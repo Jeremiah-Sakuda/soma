@@ -52,6 +52,13 @@ function script(steps: Step[]) {
   vi.stubGlobal('fetch', fetcher);
   return fetcher;
 }
+function textToolArgs(plan: { kind: string; experimentRunId: unknown; [key: string]: unknown }) {
+  const { kind: _kind, experimentRunId: _experimentRunId, ...args } = plan;
+  return args;
+}
+function experimentToolArgs(plan: { kind: string; experimentRunId: unknown; [key: string]: unknown }, experimentRunId: unknown) {
+  return { ...textToolArgs(plan), experimentRunId };
+}
 const readUpdate: Step = { name: 'read_source', args: { sourceId: 'update', offset: 0 } };
 const followSyllabus: Step = { name: 'follow_reference', args: { fromId: 'update', targetId: 'syllabus' } };
 const request = { courseId: 'circuits', goal: 'Investigate the original course correction.', initialSourceIds: ['update'] };
@@ -138,7 +145,7 @@ describe('integrated bounded Spark investigation', () => {
       predictions: [{ hypothesisId: 'series-transfer', predictedOptionIndex: 1 }, { hypothesisId: 'constant-total', predictedOptionIndex: 2 }],
       rationale: 'The choices distinguish two provisional explanations without assigning a grade.', nextActivity: 'Explore the branch relationships with the source voltage held fixed.',
     };
-    const fetcher = script([readUpdate, { name: 'prepare_diagnostic', args: plan }, body => {
+    const fetcher = script([readUpdate, { name: 'prepare_diagnostic', args: textToolArgs(plan) }, body => {
       const prepared = lastToolOutput(body); expect(prepared.accepted).toBe(true);
       return { name: 'finish_investigation', args: { ...decision(state, 'keep-current', false), decision: 'revise-session', selectedLessonId: prepared.lessonId } };
     }]);
@@ -198,7 +205,7 @@ it('revises an uninformative experiment before persisting the exact informative 
     body => {
       const experiment = lastToolOutput(body);
       expect(experiment).toMatchObject({ informative: true, observedAfter: 4 });
-      return { name: 'prepare_diagnostic', args: { ...plan, kind: 'circuit-experiment', experimentRunId: experiment.id } };
+      return { name: 'prepare_experiment_diagnostic', args: experimentToolArgs(plan, experiment.id) };
     },
     body => ({ name: 'finish_investigation', args: { ...decision(state, 'keep-current', false), decision: 'revise-session', selectedLessonId: lastToolOutput(body).lessonId } }),
   ]);
@@ -224,7 +231,7 @@ it('retains the entire investigation reservation when the provider returns no tr
 
 it('rejects reversed hypothesis judgments but accepts a conservative unresolved revision', async () => {
   const state = fixture(), plan = originalTextPlan(state);
-  script([readUpdate, { name: 'prepare_diagnostic', args: plan }, body => ({ name: 'finish_investigation', args: { ...decision(state, 'keep-current', false), decision: 'revise-session', selectedLessonId: lastToolOutput(body).lessonId } })]);
+  script([readUpdate, { name: 'prepare_diagnostic', args: textToolArgs(plan) }, body => ({ name: 'finish_investigation', args: { ...decision(state, 'keep-current', false), decision: 'revise-session', selectedLessonId: lastToolOutput(body).lessonId } })]);
   const first = await investigateWithSpark(state, request);
   const answered = applyAction(publishInvestigation(state, first), { type: 'attempt', lessonId: first.lesson!.id, optionIndex: 0 }, at);
   const attempt = answered.attempts.at(-1)!;
@@ -263,4 +270,64 @@ it('reads a later bounded source page before accepting its exact citation', asyn
   expect(fetcher).toHaveBeenCalledTimes(3);
   expect(result.reads.get('update')?.segments?.map(segment => segment.offset)).toEqual([0, 1200]);
   expect(publishInvestigation(state, result).investigations?.[0].sourceRefs[0].quote).toBe(ending);
+});
+
+it.each([
+  { field: 'kind', value: 'text' },
+  { field: 'kind', value: 'circuit-experiment' },
+  { field: 'experimentRunId', value: null },
+  { field: 'experimentRunId', value: 'invented-experiment' },
+])('rejects extra $field=$value in a text tool call instead of coercing it', async ({ field, value }) => {
+  const state = fixture(), plan = originalTextPlan(state);
+  const fetcher = script([readUpdate,
+    { name: 'prepare_diagnostic', args: { ...textToolArgs(plan), [field]: value } },
+    body => {
+      expect(lastToolOutput(body).accepted).toBe(false);
+      return { name: 'prepare_diagnostic', args: textToolArgs(plan) };
+    },
+    body => {
+      const prepared = lastToolOutput(body); expect(prepared.accepted).toBe(true);
+      return { name: 'finish_investigation', args: { ...decision(state, 'keep-current', false), decision: 'revise-session', selectedLessonId: prepared.lessonId } };
+    },
+  ]);
+  const result = await investigateWithSpark(state, request);
+  expect(fetcher).toHaveBeenCalledTimes(4);
+  expect(result.record.diagnosticPlan).toMatchObject({ kind: 'text', experimentRunId: null });
+  expect(result.record.toolActivity?.filter(item => item.outcome.includes('Rejected'))).toHaveLength(1);
+  expect(result.lesson?.kind).toBe('practice');
+  const sent = JSON.parse(fetcher.mock.calls[0][1]!.body as string) as { tools: { name: string; parameters: { properties: Record<string, unknown>; required: string[] } }[] };
+  const text = sent.tools.find(tool => tool.name === 'prepare_diagnostic')!;
+  const experiment = sent.tools.find(tool => tool.name === 'prepare_experiment_diagnostic')!;
+  expect(text.parameters.properties).not.toHaveProperty('kind');
+  expect(text.parameters.properties).not.toHaveProperty('experimentRunId');
+  expect(experiment.parameters.properties).not.toHaveProperty('kind');
+  expect(experiment.parameters.properties.experimentRunId).toMatchObject({ type: 'string' });
+  expect(experiment.parameters.required).toContain('experimentRunId');
+});
+
+it.each(['wrong-kind', 'null-run'] as const)('rejects malformed experiment tool arguments: %s', async failure => {
+  const state = fixture(), plan = originalTextPlan(state);
+  const input = {
+    baseline: { topology: 'parallel', voltage: 12, r1: 6, r2: 3 }, change: { parameter: 'voltage', value: 24 }, observable: 'current1',
+    predictions: plan.hypotheses.map((hypothesis, index) => ({ hypothesisId: hypothesis.id, claim: hypothesis.claim, predictedValue: index === 0 ? 4 : 2 })),
+  };
+  let experimentId: unknown;
+  script([readUpdate, { name: 'evaluate_experiment', args: input },
+    body => {
+      const experiment = lastToolOutput(body); expect(experiment.informative).toBe(true); experimentId = experiment.id;
+      return { name: 'prepare_experiment_diagnostic', args: { ...experimentToolArgs(plan, experimentId), ...(failure === 'wrong-kind' ? { kind: 'text' } : { experimentRunId: null }) } };
+    },
+    body => {
+      expect(lastToolOutput(body).accepted).toBe(false);
+      return { name: 'prepare_experiment_diagnostic', args: experimentToolArgs(plan, experimentId) };
+    },
+    body => {
+      const prepared = lastToolOutput(body); expect(prepared.accepted).toBe(true);
+      return { name: 'finish_investigation', args: { ...decision(state, 'keep-current', false), decision: 'revise-session', selectedLessonId: prepared.lessonId } };
+    },
+  ]);
+  const result = await investigateWithSpark(state, request);
+  expect(result.record.diagnosticPlan).toMatchObject({ kind: 'circuit-experiment', experimentRunId: experimentId });
+  expect(result.lesson?.diagnosticExperiment?.input).toEqual(input);
+  expect(result.record.toolActivity?.filter(item => item.outcome.includes('Rejected'))).toHaveLength(1);
 });

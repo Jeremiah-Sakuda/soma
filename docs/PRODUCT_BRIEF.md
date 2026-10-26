@@ -64,9 +64,11 @@ The event discourages simple education chatbots. Soma must demonstrate sustained
 
 ## Demo opening and close
 
-Open on a ready lesson card: “Prepared after your quiz was returned,” supported by a real or clearly labeled synthetic event. Use “Before you can study, you have to figure out what to study” over the card and immediate lesson entry. Enter the lesson within five seconds and manipulate it. Then reveal how course content and surrounding context made it relevant, show actual source work, and capture a response changing the next step.
+The selected hero moment is **returned work → competing explanations → a discriminating interaction → the student's response → revised interpretations and next activity**. Open on “Prepared after your quiz was returned,” enter the ready interaction within five seconds, then reveal the source marking and why Spark chose that interaction. The student can contradict the initial interpretation; the next activity changes for an inspectable reason.
 
-End with the earlier supported attempt beside a fresh later attempt and the next review action. Use the actual result, help, and elapsed time. A simulated interval stays labeled; a single success is not proof of improved learning.
+Use one actual class and a supported objective. An exact source-problem reconstruction requires the approved checked family; a conceptual analogue or ordinary-practice fallback is labeled. Do not select resistors solely for visual drama. One response changes support for hypotheses, not proof of a diagnosis. Returned-work image/PDF interpretation and model-directed browsing remain implementation/verification work.
+
+R12 remains in the product. Calendar context takes at most ten relevant seconds or moves to the judge route, preserving its release checks. Keep the hook and closing promise; end with earlier support beside actual later work and the useful next action. No fabricated interval, improvement or source-access claim. The detailed [storyboard and evaluation gates](DEMO_AND_EVALUATION.md) remain authoritative for the video.
 
 ## Human capability and evidence
 

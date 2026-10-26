@@ -69,3 +69,13 @@ Final managed worker/adaptation regression passed 2/2 in 67.47s against real Fir
 See [remaining user work](USER_REMAINING_WORK.md) for source selections, content review, optional Trigger setup and submission inputs. Existing independent-review, real-source and held-out/learner gates remain open.
 
 GitHub CI [40418506341](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40418506341) passed for `19f0af3` with the full default/build/browser checks. Later evidence-only documentation does not change the deployed runtime `00eb4b1`.
+
+### P037 architecture iteration and hero documentation
+
+The three selected refactors are implemented: typed execution-failure facts and durable job causes (`7a2ecae`), concentrated audited publication across four entry points (`40d7724`), and shared journal policy over actual Firestore/synthetic SQLite adapters (`a60b31a`). Caller authentication, automatic-source consent, original responses, source versions, generation/revision/lease checks, budgets, quota and protected disclosure remain enforced. No storage migration, index change or new retry category is required.
+
+Failures during journal cleanup no longer suppress durable job recovery. Confirmation failure after an actual commit preserves the activity and ready job; interactive requests receive an incomplete-audit notice, and background work surfaces the failure to the worker without relabeling saved work. Bounded structured causes remain in failed/retrying jobs independently of display text. The safe classification facts do not contain provider payloads or raw reasoning.
+
+Executed checks: typecheck, optimized build, 397 default tests (34 opt-in skipped), 23 browser journeys, seven shared journal contract cases against each real store plus two managed identity/expiry cases (16 total, 15.46s), and final real Firestore worker/adaptation tests (2/2, 57.02s). Provider transport in the managed job tests was scripted and no private source was processed. The initial browser run exhausted the old shared synthetic database's 200-session quota; per-run temporary storage and guarded cleanup fixed repeatability (`44cb761`), preserving the app limit. Deployment/live confirmation will be appended when executed.
+
+The hero storyboard is now the returned-work diagnostic sequence in [Demo and Evaluation](DEMO_AND_EVALUATION.md). This documentation decision does not implement missing image/PDF input, region evidence or model-directed navigation, confirm a real-course model family, or waive evaluation gates. R12's product behavior remains; its video role is brief or in the judge route.

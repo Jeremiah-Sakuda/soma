@@ -8,6 +8,8 @@ Soma brings together your course material, upcoming deadlines, available time, a
 
 **Start with [CODEX_HANDOFF.md](CODEX_HANDOFF.md) and the [scope update](docs/SCOPE_UPDATE.md).** Implementation has started in this folder. The documents describe intended behavior; current implementation evidence and limitations are recorded in [Decisions](docs/DECISIONS.md). The student-hub extension should build on the existing app, not replace it.
 
+The selected demonstration follows one returned-work event through competing explanations, a discriminating interaction, the student's response and a revised next activity. The [hero storyboard](docs/DEMO_AND_EVALUATION.md) records intended behavior and honest fallbacks; current image/browser limitations remain in [production readiness](docs/PRODUCTION_READINESS.md).
+
 ## Read in this order
 
 1. [Handoff](CODEX_HANDOFF.md): first actions, priorities, and current status.

@@ -4,37 +4,42 @@
 
 ## The story to prove
 
-**Before you can study, you have to figure out what to study.** Soma connects course material, upcoming deadlines, available time, and learning progress to interactive lessons and practice for what matters next. The demo must show preparation staying current as those inputs change.
+**Before you can study, you have to figure out what to study.** Soma connects course material, upcoming deadlines, available time and learning evidence to useful prepared activities. The selected hero moment makes that work visible through one diagnostic decision and its consequences.
 
-The student-hub scope adds one cross-domain consequence through PRD R12; see [Scope Update](SCOPE_UPDATE.md). A confirmed commitment can change the available study window and therefore the prepared recommendation. Keep the lesson, real source decisions, and learning evidence in the same three-minute story. Do not add a career-module tour.
+## Selected hero moment — returned work to a revised next activity
 
-Soma was doing useful work before the student asked a question. A relevant course event caused an activity to be prepared or updated; the student can immediately explore it; a real answer changes what follows.
+**Selected in P037; a target to implement and verify, not completed capability evidence.** One actual course and one coherent objective carry the story:
 
-Keep the lesson visually prominent. The agent's job explains the lesson's presence. Learning evidence explains its next step. There is no need to rename lessons into unfamiliar terms or open on an architecture diagram.
+**Returned work → two plausible explanations → a discriminating interaction → the student's response → revised interpretations and next activity.**
 
-Use the opening line over the ready card and immediate lesson entry, without adding an introduction segment. Carry three points through the existing storyboard: current course content makes the activity relevant; surrounding context makes it useful now; the student's response changes what comes next. Attribute the runtime decisions to Meta's Muse Spark and the origin workflow to the consumer Muse assistant. Close with “Your coursework changes every week. Your study tools should keep up.” alongside the actual evidence. Keep claims about preparation savings and learning outcomes within the measured results.
+Spark separates the student's original work, visible instructor marking and its own inference. It chooses an interaction whose predicted responses distinguish plausible explanations, checks its proposed experiment against the approved model, then revises evidential support after the response. A contradiction must be allowed to change the initial interpretation. One response cannot prove a diagnosis or broad mastery.
+
+Use actual class material when authorized. The exact source problem may be rendered only if its topology, values, assumptions and objective fit the approved checked family and the interpretation is supported. Otherwise show a clearly identified conceptual analogue or ordinary practice; do not imply an exact reconstruction. Replacing the single quantitative family requires a source-fit decision and the same scientific/generator gates, not a second family. Do not force resistor relevance onto an unrelated class.
+
+Current support includes text-source investigation, bounded diagnostic/experiment proposals, deterministic checks, saved responses, reconsideration and protected audit history. Returned-work image/PDF input, cited image regions and model-directed browser navigation remain engineering gaps. An uploaded or confirmed transcription fallback stays labeled and does not count as image reading or live collection.
 
 ## Three-minute storyboard
 
 | Time | On screen | What must be real or labeled |
 | --- | --- | --- |
-| 0:00–0:05 | Ready lesson card with a concrete trigger: “Prepared after your quiz was returned” | The trigger links to an actual run and source, or a clearly identified synthetic event |
-| 0:05–0:35 | Enter the lesson and change a meaningful resistor value or arrangement | Prepared/cached status visible; shared model drives the visual and numbers; exploration available without answering |
-| 0:35–1:20 | Reveal why this activity matters: source event, before/after consequence, concise reason | Include 10–15 seconds of actual Spark browser work when supported; distinguish recording from live execution and fixture from Blackboard |
-| 1:20–2:20 | Student predicts/explains, sees suitable help, and receives a changed follow-up | Preserve original answer and help; show an actual Spark decision and a different next question or configuration |
-| 2:20–3:00 | Fresh later attempt, paired evidence, and next action | Actual help, exposure, response and elapsed time; recorded pilot labeled; simulated delay never passed off as observed |
+| 0:00–0:05 | Ready Card: “Prepared after your quiz was returned”; enter the activity | An actual selected-source event and saved run, or an explicitly labeled synthetic event; prepared/cached state visible |
+| 0:05–0:30 | Manipulate the ready interaction on the same course objective | Approved checked family and shared model readouts; exact reconstruction or conceptual analogue labeled accurately; exploration available without answering |
+| 0:30–1:00 | Reveal the returned-work page/region and the two plausible explanations | Distinguish instructor marking, original answer, transcription and Spark's inference; expose ambiguity or allow a correction |
+| 1:00–1:45 | Show why Spark chose this discriminating interaction; the student predicts | Actual proposed parameters/tool activity and deterministic feedback; predictions distinguish hypotheses; help/exposure recorded and optional |
+| 1:45–2:20 | The response changes support and the prepared next step | Actual saved response and Spark reconsideration; show a contradicted interpretation when the evidence supports it, not a forced successful branch |
+| 2:20–3:00 | Paired earlier/later evidence and the useful next action | Actual result, assistance and elapsed interval; genuine later recording labeled; simulated delay never presented as observed |
 
-One course and one coherent learning objective carry the video. Other courses remain visible in the working build without a lengthy tour. The direct-request path, source injection case, detailed tool trace, account tests, and full metrics belong in the judge route or supporting evidence.
+Keep the opening hook over the Ready Card and immediate activity: “Before you can study, you have to figure out what to study.” Close with “Your coursework changes every week. Your study tools should keep up.” No introductory architecture or integration tour.
 
-Within the existing 0:35–1:20 source/consequence segment, show the relevant commitment, observed window change, and resulting session. Choose one dominant update (an exam update under existing calendar constraints, or a confirmed interview update); do not stack unrelated changes. Keep a labeled overlap/no-overlap/tentative variation available to the judge. The varied data, not the scenario label, must determine the result. No external rescheduling is claimed.
+R12 stays in the product and its acceptance checks. Give calendar/commitment context at most ten seconds only when it changes this same study activity; otherwise show overlap/no-overlap/tentative behavior in the judge route. Do not add an unrelated interview subplot. Source-change authority, full-semester context, direct requests, detailed audit exports, injection tests and account checks remain available in the judge route or supporting evidence.
 
-Do not force a contradictory-diagnostic branch, direct request, security test, and every integration into the same three minutes. The opening manipulation and the causal source-to-follow-up connection need room to be understood.
+A browser clip belongs in the video only if actual model-directed actions are verified and explain this same source event within the time budget. Selected-URL text collection is not model computer use. Moving footage to supporting material does not waive PRD source-access or computer-use requirements.
 
-The ideal successful ending is “Solved with a hint” beside “Solved without hints two days later.” Use it only when records support it. If the later response needs help or is wrong, show that result and the useful next action. If no real delay exists, show the actual interval or a persistent simulated label; do not hide the gap.
+The ideal ending is “Solved with a hint” beside a fresh later response, using its actual outcome and interval. Show wrong or assisted later work honestly and offer the useful next step. If no genuine delay exists, use the actual shorter interval or a persistent simulated label; no fabricated learning gain. Public course/learner material requires permission, even after redaction.
 
 ## Source and lesson coherence
 
-Use the original [development scenarios](fixtures/DEVELOPMENT_SCENARIOS.md). Their revised exam includes series/parallel resistors and excludes capacitor transients. The proposed flagship family fits that scope. Date-only changes alter priority; they do not require generating new physics content. Coverage changes alter exam eligibility without deleting course history.
+The original [development scenarios](fixtures/DEVELOPMENT_SCENARIOS.md) remain labeled development material. Their revised exam includes series/parallel resistors and excludes capacitor transients. That family fits the synthetic scope; actual-course source fit remains a separate decision. Date-only changes alter priority; they do not require generating new physics content. Coverage changes alter exam eligibility without deleting course history.
 
 A returned mistake is a hypothesis to investigate, not proof of a current misconception. A correct diagnostic should allow direct fresh application. An arithmetic slip should not be recorded as a topology misunderstanding.
 

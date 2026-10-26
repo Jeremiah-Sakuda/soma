@@ -146,3 +146,15 @@ Create an expiring isolated anonymous workspace over original public synthetic c
 
 Meaningful automated checks cover numerical/reference behavior, state transitions, duplicate ingestion, publication races, account/storage isolation, expired source recovery, source injection, attempt history, and the two entry paths. Browser checks cover controls, representative frames, reset/resume, keyboard, reduced motion, layout, and a numeric/text equivalent. Human review checks scientific, source, and instructional fit. The full counts and reporting rules are in [Demo and Evaluation](DEMO_AND_EVALUATION.md).
 
+
+## P037 — Deepened execution and journal modules
+
+The existing codebase now concentrates three previously distributed rules. This changes implementation ownership, not provider scope or data authority; executed verification is recorded in [Production readiness](PRODUCTION_READINESS.md).
+
+| Module | Interface and responsibility | Internal seams and preserved rules |
+| --- | --- | --- |
+| Typed execution failure | `execution-failure.ts` preserves bounded provider/validation/limit facts through `PreparationError` and `InvestigationError`; job recovery reads facts, not display narratives | Existing Meta transport and scripted test responses exercise the same engine path. Retry categories remain network, timeout and HTTP; no HTTP-status policy is silently added. Unknown/legacy narrative-only failures fail closed. Safe facts persist beside job failure records. |
+| Audited publication | `runAuditedPublication` owns journal creation, execution, confirmed publication status, selected/published activity references, protection and incomplete confirmation across both direct routes and both job runners | Direct owner-authorized commits and leased managed commits retain their distinct revision/generation/source/lease/outbox checks. Journal error cleanup and durable job recovery are attempted independently. A post-commit audit error cannot undo saved work or relabel a ready job. Interactive callers report incomplete confirmation; background callers surface it to the worker. |
+| Owned journal | Existing `createAuditRun`, read/history and export behavior remains stable; shared policy owns event validation, sequencing, capacity, source references, finalization pins, deadlines and projection | Two internal adapters own real Firestore transactions/queries and synthetic-only SQLite transactions/queries. They retain existing document paths/table formats. The same behavioral contract cases exercise both; managed identity and expiry checks remain specific. No storage migration or general repository framework. |
+
+The domain glossary in [CONTEXT.md](../CONTEXT.md) separates returned-work observations, learner interpretations, diagnostic interactions, original responses and assistance. The selected hero moment uses that same evidence model. Refactoring these modules does not add image/PDF input, arbitrary simulations, new quantitative families or model-directed browser actions.

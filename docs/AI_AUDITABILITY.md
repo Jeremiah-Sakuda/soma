@@ -31,3 +31,9 @@ This is an application audit journal. It is not a separately signed, externally 
 ## Verification
 
 Tests cover durable progress before provider completion, exact publication boundaries, one bounded repair, unchanged zero-call reuse, journal-outage halt, discarded diagnostic protection, current-version disclosure, account/generation isolation, history pagination, export protection and source refresh. Real Firestore checks and a hosted synthetic model check are reported with executed results in [Build Log](BUILD_LOG.md); test transport and real inference results remain separate. Operational limits and open release gates remain in [Production readiness](PRODUCTION_READINESS.md).
+
+## P037 architecture consolidation
+
+Direct preparation, direct investigation, source-change preparation jobs and response-adaptation jobs now share one audited-publication module. It derives the terminal state and protected activity references after the actual commit. Failure-journal writes cannot prevent durable job recovery; post-commit confirmation failures preserve saved work and remain visible to interactive callers or the worker. Structured execution-failure facts survive engine errors and are retained in failed/retrying job records independently of display text.
+
+Journal policy now selects one internal storage adapter per writer. Firestore and synthetic-only SQLite retain the same persistence formats and caller interface, and the same behavioral contract cases run against both real stores. This does not make SQLite a private-account backend or expand retention/capacity. The current default, managed and deployed verification checkpoint is recorded in [Production readiness](PRODUCTION_READINESS.md).

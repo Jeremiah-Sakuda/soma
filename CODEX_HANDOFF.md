@@ -14,6 +14,8 @@ Meta's Muse Spark investigates course updates, connects them to existing work, a
 
 Interactive lessons are central. Students manipulate meaningful controls, inspect the relationship, request an explanation, and optionally answer a fresh question. Their responses change what Soma prepares next. Preserve the difference between exploration, assisted completion, and later independent performance.
 
+**Selected demo spine (P037):** returned work → competing provisional explanations → a discriminating interaction → an original response → revised interpretations and next activity. Use one actual course/objective when authorized, without forcing resistor relevance. R12 stays in the product; its video role is at most ten relevant seconds or the judge route. Image/PDF interpretation, region evidence and model-directed browsing remain unimplemented/verification gaps; do not infer them from this story. All release and comparison gates remain.
+
 Use this complete loop as the implementation spine:
 
 **Change → affected commitments → supported next action → prepared learning activity when appropriate → student interaction → evidence-backed follow-up.**

@@ -72,6 +72,8 @@ This is useful evidence of the agent and rule boundaries, not an invitation to b
 
 ## One coherent flagship example
 
+P037 uses the returned-work diagnostic as the main video story. The example below remains a labeled R12 development/judge-route workload; commitment context receives at most ten relevant video seconds or supporting evidence, without removing product behavior or acceptance checks.
+
 Use original synthetic sources and a clearly labeled simulation clock:
 
 - The student selected a 45-minute focus window, 16:00–16:45.

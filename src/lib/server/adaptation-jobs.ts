@@ -10,14 +10,15 @@ import { InferenceBudgetError } from './budget';
 import { ENGINE_VERSION, investigateWithSpark, publishInvestigation, InvestigationError, type InvestigationResult } from './investigator';
 import { META_MODEL } from './meta-client';
 import { WorkspaceConflictError, WorkspaceStoreError } from './store';
-import { createAuditRun, type AuditWriter } from './audit-store';
+import { runAuditedPublication } from './audited-publication';
+import { retryableExecutionFailure, type ExecutionFailure } from './execution-failure';
 
 export type AdaptationJob = {
   id: string; ownerId: string; workspaceId: string; attemptId: string; lessonId: string; courseId: string; investigationId: string;
   attemptFingerprint: string; sourceFingerprint: string; planFingerprint: string; engineVersion: string;
   status: 'queued' | 'running' | 'ready' | 'failed' | 'stale'; attempts: number;
   createdAt: string; updatedAt: string; nextAttemptAt: number; contextRevision: number;
-  leaseId?: string; leaseUntil?: number; failureRun?: AgentRun; notice?: string; selectedLessonId?: string;
+  leaseId?: string; leaseUntil?: number; failureRun?: AgentRun; failure?: ExecutionFailure; notice?: string; selectedLessonId?: string;
 };
 export type AdaptationSummary = Pick<AdaptationJob, 'id' | 'attemptId' | 'lessonId' | 'status' | 'createdAt' | 'updatedAt' | 'notice' | 'selectedLessonId'>;
 const hash = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
@@ -153,40 +154,36 @@ export async function retryAdaptationJob(account: VerifiedAccount, id: string) {
 export function adaptationFailurePatch(current: WorkspaceState | null, job: AdaptationJob, error: unknown, now=Date.now()): Partial<AdaptationJob> {
   const valid=current&&adaptationContextCurrent(current,job);
   const inactive=['background_account_inactive','worker_account_inactive'].includes(String((error as {code?:string})?.code));
-  const transient=error instanceof WorkspaceConflictError||(error instanceof InvestigationError?/\((network|timeout|http)\)/.test(error.run.effect):[429,500,502,503,504].includes(Number((error as {status?:number})?.status)));
+  const transient=error instanceof WorkspaceConflictError||(error instanceof InvestigationError?retryableExecutionFailure(error.failure):[429,500,502,503,504].includes(Number((error as {status?:number})?.status)));
   const retry=valid&&transient&&job.attempts<MAX_ATTEMPTS;
-  return {status:!valid?'stale':retry?'queued':'failed',nextAttemptAt:retry?now+Math.min(300_000,30_000*2**(job.attempts-1)):0,...(error instanceof InvestigationError?{failureRun:error.run}:{}),notice:!valid?'A newer response, changed source or deleted workspace invalidated this follow-up. No old result replaced current work.':inactive?'Follow-up stopped because this account is no longer active. Your saved response was not changed.':retry?'Follow-up paused after a temporary interruption and will retry automatically. Your response is saved.':'The follow-up stopped at its bounded model, validation or recovery limit. Your response and current activities are preserved.'};
+  return {status:!valid?'stale':retry?'queued':'failed',nextAttemptAt:retry?now+Math.min(300_000,30_000*2**(job.attempts-1)):0,...(error instanceof InvestigationError?{failureRun:error.run,...(error.failure?{failure:error.failure}:{})}:{}),notice:!valid?'A newer response, changed source or deleted workspace invalidated this follow-up. No old result replaced current work.':inactive?'Follow-up stopped because this account is no longer active. Your saved response was not changed.':retry?'Follow-up paused after a temporary interruption and will retry automatically. Your response is saved.':'The follow-up stopped at its bounded model, validation or recovery limit. Your response and current activities are preserved.'};
 }
 export async function runAdaptationJob(account: VerifiedAccount, id: string): Promise<WorkspaceState | null> {
   const state = await readAccountWorkspace(account); if (!state) throw new WorkspaceConflictError();
   const job = await claimAdaptationJob(account, state, id); if (!job) return null;
-  let audit: AuditWriter | undefined;
-  let publicationCommitted = false;
-  try {
-    audit = await createAuditRun({ kind: 'account', account }, state, { kind: 'adaptation', trigger: 'diagnostic-response', mode: 'live', courseId: job.courseId, model: META_MODEL, engineVersion: ENGINE_VERSION, promptVersion: ENGINE_VERSION });
-    await revalidateBackgroundAccount(account);
-    const result = await investigateWithSpark(state, { courseId: job.courseId, previousInvestigationId: job.investigationId, attemptId: job.attemptId, goal: 'Reconsider the provisional explanations against this actual saved response and its assistance. Choose a supported next activity when useful; keep uncertainty and preserve the original observation.' }, { automatic: true, audit });
-    await revalidateBackgroundAccount(account);
-    const published = await updateAccountWorkspace(account, current => publishAdaptation(current, job, result), job.contextRevision, async (transaction, root) => {
-      const reference = root.collection('adaptationJobs').doc(job.id), current = await transaction.get(reference);
-      if (!current.exists || current.get('ownerId') !== account.uid || current.get('workspaceId') !== job.workspaceId || current.get('leaseId') !== job.leaseId || current.get('status') !== 'running' || current.get('leaseUntil') <= Date.now()) throw new WorkspaceConflictError();
-      transaction.update(reference, { status: 'ready', leaseUntil: 0, updatedAt: new Date().toISOString(), ...(result.selectedLessonId ? { selectedLessonId: result.selectedLessonId } : {}), notice: result.selectedLessonId ? 'Soma reconsidered your response. A supported next activity is ready.' : 'Soma reconsidered your response and saved its decision. Your current activities remain available.' });
-    });
-    publicationCommitted = true;
-    await audit.append({ actor: 'application', kind: 'publication', summary: 'Committed the follow-up after rechecking the original response, current source versions, workspace revision and adaptation lease. The saved response remains unchanged.', visibility: 'public' });
-    await audit.finish({ committedRevision: published.revision, ...(result.protectUnpublishedActivity ? { protectUnpublishedActivity: true } : {}), status: result.reused ? 'unchanged' : 'published', ...(result.reused ? { mode: 'prepared' } : {}), ...(result.selectedLessonId ? { selectedLessonId: result.selectedLessonId } : {}), ...(result.lesson ? { publishedLessonId: result.lesson.id } : {}) });
-    return published;
-  } catch (error) {
-    if (publicationCommitted) throw error; // A journal outage cannot undo an already committed follow-up.
-    if (audit) {
-      await audit.append({ actor: 'application', kind: 'stopped', summary: error instanceof InferenceBudgetError ? 'The application model allowance blocked follow-up. The original response is saved.' : error instanceof WorkspaceConflictError ? 'A newer response, changed source or expired lease prevented publication. No obsolete follow-up replaced current work.' : 'Follow-up stopped before publication. The original learner response remains saved.', visibility: 'public' });
-      await audit.finish({ status: error instanceof InferenceBudgetError ? 'blocked' : 'failed' });
-    }
-    if (error instanceof InferenceBudgetError) await finishJob(account, job, { status: 'queued', attempts: Math.max(0, job.attempts - 1), nextAttemptAt: Date.now() + 5 * 60_000, notice: 'Your response is saved. Follow-up is waiting for the configured model allowance; no new model call was made.' });
-    else {
-      const current = await readAccountWorkspace(account).catch(()=>null);
-      await finishJob(account,job,adaptationFailurePatch(current,job,error));
-    }
-    throw error;
-  }
+  const execution = await runAuditedPublication({ confirmation: 'require', access: { kind: 'account', account }, before: state, metadata: { kind: 'adaptation', trigger: 'diagnostic-response', mode: 'live', courseId: job.courseId, model: META_MODEL, engineVersion: ENGINE_VERSION, promptVersion: ENGINE_VERSION },
+    execute: async audit => {
+      await revalidateBackgroundAccount(account);
+      const result = await investigateWithSpark(state, { courseId: job.courseId, previousInvestigationId: job.investigationId, attemptId: job.attemptId, goal: 'Reconsider the provisional explanations against this actual saved response and its assistance. Choose a supported next activity when useful; keep uncertainty and preserve the original observation.' }, { automatic: true, audit });
+      return { kind: 'investigation' as const, result };
+    },
+    publish: async outcome => {
+      const result = outcome.result;
+      await revalidateBackgroundAccount(account);
+      const published = await updateAccountWorkspace(account, current => publishAdaptation(current, job, result), job.contextRevision, async (transaction, root) => {
+        const reference = root.collection('adaptationJobs').doc(job.id), current = await transaction.get(reference);
+        if (!current.exists || current.get('ownerId') !== account.uid || current.get('workspaceId') !== job.workspaceId || current.get('leaseId') !== job.leaseId || current.get('status') !== 'running' || current.get('leaseUntil') <= Date.now()) throw new WorkspaceConflictError();
+        transaction.update(reference, { status: 'ready', leaseUntil: 0, updatedAt: new Date().toISOString(), ...(result.selectedLessonId ? { selectedLessonId: result.selectedLessonId } : {}), notice: result.selectedLessonId ? 'Soma reconsidered your response. A supported next activity is ready.' : 'Soma reconsidered your response and saved its decision. Your current activities remain available.' });
+      });
+      return published;
+    },
+    onFailure: async error => {
+      if (error instanceof InferenceBudgetError) await finishJob(account, job, { status: 'queued', attempts: Math.max(0, job.attempts - 1), nextAttemptAt: Date.now() + 5 * 60_000, notice: 'Your response is saved. Follow-up is waiting for the configured model allowance; no new model call was made.' });
+      else {
+        const current = await readAccountWorkspace(account).catch(()=>null);
+        await finishJob(account,job,adaptationFailurePatch(current,job,error));
+      }
+    },
+  });
+  return execution.workspace;
 }

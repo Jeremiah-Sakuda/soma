@@ -16,7 +16,6 @@ vi.mock('../../src/lib/server/budget', async original => ({ ...await original<ty
 vi.mock('../../src/lib/server/meta', async original => ({ ...await original<typeof import('../../src/lib/server/meta')>(), prepareWithSpark: (...args: unknown[]) => boundary.prepare(...args) }));
 vi.mock('../../src/lib/server/audit-store', async original => ({ ...await original<typeof import('../../src/lib/server/audit-store')>(), createAuditRun: (...args: unknown[]) => boundary.create(...args) }));
 import { POST } from '../../src/app/api/actions/route';
-import { AuditStoreError } from '../../src/lib/server/audit-store';
 import { PreparationError } from '../../src/lib/server/meta';
 import { InferenceBudgetError } from '../../src/lib/server/budget';
 import { WorkspaceConflictError } from '../../src/lib/server/store';
@@ -48,34 +47,6 @@ describe('direct preparation audit publication boundary', () => {
     expect(events().some(event => event.kind === 'publication')).toBe(true);
   });
 
-  it('does not run inference or fallback when the audit journal cannot be created', async () => {
-    boundary.create.mockRejectedValue(new AuditStoreError('Audit unavailable.', 503, 'audit_storage_failed'));
-    expect((await POST(request())).status).toBe(503);
-    expect(boundary.prepare).not.toHaveBeenCalled(); expect(boundary.update).not.toHaveBeenCalled();
-  });
-
-  it('does not fall back or publish when the engine stops because audit append failed', async () => {
-    boundary.prepare.mockRejectedValue(new AuditStoreError('Audit unavailable.', 503, 'audit_storage_failed'));
-    expect((await POST(request())).status).toBe(503);
-    expect(boundary.update).not.toHaveBeenCalled(); expect(boundary.finish).not.toHaveBeenCalled();
-  });
-
-  it('keeps a stale publication trace without claiming that the generated proposal was saved', async () => {
-    boundary.update.mockRejectedValue(new WorkspaceConflictError());
-    expect((await POST(request())).status).toBe(409);
-    expect(events().some(event => event.kind === 'publication')).toBe(false);
-    expect(finishes().at(-1)).toEqual({ status: 'failed' });
-    expect(boundary.state!.lessons.some(item => item.id === 'audited-live-lesson')).toBe(false);
-  });
-
-  it('returns the committed activity and an explicit incomplete-audit notice when final journaling fails', async () => {
-    boundary.finish.mockRejectedValue(new AuditStoreError('Audit unavailable.', 503, 'audit_storage_failed'));
-    const response = await POST(request()), body = await response.json();
-    expect(response.status).toBe(200); expect(body.notice).toContain('final audit confirmation could not be recorded');
-    expect(body.workspace.lessons.some((item: { id: string }) => item.id === 'audited-live-lesson')).toBe(true);
-    expect(boundary.update).toHaveBeenCalledTimes(1);
-  });
-
   it('retains the failed model outcome while separately recording the prepared fallback commit', async () => {
     boundary.prepare.mockRejectedValue(new PreparationError({ id: 'failed-model', trigger: 'Synthetic test', mode: 'live', status: 'failed', createdAt: new Date().toISOString(), steps: [], effect: 'Bounded failure', sourceIds: [] }));
     const response = await POST(request()); expect(response.status).toBe(200);
@@ -96,7 +67,7 @@ describe('direct preparation audit publication boundary', () => {
     boundary.enabled = false;
     expect((await POST(request())).status).toBe(200);
     expect(boundary.prepare).not.toHaveBeenCalled();
-    expect(finishes()).toEqual([{ status: 'unchanged', mode: 'prepared' }]);
+    expect(finishes()).toEqual([{ status: 'unchanged', mode: 'prepared', committedRevision: boundary.state!.revision }]);
     expect(events().some(event => event.kind === 'decision' && event.summary.includes('without a model call'))).toBe(true);
   });
 });

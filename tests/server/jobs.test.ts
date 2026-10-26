@@ -120,16 +120,16 @@ describe('preparation ownership and restart contracts', () => {
   it('retries only typed provider interruptions after backoff and stops at the attempt bound', () => {
     const claimed = { ...job, attempts: 1, status: 'generating' as const, leaseId: 'lease' };
     const run = investigationOutcome().result.run;
-    for (const code of ['network', 'timeout', 'http']) {
-      for (const error of [new PreparationError({ ...run, steps: [`Stopped at Meta ${code}.`] }), new InvestigationError({ ...run, effect: `Investigation stopped safely (${code}).` })]) {
+    for (const code of ['network', 'timeout', 'http'] as const) {
+      for (const error of [new PreparationError({ ...run, steps: ['Arbitrary renamed human message.'] }, {kind: 'provider', code, requestSent: true, usage: null}), new InvestigationError({ ...run, effect: 'Arbitrary renamed human message.' }, {kind: 'provider', code, requestSent: true, usage: null})]) {
         const patch = preparationFailurePatch(claimed, error, 1000);
-        expect(patch).toMatchObject({ status: 'queued', nextAttemptAt: 31000, leaseId: '', leaseUntil: 0 });
+        expect(patch).toMatchObject({ status: 'queued', nextAttemptAt: 31000, leaseId: '', leaseUntil: 0, failure: {kind:'provider',code,requestSent:true,usage:null} });
         expect(mayClaimJob({ ...claimed, ...patch }, 30999)).toBe(false);
         expect(mayClaimJob({ ...claimed, ...patch }, 31000)).toBe(true);
         expect(preparationFailurePatch({ ...claimed, attempts: 3 }, error, 1000).status).toBe('failed');
       }
     }
-    for (const error of [new Error('network'), new PreparationError({ ...run, steps: ['Stopped at proposal source, version boundary.'] }), new InvestigationError({ ...run, effect: 'Investigation stopped safely (tool_invalid).' })]) {
+    for (const error of [new Error('network'), new PreparationError({...run, steps:['Stopped at Meta network.']}), new InvestigationError({...run, effect:'Investigation stopped safely (network).'}), new PreparationError({ ...run, steps: ['Stopped at proposal source, version boundary.'] }), new InvestigationError({ ...run, effect: 'Investigation stopped safely (tool_invalid).' })]) {
       expect(preparationFailurePatch(claimed, error, 1000)).toMatchObject({ status: 'failed', nextAttemptAt: 0 });
     }
   });

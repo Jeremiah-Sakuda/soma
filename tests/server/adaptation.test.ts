@@ -40,8 +40,8 @@ describe('automatic adaptation immutable evidence boundary', () => {
     const helped=applyAction(state,{type:'assistance',lessonId:job.lessonId,kind:'hint'});
     expect(adaptationFailurePatch(helped,job,new WorkspaceConflictError(),100)).toMatchObject({status:'queued',nextAttemptAt:30100});
     expect(adaptationFailurePatch(state,job,{status:503},100)).toMatchObject({status:'queued'});
-    const network=new InvestigationError({id:'original-failure',mode:'synthetic',status:'failed',trigger:'Original transport fixture',createdAt:state.createdAt,sourceIds:[],steps:[],effect:'Investigation stopped safely (network).'});
-    expect(adaptationFailurePatch(state,job,network,100)).toMatchObject({status:'queued',failureRun:network.run});
+    const network=new InvestigationError({id:'original-failure',mode:'synthetic',status:'failed',trigger:'Original transport fixture',createdAt:state.createdAt,sourceIds:[],steps:[],effect:'Changed operator-facing description.'},{kind:'provider',code:'network',requestSent:true,usage:null});
+    expect(adaptationFailurePatch(state,job,network,100)).toMatchObject({status:'queued',failureRun:network.run,failure:network.failure});
     expect(adaptationFailurePatch(state,{...job,attempts:3},network,100).status).toBe('failed');
     expect(adaptationFailurePatch(state,job,new Error('Invalid diagnostic'),100).status).toBe('failed');
     const revised=applyAction(state,{type:'attempt',lessonId:job.lessonId,optionIndex:1});

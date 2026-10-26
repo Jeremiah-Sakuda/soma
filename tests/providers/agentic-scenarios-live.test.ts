@@ -180,22 +180,23 @@ describe.skipIf(!enabled)('independent live agentic scenarios', () => {
     const state = workspace('synthetic-resistor-lab'), courseId = state.courses[0].id;
     state.sources = [source(state, 'model-source', 'Original ideal resistor lab note', 'Ideal resistors in parallel share both endpoint nodes and therefore the same voltage. Each branch current equals its voltage divided by its resistance. At zero source voltage, both branch currents are zero for every positive resistance. Changing one branch resistance at zero voltage cannot distinguish an equal-current claim from the shared-voltage relationship.', { role: 'teaching-material' })];
     await evaluate(context, 'zero-voltage-proposal', state, { courseId, initialSourceIds: ['model-source'], goal: 'I proposed parallel resistors 4 and 8 ohms at 0 V, changing the 8-ohm branch to 16 ohms, to test whether parallel branches always carry equal current. Investigate whether this check distinguishes explanations, then choose a useful optional diagnostic or retain uncertainty.' }, (result, trace) => {
-      check(!result.lesson?.examEligible, 'no invented assessment applicability');
       const trials = [...trace.experiments.values()];
       const uninformativeIndex = trials.findIndex(trial => !trial.informative && trial.baselineZeroVoltage && trial.changedZeroVoltage);
+      trace.behavioralOutcome = result.record.diagnosticPlan?.kind === 'circuit-experiment'
+        ? uninformativeIndex >= 0 && trials.slice(uninformativeIndex + 1).some(trial => trial.informative) ? 'repaired-after-uninformative-feedback' : 'avoided-uninformative-proposal-before-publication'
+        : result.record.diagnosticPlan?.kind === 'text' ? uninformativeIndex >= 0 ? 'changed-to-text-after-uninformative-feedback' : 'avoided-proposal-with-text-alternative'
+        : 'retained-uncertainty-without-publishing-experiment';
+      check(!result.lesson?.examEligible, 'no invented assessment applicability');
       if (result.record.diagnosticPlan?.kind === 'circuit-experiment') {
         check(result.lesson?.diagnosticExperiment && result.record.diagnosticPlan.experimentRunId, 'actual renderer retains evaluated experiment');
         const independent = evaluateDiagnosticExperiment(result.lesson.diagnosticExperiment.input);
         check(independent.informative, 'published circuit independently distinguishes predictions');
         check(!trace.experiments.get(result.record.diagnosticPlan.experimentRunId)?.baselineZeroVoltage || !trace.experiments.get(result.record.diagnosticPlan.experimentRunId)?.changedZeroVoltage, 'unpowered proposal is never published as informative');
         check(trace.experiments.get(result.record.diagnosticPlan.experimentRunId)?.informative, 'published experiment was actually evaluated');
-        trace.behavioralOutcome = uninformativeIndex >= 0 && trials.slice(uninformativeIndex + 1).some(trial => trial.informative) ? 'repaired-after-uninformative-feedback' : 'avoided-uninformative-proposal-before-publication';
       } else if (result.record.diagnosticPlan?.kind === 'text') {
         check(result.lesson?.kind === 'practice', 'safe text alternative rendered');
-        trace.behavioralOutcome = uninformativeIndex >= 0 ? 'changed-to-text-after-uninformative-feedback' : 'avoided-proposal-with-text-alternative';
       } else {
         check(result.decision.decision === 'needs-evidence' && !result.lesson && !result.selectedLessonId, 'uncertain alternative publishes no false diagnostic');
-        trace.behavioralOutcome = 'retained-uncertainty-without-publishing-experiment';
       }
     });
   });

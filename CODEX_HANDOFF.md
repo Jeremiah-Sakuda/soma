@@ -4,9 +4,13 @@
 
 ## The product to build
 
-**Read [the student-hub scope update](docs/SCOPE_UPDATE.md) first.** Soma keeps students ready as their classes and commitments change. Add a small shared view of source-linked deadlines and confirmed events, including career and personal context. A change can affect the student's next study recommendation; learning remains the deepest action Soma performs. Continue the existing implementation and preserve its account, Firestore, lesson, and evidence services.
+**Before you can study, you have to figure out what to study.** Soma brings together your course material, upcoming deadlines, available time, and learning progress to prepare interactive lessons and practice for what matters next. As your classes and circumstances change, your preparation keeps up.
 
-Spark determines the appropriate consequence: reprioritize an existing activity, revise session fit, change exam eligibility, revise affected content, investigate returned feedback, or do nothing. Relevant email and selected calendar context inform that decision. The result is a persistent next action or prepared learning activity, with its source and reason visible.
+**Read [the student-hub scope update](docs/SCOPE_UPDATE.md) first.** Course content and surrounding context feed the same preparation loop. Keep the small shared view of source-linked deadlines and confirmed events, including career and personal context. A change can affect the student's next study recommendation; learning remains the deepest action Soma performs. Continue the existing implementation and preserve its account, Firestore, lesson, and evidence services.
+
+**Product headline:** Your coursework changes every week. Your study tools should keep up. Use the preparation task and visible learning activity to explain the product. The positioning update adds no feature area or release gate.
+
+Meta's Muse Spark investigates course updates, connects them to existing work, and adapts the next activity from recorded learning evidence. It determines the appropriate consequence: reprioritize an existing activity, revise session fit, change exam eligibility, revise affected content, investigate returned feedback, or do nothing. Relevant email and selected calendar context inform that decision. The result is a persistent next action or prepared learning activity, with its source and reason visible.
 
 Interactive lessons are central. Students manipulate meaningful controls, inspect the relationship, request an explanation, and optionally answer a fresh question. Their responses change what Soma prepares next. Preserve the difference between exploration, assisted completion, and later independent performance.
 

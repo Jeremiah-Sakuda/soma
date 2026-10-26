@@ -76,3 +76,14 @@ At the end of each milestone, add a dated entry to [Decisions](DECISIONS.md) con
 
 Before publication, create a setup/run guide using commands actually verified, an evaluation report with denominators and failures, a source-support table, and a contribution/dependency record. These build outputs are not already available in this handoff.
 
+
+## October 26 implementation refinement — investigative/adaptive milestone
+
+Jeremy selected source investigation, diagnostic interaction design, and evidence-driven reconsideration as the next technical ambition. Continue the existing Ready Card, course/workspace services and private-source onboarding.
+
+1. Investigate incomplete or conflicting sources through scoped registry listing, paged reads and registered same-course references. Treat authority metadata as owner-declared, preserve ambiguity, and publish no invented dates or exam eligibility.
+2. Let Spark state competing provisional explanations, select an optional discriminating interaction, read the saved response with its assistance/exposure, and explicitly reconsider the hypotheses. Preserve original records and ungraded diagnostic responses.
+3. Offer deterministic experiment feedback within the current development model family only when cited course material supports it. Reject indistinguishable predictions and allow at most two bounded experiments. Keep real-course text diagnostics available without forcing resistor relevance.
+4. Execute development variations and separate held-out release cases, recording citations, actual tools, failures, latency and reconciled spend. Synthetic harness success is not the live-model or scientific gate.
+
+Read-only model-directed browser navigation and a targeted Wonder comparison are conditional on demonstrated access/capability failures. No recording of scripted navigation will be called model computer use. Keep the October 31 freeze, source-fit review and November 4 deadline.

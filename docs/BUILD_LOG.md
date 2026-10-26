@@ -467,3 +467,129 @@ P023 private-source checkpoint: identified an instructor-authored conceptual not
 ### October 26 — P022 hosted recovery verified; P023 source approval pending
 
 The repaired hosted path passed in 11.20 seconds: a cited ordinary-practice preview persisted, reopening returned the same selected lesson with one total reservation, and cleanup removed the synthetic workspace. Latest application ledger: $0.078141 consumed under the unchanged $1 cap. This includes the two earlier failed hosted attempts; neither failure is hidden or counted as successful generation. Ordinary suite: 213 passed/seven gated skipped. Prior six Chromium journeys passed. Private real-course material remains local pending the explicit requested Meta-transfer approval and private account destination.
+
+## PM001 — Evaluate the ambition of runtime Meta model use
+
+**Recorded:** October 26, 2026, in the planning conversation. Exact received timestamp unavailable. PM-prefixed IDs are separate from the concurrent implementation conversation; earlier planning messages are not reconstructed.
+
+**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM001`.
+
+**Top 3 outcomes:**
+
+1. Inspected the current Spark preparation, browser collection, learner-state handlers and implementation checkpoints. Live source selection, grounded practice and one validation-guided repair exist. The inspected preparation path remains bounded to four calls and 4,000 characters per source read; browser collection navigates selected URLs, while several scenario and learner follow-up decisions remain explicitly authored/deterministic. These observations do not establish autonomous browser investigation or general adaptive diagnosis.
+2. Recommended deepening the existing change-to-next-action loop: investigate conflicting or incomplete course context, select a question or checked interactive experiment that distinguishes plausible misunderstandings, and revise the next activity when new evidence contradicts the initial interpretation. Proposed unseen-case evaluation would assess applicability, source grounding, adaptation, safe abstention, latency and cost. No such evaluation was executed in this advisory turn.
+3. Checked current official Meta model and computer-use documentation. Both Spark 1.3 and Wonder support the documented computer-use loop; this is provider capability, not a claim that Soma has implemented it. Suggested model-led read-only navigation or a targeted Wonder comparison only if an observed bottleneck justifies the work. No model calls, credential operations, product code changes or deployments were performed.
+
+**Plan deviations:** None adopted. Recommendations are proposals, not approved scope changes. Keep the approved quantitative-family boundary, source-fit requirement, existing budget controls and October 31 feature freeze. No PRD, build plan or implementation instruction was changed.
+
+**Evidence:** `src/lib/server/meta.ts`, `src/lib/server/connectors/browser.ts`, `src/lib/domain/learning.ts`; existing P022 implementation checkpoints; [Meta model catalog](https://dev.meta.ai/docs/models) and [computer-use guide](https://dev.meta.ai/docs/computer-use). Runtime checks reported under P022 were not rerun for this advisory assessment.
+
+## PM002 — Refine the content-and-context positioning
+
+**Recorded:** October 26, 2026, in the planning conversation. Exact received timestamp unavailable.
+
+**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM002`.
+
+**Top 3 outcomes:**
+
+1. Evaluated the proposed framing around the concrete preparation burden: finding current course materials, determining priorities and selecting useful practice. No new competitive research or claim about most study products was established.
+2. Drafted positioning that connects coursework, deadlines, schedule and learning progress to prepared interactive lessons and practice that update as circumstances change. Kept interactive learning visible and used Meta's Muse Spark for runtime attribution, preserving the consumer Muse workflow as origin context.
+3. Recommended replacing vague friction language and the unmeasured promise of preparing better with observable product behavior. The copy is proposed positioning, not a claim that every planned capability is already verified.
+
+**Plan deviations:** None. No scope, PRD, implementation instructions or product code changed. No runtime tests were required or executed for this copy review.
+
+## P024 — Investigate, design an interaction, and revise
+
+**Verbatim prompt:** Preserved in the canonical prompt archive.
+
+**Top 3 outcomes:**
+
+1. Adopted the requested source-investigation, diagnostic-selection and hypothesis-revision milestone inside the existing Soma surfaces. Registered references and paged source reads extend beyond the initially supplied excerpt.
+2. Implemented bounded diagnostic and experiment contracts, provisional immutable records, optional ungraded responses, and compact inspection/reconsideration controls. Runtime orchestration and release verification remain in progress.
+3. Retained original synthetic development cases, separate held-out evaluation, actual tool activity/citations/usage, account ownership and the allocation reserve. Private course transfers remain pending their separate explicit approval.
+
+**Plan deviations:** Deepens the existing PRD R2/R3/R5/R11 loop; adds a separately reserved eight-call investigation profile and at most three runs per workspace/day for response reconsideration, within the unchanged global cap and reserve. Browser computer use and Wonder comparison remain conditional stretch, not implemented claims. The resistor fixture does not establish fit for the user's actual classes.
+
+## PM003 — Adopt the content-and-context positioning
+
+**Recorded:** October 26, 2026, in the planning conversation. Exact received timestamp unavailable.
+
+**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM003`.
+
+**Top 3 outcomes:**
+
+1. Authorized the PM002 positioning for the product documents: the work before studying, course content plus surrounding context, and preparation that stays current.
+2. Updated the [PRD](PRD.md), [product brief](PRODUCT_BRIEF.md), [handoff](../CODEX_HANDOFF.md), README, scope introduction, persona introduction, demo narrative and UI copy guidance. Recorded the adopted decision in [Decisions](DECISIONS.md). Interactive lessons remain the visible payoff; Meta's Muse Spark is the runtime attribution and the consumer Muse workflow remains the origin.
+3. Verified the hook and continuity promise across seven messaging documents, exact and unique PM003 prompt archival, and unchanged hashes for eight PRD sections covering scope, functional requirements, experience requirements, system boundaries, Meta behavior/budgets, success measures, release acceptance and delivery. `git diff --check` passed on the documentation set. No application tests were run for this documentation-only update; existing concurrent implementation edits were preserved.
+
+**Plan deviations:** Positioning update only. No product scope or engineering change is authorized by this request.
+
+## P025–P026 — Private account destination and one approved preview
+
+**Verbatim answers:** P025 is explicitly redacted in the canonical archive because it is a private account identifier. P026 preserves the exact approval answer. Exact received timestamps unavailable.
+
+**Top 3 outcomes:**
+
+1. Accepted the private account destination without committing its email. Account creation confirmation remains pending; no password was requested in chat.
+2. After explicit consent for the specific source and Meta destination, one bounded live private-course preview check passed in 14.61 seconds. The original selected note and generated preview remain owner-only, ignored local files. Supporting citations/provenance and unchanged zero-call reuse passed; this is a development preview requiring human review, not an instructional correctness benchmark.
+3. No private course body, answer, email identifier, grade, credential or browser session was added to code, fixtures, logs or demo assets. The result has not yet been saved to the user account.
+
+**Plan deviations:** The previous automatic approval rejection is retained in P023 history; this new explicit approval permits the specified single preview. The source was manually selected through Codex Gmail, not collected by Soma OAuth. Real connector and scheduled collection gates remain open.
+
+## P027–P028 — Account created and explain Soma before the demo
+
+**Verbatim prompts:** Preserved in the canonical archive. Exact received timestamps unavailable.
+
+**Top 3 outcomes:**
+
+1. Accepted the account-created confirmation and began owner-checked transfer of the already generated private preview. This transfer requires no additional Meta generation. Completion pending.
+2. Began a landing entrance with an explanation of Soma and explicit create-account and quick-demo paths. The simulated workspace should begin after demo selection; signed-in accounts and deep links must retain existing behavior. Browser verification pending.
+3. Read the updated PRD positioning: course content plus deadlines, available time and recorded learning progress prepare useful interactive lessons and practice. Applying this framing to the entrance without turning planned collection capabilities into verified claims.
+
+**Plan deviations:** Adds an explanatory entry surface before the existing Ready Card. Does not replace the selected visual direction, lesson engine or account/source boundaries.
+
+## PM004 — Evaluate winning potential against the rubric
+
+**Recorded:** October 26, 2026, in a separate advisory conversation. Exact received timestamp unavailable.
+
+**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM004`, including the pasted participant guide. The guide matches the P004 copy apart from trailing whitespace; it adds no new event requirement.
+
+**Top 3 outcomes:**
+
+1. Scored the documented plan against the Stage Two rubric as advisory judgment, not a predicted ranking. Technical depth is the strongest criterion. Impact faces the crowded study-tool category, and Meta tooling use is narrower than the PRD describes because computer use and returned-work image reading are conditional in the build plan. Demo is the largest gap because the three-minute video is the primary artifact and the only artifact in the final round.
+2. Recommended raising the ceiling without new feature categories: make Spark's discriminating-diagnostic decision the central Meta moment, feed it from a real returned-work image, open the video on no-prompt autonomy from a real class source, and attach one measured preparation-time result. Also recommended moving research-grade evaluation effort (the StudyFetch comparison and multi-student delayed-attempt study) toward video production, and keeping R12 to a short beat or the judge route.
+3. Confirmed eligibility hygiene: the pre-event planning baseline `1a7d3a2` is dated 11:10 AM ET and the first code commit `87747d7` is dated 12:42 PM ET on October 26, after the kickoff and organizer start announcement. The repository is still private, and the public contribution record remains a pending release step.
+
+**Plan deviations:** None adopted. These are recommendations only. No PRD, build plan, decision, code or deployment changed, and the October 31 freeze is unchanged. The deployed Today and lesson screens were viewed read-only; no tests or model calls were run.
+
+## PM005 — Evaluate open-weight Muse for Soma
+
+**Recorded:** October 26, 2026, in the planning conversation. Exact received timestamp unavailable.
+
+**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM005`.
+
+**Top 3 outcomes:**
+
+1. Checked current official Meta documentation for Muse Spark Open, Glimmer and hosted inference. Spark Open can run through partner APIs; its full weight footprint makes self-hosting a substantial infrastructure task. Glimmer is a 30B text/image model suited to a possible local route; neither model's quality, latency nor hardware fit has been measured for Soma.
+2. Recommended a bounded comparison of hosted Spark Open with the existing Spark 1.3 path on synthetic or appropriately authorized source investigation, diagnostic selection and validated lesson preparation. Preserve source/citation, tool, evidence and budget contracts; adopt only after actual workload and provider-compatibility checks. Local Glimmer, self-hosting Spark Open and fine-tuning are deferred recommendations, not implemented changes.
+3. Confirmed from the supplied participant guide that the $10,000 Best Build on Meta Open Weight Models award accepts Muse Glimmer or Spark Open on participant hardware or partner inference and requires infrastructure verification. Eligibility and competitive benefit are conditional; no provider account, credits, deployment, model calls or private-data transfers were initiated.
+
+**Plan deviations:** None adopted. This is advice, not authorization to change the runtime, add a provider or spend credits. The current Spark-first implementation, allocation reserve and October 31 freeze remain in effect. No product code, PRD or build-plan edits and no runtime tests were performed.
+
+**Sources:** [Spark Open](https://dev.meta.ai/docs/muse-spark-open), [Glimmer](https://dev.meta.ai/docs/muse-glimmer), [Hosted inference](https://dev.meta.ai/docs/muse-spark-open/deploy), supplied [participant guide](sources/PARTICIPANT_GUIDE.txt).
+
+### October 26 — P024–P028 implementation checkpoint
+
+- P025/P027 follow-up: the approved preview used three Meta calls and passed source/provenance/unchanged-reuse checks in 14.61 seconds. The confirmed existing private account now holds one source, one lesson and its original preparation run, with owner/generation/revision checks and append-only CAS. Readback passed; previous account records were preserved. Transfer made zero new Meta calls. Identifiers, source text, generated content and administrative receipt remain excluded from this log.
+- P027/P028: `ac54eb3` introduces the updated positioning before account signup or an explicit synthetic demo. New visitors trigger only an account-status check until choosing a path. All 12 browser journeys passed in 10.2 seconds, including sign-in/deep links, mobile/reduced motion, existing learning flows and persisted experiment controls.
+- P024: `f6c8df5`, `fc09e68`, `27b5b73` and `e38ea6d` connect source investigation, immutable diagnostic hypotheses, ungraded responses, checked experiment controls and source-change jobs. The first frozen-engine unseen synthetic evaluation scored **1/4**, costing $0.10198425. Three cases failed at validation without publication; the response-reconsideration stage was not reached. Exact original rejection detail was not retained and is unavailable; the harness now persists sanitized future metrics. This is not a passed release gate.
+- A separate original development probe exposed irrelevant nullable/discriminator fields and incomplete repairs. Its first three attempts failed safely; those failures are retained. Tools now separate text and checked experiment preparation, and encode absent/present finish references as empty/singleton arrays. The application supplies fixed types and still validates every supplied ID, exact passage, authority claim, source version and response condition. It does not silently discard incompatible values. One repair and the existing call/time/spend limits remain. `997c82b` verifies malformed-field and incompatible-reference rejection.
+- The revised development probe passed a complete live text-diagnostic -> ungraded saved response -> explicit hypothesis reconsideration loop in 40.42 seconds. This reused development scenario is **not** counted as a new unseen result. A fresh independent evaluation is pending. No browser computer-use or multimodal input claim is established.
+
+### October 26 — fresh model checks and review
+
+Fresh independent v4 cases passed 2/2 across four stages (`1ef428a`): E1 4 calls/10.605s/$0.02664725, E2 5/13.005s/$0.03424200, F1 5/15.424s/$0.03785050, F2 5/13.383s/$0.04001150. E1 selected a changed supported activity; E2 retained that valid recommendation for a no-effect update. F1 prepared a text diagnostic; F2 reconsidered both hypotheses against a contrary original ungraded observation. F1/F2 each used one validation repair. The test did not require a newly generated follow-up lesson in F2; do not describe it as proof of that stronger behavior. Total $0.13875125; original 1/4 failures remain unchanged.
+
+A single live synthetic experiment development probe (`34532db`) passed: actual list -> read -> evaluate_experiment -> prepare_experiment_diagnostic -> finish, 5 calls, 19.933s, $0.04010025 settled. Exact experiment control/readout survived lesson publication and deterministic reveal; the supported response remained ungraded. One informative experiment, zero repairs: no spontaneous uninformative-to-informative live repair was observed. The uninformative-first variation is verified through application-boundary tests, not this live run. Global ledger then expected $0.537403/$1; actual final ledger verification follows.
+
+Review fixed pre-answer diagnostic rationale disclosure (`8282798`) and added actual runtime model/engine provenance to the investigation cache and record. UI review additionally identified delayed account-switch responses, expired deep-link recovery, deletion creating implicit demo state, and diagnostic source-disclosure exposure. Those UI fixes and their targeted checks are in progress; no premature pass is recorded.

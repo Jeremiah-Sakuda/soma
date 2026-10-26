@@ -1,6 +1,10 @@
 # Soma — implementation handoff
 
-Soma keeps students ready as their classes and commitments change. It connects course updates, relevant email, and selected calendar context to useful next actions. Interactive lessons and evidence-based follow-up are its deepest capability.
+**Before you can study, you have to figure out what to study.**
+
+Soma brings together your course material, upcoming deadlines, available time, and learning progress to prepare interactive lessons and practice for what matters next. As your classes and circumstances change, your preparation keeps up. Meta's Muse Spark investigates relevant course updates and adapts the next activity from recorded learning evidence.
+
+**Your coursework changes every week. Your study tools should keep up.**
 
 **Start with [CODEX_HANDOFF.md](CODEX_HANDOFF.md) and the [scope update](docs/SCOPE_UPDATE.md).** Implementation has started in this folder. The documents describe intended behavior; current implementation evidence and limitations are recorded in [Decisions](docs/DECISIONS.md). The student-hub extension should build on the existing app, not replace it.
 

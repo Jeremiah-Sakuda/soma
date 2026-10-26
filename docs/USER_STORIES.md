@@ -1,6 +1,6 @@
 # Soma personas and user stories
 
-**Implementation handoff, October 26, 2026.** The audience is students already using AI who want a useful study session ready from their changing coursework, with interactive lessons worth exploring and revisiting. These personas are hypotheses grounded in Jeremy’s workflow and earlier secondary research; they are not completed customer interviews.
+**Implementation handoff, October 26, 2026.** The audience is students already using AI who still spend time finding current material, deciding what to study, and preparing practice. Soma connects course content with deadlines, available time, relevant commitments, and learning evidence so a useful session is ready and stays current. Interactive lessons remain worth exploring and revisiting in their own right. These personas are hypotheses grounded in Jeremy’s workflow and earlier secondary research; they are not completed customer interviews.
 
 Use these stories to validate the experience and prioritize the build. The [PRD](PRD.md) owns release scope and acceptance gates; [Demo and Evaluation](DEMO_AND_EVALUATION.md) provides the measurement and demo protocol. Story acceptance is intended behavior until its implementation has been exercised.
 

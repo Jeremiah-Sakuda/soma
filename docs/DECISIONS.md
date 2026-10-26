@@ -8,7 +8,7 @@
 | --- | --- |
 | Product name | Soma is tentative but used consistently; do not spend build time on a naming project |
 | Entry | Indie Developer, Build for Your World; acceptance confirmed |
-| Positioning | Student hub keeps the next action useful as classes and commitments change; interactive learning is the deepest capability |
+| Positioning | “Before you can study, you have to figure out what to study.” Course content plus deadlines, available time, commitments and learning evidence keep interactive lessons and practice relevant as circumstances change |
 | Core loop | Change → affected commitments → supported next action → prepared activity → student interaction → adapted follow-up |
 | UI | Today combines commitments and ready activities; Courses and Study remain; no separate career or scheduling product |
 | UI direction | Oct 26: Jeremy selected the "Ready Card" direction from a separate design canvas: one hero lesson with its source reason, a top-header shell, and a cool neutral/blue palette in Manrope. It borrows that canvas's change entries and paired evidence layout. It replaces the provisional Fieldnotes look in `design-system/soma/MASTER.md` and `globals.css`; directions A–E in `design-system/soma/directions/` stay unselected. Spec: [UI Direction](UI_DIRECTION.md). Not yet implemented |
@@ -126,3 +126,27 @@ Add later entries with the motivating observation, effect on scope, verification
 - Bound provider responses, tool decisions and usage accounting. Include prior attempts with explicit assistance/exposure conditions; these records cannot silently become mastery evidence.
 - Reuse generated artifacts only for matching objective, source versions, model/engine versions and learner context. Explicitly identify the chosen saved lesson in the response. Split larger semester collections into bounded jobs rather than failing when source counts grow.
 - Two development live API cases passed; this is not the held-out generation or independent instructional review gate. The $1 development cap and $30 allocation reserve remain unchanged.
+
+### October 26 — consequential Spark investigation and adaptation
+
+- Jeremy prioritized a consequential decision that cannot be established by replaying a fixed teaching script: investigate source applicability, design a discriminating interaction, and revise the next activity after contrary evidence.
+- Keep model choices distinct from deterministic safety/scientific checks. Spark selects source reads, reference follows, hypotheses, experiment parameters and revisions. Application code enforces ownership, exact source versions, scoped authority evidence, numerical results, uncertainty and immutable learner observations.
+- Diagnostic responses are ungraded observations. Prior support, repetition and visible-model exposure cannot become independent-understanding evidence. Compact Ready Card/lesson/why surfaces expose evidence and changes, never private reasoning traces.
+- A text-only eight-call investigation reserves $0.35 with at most three daily workspace investigations, allowing an initial decision and bounded reconsideration. The standard lesson profile remains $0.20/one daily job; the $1 development application cap and $30 reserve from the actual $150 allocation remain unchanged. Unknown usage retains the actual reserved amount.
+- Registered-source investigation is not browser computer use. Multimodal returned-work interpretation, real institutional reads and model-directed browser actions require separate implementation and actual verification; no such claim follows from API documentation alone.
+
+### October 26 — preparation content and context positioning
+
+- Jeremy approved the PM002 frame and requested that it be applied to the product documents (PM003). The opening hook is “Before you can study, you have to figure out what to study.” The continuing promise is “Your coursework changes every week. Your study tools should keep up.”
+- Explain Soma through the preparation it performs: course material, upcoming deadlines, available time, and learning evidence inform interactive lessons and practice for what matters next. As classes and circumstances change, preparation stays current. Email and calendar context serve that same learning experience.
+- Attribute runtime investigation and adaptation to Meta's Muse Spark. The consumer Muse workflow remains the origin and comparison baseline. Use observable behavior instead of blanket competitor-friction claims or unmeasured claims of better learning.
+- Apply the frame to the PRD and submission pitch, product brief, handoff, README, scope introduction, persona introduction, demo narrative and UI copy guidance. Preserve the Ready Card interaction, existing three-minute sequence, R1–R12, acceptance gates, supported lesson family, budget controls and October 31 freeze.
+- This is a documentation and positioning decision. It does not expand engineering scope or establish implementation, integration or outcome evidence. Existing implementation work, including the separate investigation/adaptation milestone, continues under its recorded authorization.
+
+### October 26 — Explicit entrance and narrower model tool contracts
+
+The user requested an explanatory landing entrance with account creation and a quick synthetic demo, using the updated PRD positioning. Existing Ready Card, account isolation and deep links remain. New visitors should not receive simulated course data before choosing the demo.
+
+Live investigation failures demonstrated that schema validity does not imply argument adherence. Model-facing text and experiment preparation now have separate capabilities; irrelevant kind/null fields are supplied by the application. Finish references use bounded empty/singleton arrays and are mapped to the existing nullable domain representation before unchanged source/authority validation. Invalid or incompatible values still reject. Preserve the original 1/4 held-out result, failed development attempts and independent evaluation distinction. No acceptance gate is relaxed.
+
+The user approved one specifically selected private instructor note being sent to Meta Spark for a private preview and then confirmed account creation. That preview and original source were transferred through verified account lookup and owner/generation/revision-checked Firestore writes, without generating auth tokens, changing runtime guards or making another Meta call. Private identifiers and content remain excluded from public artifacts. This does not establish live Soma OAuth collection.

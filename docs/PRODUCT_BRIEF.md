@@ -2,19 +2,23 @@
 
 **Working name: Soma. Implementation handoff, October 26, 2026.**
 
-**Soma keeps students ready as their classes and commitments change.**
+**Before you can study, you have to figure out what to study.**
 
-It follows authorized course sources, relevant email, and selected calendar context, identifies what needs attention, and prepares useful next actions. Learning is its deepest capability: interactive lessons and targeted practice that respond to current coursework, available study time, and actual student attempts. See the [scope update](SCOPE_UPDATE.md) for the implementation boundary.
+Soma brings together your course material, upcoming deadlines, available time, and learning progress to prepare interactive lessons and practice for what matters next. As your classes and circumstances change, your preparation keeps up.
+
+Powered by Meta’s Muse Spark, Soma investigates course updates, connects them to your existing work, and adapts the next activity based on what you demonstrate you understand. Relevant email and selected calendar context help make that preparation useful; recorded attempts and assistance inform follow-up. See the [scope update](SCOPE_UPDATE.md) for the implementation boundary.
 
 **Your coursework changes every week. Your study tools should keep up.**
 
 ## The problem
 
-Students already have powerful tools for explanations, practice questions, study plans, and interactive content. The recurring work is keeping the learning activity relevant to actual classes, changing assessment scope, returned feedback, and what the student can currently do.
+Finding current material, checking what changed, choosing a priority, and preparing useful practice take work before learning begins. The same preparation may need to be revisited after a new lecture, changed assessment coverage, a competing commitment, or returned feedback. Soma's proposed advantage is keeping that preparation current with less recurring effort.
 
 Jeremy already delegates parts of that work to the consumer Muse assistant, which checks Blackboard, Gradescope, and email and uses a browser when a connector is unavailable. Notion holds tasks and Granola captures lectures. Soma extends that firsthand workflow into prepared learning experiences and persistent evidence. This observation motivates the product; broader demand remains a hypothesis.
 
 ## One cohesive experience
+
+Course content establishes what the student is learning and what the class requires. Context establishes what matters now: deadlines, available time, relevant commitments, and evidence from earlier attempts. Together they determine which activity Soma prepares and how it adapts.
 
 A new lecture makes relevant practice available. An exam update changes which activity matters next. Returned work prompts an investigation of a possible gap. The student opens a compelling lesson, changes a meaningful variable, sees the relationship, and optionally tests a prediction. That response changes the follow-up and is preserved for a later visit.
 
@@ -54,13 +58,13 @@ Test three proposed advantages:
 
 Compare with the student's existing workflow, including Muse. Run a separate comparison against the strongest accessible StudyFetch workflow; record parity and shortcomings.
 
-The broader hub also competes with general assistants and planning tools. Do not claim that combining email and calendars establishes differentiation. Test the narrower hypothesis that a nonacademic commitment changes the learning recommendation usefully, with less correction effort. Full-life management remains a longer-term direction.
+The broader hub also competes with general assistants and planning tools. Its context should make a prepared learning activity more useful. Test whether a nonacademic commitment changes the recommendation usefully, with less correction effort. Describe the concrete preparation work Soma removes and show how it stays current; avoid blanket claims about friction in other products or unmeasured claims that Soma helps students learn better. Full-life management remains a longer-term direction.
 
 The event discourages simple education chatbots. Soma must demonstrate sustained work outside a conversation and a useful persistent artifact. Do not relabel education out of the product or claim that chatbots cannot compute. Keep familiar words such as lesson and practice. Lead with the agent's job and show the lesson immediately.
 
 ## Demo opening and close
 
-Open on a ready lesson card: “Prepared after your quiz was returned,” supported by a real or clearly labeled synthetic event. Enter the lesson within five seconds and manipulate it. Then reveal why it is relevant, show actual source work, and capture a response changing the next step.
+Open on a ready lesson card: “Prepared after your quiz was returned,” supported by a real or clearly labeled synthetic event. Use “Before you can study, you have to figure out what to study” over the card and immediate lesson entry. Enter the lesson within five seconds and manipulate it. Then reveal how course content and surrounding context made it relevant, show actual source work, and capture a response changing the next step.
 
 End with the earlier supported attempt beside a fresh later attempt and the next review action. Use the actual result, help, and elapsed time. A simulated interval stays labeled; a single success is not proof of improved learning.
 

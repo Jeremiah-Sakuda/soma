@@ -283,6 +283,7 @@ The scope update's scenario controls (overlap / no overlap / tentative) live in 
 
 ## Copy rules
 
+- Product introductions use “Before you can study, you have to figure out what to study” and explain how course material, deadlines, available time, and learning progress inform prepared lessons and practice. The headline is “Your coursework changes every week. Your study tools should keep up.” Keep this in introductory copy; the Ready Card itself retains its concrete event and activity.
 - Familiar words: lesson, practice, review, course, commitment. No "missions", "insights", "mastery", streaks or readiness scores.
 - Reasons cite events: "Prepared after Quiz 3 was returned", not "Recommended for you".
 - Describe only Soma's own changes: "Study session revised", never "Interview rescheduled". Tentative stays tentative in wording.

@@ -4,9 +4,11 @@
 
 **Product documents:** [Product Brief](PRODUCT_BRIEF.md), [Personas and User Stories](USER_STORIES.md), [Technical Plan](TECHNICAL_PLAN.md), [Build Plan](BUILD_PLAN.md), and [Demo and Evaluation](DEMO_AND_EVALUATION.md). This PRD owns product scope and release gates. [Hackathon Requirements](HACKATHON_REQUIREMENTS.md) records the supplied event constraints. [Decisions](DECISIONS.md) separates settled choices from unverified dependencies. The older PDF and online companion plans may lag this handoff.
 
-**Agent promise:** Soma keeps students ready as their classes and commitments change.
+**Product hook:** Before you can study, you have to figure out what to study.
 
-**Central product thesis:** Soma connects changing coursework, relevant email, calendar constraints, and learning evidence to a useful next action. Interactive lessons and targeted practice are its deepest capability. It prepares those activities and adapts what follows as the student's situation and understanding change.
+**Central product thesis:** Soma brings together your course material, upcoming deadlines, available time, and learning progress to prepare interactive lessons and practice for what matters next. As your classes and circumstances change, your preparation keeps up.
+
+**Meta model story:** Powered by Meta’s Muse Spark, Soma investigates course updates, connects them to the student's existing work, and adapts the next activity based on what the student demonstrates they understand. Learning progress is grounded in recorded responses and assistance; exploration alone does not establish understanding.
 
 **Student-hub boundary:** [Scope Update](SCOPE_UPDATE.md) specifies the extension. P0 adds source-linked commitments, one selected calendar read/import route, and inspectable consequences for the next study session. Career and personal context initially means explicit deadlines and confirmed events. It does not add an application pipeline, interview coach, email client, calendar optimizer, external writeback, or delegation. R12 defines acceptance. Continue the existing application and preserve all learning gates.
 
@@ -18,9 +20,11 @@ Interactive lessons are the primary reason to use Soma: clear visual explanation
 
 ## Problem and product hypothesis
 
+Before a study session can begin, students may need to find the latest material, check what changed, decide what deserves attention, and prepare useful practice for the time they have. That work recurs when assessment coverage, commitments, or learning needs change. Soma's proposed value is keeping preparation current across those changes.
+
 Jeremy already uses the consumer Muse assistant to check Blackboard, Gradescope, and email periodically and surface important updates. That assistant uses the browser where a connector is unavailable, including Blackboard. Notion holds tasks and Granola captures lectures. He still has to connect those updates to studying: find the relevant material, decide what deserves attention, prepare practice, and revise it as assessment scope and his own understanding change.
 
-The product hypothesis is that students will value interactive lessons they can explore, request, and revisit, especially when those lessons already reflect their classes and learning needs. An agent keeps the experience current by collecting relevant material, selecting or preparing a lesson, and adapting subsequent practice from evidence. The pilot must establish that the lessons are worth using, preparation saves net effort, and later independent attempts can be distinguished from supported exploration.
+The product hypothesis is that connecting course content with the context around it makes useful studying easier to start and sustain. Content establishes what the course teaches and requires; context includes deadlines, selected commitments, available study time, and recorded learning evidence. Soma uses both to prepare interactive lessons students can explore, request, and revisit, then keeps subsequent practice relevant as the inputs change. The pilot must establish that the lessons are worth using, preparation saves net effort, and later independent attempts can be distinguished from supported exploration.
 
 Four hypotheses guide the pilot:
 
@@ -52,7 +56,7 @@ Soma applies the Asili thesis that people should remain capable and exercise inf
 
 The initial user is a college student already using AI alongside course materials, deadlines, announcements, feedback, and personal notes spread across several tools. Their adoption question is what becomes easier or more useful by adding Soma to their current workflow. Prioritize two proposed personas: the student repeatedly assembling context across tools, and the student whose limited study windows make preparation costly. These can be the same person. Exploring an unfamiliar concept and interpreting returned work are important situations for both. Validate whether students choose a prepared lesson, request one, or revisit it, alongside the preparation effort saved; see [Personas and User Stories](USER_STORIES.md).
 
-**Primary job:** Help me see what needs attention across my classes and commitments, and have a useful next activity ready when I can act.
+**Primary job:** Help me know what to study next and have a useful activity ready that reflects my classes, commitments, available time, and what I have demonstrated so far.
 
 **Deepest supported action:** Prepare relevant interactive lessons and follow-up practice from my course material, available study window, and learning evidence; let me request or revisit a concept whenever I choose.
 
@@ -64,7 +68,7 @@ A new lecture can become a lesson ready to explore; a coverage change can reprio
 
 The product hierarchy is explicit: Today connects commitments to useful next actions; interactive lessons provide the deepest immediate value; course context and learning history shape what follows. A feature must improve a supported next-action decision or its prepared activity. Keep explanations, questions, and review within the learning flow; defer separate career/creation studios, broad planning tools, and graph or mastery dashboards.
 
-The agent’s continuing job leads the pitch; the interactive lesson is the immediate payoff. Course systems remain authoritative for coursework. Soma stores derived academic context and its own learning records. Keep familiar labels such as lesson, practice, and course. A no-prompt workflow, persistent artifacts, and real adaptation must establish the distinction from a simple education chatbot; vocabulary changes alone do not.
+Lead the pitch with the student's preparation work: finding current material, deciding what matters, and getting useful practice ready. Show the interactive lesson immediately, then reveal how course content and surrounding context keep it relevant. Course systems remain authoritative for coursework. Soma stores derived academic context and its own learning records. Keep familiar labels such as lesson, practice, and course. A no-prompt workflow, persistent artifacts, and real adaptation must establish the distinction from a simple education chatbot; vocabulary changes alone do not. Describe observable preparation and adaptation rather than claiming that most study products create friction or that Soma has already improved learning outcomes.
 
 | Horizon | Product outcome | Evidence |
 | --- | --- | --- |
@@ -435,7 +439,9 @@ Release the strongest complete workflow with an explicit source and lab support 
 
 **Acceptance is confirmed; the product is not yet verified.** This handoff was assembled October 26. The participant guide lists kickoff on October 26 at noon ET and the building period as October 27–November 4. The schedule below uses the latter as its planning baseline without asserting what an organizer clarification may permit on kickoff day. Submission is due November 4 at 9 PM America/New_York; target complete assets November 3. Record what was built during the eligible window and distinguish earlier planning, public dependencies, and original implementation.
 
-**Project pitch:** Soma keeps students ready as their classes and commitments change. It follows authorized coursework, relevant email, and selected calendar context, determines what a change affects, and prepares a useful next action. Its deepest capability is learning: interactive lessons and targeted practice that reflect current material, available time, and the student's actual responses. We’re building Soma around a workflow I already use with Muse: following my classes across disconnected systems. Muse Spark extends that workflow from noticing changes to investigating their consequences and preparing useful activities, while preserving assisted and independent performance separately. This fits Build for Your World through a firsthand preparation problem. Source and capability claims in the final submission must match the verified build.
+**Project pitch:** Before you can study, you have to figure out what to study. Soma brings together your course material, upcoming deadlines, available time, and learning progress to prepare interactive lessons and practice for what matters next. As your classes and circumstances change, your preparation keeps up. Powered by Meta’s Muse Spark, Soma investigates course updates, connects them to your existing work, and adapts the next activity based on what you demonstrate you understand. We’re building Soma around a workflow I already use with the consumer Muse assistant: following my classes across Blackboard, Gradescope, and email. Soma extends that workflow into prepared learning experiences and persistent evidence, keeping assisted and independent performance separate. This fits Build for Your World through a firsthand preparation problem. Your coursework changes every week. Your study tools should keep up.
+
+Source and capability claims in the final submission must match the verified build. The pitch describes the intended product; it does not establish measured preparation savings or improved learning outcomes.
 
 Describe implementation status and original contributions truthfully in the submission. Do not present this planned beta, unmeasured targets, public dependencies, or development fixtures as completed product evidence.
 
@@ -470,6 +476,8 @@ Begin Jeremy’s real sessions by Day 4 if ready, and seek two additional willin
 ## Demo and hackathon fit
 
 Build a three-minute story around one course and a coherent learning objective. In the first five seconds, show a ready lesson card with the event that prompted it; enter the interactive lesson immediately. Show an applicable course update’s actual consequence, a Spark decision responding to the student, and inspectable later performance. Keep the full-semester product available in the judge build. Protect the final 30 seconds for the evidence comparison. Label prepared artifacts and recordings; do not make the viewer wait through generation.
+
+Use the opening line “Before you can study, you have to figure out what to study” over the ready card and immediate lesson entry. The existing sequence should show what Soma has already prepared, which course or commitment context made it relevant, and how the student's response changes what comes next. Keep the promise visible in the same story; do not add an introductory slide or a separate hub tour. Close with “Your coursework changes every week. Your study tools should keep up.” alongside the actual learning evidence.
 
 1. **Ready because something changed (0:00–0:35).** Show the prepared card and its source-event reason for at most five seconds, then enter the lesson. Change a meaningful variable and show the effect in the mechanism and readout. Sources and assumptions remain inspectable; exploration is available before assessment. Label prepared or cached content. No opening tour of a raw run log or chat transcript.
 

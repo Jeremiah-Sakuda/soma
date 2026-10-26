@@ -17,11 +17,11 @@ October 26, 2026. This is a build-status record, not a declaration that the beta
 | Route | Actual mode | Remaining proof |
 | --- | --- | --- |
 | Judge semester | Original synthetic fixtures | No claim of institution access |
-| Selected course and email text | Manual import plus implemented scoped Gmail OAuth collector | User consent, first selected live read and source fit remain unverified |
+| Selected course and email text | Manual import and one approved private-course Spark preview saved to the owner account; scoped Gmail OAuth collector implemented | First live Soma OAuth read and independent source/instructional fit remain unverified |
 | Selected calendar | Structured JSON import plus implemented read-only Google OAuth collector | User consent and first selected live read remain unverified |
-| Blackboard / Gradescope / Piazza | Persistent Browserbase connector implemented, not live verified | Browserbase keys, user login, selected URLs and read/reconnect experiment |
+| Blackboard / Gradescope / Piazza | Persistent connector implemented; local Browserbase key/CLI verified, institution access not verified | Key-only connector compatibility, deployment configuration, user login, selected URLs and read/reconnect experiment |
 | Preparation jobs | Durable Firestore queue, explicit owner-triggered worker | Scheduled Trigger.dev/browser collection awaits keys and access |
-| Spark | Live API + bounded lesson preparation verified | Full generation, source-fit, instructional-fit and follow-up evaluation |
+| Spark | Live bounded preparation and scoped investigation/reconsideration exercised on labeled cases | Independent scientific/source/instructional fit, broader unseen reliability and genuine delayed learning evidence |
 
 ## Release work still open
 
@@ -62,3 +62,17 @@ Final local checks for this expansion: 209 ordinary tests passed (five gated liv
 Hosted verification caught a difference from the successful local live checks: two hosted ordinary-practice requests reached source read/proposal validation, failed closed, and returned prepared fallback. Neither produced a generated lesson; both disposable workspaces were deleted. This failure is retained explicitly. The engine now permits one bounded validator-guided repair without weakening source or schema checks. A real Firestore budget-denial regression also passed (22.91 seconds, zero Meta calls): blocked jobs remain queued with zero provider attempts and retain ownership/lease guards. Hosted retesting remains pending the next deployment.
 
 The repaired hosted path passed in 11.20 seconds: one synthetic-source ordinary-practice preview persisted, its selected lesson reopened without a second inference reservation, and the disposable workspace was deleted. The two earlier failed hosted checks remain recorded above. The application ledger now reads $0.078141/$1 including all reported hosted attempts; the $30 allocation reserve is unchanged. Final ordinary suite: 213 passed, seven gated cases skipped; the six browser journeys previously passed. The selected private-course-source check is implemented but did not execute because automatic approval review requires explicit consent to send that note to Meta. Actual account destination and private preview approval are pending; no real course body was sent to Meta by these checks.
+
+## Investigative/adaptive milestone and explicit entrance (October 26)
+
+Spark can list/read authorized same-course sources, page past an excerpt, follow registered references, retain conflicting authority, propose competing explanations, choose a typed diagnostic and explicitly reconsider hypotheses against an actual saved response. Application code validates exact read passages, declared assessment scope/supersession, ownership and all read/selected-lesson source versions before CAS publication. No arbitrary network/browser action or generated executable code is exposed.
+
+Text and experiment tools have distinct argument contracts. Optional resistor experiments evaluate the proposed control/readout numerically; persisted lesson metadata binds the same tested setup to its actual interactive reveal. Ungraded diagnostic responses preserve original timestamps, assistance, exposure, source/model versions and revisions, without automatically creating a diagnosis or authored follow-up. Runtime model and engine versions are recorded. Ordinary-course recommendations can appear on the Ready Card without preferring the synthetic resistor fixture. Source-change imports/connectors enqueue the investigation path; job execution remains explicit-worker.
+
+The first frozen-engine unseen synthetic run scored 1/4 and cost $0.10198425. Three cases stopped at validation with no publication; original rejection detail was not retained. Three separate development attempts then failed while identifying nullable/discriminator and repair-contract issues. Those failures are retained. The revised development loop passed in 40.42 seconds, costing $0.071943 across initial/reconsideration stages; this is a reused development case, not a held-out score.
+
+A new independent v4 synthetic evaluation passed 2/2 cases across four stages in 52.89 seconds, at $0.13875125. Two stages required one permitted validation repair. Original cases were not rerun and no acceptance gate was relaxed. This small evaluation does not establish general teaching quality, real source access, multimodal interpretation or robust no-prompt collection. Detailed stage metrics and limitations are in the build log.
+
+One user-approved private instructor note produced a cited ordinary-practice preview in 14.61 seconds (three Meta calls); unchanged reopening used no further call. After confirmed account creation, the source, lesson and original run were saved with Firebase account lookup, ownership/generation/revision checks and append-only CAS. Readback passed and all previous records were preserved; transfer made no additional model call. Source provenance is manual selection through Codex Gmail, not live Soma OAuth collection. Private material and identifying data remain excluded from the repository and demo.
+
+The new entry page uses the updated PRD positioning and offers account creation/sign-in or an explicit synthetic demo. New visitors receive no simulated course workspace before choosing the demo. Signed-in account and lesson deep links remain supported. Final integrated checks and deployment follow below after review fixes.

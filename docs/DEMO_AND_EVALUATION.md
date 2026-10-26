@@ -4,11 +4,15 @@
 
 ## The story to prove
 
+**Before you can study, you have to figure out what to study.** Soma connects course material, upcoming deadlines, available time, and learning progress to interactive lessons and practice for what matters next. The demo must show preparation staying current as those inputs change.
+
 The student-hub scope adds one cross-domain consequence through PRD R12; see [Scope Update](SCOPE_UPDATE.md). A confirmed commitment can change the available study window and therefore the prepared recommendation. Keep the lesson, real source decisions, and learning evidence in the same three-minute story. Do not add a career-module tour.
 
 Soma was doing useful work before the student asked a question. A relevant course event caused an activity to be prepared or updated; the student can immediately explore it; a real answer changes what follows.
 
 Keep the lesson visually prominent. The agent's job explains the lesson's presence. Learning evidence explains its next step. There is no need to rename lessons into unfamiliar terms or open on an architecture diagram.
+
+Use the opening line over the ready card and immediate lesson entry, without adding an introduction segment. Carry three points through the existing storyboard: current course content makes the activity relevant; surrounding context makes it useful now; the student's response changes what comes next. Attribute the runtime decisions to Meta's Muse Spark and the origin workflow to the consumer Muse assistant. Close with “Your coursework changes every week. Your study tools should keep up.” alongside the actual evidence. Keep claims about preparation savings and learning outcomes within the measured results.
 
 ## Three-minute storyboard
 

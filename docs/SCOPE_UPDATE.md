@@ -4,9 +4,13 @@
 
 ## Product decision
 
-**Soma keeps students ready as their classes and commitments change.**
+**Before you can study, you have to figure out what to study.**
 
-Soma follows authorized course material, relevant email, and selected calendar context. It identifies what changed, explains the consequences for the student's next steps, and prepares a useful activity. Learning is the deepest action it can perform: interactive lessons, targeted practice, and evidence-based follow-up. Career and personal commitments initially supply context and source-linked next actions.
+Soma brings together your course material, upcoming deadlines, available time, and learning progress to prepare interactive lessons and practice for what matters next. As your classes and circumstances change, your preparation keeps up.
+
+The hub supplies context around the course content: relevant email, selected calendar events, and source-linked commitments can affect what to prepare and when it is useful. Learning remains the deepest action: interactive lessons, targeted practice, and evidence-based follow-up. Career and personal commitments initially supply context and source-linked next actions. This framing preserves the extension's existing implementation boundary.
+
+**Your coursework changes every week. Your study tools should keep up.**
 
 The continuing loop is:
 

@@ -87,3 +87,9 @@ Jeremy selected source investigation, diagnostic interaction design, and evidenc
 4. Execute development variations and separate held-out release cases, recording citations, actual tools, failures, latency and reconciled spend. Synthetic harness success is not the live-model or scientific gate.
 
 Read-only model-directed browser navigation and a targeted Wonder comparison are conditional on demonstrated access/capability failures. No recording of scripted navigation will be called model computer use. Keep the October 31 freeze, source-fit review and November 4 deadline.
+
+## October 26 — production hardening before private connection verification
+
+P031 prioritizes closing architecture gaps identified in P029: durable worker/scheduling, atomic post-answer adaptation, source authority metadata/consequences, bounded retry/recovery and account/source races. Verify these with real Firestore and synthetic provider boundaries, then run the full local/remote suites and hosted checks. Retain original one-preview consent; do not automatically reprocess legacy private sources.
+
+Once the user connects sources, verify actual scope/access, refresh unchanged/changed, authentication expiry and recovery in the deployed app. Use that evidence to confirm course/topic fit and tune retrieval/lesson usefulness. This does not waive the Day 3 decision, independent review, held-out release evaluation, freeze or submission date. [Production readiness](PRODUCTION_READINESS.md) records infrastructure limits and outstanding acceptance.

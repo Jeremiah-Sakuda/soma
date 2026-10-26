@@ -1,5 +1,15 @@
 # Agentic implementation audit
 
+## Current P031 hardening checkpoint
+
+The table below the divider is the **historical post-cdfc87c audit**. P031 now adds durable worker dispatch/recovery, atomically queued automatic diagnostic adaptation, source-authority registration, owner-confirmed academic fact publication and safe timing-only lesson rebasing. Real Firestore worker/adaptation tests have passed with synthetic external boundaries; complete final verification/deployment is recorded in [production readiness](PRODUCTION_READINESS.md). These changes supersede the historical statements that no worker or automatic queue exists.
+
+The stronger limitations remain: external browser collection is selected-URL text reading, not model computer use; returned-work images/PDFs are unsupported; arbitrary-prose academic extraction remains needs-evidence; ordinary MC follow-ups/session composition are authored; comprehensive concepts/prerequisites and independent scientific/instructional/learning gates remain open. Small live synthetic results are in [agentic evaluation](AGENTIC_EVALUATION.md), including the later successful feedback-driven zero-voltage experiment repair.
+
+---
+
+## Historical audit snapshot
+
 Read-only implementation audit, October 26, 2026, after runtime `cdfc87c`. This audit made no provider calls and did not rerun tests. Prior results below refer to recorded checks in [BUILD_LOG.md](BUILD_LOG.md#L585). The subsequent P029 live scenarios are reported separately in [AGENTIC_EVALUATION.md](AGENTIC_EVALUATION.md). This file describes gaps against the existing PRD; it does not change scope or acceptance.
 
 **Soma has a working bounded Spark investigation engine, but the complete autonomous PRD loop is not implemented yet.** Model-selected source reads, diagnostics, experiment proposals, hypothesis revisions and activity selection are real runtime capabilities. Scheduled monitoring, automatic worker invocation, fully adaptive follow-up, returned-work images and general academic fact reconciliation remain incomplete.

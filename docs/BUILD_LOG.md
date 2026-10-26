@@ -624,3 +624,57 @@ GitHub CI run `40401252182` passed for deployed runtime `cdfc87c`, including the
 3. Preserved the $1 cap and $30 allocation reserve. Total new estimated usage $0.12046800; ledger $0.67864375, with $0.32135625 headroom below the next $0.35 investigation reservation. The new no-effect update and zero-voltage proposal cases were budget-skipped with zero calls; neither is a pass. Focused checks185 passed; full ordinary suite288 passed/20 opt-in skipped; typecheck passed. Detailed evidence, commands and limitations: [AGENTIC_EVALUATION.md](AGENTIC_EVALUATION.md).
 
 **Plan deviations:** None. This turn added tests/documentation and sharpened the completeness claim. Model instructions, product runtime, deployed app, cap and source permissions remained unchanged. Full autonomy and the larger unseen/independent-review gates are still open.
+
+## P030 — Increase the application development cap by one dollar
+
+**Verbatim prompt:** Preserved in the canonical archive. Exact received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Authorized a total application cap of $2, increasing the prior $1 cap by exactly $1. Local ignored configuration updated; existing usage is retained, not reset. Production configuration and activation pending. The $150 allocation, $30 reserve, per-run reservation, call/time/repair and daily limits remain unchanged.
+2. Preparing to execute only the two previously budget-skipped scenarios: no-effect source update and uninformative zero-voltage proposal. A prepared synthetic baseline will make the no-effect case independently runnable without replaying or fabricating an earlier model result.
+3. Actual outcomes, reconciled usage, remaining headroom and hosted activation verification will be appended after execution. No private course source is authorized or required for these checks.
+
+**Plan deviations:** User-authorized cap increase from $1 to $2. No model prompt, validation, source permission, product scope or release gate changes.
+
+## PM006 — Clarify knowledge graph status
+
+**Recorded:** October 26, 2026, in the planning conversation. Exact received timestamp unavailable.
+
+**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM006`.
+
+**Top 3 outcomes:**
+
+1. Confirmed that the PRD and technical plan retain the evidence graph and bounded Spark interpretation authority. Firestore stores explicit versioned record references; a separate graph database is not required, and a graph canvas is deferred.
+2. Inspected current types, account record storage and investigation tools. Sources, lesson versions, attempts/assistance, interpretations, diagnostic hypotheses, revisions and selected activities have explicit links. A comprehensive concept/prerequisite map across the semester is not implemented by these records and must not be claimed as complete.
+3. Read the P029 live evaluation: a synthetic contrary diagnostic response led to explicit Spark hypothesis revisions and selection of a different existing activity, with original evidence preserved through in-memory publication and JSON reload. This is recorded prior evidence, not a new test; automatic post-answer invocation and full graph capabilities remain incomplete.
+
+**Plan deviations:** None. Clarified retained scope versus current implementation; no PRD, product code, graph dependency, deployment or model call changed.
+
+**Evidence:** [Technical plan](TECHNICAL_PLAN.md), [agentic status](AGENTIC_STATUS.md), [agentic evaluation](AGENTIC_EVALUATION.md), `src/lib/domain/types.ts`, `src/lib/server/investigator.ts`, `src/lib/server/account-store.ts`.
+
+### October 26 — P030 additional live checks
+
+The two previously skipped synthetic scenarios now passed once under the authorized $2 cap (`c0784aa`, `c465258`). No-effect preserved the independently prepared recommendation: 5 calls, 13.503s, $0.03722500. The zero-voltage case actually evaluated an uninformative experiment, revised it to a nonzero-voltage informative experiment, and published a deterministically checked diagnostic: 7 calls, 21.791s, $0.05897575; one duplicate-citation validation repair. Total additional estimated usage $0.09620075; reconciled global ledger $0.77484450 of $2. No private source was used. Vercel configuration is updated to $2; activation awaits deployment. Historical $1 budget-skipped results remain historical, superseded by these executions.
+
+## P031 — Production architecture and sufficient tests before real connections
+
+**Verbatim prompt:** Preserved in the canonical archive. Exact received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Implementing a durable authenticated background worker with bounded account traversal, owner/generation checks, retries, source refresh and persisted job execution while the browser is closed. Actual hosting/scheduler verification remains pending. Google Cloud billing is disabled; Trigger credentials are absent. A GitHub schedule fallback is being prepared, with its availability limits explicit.
+2. Implementing automatic queued post-answer adaptation and production source-authority registration/academic consequence reconciliation. Each retains immutable evidence and current-source validation; these changes are in progress, not release-verified.
+3. Expanding tests around managed persistence, job recovery, account isolation, source/attempt races and automatic user journeys. Deployment, new full-suite results and remaining release limitations will be appended after execution.
+
+**Plan deviations:** This user-authorized hardening checkpoint closes gaps identified in P029. No new quantitative family, provider, calendar writeback or external message sending is added. Actual source access, private content review and release gates cannot be pre-certified before connection.
+
+### October 26 — P031 production candidate and executed evidence
+
+1. Shipped worker dispatch/recovery, source authority/fact reconciliation and automatic adaptation (`056c29a`, `4de82ff`, `cacc0da`, `cb97d51`, `7dfbba9`, `614e5f6`). Review fixed refresh-version loops, intent/model-version deduplication, Gmail query rotation, transient/exhausted retries, atomic attempt/outbox saves, and stale UI result rollback (`aed2062`). Original evidence remains immutable. General academic prose extraction, images/PDFs and model computer use remain outside implemented support.
+2. Fixed a semester-scale persistence blocker: stable exact record ranks preserve existing rows instead of rewriting every lesson on prepend (`a745a27`). Real Firestore proof covered 1,000 saved lessons and fresh-process reload. Explicit processing consent now gates unattended source, derived lesson/hypothesis and historical-attempt model input, including exact source versions and old-receipt retries (`94cbb36`, `8ff0b47`). Academic batches reject superseded authority and excluded-topic eligibility in either order. Typecheck/build, 327 ordinary tests and 19 browser journeys passed; separate real Firestore worker 47.72s, adaptation 43.08s and ordering 38.1s checks passed with synthetic external boundaries and cleanup.
+3. Runtime `8ff0b47` is deployed READY (`dpl_Ast47Du1rWhB4XX5mfSjMhdQchaX`) at the production alias, activating the authorized $2 cap and configured Browserbase key. A new hosted synthetic automatic follow-up passed in 21.15s: response-only dispatch, linked actual Spark hypothesis revisions, immutable answer, persistence and cleanup. It cost $0.03165825; settled application ledger $0.80650275/$2. The initial diagnostic was authored/prepared, not a new Spark result; changed/generated next activity was not required. Calls/decision console detail was suppressed and is unavailable, not reconstructed. Future probe writes body-free metrics to ignored local storage.
+
+**Activation limitation:** missing/wrong worker Bearer 401 and forbidden account selector 400 passed on the deployed endpoint. Automatic approval review rejected an authenticated general worker invocation because it could discover real connected data and send selected sources to Meta. It did not execute; no indirect scheduler activation was attempted. An explicit approval question is pending. GitHub fallback remains disabled; Trigger credentials remain absent. This limit is distinct from the successful synthetic hosted and managed-worker tests.
+
+**Plan deviations:** Hardened implementation defects discovered during review; no extra model family/provider or external write behavior added. Actual institutional/Google read/reconnect verification, independent content/scientific review, broader held-out and learner gates remain open. These cannot honestly be called cosmetic fine-tuning. Production operations and recovery: [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md). Remote CI result is appended after completion.

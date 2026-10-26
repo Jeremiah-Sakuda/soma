@@ -40,3 +40,14 @@ These checks establish valid actions and preserved evidence in these cases. They
 - `npm test`: **288 passed, 20 opt-in live cases skipped**. This default run deliberately does not consume provider credits; separately enabled results are listed above.
 
 Tests are opt-in and may spend credits if enabled. They enforce the existing application cap and source/ownership/call limits. Body-free metrics are kept in ignored owner-only `.local/agentic-adaptation-live-metrics.jsonl` and `.local/agentic-scenarios-live.jsonl`; no credentials, private documents or provider reasoning are committed.
+
+## P030 — previously skipped cases executed with the authorized $2 total cap
+
+The earlier $1 budget skips remain historical. Subsequent commits `c0784aa`/`c465258` executed only the skipped cases, with an independently authored prepared baseline for no-effect (no invented earlier model history).
+
+| Case | Actual result | Calls / time / estimated cost |
+| --- | --- | --- |
+| No-effect source update | Kept practice-revised; no new lesson or replacement | 5 / 13.503s / $0.03722500 |
+| Uninformative zero-voltage proposal | First evaluated 0V experiment was uninformative; Spark revised to nonzero voltage, re-evaluated and published a checked informative diagnostic | 7 / 21.791s / $0.05897575 |
+
+The experiment case used one duplicate-source-citation validation repair. This is actual feedback-driven experiment repair, beyond avoiding the bad setup initially. Both reservations settled; additional usage $0.09620075, reconciled global application ledger $0.77484450 of $2. No private material was used. This remains a small synthetic development evaluation, not the broader release denominator or proof of live course fit.

@@ -2,6 +2,8 @@
 
 October 26, 2026. This is a build-status record, not a declaration that the beta release gates have passed.
 
+Latest P031 hardening: durable page-closed worker/recovery, atomic diagnostic adaptation, declared source authority/facts and safe teaching reuse are implemented. Real Firestore synthetic integration checks passed; final checks/deployment and limitations are maintained in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md). Earlier chronological results below are historical, including the prior $1 cap and missing-worker audit. P030 authorized a $2 total cap and the two skipped model cases subsequently passed; [AGENTIC_EVALUATION.md](AGENTIC_EVALUATION.md) has the exact results.
+
 ## Working and exercised
 
 - Ready Card Today, Courses and Study use the existing lesson engine, checked numerical calculation code and persistent evidence. Optional prediction, reveal, fresh question, revisit, assistance, review and source-version history remain distinct.
@@ -90,3 +92,7 @@ The complete autonomous PRD loop is not implemented. A code-backed [status matri
 New live Spark simulation: two scenario families passed across three model runs (15 calls, $0.12046800 estimated usage, one validation repair). Spark prepared a diagnostic for ambiguous returned work, reconsidered an actual ungraded contrary response and selected a different existing activity, and followed a registered source reference to change a conflicting-source recommendation. Exact citations, immutable original evidence, recommendation changes and in-memory JSON reload passed. Zero-call/zero-reservation cache reuse also passed. Managed persistence and full background execution were not exercised by these new cases.
 
 Two additional paid cases were skipped before inference under the unchanged $1 development cap: a new no-effect update and an uninformative zero-voltage proposal. Ledger $0.67864375 leaves $0.32135625 headroom, below the next $0.35 investigation reservation. Further investigations are currently preflight-blocked by this cap. The $150 allocation/$30 reserve setting remains unchanged; this is not a provider balance claim. Full report: [AGENTIC_EVALUATION.md](AGENTIC_EVALUATION.md). Typecheck and 288 ordinary tests passed; 20 opt-in cases skipped in the default run, with separately enabled results reported above.
+
+## P031 deployed hardening checkpoint
+
+Runtime `8ff0b47` is READY on the production alias. Typecheck/build, 327 default checks and 19 browser journeys passed; separate real Firestore worker/adaptation/1,000-record ordering checks passed with disposable synthetic records and scripted external boundaries. One actual hosted automatic Spark follow-up passed on an authored synthetic diagnostic, costing $0.03165825; application total $0.80650275/$2. Worker authentication/selector rejection passed. General production worker invocation was blocked by automatic approval review; recurring activation awaits explicit user approval, with Trigger credentials still absent. Full evidence, recovery and remaining acceptance boundaries: [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).

@@ -403,3 +403,17 @@ blockquote { margin: 12px 0; padding: 0; color: var(--ink-2); font-size: 14px; l
 .prediction-result .primary-button { margin-top:16px; }
 @media(max-width:640px) { .context-line,.session-builder .section-heading { flex-direction:column; align-items:flex-start; } .session-items { width:100%; } .lesson-stage>.section-heading { flex-direction:column; align-items:flex-start; } .commitment-row { grid-template-columns:20px minmax(0,1fr); } }
 .overline { text-decoration:none; }
+.account-section { border-top:1px solid var(--border); margin-top:24px; padding-top:24px; }
+.account-section>p { margin:10px 0 16px; }
+.account-section>.segmented-control { margin-top:18px; }
+.import-panel,.delete-records { margin:20px 0; border-top:1px solid var(--border); padding-top:14px; }
+.json-example { overflow:auto; font-size:12px; padding:15px; background:var(--surface-muted); border-radius:10px; }
+.evidence-comparison { margin-top:24px; border-top:1px solid var(--border); padding-top:20px; }
+.evidence-comparison>.evidence-pair { gap:14px; }
+.evidence-card.later { border:1px solid var(--accent); }
+.preparation-jobs { margin-bottom:24px; }
+.preparation-job { display:flex; justify-content:space-between; align-items:center; gap:16px; padding-top:18px; margin-top:18px; border-top:1px solid var(--border); }
+@media(max-width:640px) { .preparation-job { flex-direction:column; align-items:flex-start; } }
+.focus-window-form { border-top:1px solid var(--border); padding-top:20px; margin-top:24px; }
+.focus-window-form>p { margin-top:8px; }
+@media(max-width:640px) { .stack>.context-line { order:0; } .stack>.ready-card { order:1; } .stack>.changes-card { order:2; } .stack>.session-builder { order:3; } .stack>.today-context-grid { order:4; } }

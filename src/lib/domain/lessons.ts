@@ -62,12 +62,20 @@ export function preparedLessons(sources: Source[]): Lesson[] {
   return entries.map(lesson => ({ ...lesson, modelVersion: lesson.kind === 'circuit' ? MODEL_VERSION : PREPARED_MODEL, sourceVersions: sourceVersions(sources, lesson.sourceIds) }));
 }
 
+export class AuthoredFollowupUnavailableError extends Error {
+  constructor() { super('No different authored question is available for this lesson. Request another source-grounded question.'); }
+}
+
 /** Authored deterministic follow-up. This is not live model generation or an unseen evaluation. */
 export function followupLesson(parent: Lesson, ordinal: number, assisted: boolean): Lesson {
+  // Course labels alone do not establish fit for an authored fixture. Live ordinary practice needs a new grounded model proposal.
+  if (parent.kind === 'practice' && (parent.mode !== 'prepared' || parent.modelVersion !== PREPARED_MODEL || !['probability', 'writing', 'programming', 'design'].includes(parent.courseId) || !parent.sourceIds.includes(`source-${parent.courseId}`))) throw new AuthoredFollowupUnavailableError();
   const next = structuredClone(parent);
   next.id = `${parent.id.split('-followup-')[0]}-followup-${ordinal}`;
   next.version = 1;
   next.mode = 'prepared';
+  next.description = parent.kind === 'circuit' ? 'Authored parameterized practice for the ideal DC resistor model. Independent source-fit and scientific review remain pending.' : 'Authored development practice from the original synthetic course fixture.';
+  next.validation = { status: 'development-preview', modelVersion: next.modelVersion };
   next.title = assisted ? 'Try a fresh application' : 'Take the idea further';
   next.reason = assisted ? 'Prior support is preserved. This different question offers another application; external help is unknown.' : 'A new response updates the working hypothesis. Try a different application, or keep exploring.';
   if (parent.kind === 'circuit') {
@@ -102,6 +110,8 @@ export function followupLesson(parent: Lesson, ordinal: number, assisted: boolea
     const item = cases[parent.courseId];
     if (item) [next.question, next.options, next.answerIndex, next.explanation] = item;
   }
+  const normalize = (value: string) => value.normalize('NFKC').replace(/\s+/g, ' ').trim().toLowerCase();
+  if (normalize(next.question) === normalize(parent.question)) throw new AuthoredFollowupUnavailableError();
   return next;
 }
 

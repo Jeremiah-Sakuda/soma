@@ -52,6 +52,10 @@ function script(steps: Step[]) {
   vi.stubGlobal('fetch', fetcher);
   return fetcher;
 }
+function finishToolArgs(value: SourceDecision, selectedLessonId: unknown = null) {
+  const { assessmentId, conflicts, ...rest } = value;
+  return { ...rest, assessmentIds: assessmentId === null ? [] : [assessmentId], selectedLessonIds: selectedLessonId === null ? [] : [selectedLessonId], conflicts: conflicts.map(({ preferredSourceId, ...conflict }) => ({ ...conflict, preferredSourceIds: preferredSourceId === null ? [] : [preferredSourceId] })) };
+}
 function textToolArgs(plan: { kind: string; experimentRunId: unknown; [key: string]: unknown }) {
   const { kind: _kind, experimentRunId: _experimentRunId, ...args } = plan;
   return args;
@@ -71,7 +75,7 @@ function lastToolOutput(body: RequestBody): Record<string, unknown> {
 describe('integrated bounded Spark investigation', () => {
   it('follows a registered source, validates explicit authority, publishes a recommendation, and reuses it without another call', async () => {
     const state = fixture(), original = structuredClone(state);
-    const fetcher = script([readUpdate, followSyllabus, { name: 'finish_investigation', args: { ...decision(state), selectedLessonId: 'parallel-nodes' } }]);
+    const fetcher = script([readUpdate, followSyllabus, { name: 'finish_investigation', args: finishToolArgs(decision(state), 'parallel-nodes') }]);
     const result = await investigateWithSpark(state, request);
     expect(fetcher).toHaveBeenCalledTimes(3);
     expect([...result.reads.keys()]).toEqual(['update', 'syllabus']);
@@ -93,7 +97,7 @@ describe('integrated bounded Spark investigation', () => {
 
   it('records a no-effect decision without replacing the session or changing academic facts', async () => {
     const state = fixture();
-    script([readUpdate, { name: 'finish_investigation', args: { ...decision(state, 'keep-current', false), selectedLessonId: null } }]);
+    script([readUpdate, { name: 'finish_investigation', args: finishToolArgs(decision(state, 'keep-current', false)) }]);
     const result = await investigateWithSpark(state, request);
     const next = publishInvestigation(state, result);
     expect(result.selectedLessonId).toBeUndefined();
@@ -106,7 +110,7 @@ describe('integrated bounded Spark investigation', () => {
 
   it('refuses publication when a followed but uncited source becomes stale after investigation', async () => {
     const state = fixture();
-    script([readUpdate, followSyllabus, { name: 'finish_investigation', args: { ...decision(state, 'keep-current', false), selectedLessonId: null } }]);
+    script([readUpdate, followSyllabus, { name: 'finish_investigation', args: finishToolArgs(decision(state, 'keep-current', false)) }]);
     const result = await investigateWithSpark(state, request);
     expect(result.record.sourceRefs.map(ref => ref.sourceId)).toEqual(['update']);
     state.sources.find(source => source.id === 'syllabus')!.status = 'stale';
@@ -147,7 +151,7 @@ describe('integrated bounded Spark investigation', () => {
     };
     const fetcher = script([readUpdate, { name: 'prepare_diagnostic', args: textToolArgs(plan) }, body => {
       const prepared = lastToolOutput(body); expect(prepared.accepted).toBe(true);
-      return { name: 'finish_investigation', args: { ...decision(state, 'keep-current', false), decision: 'revise-session', selectedLessonId: prepared.lessonId } };
+      return { name: 'finish_investigation', args: finishToolArgs({ ...decision(state, 'keep-current', false), decision: 'revise-session' }, prepared.lessonId) };
     }]);
     const result = await investigateWithSpark(state, request);
     expect(fetcher).toHaveBeenCalledTimes(3);
@@ -162,7 +166,7 @@ describe('integrated bounded Spark investigation', () => {
     const revisionFetcher = script([readUpdate,
       { name: 'revise_interpretation', args: { hypothesisId: 'series-transfer', status: 'supported', attemptId: attempt.id, reason: 'The original response is consistent with this provisional prediction, not mastery.' } },
       { name: 'revise_interpretation', args: { hypothesisId: 'constant-total', status: 'weakened', attemptId: attempt.id, reason: 'The saved option differs from this explanation’s predicted option.' } },
-      { name: 'finish_investigation', args: { ...decision(answered, 'keep-current', false), selectedLessonId: null } },
+      { name: 'finish_investigation', args: finishToolArgs(decision(answered, 'keep-current', false)) },
     ]);
     const revised = await investigateWithSpark(answered, { ...request, previousInvestigationId: result.record.id, attemptId: attempt.id });
     const final = publishInvestigation(answered, revised);
@@ -207,7 +211,7 @@ it('revises an uninformative experiment before persisting the exact informative 
       expect(experiment).toMatchObject({ informative: true, observedAfter: 4 });
       return { name: 'prepare_experiment_diagnostic', args: experimentToolArgs(plan, experiment.id) };
     },
-    body => ({ name: 'finish_investigation', args: { ...decision(state, 'keep-current', false), decision: 'revise-session', selectedLessonId: lastToolOutput(body).lessonId } }),
+    body => ({ name: 'finish_investigation', args: finishToolArgs({ ...decision(state, 'keep-current', false), decision: 'revise-session' }, lastToolOutput(body).lessonId) }),
   ]);
   const result = await investigateWithSpark(state, request);
   expect(fetcher).toHaveBeenCalledTimes(5);
@@ -231,7 +235,7 @@ it('retains the entire investigation reservation when the provider returns no tr
 
 it('rejects reversed hypothesis judgments but accepts a conservative unresolved revision', async () => {
   const state = fixture(), plan = originalTextPlan(state);
-  script([readUpdate, { name: 'prepare_diagnostic', args: textToolArgs(plan) }, body => ({ name: 'finish_investigation', args: { ...decision(state, 'keep-current', false), decision: 'revise-session', selectedLessonId: lastToolOutput(body).lessonId } })]);
+  script([readUpdate, { name: 'prepare_diagnostic', args: textToolArgs(plan) }, body => ({ name: 'finish_investigation', args: finishToolArgs({ ...decision(state, 'keep-current', false), decision: 'revise-session' }, lastToolOutput(body).lessonId) })]);
   const first = await investigateWithSpark(state, request);
   const answered = applyAction(publishInvestigation(state, first), { type: 'attempt', lessonId: first.lesson!.id, optionIndex: 0 }, at);
   const attempt = answered.attempts.at(-1)!;
@@ -244,7 +248,7 @@ it('rejects reversed hypothesis judgments but accepts a conservative unresolved 
   expect(answered.investigations).toHaveLength(1);
   const conservative = script([readUpdate,
     { name: 'revise_interpretation', args: { hypothesisId: 'voltage-rule', status: 'unresolved', attemptId: attempt.id, reason: 'A single response is insufficient to settle the learner explanation.' } },
-    { name: 'finish_investigation', args: { ...decision(answered, 'keep-current', false), selectedLessonId: null } },
+    { name: 'finish_investigation', args: finishToolArgs(decision(answered, 'keep-current', false)) },
   ]);
   const result = await investigateWithSpark(answered, revisionRequest);
   expect(conservative).toHaveBeenCalledTimes(3);
@@ -263,7 +267,7 @@ it('reads a later bounded source page before accepting its exact citation', asyn
     },
     body => {
       expect(lastToolOutput(body).body).toBe(ending);
-      return { name: 'finish_investigation', args: { ...decision(state, 'keep-current', false), sourceRefs: [{ sourceId: 'update', version: 1, quote: ending }], selectedLessonId: null } };
+      return { name: 'finish_investigation', args: finishToolArgs({ ...decision(state, 'keep-current', false), sourceRefs: [{ sourceId: 'update', version: 1, quote: ending }] }) };
     },
   ]);
   const result = await investigateWithSpark(state, request);
@@ -287,7 +291,7 @@ it.each([
     },
     body => {
       const prepared = lastToolOutput(body); expect(prepared.accepted).toBe(true);
-      return { name: 'finish_investigation', args: { ...decision(state, 'keep-current', false), decision: 'revise-session', selectedLessonId: prepared.lessonId } };
+      return { name: 'finish_investigation', args: finishToolArgs({ ...decision(state, 'keep-current', false), decision: 'revise-session' }, prepared.lessonId) };
     },
   ]);
   const result = await investigateWithSpark(state, request);
@@ -323,11 +327,50 @@ it.each(['wrong-kind', 'null-run'] as const)('rejects malformed experiment tool 
     },
     body => {
       const prepared = lastToolOutput(body); expect(prepared.accepted).toBe(true);
-      return { name: 'finish_investigation', args: { ...decision(state, 'keep-current', false), decision: 'revise-session', selectedLessonId: prepared.lessonId } };
+      return { name: 'finish_investigation', args: finishToolArgs({ ...decision(state, 'keep-current', false), decision: 'revise-session' }, prepared.lessonId) };
     },
   ]);
   const result = await investigateWithSpark(state, request);
   expect(result.record.diagnosticPlan).toMatchObject({ kind: 'circuit-experiment', experimentRunId: experimentId });
   expect(result.lesson?.diagnosticExperiment?.input).toEqual(input);
   expect(result.record.toolActivity?.filter(item => item.outcome.includes('Rejected'))).toHaveLength(1);
+});
+
+it.each([
+  'legacy-assessment', 'legacy-selection', 'legacy-conflict', 'course-assessment',
+  'multiple-assessments', 'multiple-selections', 'multiple-preferences', 'null-array', 'unresolved-preference',
+] as const)('rejects incompatible or nullable legacy finish arguments: %s', async failure => {
+  const state = fixture(), valid = finishToolArgs(decision(state, 'keep-current'));
+  let invalid: Record<string, unknown> = { ...valid };
+  if (failure === 'legacy-assessment') invalid.assessmentId = null;
+  if (failure === 'legacy-selection') invalid.selectedLessonId = null;
+  if (failure === 'course-assessment') invalid.assessmentIds = ['alpha'];
+  if (failure === 'multiple-assessments') invalid.assessmentIds = ['alpha', 'beta'];
+  if (failure === 'multiple-selections') invalid.selectedLessonIds = ['parallel-nodes', 'series-contrast'];
+  if (failure === 'null-array') invalid.selectedLessonIds = null;
+  if (failure === 'legacy-conflict' || failure === 'multiple-preferences' || failure === 'unresolved-preference') {
+    invalid = { ...invalid, decision: 'needs-evidence', conflicts: [{ sourceIds: ['syllabus', 'update'], reason: 'These original synthetic source statements remain unresolved.', resolution: 'unresolved',
+      preferredSourceIds: failure === 'multiple-preferences' ? ['update', 'syllabus'] : failure === 'unresolved-preference' ? ['update'] : [],
+      ...(failure === 'legacy-conflict' ? { preferredSourceId: null } : {}),
+    }] };
+  }
+  const fetcher = script([readUpdate, followSyllabus,
+    { name: 'finish_investigation', args: invalid },
+    body => {
+      expect(lastToolOutput(body).accepted).toBe(false);
+      return { name: 'finish_investigation', args: valid };
+    },
+  ]);
+  const result = await investigateWithSpark(state, request);
+  expect(fetcher).toHaveBeenCalledTimes(4);
+  expect(result.record).toMatchObject({ decision: 'keep-current', assessmentId: null, conflicts: [] });
+  expect(result.selectedLessonId).toBeUndefined();
+  expect(result.record.toolActivity?.filter(item => item.outcome.includes('Rejected'))).toHaveLength(1);
+  expect(publishInvestigation(state, result).recommendedLessonId).toBe(state.recommendedLessonId);
+  const sent = JSON.parse(fetcher.mock.calls[0][1]!.body as string) as { tools: { name: string; parameters: { properties: Record<string, unknown> } }[] };
+  const schema = sent.tools.find(tool => tool.name === 'finish_investigation')!.parameters;
+  expect(schema.properties).not.toHaveProperty('assessmentId');
+  expect(schema.properties).not.toHaveProperty('selectedLessonId');
+  expect(schema.properties.assessmentIds).toMatchObject({ type: 'array', maxItems: 1 });
+  expect(schema.properties.selectedLessonIds).toMatchObject({ type: 'array', maxItems: 1 });
 });

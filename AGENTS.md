@@ -33,6 +33,14 @@ Bound calls, tokens, retries, wall time, and spend; unchanged-source checks shou
 
 ## Working and verification
 
+### Build log maintenance
+
+- Maintain `docs/BUILD_LOG.md` and its canonical verbatim prompt archive, `docs/build-log/prompts.json`, throughout the build. Read the latest entries when resuming work.
+- Capture every human prompt and clarification answer in this coding conversation verbatim, preserving spelling, whitespace and line breaks. Assign a stable prompt ID and retain the actual timestamp when available; do not invent timestamps or reconstruct missing text. Exclude platform-injected context and inter-agent messages.
+- For each prompt, record the top three material outcomes and any deviations from `docs/BUILD_PLAN.md`, the PRD or other documented decisions. Mark pending, blocked or unverified outcomes honestly; do not fabricate three successes. Link relevant commits, artifacts and executed checks where available.
+- Add prompts as they arrive and update outcomes before ending each turn and at meaningful checkpoints. Preserve original prompt text; append dated corrections or follow-up evidence. Label retrospective entries and cross-reference superseding prompts. Keep architectural/scope decisions in `docs/DECISIONS.md` as well.
+- Credential and private-data exclusions still apply: never commit secret values, session material, private course documents or learner records from a prompt. Use an explicit redaction marker and explain the exception to verbatim logging; do not make another plaintext secret archive.
+
 Complete a thin end-to-end slice early. Use original synthetic scenarios for development and clearly label them. Prove real source access separately. Time-box failed access experiments and use the documented fallback.
 
 Run meaningful checks for numerical behavior, state changes, account isolation, source recovery, and user journeys. Report executed results; do not write tests that simply restate a mocked implementation. Keep held-out release cases outside prompts and tuning.

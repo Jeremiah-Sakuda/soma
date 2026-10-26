@@ -1,0 +1,213 @@
+# Soma build log
+
+**Established October 26, 2026.** Chronological user direction, three material outcomes per prompt, and explicit deviations from the documented plan. Dates below use America/New_York. This first edition is a retrospective backfill from this coding conversation; outcomes describe the state at backfill, not necessarily work completed immediately after each message.
+
+## How to read and maintain this log
+
+- [Prompt archive](build-log/prompts.json) is the canonical verbatim record, preserving original spelling, whitespace, line breaks and timestamps. UI clarification answers retain their question as context; platform wrappers, injected environment/AGENTS context and inter-agent messages are not user prompts.
+- Every new human prompt or clarification answer gets a stable ID, exact text, three outcome slots, and a deviation note. Update outcomes as work completes; mark pending or unverified items explicitly rather than inventing a third success.
+- Keep the original prompt immutable. Add later corrections as dated updates and cross-reference the prompt that changed direction. Update before ending each turn and at meaningful checkpoints.
+- Never publish secrets, credentials, private course content or learner records. If a future prompt contains them, retain only a clearly marked redacted record in version control and note that this is an explicit exception to verbatim public logging. Do not create a second plaintext secret archive.
+- BUILD_PLAN owns sequence, PRD owns acceptance, and DECISIONS owns decisions. This log tracks what prompted work and what actually resulted; it does not replace those documents.
+- Coverage: P001–P011 are all recoverable human inputs in this coding conversation at creation. Prompts from other chats are not reconstructed; supplied scope documents are referenced as documents. No missing timestamps, tests or outcomes are fabricated.
+
+## P001 — Project orientation
+
+**Received:** 2026-10-26 11:03:45 EDT · **Recorded:** retrospective, October 26, 2026
+
+**Verbatim prompt:**
+
+```text
+Alright, this is a new project, there are a few docs for you to familiarize yourself with 
+```
+
+**Top 3 outcomes (state at backfill):**
+
+1. The existing Soma handoff and product documents establish the implementation baseline; no replacement project was created.
+2. The original planning snapshot is preserved in Git (`1a7d3a2`).
+3. Current scope authority is identified as PRD, build sequence as BUILD_PLAN, and later decisions as DECISIONS; historical plans are supporting context.
+
+**Plan deviations:** None established for this orientation request. These are retrospective observations of the retained baseline, not a reconstructed claim of unseen tool activity.
+
+## P002 — UI UX Pro Max availability
+
+**Received:** 2026-10-26 11:39:40 EDT · **Recorded:** retrospective, October 26, 2026
+
+**Verbatim prompt:**
+
+```text
+Do you have the UI UX pro max skill? 
+```
+
+**Top 3 outcomes (state at backfill):**
+
+1. UI UX Pro Max is available locally at `/Users/jerem/.codex/skills/ui-ux-pro-max/SKILL.md`.
+2. The existing design system is retained at `design-system/soma/MASTER.md`.
+3. The skill is explicitly applied to the three proposed visual directions under P010; a final visual direction has not been selected.
+
+**Plan deviations:** No product-scope change. Availability is verified at backfill time; no earlier installation action is inferred.
+
+## P003 — PM mandate, credentials and delivery process
+
+**Received:** 2026-10-26 12:28:38 EDT · **Recorded:** retrospective, October 26, 2026
+
+**Verbatim prompt:**
+
+```text
+Alright. You are the PM  for this hackathon. Your directive is to use subagents as needed to fully implement the solution, in charge of initializing a github repo, setting up tests, and committing very frequemtly to keep track of progress, and then handling any merge conflicts. Let's start by me giving you whatever API keys you need in an env file 
+```
+
+**Top 3 outcomes (state at backfill):**
+
+1. Ignored, owner-only local environment setup and safe placeholder documentation were prepared (`24ef86e`).
+2. Domain, product UI, persistence and credential research work were delegated; root integrates changes and checks ownership boundaries.
+3. A private GitHub repository (`Jeremiah-Sakuda/soma`) and local checkpoints exist, including `87747d7` and `7fb4e46`; public publication and remote push are not established by this entry.
+
+**Plan deviations:** The initial restricted-network GitHub authentication failure was later disproved by a network-enabled check. Public repository visibility is still a release requirement. No merge-conflict resolution is claimed where no conflict was observed.
+
+## P004 — Participant guide supplied in clarification answer
+
+**Received:** 2026-10-26 12:30:47 EDT · **Recorded:** retrospective, October 26, 2026
+
+**Clarification question (context, not user wording):** The supplied guide lists October 26 kickoff but October 27 as the start of building. Have organizers confirmed that product implementation today is eligible? I can finish credential and repository preparation while this is unresolved.
+
+**Verbatim prompt:** Full 13,329-character answer in [prompt archive](build-log/prompts.json), entry `P004`. The long pasted guide is not duplicated here.
+
+**Top 3 outcomes (state at backfill):**
+
+1. The complete supplied guide is retained verbatim in the prompt archive, including its kickoff and building-period distinction.
+2. Meta incorporation, public repository, original event work and the November 4 submission requirements inform the project constraints.
+3. The timing uncertainty was resolved by the later organizer announcement in P005, not by rewriting this guide.
+
+**Plan deviations:** Preparation initially stayed within the existing timing baseline. P005 explicitly supersedes that timing uncertainty. The pasted guide is user-supplied evidence, not an independent verification of the website.
+
+## P005 — Organizer announcement authorizes implementation
+
+**Received:** 2026-10-26 12:33:07 EDT · **Recorded:** retrospective, October 26, 2026
+
+**Verbatim prompt:**
+
+```text
+They just announced: **Hacking has officially started!** Event details can be found [here](https://cerebralvalley.ai/e/meta-ai-developer-hackathon/details "here
+
+(https://cerebralvalley.ai/e/meta-ai-developer-hackathon/details)") and ask all your questions in the Discord.
+Cerebral Valley so I think we're good to s tart
+```
+
+**Top 3 outcomes (state at backfill):**
+
+1. The user-supplied organizer start announcement is recorded in DECISIONS as authorization to begin on October 26.
+2. The pinned TypeScript/Next.js scaffold and Firebase substitution checkpoint were created (`87747d7`).
+3. The versioned learning engine and isolated session foundation were checkpointed (`7fb4e46`); the October 31 freeze and November 4 deadline remain.
+
+**Plan deviations:** Implementation begins October 26 rather than the guide’s October 27 building-period baseline, based on the organizer clarification supplied by the user. See DECISIONS, “organizer start announcement and Firestore substitution.”
+
+## P006 — Firestore substitution and Meta API probe
+
+**Received:** 2026-10-26 12:37:37 EDT · **Recorded:** retrospective, October 26, 2026
+
+**Verbatim prompt:**
+
+```text
+I have exceeded my free supabase projects, can we use google firestore? Also meta API should be there test it 
+```
+
+**Top 3 outcomes (state at backfill):**
+
+1. Firestore/Firebase replaces provisional Supabase because the user exhausted free Supabase projects; versioned evidence references and server ownership checks remain.
+2. Two bounded Meta probes returned HTTP 200: first incomplete at its output cap, second completed with the expected response (15 input + 49 output tokens, 975 ms); 335 tokens combined.
+3. A local SQLite fallback supports explicitly synthetic development only; Firestore-mode server persistence and isolation checks are implemented, but actual cloud read/write verification remains pending.
+
+**Plan deviations:** User-authorized persistence change from relational Supabase/Postgres to Firestore. SQLite is temporary synthetic infrastructure, not production private-data storage. Successful API probes are not a lesson-generation release pass.
+
+## P007 — Actual Meta credit allocation
+
+**Received:** 2026-10-26 12:48:40 EDT · **Recorded:** retrospective, October 26, 2026
+
+**Clarification question (context, not user wording):** What Meta API credit balance is actually available in Billing? I’ll use that amount to enforce the 20% reserve before enabling automatic inference. The key test passed, but it does not confirm the credit balance.
+
+**Verbatim prompt:**
+
+```text
+150 free credits they gave
+```
+
+**Top 3 outcomes (state at backfill):**
+
+1. The user reports $150 in free Meta credits; this is a user-confirmed allocation, not an independently queried Billing balance.
+2. The 20% reserve is $30, leaving an absolute allocation-based ceiling of $120.
+3. Current local application configuration is more restrictive: $1 spend cap with bounded calls and transactional reservations; it does not authorize spending the full $120 immediately.
+
+**Plan deviations:** No reserve-policy deviation. The lower application cap is an intentional development limit. No remaining provider balance is inferred from token counts.
+
+## P008 — Firebase provisioning through gcloud
+
+**Received:** 2026-10-26 12:54:03 EDT · **Recorded:** retrospective, October 26, 2026
+
+**Verbatim prompt:**
+
+```text
+is it possible for you to create the firebase application using the gcloud cli and get the credentials to fill in? 
+```
+
+**Top 3 outcomes (state at backfill):**
+
+1. Created Firebase-enabled Google Cloud project `soma-meta-jerem-2026` and registered its Soma Web application; public client configuration was written directly to ignored local env.
+2. Created a free-tier native default Firestore database in `us-east1` and a project-scoped runtime service account.
+3. A runtime credential file was created outside the repository. Application wiring, actual cloud connectivity checks and explicit rules deployment remain pending at this pause.
+
+**Plan deviations:** Provisioning uses gcloud authentication plus Firebase Management REST calls because Firebase CLI has no login. No paid billing upgrade is recorded. Resource creation does not establish deployed application connectivity.
+
+## P009 — Vercel deployment target
+
+**Received:** 2026-10-26 12:55:51 EDT · **Recorded:** retrospective, October 26, 2026
+
+**Verbatim prompt:**
+
+```text
+Also, we'll deploy on vercel 
+```
+
+**Top 3 outcomes (state at backfill):**
+
+1. Vercel is the selected hosting destination.
+2. Vercel CLI authentication and the accessible account/team were checked successfully.
+3. Project linking, encrypted environment configuration and deployment remain pending; no deployed URL is claimed.
+
+**Plan deviations:** Hosting is now explicitly Vercel; credentials must use a server environment mechanism rather than a developer-machine credential path. Deployment work is paused for P010’s design selection.
+
+## P010 — Build log and visual-direction review
+
+**Received:** 2026-10-26 13:05:24 EDT · **Recorded:** retrospective, October 26, 2026
+
+**Verbatim prompt:**
+
+```text
+Actually before we continue. 1) Establish a build log, with instructions to update it in AGENTS.md. The build log should capture all prompts I give verbatim, as well as the top 3 outcomes that it had, and any deviations from documented plan. Fill it retroactively with the first few prompts And 2) have the product design agent generate a few visual diractions, so i can pick one. Use the UI UX pro max skill 
+```
+
+**Top 3 outcomes (state at backfill):**
+
+1. Established this build log and the exact-text prompt archive; backfilled all 11 human prompts/answers available in this coding conversation, with original timestamps.
+2. Added mandatory prompt/outcome/deviation maintenance instructions to AGENTS.md, including honest pending status and secret exclusions.
+3. Product design agent is creating three distinct responsive concepts using UI UX Pro Max and the updated scope; previews and validation are pending.
+
+**Plan deviations:** User-directed pause in implementation/deployment for traceability and design review. Concepts are proposals; existing app design and master design system remain unchanged until selection.
+
+## P011 — Updated scope and handoff supplied
+
+**Received:** 2026-10-26 13:05:27 EDT · **Recorded:** retrospective, October 26, 2026
+
+**Verbatim prompt:**
+
+```text
+I have also provided a scope update and updated the handoff doc
+```
+
+**Top 3 outcomes (state at backfill):**
+
+1. Read updated CODEX_HANDOFF.md and docs/SCOPE_UPDATE.md; the extension is commitment context feeding the existing learning engine.
+2. Design concepts use the same confirmed interview, 45-to-20-minute focus-window consequence and reusable resistor lesson so visual choices compare the same product behavior.
+3. Preserved the user’s in-flight documentation edits. New R12 behavior remains a requirement to implement and verify, not a feature completed by this documentation review.
+
+**Plan deviations:** Compared with the earlier course-only loop, R12 adds source-linked commitments/consequences and at most one selected calendar read/import route. It defers extra adapters and integrations, preserves the freeze, and excludes external writeback or a career suite. See SCOPE_UPDATE and PRD R12.

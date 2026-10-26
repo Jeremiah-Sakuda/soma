@@ -255,7 +255,7 @@ export async function runPreparationJob(account: VerifiedAccount, id: string): P
     const selectedLessonId = outcome.intent === 'prepare-lesson' ? outcome.result.lesson.id : outcome.result.selectedLessonId;
     const publishedLessonId = outcome.intent === 'prepare-lesson' ? (outcome.result.run.status === 'unchanged' ? undefined : outcome.result.lesson.id) : outcome.result.lesson?.id;
     await audit.append({ actor: 'application', kind: 'publication', summary: 'The current workspace revision and job lease were checked. The preparation outcome was committed to managed storage.', visibility: 'public' });
-    await audit.finish({ ...(outcome.intent === 'investigate-change' && outcome.result.protectUnpublishedActivity ? { protectUnpublishedActivity: true } : {}), status: outcome.result.run.status === 'unchanged' ? 'unchanged' : 'published', ...(outcome.result.run.status === 'unchanged' ? { mode: 'prepared' } : {}), ...(selectedLessonId ? { selectedLessonId } : {}), ...(publishedLessonId ? { publishedLessonId } : {}) });
+    await audit.finish({ committedRevision: published.revision, ...(outcome.intent === 'investigate-change' && outcome.result.protectUnpublishedActivity ? { protectUnpublishedActivity: true } : {}), status: outcome.result.run.status === 'unchanged' ? 'unchanged' : 'published', ...(outcome.result.run.status === 'unchanged' ? { mode: 'prepared' } : {}), ...(selectedLessonId ? { selectedLessonId } : {}), ...(publishedLessonId ? { publishedLessonId } : {}) });
     return published;
   } catch (error) {
     if (publicationCommitted) throw error; // The saved workspace and ready job must not be relabeled as unpublished.

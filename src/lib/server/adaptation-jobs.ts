@@ -174,7 +174,7 @@ export async function runAdaptationJob(account: VerifiedAccount, id: string): Pr
     });
     publicationCommitted = true;
     await audit.append({ actor: 'application', kind: 'publication', summary: 'Committed the follow-up after rechecking the original response, current source versions, workspace revision and adaptation lease. The saved response remains unchanged.', visibility: 'public' });
-    await audit.finish({ ...(result.protectUnpublishedActivity ? { protectUnpublishedActivity: true } : {}), status: result.reused ? 'unchanged' : 'published', ...(result.reused ? { mode: 'prepared' } : {}), ...(result.selectedLessonId ? { selectedLessonId: result.selectedLessonId } : {}), ...(result.lesson ? { publishedLessonId: result.lesson.id } : {}) });
+    await audit.finish({ committedRevision: published.revision, ...(result.protectUnpublishedActivity ? { protectUnpublishedActivity: true } : {}), status: result.reused ? 'unchanged' : 'published', ...(result.reused ? { mode: 'prepared' } : {}), ...(result.selectedLessonId ? { selectedLessonId: result.selectedLessonId } : {}), ...(result.lesson ? { publishedLessonId: result.lesson.id } : {}) });
     return published;
   } catch (error) {
     if (publicationCommitted) throw error; // A journal outage cannot undo an already committed follow-up.

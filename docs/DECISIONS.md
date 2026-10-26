@@ -98,3 +98,16 @@ Add later entries with the motivating observation, effect on scope, verification
 - Created and linked Vercel project `jeremiah-sakudas-projects/soma` to the existing GitHub repository. Production env is configured; a successful application deployment and end-to-end production verification are still pending.
 - Actual Meta allocation is user-confirmed $150. Reserve $30, with the more restrictive $1 development application cap still active. Live lesson preparation needs its own verification; earlier API probes do not establish the generation gate.
 - Jeremy will use his own source accounts and add Browserbase/Trigger.dev keys to local env. Exact LMS URL and selected course/email scope remain needed for live collection. Imports remain explicitly labeled while access is pending.
+
+### October 26 — integrated Ready Card and live-provider evidence
+
+- Ready Card UI checkpoint `9cd89b6` passed type checking and four Playwright journeys. Domain checkpoint `7bd3fde` adds R12 consequences, bounded sessions, corrections and preserved prediction/fresh-question evidence; 82 domain/schema checks passed.
+- A real two-account Firebase test passed sign-in/session verification, record isolation, reconnection, CAS conflict, deletion/recreation and cleanup. These synthetic users are not human pilots.
+- Two development live Spark preparations ran over synthetic sources: the first failed safely before publication, the second passed with source reads and deterministic validation in about 10 seconds. This is not the unseen generation evaluation. Exact supporting passages are retained for inspection.
+- Firestore application ledger read $0.028642 consumed under the $1 development cap. The confirmed $150 allocation retains its $30 reserve. This ledger is not a query of the provider Billing balance and does not include unrelated provider activity.
+
+### October 26 — production milestone
+
+- Deployed Ready Card at https://soma-woad-beta.vercel.app. Anonymous persistence/isolation/CSRF/deletion smoke and real private-account HTTP sign-in/import/job/deletion checks passed. Browser verification opened the live lesson.
+- Scoped transitive override `jwks-rsa → jose 5.10.0` resolves the observed Vercel CommonJS/ESM startup failure. Application tests and production authentication pass with the fix.
+- Live source connectors and automatic scheduling remain pending the user’s Browserbase/Trigger.dev configuration and exact source scope. Current preparation jobs persist and recover but require an explicit worker invocation. No scheduled-collection claim is made.

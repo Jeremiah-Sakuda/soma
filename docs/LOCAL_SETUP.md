@@ -46,3 +46,27 @@ Meta's guide requires participant-managed billing and credit claiming. Verify th
 - [Browserbase quickstart](https://docs.browserbase.com/welcome/quickstarts/playwright)
 
 These are configuration references, not evidence that the project's accounts, credits, model access, or integrations work. Pin and exercise the actual SDK contracts during implementation.
+
+## Verified application setup (October 26)
+
+The created Firebase project is `soma-meta-jerem-2026`. Local Firestore write/read/delete and two real Firebase Auth test-user sessions have passed. Email/password is enabled. The runtime credential is outside the repository; `.env.local` points to it. The Vercel production environment uses `FIREBASE_SERVICE_ACCOUNT_JSON` as an encrypted server secret instead of a local file path. Never prefix it with `NEXT_PUBLIC_`.
+
+Verified commands from the repository root:
+
+```sh
+npm ci
+npm run typecheck
+npm test
+npm run build
+npm run dev
+npm run test:e2e
+npm run check:firestore
+```
+
+`npm run dev` serves the app on loopback port 3000. Browser tests start their own synthetic-only development server on 3100; stop another development server before running them. The live account/provider tests are opt-in and are skipped in ordinary CI. They use disposable synthetic records and actual provider credentials; run them only with the documented flags in their source.
+
+The anonymous demo uses original synthetic course material and an expiring isolated workspace. Sign in through settings to use an empty private workspace, then import selected course text, selected email text or calendar JSON. Imports are manual, not live course collection. No institutional password is collected by Soma.
+
+The Meta allocation is user-confirmed $150, with a $30 reserve and a more restrictive $1 development application cap. One daily preparation job per workspace, four calls per job and transactional cost reservations apply. Development circuit previews do not establish independent scientific review or real-course source fit.
+
+Vercel project `jeremiah-sakudas-projects/soma` is linked to GitHub. Deployment uses the committed `vercel.json`; private environment files, source documents, screenshots and prompt logs are excluded from its upload by `.vercelignore`. GitHub CI runs type checking, unit tests, the production build and the browser journeys.

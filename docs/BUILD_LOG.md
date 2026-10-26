@@ -252,7 +252,7 @@ Implement the Ready Card spec in docs/UI_DIRECTION.md, not Fieldnotes..  COntinu
 
 1. Ready Card in UI_DIRECTION.md is selected; Fieldnotes and A–E remain unselected explorations.
 2. Resumed UI, domain and account/import implementation in parallel using the existing codebase.
-3. Firebase/Vercel completion and integrated verification are in progress.
+3. Firebase/Vercel completion is verified: production is live at https://soma-woad-beta.vercel.app. Ready Card, account/import interfaces, R12 consequences and persistent preparation jobs are implemented; executed checks and remaining release gates are in IMPLEMENTATION_STATUS.md.
 
 **Plan deviations:** User ends the design-comparison pause. UI_DIRECTION supersedes the provisional visual master; update the master without changing PRD/R12 acceptance.
 
@@ -291,3 +291,29 @@ I’ll add them to .env.local
 3. Live source verification remains pending; the bounded import path proceeds meanwhile.
 
 **Plan deviations:** No new scope change. Provider access is pending rather than claimed complete.
+
+## P016 — Continue implementation
+
+**Received:** 2026-10-26T13:46:47.306000-04:00
+
+**Verbatim prompt:**
+
+```text
+continue 
+```
+
+**Top 3 outcomes:**
+
+1. Resumed all three implementation agents after the interruption; preserved their in-flight changes.
+2. Ready Card browser journeys, R12 domain/schema checks, real Firebase two-account checks and bounded live Spark preparation have executed; evidence is recorded in IMPLEMENTATION_STATUS.md.
+3. Account imports and durable preparation jobs are implemented. Production deployment and anonymous HTTP persistence/isolation checks passed; private account HTTP verification also passed (secure session, persisted/deduplicated import, queued preparation, cross-origin rejection and deletion).
+
+**Plan deviations:** No new scope. Scheduled external collection remains pending provider keys and selected institution access; imported sources stay labeled.
+
+### October 26 — deployed Ready Card milestone
+
+Production: https://soma-woad-beta.vercel.app. Integrated typecheck and 123 unit checks passed; five browser journeys passed. Live backend Firebase and Spark checks are separate opt-in tests, not included in that unit count. The first deployment exposed a Firebase transitive ESM import failure; the scoped jose5 override fixed it. A deployment-monitor network failure and a timed-out repeat backend check are retained as failures; Vercel later confirmed READY and production smoke checks passed. External live collection, scheduled invocation, human review and pilots remain open.
+
+### October 26 — production verification complete
+
+The deployed Ready Card was opened in the browser and its lesson screen verified. Production private-account HTTP check passed; all disposable users/records from that check and the interrupted backend run were cleaned up. The current build log preserves 16 human inputs. Live institutional source collection, scheduled invocation, independent scientific review and human pilots remain explicit next dependencies; this deployed milestone does not declare the full hackathon release complete.

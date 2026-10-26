@@ -253,6 +253,12 @@
       "received_at": null,
       "kind": "message",
       "prompt": "Great, now I want the AI to be thoroughly auditable. To be able to explain its reasoning as it goes and the motivation behind key decisions. Is that feasible?"
+    },
+    {
+      "id": "P034",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Great implement that. And then give me the remaining work I need to do"
     }
   ]
 }

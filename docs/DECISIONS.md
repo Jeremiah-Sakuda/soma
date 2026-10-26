@@ -166,3 +166,7 @@ Runtime `8ff0b47` deployed READY with the authorized $2 total cap. The response-
 ## October 26 — P032 selected-source background processing approved
 
 The user answered “Enable selected-source processing,” explicitly authorizing the production worker verification and recurring read-only refresh/Meta preparation for sources selected in Soma, within the existing $2 total cap. The prior activation hold is superseded; selected-source consent, owner/generation checks, leases/retries and all budget limits remain unchanged. A direct production tick returned HTTP200/idle after scanning one account. The GitHub 15-minute fallback is enabled; first workflow verification is recorded in the build log. Trigger.dev is not deployed. No permission for external writes, unselected content or a cap increase is inferred.
+
+## October 26 — P034 progressive decision audit
+
+Implement a durable, owner-scoped audit journal separate from workspace revisions. Application-observed events and model-stated rationale have distinct labels. Capture bounded action proposals, actual reads/checks, citation versions, rejected proposals/repairs, usage and final publication/failure; keep missing reasons explicit. No raw provider reasoning, credentials, arbitrary request payloads or extra narration calls. Live UI and export use the same diagnostic-protection projection; preserve old events and append outcomes/corrections. A validated proposal is not a published result. All source consent, generation, read-only and spend limits remain unchanged.

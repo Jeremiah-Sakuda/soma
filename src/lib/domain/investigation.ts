@@ -161,6 +161,8 @@ function validateAcademicUpdates(plan: SourceDecision, state: WorkspaceState, co
     touched.add(key);
     if (!assessment || plan.assessmentId !== assessment.id || !source || source.version !== update.sourceRef.version || !disclosedSegments(source, reads).some(segment => segment.includes(update.sourceRef.quote))) throw new Error('Academic update needs a registered course assessment and exact cited evidence.');
     if (source.context?.assessmentId !== assessment.id || source.context.applicability !== 'assessment' || !['syllabus', 'instructor-update'].includes(source.context.role)) throw new Error('Academic authority must be explicitly declared for this assessment.');
+    const supersededBy = sourcesInCourse(state, courseId).find(candidate => candidate.id !== source.id && candidate.context?.assessmentId === assessment.id && candidate.context.applicability === 'assessment' && ['syllabus', 'instructor-update'].includes(candidate.context.role) && candidate.context.supersedes?.some(ref => ref.sourceId === source.id && ref.version === source.version));
+    if (supersededBy) throw new Error('A superseded source cannot establish current academic authority; read its declared replacement.');
     const fact = update.kind === 'deadline' ? source.context.confirmedFacts?.deadline : source.context.confirmedFacts?.coverage;
     if (!fact || fact.quote !== update.sourceRef.quote) throw new Error('Academic values must come from owner-confirmed typed facts with the exact cited passage.');
     if (update.kind !== 'eligibility' && (update.lessonIds.length || update.topic || update.eligible)) throw new Error('Only eligibility updates can select lessons or topics.');
@@ -171,9 +173,18 @@ function validateAcademicUpdates(plan: SourceDecision, state: WorkspaceState, co
       if (!sameFacts && !source.context.supersedes?.some(ref => ref.sourceId === old.sourceId && ref.version === old.version)) throw new Error('Changing confirmed academic facts requires explicit supersession of the previous source version.');
     }
     if (update.kind === 'eligibility') {
-      const coverage = source.context.confirmedFacts!.coverage!;
+      const coverageUpdate = updates.find(item => item.assessmentId === assessment.id && item.kind === 'coverage');
+      const proposedCoverageSource = coverageUpdate && cited.get(coverageUpdate.sourceRef.sourceId);
+      const coverage = coverageUpdate
+        ? proposedCoverageSource?.context?.confirmedFacts?.coverage
+        : assessment.includedTopics !== undefined || assessment.excludedTopics !== undefined
+          ? { includedTopics: assessment.includedTopics ?? [], excludedTopics: assessment.excludedTopics ?? [] }
+          : source.context.confirmedFacts!.coverage;
+      if (!coverage) throw new Error('Eligibility requires valid final assessment coverage.');
       if (!update.lessonIds.length || !update.topic) throw new Error('Eligibility needs an explicit topic and scoped lessons.');
       const topic = update.topic.toLowerCase();
+      const citedCoverage = source.context.confirmedFacts!.coverage!;
+      if (update.eligible && (!citedCoverage.includedTopics.some(value => value.toLowerCase() === topic) || citedCoverage.excludedTopics.some(value => value.toLowerCase() === topic))) throw new Error('Excluded or unlisted topics in the cited source cannot be attached to an assessment.');
       const included = coverage.includedTopics.some(value => value.toLowerCase() === topic);
       const excluded = coverage.excludedTopics.some(value => value.toLowerCase() === topic);
       if (update.eligible && (!included || excluded)) throw new Error('Excluded or unlisted topics cannot be attached to an assessment.');

@@ -95,6 +95,47 @@ describe('declared source authority and academic reconciliation', () => {
     expect(() => validateInvestigationDecision(plan, state, 'statistics', reads(state))).toThrow('this course');
   });
 
+  it.each([false, true])('rejects superseded eligibility authority in a combined batch regardless of order (%s)', reverse => {
+    const state = imported(), old = state.sources[0];
+    // This synthetic flag exercises the application gate; it is not a human-review claim.
+    const item = { ...lesson(old), title: 'Sampling variability', objective: 'Study sampling variability', description: 'Original unit fixture', explanation: 'Original unit fixture', validation: { status: 'checked' as const, modelVersion: 'synthetic-practice-v1' } };
+    state.lessons = [item];
+    const replacementQuote = 'The replacement assessment includes randomization and excludes sampling variability.';
+    const replacement: Source = { ...structuredClone(old), id: 'replacement', body: replacementQuote, context: { role: 'instructor-update', applicability: 'assessment', assessmentId: 'exam-1', supersedes: [{ sourceId: old.id, version: old.version }], confirmedFacts: { coverage: { includedTopics: ['randomization'], excludedTopics: ['sampling variability'], quote: replacementQuote } } } };
+    state.sources.push(replacement);
+    const oldRef = { sourceId: old.id, version: old.version, quote: coverageQuote }, newRef = { sourceId: replacement.id, version: replacement.version, quote: replacementQuote };
+    const plan: SourceDecision = { decision: 'keep-current', reason: 'Original synthetic reproduction of conflicting batch proposals.', assessmentId: 'exam-1', applicability: 'assessment', conflicts: [], sourceRefs: [oldRef, newRef], academicUpdates: [
+      { assessmentId: 'exam-1', kind: 'coverage', sourceRef: newRef, lessonIds: [], topic: '', eligible: false },
+      { assessmentId: 'exam-1', kind: 'eligibility', sourceRef: oldRef, lessonIds: [item.id], topic: 'sampling variability', eligible: true },
+    ] };
+    if (reverse) plan.academicUpdates!.reverse();
+    const original = structuredClone(state);
+    expect(() => applySourceDecision(state, 'statistics', plan, reads(state), metadata('invalid-batch'))).toThrow('superseded source');
+    expect(state).toEqual(original);
+  });
+
+  it.each([false, true])('checks eligibility against final batch coverage even without a declared source replacement (%s)', reverse => {
+    const state = imported(), old = state.sources[0];
+    const item = { ...lesson(old), title: 'Sampling variability', objective: 'Study sampling variability', description: 'Original unit fixture', explanation: 'Original unit fixture', validation: { status: 'checked' as const, modelVersion: 'synthetic-practice-v1' } };
+    state.lessons = [item];
+    const quote = 'Assessment coverage includes randomization and excludes sampling variability.';
+    const newer: Source = { ...structuredClone(old), id: 'other-current-authority', body: quote, context: { role: 'instructor-update', applicability: 'assessment', assessmentId: 'exam-1', confirmedFacts: { coverage: { includedTopics: ['randomization'], excludedTopics: ['sampling variability'], quote } } } };
+    state.sources.push(newer);
+    const oldRef = { sourceId: old.id, version: old.version, quote: coverageQuote }, newRef = { sourceId: newer.id, version: newer.version, quote };
+    const plan: SourceDecision = { decision: 'keep-current', reason: 'Original synthetic reproduction of inconsistent effective coverage.', assessmentId: 'exam-1', applicability: 'assessment', conflicts: [], sourceRefs: [oldRef, newRef], academicUpdates: [
+      { assessmentId: 'exam-1', kind: 'coverage', sourceRef: newRef, lessonIds: [], topic: '', eligible: false },
+      { assessmentId: 'exam-1', kind: 'eligibility', sourceRef: oldRef, lessonIds: [item.id], topic: 'sampling variability', eligible: true },
+    ] };
+    if (reverse) plan.academicUpdates!.reverse();
+    expect(() => applySourceDecision(state, 'statistics', plan, reads(state), metadata('invalid-final-coverage'))).toThrow('Excluded');
+  });
+
+  it('rejects an isolated old deadline update after an explicitly declared current replacement', () => {
+    const state = imported(), old = state.sources[0];
+    state.sources.push({ ...structuredClone(old), id: 'replacement', context: { ...old.context!, role: 'instructor-update', supersedes: [{ sourceId: old.id, version: old.version }] } });
+    expect(() => validateInvestigationDecision(decision(old, 'deadline', deadlineQuote), state, 'statistics', reads(state))).toThrow('superseded source');
+  });
+
   it('retains known authorized URL references across imports and rejects foreign course targets', () => {
     let state = imported(); const source = state.sources[0]; source.url = 'https://source.example.invalid/teaching';
     const link = { ...structuredClone(source), id: 'link', body: 'Read https://source.example.invalid/teaching for the relevant original lesson.' };

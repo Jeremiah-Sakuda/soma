@@ -5,14 +5,17 @@ This folder contains the Soma hackathon handoff. Follow the current user request
 ## Authority and status
 
 - docs/PRD.md owns product scope and release acceptance. docs/HACKATHON_REQUIREMENTS.md records the supplied event requirements. docs/BUILD_PLAN.md owns the current dated sequence. Record later decisions in docs/DECISIONS.md.
+- Read docs/SCOPE_UPDATE.md for the student-hub extension: commitment context and consequences feeding the existing learning engine. PRD R12 adds the acceptance boundary; do not restart the application or build a career suite.
+- `docs/UI_DIRECTION.md` owns the selected Ready Card interface. It supersedes the provisional visual master; Fieldnotes and directions A–E remain unselected explorations. Preserve the existing app and verified behavior when applying it.
 - The historical PDF and older online companion plans can lag these files.
 - No integrations, test outcomes, pilots, or benchmark results are established merely by their appearance in a plan. Preserve explicit status.
-- The supplied guide lists an October 26 kickoff and October 27–November 4 building period. Record organizer clarification when resolving eligibility of kickoff-day implementation. Submission is November 4 at 9 PM America/New_York.
+- Jeremy supplied the organizer's hacking-start announcement and authorized October 26 implementation; see docs/DECISIONS.md. Keep the October 31 feature freeze and November 4, 9 PM America/New_York submission deadline.
 
 ## Product invariants
 
 - Soma is the product and agent. Spark is the runtime Meta model. The consumer Muse workflow is the origin and comparison baseline.
-- Deliver the complete course-event-to-lesson-to-follow-up loop. It must create useful persistent output without a conversational prompt.
+- Deliver the complete change-to-next-action loop. Course changes and confirmed nonacademic commitments can affect the next study session; useful persistent output must not require a conversational prompt. Learning remains the deepest action.
+- Use selected calendar/email context, source-linked commitments, and inspectable before/after consequences. No separate career pipeline, general schedule solver, calendar writeback, or delegation. Tentative invitations stay tentative; no-overlap changes should preserve valid recommendations.
 - Interactive lessons remain prominent. Support automatic preparation, direct requests, and revisits through one engine. Exploration and help must not require a compulsory assessment.
 - Keep full-semester, multi-account support. Five courses and ten test accounts are verification workloads, not hard limits.
 - Keep one approved quantitative family for P0. The proposed first family is ideal DC series/parallel resistor networks; confirm source fit before committing. Do not attach an excluded topic to an exam.
@@ -51,3 +54,13 @@ Do not expand P0 to improve model count. Preserve the Day 3 lab decision, Octobe
 
 Keep credentials, session state, private course documents, and learner records out of public code, fixtures, and demo assets. Preserve required third-party notices and identify original event work accurately. Ask for missing inputs only when needed; continue independent authorized work meanwhile.
 
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

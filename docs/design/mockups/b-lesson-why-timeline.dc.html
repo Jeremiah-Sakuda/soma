@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Brief · Lesson</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#B03A0B}a:hover{color:#7E2907}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #B03A0B;outline-offset:2px}
+input[type=range]{width:100%;accent-color:#141414;height:28px}
+</style>
+</helmet>
+<div style="min-height: 980px; background: #FFFFFF; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #141414; font-size: 15px; line-height: 1.55">
+
+  <header style="border-bottom: 1px solid #DADDE2">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px">
+      <a href="b-today-change-entries.dc.html" style="min-height: 44px; display: inline-flex; align-items: center; font-weight: 600">← Brief</a>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4B505A">CIRCUIT FOUNDATIONS · LECTURE 8 · PREPARED 9:14 AM · CHECKED MODEL V1</div>
+      <div style="margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6B4700; background: #FFF4DB; padding: 4px 8px; border-radius: 4px">DEMO SEMESTER</div>
+    </div>
+  </header>
+
+  <main style="max-width: 1200px; margin: 0 auto; padding: 32px 24px 56px; display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start">
+
+    <article aria-labelledby="lesson-title" style="flex: 999 1 600px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+      <h1 id="lesson-title" style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 40px; line-height: 1.12; font-weight: 700">Parallel branches share voltage, not current</h1>
+      <p style="margin: 0; font-size: 18px; color: #33373F; max-width: 640px">Two resistors that connect to the same pair of nodes must have the same voltage across them. What each one carries depends on its own resistance.</p>
+
+      <div role="group" aria-label="Variant" style="display: flex; gap: 0; border: 1px solid #141414; border-radius: 6px; align-self: flex-start; overflow: hidden">
+        <button type="button" aria-pressed="{{parPressed}}" onClick="{{setPar}}" style="min-height: 44px; padding: 0 16px; border: none; background: {{parBg}}; color: {{parFg}}; font-weight: 600">Parallel (from Quiz 3)</button>
+        <button type="button" aria-pressed="{{serPressed}}" onClick="{{setSer}}" style="min-height: 44px; padding: 0 16px; border: none; background: {{serBg}}; color: {{serFg}}; font-weight: 600">Series contrast</button>
+      </div>
+
+      <figure style="margin: 0; border-top: 2px solid #141414; border-bottom: 1px solid #DADDE2; padding: 22px 0; display: flex; flex-direction: column; gap: 16px">
+        <div role="img" aria-label="{{diagramLabel}}" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4B505A">R₁ = {{r1}} Ω</div>
+            <div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 34px; font-weight: 700">{{i1Text}}</div>
+            <div style="height: 14px; background: #F0F1F3"><div style="height: 14px; width: {{i1Pct}}%; background: #141414"></div></div>
+            <div style="font-size: 14px; color: #33373F">{{v1Text}} across</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4B505A">R₂ = {{r2}} Ω</div>
+            <div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 34px; font-weight: 700">{{i2Text}}</div>
+            <div style="height: 14px; background: #F0F1F3"><div style="height: 14px; width: {{i2Pct}}%; background: #141414"></div></div>
+            <div style="font-size: 14px; color: #33373F">{{v2Text}} across</div>
+          </div>
+        </div>
+        <figcaption style="font-size: 14px; color: #33373F">{{caption}} Total: {{itText}} from a {{vText}} ideal source; equivalent resistance {{reqText}}.</figcaption>
+      </figure>
+
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px">
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <label for="b-v" style="font-weight: 600; display: flex; justify-content: space-between"><span>Source</span><span style="font-family: 'IBM Plex Mono', monospace">{{vText}}</span></label>
+          <input id="b-v" type="range" min="0" max="24" step="1" value="{{v}}" onChange="{{setV}}">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <label for="b-r1" style="font-weight: 600; display: flex; justify-content: space-between"><span>R₁</span><span style="font-family: 'IBM Plex Mono', monospace">{{r1}} Ω</span></label>
+          <input id="b-r1" type="range" min="1" max="100" step="1" value="{{r1}}" onChange="{{setR1}}">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <label for="b-r2" style="font-weight: 600; display: flex; justify-content: space-between"><span>R₂</span><span style="font-family: 'IBM Plex Mono', monospace">{{r2}} Ω</span></label>
+          <input id="b-r2" type="range" min="1" max="100" step="1" value="{{r2}}" onChange="{{setR2}}">
+        </div>
+      </div>
+
+      <section aria-labelledby="check-title" style="background: #F5F6F8; border-radius: 8px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+        <h2 id="check-title" style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 20px">In your own words <span style="font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; font-weight: 500; color: #4B505A">· optional, saved as written</span></h2>
+        <label for="b-explain" style="font-size: 14px">Why do I₁ and I₂ differ when the resistors are in parallel?</label>
+        <textarea id="b-explain" rows="3" placeholder="Name the shared nodes, then reason about each branch." style="font-family: inherit; font-size: 15px; padding: 10px 12px; border: 1px solid #B8BCC4; border-radius: 6px; resize: vertical"></textarea>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px">
+          <button type="button" style="min-height: 44px; padding: 0 18px; border: none; border-radius: 6px; background: #141414; color: #FFFFFF; font-weight: 600">Check my explanation</button>
+          <button type="button" style="min-height: 44px; padding: 0 18px; border: 1px solid #B8BCC4; border-radius: 6px; background: #FFFFFF; font-weight: 600">Show a worked example</button>
+        </div>
+        <div style="font-size: 13px; color: #4B505A">Seeing the worked example first is fine; Soma records it as help.</div>
+      </section>
+    </article>
+
+    <aside aria-labelledby="why-title" style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 0">
+      <h2 id="why-title" style="margin: 0 0 12px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.05em; color: #4B505A">WHY THIS IS HERE</h2>
+      <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+        <li style="padding: 12px 0; border-top: 1px solid #DADDE2"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4B505A">OCT 26 · GRADESCOPE</div>Quiz 3 returned: you wrote “equal currents… each gets 3 A.”</li>
+        <li style="padding: 12px 0; border-top: 1px solid #DADDE2"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4B505A">OCT 28 · 09:00 · BLACKBOARD</div>Exam 2 moved to Friday. Raised priority.</li>
+        <li style="padding: 12px 0; border-top: 1px solid #DADDE2"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4B505A">09:10 · COURSE EMAIL</div>Exam asks you to explain equal currents or voltages, so this lesson asks for an explanation.</li>
+        <li style="padding: 12px 0; border-top: 1px solid #DADDE2"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4B505A">09:14 · SOMA</div>Chose the parallel-branch lesson with R₁ 6 Ω and R₂ 3 Ω, the values from your quiz.</li>
+        <li style="padding: 12px 0; border-top: 1px solid #DADDE2; border-bottom: 1px solid #DADDE2"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4B505A">STATUS</div>Suspected gap, not confirmed. Your answer here can revise it.</li>
+      </ol>
+      <div style="margin-top: 16px; font-size: 14px; color: #33373F">Model assumes an ideal source and ideal resistors. <a href="#">Read Lecture 8 passage</a></div>
+    </aside>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ topo: 'parallel', v: 12, r1: 6, r2: 3 }, this.state || {});
+    const { topo, v, r1, r2 } = st;
+    const f = (x) => String(Math.round(x * 100) / 100);
+    const pct = (x, max) => Math.max(0, Math.min(100, (x / max) * 100)).toFixed(1);
+    let i1, i2, it, v1, v2, req;
+    if (topo === 'series') {
+      req = r1 + r2; it = v / req; i1 = it; i2 = it; v1 = it * r1; v2 = it * r2;
+    } else {
+      req = (r1 * r2) / (r1 + r2); i1 = v / r1; i2 = v / r2; it = i1 + i2; v1 = v; v2 = v;
+    }
+    const isPar = topo !== 'series';
+    return {
+      parPressed: isPar ? 'true' : 'false', serPressed: isPar ? 'false' : 'true',
+      parBg: isPar ? '#141414' : '#FFFFFF', parFg: isPar ? '#FFFFFF' : '#141414',
+      serBg: isPar ? '#FFFFFF' : '#141414', serFg: isPar ? '#141414' : '#FFFFFF',
+      setPar: () => this.setState({ topo: 'parallel' }),
+      setSer: () => this.setState({ topo: 'series' }),
+      v, r1, r2,
+      vText: f(v) + ' V', v1Text: f(v1) + ' V', v2Text: f(v2) + ' V',
+      i1Text: f(i1) + ' A', i2Text: f(i2) + ' A', itText: f(it) + ' A', reqText: f(req) + ' Ω',
+      i1Pct: pct(i1, 12), i2Pct: pct(i2, 12),
+      caption: isPar
+        ? 'Parallel: same voltage across both; current splits by resistance.'
+        : 'Series: same current through both; voltage splits by resistance.',
+      diagramLabel: 'Current through R1 is ' + f(i1) + ' amps and through R2 is ' + f(i2) + ' amps.',
+      setV: (e) => this.setState({ v: Number(e.target.value) }),
+      setR1: (e) => this.setState({ r1: Number(e.target.value) }),
+      setR2: (e) => this.setState({ r2: Number(e.target.value) })
+    };
+  }
+}
+</script>
+</body>
+</html>

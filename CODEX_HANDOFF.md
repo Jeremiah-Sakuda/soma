@@ -4,19 +4,21 @@
 
 ## The product to build
 
-Soma monitors a student's authorized course sources and keeps their next study session ready. When a source changes, Spark determines the appropriate consequence: reprioritize an existing lesson, change exam eligibility, revise affected content, investigate returned feedback, or do nothing. The result is a persistent learning activity the student can open without writing a prompt.
+**Read [the student-hub scope update](docs/SCOPE_UPDATE.md) first.** Soma keeps students ready as their classes and commitments change. Add a small shared view of source-linked deadlines and confirmed events, including career and personal context. A change can affect the student's next study recommendation; learning remains the deepest action Soma performs. Continue the existing implementation and preserve its account, Firestore, lesson, and evidence services.
+
+Spark determines the appropriate consequence: reprioritize an existing activity, revise session fit, change exam eligibility, revise affected content, investigate returned feedback, or do nothing. Relevant email and selected calendar context inform that decision. The result is a persistent next action or prepared learning activity, with its source and reason visible.
 
 Interactive lessons are central. Students manipulate meaningful controls, inspect the relationship, request an explanation, and optionally answer a fresh question. Their responses change what Soma prepares next. Preserve the difference between exploration, assisted completion, and later independent performance.
 
 Use this complete loop as the implementation spine:
 
-**Course event → relevant source reads → supported decision → prepared or updated lesson → student interaction → evidence-backed follow-up → later return.**
+**Change → affected commitments → supported next action → prepared learning activity when appropriate → student interaction → evidence-backed follow-up.**
 
 ## What is here and what is not
 
 The folder contains the complete reconciled [PRD](docs/PRD.md), [user stories](docs/USER_STORIES.md), engineering and delivery plans, evaluation instructions, original synthetic source material, and the supplied participant guide. An older PDF remains in output/pdf.
 
-No application source, initialized deployment, working standalone connector, verified model integration, numerical validation result, recruited pilot cohort, or measured competitive advantage was established while preparing this handoff. Do not turn planned targets into completed checkmarks.
+Implementation now includes application, domain, server and test files. The decision log records initial runtime Meta access and the Firebase/Firestore substitution. This scope review did not rerun the application or verify live source access, production deployment, pilots, or release gates. Inspect current code and actual test results; do not treat planning targets as completed checks.
 
 Jeremy reports that his existing consumer Muse workflow already checks Blackboard, Gradescope, and email, using a browser where needed. That is the origin and baseline. It does not provide Soma with an application API key, authenticated browser session, or reusable consumer-assistant infrastructure.
 
@@ -24,7 +26,7 @@ Jeremy reports that his existing consumer Muse workflow already checks Blackboar
 
 Read [AGENTS.md](AGENTS.md), the [product brief](docs/PRODUCT_BRIEF.md), and the [event constraints](docs/HACKATHON_REQUIREMENTS.md). Then inspect the actual environment and existing files before scaffolding. Work in this folder unless Jeremy directs otherwise; preserve the documentation and historical PDF.
 
-Use the guide's October 27–November 4 building period for scheduling. The guide also has an October 26 kickoff; record any organizer clarification before relying on kickoff-day work as eligible implementation. That uncertainty does not block reading, planning, or documenting dependencies.
+The organizer-start clarification is recorded in docs/DECISIONS.md and implementation was authorized for October 26. Keep the existing code and milestones. The first-session checklist below remains an acceptance checklist where unfinished, not an instruction to scaffold again.
 
 Once implementation is within the applicable event window:
 
@@ -38,9 +40,9 @@ Do not wait for every external dependency before completing independent local wo
 
 ## Default implementation choices
 
-Use Next.js, TypeScript, Tailwind, shadcn/ui, Vercel, Supabase Auth/Postgres/Storage, Trigger.dev Cloud, Playwright with Browserbase, Muse Spark 1.3 through Meta Model API, PDF.js, ts-fsrs, and approved SVG/React lesson components. These are baseline choices to verify, not installed or proven dependencies.
+Use the existing Next.js/TypeScript application with Firebase Authentication and Firestore, plus the source/worker tooling in [Technical Plan](docs/TECHNICAL_PLAN.md). Preserve the current UI and checked lesson components where they work. Verify each additional provider and package rather than replacing implemented infrastructure with the original provisional stack.
 
-Keep the evidence graph in Postgres. Spark has broad responsibility for source investigation and local graph interpretation through bounded typed tools. Application code owns authentication, invariants, numerical execution, publishing, spending, and persistence.
+Keep evidence relationships as versioned Firestore references. Spark has broad responsibility for source investigation and local graph interpretation through bounded typed tools. Application code owns authentication, invariants, time arithmetic, numerical execution, publishing, spending, and persistence.
 
 Runtime lesson generation produces a structured specification for a checked model and approved components. It does not produce arbitrary JavaScript. See [Technical Plan](docs/TECHNICAL_PLAN.md) for contracts and the model/agent boundary.
 
@@ -48,7 +50,9 @@ Runtime lesson generation produces a structured specification for a checked mode
 
 Build for multiple private accounts and full course loads. Five concurrent courses and ten isolated test accounts are acceptance workloads, not maximums. The release has one checked quantitative lesson family and two meaningful variants; other subjects use grounded ordinary practice.
 
-There are three main destinations: Today, Courses, and Study. Keep the ready lesson prominent. Both automatic preparation and direct requests from course material use the same service, as do real students and the isolated judge experience. Reopening a lesson must not require another assessment.
+There are three main destinations: Today, Courses, and Study. Keep the ready lesson prominent. Both automatic preparation and direct requests from course material use the same service, as do real students and the isolated judge experience. Reopening a lesson must not require another assessment. Build the screens to [UI Direction](docs/UI_DIRECTION.md), the selected "Ready Card" design, with its states, tokens and reference mockups.
+
+Today now includes relevant commitments and their consequences alongside ready lessons. Add one selected read-only calendar route or clearly labeled import, not a calendar editor. Career context is limited to explicit deadlines and confirmed events; no Jobs destination, application pipeline, autonomous replies, rescheduling, or delegation. R12 defines the extension and its failure cases.
 
 Do not add a general calendar optimizer, graph canvas, extra LMS adapters, recording product, voice, Quest, social features, or multiple model integrations before the loop and release gates pass. Notion and Granola can supply relevant imports; replacing them is outside scope. Glimmer, Wonder, and SAM are optional experiments, not a model-count requirement.
 
@@ -74,5 +78,5 @@ After each meaningful milestone, provide a runnable result and update the build 
 
 Before release, provide setup instructions, migrations, deployment configuration, measured budget settings, executed verification results, source/model support, an accessible judge route, a three-minute demo, and an original-contribution/dependency record. Mark incomplete gates plainly. Public publication, deployment access, payment setup, and submission must follow Jeremy's actual authorization.
 
-No implementation is requested by the act of preparing this handoff itself. Begin implementation when Jeremy assigns it to the coding session.
+The current scope update changes product requirements only. Continue already-authorized implementation in the coding session, using the current working tree and recording verified progress. Do not assume the new hub behavior is implemented because it is documented.
 

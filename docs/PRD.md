@@ -4,9 +4,11 @@
 
 **Product documents:** [Product Brief](PRODUCT_BRIEF.md), [Personas and User Stories](USER_STORIES.md), [Technical Plan](TECHNICAL_PLAN.md), [Build Plan](BUILD_PLAN.md), and [Demo and Evaluation](DEMO_AND_EVALUATION.md). This PRD owns product scope and release gates. [Hackathon Requirements](HACKATHON_REQUIREMENTS.md) records the supplied event constraints. [Decisions](DECISIONS.md) separates settled choices from unverified dependencies. The older PDF and online companion plans may lag this handoff.
 
-**Agent promise:** Soma is an agent that monitors your courses and keeps your next study session ready.
+**Agent promise:** Soma keeps students ready as their classes and commitments change.
 
-**Central product thesis:** Soma turns your coursework into interactive lessons, then adapts what comes next as your classes and understanding change.
+**Central product thesis:** Soma connects changing coursework, relevant email, calendar constraints, and learning evidence to a useful next action. Interactive lessons and targeted practice are its deepest capability. It prepares those activities and adapts what follows as the student's situation and understanding change.
+
+**Student-hub boundary:** [Scope Update](SCOPE_UPDATE.md) specifies the extension. P0 adds source-linked commitments, one selected calendar read/import route, and inspectable consequences for the next study session. Career and personal context initially means explicit deadlines and confirmed events. It does not add an application pipeline, interview coach, email client, calendar optimizer, external writeback, or delegation. R12 defines acceptance. Continue the existing application and preserve all learning gates.
 
 Interactive lessons are the primary reason to use Soma: clear visual explanations with meaningful controls that let students inspect, experiment, and explore. Course awareness makes those lessons relevant and ready; saved learning evidence makes later lessons and review more useful. Students can open a lesson Soma prepared or ask “Show me how this works” from a course passage, problem, or concept. Both paths use the same lesson engine and history. The hackathon beta supports individual accounts and full course loads, with Blackboard, Gradescope, and course email as the intended source set. There is no one-student or two-course restriction. In this PRD, a lab is the supported interactive lesson format, not a separate product.
 
@@ -50,9 +52,9 @@ Soma applies the Asili thesis that people should remain capable and exercise inf
 
 The initial user is a college student already using AI alongside course materials, deadlines, announcements, feedback, and personal notes spread across several tools. Their adoption question is what becomes easier or more useful by adding Soma to their current workflow. Prioritize two proposed personas: the student repeatedly assembling context across tools, and the student whose limited study windows make preparation costly. These can be the same person. Exploring an unfamiliar concept and interpreting returned work are important situations for both. Validate whether students choose a prepared lesson, request one, or revisit it, alongside the preparation effort saved; see [Personas and User Stories](USER_STORIES.md).
 
-**Primary job:** When I have time to study, have a relevant session ready from my current classes, with an interactive lesson that helps me understand the concept.
+**Primary job:** Help me see what needs attention across my classes and commitments, and have a useful next activity ready when I can act.
 
-**Continuing job:** Keep those lessons and follow-up practice relevant as my classes, priorities, and understanding change; let me request or revisit a concept whenever I choose.
+**Deepest supported action:** Prepare relevant interactive lessons and follow-up practice from my course material, available study window, and learning evidence; let me request or revisit a concept whenever I choose.
 
 Support students with several concurrent courses across disciplines. Enrollment and course selection are data-driven, with no hard-coded course count. Verify the complete semester experience against a five-course workload and account isolation with multiple users. Those are acceptance workloads, not product limits. New institutions extend the same adapter and course model; launch claims identify the environments actually verified.
 
@@ -60,7 +62,7 @@ Support students with several concurrent courses across disciplines. Enrollment 
 
 A new lecture can become a lesson ready to explore; a coverage change can reprioritize or revise it; a student’s question can request one directly; and returned work can motivate a more targeted variant. Each path leads to the same learning experience. Course collection, the evidence graph, and review scheduling support lesson relevance, adaptation, and continuity.
 
-The product hierarchy is explicit: interactive lessons attract the student, course context personalizes them, and learning history shapes what follows. Apply this scope rule: a feature must improve the lesson itself, why it is selected, or what comes next. Keep explanations, questions, and review within the learning flow; defer separate creation studios, broad planning tools, and graph or mastery dashboards.
+The product hierarchy is explicit: Today connects commitments to useful next actions; interactive lessons provide the deepest immediate value; course context and learning history shape what follows. A feature must improve a supported next-action decision or its prepared activity. Keep explanations, questions, and review within the learning flow; defer separate career/creation studios, broad planning tools, and graph or mastery dashboards.
 
 The agent’s continuing job leads the pitch; the interactive lesson is the immediate payoff. Course systems remain authoritative for coursework. Soma stores derived academic context and its own learning records. Keep familiar labels such as lesson, practice, and course. A no-prompt workflow, persistent artifacts, and real adaptation must establish the distinction from a simple education chatbot; vocabulary changes alone do not.
 
@@ -87,15 +89,16 @@ Report the real number of students tested and the actual institutions supported.
 
 ## Scope and release boundary
 
-P0 delivers one coherent experience: source-grounded interactive lessons that students can open, request, revisit, and continue across sessions. Course collection, priorities, graph evidence, feedback, and review serve that experience. Start with one dependable model family and ordinary practice for unsupported topics. Full-semester and multiple-user support remain; the pilot sample does not define the audience or capacity. P1 adds lesson families, integrations, and modalities after the required experience works.
+P0 delivers one coherent student workspace: changing classes and confirmed commitments lead to useful next actions, with source-grounded interactive learning as the deepest supported action. Course collection, bounded calendar context, priorities, graph evidence, feedback, and review serve that experience. Students can open, request, revisit, and continue lessons across sessions. Start with one dependable model family and ordinary practice for unsupported topics. Full-semester and multiple-user support remain; the pilot sample does not define the audience or capacity. P1 adds lesson families and broader workflows after the required experience works.
 
 | Area | P0 hackathon beta | P1 expansion |
 | --- | --- | --- |
 | Users | Individual accounts, isolated workspaces, invite-based onboarding, full course loads | Open signup and institution administration |
 | Course sources | Blackboard, course email, and Gradescope as the intended source set, with explicit access fallbacks | Canvas and additional LMS adapters |
+| Commitment context | Explicit deadlines and confirmed events from scoped email and one selected calendar read/import route; source-linked consequences for study | Application lifecycle management, interview coaching, generalized personal workflows |
 | Material | PDFs, notes, imported lecture transcripts, lecture images, and legible returned-work scans | Direct lecture capture, audio and video ingestion |
 | Agent | Source gathering, reconciliation, evidence-graph updates, diagnostic selection, and bounded lab preparation | Longer research and additional external tools |
-| Prioritization | Next lessons and reviews across courses, with assessment context and available time | Detailed weekly planning, calendar optimization, and writeback |
+| Prioritization | Next actions, lessons and reviews using assessment context, explicit commitments, declared focus windows and observed busy time | Detailed weekly planning, calendar optimization, and writeback |
 | Studying | Interactive lessons as the main experience, with questions, hints, explanations, and review in the same flow | Voice tutoring, generated video, and additional study formats |
 | Interactive lessons | One checked model family; two meaningful variants; prepared and direct-request entry; revisit, exploration, and optional checks | New model families, richer mechanisms, and open-ended executable generation |
 | Feedback | Link returned feedback and observed mistakes to diagnostics and follow-up practice | Extensive handwriting and diagram coverage |
@@ -111,7 +114,7 @@ P0 delivers one coherent experience: source-grounded interactive lessons that st
 
 ## Core user journey
 
-1. **Bring the course context.** Sign in, authorize supported sources, and select the semester’s courses. Soma proposes course mappings; the student corrects ambiguous matches and confirms timezone and email scope. Available course material provides the starting point for lessons, with source freshness visible.
+1. **Bring the relevant context.** Sign in, authorize supported sources, and select the semester’s courses. Optionally connect/import selected calendar context and confirm focus windows. Soma proposes source and commitment mappings; the student corrects ambiguity and confirms timezone and email scope. Available course material starts lesson preparation, while explicit commitments inform the next action. Source freshness remains visible.
 
 2. **Open or request a lesson.** Choose a prepared lesson or select a passage, problem, or concept and ask “Show me how this works.” Both paths resolve the objective, sources, and supported model through the same preparation service. A request can express curiosity about new material; a recorded mistake is not required.
 
@@ -121,7 +124,7 @@ P0 delivers one coherent experience: source-grounded interactive lessons that st
 
 5. **Return on the student’s terms.** Pause, resume, or reopen a saved lesson from its course. A revisit need not start with a diagnostic. Students can choose a short lesson directly or a 10, 20, or 45 minute study session. Offer fresh practice and later review without forcing every exploratory visit through an assessment.
 
-6. **Keep the experience current.** Background checks follow changes in material, deadlines, and coverage. Soma updates affected lessons and next-study recommendations across classes, preserving prior lesson versions and attempts. Today explains why a lesson matters now and shows the next useful lesson or review.
+6. **Keep the experience current.** Background checks follow changes in material, deadlines, coverage, and supported commitment sources. Soma updates affected recommendations and lessons while preserving prior versions and attempts. Today shows what changed, what needs attention, and the next useful activity. No relevant effect is a valid outcome; the agent should preserve unaffected content.
 
 Example: A student has five courses and thirty minutes free. A Blackboard announcement moves an exam earlier; a course email narrows its coverage; a returned quiz suggests confusion about why unequal parallel resistors have equal voltage but different currents. Soma checks the interpretation with a diagnostic and prepares a lab from the supported model family. The student predicts the effect of doubling resistance, changes it, and explains the response. Soma then asks a fresh question without the lab’s visual support and schedules a later check. An unrelated low grade caused by a late penalty does not become evidence of a conceptual weakness.
 
@@ -233,15 +236,33 @@ Use a small set of typed settings for the beta. Model-generated prose cannot bec
 
 **Acceptance.** Two source- or learner-driven variants must change a meaningful parameter, diagnostic, or follow-up rather than only appearance. Each flagship lesson includes a manipulation that makes its stated relationship visible and a fresh application question that tests the same relationship. Demonstrate that a changed prediction changes the next question, a contradictory diagnostic revises the graph hypothesis, and a source revision invalidates obsolete teaching content while a timing-only change preserves valid content. Verify resume, skip, keyboard operation, reduced motion, failure fallback, and the preservation of assistance history. Numerical, instructional, and generation release gates are defined below. Both prepared and direct-request entry paths must reach the same checked lesson service. A student can request an unfamiliar concept, reopen a current lesson without regeneration, and explore without submitting an answer; none of those actions alone creates independent-understanding evidence.
 
+### R12 Commitments and consequences
+
+Maintain a small shared view of academic deadlines, explicit application deadlines, confirmed interviews, and selected personal events. Each record has an owner/workspace, category, event or deadline kind, explicit time and timezone when known, source versions, confirmation/conflict state, and references to related academic records or prepared activities. Do not duplicate an academic deadline as a separately editable truth. Identify duplicate calendar/email observations only when their common identity is supported.
+
+Use scoped read-only email and one selected calendar source. A labeled import or manually confirmed event is a valid fallback, but does not count as automatic external monitoring. Use student-declared focus windows and future busy intervals for session fit. Merge overlapping busy intervals, clip at the current time, and honor explicit buffers and timezones. Empty calendar space is not automatically available study time; missing effort estimates or stale sources remain uncertain.
+
+When a source changes, determine whether a commitment or prepared activity is actually affected. Preserve a consequence record with the trigger, evidence versions, affected IDs, before/after facts, concise reason, and saved result. Automatically update Soma's internal recommendations within the student's goals; unresolved tradeoffs are surfaced. A timing conflict can shorten or reprioritize the offered session, while unused practice remains pending and academic scope stays intact. It cannot change a mastery estimate or guarantee the student is prepared.
+
+Spark interprets and investigates sources and proposes supported next actions. Deterministic application checks own time arithmetic, reference integrity, source applicability, ownership and allowed updates. A display name or model confidence does not establish sender authority. A proposed interview slot stays tentative unless evidence or the student confirms it. Source instructions cannot authorize external actions.
+
+Today presents commitments needing attention and ready activities together; the lesson remains prominent. Courses and Study retain their roles. No full job-application lifecycle, separate Jobs surface, calendar optimization, external rescheduling, messaging, application submission, or delegation enters P0. Use the same Firestore, source-version, job, activity and evidence services; do not add a second planning product or general graph solver.
+
+**Acceptance:** A confirmed event inside a declared focus window changes the appropriate study recommendation with inspectable before/after evidence. A non-overlapping event leaves a valid activity unchanged; duplicate observations do not consume time twice. Tentative/ambiguous updates cannot silently become confirmed obligations. Student corrections persist and remain account-isolated. Shorter sessions preserve teaching validity, remaining work, attempts and help history. Stale context and publication races do not produce falsely current recommendations. No connected external record is mutated. Exercise timezones, elapsed time and overlapping events as regression cases, and include fresh variations within the existing ten held-out change scenarios.
+
+The extension adds one bounded context path and no second numerical or learning engine. If calendar access is unavailable, ship an accurately labeled import or narrow the support claim. Preserve the Day 3 lesson gate and October 31 feature freeze. See [Scope Update](SCOPE_UPDATE.md) for the concrete overlap/no-overlap/tentative demonstration and implementation order.
+
 ### Story coverage
+
+R12 adds S9–S10 in [User Stories](USER_STORIES.md): let a confirmed commitment change an appropriate study recommendation, and correct or question its source without silently changing external records. R1–R11 remain required.
 
 The companion stories cover course setup, changed material, available time, support, returned work, review, corrections, and stale connections. They support the central R11 stories: open a prepared lesson; request “Show me how this works” from course material; explore and revisit without a diagnostic gate; and optionally test the concept independently. The PRD owns the current release scope and acceptance gates.
 
 ## Experience requirements
 
-Interactive lessons are the main experience across the three existing destinations; integrations and the evidence graph support relevance and continuity without adding separate product surfaces.
+Today provides the broader commitment context, while interactive lessons remain the deepest experience across the three existing destinations. Integrations and the evidence graph support relevance and continuity without adding separate career or scheduling products.
 
-- **Today:** prepared lessons and next reviews, each with a reason to open it now, estimated duration, course context, and source freshness. Upcoming work informs these recommendations.
+- **Today:** relevant changes and commitments needing attention alongside prepared lessons and next reviews. Show the supported consequence, next action, estimated duration where known, and source freshness. Keep a ready lesson immediately accessible; no full calendar or application board is required.
 
 - **Courses:** connected classes, current material, prepared and saved lessons to revisit, and relevant feedback. Selecting a passage, problem, or concept offers the direct lesson-request path.
 
@@ -414,7 +435,7 @@ Release the strongest complete workflow with an explicit source and lab support 
 
 **Acceptance is confirmed; the product is not yet verified.** This handoff was assembled October 26. The participant guide lists kickoff on October 26 at noon ET and the building period as October 27–November 4. The schedule below uses the latter as its planning baseline without asserting what an organizer clarification may permit on kickoff day. Submission is due November 4 at 9 PM America/New_York; target complete assets November 3. Record what was built during the eligible window and distinguish earlier planning, public dependencies, and original implementation.
 
-**Project pitch:** Soma is an agent that monitors your courses and keeps your next study session ready. It follows changes across Blackboard, Gradescope, and email, determines which learning activities need updating, and prepares interactive labs and targeted practice. Students explore those lessons and attempt fresh questions; their responses shape what Soma prepares next, with assisted work and independent performance recorded separately. We’re building Soma around a workflow I already use with Muse: following my actual classes across disconnected systems. Muse Spark extends that workflow from noticing what changed to preparing something useful to learn from. This fits Build for Your World because it addresses firsthand preparation work and frees time for learning. Source names in the final submission must match the actual verified support matrix.
+**Project pitch:** Soma keeps students ready as their classes and commitments change. It follows authorized coursework, relevant email, and selected calendar context, determines what a change affects, and prepares a useful next action. Its deepest capability is learning: interactive lessons and targeted practice that reflect current material, available time, and the student's actual responses. We’re building Soma around a workflow I already use with Muse: following my classes across disconnected systems. Muse Spark extends that workflow from noticing changes to investigating their consequences and preparing useful activities, while preserving assisted and independent performance separately. This fits Build for Your World through a firsthand preparation problem. Source and capability claims in the final submission must match the verified build.
 
 Describe implementation status and original contributions truthfully in the submission. Do not present this planned beta, unmeasured targets, public dependencies, or development fixtures as completed product evidence.
 

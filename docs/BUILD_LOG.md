@@ -237,3 +237,57 @@ The log and maintenance rules were checkpointed in `24f8992`. All 11 original ar
 ### October 26 — P012 completion evidence
 
 D/E were authored without further skill reads, skill searches or skill-derived templates; official NotebookLM and Google Calendar references and independent design reasoning informed this comparison. Root opened the new preview in the in-app browser. The originals remain available through its A/B/C link. All 12 human inputs are archived; no final design selection is inferred. Application implementation and Vercel deployment remain paused for this user-directed review.
+
+## P013 — Implementation continuation / source setup
+
+**Received:** 2026-10-26T13:35:36.310000-04:00 · **Recorded:** during work, October 26, 2026
+
+**Verbatim prompt:**
+
+```text
+Implement the Ready Card spec in docs/UI_DIRECTION.md, not Fieldnotes..  COntinue with the rest o fthe project as well 
+```
+
+**Top 3 outcomes:**
+
+1. Ready Card in UI_DIRECTION.md is selected; Fieldnotes and A–E remain unselected explorations.
+2. Resumed UI, domain and account/import implementation in parallel using the existing codebase.
+3. Firebase/Vercel completion and integrated verification are in progress.
+
+**Plan deviations:** User ends the design-comparison pause. UI_DIRECTION supersedes the provisional visual master; update the master without changing PRD/R12 acceptance.
+
+## P014 — Implementation continuation / source setup
+
+**Received:** 2026-10-26T13:38:09.564000-04:00 · **Recorded:** during work, October 26, 2026
+
+**Verbatim prompt:**
+
+```text
+We'll use my own
+```
+
+**Top 3 outcomes:**
+
+1. User clarification recorded; own accounts are the intended source context.
+2. Local-key setup remains with the user; secret values must stay out of chat and version control.
+3. Live source verification remains pending; the bounded import path proceeds meanwhile.
+
+**Plan deviations:** No new scope change. Provider access is pending rather than claimed complete.
+
+## P015 — Implementation continuation / source setup
+
+**Received:** 2026-10-26T13:38:09.564000-04:00 · **Recorded:** during work, October 26, 2026
+
+**Verbatim prompt:**
+
+```text
+I’ll add them to .env.local
+```
+
+**Top 3 outcomes:**
+
+1. User clarification recorded; own accounts are the intended source context.
+2. Local-key setup remains with the user; secret values must stay out of chat and version control.
+3. Live source verification remains pending; the bounded import path proceeds meanwhile.
+
+**Plan deviations:** No new scope change. Provider access is pending rather than claimed complete.

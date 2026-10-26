@@ -75,6 +75,26 @@
       "received_at": "2026-10-26T17:15:23.441Z",
       "kind": "message",
       "prompt": "I think fieldnotes is the best as is, but I am not sure about any of them. Can you try generate without using the skill so I can compare? I am thinking about google's design language for notebookLM and gcal so it's more user friendly \n"
+    },
+    {
+      "id": "P013",
+      "received_at": "2026-10-26T17:35:36.310Z",
+      "kind": "message",
+      "prompt": "Implement the Ready Card spec in docs/UI_DIRECTION.md, not Fieldnotes..  COntinue with the rest o fthe project as well \n"
+    },
+    {
+      "id": "P014",
+      "received_at": "2026-10-26T17:38:09.564Z",
+      "kind": "answer",
+      "prompt": "We'll use my own",
+      "question_context": "For the live-source setup, what Blackboard URL and which courses/email scope should Soma read? I’ll continue with the labeled import path while this is being configured."
+    },
+    {
+      "id": "P015",
+      "received_at": "2026-10-26T17:38:09.564Z",
+      "kind": "answer",
+      "prompt": "I’ll add them to .env.local",
+      "question_context": "Browserbase and Trigger.dev are still empty in .env.local. Can you fill those values there for the browser and background-worker setup? Keep the keys in the env file, not in chat."
     }
   ]
 }

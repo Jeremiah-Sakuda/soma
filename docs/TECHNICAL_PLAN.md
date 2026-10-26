@@ -21,6 +21,8 @@ No graph database, separate Python service, multi-agent framework, vector databa
 
 ## Execution path
 
+The [student-hub extension](SCOPE_UPDATE.md) adds commitment and consequence records to this same pipeline (PRD R12). Confirmed events and explicit deadlines can change session fit or priority. Keep the existing lesson/evidence engine, Firebase/Firestore boundary, and read-only external scope. This is not a new scheduling service or application pipeline.
+
 1. A schedule, Refresh, explicit request, or returned-work event creates a bounded job with a workspace identity and goal.
 2. The collector uses an authorized provider adapter. It normalizes source items, records retrieval status, and compares stable IDs and content versions.
 3. A changed item becomes an immutable source version. Spark retrieves relevant context and may follow permitted links or inspect an image when needed.
@@ -41,6 +43,7 @@ Each adapter must support a scoped collection request, stable provider item iden
 | --- | --- | --- |
 | Blackboard | Per-student authorized browser with manual login/reconnect | Watched student-controlled course folder plus scoped course email; count manual copying |
 | Course email | Official provider API or authorized connector scoped to selected courses | Uploads are development/manual support, not a live second source |
+| Relevant commitment email and calendar | Student-selected email scope plus one selected read-only calendar route | Labeled calendar import or manually confirmed event; no live-monitoring claim for imports |
 | Gradescope | Proved permitted read route | Explicit returned-work PDF/image upload |
 | Lecture notes/transcripts | Course files and user-authorized imports | Manual import, identified as such |
 | Notion / Granola | Optional selected-content import when access is available | No dependency on replacing task tracking or lecture recording |
@@ -58,6 +61,8 @@ Firestore replaces the original relational baseline because the builder has exha
 | Record group | Required fields and invariants |
 | --- | --- |
 | Workspace, course, assessment | Owner, timezone, enrollment, provider identity, assessment applicability, dates and supporting evidence |
+| Commitment | Workspace, title, category, event/deadline kind, explicit time/timezone, optional course/assessment link, source versions, confirmed/tentative/conflicting state; references existing academic truth |
+| Consequence | Triggering source/context revision, affected records, before/after facts, supported reason or rule, resulting recommendation/artifact version and persistence outcome |
 | Connection | Provider, authorized scope, secret reference, status, last attempt, last success, recoverable error |
 | Source item and version | Stable provider ID, course mapping, original location, retrieval time, content hash, immutable text/image reference |
 | Academic fact | Fact type/value, source version, course/assessment/person applicability, certainty, unresolved conflict or superseded link |
@@ -69,6 +74,10 @@ Firestore replaces the original relational baseline because the builder has exha
 | Review and preference | Card version, self-rating history, scheduler state; explicit preference value, scope, confirmation, active/deleted state |
 
 Never overwrite an original response with a revision. Never infer independent understanding merely from a score, a lesson completion event, a task checked off, or an FSRS self-rating. Record question exposure and support so a fresh question can be distinguished from a repeated one. Describe an attempt as “without recorded help in Soma” when external conditions are unknown.
+
+A nonacademic source may have no course association; do not invent a dummy course to satisfy the current type. Preserve workspace ownership and keep academic references explicit where applicable. Interview or application status is not learner evidence. Join duplicate source observations only with supported identity, retaining both provenance links.
+
+For immediate session-fit checks, use a rolling seven-day view over full-semester records, student-declared focus windows, future-clipped intervals, merged busy time, and explicit buffers. Use timezone-aware timestamps. A proposed slot remains tentative. Missing or stale calendar context yields uncertainty; unknown effort is not zero. No global feasibility, stress, mastery, or readiness score is required.
 
 Supersede an interpretation while retaining the observations that supported it. A source correction or contrary diagnostic should change the current inference and subsequent action, not rewrite the student's past.
 

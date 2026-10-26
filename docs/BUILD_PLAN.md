@@ -6,6 +6,10 @@ No milestone is marked complete by this handoff. One builder is assumed availabl
 
 ## Dependency order
 
+**Student-hub extension:** Follow [Scope Update](SCOPE_UPDATE.md) and PRD R12 within the existing milestones. Add source-linked commitments and consequences, then overlap/no-overlap/tentative fixtures feeding the current study path. One selected calendar read/import route is the additional adapter ceiling. Time-box its first access experiment to four focused hours and label any import fallback. Direct Notion/Granola integrations, extra source adapters, graph views, career workflows and extra models remain deferred. Preserve the October 31 freeze and existing release gates.
+
+The existing implementation is underway; do not repeat completed scaffold/model work. The organizer's start clarification and Firestore substitution are recorded in [Decisions](DECISIONS.md). Dates below retain the existing delivery milestones; the hub extension is not a new sprint.
+
 Source/agent work: identity and ownership → source versions → real collection → source reconciliation → bounded activity preparation → recovery and measured costs.
 
 Learning/product work: checked model → usable renderer → typed Spark specification → publication gate → student attempts and help → adaptive follow-up → delayed evidence.

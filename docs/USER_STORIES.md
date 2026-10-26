@@ -140,6 +140,27 @@ A student receives feedback but cannot tell what to practice next. They need Som
 
 ## Additional context
 
+### S9 Let real commitments shape my next study session
+
+**Story:** When a confirmed interview or personal event changes my available study window, I want Soma to explain the effect and prepare an appropriate next session so that I can act without rebuilding the context. **Priority:** P0. **PRD:** R12.
+
+- Connect or import selected calendar context and relevant email; display the actual access mode and freshness.
+- Use my declared focus windows and explicit goals. Do not assume every empty calendar gap is available or rank career above classes by default.
+- Show the source, changed commitment, affected activity, and before/after recommendation together.
+- Preserve a valid lesson when timing alone changes. A shorter offered session leaves remaining practice visible and does not alter exam scope or learning evidence.
+- A non-overlapping event can leave the recommendation unchanged. Repeated email/calendar observations of one event cannot consume availability twice.
+
+### S10 Correct a commitment without losing control
+
+**Story:** When Soma mistakes a suggested time for a confirmed event or matches the wrong deadline, I want to see the evidence, correct it, and have that correction affect the next recommendation. **Priority:** P0. **PRD:** R7 and R12.
+
+- Proposed slots remain tentative until supported or confirmed. A display name or high model confidence does not establish source authority.
+- Ambiguous identity, time, timezone or source conflict stays visible rather than silently rewriting a commitment.
+- Corrections survive restart and remain isolated to my account; stale sources show their last successful check.
+- Soma updates its own recommendation. It does not send messages, move calendar entries, submit applications, or delegate tasks.
+
+The scope is context and consequences. A career pipeline, résumé builder, interview coach, and calendar optimization are outside P0; see [Scope Update](SCOPE_UPDATE.md).
+
 **Notion tasks and Granola lectures:** Read selected tasks or import notes and transcripts when they improve priorities or support practice. Preserve a transcript’s distinction from its generated summary, and keep task completion separate from evidence of learning. Direct integrations are conditional additions after the core stories work; imported material can demonstrate their value. A replacement task workspace, lecture recorder, and external task writeback are outside the hackathon core.
 
 ## First session and return journey

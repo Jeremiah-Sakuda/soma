@@ -4,6 +4,8 @@
 
 ## The story to prove
 
+The student-hub scope adds one cross-domain consequence through PRD R12; see [Scope Update](SCOPE_UPDATE.md). A confirmed commitment can change the available study window and therefore the prepared recommendation. Keep the lesson, real source decisions, and learning evidence in the same three-minute story. Do not add a career-module tour.
+
 Soma was doing useful work before the student asked a question. A relevant course event caused an activity to be prepared or updated; the student can immediately explore it; a real answer changes what follows.
 
 Keep the lesson visually prominent. The agent's job explains the lesson's presence. Learning evidence explains its next step. There is no need to rename lessons into unfamiliar terms or open on an architecture diagram.
@@ -19,6 +21,8 @@ Keep the lesson visually prominent. The agent's job explains the lesson's presen
 | 2:20–3:00 | Fresh later attempt, paired evidence, and next action | Actual help, exposure, response and elapsed time; recorded pilot labeled; simulated delay never passed off as observed |
 
 One course and one coherent learning objective carry the video. Other courses remain visible in the working build without a lengthy tour. The direct-request path, source injection case, detailed tool trace, account tests, and full metrics belong in the judge route or supporting evidence.
+
+Within the existing 0:35–1:20 source/consequence segment, show the relevant commitment, observed window change, and resulting session. Choose one dominant update (an exam update under existing calendar constraints, or a confirmed interview update); do not stack unrelated changes. Keep a labeled overlap/no-overlap/tentative variation available to the judge. The varied data, not the scenario label, must determine the result. No external rescheduling is claimed.
 
 Do not force a contradictory-diagnostic branch, direct request, security test, and every integration into the same three minutes. The opening manipulation and the causal source-to-follow-up connection need room to be understood.
 
@@ -64,6 +68,7 @@ Some sample records may serve multiple reviewed purposes, but name the overlap a
 | Accounts and semester | Five-course workload and ten isolated test accounts pass; a second student can onboard without code edits | Cross-account denial, storage and job checks, actual supported scope |
 | Live source support | At least two live source types update automatically, with restart and expired-auth recovery | Provider/institution support matrix, last-success times, recovery outcome; uploads identified |
 | Change reasoning | At least 9/10 unseen cases resolve correctly or request genuinely necessary clarification | Human reference, applicability, citations, result, errors and clarification rate |
+| Commitment consequences (R12) | Mandatory regression checks pass for overlapping/non-overlapping events, tentative invitations, duplicate observations, corrections, stale data, elapsed time and timezones; no external writes | Versioned commitment and source, declared focus window, before/after recommendation, saved result; include fresh variants in the same ten change scenarios |
 | Returned work | Ten unseen examples yield supported interpretations and relevant follow-up, or necessary clarification; lateness alone is never conceptual weakness | Original page/region, transcription, diagnostic, student correction, next action |
 | Practice quality | At least 30 reviewed items across courses/formats/versions; all critical facts correct or visibly unresolved, no unsupported answer in the sample | Sources, answer criteria, reviewer outcomes and rejected items |
 | Numerical model | At least five independently calculated cases spanning representative, boundary and limiting behavior; units and assumptions reviewed | Reference derivation, tolerance policy, implementation output, reviewer |
@@ -108,6 +113,8 @@ Use two comparable independently reviewed learning objectives, comparable time/s
 Evaluate reasoning as well as numerical output. If there are too few usable observations, report usability and specific attempts without claiming a learning advantage. Three students cannot establish causal learning gains, grade improvement, or semester-long retention.
 
 ## Pilot targets and observation record
+
+For the hub hypothesis, include one observed preparation task where a nonacademic commitment changes the student's available window. Record whether the changed recommendation was useful and the correction effort it caused. A calendar connection or an extra commitment card alone is not evidence of value. Use the same pilot cohort and reporting limits; do not launch a separate career-outcomes study.
 
 Target Jeremy returning on three separate days and two other willing students completing two sessions each. Record actual recruitment and use. Ten synthetic test accounts do not count as ten users.
 

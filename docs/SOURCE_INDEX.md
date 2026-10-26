@@ -18,6 +18,8 @@ The online Pages were read, not rewritten as part of this local handoff. The exi
 
 ## Reconciliation decisions
 
+The later [student-hub scope update](SCOPE_UPDATE.md) adds R12 and S9–S10: source-linked commitments, selected calendar context, and inspectable consequences feeding the existing learning engine. It imports no implementation code. The current [decision log](DECISIONS.md) also records authorized October 26 implementation, Firebase/Firestore, and runtime model-access evidence; do not treat earlier preparation status as the present state of the application.
+
 See [Decisions](DECISIONS.md) for the exact changes. The key additions are the scheduled no-conversational-prompt path, the first-five-seconds source-event card, the proposed resistor family matching existing exam coverage, the nine-day guide-based build plan, and current submission requirements.
 
 The model/SDK behavior, account access, source integrations, hardware, applied credits, actual costs, reviewer availability and pilot recruitment still require verification. Research citations are retained as references, not evidence of newly completed tests.

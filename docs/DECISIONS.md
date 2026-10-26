@@ -8,9 +8,11 @@
 | --- | --- |
 | Product name | Soma is tentative but used consistently; do not spend build time on a naming project |
 | Entry | Indie Developer, Build for Your World; acceptance confirmed |
-| Positioning | Agent monitors changing coursework and keeps a useful session ready; interactive lessons remain the central payoff |
-| Core loop | Source change → real decision → persistent learning artifact → student interaction → adapted follow-up |
-| UI | Today, Courses, Study; a ready lesson is prominent; familiar educational labels stay |
+| Positioning | Student hub keeps the next action useful as classes and commitments change; interactive learning is the deepest capability |
+| Core loop | Change → affected commitments → supported next action → prepared activity → student interaction → adapted follow-up |
+| UI | Today combines commitments and ready activities; Courses and Study remain; no separate career or scheduling product |
+| UI direction | Oct 26: Jeremy selected the "Ready Card" direction from a separate design canvas: one hero lesson with its source reason, a top-header shell, and a cool neutral/blue palette in Manrope. It borrows that canvas's change entries and paired evidence layout. It replaces the provisional Fieldnotes look in `design-system/soma/MASTER.md` and `globals.css`; directions A–E in `design-system/soma/directions/` stay unselected. Spec: [UI Direction](UI_DIRECTION.md). Not yet implemented |
+| Hub boundary | R12 adds source-linked deadlines/events, one selected calendar read/import route, and consequences for study; no application pipeline or external writeback |
 | Entry paths | Prepared, direct request from course material, and revisit converge on the same engine |
 | User scope | Multi-account, full semester; five courses and ten test accounts are evaluation workloads |
 | Learning evidence | Preserve original response, help, revision, novelty, actual delay, and versions; diagnoses are revisable |
@@ -77,3 +79,22 @@ Add later entries with the motivating observation, effect on scope, verification
 - Local SQLite is solely an explicitly labeled synthetic development fallback. It is not a private-course production backend or proof of Firestore connectivity.
 - Network-enabled `gh auth status` passed; the previous reported invalid login was a restricted-network artifact. Created private GitHub repository https://github.com/Jeremiah-Sakuda/soma; public submission visibility remains a later release step.
 - Executed two bounded Meta Responses probes using `muse-spark-1.3`. First: HTTP 200, incomplete at 256 output tokens (271 total). Second: HTTP 200, completed, expected response, 975 ms, 15 input + 49 output tokens. Combined 335 tokens. No secrets or private coursework were output. This proves runtime API access, not the lesson-generation release gate or available credits.
+
+### October 26 — student-hub scope revision
+
+- Jeremy requested evaluation of a broader student hub and an updated scope for Codex. The selected extension is commitment context and consequences feeding the current learning engine, specified in [Scope Update](SCOPE_UPDATE.md) and PRD R12.
+- Add explicit academic/career deadlines, confirmed interviews and selected personal events with source evidence; one selected calendar read/import route informs declared focus windows. Tentative invitations and ambiguous identities remain unresolved. The same event observed in calendar and email must not consume time twice.
+- Preserve Today, Courses and Study, with ready lessons prominent. Learning remains the deepest action. No application lifecycle tracker, résumé/interview suite, calendar optimizer, autonomous rescheduling, messaging, applications, or delegation enters P0.
+- Reuse existing Firestore, source versions, jobs, activity preparation and learning evidence. Calendar and email context can change a recommendation, not fabricate learning progress or imply external changes. The existing numerical/generation/isolation gates and October 31 freeze remain.
+- The demonstration must distinguish overlap, no overlap, and tentative updates through changed data rather than fixed outcomes. Fresh variants join the existing ten held-out change scenarios; this adds no separate pilot cohort.
+- This revision changes documentation only. No product code, credentials, fixtures or deployments were imported, and no application/repository tests were executed by this scope review. Current implementation work and prior verified results remain intact; new behavior needs implementation and verification.
+
+### October 26 — Ready Card selected; cloud setup verified
+
+- Jeremy explicitly selected `docs/UI_DIRECTION.md` Ready Card and resumed implementation. This is the separate Ready Card design, not Fieldnotes or any A–E exploration. Apply the specified light tokens, Manrope, header navigation, hero lesson, optional prediction, source explanations and evidence view to the existing app.
+- Created Firebase-enabled project `soma-meta-jerem-2026`, registered Soma Web, and created native Standard Firestore in `us-east1`. The synthetic write/read/delete probe passed. Deny-all browser database rules were published; the server enforces account and demo ownership.
+- Firebase email/password authentication was initialized and verified enabled using the provisioning path in official Firebase CLI 15.34.1. Initial runtime-service-account provisioning was denied; the existing owner gcloud login completed setup without broadening runtime permissions or enabling paid Identity Platform billing.
+- The runtime service account credential stays outside the repository for local ADC. Hosted credentials use an encrypted server-only Vercel environment value; public web configuration contains no admin credential.
+- Created and linked Vercel project `jeremiah-sakudas-projects/soma` to the existing GitHub repository. Production env is configured; a successful application deployment and end-to-end production verification are still pending.
+- Actual Meta allocation is user-confirmed $150. Reserve $30, with the more restrictive $1 development application cap still active. Live lesson preparation needs its own verification; earlier API probes do not establish the generation gate.
+- Jeremy will use his own source accounts and add Browserbase/Trigger.dev keys to local env. Exact LMS URL and selected course/email scope remain needed for live collection. Imports remain explicitly labeled while access is pending.

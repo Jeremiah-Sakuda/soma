@@ -1,5 +1,7 @@
 # Agentic implementation audit
 
+P037 implements the three selected architecture refactors: typed execution failures, shared audited publication and matching journal contracts over real Firestore/synthetic SQLite. The selected [returned-work hero story](DEMO_AND_EVALUATION.md) is now documented; its vision/region-evidence path and actual-course family fit remain open. See [production evidence](PRODUCTION_READINESS.md) for executed checks and deployment.
+
 P034 adds durable progressive AI activity journals and protected owner exports across source checks, model preparation, investigation and automatic adaptation. See [audit contract](AI_AUDITABILITY.md), [production evidence](PRODUCTION_READINESS.md) and [remaining user inputs](USER_REMAINING_WORK.md). This does not close the real-source, content-review or learning-evidence gates.
 
 ## Current P031 hardening checkpoint

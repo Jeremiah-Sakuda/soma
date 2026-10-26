@@ -12,7 +12,8 @@ import { META_ENDPOINT } from '../../src/lib/server/meta-client';
 // Original synthetic scenarios, independent of prior development/evaluation cases.
 // Actual provider choices are never stubbed or scripted. Only explicitly gated,
 // coordinated runs may spend; each stage checks the existing global reservation
-// headroom. Never increase the cap or rerun failures for tuning.
+// headroom. The user authorized a $2 total cap; never exceed it or change provider
+// configuration here, and never rerun failures for tuning.
 const enabled = process.env.SOMA_LIVE_AGENTIC_SCENARIOS_TEST === 'true';
 const evaluationId = randomUUID();
 const tools = new Set(['list_sources', 'read_source', 'follow_reference', 'evaluate_experiment', 'prepare_diagnostic', 'prepare_experiment_diagnostic', 'revise_interpretation', 'finish_investigation']);
@@ -34,6 +35,20 @@ function source(state: WorkspaceState, id: string, title: string, body: string, 
 function practice(state: WorkspaceState, id: string, objective: string, sourceId: string): Lesson {
   return { id, courseId: state.courses[0].id, title: objective, objective, description: 'Original synthetic practice.', reason: 'Previously selected from course guidance.', duration: 8, kind: 'practice', circuit: { topology: 'series', voltage: 1, r1: 1, r2: 1 }, sourceIds: [sourceId], sourceVersions: { [sourceId]: 1 }, modelVersion: 'authored-scenario-v1', version: 1, state: 'ready', examEligible: false, mode: 'prepared', question: 'Which choice follows the stated course objective?', options: ['Use the stated criterion.', 'Ignore the stated criterion.', 'Assume every criterion is interchangeable.'], answerIndex: 0, explanation: 'The stated criterion supports this choice.', hint: 'Review the source criterion.' };
 }
+/** Authored prepared baseline only: no previous live decision, response, or run. */
+function authorityFixture(): WorkspaceState {
+  const state = workspace('synthetic-visual-communication');
+  const correctionUrl = 'https://scenario.example.invalid/birch-correction';
+  state.sources = [
+    source(state, 'a-reading-note', 'Workshop reading note', `The birch assessment has an official scope correction. Read its registered reference before selecting preparation: ${correctionUrl}`, { role: 'teaching-material', assessmentId: 'birch' }),
+    source(state, 'b-outline', 'First workshop outline', 'The birch assessment asks students to make text edges align consistently. Prepare by comparing alignment choices; visual hierarchy belongs to a later workshop.', { role: 'syllabus', assessmentId: 'birch' }),
+    ...Array.from({ length: 6 }, (_, index) => source(state, `m-reference-${index}`, `General reference ${index}`, 'This original synthetic reference concerns shared studio supplies rather than the assessment scope.', { role: 'teaching-material' })),
+    source(state, 'z-official-correction', 'Birch scope correction', 'This correction replaces the First workshop outline for the birch assessment. Prepare to identify a clear reading order using visual hierarchy. Alignment remains background preparation.', { role: 'instructor-update', assessmentId: 'birch' }, correctionUrl),
+  ];
+  state.lessons = [practice(state, 'practice-prior', 'Compare text-edge alignment choices', 'b-outline'), practice(state, 'practice-revised', 'Identify a clear reading order through visual hierarchy', 'z-official-correction')];
+  state.recommendedLessonId = 'practice-prior';
+  return state;
+}
 function classify(detail: unknown): string {
   if (typeof detail !== 'string') return 'unclassified';
   if (detail.includes('Cite each source once.')) return 'duplicate-source-citation';
@@ -53,10 +68,10 @@ async function evaluate(context: TestContext, stage: string, state: WorkspaceSta
   check(process.env.SOMA_PERSISTENCE === 'firestore' && process.env.SOMA_LIVE_INFERENCE === 'true' && Boolean(process.env.MODEL_API_KEY), 'actual configured provider');
   check(!process.env.FIRESTORE_EMULATOR_HOST && !process.env.FIREBASE_AUTH_EMULATOR_HOST, 'no emulator fallback');
   const cap = Number(process.env.META_APP_SPEND_CAP_USD || '1');
-  check(cap > 0 && cap <= 1, 'unchanged maximum one-dollar cap');
+  check(cap > 0 && cap <= 2, 'user-authorized maximum two-dollar total cap');
   const consumed = Number((await getServerFirestore().doc('somaBudget/global').get()).data()?.consumed || 0);
   if (consumed + INVESTIGATION_RESERVATION_USD > budgetLimit(Number(process.env.META_ALLOCATION_USD), cap)) {
-    report({ stage, outcome: 'budget-blocked', calls: 0, costUsd: 0, preflightConsumedUsd: consumed });
+    report({ stage, outcome: 'budget-blocked', calls: 0, costUsd: 0, preflightConsumedUsd: consumed, configuredCapUsd: cap, baseline: 'authored-prepared-synthetic', priorInvestigationCount: state.investigations?.length ?? 0 });
     context.skip('Existing global budget cannot reserve the next investigation; no inference attempted.');
   }
   const original = JSON.stringify(state), started = Date.now(), originalFetch = globalThis.fetch;
@@ -109,7 +124,8 @@ async function evaluate(context: TestContext, stage: string, state: WorkspaceSta
   } finally {
     globalThis.fetch = originalFetch;
     const billing = steps.map(step => step.match(/(\d+) Meta calls; estimated token cost \$(\d+(?:\.\d+)?); (\d+) ms\./)).find(Boolean);
-    report({ stage, outcome, calls, elapsedMs: Date.now() - started, preflightConsumedUsd: consumed,
+    report({ stage, outcome, calls, elapsedMs: Date.now() - started, preflightConsumedUsd: consumed, configuredCapUsd: cap,
+      baseline: 'authored-prepared-synthetic', priorInvestigationCount: state.investigations?.length ?? 0,
       costUsd: result?.record.usage?.costUsd ?? (billing ? Number(billing[2]) : null),
       engineVersion: result?.record.engineVersion ?? null, runtimeModel: result?.record.runtimeModel ?? null,
       decision: result?.decision.decision ?? null, selectedLessonId: result?.selectedLessonId ?? null,
@@ -124,19 +140,9 @@ async function evaluate(context: TestContext, stage: string, state: WorkspaceSta
   }
 }
 
-let authorityState: WorkspaceState | undefined;
 describe.skipIf(!enabled)('independent live agentic scenarios', () => {
   it('source authority follows a registered correction and reuses unchanged work', { timeout: 115_000, retry: 0 }, async context => {
-    const state = workspace('synthetic-visual-communication'), courseId = state.courses[0].id;
-    const correctionUrl = 'https://scenario.example.invalid/birch-correction';
-    state.sources = [
-      source(state, 'a-reading-note', 'Workshop reading note', `The birch assessment has an official scope correction. Read its registered reference before selecting preparation: ${correctionUrl}`, { role: 'teaching-material', assessmentId: 'birch' }),
-      source(state, 'b-outline', 'First workshop outline', 'The birch assessment asks students to make text edges align consistently. Prepare by comparing alignment choices; visual hierarchy belongs to a later workshop.', { role: 'syllabus', assessmentId: 'birch' }),
-      ...Array.from({ length: 6 }, (_, index) => source(state, `m-reference-${index}`, `General reference ${index}`, 'This original synthetic reference concerns shared studio supplies rather than the assessment scope.', { role: 'teaching-material' })),
-      source(state, 'z-official-correction', 'Birch scope correction', 'This correction replaces the First workshop outline for the birch assessment. Prepare to identify a clear reading order using visual hierarchy. Alignment remains background preparation.', { role: 'instructor-update', assessmentId: 'birch' }, correctionUrl),
-    ];
-    state.lessons = [practice(state, 'practice-prior', 'Compare text-edge alignment choices', 'b-outline'), practice(state, 'practice-revised', 'Identify a clear reading order through visual hierarchy', 'z-official-correction')];
-    state.recommendedLessonId = 'practice-prior';
+    const state = authorityFixture(), courseId = state.courses[0].id;
     const request = { courseId, initialSourceIds: ['a-reading-note', 'b-outline'], goal: 'Investigate the reading note and its official reference, then decide which available activity fits the birch assessment.' };
     const result = await evaluate(context, 'source-authority', state, request, value => {
       check(value.decision.decision === 'revise-session' && value.selectedLessonId === 'practice-revised', 'supported activity replaces prior recommendation');
@@ -144,7 +150,7 @@ describe.skipIf(!enabled)('independent live agentic scenarios', () => {
       check(value.decision.conflicts.some(item => item.resolution === 'explicit-supersession' && item.preferredSourceId === 'z-official-correction' && item.sourceIds.includes('b-outline')), 'authority conflict explicitly resolved');
       check(!value.lesson, 'existing validated activity reused');
     });
-    authorityState = publishInvestigation(state, result);
+    const authorityState = publishInvestigation(state, result);
     const reservationsBefore = await getServerFirestore().collection('somaBudgetReservations').where('workspaceId', '==', state.id).get();
     const originalFetch = globalThis.fetch, before = JSON.stringify(authorityState); let cacheCalls = 0;
     globalThis.fetch = (async (...args: Parameters<typeof fetch>) => { const input = args[0]; if ((input instanceof Request ? input.url : String(input)) === META_ENDPOINT) cacheCalls++; return originalFetch(...args); }) as typeof fetch;
@@ -159,9 +165,9 @@ describe.skipIf(!enabled)('independent live agentic scenarios', () => {
   });
 
   it('source no-effect follow-up retains useful preparation when budget permits', { timeout: 115_000, retry: 0 }, async context => {
-    if (!authorityState) { report({ stage: 'source-no-effect', outcome: 'prerequisite-unavailable', calls: 0, costUsd: 0 }); context.skip('Authority stage must have completed first.'); }
-    check(authorityState, 'authority prerequisite available');
-    const state = structuredClone(authorityState), courseId = state.courses[0].id;
+    const state = authorityFixture(), courseId = state.courses[0].id;
+    state.recommendedLessonId = 'practice-revised';
+    check(!state.investigations?.length && !state.runs.length && state.lessons.every(lesson => lesson.mode === 'prepared'), 'authored prepared baseline has no fabricated live history');
     state.sources.push(source(state, 'later-logistics', 'Studio materials notice', 'For the birch assessment, bring a blank sheet to the studio. The preparation objective remains visual hierarchy and reading order from the official scope correction. Bringing a sheet changes supplies, not the learning objective.', { role: 'instructor-update', assessmentId: 'birch' }));
     state.revision++;
     await evaluate(context, 'source-no-effect', state, { courseId, initialSourceIds: ['later-logistics'], goal: 'Check the new studio materials notice and decide whether my next preparation activity needs to change.' }, result => {

@@ -86,6 +86,22 @@ describe.skipIf(process.env.SOMA_LIVE_ADAPTATION_TEST!=='true')('real account ad
         await root.collection('adaptationJobs').doc(latest.id).update({status:'running',attempts:3,leaseUntil:0,nextAttemptAt:0});
         expect(await listNextAdaptationJob(owner)).toEqual({id:latest.id});expect(await runAdaptationJob(owner,latest.id)).toBeNull();
         expect((await listAdaptationJobs(owner))[0].status).toBe('failed');
+        // Immediate after() uses an ordinary session capability; disabled users must also stop.
+        const beforeDisabled=await submit(0,newer.attempts.at(-1)!.id),preDisabled=(await listAdaptationJobs(owner))[0];
+        await getAuth(getServerApp()).updateUser(a.uid,{disabled:true});
+        const countBeforeDisabled=providerCalls;
+        await expect(runAdaptationJob(owner,preDisabled.id)).rejects.toMatchObject({code:'background_account_inactive',status:401});
+        expect(providerCalls).toBe(countBeforeDisabled);expect((await listAdaptationJobs(owner))[0].status).toBe('failed');
+        await getAuth(getServerApp()).updateUser(a.uid,{disabled:false});
+        const beforePublication=await submit(1,beforeDisabled.attempts.at(-1)!.id),disabledDuring=(await listAdaptationJobs(owner))[0];
+        held=new Promise<void>(resolve=>{release=resolve;});entered=new Promise<void>(resolve=>{arrived=resolve;});
+        const disabledPending=runAdaptationJob(owner,disabledDuring.id);await entered;
+        await getAuth(getServerApp()).updateUser(a.uid,{disabled:true});release();
+        await expect(disabledPending).rejects.toMatchObject({code:'background_account_inactive',status:401});
+        expect((await readAccountWorkspace(owner))!.investigations).toEqual(beforePublication.investigations);
+        expect((await readAccountWorkspace(owner))!.attempts).toEqual(beforePublication.attempts);
+        expect((await listAdaptationJobs(owner))[0].status).toBe('failed');
+        await getAuth(getServerApp()).updateUser(a.uid,{disabled:false});
         await deleteAccountWorkspace(owner);expect(await listAdaptationJobs(owner)).toEqual([]);
         expect(await readAccountWorkspace(other)).toEqual(otherBefore);
       }finally{release?.();intercepted.mockRestore();}

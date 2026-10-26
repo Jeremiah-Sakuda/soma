@@ -3,7 +3,7 @@ import { FieldPath, type DocumentReference, type Transaction } from 'firebase-ad
 import type { AgentRun, WorkspaceAction, WorkspaceState } from '../domain/types';
 import { applyAction } from '../domain/learning';
 import { MODEL_VERSION } from '../domain/lessons';
-import { assertVerifiedAccount, assertAccountWorkspaceGeneration, revalidateWorkerAccount, type VerifiedAccount } from './account';
+import { assertVerifiedAccount, assertAccountWorkspaceGeneration, revalidateWorkerAccount, revalidateBackgroundAccount, type VerifiedAccount } from './account';
 import { readAccountWorkspace, updateAccountWorkspace } from './account-store';
 import { getServerFirestore } from './firebase-config';
 import { InferenceBudgetError } from './budget';
@@ -151,15 +151,18 @@ export async function retryAdaptationJob(account: VerifiedAccount, id: string) {
 }
 export function adaptationFailurePatch(current: WorkspaceState | null, job: AdaptationJob, error: unknown, now=Date.now()): Partial<AdaptationJob> {
   const valid=current&&adaptationContextCurrent(current,job);
+  const inactive=['background_account_inactive','worker_account_inactive'].includes(String((error as {code?:string})?.code));
   const transient=error instanceof WorkspaceConflictError||(error instanceof InvestigationError?/\((network|timeout|http)\)/.test(error.run.effect):[429,500,502,503,504].includes(Number((error as {status?:number})?.status)));
   const retry=valid&&transient&&job.attempts<MAX_ATTEMPTS;
-  return {status:!valid?'stale':retry?'queued':'failed',nextAttemptAt:retry?now+Math.min(300_000,30_000*2**(job.attempts-1)):0,...(error instanceof InvestigationError?{failureRun:error.run}:{}),notice:!valid?'A newer response, changed source or deleted workspace invalidated this follow-up. No old result replaced current work.':retry?'Follow-up paused after a temporary interruption and will retry automatically. Your response is saved.':'The follow-up stopped at its bounded model, validation or recovery limit. Your response and current activities are preserved.'};
+  return {status:!valid?'stale':retry?'queued':'failed',nextAttemptAt:retry?now+Math.min(300_000,30_000*2**(job.attempts-1)):0,...(error instanceof InvestigationError?{failureRun:error.run}:{}),notice:!valid?'A newer response, changed source or deleted workspace invalidated this follow-up. No old result replaced current work.':inactive?'Follow-up stopped because this account is no longer active. Your saved response was not changed.':retry?'Follow-up paused after a temporary interruption and will retry automatically. Your response is saved.':'The follow-up stopped at its bounded model, validation or recovery limit. Your response and current activities are preserved.'};
 }
 export async function runAdaptationJob(account: VerifiedAccount, id: string): Promise<WorkspaceState | null> {
   const state = await readAccountWorkspace(account); if (!state) throw new WorkspaceConflictError();
   const job = await claimAdaptationJob(account, state, id); if (!job) return null;
   try {
+    await revalidateBackgroundAccount(account);
     const result = await investigateWithSpark(state, { courseId: job.courseId, previousInvestigationId: job.investigationId, attemptId: job.attemptId, goal: 'Reconsider the provisional explanations against this actual saved response and its assistance. Choose a supported next activity when useful; keep uncertainty and preserve the original observation.' }, { automatic: true });
+    await revalidateBackgroundAccount(account);
     return await updateAccountWorkspace(account, current => publishAdaptation(current, job, result), job.contextRevision, async (transaction, root) => {
       const reference = root.collection('adaptationJobs').doc(job.id), current = await transaction.get(reference);
       if (!current.exists || current.get('ownerId') !== account.uid || current.get('workspaceId') !== job.workspaceId || current.get('leaseId') !== job.leaseId || current.get('status') !== 'running' || current.get('leaseUntil') <= Date.now()) throw new WorkspaceConflictError();

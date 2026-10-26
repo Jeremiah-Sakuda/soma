@@ -6,6 +6,6 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command: 'npm run dev -- --port 3100', url: 'http://127.0.0.1:3100', reuseExistingServer: false,
-    timeout: 120000, env: { SOMA_PERSISTENCE: 'local-synthetic', SOMA_LIVE_INFERENCE: 'false', SOMA_LOCAL_DATABASE_PATH: '.local/e2e.sqlite' },
+    timeout: 120000, env: { NEXT_PUBLIC_FIREBASE_API_KEY: 'synthetic-browser-test-key', SOMA_PERSISTENCE: 'local-synthetic', SOMA_LIVE_INFERENCE: 'false', SOMA_LOCAL_DATABASE_PATH: '.local/e2e.sqlite' },
   },
 });

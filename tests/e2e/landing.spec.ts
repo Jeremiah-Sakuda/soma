@@ -84,3 +84,85 @@ test('a failed account check cannot silently create a demo workspace', async ({ 
   expect(checks).toBe(2);
   expect(workspaceRequests).toBe(0);
 });
+
+test('an expired account deep link offers sign-in without creating a demo', async ({ page }) => {
+  let workspaceRequests = 0;
+  await page.route('**/api/auth/session', route => route.fulfill({ json: { authenticated: false, accountWorkspaceAvailable: true } }));
+  await page.route('**/api/workspace', route => { workspaceRequests++; return route.fulfill({ status: 401, json: { error: 'Please sign in again.' } }); });
+  await page.goto('/?view=study&lesson=private-expired');
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+  await expect(page.getByLabel('Email', { exact: true })).toBeVisible();
+  await expect(page.getByRole('dialog')).toContainText('Your account session expired.');
+  await expect(page).toHaveURL(/lesson=private-expired/);
+  expect(workspaceRequests).toBe(1);
+});
+
+test('deleting workspace data returns to the entrance without fetching a synthetic workspace', async ({ page }) => {
+  const workspace = { ...seedWorkspace('original-delete-account'), mode: 'account' as const };
+  let reads = 0, deleted = false;
+  await page.route('**/api/auth/session', route => route.fulfill({ json: { authenticated: !deleted, accountWorkspaceAvailable: true } }));
+  await page.route('**/api/workspace', route => { if (route.request().method() === 'DELETE') { deleted = true; return route.fulfill({ json: { deleted: true } }); } reads++; return route.fulfill({ json: { workspace, capabilities: { spark: false, persistence: 'local-synthetic', liveSources: [] } } }); });
+  await page.route('**/api/jobs', route => route.fulfill({ json: { jobs: [] } }));
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Workspace menu' }).click();
+  await page.locator('summary').filter({ hasText: 'Delete workspace data' }).click();
+  await page.getByLabel('Delete my current workspace records', { exact: true }).check();
+  await page.getByRole('button', { name: 'Delete workspace data', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Study what matters next.', exact: true })).toBeVisible();
+  expect(deleted).toBe(true); expect(reads).toBe(1);
+  await expect(page).toHaveURL(/\/$/);
+});
+
+test('signing into another account discards delayed investigation output and queued old saves', async ({ page }) => {
+  const first = { ...seedWorkspace('original-delayed-account-a'), mode: 'account' as const };
+  const second = { ...seedWorkspace('original-delayed-account-b'), mode: 'account' as const };
+  first.lessons[0].diagnosticInvestigationId = 'synthetic-pending-investigation';
+  second.lessons[0].title = 'Account B private lesson';
+  let account: 'a' | 'b' | null = 'a', actions = 0, started = false, reads = 0, heldRead = false, importStarted = false;
+  let finish!: () => void; const held = new Promise<void>(resolve => { finish = resolve; });
+  const capabilities = { spark: true, persistence: 'local-synthetic', liveSources: [] };
+  await page.route('https://identitytoolkit.googleapis.com/**', route => route.fulfill({ json: { idToken: 'synthetic-test-token-never-valid' } }));
+  await page.route('**/api/auth/session', route => { if (route.request().method() === 'DELETE') account = null; if (route.request().method() === 'POST') account = 'b'; return route.fulfill({ json: { authenticated: !!account, accountWorkspaceAvailable: true } }); });
+  await page.route('**/api/workspace', async route => { const workspace = account === 'b' ? second : first; if (++reads === 2) { heldRead = true; await held; } await route.fulfill({ json: { workspace, capabilities } }); });
+  await page.route('**/api/imports', async route => { importStarted = true; await held; await route.fulfill({ json: { workspace: first, capabilities } }); });
+  await page.route('**/api/jobs', route => route.fulfill({ json: { jobs: [] } }));
+  await page.route('**/api/investigations', async route => { started = true; await held; await route.fulfill({ json: { workspace: first, capabilities, selectedLessonId: first.lessons[0].id, notice: 'Old account response must stay hidden.' } }); });
+  await page.route('**/api/actions', route => { actions++; return route.fulfill({ json: { workspace: first, capabilities } }); });
+  await page.goto('/?view=courses');
+  await page.getByRole('button', { name: 'Investigate course update', exact: true }).first().click();
+  await expect.poll(() => started).toBe(true);
+  // Opening sources queues a diagnostic-help save behind the held investigation.
+  await page.getByRole('button', { name: 'Inspect sources', exact: true }).click();
+  // Also hold a reload and a child component's import callback from account A.
+  await page.evaluate(() => window.dispatchEvent(new PopStateEvent('popstate')));
+  await expect.poll(() => heldRead).toBe(true);
+  await page.getByRole('button', { name: 'Workspace menu' }).click();
+  await page.locator('summary').filter({ hasText: /^Add selected source material$/ }).click();
+  await page.getByLabel('Stable source key', { exact: true }).fill('synthetic-held-import');
+  await page.getByLabel('Source title', { exact: true }).fill('Original synthetic source');
+  await page.getByLabel('Course ID', { exact: true }).fill('circuits');
+  await page.getByLabel('Course code', { exact: true }).fill('EE 201');
+  await page.getByLabel('Course title', { exact: true }).fill('Synthetic Circuits');
+  await page.getByLabel('Selected source text', { exact: true }).fill('Original synthetic course material for a held import.');
+  await page.getByRole('button', { name: 'Import selected source', exact: true }).click();
+  await expect.poll(() => importStarted).toBe(true);
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Study what matters next.', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page.getByLabel('Email', { exact: true }).fill('synthetic-b@example.test');
+  await page.getByLabel('Password', { exact: true }).fill('synthetic-fixture-password');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).last().click();
+  await expect(page.getByRole('heading', { name: 'Your private account' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close dialog', exact: true }).click();
+  await page.getByRole('button', { name: 'Today', exact: true }).click();
+  await expect(page.getByRole('heading', { name: second.lessons[0].title, exact: true })).toBeVisible();
+  const responseFinished = page.waitForResponse('**/api/investigations'); finish(); await responseFinished;
+  // A subsequent browser request gives the response continuation and abandoned queue time to settle.
+  await page.getByRole('button', { name: 'Workspace menu' }).click();
+  await expect(page.getByRole('heading', { name: 'Your private account' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close dialog', exact: true }).click();
+  await expect(page.getByRole('heading', { name: second.lessons[0].title, exact: true })).toBeVisible();
+  await expect(page.getByText('Old account response must stay hidden.', { exact: true })).toHaveCount(0);
+  await expect(page).toHaveURL(/view=today/); expect(actions).toBe(0);
+});

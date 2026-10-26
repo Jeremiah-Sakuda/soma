@@ -5,11 +5,11 @@ import { AccountPanel } from './account-panel';
 import type { WorkspaceResponse } from '@/lib/domain/types';
 import styles from './soma-entrance.module.css';
 
-export function SomaEntrance({ openDemo, accountReady, onUpdate, error, retry, oauthReturn }: {
+export function SomaEntrance({ openDemo, accountReady, onUpdate, error, retry, oauthReturn, recoverAccount, beforeSessionChange, onSessionChangeFailed }: {
   openDemo: () => void; accountReady: () => Promise<void>; onUpdate: (response: WorkspaceResponse) => void;
-  error?: string; retry: () => void; oauthReturn?: 'connected' | 'error' | null;
+  recoverAccount?: boolean; beforeSessionChange?: () => void; onSessionChangeFailed?: () => void; error?: string; retry: () => void; oauthReturn?: 'connected' | 'error' | null;
 }) {
-  const [authMode, setAuthMode] = useState<'signin' | 'signup' | null>(oauthReturn ? 'signin' : null);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | null>(oauthReturn || recoverAccount ? 'signin' : null);
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => { if (authMode) dialog.current?.showModal(); else dialog.current?.close(); }, [authMode]);
   return <div className={styles.entrance}>
@@ -41,8 +41,9 @@ export function SomaEntrance({ openDemo, accountReady, onUpdate, error, retry, o
     </main>
     <dialog ref={dialog} className="workspace-dialog" aria-labelledby="entrance-account-title" onCancel={() => setAuthMode(null)} onClick={event => { if (event.target === event.currentTarget) setAuthMode(null); }}>
       <div className="dialog-content"><div className="dialog-header"><h2 id="entrance-account-title">{authMode === 'signup' ? 'Create your Soma account' : 'Welcome back'}</h2><button className="icon-button" aria-label="Close account dialog" onClick={() => setAuthMode(null)}><X size={20}/></button></div>
+        {recoverAccount && error && <p className="alert" role="alert">{error}</p>}
         {oauthReturn && <p className="alert" role="status">{oauthReturn === 'error' ? 'Google authorization did not complete. Sign in to your Soma account to retry the connection.' : 'Sign in to your Soma account to inspect the returned Google connection.'}</p>}
-        {authMode && <AccountPanel key={authMode} initialMode={authMode} reload={accountReady} onUpdate={onUpdate}/>}
+        {authMode && <AccountPanel key={authMode} initialMode={authMode} reload={accountReady} onSignedIn={accountReady} beforeSessionChange={beforeSessionChange} onSessionChangeFailed={onSessionChangeFailed} onUpdate={onUpdate}/>}
       </div>
     </dialog>
   </div>;

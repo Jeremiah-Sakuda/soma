@@ -74,6 +74,8 @@ test('optional investigation preserves responses and exposes a provisional befor
   expect(requests[1].previousInvestigationId).toBe(record.id);
   expect(requests[1].attemptId).toBe(workspace.attempts[0].id);
   expect(workspace.attempts).toHaveLength(1);
+  expect(workspace.attempts[0].assisted).toBe(true);
+  expect(workspace.attempts[0].assistance.some(item => item.includes('explanation'))).toBe(true);
   await page.locator('section[aria-label="Course investigations"] summary').first().click();
   await expect(page.getByText('What changed after your response', { exact: true })).toBeVisible();
   await expect(page.getByText('Before: plausible · After: weakened', { exact: true })).toBeVisible();
@@ -134,4 +136,37 @@ test('persisted diagnostic experiments restore their setup, reveal generic targe
   const revealed = records?.find(item => item.kind === 'reveal');
   expect(revealed).toMatchObject({ comparisonValid: false, resultInputs: { voltage: 18, r1: 12, r2: 3 } });
   expect(revealed).not.toHaveProperty('matched');
+});
+
+test('source disclosure waits for saved help and cannot rewrite an earlier unassisted diagnostic response', async ({ page }) => {
+  let workspace = seedWorkspace('diagnostic-help-boundary');
+  const lesson = { ...workspace.lessons[0], id: 'help-boundary', kind: 'practice' as const, exposure: 'fresh-no-diagram' as const, diagnosticInvestigationId: 'help-inspection', reason: 'An optional comparison using your selected course context.' };
+  workspace = { ...workspace, lessons: [lesson, { ...lesson, id: 'historical-help-boundary', state: 'stale' }, ...workspace.lessons] };
+  const reply = (): WorkspaceResponse => ({ workspace, capabilities: { spark: false, persistence: 'local-synthetic', liveSources: [] } });
+  let rejectHelp = true;
+  await page.route('**/api/workspace', route => route.fulfill({ json: reply() }));
+  await page.route('**/api/actions', route => {
+    const action = route.request().postDataJSON();
+    if (action.type === 'assistance' && rejectHelp) return route.fulfill({ status: 503, json: { error: 'Synthetic help persistence unavailable.' } });
+    workspace = applyAction(workspace, action); return route.fulfill({ json: reply() });
+  });
+  await page.goto('/?view=study&lesson=help-boundary');
+  await page.locator('.why-card summary').click();
+  await page.getByRole('button', { name: 'Read source context', exact: true }).click();
+  await expect(page.locator('main [role="alert"]')).toContainText('Synthetic help persistence unavailable.');
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  expect(workspace.assistance[lesson.id] ?? []).toHaveLength(0);
+  await page.locator('.answer-options').getByRole('radio').first().check();
+  await page.getByRole('button', { name: 'Check my thinking', exact: true }).click();
+  await expect.poll(() => workspace.attempts.length).toBe(1);
+  const original = structuredClone(workspace.attempts[0]); expect(original.assisted).toBe(false);
+  rejectHelp = false;
+  await page.getByRole('button', { name: 'Read source context', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Your sources', exact: true })).toBeVisible();
+  expect(workspace.assistance[lesson.id].some(item => item.includes('explanation'))).toBe(true);
+  expect(workspace.attempts[0]).toEqual(original);
+  await page.getByRole('button', { name: 'Close dialog', exact: true }).click();
+  await page.getByRole('button', { name: 'Save revised answer', exact: true }).click();
+  await expect.poll(() => workspace.attempts.length).toBe(2);
+  expect(workspace.attempts[1].assisted).toBe(true); expect(workspace.attempts[0]).toEqual(original);
 });

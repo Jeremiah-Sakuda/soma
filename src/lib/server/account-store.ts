@@ -6,14 +6,18 @@ import { assertVerifiedAccount, assertAccountWorkspaceGeneration, revalidateWork
 import { getServerFirestore } from './firebase-config';
 import { getPersistenceMode, WorkspaceConflictError, WorkspaceStoreError } from './store';
 
-type RecordValue = { key: string; order: number; value: unknown };
+import { compareRecordOrder, retainRecordOrder, type RecordOrder } from './record-order';
+
+type RecordValue = { key: string; order: RecordOrder; value: unknown };
 export type AccountRecords = { summary: Record<string, unknown>; groups: Record<string, { kind: 'array' | 'map'; records: Record<string, RecordValue> }> };
 type Metadata = { ownerId: string; workspaceId: string; revision: number; summary: Record<string, unknown>; groups: Record<string, 'array' | 'map'>; deleted?: boolean; deletionComplete?: boolean };
+// Preserve the persisted rank snapshot separately from the public workspace payload.
+const snapshots = new WeakMap<WorkspaceState, AccountRecords>();
 const mapGroups = new Set(['assistance', 'savedInputs', 'predictionStates']);
 const digest = (value: string) => createHash('sha256').update(value).digest('hex');
 
 /** Each source version, attempt, lesson, interpretation and commitment is a record. */
-export function encodeAccountRecords(workspace: WorkspaceState): AccountRecords {
+export function encodeAccountRecords(workspace: WorkspaceState, previous = snapshots.get(workspace)): AccountRecords {
   if (workspace.mode !== 'account') throw new WorkspaceStoreError('Account storage requires an account workspace.', 422, 'account_workspace_required');
   const normalized = JSON.parse(JSON.stringify(workspace)) as Record<string, unknown>;
   const summary: Record<string, unknown> = {};
@@ -30,8 +34,9 @@ export function encodeAccountRecords(workspace: WorkspaceState): AccountRecords 
       const recordId = digest(identity);
       if (records[recordId]) throw new WorkspaceStoreError('Duplicate record identity in workspace.', 422, 'duplicate_record');
       if (Buffer.byteLength(JSON.stringify(item), 'utf8') > 256 * 1024) throw new WorkspaceStoreError('An imported record exceeds the storage limit.', 413, 'record_capacity');
-      records[recordId] = { key, order, value: item };
+      records[recordId] = { key: kind === 'array' ? previous?.groups[group]?.records[recordId]?.key ?? identity : key, order, value: item };
     });
+    if (previous?.groups[group]?.kind === kind) retainRecordOrder(records, previous.groups[group].records);
     groups[group] = { kind, records };
   }
   if (Buffer.byteLength(JSON.stringify(summary), 'utf8') > 128 * 1024) throw new WorkspaceStoreError('Workspace metadata capacity reached.', 413, 'workspace_capacity');
@@ -41,10 +46,12 @@ export function encodeAccountRecords(workspace: WorkspaceState): AccountRecords 
 export function decodeAccountRecords(encoded: AccountRecords): WorkspaceState {
   const state: Record<string, unknown> = { ...encoded.summary };
   for (const [group, { kind, records }] of Object.entries(encoded.groups)) {
-    const ordered = Object.values(records).sort((a, b) => a.order - b.order);
+    const ordered = Object.values(records).sort((a, b) => compareRecordOrder(a.order,b.order));
     state[group] = kind === 'array' ? ordered.map(record => record.value) : Object.fromEntries(ordered.map(record => [record.key, record.value]));
   }
-  return state as WorkspaceState;
+  const workspace = state as WorkspaceState;
+  snapshots.set(workspace, encoded);
+  return workspace;
 }
 
 function accountRef(account: VerifiedAccount) {
@@ -87,7 +94,7 @@ export function accountRecordChanges(before: AccountRecords, after: AccountRecor
 }
 
 function writeRecords(transaction: Transaction, ref: DocumentReference, account: VerifiedAccount, workspace: WorkspaceState, before: AccountRecords): void {
-  const after = encodeAccountRecords(workspace);
+  const after = encodeAccountRecords(workspace, before);
   for (const change of accountRecordChanges(before, after)) {
     const recordRef = ref.collection(change.group).doc(change.id);
     if (change.record) transaction.set(recordRef, { ...change.record, ownerId: account.uid, workspaceId: workspace.id });
@@ -134,8 +141,8 @@ export async function updateAccountWorkspace(account: VerifiedAccount, mutator: 
   const next = await mutator(structuredClone(current));
   if (next.id !== current.id || next.mode !== current.mode || next.createdAt !== current.createdAt || next.expiresAt !== current.expiresAt) throw new WorkspaceStoreError('Workspace identity cannot be changed by an action.', 422, 'immutable_workspace');
   next.revision = current.revision + 1;
-  const before = encodeAccountRecords(current);
-  accountRecordChanges(before, encodeAccountRecords(next));
+  const before = snapshots.get(current)!;
+  accountRecordChanges(before, encodeAccountRecords(next, before));
   await revalidateWorkerAccount(account);
   await ref.firestore.runTransaction(async transaction => {
     const document = await transaction.get(ref);

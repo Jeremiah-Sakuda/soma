@@ -159,7 +159,7 @@ export async function runAdaptationJob(account: VerifiedAccount, id: string): Pr
   const state = await readAccountWorkspace(account); if (!state) throw new WorkspaceConflictError();
   const job = await claimAdaptationJob(account, state, id); if (!job) return null;
   try {
-    const result = await investigateWithSpark(state, { courseId: job.courseId, previousInvestigationId: job.investigationId, attemptId: job.attemptId, goal: 'Reconsider the provisional explanations against this actual saved response and its assistance. Choose a supported next activity when useful; keep uncertainty and preserve the original observation.' });
+    const result = await investigateWithSpark(state, { courseId: job.courseId, previousInvestigationId: job.investigationId, attemptId: job.attemptId, goal: 'Reconsider the provisional explanations against this actual saved response and its assistance. Choose a supported next activity when useful; keep uncertainty and preserve the original observation.' }, { automatic: true });
     return await updateAccountWorkspace(account, current => publishAdaptation(current, job, result), job.contextRevision, async (transaction, root) => {
       const reference = root.collection('adaptationJobs').doc(job.id), current = await transaction.get(reference);
       if (!current.exists || current.get('ownerId') !== account.uid || current.get('workspaceId') !== job.workspaceId || current.get('leaseId') !== job.leaseId || current.get('status') !== 'running' || current.get('leaseUntil') <= Date.now()) throw new WorkspaceConflictError();

@@ -4,6 +4,7 @@ export function adaptationFixture(id = 'original-adaptation-fixture'): Workspace
   const state = seedWorkspace(id); state.mode = 'account';
   const base = state.lessons.find(item => item.courseId === 'probability')!;
   const source = state.sources.find(item => item.id === base.sourceIds[0])!;
+  for(const selected of state.sources.filter(item=>base.sourceIds.includes(item.id)))selected.provenance={automaticPreparation:true,origin:'manual-course',sourceKey:`original-selected-${selected.id}`,contentHash:'original-synthetic-consent-fixture',importedAt:state.createdAt};
   const evidence = [{ sourceId: source.id, version: source.version, quote: source.body.slice(0,100) }];
   const lesson = { ...base, id: 'original-adaptive-question', exposure: 'fresh-no-diagram' as const, diagnosticInvestigationId: 'original-adaptation-investigation', question: 'Which interpretation best explains this original synthetic relationship?', options: ['The first relationship applies.', 'The competing relationship applies.', 'The evidence remains uncertain.'], explanation: 'Your response can distinguish provisional explanations; it is not graded.' };
   state.lessons.unshift(lesson);

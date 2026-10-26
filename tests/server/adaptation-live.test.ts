@@ -30,7 +30,15 @@ describe.skipIf(process.env.SOMA_LIVE_ADAPTATION_TEST!=='true')('real account ad
         const session=await exchangeAccountSession((await login.json()).idToken);record.cookie=`${ACCOUNT_SESSION_COOKIE}=${session.sessionCookie}`;
         record.account=(await verifyAccountSession(new Request('https://soma.example',{headers:{cookie:record.cookie}})))!;
         const initial=await readOrCreateAccountWorkspace(record.account);record.workspaceId=initial.id;
-        await updateAccountWorkspace(record.account,current=>({...adaptationFixture(current.id),createdAt:current.createdAt,expiresAt:current.expiresAt,revision:current.revision}));
+        await updateAccountWorkspace(record.account,current=>{
+          const fixture={...adaptationFixture(current.id),createdAt:current.createdAt,expiresAt:current.expiresAt,revision:current.revision};
+          const selected=fixture.lessons[0],legacySource={...fixture.sources.find(item=>item.id===selected.sourceIds[0])!,id:'legacy-unselected-source',body:'UNCONSENTED_BODY_MUST_NOT_REACH_MODEL',provenance:undefined};
+          fixture.sources.push(legacySource);
+          fixture.lessons.push({...selected,id:'legacy-unselected-lesson',title:'UNCONSENTED_LESSON_MUST_NOT_REACH_MODEL',sourceIds:[legacySource.id],sourceVersions:{[legacySource.id]:legacySource.version},diagnosticInvestigationId:'legacy-unselected-investigation'});
+          const previous=fixture.investigations![0],refs=[{sourceId:legacySource.id,version:legacySource.version,quote:legacySource.body}];
+          fixture.investigations!.push({...previous,id:'legacy-unselected-investigation',sourceRefs:refs,diagnosticLessonId:'legacy-unselected-lesson',diagnosticPlan:{...previous.diagnosticPlan!,hypotheses:previous.diagnosticPlan!.hypotheses.map(item=>({...item,claim:'UNCONSENTED_HYPOTHESIS_MUST_NOT_REACH_MODEL',evidence:refs}))}});
+          return fixture;
+        });
       }
       const [a,b]=users;const owner=a.account!,other=b.account!;
       const otherBefore=await readAccountWorkspace(other);
@@ -49,7 +57,7 @@ describe.skipIf(process.env.SOMA_LIVE_ADAPTATION_TEST!=='true')('real account ad
       const source=saved.sources.find(item=>item.id===saved.investigations![0].sourceRefs[0].sourceId)!;
       const intercepted=vi.spyOn(globalThis,'fetch').mockImplementation(async(input,init)=>{
         const url=input instanceof Request?input.url:String(input);if(url!=='https://api.meta.ai/v1/responses')return originalFetch(input,init);
-        providerCalls++;const request=JSON.parse(String(init?.body));const start=JSON.parse(request.input[0].content);
+        providerCalls++;expect(String(init?.body)).not.toContain('UNCONSENTED_');const request=JSON.parse(String(init?.body));const start=JSON.parse(request.input[0].content);
         const step=request.input.filter((item:{type?:string})=>item.type==='function_call').length;
         let name:string,args:unknown;
         if(step===0){name='read_source';args={sourceId:source.id,offset:0};}

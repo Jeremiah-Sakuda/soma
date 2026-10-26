@@ -41,5 +41,9 @@ export async function replaceManagedWorkspace(tokenHash: string, workspace: Work
 }
 
 export async function deleteManagedWorkspace(tokenHash: string): Promise<void> {
-  await sessions().doc(tokenHash).delete();
+  // Revoke access first; a concurrent audit append checks this parent atomically.
+  const ref = sessions().doc(tokenHash);
+  await ref.delete();
+  await ref.firestore.recursiveDelete(ref.collection('auditRuns'));
+  await ref.firestore.recursiveDelete(ref.collection('auditMetadata'));
 }

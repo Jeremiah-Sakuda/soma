@@ -118,5 +118,9 @@ export async function updateWorkspace(token: string, mutator: (workspace: Worksp
 export async function deleteWorkspace(token: string): Promise<void> {
   if (!TOKEN_RE.test(token)) return;
   if (getPersistenceMode() === 'firestore') await deleteManagedWorkspace(hashToken(token));
-  else database().prepare('DELETE FROM demo_sessions WHERE token_hash = ?').run(hashToken(token));
+  else {
+    const db = database();
+    if (db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='audit_runs'").get()) db.prepare('DELETE FROM audit_runs WHERE token_hash = ?').run(hashToken(token));
+    db.prepare('DELETE FROM demo_sessions WHERE token_hash = ?').run(hashToken(token));
+  }
 }

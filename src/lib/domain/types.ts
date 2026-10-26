@@ -2,7 +2,7 @@ export type Topology = 'series' | 'parallel';
 export type CircuitInput = { topology: Topology; voltage: number; r1: number; r2: number };
 export type CircuitOutput = { equivalentResistance: number; totalCurrent: number; current1: number; current2: number; voltage1: number; voltage2: number; power: number };
 export type Course = { id: string; code: string; title: string; instructor: string; color: string; nextEvent: string; deadline: string };
-export type Source = { id: string; courseId?: string; title: string; body: string; version: number; kind: 'synthetic' | 'upload' | 'email' | 'folder' | 'blackboard' | 'calendar'; retrievedAt: string; status: 'current' | 'stale'; timezone?: string; origin?: 'synthetic' | 'manual-import' | 'live'; observedAt?: string; provenance?: { origin: 'manual-course' | 'manual-email' | 'manual-calendar'; sourceKey: string; contentHash: string; importedAt: string }; };
+export type Source = { id: string; courseId?: string; title: string; body: string; version: number; kind: 'synthetic' | 'upload' | 'email' | 'folder' | 'blackboard' | 'calendar' | 'gradescope' | 'piazza'; retrievedAt: string; status: 'current' | 'stale'; timezone?: string; origin?: 'synthetic' | 'manual-import' | 'live'; observedAt?: string; url?: string; modifiedAt?: string; provenance?: { origin: 'manual-course' | 'manual-email' | 'manual-calendar' | 'live-browser' | 'live-google'; sourceKey: string; contentHash: string; importedAt: string }; };
 export type Lesson = {
   id: string; courseId: string; title: string; description: string; objective: string; reason: string;
   duration: number; kind: 'circuit' | 'practice'; circuit: CircuitInput; sourceIds: string[];
@@ -61,7 +61,7 @@ export type CommitmentStatus = 'confirmed' | 'tentative' | 'conflict' | 'cancell
 export type CommitmentObservation = {
   id: string; workspaceId: string; eventId: string; title: string; category: 'Interview' | 'Personal' | 'Application'; kind: 'event' | 'deadline';
   startAt: string; endAt: string; timezone: string; status: 'confirmed' | 'tentative' | 'cancelled';
-  bufferBeforeMinutes: number; bufferAfterMinutes: number; sourceRefs: SourceRef[]; observedAt: string; identityBasis: string;
+  bufferBeforeMinutes: number; bufferAfterMinutes: number; blocksFocus?: boolean; sourceRefs: SourceRef[]; observedAt: string; identityBasis: string;
 };
 export type Commitment = Omit<CommitmentObservation, 'eventId' | 'status'> & { status: CommitmentStatus; observationIds: string[]; correctionId?: string };
 export type CommitmentCorrection = { id: string; workspaceId: string; commitmentId: string; createdAt: string; note: string; fields?: ('status' | 'startAt' | 'endAt' | 'timezone')[]; before: { status: CommitmentStatus; startAt: string; endAt: string; timezone: string }; after: { status: 'confirmed' | 'tentative' | 'cancelled'; startAt: string; endAt: string; timezone: string } };

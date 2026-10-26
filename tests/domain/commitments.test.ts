@@ -34,6 +34,19 @@ describe('R12 bounded commitments and consequences', () => {
     expect(changed.attempts).toEqual(original.attempts);
     expect(changed.interpretations).toEqual(original.interpretations);
   });
+  it('retains confirmed transparent events without making them busy or cancelled', () => {
+    const state = seed();
+    const result = ingestCommitments(state, [observation(state, { blocksFocus: false })], now);
+    expect(result.commitments?.[0].status).toBe('confirmed');
+    expect(result.commitmentObservations?.[0].blocksFocus).toBe(false);
+    expect(selectAvailability(result).busyIntervals).toEqual([]);
+    expect(selectAvailability(result).availableMinutes).toBe(45);
+    expect(result.sessionRecommendation?.minutes).toBe(45);
+    expect(() => ingestCommitments(result, [observation(state, { blocksFocus: true })], now)).toThrow(/unchanged source/);
+    const conflicting = ingestCommitments(result, [observation(state, { id: 'obs-busy', blocksFocus: true, sourceRefs: [{ sourceId: 'source-g', version: 1 }] })], now);
+    expect(conflicting.commitments?.[0].status).toBe('conflict');
+    expect(selectAvailability(conflicting).status).toBe('uncertain');
+  });
   it('a non-overlapping event adds context but no misleading change row or regenerated lesson', () => {
     const original = seed(), changed = scenario(original, 'commitment-no-overlap');
     expect(selectAvailability(changed).availableMinutes).toBe(45);

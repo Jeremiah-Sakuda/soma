@@ -65,12 +65,13 @@ export function selectAvailability(state: WorkspaceState, at: string | Date = st
   const now = new Date(at).getTime();
   const focusWindow = (state.focusWindows ?? []).filter(window => instant(window.endAt) > now && instant(window.startAt) <= now + 7 * DAY).sort((a, b) => instant(a.startAt) - instant(b.startAt))[0];
   const context = state.calendarContext;
-  const sourceRefs = uniqueRefs([...(context?.sourceRefs ?? []), ...(state.commitments ?? []).flatMap(item => item.sourceRefs)]);
+  const relevantCommitments = (state.commitments ?? []).filter(item => item.kind === 'event' && item.status !== 'cancelled' && (item.blocksFocus !== false || item.status === 'conflict') && focusWindow && instant(asBusy(item).endAt) > Math.max(now, instant(focusWindow.startAt)) && instant(asBusy(item).startAt) < instant(focusWindow.endAt));
+  const sourceRefs = uniqueRefs([...(context?.sourceRefs ?? []), ...relevantCommitments.flatMap(item => item.sourceRefs)]);
   const empty: Availability = { status: 'missing', availableMinutes: null, totalFreeMinutes: null, tentativeAvailableMinutes: null, freeIntervals: [], busyIntervals: [], tentativeCommitments: [], reason: 'Declare a focus window before treating calendar gaps as study time.', sourceRefs };
   if (!focusWindow) return empty;
   if (!context || context.status === 'missing') return { ...empty, focusWindow, reason: 'Calendar context is missing. The declared focus window does not establish free time.' };
   const start = new Date(Math.max(now, instant(focusWindow.startAt))).toISOString();
-  const all = (state.commitments ?? []).filter(item => item.kind === 'event' && item.status !== 'cancelled');
+  const all = relevantCommitments;
   const confirmed = all.filter(item => item.status === 'confirmed');
   const tentativeCommitments = all.filter(item => item.status === 'tentative' || item.status === 'conflict')
     .filter(item => instant(asBusy(item).endAt) > instant(start) && instant(asBusy(item).startAt) < instant(focusWindow.endAt));
@@ -94,6 +95,7 @@ function validateObservation(state: WorkspaceState, item: CommitmentObservation)
   if (!item.title.trim() || item.title.length > 300 || item.identityBasis.length > 500) throw new Error('Commitment text exceeds its bounds.');
   validateInterval(item.startAt, item.endAt, item.timezone, item.kind === 'deadline');
   instant(item.observedAt);
+  if (item.blocksFocus !== undefined && typeof item.blocksFocus !== 'boolean') throw new Error('Focus occupancy must be an explicit boolean.');
   for (const buffer of [item.bufferBeforeMinutes, item.bufferAfterMinutes]) if (!Number.isInteger(buffer) || buffer < 0 || buffer > 120) throw new Error('Buffers must be 0–120 whole minutes.');
 }
 
@@ -108,7 +110,7 @@ function reconcile(state: WorkspaceState): Commitment[] {
     // An old source version remains inspectable, but cannot override that source's newer observation.
     const active = observations.filter(item => !observations.some(newer => newer !== item && newer.sourceRefs.some(next => item.sourceRefs.some(old => next.sourceId === old.sourceId && next.version > old.version))));
     const head = active.at(-1)!;
-    const signatures = new Set(active.map(item => `${instant(item.startAt)}|${instant(item.endAt)}|${item.kind}|${item.status === 'cancelled'}`));
+    const signatures = new Set(active.map(item => `${instant(item.startAt)}|${instant(item.endAt)}|${item.kind}|${item.status === 'cancelled'}|${item.blocksFocus ?? true}`));
     const status = signatures.size > 1 ? 'conflict' : active.some(item => item.status === 'confirmed') ? 'confirmed' : head.status;
     const result: Commitment = { ...head, id, status, sourceRefs: uniqueRefs(active.flatMap(item => item.sourceRefs)), observationIds: observations.map(item => item.id) };
     for (const correction of (state.corrections ?? []).filter(item => item.commitmentId === id && item.workspaceId === state.id)) {
@@ -151,7 +153,7 @@ export function ingestCommitments(input: WorkspaceState, observations: Commitmen
     validateObservation(state, observation);
     const duplicate = state.commitmentObservations.find(existing => existing.eventId === observation.eventId && existing.sourceRefs.length === observation.sourceRefs.length && existing.sourceRefs.every(ref => observation.sourceRefs.some(other => other.sourceId === ref.sourceId && other.version === ref.version)));
     if (duplicate) {
-      const facts = (item: CommitmentObservation) => JSON.stringify([item.eventId, item.title, item.category, item.kind, instant(item.startAt), instant(item.endAt), item.timezone, item.status, item.bufferBeforeMinutes, item.bufferAfterMinutes]);
+      const facts = (item: CommitmentObservation) => JSON.stringify([item.eventId, item.title, item.category, item.kind, instant(item.startAt), instant(item.endAt), item.timezone, item.status, item.bufferBeforeMinutes, item.bufferAfterMinutes, item.blocksFocus ?? true]);
       if (facts(duplicate) !== facts(observation)) throw new Error('An unchanged source version cannot supply contradictory commitment facts. Import a new source version.');
     } else {
       if (state.commitmentObservations.some(item => item.id === observation.id)) throw new Error('Observation identity already belongs to another source or event.');

@@ -120,6 +120,13 @@
       "received_at": "2026-10-26T19:16:50.388Z",
       "kind": "message",
       "prompt": "Google Oauth should be done \n"
+    },
+    {
+      "id": "P021",
+      "received_at": "2026-10-26T19:28:20.446Z",
+      "kind": "answer",
+      "prompt": "Install browse (Recommended)",
+      "question_context": "Node.js is installed, but Browserbase’s `browse` command-line tool is missing. May I install `browse` to verify your key and start the first cloud browser session?"
     }
   ]
 }

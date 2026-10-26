@@ -379,3 +379,43 @@ Google Oauth should be done
 3. Account connection UI passed real disposable Firebase account checks for both missing and configured Google states; user OAuth consent and an actual selected-source read remain pending deployment and authorization.
 
 **Plan deviations:** None. Client configuration is distinct from provider consent and successful source collection.
+
+### October 26 — private connector implementation checks
+
+P017: Browserbase adapters for BU Blackboard, Gradescope and Piazza are implemented with owner-bound encrypted contexts, selected course URLs, bounded read collection and cleanup before workspace deletion. Gmail/Calendar use PKCE, one-use encrypted state, owner-scoped tokens and explicit read selections. Changed course sources hand off to the durable queue; unchanged reads reuse source-version job identities. No source provider messages, submissions or calendar writes are performed.
+
+P018: The exact production callback and read-only scope walkthrough were provided. Google API services and production credentials are configured. User consent and actual selected Google reads remain pending; local credential presence alone is not provider verification.
+
+P019 top-three outcome update: (1) client ID/secret presence was verified without displaying values; (2) server configuration was uploaded and the connector code committed/pushed through `141edef`; (3) 166 unit tests, typecheck, production build, five browser journeys, real Firebase token-vault/state isolation and disposable-account connection UI checks passed. Google consent/read and Browserbase keys remain the next external dependencies. Four opt-in tests are skipped by the ordinary suite, with executed live Firebase checks recorded separately.
+
+Remote GitHub checks and the automatic Vercel deployment are pending at this checkpoint. The initial local build failed under sandbox port restrictions; clearing generated build output and rerunning with local process access passed. No product scope change beyond P017's explicit adapter request.
+
+## P020 — Browserbase onboarding attachment
+
+**Verbatim prompt:** Preserved in the canonical archive; the supplied API key is explicitly redacted under the credential exclusion.
+
+**Top 3 outcomes:**
+
+1. Read the supplied onboarding flow; Node.js is installed and browse is absent.
+2. Saved the supplied Browserbase API key in ignored owner-only `.env.local`; its value is excluded from logs and version control.
+3. Asked the required install question. CLI access verification and project-ID-free integration are in progress.
+
+**Plan deviations:** The supplied setup specifies key-only Browserbase configuration, superseding the earlier required-project-ID setup assumption. Keep the existing Soma repository and read-only source objective.
+
+## P021 — Install Browserbase CLI
+
+**Verbatim answer:** `Install browse (Recommended)`
+
+**Top 3 outcomes:**
+
+1. Installation authorized explicitly and started.
+2. Access verification will use the environment key without printing it.
+3. First cloud browser session remains pending the onboarding choices and successful access check.
+
+**Plan deviations:** None. No template, new framework or alternative model provider has been added.
+
+### October 26 — Google connectors deployed and verified
+
+Vercel deployment `dpl_5NbxXMJnfHLM9YgK8EgevfAwqbMX` is READY at https://soma-woad-beta.vercel.app. GitHub CI passed for `141edef`: https://github.com/Jeremiah-Sakuda/soma/actions/runs/40386878067. The hosted disposable-account check passed in 15.14 seconds: configured Google status, one-use authorization-state creation, exact callback/PKCE/read-only scope, cross-origin rejection, safe missing-browser configuration handling, and the existing import/job/deletion checks. No Google consent or data read was performed. Synthetic account and private records were removed.
+
+P020/P021 update: browse 0.11.3 installed after explicit user approval; key access verified by project listing. No project ID requested or added. The next onboarding choice is pending.

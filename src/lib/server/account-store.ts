@@ -123,7 +123,7 @@ export async function readOrCreateAccountWorkspace(account: VerifiedAccount): Pr
   });
 }
 
-export async function updateAccountWorkspace(account: VerifiedAccount, mutator: (workspace: WorkspaceState) => WorkspaceState | Promise<WorkspaceState>, expectedRevision?: number): Promise<WorkspaceState> {
+export async function updateAccountWorkspace(account: VerifiedAccount, mutator: (workspace: WorkspaceState) => WorkspaceState | Promise<WorkspaceState>, expectedRevision?: number, commitGuard?: (transaction: Transaction, accountRef: DocumentReference) => Promise<void>): Promise<WorkspaceState> {
   const ref = accountRef(account);
   const current = await readAccountWorkspace(account);
   if (!current) throw new WorkspaceStoreError('Create a private workspace before saving changes.', 404, 'workspace_missing');
@@ -139,6 +139,7 @@ export async function updateAccountWorkspace(account: VerifiedAccount, mutator: 
     const data = document.data() as Metadata;
     assertOwner(data, account);
     if (data.deleted || data.workspaceId !== current.id || data.revision !== current.revision) throw new WorkspaceConflictError();
+    if (commitGuard) await commitGuard(transaction, ref);
     writeRecords(transaction, ref, account, next, before);
   });
   return next;

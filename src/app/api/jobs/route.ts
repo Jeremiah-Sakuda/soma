@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   try {
     const account = await verifyAccountSession(request);
     if (!account) throw new AccountSessionError('Sign in to view your preparations.', 401, 'account_required');
-    return NextResponse.json({ jobs: await listPreparationJobs(account), scheduling: 'explicit-worker' }, { headers: { 'Cache-Control': 'private, no-store' } });
+    return NextResponse.json({ jobs: await listPreparationJobs(account), scheduling: process.env.SOMA_WORKER_ENABLED === 'true' ? 'background-worker' : 'explicit-worker' }, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (error) { return apiError(error); }
 }
 

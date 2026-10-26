@@ -3,22 +3,13 @@ import { verifyAccountSession, AccountSessionError } from '@/lib/server/account'
 import { readOrCreateAccountWorkspace, updateAccountWorkspace } from '@/lib/server/account-store';
 import { applySourceImport, readSourceImport } from '@/lib/server/imports';
 import { apiError, requireSameOrigin, workspaceResponse } from '@/lib/server/http';
+import { importWithAutomation, needsImportAutomationConsent } from '@/lib/server/import-automation';
 import { enqueuePreparation } from '@/lib/server/jobs';
 import type { WorkspaceState } from '@/lib/domain/types';
 import type { VerifiedAccount } from '@/lib/server/account';
 import type { SourceImport } from '@/lib/server/imports';
 
 export const runtime = 'nodejs';
-
-/** A normal authenticated import explicitly opts this selected text into automatic preparation.
- * Administrative preview transfer uses the pure importer and never receives this marker. */
-function importWithAutomation(workspace: WorkspaceState, input: SourceImport) {
-  const result = applySourceImport(workspace, input);
-  if (input.kind !== 'calendar-json') for (const source of result.workspace.sources) {
-    if (result.sourceIds.includes(source.id) && source.status === 'current' && source.provenance) source.provenance.automaticPreparation = true;
-  }
-  return result.workspace;
-}
 
 async function importedResponse(account: VerifiedAccount, workspace: WorkspaceState, input: SourceImport) {
   let notice = 'Selected material imported. This is a manual import, not a live source connection.';
@@ -46,8 +37,8 @@ export async function POST(request: Request) {
     const current = await readOrCreateAccountWorkspace(account);
     // Idempotent retries return the committed result even if their old revision is stale.
     if (current.importReceipts?.some(receipt => receipt.key === input.importId)) {
-      const checked = applySourceImport(current, input);
-      const needsConsent = input.kind !== 'calendar-json' && checked.sourceIds.some(id => current.sources.some(source => source.id === id && source.status === 'current' && !source.provenance?.automaticPreparation));
+      applySourceImport(current, input);
+      const needsConsent = needsImportAutomationConsent(current, input);
       const selected = needsConsent ? await updateAccountWorkspace(account, workspace => importWithAutomation(workspace, input), current.revision) : current;
       return importedResponse(account, selected, input);
     }

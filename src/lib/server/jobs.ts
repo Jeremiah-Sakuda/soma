@@ -1,3 +1,4 @@
+import { automaticModelContext } from './automatic-context';
 import { createHash, randomBytes } from 'node:crypto';
 import type { WorkspaceState, SourceRef, AgentRun } from '../domain/types';
 import { assertVerifiedAccount, assertAccountWorkspaceGeneration, type VerifiedAccount } from './account';
@@ -230,9 +231,11 @@ export async function runPreparationJob(account: VerifiedAccount, id: string): P
   const job = await claimPreparationJob(account, workspace, id);
   if (!job) return null;
   try {
+    const modelContext = automaticModelContext(workspace);
+    if (!jobSourcesCurrent(modelContext, job)) throw new WorkspaceStoreError('Select these current source versions again before automatic preparation.', 422, 'automatic_source_consent');
     const outcome: PreparationOutcome = job.intent === 'investigate-change'
-      ? { intent: 'investigate-change', result: await investigateWithSpark(workspace, { courseId: job.courseId, goal: job.topic, initialSourceIds: [...new Set(job.sourceRefs.map(ref => ref.sourceId))].slice(0, 8) }) }
-      : { intent: 'prepare-lesson', result: await prepareWithSpark(workspace, job.courseId, job.topic, { sourceRefs: job.sourceRefs, trigger: 'source-change' }) };
+      ? { intent: 'investigate-change', result: await investigateWithSpark(modelContext, { courseId: job.courseId, goal: job.topic, initialSourceIds: [...new Set(job.sourceRefs.map(ref => ref.sourceId))].slice(0, 8) }, { automatic: true }) }
+      : { intent: 'prepare-lesson', result: await prepareWithSpark(modelContext, job.courseId, job.topic, { sourceRefs: job.sourceRefs, trigger: 'source-change' }) };
     const root = refs(account);
     await root.firestore.runTransaction(async transaction => {
       const document = await transaction.get(root.collection('jobs').doc(job.id));

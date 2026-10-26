@@ -49,6 +49,20 @@ export async function revalidateWorkerAccount(account: VerifiedAccount): Promise
   catch { throw new AccountSessionError('Worker account is no longer active.', 401, 'worker_account_inactive'); }
 }
 
+/** Immediate post-response jobs also outlive their original session verification. */
+export async function revalidateBackgroundAccount(account: VerifiedAccount): Promise<void> {
+  assertVerifiedAccount(account);
+  if (workerAccounts.has(account)) return revalidateWorkerAccount(account);
+  try {
+    const user = await auth().getUser(account.uid);
+    if (user.disabled) throw new AccountSessionError('Background account is no longer active.', 401, 'background_account_inactive');
+  } catch (error) {
+    if (error instanceof AccountSessionError) throw error;
+    if ((error as { code?: string }).code === 'auth/user-not-found') throw new AccountSessionError('Background account is no longer active.', 401, 'background_account_inactive');
+    throw new AccountSessionError('Background account verification is unavailable.', 503, 'background_account_unavailable');
+  }
+}
+
 export const ACCOUNT_SESSION_COOKIE = 'soma_account';
 export const ACCOUNT_SESSION_TTL_SECONDS = 24 * 60 * 60;
 const MAX_REQUEST_BYTES = 8192;

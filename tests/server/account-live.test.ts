@@ -7,6 +7,7 @@ import { exchangeAccountSession, verifyAccountSession, ACCOUNT_SESSION_COOKIE, t
 import { readOrCreateAccountWorkspace, readAccountWorkspace, updateAccountWorkspace, deleteAccountWorkspace } from '../../src/lib/server/account-store';
 import { enqueuePreparation, listPreparationJobs, claimPreparationJob, runPreparationJob } from '../../src/lib/server/jobs';
 import { reserveInference, settleInference, InferenceBudgetError } from '../../src/lib/server/budget';
+import { importWithAutomation } from '../../src/lib/server/import-automation';
 import { applySourceImport, sourceImportSchema } from '../../src/lib/server/imports';
 
 // Explicit live integration only; creates disposable synthetic users, never uses real learner data.
@@ -36,7 +37,7 @@ describe.skipIf(process.env.SOMA_LIVE_FIRESTORE_TEST !== 'true')('live Firebase 
       const other = await readOrCreateAccountWorkspace(b);
       expect(first.id).not.toBe(other.id);
       const importInput = sourceImportSchema.parse({ importId: 'synthetic-import-1', expectedRevision: 0, sourceKey: 'original-integration-fixture', title: 'Original synthetic integration fixture', kind: 'course-text', text: 'This is synthetic resistor test content, not a student record.', course: { id: 'test-course', code: 'TEST', title: 'Synthetic integration course' } });
-      await updateAccountWorkspace(a, workspace => applySourceImport(workspace, importInput).workspace, 0);
+      await updateAccountWorkspace(a, workspace => importWithAutomation(workspace, importInput), 0);
       expect((await readAccountWorkspace(b))?.sources).toHaveLength(0);
       await deleteApp(getServerApp());
       expect((await readAccountWorkspace(a))?.sources).toHaveLength(1);

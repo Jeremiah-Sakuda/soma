@@ -1,3 +1,4 @@
+import { automaticModelContext } from './automatic-context';
 import { createHash, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { AgentRun, Lesson, SomaInvestigation, WorkspaceState } from '../domain/types';
@@ -56,7 +57,8 @@ function makeDiagnosticLesson(state: WorkspaceState, plan: ValidatedDiagnosticPl
 }
 
 export type InvestigationResult = { decision: SourceDecision; record: SomaInvestigation; lesson?: Lesson; selectedLessonId?: string; reads: Map<string, ReadSourceEvidence>; run: AgentRun; reused?: boolean };
-export async function investigateWithSpark(state: WorkspaceState, raw: InvestigationRequest): Promise<InvestigationResult> {
+export async function investigateWithSpark(state: WorkspaceState, raw: InvestigationRequest, options: { automatic?: boolean } = {}): Promise<InvestigationResult> {
+  if (options.automatic) state = automaticModelContext(state);
   const request = investigationRequestSchema.parse(raw);
   const firstPage = catalog(state, request.courseId);
   const allCurrent = state.sources.filter(source => source.courseId === request.courseId && source.status === 'current');

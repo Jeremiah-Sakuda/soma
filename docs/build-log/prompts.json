@@ -101,6 +101,25 @@
       "received_at": "2026-10-26T17:46:47.306Z",
       "kind": "message",
       "prompt": "continue \n"
+    },
+    {
+      "id": "P017",
+      "received_at": "2026-10-26T19:09:11.638Z",
+      "kind": "message",
+      "prompt": "Okay so, the way my muse session does it is by using a browser and storing the blackboard login credentials for learn.bu.edu. It does the same for gradesceope and piazza. Is that something we can implement? Also we need a connector for gcal and gmail \n"
+    },
+    {
+      "id": "P018",
+      "received_at": "2026-10-26T19:11:58.660Z",
+      "kind": "answer",
+      "prompt": "Walk me through creating it",
+      "question_context": "Google access needs a Web application OAuth client. Can you create one in Soma’s Google Cloud project and put its client ID and secret in GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET in .env.local? I’ll provide the exact redirect URL when the callback route is ready."
+    },
+    {
+      "id": "P019",
+      "received_at": "2026-10-26T19:16:50.388Z",
+      "kind": "message",
+      "prompt": "Google Oauth should be done \n"
     }
   ]
 }

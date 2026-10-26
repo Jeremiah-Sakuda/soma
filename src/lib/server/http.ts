@@ -6,7 +6,7 @@ import { inferenceEnabled } from './budget';
 export function workspaceResponse(workspace: WorkspaceState, notice?: string) {
   const body: WorkspaceResponse = { workspace, capabilities: {
     spark: inferenceEnabled(),
-    persistence: getPersistenceMode(), liveSources: [],
+    persistence: getPersistenceMode(), liveSources: [...new Set(workspace.sources.filter(source => source.origin === 'live' && source.status === 'current').map(source => source.kind))],
   }, ...(notice ? { notice } : {}) };
   return NextResponse.json(body, { headers: { 'Cache-Control': 'private, no-store' } });
 }

@@ -1,3 +1,4 @@
+import { disconnectAllBrowserConnections } from '@/lib/server/connectors/browser';
 import { createWorkspace } from '@/lib/server/store';
 import { resolveWorkspaceAccess, readWorkspaceByAccess, deleteWorkspaceByAccess } from '@/lib/server/workspace-access';
 import { ACCOUNT_SESSION_COOKIE, accountSessionCookieOptions } from '@/lib/server/account';
@@ -25,6 +26,7 @@ export async function DELETE(request: Request) {
   try {
     requireSameOrigin(request);
     const access = await resolveWorkspaceAccess(request);
+    if (access?.kind === 'account') await disconnectAllBrowserConnections(access.account);
     if (access) await deleteWorkspaceByAccess(access);
     const response = NextResponse.json({ deleted: true });
     response.cookies.set(SESSION_COOKIE, '', { ...sessionCookieOptions(), maxAge: 0 });

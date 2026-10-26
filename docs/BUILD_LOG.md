@@ -325,3 +325,57 @@ Remote browser checks exposed a regression from the local SQLite lazy-loader ref
 ### October 26 — final remote checks passed
 
 GitHub CI for code revision `1ea81ce` passed all stages, including five Chromium journeys: https://github.com/Jeremiah-Sakuda/soma/actions/runs/40377954896. The automatic Vercel deployment is READY and the production persistence/isolation/CSRF/deletion smoke passed again. Final ordinary suite: 123 passed, three explicitly gated live checks skipped; executed live-provider/account checks are reported separately. This documentation-only outcome record changes no application code.
+
+## P017 — Persistent browser and Google connectors
+
+**Received:** 2026-10-26T19:09:11.638Z
+
+**Verbatim prompt:**
+
+```text
+Okay so, the way my muse session does it is by using a browser and storing the blackboard login credentials for learn.bu.edu. It does the same for gradesceope and piazza. Is that something we can implement? Also we need a connector for gcal and gmail 
+```
+
+**Top 3 outcomes:**
+
+1. Browser-based read-only connection work now targets BU Blackboard (`learn.bu.edu`), Gradescope and Piazza using user-completed login/MFA and encrypted persistent contexts.
+2. Gmail and Calendar read-only OAuth connectors are being implemented with workspace-bound encrypted tokens, explicit selections and versioned live-source observations.
+3. Google API services are enabled; a step-by-step Web OAuth client walkthrough was supplied. Live provider sign-in and read/restart verification remain pending credentials and user consent.
+
+**Plan deviations:** User explicitly requests Gradescope and Piazza browser adapters in addition to Blackboard and the Google sources. Prioritize the selected-URL collector and preserve the existing one-family learning scope and freeze. Persistent browser sessions replace any need to put institutional passwords in application prompts or fixtures.
+
+## P018 — Persistent browser and Google connectors
+
+**Received:** 2026-10-26T19:11:58.660Z
+
+**Verbatim prompt:**
+
+```text
+Walk me through creating it
+```
+
+**Top 3 outcomes:**
+
+1. Browser-based read-only connection work now targets BU Blackboard (`learn.bu.edu`), Gradescope and Piazza using user-completed login/MFA and encrypted persistent contexts.
+2. Gmail and Calendar read-only OAuth connectors are being implemented with workspace-bound encrypted tokens, explicit selections and versioned live-source observations.
+3. Google API services are enabled; a step-by-step Web OAuth client walkthrough was supplied. Live provider sign-in and read/restart verification remain pending credentials and user consent.
+
+**Plan deviations:** User explicitly requests Gradescope and Piazza browser adapters in addition to Blackboard and the Google sources. Prioritize the selected-URL collector and preserve the existing one-family learning scope and freeze. Persistent browser sessions replace any need to put institutional passwords in application prompts or fixtures.
+
+## P019 — Google OAuth client configured
+
+**Received:** 2026-10-26T19:16:50.388Z
+
+**Verbatim prompt:**
+
+```text
+Google Oauth should be done 
+```
+
+**Top 3 outcomes:**
+
+1. Verified the local OAuth client ID and secret are present without displaying their values.
+2. Configured the Google OAuth credentials, stable connector encryption key and production callback origin in Vercel production.
+3. Account connection UI passed real disposable Firebase account checks for both missing and configured Google states; user OAuth consent and an actual selected-source read remain pending deployment and authorization.
+
+**Plan deviations:** None. Client configuration is distinct from provider consent and successful source collection.

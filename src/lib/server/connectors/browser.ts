@@ -184,21 +184,30 @@ export async function completeBrowserLogin(account: VerifiedAccount, provider: B
     return { notice: 'Saved the browser context. Wait a few seconds for sync, then refresh selected pages to verify access.' };
   } catch (error) { await releaseConnectionLease(account, connection.id, leaseId); throw error; }
 }
-async function readPage(page: Page, provider: BrowserProvider, target: BrowserTarget): Promise<CollectedSource> {
-  const response = await page.goto(target.url, { waitUntil: 'domcontentloaded', timeout: 20_000 });
+export function remainingReadTime(deadline: number, maximum: number, now = Date.now()): number {
+  const left = deadline - now;
+  if (left <= 0) throw fail('The selected-page read reached its time limit. Try fewer pages.', 408, 'browser_timeout');
+  return Math.min(left, maximum);
+}
+async function readPage(page: Page, provider: BrowserProvider, target: BrowserTarget, deadline: number): Promise<CollectedSource> {
+  const response = await page.goto(target.url, { waitUntil: 'domcontentloaded', timeout: remainingReadTime(deadline, 20_000) });
   if (!response?.ok()) throw fail('This selected page is unavailable. Sign in again or check its URL.', 409, 'browser_login_required');
   // Positive authenticated navigation plus useful course content are both required.
   const auth = page.locator('a[href*="logout"], a[href*="signout"], button[aria-label*="Account"], [data-testid="user-menu"]');
-  await auth.first().waitFor({ state: 'attached', timeout: 8000 }).catch(() => undefined);
+  await auth.first().waitFor({ state: 'attached', timeout: remainingReadTime(deadline, 8000) }).catch(() => undefined);
   const password = await page.locator('input[type="password"]').count();
-  const body = (await page.locator('body').innerText({ timeout: 8000 })).trim();
+  const body = (await page.locator('body').innerText({ timeout: remainingReadTime(deadline, 8000) })).trim();
   if (password || !validatesCourseSnapshot(provider, target, page.url(), body, await auth.count() > 0)) throw fail('Course access could not be verified. Complete sign-in or choose a supported course page.', 409, 'browser_login_required');
   if (body.length > 48_000) throw fail('This page is too large. Select a narrower course page.', 413);
   return { id: target.url, title: (await page.title()).slice(0, 300) || BROWSER_PROVIDERS[provider].label, body, courseId: target.courseId, url: target.url, kind: provider };
 }
 export async function refreshBrowser(account: VerifiedAccount, provider: BrowserProvider) {
+  // Reserve 40 seconds of the 120-second route for release, context sync and persistence.
+  const deadline = Date.now() + 80_000;
   const lease = await acquireConnectionLease<Secret, Configuration>(account, ID(provider), 'collect', 240_000);
   let connection = lease.connection, browser: Browser | undefined, allocatedHere = false;
+  const deadlineTimer = setTimeout(() => { void browser?.close().catch(() => undefined); }, Math.max(1, deadline - Date.now()));
+  deadlineTimer.unref();
   try {
     const selected = await validateTargets(account, provider, connection.configuration.targets);
     if (!selected.targets.length) throw fail('Select at least one course page first.', 400);
@@ -227,7 +236,8 @@ export async function refreshBrowser(account: VerifiedAccount, provider: Browser
     await cdp.send('Network.setBypassServiceWorker', { bypass: true });
     await cdp.send('ServiceWorker.stopAllWorkers');
     const records: CollectedSource[] = [];
-    for (const target of selected.targets) records.push(await readPage(page, provider, target));
+    for (const target of selected.targets) records.push(await readPage(page, provider, target, deadline));
+    remainingReadTime(deadline, 1);
     const checkedAt = new Date().toISOString();
     let changedSourceIds: string[] = [];
     const workspace = await updateAccountWorkspace(account, state => {
@@ -244,7 +254,7 @@ export async function refreshBrowser(account: VerifiedAccount, provider: Browser
     await updateAccountWorkspace(account, state => ({ ...state, sources: state.sources.map(source => source.provenance?.sourceKey.startsWith(`${provider}:${connection.id}:`) ? { ...source, status: 'stale' as const } : source) }), undefined, connectionPublicationGuard(account, connection.id, lease.leaseId)).catch(() => undefined);
     await releaseConnectionLease(account, connection.id, lease.leaseId, { secret, status: (error as {code?:string}).code === 'browser_login_required' ? 'login-required' : 'stale', notice: 'Refresh did not verify current course content. Previous sources are stale; reconnect or try again.' });
     throw error;
-  }
+  } finally { clearTimeout(deadlineTimer); }
 }
 export async function disconnectBrowser(account: VerifiedAccount, provider: BrowserProvider) {
   const existing = await readConnection<Secret, Configuration>(account, ID(provider));

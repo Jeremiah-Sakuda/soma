@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { browserActionSchema, isAllowedReadRequest, validateCourseTarget, validatesCourseSnapshot, validateSessionOwnership } from '../../src/lib/server/connectors/browser';
+import { browserActionSchema, remainingReadTime, isAllowedReadRequest, validateCourseTarget, validatesCourseSnapshot, validateSessionOwnership } from '../../src/lib/server/connectors/browser';
 import { createHash } from 'node:crypto';
 
 const target = { courseId: 'real-course', url: 'https://www.gradescope.com/courses/123/assignments/456' };
@@ -48,6 +48,11 @@ describe('browser collection boundaries (development checks, not a provider acce
     expect(validateSessionOwnership({ ...session, id: 'sessionB' }, owner, 'projectA')).toBe(false);
     expect(validateSessionOwnership({ ...session, contextId: 'contextB' }, owner, 'projectA')).toBe(false);
     expect(validateSessionOwnership({ ...session, userMetadata: {} }, owner, 'projectA')).toBe(false);
+  });
+  it('caps every read by the remaining shared deadline, including later selected pages', () => {
+    expect(remainingReadTime(80_000, 20_000, 0)).toBe(20_000);
+    expect(remainingReadTime(80_000, 20_000, 75_000)).toBe(5000);
+    expect(() => remainingReadTime(80_000, 8000, 80_000)).toThrow('time limit');
   });
   it('rejects passwords, arbitrary actions and oversized page selections at the route boundary', () => {
     expect(browserActionSchema.safeParse({ provider: 'gradescope', action: 'start', password: 'never-send' }).success).toBe(false);

@@ -4,7 +4,7 @@ import { apiError, requireSameOrigin } from '@/lib/server/http';
 import { listConnections } from '@/lib/server/connectors/store';
 import { BROWSER_PROVIDERS, browserActionSchema, browserConfigured, completeBrowserLogin, configureBrowser, disconnectBrowser, refreshBrowser, startBrowserLogin } from '@/lib/server/connectors/browser';
 export const runtime = 'nodejs';
-export const maxDuration = 240;
+export const maxDuration = 120;
 const response = (body: unknown) => NextResponse.json(body, { headers: { 'Cache-Control': 'private, no-store' } });
 function browserError(error: unknown) {
   const known = error as { status?: number; code?: string };

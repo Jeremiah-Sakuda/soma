@@ -48,8 +48,8 @@ export const experimentTool = {
 export type DiagnosticHypothesisStatus = 'plausible' | 'weakened' | 'supported' | 'unresolved';
 const evidenceSchema = z.strictObject({ sourceId: identifier, version: z.number().int().positive(), quote: z.string().min(20).max(500) });
 export const diagnosticPlanSchema = z.strictObject({
-  kind: z.enum(['text', 'circuit-experiment']), experimentRunId: identifier.nullable(),
-  hypotheses: z.array(z.strictObject({ id: identifier, claim: boundedText(400), evidence: z.array(evidenceSchema).min(1).max(4), attemptIds: z.array(identifier).max(6) })).length(2),
+  kind: z.enum(['text', 'circuit-experiment']), experimentRunId: identifier.nullable().describe('For kind text this MUST be JSON null. For circuit-experiment use an informative evaluate_experiment result ID. Never invent an ID or use an empty string.'),
+  hypotheses: z.array(z.strictObject({ id: identifier, claim: boundedText(400), evidence: z.array(evidenceSchema).min(1).max(4), attemptIds: z.array(identifier).max(6).describe('Always include this array in each hypothesis. Use [] unless actual saved same-course attempt IDs were disclosed; never use null.') })).length(2),
   question: boundedText(1000), options: z.array(z.string().trim().min(1).max(400)).min(3).max(4),
   predictions: z.array(z.strictObject({ hypothesisId: identifier, predictedOptionIndex: z.number().int().min(0).max(3) })).length(2),
   rationale: boundedText(600), nextActivity: boundedText(500),
@@ -63,8 +63,12 @@ export const diagnosticPlanSchema = z.strictObject({
 });
 export type DiagnosticPlan = z.infer<typeof diagnosticPlanSchema>;
 export type ValidatedDiagnosticPlan = Omit<DiagnosticPlan, 'hypotheses'> & { courseId: string; hypotheses: (DiagnosticPlan['hypotheses'][number] & { status: DiagnosticHypothesisStatus })[] };
-// Zod provides the JSON schema from the same bounded input contract; refinement invariants remain application checks.
-export const diagnosticTool = { type: 'function', name: 'prepare_diagnostic', strict: true, description: 'Propose two plausible, revisable explanations grounded in current read passages and optional recorded same-course attempts. Choose a diagnostic whose predicted responses differ and explain the next activity. Text diagnostics support actual course concepts. Circuit experiments must reference a prior informative evaluate_experiment result. No mastery or learning-record writes.', parameters: z.toJSONSchema(diagnosticPlanSchema) } as const;
+// Capabilities omit irrelevant nullable/discriminator fields; full-plan validation stays mandatory.
+const { kind: _kind, experimentRunId: _experiment, ...diagnosticFields } = diagnosticPlanSchema.shape;
+export const textDiagnosticInputSchema = z.strictObject(diagnosticFields);
+export const experimentDiagnosticInputSchema = z.strictObject({ ...diagnosticFields, experimentRunId: identifier.describe('ID returned by a prior informative evaluate_experiment call for these exact hypotheses.') });
+export const diagnosticTool = { type: 'function', name: 'prepare_diagnostic', strict: true, description: 'Prepare a TEXT diagnostic for an ordinary course concept. Propose two plausible revisable explanations grounded in current read passages. Each hypothesis requires evidence and attemptIds (use [] without disclosed saved IDs). Choose different predicted option indices and explain the next activity. No kind or experimentRunId fields belong in this tool. No mastery or learner-record writes.', parameters: z.toJSONSchema(textDiagnosticInputSchema) } as const;
+export const experimentDiagnosticTool = { type: 'function', name: 'prepare_experiment_diagnostic', strict: true, description: 'Prepare an interactive resistor diagnostic using a prior informative evaluate_experiment result ID and the exact same two hypothesis IDs and claims. Each hypothesis requires evidence and attemptIds (use [] without disclosed saved IDs). Choose distinct predicted option indices. Application validates source fit and calculated experiment before creating a lesson. No kind field belongs in this tool.', parameters: z.toJSONSchema(experimentDiagnosticInputSchema) } as const;
 
 export type DiagnosticReadSource = { version: number; body?: string; segments?: { offset: number; body: string }[] };
 function disclosedSegments(read: DiagnosticReadSource) {

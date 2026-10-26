@@ -2,9 +2,10 @@ import { resolveWorkspaceAccess, readWorkspaceByAccess, updateWorkspaceByAccess 
 import { workspaceActionSchema } from '@/lib/server/action-schema';
 import { applyAction } from '@/lib/domain/learning';
 import { apiError, requireSameOrigin, workspaceResponse } from '@/lib/server/http';
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { inferenceEnabled } from '@/lib/server/budget';
 import { prepareWithSpark, PreparationError } from '@/lib/server/meta';
+import { adaptationForAttempt, runAdaptationJob, saveActionWithAdaptation } from '@/lib/server/adaptation-jobs';
 import type { AgentRun } from '@/lib/domain/types';
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -34,6 +35,12 @@ export async function POST(request: Request) {
     const rawRevision = request.headers.get('x-workspace-revision');
     const revision = rawRevision === null ? undefined : Number(rawRevision);
     if (revision !== undefined && (!Number.isSafeInteger(revision) || revision < 0)) return NextResponse.json({ error: 'Invalid workspace revision.' }, { status: 400 });
+    if (access.kind === 'account' && parsed.data.type === 'attempt') {
+      const saved = await saveActionWithAdaptation(access.account, parsed.data, revision);
+      const job = adaptationForAttempt(saved, access.account.uid, saved.attempts.at(-1)!.id);
+      if(job)after(async()=>{try{await runAdaptationJob(access.account,job.id);}catch{/* Durable queue/backoff retains the outcome for the scheduled worker. */}});
+      return workspaceResponse(saved, job ? 'Response saved. Soma’s follow-up is queued automatically; you can keep studying.' : undefined);
+    }
     let notice: string | undefined;
     let failedRun: AgentRun | undefined;
     if (parsed.data.type === 'request-lesson' && inferenceEnabled()) {

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { seedWorkspace } from '../../src/lib/domain/seed';
+test.beforeEach(async({page})=>{await page.route('**/api/adaptations',route=>route.fulfill({json:{jobs:[]}}));});
 
 test('new visitors see the product before explicitly opening the synthetic demo', async ({ page, context }) => {
   let workspaceRequests = 0;

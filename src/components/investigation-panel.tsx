@@ -1,5 +1,7 @@
 'use client';
-import type { SomaInvestigation, WorkspaceState } from '@/lib/domain/types';
+import { useEffect, useState } from 'react';
+import type { AdaptationSummary } from '@/lib/server/adaptation-jobs';
+import type { WorkspaceResponse, SomaInvestigation, WorkspaceState } from '@/lib/domain/types';
 import { time } from './today-view';
 
 export type InvestigationRequest = {
@@ -37,7 +39,7 @@ export function InvestigationPanel({ ws, courseId, openLesson }: {
         <summary><span><strong>{decisionLabels[record.decision]}</strong><small>{ws.courses.find(course => course.id === record.courseId)?.code ?? 'Course'} · {record.mode === 'live' ? 'Live Spark' : record.mode === 'synthetic' ? 'Synthetic scenario' : 'Prepared operation'} · {time(record.createdAt)} Eastern</small></span></summary>
         <div className="source-body">
           <p>{record.reason}</p>
-          <p className="meta">Applies to {record.applicability === 'assessment' ? `assessment ${record.assessmentId ?? 'not identified'}` : record.applicability === 'course' ? 'this course' : 'an uncertain scope'}. This record does not change source facts or exam eligibility.</p>
+          <p className="meta">Applies to {record.applicability === 'assessment' ? `assessment ${record.assessmentId ?? 'not identified'}` : record.applicability === 'course' ? 'this course' : 'an uncertain scope'}. Validated updates can change Soma’s internal preparation; the original source records remain preserved.</p>
           {record.conflicts.map((conflict, index) => <div className="help-box" key={index}>
             <strong>{conflict.resolution === 'unresolved' ? 'Unresolved source conflict' : 'Explicit source supersession'}</strong>
             <p>{conflict.reason}</p>
@@ -91,12 +93,49 @@ export function InvestigationFollowUp({ ws, lessonId, busy, available, investiga
   const considered = attempt && records.some(item => item.supersedesId === record.id && item.attemptIds?.includes(attempt.id));
   return <section className="card" aria-label="Reconsider the investigation" style={{ marginTop: 24 }}>
     <h2>{attempt ? 'Let this response inform what comes next.' : 'A question you can choose to explore.'}</h2>
-    <p>{attempt ? 'Soma can reconsider its provisional explanations using your saved response. The original question, response, and assistance stay in your record.' : 'Answering is optional. You can return to your ready lessons at any time.'}</p>
+    <p>{attempt ? ws.mode==='account' ? 'Soma automatically queues a follow-up from this saved response. Your original question, response, and assistance stay in your record.' : 'Soma can reconsider its provisional explanations using your saved response. The original question, response, and assistance stay in your record.' : 'Answering is optional. You can return to your ready lessons at any time.'}</p>
     <div className="action-row">
-      {attempt && !considered && <button className="secondary-button" disabled={busy || !available} onClick={() => void investigate({ courseId: record.courseId, previousInvestigationId: record.id, attemptId: attempt.id, goal: 'Reconsider the provisional explanations using this saved response and current course evidence; choose the next useful activity without inferring mastery.' })}>{busy ? 'Reconsidering…' : 'Reconsider with my response'}</button>}
+      {ws.mode!=='account' && attempt && !considered && <button className="secondary-button" disabled={busy || !available} onClick={() => void investigate({ courseId: record.courseId, previousInvestigationId: record.id, attemptId: attempt.id, goal: 'Reconsider the provisional explanations using this saved response and current course evidence; choose the next useful activity without inferring mastery.' })}>{busy ? 'Reconsidering…' : 'Reconsider with my response'}</button>}
       <button className="text-button" onClick={inspect}>Inspect investigation</button>
     </div>
     {considered && <p className="meta" role="status">This response has a saved reconsideration. Inspect the investigation to compare the records.</p>}
     {attempt && !available && !considered && <p className="meta">Live Spark is unavailable. Your response is saved; reconsideration can wait.</p>}
   </section>;
+}
+
+
+/** Read-only polling observes durable worker results; the browser never starts inference. */
+export function AdaptationStatus({ data, onUpdate, openLesson, onSessionExpired }: {
+  data: WorkspaceResponse; onUpdate: (value: WorkspaceResponse) => void; openLesson: (id: string) => void; onSessionExpired: () => void;
+}) {
+  const [jobs,setJobs]=useState<AdaptationSummary[]>([]),[error,setError]=useState(''),[refresh,setRefresh]=useState(0),[paused,setPaused]=useState(false),[retrying,setRetrying]=useState(false);
+  const ws=data.workspace;
+  useEffect(()=>{
+    let stopped=false,timer:ReturnType<typeof setTimeout>|undefined,polls=0;
+    const controller=new AbortController();setPaused(false);
+    async function poll(){
+      if(stopped||document.hidden)return;
+      if(polls++>=60){setPaused(true);return;}
+      try{
+        const response=await fetch('/api/adaptations',{signal:controller.signal});
+        if(stopped)return;if(response.status===401){onSessionExpired();return;}
+        const result=await response.json();if(!response.ok)throw new Error('Follow-up status is temporarily unavailable. Your saved response is retained.');
+        if(stopped)return;const next:AdaptationSummary[]=result.jobs??[];setJobs(next);setError('');
+        if(next.some(job=>job.status==='ready'&&!ws.investigations?.some(item=>item.attemptIds?.includes(job.attemptId)))){
+          const updated=await fetch('/api/workspace',{signal:controller.signal});
+          if(stopped)return;if(updated.status===401){onSessionExpired();return;}
+          if(!updated.ok)throw new Error('The follow-up is saved, but the workspace could not refresh.');
+          const payload:WorkspaceResponse=await updated.json();if(!stopped&&payload.workspace.id===ws.id)onUpdate(payload);
+        }
+        if(!stopped&&next.some(job=>job.status==='queued'||job.status==='running'))timer=setTimeout(()=>void poll(),5000);
+      }catch{if(!stopped){setError('Follow-up status is temporarily unavailable. Your saved response is retained.');timer=setTimeout(()=>void poll(),10000);}}
+    }
+    const visible=()=>{if(!document.hidden&&!stopped){if(timer)clearTimeout(timer);void poll();}};
+    void poll();document.addEventListener('visibilitychange',visible);
+    return()=>{stopped=true;controller.abort();if(timer)clearTimeout(timer);document.removeEventListener('visibilitychange',visible);};
+  },[ws.id,ws.revision,refresh,onUpdate,onSessionExpired]);
+  const job=jobs.find(item=>ws.attempts.some(attempt=>attempt.id===item.attemptId&&attempt.lessonId===item.lessonId));
+  if(!job&&!error)return null;
+  async function retry(){if(!job)return;setRetrying(true);try{const response=await fetch('/api/adaptations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId:job.id})});if(response.status===401){onSessionExpired();return;}if(!response.ok)throw new Error();setRefresh(value=>value+1);}catch{setError('This follow-up could not be queued again. Your response remains saved.');}finally{setRetrying(false);}}
+  return <section className="card" aria-label="Automatic follow-up" style={{marginBottom:24}}><h2>Your next step</h2><p role="status" aria-atomic="true">{job?.status==='queued'?(job.notice??'Response saved. Soma’s follow-up is queued automatically.'):job?.status==='running'?'Soma is reconsidering your response. You can keep studying.':job?.notice??'Checking your saved follow-up.'}</p>{error&&<p role="alert">{error}</p>}<div className="action-row">{job?.status==='ready'&&job.selectedLessonId&&<button className="primary-button" onClick={()=>openLesson(job.selectedLessonId!)}>Open next activity</button>}{job?.status==='failed'&&<button className="secondary-button" disabled={retrying} onClick={()=>void retry()}>Retry follow-up</button>}{(paused||error)&&<button className="text-button" onClick={()=>setRefresh(value=>value+1)}>Check follow-up status</button>}</div>{paused&&<p className="meta">Automatic status checks paused. Background work can continue while this page is closed.</p>}</section>;
 }

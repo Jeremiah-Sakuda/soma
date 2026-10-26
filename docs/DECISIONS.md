@@ -69,3 +69,11 @@ Missing access is not a reason to stop independent authorized work. Do not reque
 
 Add later entries with the motivating observation, effect on scope, verification performed, and unresolved consequences.
 
+
+### October 26 — organizer start announcement and Firestore substitution
+
+- Jeremy supplied the organizer announcement, “Hacking has officially started!”, identifying Cerebral Valley as its source. This resolves kickoff-day implementation for this project; implementation starts October 26. The historical participant guide remains unchanged. Keep October 31 feature freeze and November 4, 9 PM America/New_York deadline.
+- Jeremy reported exhausting his free Supabase project allowance and requested Google Firestore. Replace the provisional Supabase stack with Firestore and Firebase Authentication. The evidence relationships remain explicit typed references; server ownership checks and transactions replace Postgres row policies and SQL transactions. Cloud setup, account isolation, quotas, and deployment still need verification.
+- Local SQLite is solely an explicitly labeled synthetic development fallback. It is not a private-course production backend or proof of Firestore connectivity.
+- Network-enabled `gh auth status` passed; the previous reported invalid login was a restricted-network artifact. Created private GitHub repository https://github.com/Jeremiah-Sakuda/soma; public submission visibility remains a later release step.
+- Executed two bounded Meta Responses probes using `muse-spark-1.3`. First: HTTP 200, incomplete at 256 output tokens (271 total). Second: HTTP 200, completed, expected response, 975 ms, 15 input + 49 output tokens. Combined 335 tokens. No secrets or private coursework were output. This proves runtime API access, not the lesson-generation release gate or available credits.

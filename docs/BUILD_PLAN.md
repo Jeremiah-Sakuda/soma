@@ -1,6 +1,6 @@
 # Soma build plan
 
-**Planning baseline: October 27–November 4, 2026.** The participant guide lists that building period and an October 26 kickoff. Record any organizer clarification; do not silently turn the earlier ten-day draft into an eligibility claim. Target complete submission assets on November 3 and submission before **November 4, 9 PM America/New_York**.
+**Updated October 26: implementation is authorized from today by the organizer’s “Hacking has officially started!” announcement, supplied by Jeremy.** The existing dated milestones remain targets; use the extra start day for the first slice. The participant guide lists that building period and an October 26 kickoff. Record any organizer clarification; do not silently turn the earlier ten-day draft into an eligibility claim. Target complete submission assets on November 3 and submission before **November 4, 9 PM America/New_York**.
 
 No milestone is marked complete by this handoff. One builder is assumed available; a second is not confirmed. The two workstreams below organize dependencies rather than authorize delegation.
 

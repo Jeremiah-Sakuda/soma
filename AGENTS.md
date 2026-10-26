@@ -23,7 +23,7 @@ This folder contains the Soma hackathon handoff. Follow the current user request
 
 ## Engineering defaults
 
-Use the provisional TypeScript stack in docs/TECHNICAL_PLAN.md; verify current APIs and pin compatible versions. One app/worker codebase, relational evidence graph, bounded Spark tools, managed persistence, separate browser runner. Do not add a graph database or agent framework without a demonstrated need.
+Use the provisional TypeScript stack in docs/TECHNICAL_PLAN.md; verify current APIs and pin compatible versions. One app/worker codebase, versioned evidence graph in Firestore (user-authorized replacement for Supabase; see docs/DECISIONS.md), bounded Spark tools, managed persistence, separate browser runner. Do not add a graph database or agent framework without a demonstrated need.
 
 Generate typed lesson specifications for approved components. Keep numerical models deterministic and independently checked. Generated content cannot run arbitrary code, access credentials, write learner evidence directly, or modify validation rules.
 

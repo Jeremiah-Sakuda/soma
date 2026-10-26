@@ -1,13 +1,13 @@
 # Soma technical plan
 
-**Proposed implementation baseline, October 26, 2026. No integration or release result is established here.** The [PRD](PRD.md) owns scope; this document makes its boundaries concrete. Verify provider APIs, availability, permissions, prices, and compatible package versions during setup. Do not infer API paths or capabilities from product names.
+**Implementation baseline, October 26, 2026; Firestore substitution authorized by Jeremy. Release results are recorded separately.** The [PRD](PRD.md) owns scope; this document makes its boundaries concrete. Verify provider APIs, availability, permissions, prices, and compatible package versions during setup. Do not infer API paths or capabilities from product names.
 
 ## Stack and deployment boundaries
 
 | Responsibility | Default | Verification before depending on it |
 | --- | --- | --- |
 | Web interface and server endpoints | Next.js, TypeScript, Tailwind, shadcn/ui; Vercel | Current runtime support, authenticated server boundary, deploy and refresh behavior |
-| Identity, relational data, files | Supabase Auth, Postgres, Storage | Row policies, storage access, migrations, service-role isolation |
+| Identity, evidence records, files | Firebase Authentication, Firestore; object storage to verify | Server ownership checks, deny-by-default client rules, transactions, versioned evidence, file access |
 | Durable scheduled work | Trigger.dev Cloud | Recurrence, retry semantics, concurrency, task time limits, deployment secrets |
 | Authenticated browser | Playwright and Browserbase | Interactive sign-in, session persistence, institutional login behavior, restart and expiry |
 | Runtime reasoning | Muse Spark 1.3 via Meta Model API | Exact available model ID, SDK or HTTP contract, tools, images, structured output, computer-use actions, usage fields |
@@ -15,7 +15,7 @@
 | Review scheduling | ts-fsrs | Pin version; persist ratings and scheduling state; use defaults initially |
 | Verification | Vitest, Playwright, independent reference review | Actual numerical, ownership, state, recovery, and user-journey checks |
 
-Use one TypeScript app/worker codebase. Keep long-running browser and generation work outside web-request lifetimes. Persist state in Postgres and object storage, not in process memory or a browser tab. Use the same domain services for the real-account and judge routes.
+Use one TypeScript app/worker codebase. Keep long-running browser and generation work outside web-request lifetimes. Persist production state in Firestore and authorized object storage, not in process memory or a browser tab. Use the same domain services for the real-account and judge routes.
 
 No graph database, separate Python service, multi-agent framework, vector database, general circuit solver, or calendar optimization engine is required initially. Add a dependency only when a measured requirement needs it.
 
@@ -53,7 +53,7 @@ Use content/version checks to skip redundant inference where possible. A failed 
 
 ## Data contracts
 
-All private records carry a workspace identity. Foreign references must resolve inside that workspace or to explicitly approved public demo/model content. Use immutable version IDs for content used by an attempt.
+Firestore replaces the original relational baseline because the builder has exhausted free Supabase projects. Model relationships as explicit versioned document references; transactionally enforce ownership, revisions, and publication freshness. Keep observations and interpretations separate. Anonymous development workspaces may use a size-bounded snapshot, but private full-semester records must use separate collections before production onboarding. All private records carry a workspace identity. Foreign references must resolve inside that workspace or to explicitly approved public demo/model content. Use immutable version IDs for content used by an attempt.
 
 | Record group | Required fields and invariants |
 | --- | --- |

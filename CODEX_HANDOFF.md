@@ -1,6 +1,6 @@
 # Soma: start here
 
-**Handoff date: October 26, 2026.** Jeremy has been accepted to the Meta Global AI Developer Hackathon. The target is a competitive Indie Developer entry under Build for Your World. This is an implementation brief, not evidence that the product already exists.
+**Handoff date: October 26, 2026.** **Later decisions:** Jeremy supplied the organizer’s start announcement and authorized October 26 implementation; Firestore/Firebase replaces Supabase due to project quota. See docs/DECISIONS.md; original handoff details below are retained as context. Jeremy has been accepted to the Meta Global AI Developer Hackathon. The target is a competitive Indie Developer entry under Build for Your World. This is an implementation brief, not evidence that the product already exists.
 
 ## The product to build
 

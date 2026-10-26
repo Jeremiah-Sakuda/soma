@@ -13,3 +13,5 @@ test-results/
 # Local browser authentication and private source material
 playwright/.auth/
 .local/
+*service-account*.json
+*firebase-adminsdk*.json

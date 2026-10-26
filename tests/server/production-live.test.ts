@@ -43,6 +43,21 @@ describe.skipIf(process.env.SOMA_PRODUCTION_HTTP_TEST !== 'true')('production ac
       expect(initial.workspace.mode).toBe('account');
       expect(initial.workspace.sources).toHaveLength(0);
       expect(initial.workspace.lessons).toHaveLength(0);
+      if (process.env.SOMA_PRODUCTION_CONNECTOR_TEST === 'true') {
+        const google = await read(await call('/api/connectors/google/status'), 200, 'Google connector configuration');
+        expect(google.configured).toBe(true);
+        expect(google.connections).toEqual([]);
+        await read(await call('/api/connectors/google/start', 'POST', { provider: 'gmail' }, 'https://cross-origin.example'), 403, 'Google cross-origin rejection');
+        const start = await read(await call('/api/connectors/google/start', 'POST', { provider: 'gmail' }), 200, 'Google authorization state creation');
+        const authorization = new URL(start.authorizationUrl);
+        expect(authorization.origin).toBe('https://accounts.google.com');
+        expect(authorization.searchParams.get('redirect_uri')).toBe(`${base}/api/connectors/google/callback`);
+        expect(authorization.searchParams.get('scope')).toBe('https://www.googleapis.com/auth/gmail.readonly');
+        expect(authorization.searchParams.get('code_challenge_method')).toBe('S256');
+        expect(authorization.searchParams.has('client_secret')).toBe(false);
+        const browser = await read(await call('/api/connectors/browser'), 200, 'Browser connector configuration');
+        if (!browser.configured) await read(await call('/api/connectors/browser', 'POST', { provider: 'blackboard', action: 'start' }), 503, 'Unconfigured browser rejection');
+      }
       const input = {
         importId: 'production-synthetic-import-1', expectedRevision: initial.workspace.revision,
         kind: 'course-text', sourceKey: 'production-synthetic-course-source', title: 'Original synthetic parallel resistor notes',

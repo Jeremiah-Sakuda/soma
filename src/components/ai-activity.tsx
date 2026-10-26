@@ -112,7 +112,7 @@ export function AiActivity({ workspaceId, revision, busy, enabled = true, onSess
           {!!run.sourceRefs.length && <button className="text-button" onClick={inspectSources}>Inspect cited sources</button>}
           <ol className="audit-events">{run.events.map(event => <AuditEvent event={event} key={event.seq}/>)}</ol>
           <div className="action-row">{(run.publishedLessonId ?? run.selectedLessonId) && <button className="secondary-button" onClick={() => openLesson((run.publishedLessonId ?? run.selectedLessonId)!)}>Open resulting activity</button>}<a className="text-button" href={`/api/audit?runId=${encodeURIComponent(run.id)}&format=json`} download><FileDown size={16} aria-hidden="true"/>Export this record</a></div>
-          {run.events.some(event => event.protected) && <p className="meta">Explore the resulting activity and use its help controls if you want to reveal protected explanations. You do not have to answer first.</p>}
+          {run.events.some(event => event.protected) && <p className="meta">{run.protectUnpublishedActivity ? 'Explanations for unanswered or unpublished activities remain protected. Application events are available above.' : run.selectedLessonId || run.publishedLessonId ? 'Explore the resulting activity and use its help controls if you want to reveal protected explanations. You do not have to answer first.' : 'Model explanations remain protected until this run confirms a published result.'}</p>}
           <p className="meta">Export uses the same access checks and protected details as this view.</p>
         </div>
       </details>)}

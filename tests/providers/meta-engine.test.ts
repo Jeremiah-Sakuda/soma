@@ -43,6 +43,10 @@ describe('Spark engine across real validation, transport and budget boundaries',
     const reopened = await prepareWithSpark(persisted, 'probability', 'Compare independent events');
     expect(reopened.lesson.id).toBe(result.lesson.id); expect(reopened.run).toMatchObject({ status: 'unchanged', mode: 'prepared' });
     expect(provider).toHaveBeenCalledTimes(2); expect(charges()).toHaveLength(1);
+    const obsolete = structuredClone(persisted); obsolete.lessons[0].modelVersion = 'obsolete-model';
+    await expect(prepareWithSpark(obsolete, 'probability', 'Compare independent events')).rejects.toThrow('allowance');
+    const authored = structuredClone(persisted); authored.lessons[0].mode = 'prepared';
+    await expect(prepareWithSpark(authored, 'probability', 'Compare independent events')).rejects.toThrow('allowance');
     const answered = applyAction(persisted, { type: 'attempt', lessonId: result.lesson.id, optionIndex: 1 });
     expect(answered.attempts).toHaveLength(1); expect(answered.lessons).toHaveLength(persisted.lessons.length);
     await expect(prepareWithSpark(answered, 'probability', 'Compare independent events')).rejects.toThrow('allowance');

@@ -435,3 +435,15 @@ In the meantime, can you work on our muse integration?
 3. Implementing bounded provider contracts, grounded ordinary practice and learner-context-aware preparation through the existing engine; executed results pending.
 
 **Plan deviations:** None. Muse Spark remains the runtime model; this does not reuse credentials or sessions from the separate consumer Muse assistant.
+
+### October 26 — P022 Muse integration milestone
+
+**Top-three outcome update:**
+
+1. Implemented the bounded Meta Responses client, grounded ordinary practice, exact disclosed-source citation validation, and the shared direct-request/collected-source engine (`4686906`, `b90231d`, `5b19d3b`).
+2. Added bounded learner context and safe artifact reuse. Preserved attempts when no supported authored follow-up exists; reused requests now identify the selected saved lesson (`3b09992`, `857967d`, plus integrated fixes).
+3. Two live Spark checks over synthetic material passed in 17.07 seconds; reconciled spend totaled $0.01867975 and the application ledger read $0.04732175/$1. Ordinary tests, build and browser results are recorded separately; independent review and unseen evaluation remain open.
+
+**Plan deviations:** None. Ordinary practice is existing PRD scope; the one quantitative family is unchanged. Browserbase onboarding remains on its independent pending choice. Review found and corrected model-version reuse, oversized source-job and cached-lesson navigation defects before deployment.
+
+P022 integrated validation: 209 ordinary tests passed; five explicitly gated live cases skipped. The separately enabled live Meta file passed both cases. Typecheck and production build passed. Six Chromium journeys passed in 9.6 seconds, including a response-contract regression proving that an older selected cached lesson opens correctly. Seven focused engine/semester-scope checks passed again after the final reuse guards. Remote CI and deployment are pending at this checkpoint.

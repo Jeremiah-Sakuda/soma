@@ -3,11 +3,11 @@ import type { WorkspaceResponse, WorkspaceState } from '../domain/types';
 import { getPersistenceMode } from './store';
 import { inferenceEnabled } from './budget';
 
-export function workspaceResponse(workspace: WorkspaceState, notice?: string) {
+export function workspaceResponse(workspace: WorkspaceState, notice?: string, selectedLessonId?: string) {
   const body: WorkspaceResponse = { workspace, capabilities: {
     spark: inferenceEnabled(),
     persistence: getPersistenceMode(), liveSources: [...new Set(workspace.sources.filter(source => source.origin === 'live' && source.status === 'current').map(source => source.kind))],
-  }, ...(notice ? { notice } : {}) };
+  }, ...(notice ? { notice } : {}), ...(selectedLessonId && workspace.lessons.some(lesson => lesson.id === selectedLessonId) ? { selectedLessonId } : {}) };
   return NextResponse.json(body, { headers: { 'Cache-Control': 'private, no-store' } });
 }
 

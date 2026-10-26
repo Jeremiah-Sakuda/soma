@@ -53,7 +53,7 @@ export type WorkspaceAction =
   | { type: 'explore-lesson'; lessonId: string }
   | { type: 'fresh-question'; lessonId: string; when: 'now' | 'later' }
   | { type: 'reset' };
-export type WorkspaceResponse = { workspace: WorkspaceState; capabilities: { spark: boolean; persistence: 'local-synthetic' | 'firestore'; liveSources: string[] }; notice?: string };
+export type WorkspaceResponse = { workspace: WorkspaceState; capabilities: { spark: boolean; persistence: 'local-synthetic' | 'firestore'; liveSources: string[] }; notice?: string; selectedLessonId?: string };
 
 export type SourceRef = { sourceId: string; version: number };
 export type FocusWindow = { id: string; startAt: string; endAt: string; timezone: string; declaredAt: string };

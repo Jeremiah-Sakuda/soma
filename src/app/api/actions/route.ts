@@ -52,7 +52,7 @@ export async function POST(request: Request) {
             state.runs.unshift(result.run);
             return state;
           }, before.revision);
-          return workspaceResponse(published, result.run.status === 'unchanged' ? 'Reopened saved Spark practice with unchanged context. No new inference was needed.' : before.mode === 'demo' ? 'Prepared with live Spark decisions over original synthetic sources.' : 'Prepared with live Spark decisions over your selected sources.');
+          return workspaceResponse(published, result.run.status === 'unchanged' ? 'Reopened saved Spark practice with unchanged context. No new inference was needed.' : before.mode === 'demo' ? 'Prepared with live Spark decisions over original synthetic sources.' : 'Prepared with live Spark decisions over your selected sources.', result.lesson.id);
         } catch (error) {
           if ((error as { status?: number }).status === 409) throw error;
           if (error instanceof PreparationError) failedRun = error.run;

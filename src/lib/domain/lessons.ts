@@ -71,6 +71,7 @@ export function followupLesson(parent: Lesson, ordinal: number, assisted: boolea
   // Course labels alone do not establish fit for an authored fixture. Live ordinary practice needs a new grounded model proposal.
   if (parent.kind === 'practice' && (parent.mode !== 'prepared' || parent.modelVersion !== PREPARED_MODEL || !['probability', 'writing', 'programming', 'design'].includes(parent.courseId) || !parent.sourceIds.includes(`source-${parent.courseId}`))) throw new AuthoredFollowupUnavailableError();
   const next = structuredClone(parent);
+  delete next.generationKey;
   next.id = `${parent.id.split('-followup-')[0]}-followup-${ordinal}`;
   next.version = 1;
   next.mode = 'prepared';

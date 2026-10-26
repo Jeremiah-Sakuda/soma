@@ -1,5 +1,19 @@
 import { test, expect, type Page } from '@playwright/test';
+import { seedWorkspace } from '../../src/lib/domain/seed';
 async function scenario(page:Page,label:string){await page.getByRole('button',{name:'Workspace menu'}).click();await page.getByRole('button',{name:'Try a synthetic change',exact:true}).click();await page.getByRole('button',{name:label,exact:true}).click();await expect(page.getByRole('dialog')).not.toBeVisible();}
+test('a reused request opens the selected saved lesson even behind a newer lesson', async ({ page }) => {
+ const workspace=seedWorkspace('cached-navigation');
+ workspace.lessons.unshift({...workspace.lessons[0],id:'newer-parallel',title:'A different saved parallel lesson'});
+ const result={workspace,capabilities:{spark:true,persistence:'local-synthetic',liveSources:[]},selectedLessonId:'parallel-nodes'};
+ // Isolate the API response contract: this case must not call a model provider.
+ await page.route('**/api/workspace',route=>route.fulfill({json:result}));
+ await page.route('**/api/actions',route=>route.fulfill({json:result}));
+ await page.goto('/');await page.getByRole('button',{name:'Request a lesson',exact:true}).click();
+ await page.getByLabel('What would you like to explore?').fill('Explain parallel branch currents');
+ await page.getByRole('button',{name:'Prepare a lesson',exact:true}).click();
+ await expect(page).toHaveURL(/lesson=parallel-nodes/);
+ await expect(page.getByRole('heading',{name:'Same voltage. Different currents.',exact:true})).toBeVisible();
+});
 test('Ready Card prediction, deterministic controls, fresh attempt and revisit persist',async({page})=>{
  await page.setViewportSize({width:1440,height:900});await page.goto('/');
  const open=page.getByRole('button',{name:'Open lesson',exact:true});await expect(open).toBeVisible();expect((await open.boundingBox())!.y).toBeLessThan(850);

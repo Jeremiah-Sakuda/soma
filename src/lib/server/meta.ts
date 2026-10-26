@@ -2,11 +2,11 @@ import { z } from 'zod';
 import { createHash, randomUUID } from 'node:crypto';
 import type { CircuitInput, Lesson, WorkspaceState, AgentRun, Source, SourceRef } from '../domain/types';
 import { calculateCircuit } from '../domain/circuit';
-import { circuitCandidate } from '../domain/lessons';
+import { circuitCandidate, MODEL_VERSION } from '../domain/lessons';
 import { withLessonMetadata } from '../domain/prediction';
 import { reserveInference, settleInference, usageCost, MAX_CALLS } from './budget';
 import { requestMetaResponse, MetaClientError } from './meta-client';
-import { practiceTool, validatePracticeProposal, instantiatePractice, learnerPracticeContext } from './meta-practice';
+import { practiceTool, validatePracticeProposal, instantiatePractice, learnerPracticeContext, PRACTICE_MODEL_VERSION } from './meta-practice';
 import { isSupportedCircuitRequest } from '../domain/support';
 
 const proposalSchema = z.strictObject({
@@ -101,8 +101,8 @@ export async function prepareWithSpark(state: WorkspaceState, courseId: string, 
   const activeTools = [tools[0], ...(allowCircuit ? [tools[1]] : []), practiceTool, declineTool];
   const learnerContext = learnerPracticeContext(state, courseId);
   const trigger = options.trigger === 'source-change' ? 'Collected course source change' : 'Direct lesson request';
-  const generationKey = createHash('sha256').update(JSON.stringify({ engine: SPARK_ENGINE_VERSION, workspaceId: state.id, courseId, topic: topic.trim().replace(/\s+/g, ' '), sources: allowed.map(source => [source.id, source.version]).sort(), learnerContext })).digest('hex');
-  const reusable = state.lessons.find(lesson => lesson.courseId === courseId && lesson.state === 'ready' && lesson.generationKey === generationKey && lesson.sourceIds.every(id => allowed.some(source => source.id === id && source.version === lesson.sourceVersions[id])));
+  const generationKey = createHash('sha256').update(JSON.stringify({ engine: SPARK_ENGINE_VERSION, models: [MODEL_VERSION, PRACTICE_MODEL_VERSION], workspaceId: state.id, courseId, topic: topic.trim().replace(/\s+/g, ' '), sources: allowed.map(source => [source.id, source.version]).sort(), learnerContext })).digest('hex');
+  const reusable = state.lessons.find(lesson => lesson.courseId === courseId && lesson.state === 'ready' && lesson.mode === 'live' && lesson.modelVersion === (lesson.kind === 'circuit' ? MODEL_VERSION : PRACTICE_MODEL_VERSION) && lesson.generationKey === generationKey && lesson.sourceIds.every(id => allowed.some(source => source.id === id && source.version === lesson.sourceVersions[id])));
   if (reusable) return { lesson: structuredClone(reusable), run: { id: `run-${randomUUID()}`, trigger, mode: 'prepared', status: 'unchanged', createdAt: new Date().toISOString(), steps: ['Reused a saved Spark artifact with unchanged source versions, objective, engine and learner context. No inference call made.'], effect: 'Current saved practice remains available.', sourceIds: [...reusable.sourceIds] } };
   const reservation = await reserveInference(state.id);
   let cost = 0; let certain = true; const steps: string[] = []; const readIds = new Set<string>();

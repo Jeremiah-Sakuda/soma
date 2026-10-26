@@ -118,3 +118,11 @@ Add later entries with the motivating observation, effect on scope, verification
 - Use user-completed login/MFA in Browserbase and encrypted persistent contexts rather than storing institutional passwords in prompts. Collect only selected, validated course pages through a bounded read policy. Context cleanup precedes workspace deletion; failed cleanup retains references for retry.
 - Google authorization uses a Web OAuth client with PKCE, one-use account/workspace-bound state, read-only scopes and encrypted refresh tokens. Gmail requires selected course queries; Calendar selects one calendar and a bounded seven-day window. No mail, coursework or calendar writes are implemented.
 - Google API services and production server configuration are installed. Real Firebase encryption/state/isolation tests and connection UI checks passed; no actual Google consent, selected mail/calendar read or institutional browser read has occurred yet. Browserbase credentials are still absent. Manual imports remain available and labeled.
+
+### October 26 — deepen the Muse Spark runtime
+
+- Jeremy asked to work on the Muse integration while Browserbase onboarding is pending. Continue the existing Muse Spark 1.3 Meta API integration; no consumer Muse session is reused.
+- Extend the same approved lesson engine with source-grounded ordinary text practice, as already specified in the PRD. Preserve the single numerical model family, strict source/version validation, account ownership and no external writes.
+- Bound provider responses, tool decisions and usage accounting. Include prior attempts with explicit assistance/exposure conditions; these records cannot silently become mastery evidence.
+- Reuse generated artifacts only for matching objective, source versions, model/engine versions and learner context. Explicitly identify the chosen saved lesson in the response. Split larger semester collections into bounded jobs rather than failing when source counts grow.
+- Two development live API cases passed; this is not the held-out generation or independent instructional review gate. The $1 development cap and $30 allocation reserve remain unchanged.

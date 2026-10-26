@@ -6,6 +6,7 @@ import { readAccountWorkspace, updateAccountWorkspace } from '../account-store';
 import { WorkspaceStoreError } from '../store';
 import { acquireConnectionLease, checkpointConnectionLease, connectionPublicationGuard, deleteConnection, listConnections, readConnection, releaseConnectionLease, saveConnection, type Connection } from './store';
 import { applyCollectedSources, type CollectedSource } from './ingest';
+import { sourceAuthorityContextSchema, validateSourceContext, type SourceAuthorityContext } from '../../domain/source-context';
 
 export const BROWSER_PROVIDERS = {
   blackboard: { label: 'BU Blackboard', homeUrl: 'https://learn.bu.edu/', hosts: ['learn.bu.edu'] },
@@ -13,7 +14,7 @@ export const BROWSER_PROVIDERS = {
   piazza: { label: 'Piazza', homeUrl: 'https://piazza.com/', hosts: ['piazza.com'] },
 } as const;
 export type BrowserProvider = keyof typeof BROWSER_PROVIDERS;
-export type BrowserTarget = { courseId: string; url: string };
+export type BrowserTarget = { courseId: string; url: string; context?: SourceAuthorityContext };
 type Configuration = { targets: BrowserTarget[] };
 type Secret = { contextId?: string; sessionId?: string; sessionExpiresAt?: string; readyAt?: string; day?: string; starts?: number };
 type BrowserConnection = Connection<Secret, Configuration>;
@@ -22,12 +23,27 @@ const fail = (message: string, status = 409, code = 'browser_connection') => new
 export const browserActionSchema = z.object({
   provider: z.enum(['blackboard', 'gradescope', 'piazza']),
   action: z.enum(['start', 'complete', 'configure', 'refresh', 'disconnect']),
-  targets: z.array(z.object({ courseId: z.string().min(1).max(128), url: z.string().max(2048) }).strict()).max(5).optional(),
+  targets: z.array(z.object({ courseId: z.string().min(1).max(128), url: z.string().max(2048), context: sourceAuthorityContextSchema.optional() }).strict()).max(5).optional(),
 }).strict();
-export function browserConfigured(): boolean { return Boolean(process.env.BROWSERBASE_API_KEY && process.env.BROWSERBASE_PROJECT_ID && process.env.SOMA_CONNECTOR_ENCRYPTION_KEY); }
+export function browserConfigured(): boolean { return Boolean(process.env.BROWSERBASE_API_KEY && process.env.SOMA_CONNECTOR_ENCRYPTION_KEY); }
 function settings() {
   if (!browserConfigured()) throw fail('Browser connections are not configured yet.', 503, 'browser_configuration');
-  return { key: process.env.BROWSERBASE_API_KEY!, projectId: process.env.BROWSERBASE_PROJECT_ID! };
+  return { key: process.env.BROWSERBASE_API_KEY!, projectId: process.env.BROWSERBASE_PROJECT_ID };
+}
+let discoveredProject: { keyHash: string; expires: number; value: Promise<string> } | undefined;
+/** Resolve the single project granted to the key; ambiguous accounts require an explicit deployment selection. */
+export async function resolveBrowserProjectId(): Promise<string> {
+  const config = settings();
+  if (config.projectId) return config.projectId;
+  const keyHash = createHash('sha256').update(config.key).digest('hex');
+  if (discoveredProject?.keyHash === keyHash && discoveredProject.expires > Date.now()) return discoveredProject.value;
+  const value = (async () => {
+    const projects = z.array(z.object({ id: z.string().min(1) })).max(100).parse(await api('/projects'));
+    if (projects.length !== 1) throw fail('The browser key must identify one project. Set a deployment project selection before connecting.', 503, 'browser_project');
+    return projects[0].id;
+  })();
+  const entry = { keyHash, expires: Date.now() + 300_000, value }; discoveredProject = entry;
+  try { return await value; } catch (error) { if (discoveredProject === entry) discoveredProject = undefined; throw error; }
 }
 function safeProviderUrl(provider: BrowserProvider, raw: string): URL {
   let url: URL; try { url = new URL(raw); } catch { throw fail('Enter a valid course URL.', 400); }
@@ -46,7 +62,7 @@ export function validateCourseTarget(provider: BrowserProvider, target: BrowserT
   const allowedKeys = provider === 'blackboard' ? ['course_id', 'content_id', 'mode'] : provider === 'piazza' ? ['cid'] : [];
   if (!identity || !/^[a-zA-Z0-9_-]{1,160}$/.test(identity) || [...url.searchParams.keys()].some(key => !allowedKeys.includes(key)) || (url.searchParams.has('mode') && url.searchParams.get('mode') !== 'reset')) throw fail('Select a supported course, announcement, or assignment page URL.', 400);
   url.hash = ''; if (provider === 'gradescope') url.hostname = 'www.gradescope.com'; url.searchParams.sort();
-  return { courseId: target.courseId, url: url.href };
+  return { courseId: target.courseId, url: url.href, ...(target.context ? { context: sourceAuthorityContextSchema.parse(target.context) } : {}) };
 }
 /** A conservative read policy; unsupported provider APIs fail closed instead of making POSTs. */
 export function isAllowedReadRequest(provider: BrowserProvider, raw: string, method: string): boolean {
@@ -83,7 +99,7 @@ async function getSession(connection: BrowserConnection): Promise<Session | null
   const raw = await api<unknown>(`/sessions/${encodeURIComponent(connection.secret.sessionId)}`, 'GET', undefined, true);
   if (!raw) return null;
   const session = sessionSchema.parse(raw);
-  if (!validateSessionOwnership(session, connection, settings().projectId)) throw fail('Browser session ownership could not be verified.', 403, 'browser_owner');
+  if (!validateSessionOwnership(session, connection, await resolveBrowserProjectId())) throw fail('Browser session ownership could not be verified.', 403, 'browser_owner');
   return session;
 }
 const active = (session: Session | null) => Boolean(session && ['RUNNING', 'PENDING'].includes(session.status) && Date.parse(session.expiresAt) > Date.now());
@@ -109,7 +125,7 @@ async function allocateSession(account: VerifiedAccount, leaseId: string, connec
   if (starts >= 24) throw fail('This provider has reached today’s browser session limit.', 429);
   connection.secret = { ...connection.secret, day, starts: starts + 1 };
   if (!await checkpointConnectionLease(account, connection.id, leaseId, { secret: connection.secret })) throw fail('Source settings changed. Reopen the connection.');
-  const raw = await api<unknown>('/sessions', 'POST', { projectId: settings().projectId, timeout: seconds, keepAlive: true, browserSettings: { context: { id: connection.secret.contextId, persist: true }, recordSession: false, logSession: false, solveCaptchas: false }, userMetadata: { somaOwner: ownerTag(connection) } });
+  const raw = await api<unknown>('/sessions', 'POST', { projectId: await resolveBrowserProjectId(), timeout: seconds, keepAlive: true, browserSettings: { context: { id: connection.secret.contextId, persist: true }, recordSession: false, logSession: false, solveCaptchas: false }, userMetadata: { somaOwner: ownerTag(connection) } });
   const session = sessionSchema.parse(raw);
   connection.secret = { ...connection.secret, sessionId: session.id, sessionExpiresAt: session.expiresAt };
   const next = connection;
@@ -117,7 +133,7 @@ async function allocateSession(account: VerifiedAccount, leaseId: string, connec
     await api(`/sessions/${encodeURIComponent(session.id)}`, 'POST', { status: 'REQUEST_RELEASE' });
     throw fail('Source settings changed. Reopen the connection.');
   }
-  if (!validateSessionOwnership(session, next, settings().projectId)) throw fail('Browser session ownership could not be verified.', 503);
+  if (!validateSessionOwnership(session, next, await resolveBrowserProjectId())) throw fail('Browser session ownership could not be verified.', 503);
   return { connection: next, session };
 }
 async function persistLease(account: VerifiedAccount, connection: BrowserConnection, leaseId: string, patch: Parameters<typeof releaseConnectionLease<Secret, Configuration>>[3]) {
@@ -126,7 +142,7 @@ async function persistLease(account: VerifiedAccount, connection: BrowserConnect
 async function validateTargets(account: VerifiedAccount, provider: BrowserProvider, targets: BrowserTarget[]) {
   const workspace = await readAccountWorkspace(account);
   if (!workspace) throw fail('Create your private workspace first.', 404);
-  const valid = targets.map(target => validateCourseTarget(provider, target));
+  const valid = targets.map(target => { const valid = validateCourseTarget(provider, target); validateSourceContext(workspace, target.courseId, target.context); return valid; });
   if (valid.some(target => !workspace.courses.some(course => course.id === target.courseId))) throw fail('Choose a course from this workspace.', 400);
   if (new Set(valid.map(target => target.url)).size !== valid.length) throw fail('Select each page only once.', 400);
   return { workspace, targets: valid };
@@ -157,7 +173,7 @@ export async function startBrowserLogin(account: VerifiedAccount, provider: Brow
         throw fail('The previous sign-in session ended. Wait a few seconds, then reconnect.');
       }
       if (!connection.secret.contextId) {
-        const context = z.object({ id: z.string().min(1) }).parse(await api('/contexts', 'POST', { projectId: settings().projectId }));
+        const context = z.object({ id: z.string().min(1) }).parse(await api('/contexts', 'POST', { projectId: await resolveBrowserProjectId() }));
         connection = { ...connection, secret: { ...connection.secret, contextId: context.id } };
         if (!await checkpointConnectionLease(account, connection.id, lease.leaseId, { secret: connection.secret })) { await api(`/contexts/${encodeURIComponent(context.id)}`, 'DELETE'); throw fail('Source settings changed.'); }
       }
@@ -199,7 +215,7 @@ async function readPage(page: Page, provider: BrowserProvider, target: BrowserTa
   const body = (await page.locator('body').innerText({ timeout: remainingReadTime(deadline, 8000) })).trim();
   if (password || !validatesCourseSnapshot(provider, target, page.url(), body, await auth.count() > 0)) throw fail('Course access could not be verified. Complete sign-in or choose a supported course page.', 409, 'browser_login_required');
   if (body.length > 48_000) throw fail('This page is too large. Select a narrower course page.', 413);
-  return { id: target.url, title: (await page.title()).slice(0, 300) || BROWSER_PROVIDERS[provider].label, body, courseId: target.courseId, url: target.url, kind: provider };
+  return { id: target.url, title: (await page.title()).slice(0, 300) || BROWSER_PROVIDERS[provider].label, body, courseId: target.courseId, url: target.url, kind: provider, ...(target.context ? { context: target.context } : {}) };
 }
 export async function refreshBrowser(account: VerifiedAccount, provider: BrowserProvider) {
   // Reserve 40 seconds of the 120-second route for release, context sync and persistence.

@@ -15,7 +15,7 @@ vi.mock('../../src/lib/server/connectors/store', () => ({
   connectionPublicationGuard: vi.fn(),
   deleteConnection: vi.fn(async () => { state.calls.push('delete-local'); state.connection = null; }),
 }));
-import { browserConfigured, configureBrowser, disconnectBrowser, refreshBrowser, startBrowserLogin } from '../../src/lib/server/connectors/browser';
+import { browserConfigured, resolveBrowserProjectId, configureBrowser, disconnectBrowser, refreshBrowser, startBrowserLogin } from '../../src/lib/server/connectors/browser';
 import { createHash } from 'node:crypto';
 const account = {} as VerifiedAccount; // Store/account integration tests verify the actual authenticated brand; this suite tests orchestration.
 const makeConnection = (secret: Record<string, unknown> = {}) => ({ id: 'browser-gradescope', workspaceId: 'workspace-one', provider: 'gradescope', version: 1, status: 'connected', configuration: { targets: [{ courseId: 'course-one', url: 'https://www.gradescope.com/courses/123' }] }, secret });
@@ -28,6 +28,27 @@ describe('browser lifecycle orchestration with synthetic provider responses', ()
   it('fails honestly before any external call when provider keys are absent', async () => {
     vi.stubEnv('BROWSERBASE_API_KEY', ''); expect(browserConfigured()).toBe(false);
     await expect(startBrowserLogin(account, 'gradescope')).rejects.toMatchObject({ code: 'browser_configuration' });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it('resolves a single granted project with only the API key and caches discovery', async () => {
+    vi.stubEnv('BROWSERBASE_PROJECT_ID', ''); vi.stubEnv('BROWSERBASE_API_KEY', 'key-discovery-single');
+    vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify([{ id: 'inferred-project' }])));
+    expect(browserConfigured()).toBe(true);
+    expect(await resolveBrowserProjectId()).toBe('inferred-project');
+    expect(await resolveBrowserProjectId()).toBe('inferred-project');
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(String(vi.mocked(fetch).mock.calls[0][0])).toBe('https://api.browserbase.com/v1/projects');
+  });
+  it('never silently selects among several projects and permits recovery after discovery failure', async () => {
+    vi.stubEnv('BROWSERBASE_PROJECT_ID', ''); vi.stubEnv('BROWSERBASE_API_KEY', 'key-discovery-many');
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify([{ id: 'one' }, { id: 'two' }])));
+    await expect(resolveBrowserProjectId()).rejects.toMatchObject({ code: 'browser_project' });
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify([{ id: 'one' }])));
+    expect(await resolveBrowserProjectId()).toBe('one');
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+  it('rejects authority metadata for a different course assessment before a paid session', async () => {
+    await expect(configureBrowser(account, 'gradescope', [{ courseId: 'course-one', url: 'https://www.gradescope.com/courses/123', context: { role: 'instructor-update', applicability: 'assessment', assessmentId: 'foreign-exam' } }])).rejects.toThrow('registered assessment');
     expect(fetch).not.toHaveBeenCalled();
   });
   it('rejects cross-workspace course selections before creating a paid session', async () => {

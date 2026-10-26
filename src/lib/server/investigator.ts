@@ -11,7 +11,7 @@ import { MAX_INVESTIGATION_CALLS, reserveInference, settleInference, usageCost }
 const identifier = z.string().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/);
 export const investigationRequestSchema = z.strictObject({ courseId: identifier, goal: z.string().trim().min(1).max(300), initialSourceIds: z.array(identifier).max(8).optional(), previousInvestigationId: identifier.optional(), attemptId: identifier.optional() }).refine(value => !value.attemptId || !!value.previousInvestigationId, 'A response must reference its original investigation.');
 export type InvestigationRequest = z.infer<typeof investigationRequestSchema>;
-const ENGINE_VERSION = 'source-diagnostic-investigation-v4';
+export const ENGINE_VERSION = 'source-diagnostic-investigation-v4';
 // Empty/singleton arrays represent absent/present references without asking the model
 // to emit nullable strings. The application still validates every supplied reference.
 const finishSchema = sourceDecisionSchema.omit({ assessmentId: true, conflicts: true }).extend({

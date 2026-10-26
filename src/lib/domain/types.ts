@@ -1,8 +1,10 @@
+import type { InvestigationRecord, SourceAuthorityContext } from './investigation';
+import type { ValidatedDiagnosticPlan, DiagnosticHypothesisStatus, DiagnosticExperimentInput } from './diagnostics';
 export type Topology = 'series' | 'parallel';
 export type CircuitInput = { topology: Topology; voltage: number; r1: number; r2: number };
 export type CircuitOutput = { equivalentResistance: number; totalCurrent: number; current1: number; current2: number; voltage1: number; voltage2: number; power: number };
 export type Course = { id: string; code: string; title: string; instructor: string; color: string; nextEvent: string; deadline: string };
-export type Source = { id: string; courseId?: string; title: string; body: string; version: number; kind: 'synthetic' | 'upload' | 'email' | 'folder' | 'blackboard' | 'calendar' | 'gradescope' | 'piazza'; retrievedAt: string; status: 'current' | 'stale'; timezone?: string; origin?: 'synthetic' | 'manual-import' | 'live'; observedAt?: string; url?: string; modifiedAt?: string; provenance?: { origin: 'manual-course' | 'manual-email' | 'manual-calendar' | 'live-browser' | 'live-google'; sourceKey: string; contentHash: string; importedAt: string }; };
+export type Source = { context?: SourceAuthorityContext; relatedSourceIds?: string[]; id: string; courseId?: string; title: string; body: string; version: number; kind: 'synthetic' | 'upload' | 'email' | 'folder' | 'blackboard' | 'calendar' | 'gradescope' | 'piazza'; retrievedAt: string; status: 'current' | 'stale'; timezone?: string; origin?: 'synthetic' | 'manual-import' | 'live'; observedAt?: string; url?: string; modifiedAt?: string; provenance?: { origin: 'manual-course' | 'manual-email' | 'manual-calendar' | 'live-browser' | 'live-google'; sourceKey: string; contentHash: string; importedAt: string }; };
 export type Lesson = {
   id: string; courseId: string; title: string; description: string; objective: string; reason: string;
   duration: number; kind: 'circuit' | 'practice'; circuit: CircuitInput; sourceIds: string[];
@@ -14,16 +16,18 @@ export type Lesson = {
   inputRanges?: { voltage: { min: number; max: number; unit: 'V' }; r1: { min: number; max: number; unit: 'Ω' }; r2: { min: number; max: number; unit: 'Ω' } };
   checkpoint?: PredictionCheckpoint;
   supportingPassages?: { sourceId: string; version: number; quote: string }[];
-  generationKey?: string;
+  generationKey?: string; diagnosticInvestigationId?: string; diagnosticExperiment?: { input: DiagnosticExperimentInput };
 };
 export type Attempt = {
   id: string; lessonId: string; lessonVersion: number; modelVersion: string; question: string;
-  response: string; correct: boolean; assisted: boolean; assistance: string[];
+  response: string; correct: boolean | null; assisted: boolean; assistance: string[];
   createdAt: string; revisionOf?: string; novel: boolean; feedback: string; sourceVersions?: Record<string, number>; exposure?: 'lab' | 'fresh-no-diagram'; predictionId?: string;
 };
 export type AgentRun = { id: string; trigger: string; mode: 'synthetic' | 'prepared' | 'live'; status: 'completed' | 'failed' | 'unchanged'; createdAt: string; steps: string[]; effect: string; sourceIds: string[]; };
 export type Interpretation = { id: string; courseId: string; claim: string; status: 'suspected' | 'revised' | 'supported'; evidenceIds: string[]; reason: string; updatedAt: string };
+export type SomaInvestigation = InvestigationRecord & { investigationKey?: string; selectedLessonId?: string; diagnosticPlan?: ValidatedDiagnosticPlan; diagnosticLessonId?: string; hypothesisRevisions?: { hypothesisId: string; status: DiagnosticHypothesisStatus; reason?: string }[]; toolActivity?: { tool: string; outcome: string }[]; usage?: { calls: number; costUsd: number; elapsedMs: number } };
 export type WorkspaceState = {
+  investigations?: SomaInvestigation[]; recommendedLessonId?: string;
   id: string; mode: 'demo' | 'account'; createdAt: string; expiresAt: string;
   revision: number; importReceipts?: { key: string; sourceId: string; hash: string; importedAt: string; preparationRevision?: number }[]; timezone?: string; demoClock?: string;
   focusWindows?: FocusWindow[]; calendarContext?: CalendarContext;
@@ -68,7 +72,7 @@ export type Commitment = Omit<CommitmentObservation, 'eventId' | 'status'> & { s
 export type CommitmentCorrection = { id: string; workspaceId: string; commitmentId: string; createdAt: string; note: string; fields?: ('status' | 'startAt' | 'endAt' | 'timezone')[]; before: { status: CommitmentStatus; startAt: string; endAt: string; timezone: string }; after: { status: 'confirmed' | 'tentative' | 'cancelled'; startAt: string; endAt: string; timezone: string } };
 export type Consequence = { id: string; workspaceId: string; createdAt: string; trigger: string; classification: 'timing' | 'scope' | 'content' | 'availability' | 'uncertainty' | 'identity' | 'correction'; sourceRefs: SourceRef[]; affectedIds: string[]; before: Record<string, string | number | boolean | null>; after: Record<string, string | number | boolean | null>; reason: string; result: string };
 export type SessionRecommendation = { minutes: 10 | 20 | 45; availableMinutes: number | null; status: 'known' | 'uncertain' | 'stale' | 'missing'; sourceRefs: SourceRef[]; contextRevision: number; updatedAt: string; reason: string };
-export type PredictionCheckpoint = { id: string; question: string; options: string[]; answerIndex: number; revealLabel: string; parameter: 'r2'; multiplier: number; observedOutput: 'current1' | 'voltage2'; explanation: string };
+export type PredictionCheckpoint = { id: string; question: string; options: string[]; answerIndex: number; revealLabel: string; parameter: 'r1' | 'r2' | 'voltage'; multiplier: number; targetValue?: number; observedOutput: 'current1' | 'current2' | 'voltage1' | 'voltage2'; explanation: string };
 export type PredictionInteraction = { id: string; lessonId: string; lessonVersion: number; modelVersion: string; kind: 'selection' | 'exploration' | 'reveal'; createdAt: string; inputs: CircuitInput; optionIndex?: number; predictionId?: string; resultInputs?: CircuitInput; result?: CircuitOutput; matched?: boolean; comparisonValid?: boolean; checkpoint?: PredictionCheckpoint };
 export type PredictionState = { state: 'idle' | 'exploring' | 'predicted' | 'revealed'; selectedPredictionId?: string; revealId?: string };
 export type FreshRequest = { id: string; parentLessonId: string; lessonId: string; predictionId?: string; requestedAt: string; when: 'now' | 'later'; status: 'pending' | 'opened'; openedAt?: string };

@@ -30,6 +30,6 @@ export async function POST(request: Request) {
     const parsed = z.strictObject({ jobId: z.string().regex(/^[a-f0-9]{64}$/) }).safeParse(input);
     if (!parsed.success) return NextResponse.json({ error: 'Valid preparation ID is required.' }, { status: 400 });
     const workspace = await runPreparationJob(account, parsed.data.jobId);
-    return workspace ? workspaceResponse(workspace, 'Prepared from your selected material with live Spark.') : NextResponse.json({ jobs: await listPreparationJobs(account) }, { headers: { 'Cache-Control': 'private, no-store' } });
+    return workspace ? workspaceResponse(workspace, 'Saved the source investigation or prepared activity.') : NextResponse.json({ jobs: await listPreparationJobs(account) }, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (error) { return apiError(error); }
 }

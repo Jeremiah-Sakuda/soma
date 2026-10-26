@@ -178,7 +178,8 @@ export function applyAction(input: WorkspaceState, action: WorkspaceAction, now:
       if (action.inputs.topology !== lesson.circuit.topology) throw new Error('Open the matching lesson variant to change topology.');
       const predictionState = state.predictionStates?.[lesson.id];
       const selection = state.predictions?.find(item => item.id === predictionState?.selectedPredictionId);
-      if (predictionState?.state === 'predicted' && selection && action.inputs.r2 !== selection.inputs.r2) revealPrediction(state, lesson, timestamp, action.inputs);
+      const changedParameter = selection?.checkpoint?.parameter ?? 'r2';
+      if (predictionState?.state === 'predicted' && selection && action.inputs[changedParameter] !== selection.inputs[changedParameter]) revealPrediction(state, lesson, timestamp, action.inputs);
       state.savedInputs[lesson.id] = structuredClone(action.inputs);
       // Exploring the model is support; absence of a hint click does not make a later answer independent.
       if (!(state.assistance[lesson.id] ?? []).some(item => item.includes('exploration'))) state.assistance[lesson.id] = [...(state.assistance[lesson.id] ?? []), `${timestamp} · exploration`];
@@ -200,14 +201,20 @@ export function applyAction(input: WorkspaceState, action: WorkspaceAction, now:
       if (action.revisionOf && (!original || original.lessonId !== lesson.id)) throw new Error('A revision must reference an original attempt on this lesson in this workspace.');
       const visibleSupport = lesson.kind === 'circuit' && lesson.exposure !== 'fresh-no-diagram' ? [`${timestamp} · diagram-visible`] : [];
       const assistance = [...new Set([...(original?.assistance ?? []), ...(state.assistance[lesson.id] ?? []), ...visibleSupport])];
-      const correct = action.optionIndex === lesson.answerIndex;
+      const correct = lesson.diagnosticInvestigationId ? null : action.optionIndex === lesson.answerIndex;
       const novel = !state.attempts.some(attempt => attempt.question === lesson.question);
       const id = `attempt-${state.attempts.length + 1}`;
       const assisted = assistance.length > 0;
       state.attempts.push({ id, lessonId: lesson.id, lessonVersion: lesson.version, modelVersion: lesson.modelVersion,
         sourceVersions: structuredClone(lesson.sourceVersions), exposure: lesson.exposure ?? 'lab', ...(lesson.predictionId ? { predictionId: lesson.predictionId } : {}), question: lesson.question, response: lesson.options[action.optionIndex], correct, assisted, assistance,
         createdAt: timestamp, ...(action.revisionOf ? { revisionOf: action.revisionOf } : {}), novel,
-        feedback: `${correct ? 'This selected explanation is correct.' : 'This answer needs another look.'} ${assisted ? 'Recorded help preceded this response.' : 'Answered without recorded help in Soma; external help is unknown.'} ${novel ? 'First recorded response to this question.' : 'Repeated exposed question; this is not fresh transfer evidence.'} ${lesson.explanation}` });
+        feedback: `${correct === null ? 'Diagnostic response saved without a correctness grade.' : correct ? 'This selected explanation is correct.' : 'This answer needs another look.'} ${assisted ? 'Recorded help preceded this response.' : 'Answered without recorded help in Soma; external help is unknown.'} ${novel ? 'First recorded response to this question.' : 'Repeated exposed question; this is not fresh transfer evidence.'} ${lesson.explanation}` });
+      if (lesson.diagnosticInvestigationId) {
+        state.assistance[lesson.id] = [...(state.assistance[lesson.id] ?? []), `${timestamp} · diagnostic-response-exposure`];
+        addRun(state, timestamp, `diagnostic:${id}`, 'Saved an ungraded diagnostic response with its original conditions. Spark can reconsider the competing explanations; no diagnosis or authored follow-up was inferred.', lesson.sourceIds, 'unchanged');
+        state.revision = input.revision + 1;
+        return state;
+      }
       // Feedback is a solution reveal for any subsequent response to this item.
       state.assistance[lesson.id] = [...(state.assistance[lesson.id] ?? []), `${timestamp} · answer-feedback`];
       state.interpretations.push({ id: `interpretation-${state.interpretations.length + 1}`, courseId: lesson.courseId,

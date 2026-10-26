@@ -20,7 +20,7 @@ describe('application-enforced inference budget', () => {
   });
   it('reserves before concurrency, retains unknown costs and limits one daily job per workspace', async () => {
     configure();
-    const reservations = await Promise.allSettled(['a', 'b', 'c'].map(reserveInference));
+    const reservations = await Promise.allSettled(['a', 'b', 'c'].map(id => reserveInference(id)));
     expect(reservations.filter(r => r.status === 'fulfilled')).toHaveLength(2);
     await expect(reserveInference('a')).rejects.toThrow();
     const first = reservations.find(r => r.status === 'fulfilled') as PromiseFulfilledResult<string>;
@@ -56,4 +56,18 @@ describe('application-enforced inference budget', () => {
     configure(); delete process.env.META_ALLOCATION_USD;
     await expect(reserveInference('a')).rejects.toMatchObject({ name: 'InferenceBudgetError', reason: 'configured', status: 503, message: expect.stringContaining('configured allocation') });
   });
+  it('reserves enough for deeper investigation and bounds three reconsiderations separately', async () => {
+    configure('0.8');
+    const first = await reserveInference('learner', 'investigation');
+    await settleInference(first, 0.01, true);
+    const second = await reserveInference('learner', 'investigation');
+    await settleInference(second, 0.01, true);
+    const third = await reserveInference('learner', 'investigation');
+    await settleInference(third, 0.01, true);
+    await expect(reserveInference('learner', 'investigation')).rejects.toMatchObject({ reason: 'daily' });
+    const standard = await reserveInference('learner');
+    await settleInference(standard, 0.01, true);
+    expect(8 * usageCost(24000, 2048)).toBeLessThan(0.35);
+  });
+
 });

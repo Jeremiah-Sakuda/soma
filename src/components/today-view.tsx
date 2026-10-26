@@ -8,7 +8,7 @@ export type Act = (action: WorkspaceAction) => Promise<WorkspaceResponse | undef
 export const time = (date: string) => new Date(date).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
 export function TodayView({ ws, openLesson, openSources, why, correct, act, busy, request }: { ws: WorkspaceState; openLesson: (id: string) => void; openSources: () => void; why: (lesson: Lesson) => void; correct: (id: string) => void; act: Act; busy: boolean; request: () => void }) {
  const availability=selectAvailability(ws), minutes=ws.selectedSessionMinutes??ws.sessionRecommendation?.minutes??20, plan=planSession(ws,minutes);
- const ready=ws.lessons.filter(l=>l.state==='ready'&&l.exposure!=='fresh-no-diagram');
+ const ready=ws.lessons.filter(l=>l.state==='ready'&&(l.exposure!=='fresh-no-diagram'||l.diagnosticInvestigationId));
  const featured=ready.find(l=>l.id===plan.items[0]?.lessonId)??ready[0];
  const now=new Date(ws.demoClock??Date.now()).getTime();
  const coming=[...ws.courses.filter(c=>c.deadline).map(c=>({id:c.id,title:c.nextEvent,at:c.deadline,label:c.code,status:'Academic deadline'})),...(ws.commitments??[]).filter(c=>c.status!=='cancelled').map(c=>({id:c.id,title:c.title,at:c.startAt,label:c.category,status:c.status}))].filter(c=>Date.parse(c.at)>=now&&Date.parse(c.at)<=now+7*86400000).sort((a,b)=>Date.parse(a.at)-Date.parse(b.at));

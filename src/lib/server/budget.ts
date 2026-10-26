@@ -9,6 +9,8 @@ export const INPUT_USD_PER_MILLION = 1.25;
 export const OUTPUT_USD_PER_MILLION = 4.25;
 export const JOB_RESERVATION_USD = 0.20;
 export const MAX_CALLS = 4;
+export const INVESTIGATION_RESERVATION_USD = 0.35;
+export const MAX_INVESTIGATION_CALLS = 8;
 export const MAX_OUTPUT_TOKENS = 2048;
 export const MAX_REQUEST_BYTES = 24000;
 
@@ -46,30 +48,32 @@ function database() {
   return db;
 }
 
-export async function reserveInference(workspaceId: string): Promise<string> {
+export async function reserveInference(workspaceId: string, profile: 'lesson' | 'investigation' = 'lesson'): Promise<string> {
   if (!inferenceEnabled()) throw new InferenceBudgetError('configured');
   const limit = budgetLimit(Number(process.env.META_ALLOCATION_USD), Number(process.env.META_APP_SPEND_CAP_USD || '1'));
-  const now = new Date(); const day = now.toISOString().slice(0, 10); const id = randomUUID();
+  const now = new Date(); const day = now.toISOString().slice(0, 10) + (profile === 'investigation' ? '-investigation' : ''); const id = randomUUID();
+  const reservationUsd = profile === 'investigation' ? INVESTIGATION_RESERVATION_USD : JOB_RESERVATION_USD;
+  const dailyLimit = profile === 'investigation' ? 3 : 1;
   if (process.env.SOMA_PERSISTENCE === 'firestore') {
     const db = getServerFirestore();
     const global = db.doc('somaBudget/global'); const daily = db.doc(`somaBudgetDays/${workspaceId}-${day}`);
     await db.runTransaction(async tx => {
       const [g, d] = await Promise.all([tx.get(global), tx.get(daily)]);
       const consumed = Number(g.data()?.consumed || 0);
-      if (d.exists) throw new InferenceBudgetError('daily');
-      if (consumed + JOB_RESERVATION_USD > limit) throw new InferenceBudgetError('global');
-      tx.set(global, { consumed: consumed + JOB_RESERVATION_USD });
-      tx.create(daily, { reservationId: id, createdAt: now.toISOString() });
-      tx.create(db.doc(`somaBudgetReservations/${id}`), { reserved: JOB_RESERVATION_USD, workspaceId, createdAt: now.toISOString(), charged: null });
+      if (Number(d.data()?.count ?? (d.exists ? 1 : 0)) >= dailyLimit) throw new InferenceBudgetError('daily');
+      if (consumed + reservationUsd > limit) throw new InferenceBudgetError('global');
+      tx.set(global, { consumed: consumed + reservationUsd });
+      tx.set(daily, { reservationId: id, count: Number(d.data()?.count ?? (d.exists ? 1 : 0)) + 1, createdAt: now.toISOString() });
+      tx.create(db.doc(`somaBudgetReservations/${id}`), { reserved: reservationUsd, workspaceId, createdAt: now.toISOString(), charged: null });
     });
   } else {
     const db = database();
     try {
       db.exec('BEGIN IMMEDIATE');
       const total = Number((db.prepare('SELECT COALESCE(SUM(COALESCE(charged, reserved)), 0) AS total FROM reservations').get() as { total: number }).total);
-      if (db.prepare('SELECT id FROM reservations WHERE workspace=? AND day=?').get(workspaceId, day)) throw new InferenceBudgetError('daily');
-      if (total + JOB_RESERVATION_USD > limit) throw new InferenceBudgetError('global');
-      db.prepare('INSERT INTO reservations VALUES (?,?,?,?,NULL,?)').run(id, workspaceId, day, JOB_RESERVATION_USD, now.toISOString());
+      if (Number((db.prepare('SELECT COUNT(*) AS count FROM reservations WHERE workspace=? AND day=?').get(workspaceId, day) as { count: number }).count) >= dailyLimit) throw new InferenceBudgetError('daily');
+      if (total + reservationUsd > limit) throw new InferenceBudgetError('global');
+      db.prepare('INSERT INTO reservations VALUES (?,?,?,?,NULL,?)').run(id, workspaceId, day, reservationUsd, now.toISOString());
       db.exec('COMMIT');
     } catch (error) { db.exec('ROLLBACK'); throw error; }
     finally { db.close(); }
@@ -87,7 +91,7 @@ export async function settleInference(id: string, cost: number, certain: boolean
       const [r, g] = await Promise.all([tx.get(ref), tx.get(global)]);
       if (!r.exists || r.data()?.charged !== null) return;
       tx.update(ref, { charged: cost });
-      tx.update(global, { consumed: Math.max(0, Number(g.data()?.consumed || 0) - JOB_RESERVATION_USD + cost) });
+      tx.update(global, { consumed: Math.max(0, Number(g.data()?.consumed || 0) - Number(r.data()?.reserved || JOB_RESERVATION_USD) + cost) });
     });
   } else {
     const db = database();

@@ -2,7 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import type { DocumentReference, Transaction } from 'firebase-admin/firestore';
 import type { WorkspaceState } from '../domain/types';
 import { seedEmptyAccountWorkspace } from '../domain/seed';
-import { assertVerifiedAccount, type VerifiedAccount } from './account';
+import { assertVerifiedAccount, assertAccountWorkspaceGeneration, revalidateWorkerAccount, type VerifiedAccount } from './account';
 import { getServerFirestore } from './firebase-config';
 import { getPersistenceMode, WorkspaceConflictError, WorkspaceStoreError } from './store';
 
@@ -55,6 +55,7 @@ function accountRef(account: VerifiedAccount) {
 
 function assertOwner(data: Metadata, account: VerifiedAccount): void {
   if (data.ownerId !== account.uid) throw new WorkspaceStoreError('Workspace ownership could not be verified.', 403, 'owner_mismatch');
+  assertAccountWorkspaceGeneration(account, data.workspaceId);
 }
 
 async function readRecords(transaction: Transaction, ref: DocumentReference, data: Metadata): Promise<AccountRecords> {
@@ -117,6 +118,8 @@ export async function readOrCreateAccountWorkspace(account: VerifiedAccount): Pr
       if (!data.deleted) return decodeAccountRecords(await readRecords(transaction, ref, data));
       if (!data.deletionComplete) throw new WorkspaceStoreError('Workspace deletion is still in progress.', 409, 'deletion_pending');
     }
+    // Scheduled capabilities may only act on their existing generation.
+    assertAccountWorkspaceGeneration(account, '');
     const workspace = seedEmptyAccountWorkspace(randomUUID(), new Date());
     writeRecords(transaction, ref, account, workspace, { summary: {}, groups: {} });
     return workspace;
@@ -133,6 +136,7 @@ export async function updateAccountWorkspace(account: VerifiedAccount, mutator: 
   next.revision = current.revision + 1;
   const before = encodeAccountRecords(current);
   accountRecordChanges(before, encodeAccountRecords(next));
+  await revalidateWorkerAccount(account);
   await ref.firestore.runTransaction(async transaction => {
     const document = await transaction.get(ref);
     if (!document.exists) throw new WorkspaceConflictError();

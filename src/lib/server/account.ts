@@ -1,13 +1,52 @@
 import { getAuth } from 'firebase-admin/auth';
+import { createHash } from 'node:crypto';
 import { z } from 'zod';
-import { getServerApp } from './firebase-config';
+import { getServerApp, getServerFirestore } from './firebase-config';
+import { assertTrustedWorker, type TrustedWorker } from './worker-auth';
 
 declare const accountBrand: unique symbol;
 export type VerifiedAccount = Readonly<{ uid: string; [accountBrand]: true }>;
 const verifiedAccounts = new WeakSet<object>();
+const workerAccounts = new WeakMap<object, { rootId: string; workspaceId: string; expiresAt: number }>();
 
 export function assertVerifiedAccount(account: VerifiedAccount): void {
   if (!account || !verifiedAccounts.has(account)) throw new AccountSessionError('A verified account session is required.', 401, 'account_required');
+  const worker = workerAccounts.get(account);
+  if (worker && worker.expiresAt <= Date.now()) throw new AccountSessionError('Worker account authorization expired.', 401, 'worker_account_expired');
+}
+
+/** Regular session behavior is unchanged; scheduled capabilities bind one generation. */
+export function assertAccountWorkspaceGeneration(account: VerifiedAccount, workspaceId: string): void {
+  assertVerifiedAccount(account);
+  const worker = workerAccounts.get(account);
+  if (worker && worker.workspaceId !== workspaceId) throw new AccountSessionError('Worker workspace generation changed.', 409, 'worker_workspace_changed');
+}
+
+/** Identity comes exclusively from a stored account root, after worker authentication. */
+export async function verifyWorkerAccount(capability: TrustedWorker, rootId: string, workspaceId: string): Promise<VerifiedAccount | null> {
+  assertTrustedWorker(capability);
+  if (!/^[a-f0-9]{64}$/.test(rootId) || !workspaceId) return null;
+  const ref = getServerFirestore().collection('somaAccounts').doc(rootId);
+  const first = await ref.get(), data = first.data();
+  if (!data || data.deleted || data.workspaceId !== workspaceId || typeof data.ownerId !== 'string' || createHash('sha256').update(data.ownerId).digest('hex') !== rootId) return null;
+  try { if ((await auth().getUser(data.ownerId)).disabled) return null; }
+  catch (error) { if ((error as { code?: string }).code === 'auth/user-not-found') return null; throw new AccountSessionError('Worker account verification is unavailable.', 503, 'worker_account_unavailable'); }
+  const current = (await ref.get()).data();
+  if (!current || current.deleted || current.ownerId !== data.ownerId || current.workspaceId !== workspaceId) return null;
+  const account = Object.freeze({ uid: data.ownerId }) as VerifiedAccount;
+  verifiedAccounts.add(account);
+  workerAccounts.set(account, { rootId, workspaceId, expiresAt: capability.expiresAt });
+  return account;
+}
+
+/** Recheck disabled/deleted identities before publishing a long-running worker result. */
+export async function revalidateWorkerAccount(account: VerifiedAccount): Promise<void> {
+  assertVerifiedAccount(account);
+  const worker = workerAccounts.get(account); if (!worker) return;
+  const current = (await getServerFirestore().collection('somaAccounts').doc(worker.rootId).get()).data();
+  if (!current || current.deleted || current.ownerId !== account.uid || current.workspaceId !== worker.workspaceId) throw new AccountSessionError('Worker workspace is no longer active.', 409, 'worker_workspace_changed');
+  try { if ((await auth().getUser(account.uid)).disabled) throw new Error('disabled'); }
+  catch { throw new AccountSessionError('Worker account is no longer active.', 401, 'worker_account_inactive'); }
 }
 
 export const ACCOUNT_SESSION_COOKIE = 'soma_account';

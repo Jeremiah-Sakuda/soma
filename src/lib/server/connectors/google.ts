@@ -1,3 +1,4 @@
+import { sourceAuthorityContextSchema, validateSourceContext, type SourceAuthorityContext } from '../../domain/source-context';
 import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import type { CommitmentObservation, WorkspaceState } from '../../domain/types';
@@ -10,7 +11,7 @@ import { acquireConnectionLease, connectionPublicationGuard, consumeConnectionSt
 
 export type GoogleProvider = 'gmail' | 'calendar';
 type GoogleSecret = { accessToken: string; refreshToken: string; expiresAt: number; scopes: string[] };
-export type GoogleConfiguration = { queries?: { courseId: string; query: string }[]; nextQueryIndex?: number; calendarIds?: string[]; timezone?: string };
+export type GoogleConfiguration = { queries?: { courseId: string; query: string; context?: SourceAuthorityContext }[]; nextQueryIndex?: number; calendarIds?: string[]; timezone?: string };
 type OAuthState = { provider: GoogleProvider; verifier: string; workspaceId: string; connectionVersion: number };
 const digest = (value: string) => createHash('sha256').update(value).digest('hex');
 const connectionId = (provider: GoogleProvider) => `google-${provider}`;
@@ -21,7 +22,7 @@ export const GOOGLE_SCOPES = {
 const providerSchema = z.enum(['gmail', 'calendar']);
 const validTimezone = (value: string) => { try { new Intl.DateTimeFormat('en-US', { timeZone: value }); return true; } catch { return false; } };
 export const googleSettingsSchema = z.discriminatedUnion('provider', [
-  z.strictObject({ provider: z.literal('gmail'), queries: z.array(z.strictObject({ courseId: z.string().regex(/^[A-Za-z0-9_-]{1,128}$/), query: z.string().trim().min(3).max(500).refine(query => /(?:^|\s|\()(?:label|from|subject):\S+/i.test(query), 'Choose a specific label, sender, or subject') })).min(1).max(20) }),
+  z.strictObject({ provider: z.literal('gmail'), queries: z.array(z.strictObject({ courseId: z.string().regex(/^[A-Za-z0-9_-]{1,128}$/), context: sourceAuthorityContextSchema.optional(), query: z.string().trim().min(3).max(500).refine(query => /(?:^|\s|\()(?:label|from|subject):\S+/i.test(query), 'Choose a specific label, sender, or subject') })).min(1).max(20) }),
   z.strictObject({ provider: z.literal('calendar'), calendarIds: z.array(z.string().min(1).max(256)).length(1), timezone: z.string().max(80).refine(validTimezone) }),
 ]);
 
@@ -109,6 +110,7 @@ export async function saveGoogleSettings(account: VerifiedAccount, input: unknow
   if (!connection || connection.status === 'disconnected') throw new WorkspaceStoreError('Connect this Google source first.', 409, 'connection_missing');
   const workspace = await readAccountWorkspace(account);
   if (!workspace || (value.provider === 'gmail' && value.queries.some(query => !workspace.courses.some(course => course.id === query.courseId)))) throw new WorkspaceStoreError('Every mail query must map to a course in this workspace.', 422, 'google_course_scope');
+  if (value.provider === 'gmail') for (const query of value.queries) validateSourceContext(workspace, query.courseId, query.context);
   const { provider: _provider, ...configuration } = value;
   await saveConnection(account, workspace.id, connection.id, { ...connection, configuration, status: 'connected', notice: 'Selection saved. Refresh to verify the selected sources.' }, connection.version);
   await updateAccountWorkspace(account, current => {
@@ -150,7 +152,7 @@ export async function collectBoundedPages<T>(read: (pageToken?: string) => Promi
   return { items, truncated: true };
 }
 
-export function normalizeGmailMessage(message: any, courseId: string): CollectedSource {
+export function normalizeGmailMessage(message: any, courseId: string, context?: SourceAuthorityContext): CollectedSource {
   if (typeof message.id !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(message.id)) throw new Error('Invalid Gmail message identity.');
   const headers = Array.isArray(message.payload?.headers) ? message.payload.headers : [];
   const header = (name: string) => String(headers.find((item: any) => String(item.name).toLowerCase() === name)?.value ?? '').slice(0, 500);
@@ -163,7 +165,7 @@ export function normalizeGmailMessage(message: any, courseId: string): Collected
   walk(message.payload, 0);
   const content = plain.length ? plain.join('\n\n') : `Message preview only; full plain-text body unavailable:\n${String(message.snippet ?? '')}`;
   const body = `Subject: ${header('subject')}\nFrom: ${header('from')}\nDate header: ${header('date') || 'Unknown'}\n\n${content}`;
-  return { id: message.id, courseId, title: (header('subject') || 'Selected course email').slice(0, 300), body: body.length > 48_000 ? `${body.slice(0, 47_920)}\n[Content truncated at the collection limit; attachments not collected.]` : body, kind: 'email', url: `https://mail.google.com/mail/u/0/#all/${message.id}` };
+  return { id: message.id, courseId, ...(context ? { context } : {}), title: (header('subject') || 'Selected course email').slice(0, 300), body: body.length > 48_000 ? `${body.slice(0, 47_920)}\n[Content truncated at the collection limit; attachments not collected.]` : body, kind: 'email', url: `https://mail.google.com/mail/u/0/#all/${message.id}` };
 }
 
 type CalendarEvent = { id: string; title: string; startAt?: string; endAt?: string; timezone: string; status: 'confirmed' | 'tentative' | 'cancelled'; busy: boolean; updated?: string; url?: string };
@@ -234,7 +236,7 @@ export async function refreshGoogleConnection(account: VerifiedAccount, provider
         const batch = await Promise.all(selectedMessages.map(async item => {
           if (!/^[a-zA-Z0-9_-]{1,128}$/.test(item.id)) throw new Error('Invalid Google message ID.');
           const url = new URL(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${item.id}`); url.searchParams.set('format', 'full');
-          return normalizeGmailMessage(await googleRead(url, secret, deadline), selected.courseId);
+          return normalizeGmailMessage(await googleRead(url, secret, deadline), selected.courseId, selected.context);
         })); records.push(...batch);
       }
       nextConfiguration = { ...connection.configuration, nextQueryIndex: (index + 1) % queries.length };

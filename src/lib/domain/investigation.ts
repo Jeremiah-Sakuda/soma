@@ -1,17 +1,27 @@
 import { z } from 'zod';
+import type { SourceAuthorityContext } from './source-context';
+export { sourceAuthorityContextSchema, validateSourceContext } from './source-context';
+export type { SourceAuthorityContext } from './source-context';
 import type { Source, SourceRef, WorkspaceState } from './types';
 
 export type SourceEvidenceRef = SourceRef & { quote: string };
 /** Owner-declared source context; titles, sender names and recency do not establish authority. */
-export type SourceAuthorityContext = { role: 'instructor-update' | 'syllabus' | 'teaching-material' | 'returned-work' | 'student-question'; assessmentId?: string; publishedAt?: string; supersedes?: SourceRef[] };
+
 export type InvestigableSource = Source & { context?: SourceAuthorityContext; relatedSourceIds?: string[] };
 export type ReadSourceEvidence = { version: number; body?: string; segments?: { offset: number; body: string }[] };
 export type InvestigationReads = ReadonlyMap<string, ReadSourceEvidence>;
 const id = z.string().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/);
 const evidenceSchema = z.strictObject({ sourceId: id, version: z.number().int().min(1), quote: z.string().min(10).max(1000) });
+export const academicUpdateSchema = z.strictObject({
+  assessmentId: id, kind: z.enum(['deadline', 'coverage', 'eligibility']),
+  sourceRef: evidenceSchema,
+  lessonIds: z.array(id).max(30), topic: z.string().trim().max(120), eligible: z.boolean(),
+});
+export type AcademicUpdate = z.infer<typeof academicUpdateSchema>;
 export const sourceDecisionSchema = z.strictObject({
   decision: z.enum(['revise-session', 'keep-current', 'needs-evidence']),
   reason: z.string().trim().min(10).max(1200),
+  academicUpdates: z.array(academicUpdateSchema).max(8).optional(),
   sourceRefs: z.array(evidenceSchema).min(1).max(8),
   assessmentId: id.nullable(), applicability: z.enum(['course', 'assessment', 'unknown']),
   conflicts: z.array(z.strictObject({ sourceIds: z.array(id).min(2).max(8), reason: z.string().trim().min(10).max(800), resolution: z.enum(['unresolved', 'explicit-supersession']), preferredSourceId: id.nullable() })).max(8),
@@ -24,7 +34,7 @@ export type InvestigationRecord = SourceDecision & {
 export type InvestigationWorkspace = WorkspaceState & { investigations?: InvestigationRecord[] };
 export const sourceDecisionTool = {
   type: 'function', name: 'finish_investigation', strict: true,
-  description: 'Propose a source-supported next-session decision. Cite exact disclosed passages for every source. Keep unresolved authority/applicability conflicts explicit; recency alone never resolves them. This cannot alter dates, exam eligibility, source observations or learner evidence.',
+  description: 'Propose a source-supported next-session decision. Cite exact disclosed passages for every source. Keep unresolved authority/applicability conflicts explicit; recency alone never resolves them. Academic updates can apply only explicit owner-confirmed typed assessment facts and exact cited evidence; they cannot invent dates, source observations or learner evidence.',
   parameters: {
     type: 'object', properties: {
       decision: { type: 'string', enum: ['revise-session', 'keep-current', 'needs-evidence'] }, reason: { type: 'string', minLength: 10, maxLength: 1200 },
@@ -108,6 +118,7 @@ export function validateInvestigationDecision(raw: unknown, state: Investigation
     if (!stored || previous.workspaceId !== state.id || previous.courseId !== courseId) throw new Error('Previous investigation is outside this workspace and course.');
     previous = stored;
   }
+  if (plan.applicability !== 'unknown' && [...cited.values()].some(source => ['personal', 'unknown'].includes(source.context?.applicability ?? ''))) throw new Error('Personal or unknown applicability must remain needs-evidence.');
   if (plan.applicability === 'assessment') {
     if (!plan.assessmentId || ![...cited.values()].every(source => source.context?.assessmentId === plan.assessmentId) || ![...cited.values()].some(source => ['instructor-update', 'syllabus'].includes(source.context?.role ?? ''))) throw new Error('Assessment applicability needs matching declared source authority.');
   } else if (plan.assessmentId !== null) throw new Error('Unknown or course-only applicability cannot claim an assessment.');
@@ -132,7 +143,83 @@ export function validateInvestigationDecision(raw: unknown, state: Investigation
       if (!plan.conflicts.some(conflict => conflict.resolution === 'explicit-supersession' && unresolved.sourceIds.every(sourceId => conflict.sourceIds.includes(sourceId)))) throw new Error('A prior unresolved conflict cannot silently disappear.');
     }
   }
+  validateAcademicUpdates(plan, state, courseId, cited, reads);
   return plan;
+}
+
+function validateAcademicUpdates(plan: SourceDecision, state: WorkspaceState, courseId: string, cited: Map<string, InvestigableSource>, reads: InvestigationReads) {
+  const updates = plan.academicUpdates ?? [];
+  if (!updates.length) return;
+  if (plan.decision === 'needs-evidence' || plan.applicability !== 'assessment') throw new Error('Academic changes require resolved assessment applicability.');
+  const course = state.courses.find(item => item.id === courseId)!;
+  const touched = new Set<string>();
+  for (const update of updates) {
+    const assessment = course.assessments?.find(item => item.id === update.assessmentId);
+    const source = cited.get(update.sourceRef.sourceId);
+    const key = `${update.assessmentId}:${update.kind}`;
+    if (touched.has(key)) throw new Error('Only one update per assessment field is allowed.');
+    touched.add(key);
+    if (!assessment || plan.assessmentId !== assessment.id || !source || source.version !== update.sourceRef.version || !disclosedSegments(source, reads).some(segment => segment.includes(update.sourceRef.quote))) throw new Error('Academic update needs a registered course assessment and exact cited evidence.');
+    if (source.context?.assessmentId !== assessment.id || source.context.applicability !== 'assessment' || !['syllabus', 'instructor-update'].includes(source.context.role)) throw new Error('Academic authority must be explicitly declared for this assessment.');
+    const fact = update.kind === 'deadline' ? source.context.confirmedFacts?.deadline : source.context.confirmedFacts?.coverage;
+    if (!fact || fact.quote !== update.sourceRef.quote) throw new Error('Academic values must come from owner-confirmed typed facts with the exact cited passage.');
+    if (update.kind !== 'eligibility' && (update.lessonIds.length || update.topic || update.eligible)) throw new Error('Only eligibility updates can select lessons or topics.');
+    for (const old of (update.kind === 'deadline' ? (assessment.deadlineAt ? assessment.deadlineSourceRefs ?? assessment.sourceRefs : []) : (assessment.includedTopics || assessment.excludedTopics ? assessment.coverageSourceRefs ?? assessment.sourceRefs : [])) ?? []) {
+      if (old.sourceId === source.id && old.version === source.version) continue;
+      const previous = state.sources.find(item => item.id === old.sourceId && item.version === old.version && item.courseId === courseId);
+      const sameFacts = update.kind === 'deadline' ? previous?.context?.confirmedFacts?.deadline?.at === source.context.confirmedFacts?.deadline?.at && previous?.context?.confirmedFacts?.deadline?.timezone === source.context.confirmedFacts?.deadline?.timezone : JSON.stringify(previous?.context?.confirmedFacts?.coverage) === JSON.stringify(source.context.confirmedFacts?.coverage);
+      if (!sameFacts && !source.context.supersedes?.some(ref => ref.sourceId === old.sourceId && ref.version === old.version)) throw new Error('Changing confirmed academic facts requires explicit supersession of the previous source version.');
+    }
+    if (update.kind === 'eligibility') {
+      const coverage = source.context.confirmedFacts!.coverage!;
+      if (!update.lessonIds.length || !update.topic) throw new Error('Eligibility needs an explicit topic and scoped lessons.');
+      const topic = update.topic.toLowerCase();
+      const included = coverage.includedTopics.some(value => value.toLowerCase() === topic);
+      const excluded = coverage.excludedTopics.some(value => value.toLowerCase() === topic);
+      if (update.eligible && (!included || excluded)) throw new Error('Excluded or unlisted topics cannot be attached to an assessment.');
+      for (const lessonId of update.lessonIds) {
+        const lesson = state.lessons.find(item => item.id === lessonId && item.courseId === courseId);
+        if (!lesson || lesson.state !== 'ready' || !lesson.sourceIds.every(id => state.sources.some(item => item.id === id && item.version === lesson.sourceVersions[id] && item.status === 'current' && item.courseId === courseId))) throw new Error('Eligibility lesson must be current and in this course.');
+        if (update.eligible && coverage.excludedTopics.some(excludedTopic => [lesson.title, lesson.objective, lesson.description, lesson.question, lesson.explanation].join(' ').toLowerCase().includes(excludedTopic.toLowerCase()))) throw new Error('A lesson containing an excluded topic cannot be attached to the assessment.');
+        if (update.eligible && (lesson.validation?.status !== 'checked' || ![lesson.title, lesson.objective, lesson.description].some(value => value.toLowerCase().includes(topic)))) throw new Error('Exam eligibility requires checked content and an explicit matching topic.');
+      }
+    }
+  }
+}
+
+function publishAcademicUpdates(state: WorkspaceState, courseId: string, plan: SourceDecision, record: InvestigationRecord) {
+  const course = state.courses.find(item => item.id === courseId)!;
+  for (const [index, update] of (plan.academicUpdates ?? []).entries()) {
+    const assessment = course.assessments!.find(item => item.id === update.assessmentId)!;
+    const source = state.sources.find(item => item.id === update.sourceRef.sourceId && item.version === update.sourceRef.version)!;
+    const before: Record<string, string | number | boolean | null> = {};
+    const after: Record<string, string | number | boolean | null> = {};
+    if (update.kind === 'deadline') {
+      const fact = source.context!.confirmedFacts!.deadline!;
+      before.deadlineAt = assessment.deadlineAt ?? null; before.timezone = assessment.timezone ?? null;
+      assessment.deadlineAt = fact.at; assessment.timezone = fact.timezone;
+      assessment.deadlineSourceRefs = [{ sourceId: source.id, version: source.version }];
+      after.deadlineAt = fact.at; after.timezone = fact.timezone;
+    } else if (update.kind === 'coverage') {
+      const fact = source.context!.confirmedFacts!.coverage!;
+      before.includedTopics = JSON.stringify(assessment.includedTopics ?? []); before.excludedTopics = JSON.stringify(assessment.excludedTopics ?? []);
+      assessment.includedTopics = [...fact.includedTopics]; assessment.excludedTopics = [...fact.excludedTopics];
+      assessment.coverageSourceRefs = [{ sourceId: source.id, version: source.version }];
+      after.includedTopics = JSON.stringify(fact.includedTopics); after.excludedTopics = JSON.stringify(fact.excludedTopics);
+      // Removing coverage always removes an existing attachment; adding coverage never silently validates a lesson.
+      for (const lesson of state.lessons.filter(item => item.courseId === courseId)) for (const eligibility of lesson.assessmentEligibility ?? []) if (eligibility.assessmentId === assessment.id && (!fact.includedTopics.some(topic => topic.toLowerCase() === eligibility.topic.toLowerCase()) || fact.excludedTopics.some(topic => topic.toLowerCase() === eligibility.topic.toLowerCase()))) { eligibility.eligible = false; lesson.examEligible = false; }
+    } else {
+      for (const lesson of state.lessons.filter(item => update.lessonIds.includes(item.id))) {
+        before[lesson.id] = lesson.assessmentEligibility?.find(item => item.assessmentId === assessment.id)?.eligible ?? false;
+        lesson.assessmentEligibility = [...(lesson.assessmentEligibility ?? []).filter(item => item.assessmentId !== assessment.id), { assessmentId: assessment.id, topic: update.topic, eligible: update.eligible, sourceRefs: [{ sourceId: source.id, version: source.version }] }];
+        lesson.examEligible = lesson.assessmentEligibility.some(item => item.eligible);
+        after[lesson.id] = update.eligible;
+      }
+    }
+    assessment.sourceRefs = [{ sourceId: source.id, version: source.version }]; assessment.updatedAt = record.createdAt;
+    state.consequences ??= [];
+    state.consequences.push({ id: `academic-${record.id}-${index}`, workspaceId: state.id, createdAt: record.createdAt, trigger: 'Confirmed academic update', classification: update.kind === 'deadline' ? 'timing' : 'scope', sourceRefs: [{ sourceId: source.id, version: source.version }], affectedIds: [courseId, assessment.id, ...update.lessonIds], before, after, reason: plan.reason, result: 'Applied owner-confirmed facts from exact current source evidence. Original attempts retained.' });
+  }
 }
 
 export function applySourceDecision(state: InvestigationWorkspace, courseId: string, raw: unknown, reads: InvestigationReads, metadata: { id: string; createdAt: string; mode: InvestigationRecord['mode']; supersedesId?: string; attemptIds?: string[] }): InvestigationWorkspace & { investigations: InvestigationRecord[] } {
@@ -149,6 +236,7 @@ export function applySourceDecision(state: InvestigationWorkspace, courseId: str
   next.investigations ??= [];
   if (existing) return next;
   next.investigations.push(record);
+  publishAcademicUpdates(next, courseId, plan, record);
   next.consequences ??= [];
   next.consequences.push({ id: `investigation-${record.id}`, workspaceId: state.id, createdAt: record.createdAt, trigger: 'Source investigation', classification: plan.decision === 'needs-evidence' ? 'uncertainty' : 'content', sourceRefs: plan.sourceRefs.map(({ sourceId, version }) => ({ sourceId, version })), affectedIds: [courseId], before: { investigationId: previous?.id ?? null }, after: { investigationId: record.id, decision: plan.decision, applicability: plan.applicability, assessmentId: plan.assessmentId }, reason: plan.reason, result: plan.decision === 'revise-session' ? 'A source-supported session revision was proposed; lesson publication requires its own validation.' : plan.decision === 'keep-current' ? 'Current lessons were retained without regeneration.' : 'More evidence is needed before revising the session.' });
   return next;

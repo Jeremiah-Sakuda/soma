@@ -1,3 +1,4 @@
+import { assessmentRegistrationSchema, sourceAuthorityContextSchema, validateSourceContext, reconcileSourceRefresh } from '../domain/source-context';
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import type { CommitmentObservation, Source, WorkspaceState } from '../domain/types';
@@ -18,8 +19,8 @@ const event = z.strictObject({
 }).refine(value => value.kind === 'deadline' ? Date.parse(value.endAt) >= Date.parse(value.startAt) : Date.parse(value.endAt) > Date.parse(value.startAt), 'Event end must follow its start');
 
 export const sourceImportSchema = z.discriminatedUnion('kind', [
-  z.strictObject({ ...common, kind: z.literal('course-text'), text: z.string().trim().min(1).max(48_000), course }),
-  z.strictObject({ ...common, kind: z.literal('email-text'), text: z.string().trim().min(1).max(48_000), course }),
+  z.strictObject({ ...common, kind: z.literal('course-text'), text: z.string().trim().min(1).max(48_000), course, assessment: assessmentRegistrationSchema.optional(), context: sourceAuthorityContextSchema.optional(), url: z.string().url().max(2048).optional() }),
+  z.strictObject({ ...common, kind: z.literal('email-text'), text: z.string().trim().min(1).max(48_000), course, assessment: assessmentRegistrationSchema.optional(), context: sourceAuthorityContextSchema.optional(), url: z.string().url().max(2048).optional() }),
   z.strictObject({ ...common, kind: z.literal('calendar-json'), timezone, events: z.array(event).max(50).refine(events => new Set(events.map(event => event.id)).size === events.length, 'Event IDs must be unique') }),
 ]);
 export type SourceImport = z.infer<typeof sourceImportSchema>;
@@ -67,6 +68,18 @@ export function applySourceImport(input: WorkspaceState, request: SourceImport, 
     const existingCourse = state.courses.find(item => item.id === request.course.id);
     if (!existingCourse) state.courses.push({ ...request.course, instructor: request.course.instructor ?? '', color: '#2244C2', nextEvent: 'No dated event imported', deadline: '' });
   }
+  if (request.kind !== 'calendar-json' && request.assessment) {
+    const ownerCourse = state.courses.find(item => item.id === request.course.id)!;
+    ownerCourse.assessments ??= [];
+    const existing = ownerCourse.assessments.find(item => item.id === request.assessment!.id);
+    if (existing && existing.title !== request.assessment.title) throw new WorkspaceStoreError('Assessment identity already has a different title.', 409, 'assessment_identity_conflict');
+    if (!existing) ownerCourse.assessments.push(structuredClone(request.assessment));
+  }
+  const context = request.kind === 'calendar-json' ? undefined : validateSourceContext(state, courseId, request.context, request.text);
+  if (request.kind !== 'calendar-json' && request.url) {
+    const url = new URL(request.url);
+    if (url.protocol !== 'https:' || url.username || url.password || [...url.searchParams.keys()].some(key => /token|password|secret|authorization/i.test(key))) throw new WorkspaceStoreError('Use a public HTTPS source location without credentials.', 422, 'source_location');
+  }
   const changed = previous?.provenance?.contentHash !== contentHash;
   let source = previous;
   if (changed) {
@@ -75,13 +88,14 @@ export function applySourceImport(input: WorkspaceState, request: SourceImport, 
       id: sourceId, ...(courseId ? { courseId } : {}), title: request.title,
       body: request.kind === 'calendar-json' ? JSON.stringify({ timezone: request.timezone, events: request.events }, null, 2) : request.text,
       version: (previous?.version ?? 0) + 1, kind: 'upload', origin: 'manual-import', retrievedAt: now, observedAt: now, status: 'current',
-      ...(request.kind === 'calendar-json' ? { timezone: request.timezone } : {}),
+      ...(request.kind === 'calendar-json' ? { timezone: request.timezone } : { ...(context ? { context } : {}), ...(request.url ? { url: request.url } : {}) }),
       provenance: { origin, sourceKey: request.sourceKey, contentHash, importedAt: now },
     };
     state.sources.push(source);
-    for (const lesson of state.lessons) if (lesson.sourceIds.includes(sourceId)) lesson.state = 'stale';
+    reconcileSourceRefresh(state, source, previous);
   }
   if (!source) throw new Error('Import source was not created.');
+  if (!changed) { source.status = 'current'; source.retrievedAt = now; reconcileSourceRefresh(state, source); }
   if (request.kind === 'calendar-json') {
     const priorCalendarKeys = new Set(state.sources.filter(item => item.provenance?.origin === 'manual-calendar' && item.status === 'current').map(item => item.provenance!.sourceKey));
     if (priorCalendarKeys.size > 1) throw new WorkspaceStoreError('Use one selected calendar source for this workspace.', 422, 'calendar_scope_limit');

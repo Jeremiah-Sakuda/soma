@@ -1,9 +1,10 @@
+import type { Assessment } from './source-context';
 import type { InvestigationRecord, SourceAuthorityContext } from './investigation';
 import type { ValidatedDiagnosticPlan, DiagnosticHypothesisStatus, DiagnosticExperimentInput } from './diagnostics';
 export type Topology = 'series' | 'parallel';
 export type CircuitInput = { topology: Topology; voltage: number; r1: number; r2: number };
 export type CircuitOutput = { equivalentResistance: number; totalCurrent: number; current1: number; current2: number; voltage1: number; voltage2: number; power: number };
-export type Course = { id: string; code: string; title: string; instructor: string; color: string; nextEvent: string; deadline: string };
+export type Course = { assessments?: Assessment[]; id: string; code: string; title: string; instructor: string; color: string; nextEvent: string; deadline: string };
 export type Source = { context?: SourceAuthorityContext; relatedSourceIds?: string[]; id: string; courseId?: string; title: string; body: string; version: number; kind: 'synthetic' | 'upload' | 'email' | 'folder' | 'blackboard' | 'calendar' | 'gradescope' | 'piazza'; retrievedAt: string; status: 'current' | 'stale'; timezone?: string; origin?: 'synthetic' | 'manual-import' | 'live'; observedAt?: string; url?: string; modifiedAt?: string; provenance?: { origin: 'manual-course' | 'manual-email' | 'manual-calendar' | 'live-browser' | 'live-google'; sourceKey: string; contentHash: string; importedAt: string }; };
 export type Lesson = {
   id: string; courseId: string; title: string; description: string; objective: string; reason: string;
@@ -16,7 +17,7 @@ export type Lesson = {
   inputRanges?: { voltage: { min: number; max: number; unit: 'V' }; r1: { min: number; max: number; unit: 'Ω' }; r2: { min: number; max: number; unit: 'Ω' } };
   checkpoint?: PredictionCheckpoint;
   supportingPassages?: { sourceId: string; version: number; quote: string }[];
-  generationKey?: string; diagnosticInvestigationId?: string; diagnosticExperiment?: { input: DiagnosticExperimentInput };
+  assessmentEligibility?: { assessmentId: string; topic: string; eligible: boolean; sourceRefs: SourceRef[] }[]; generationKey?: string; diagnosticInvestigationId?: string; diagnosticExperiment?: { input: DiagnosticExperimentInput };
 };
 export type Attempt = {
   id: string; lessonId: string; lessonVersion: number; modelVersion: string; question: string;

@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { SourceContextFields } from './source-context-fields';
+import type { SourceAuthorityContext } from '@/lib/domain/source-context';
 import type { WorkspaceResponse } from '@/lib/domain/types';
 
 const fieldSpacing = { marginTop: 16 };
@@ -21,7 +23,7 @@ type Connection = {
   status: 'connected' | 'connecting' | 'current' | 'stale' | 'error' | 'login-required' | 'disconnected';
   lastSuccessAt?: string;
   notice?: string;
-  configuration?: { queries?: { courseId: string; query: string }[]; calendarIds?: string[]; timezone?: string };
+  configuration?: { queries?: { courseId: string; query: string; context?: SourceAuthorityContext }[]; calendarIds?: string[]; timezone?: string };
 };
 type GoogleStatus = { configured: boolean; providers: Record<GoogleProvider, boolean>; connections: Connection[] };
 type Calendar = { id: string; summary: string; timeZone?: string; primary?: boolean };
@@ -40,7 +42,7 @@ function GoogleConnections({ data, reload }: { data: WorkspaceResponse; reload: 
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState('');
-  const [queries, setQueries] = useState<{ courseId: string; query: string }[]>([{ courseId: '', query: '' }]);
+  const [queries, setQueries] = useState<{ courseId: string; query: string; context?: SourceAuthorityContext }[]>([{ courseId: '', query: '' }]);
   const [calendars, setCalendars] = useState<Calendar[]>([]);
   const [calendarId, setCalendarId] = useState('');
   const [timezone, setTimezone] = useState('America/New_York');
@@ -123,6 +125,7 @@ function GoogleConnections({ data, reload }: { data: WorkspaceResponse; reload: 
               </select>
               <label className="field-label" htmlFor={`gmail-query-${index}`}>Gmail query</label>
               <input id={`gmail-query-${index}`} type="text" value={query.query} required minLength={3} maxLength={500} placeholder="from:instructor@example.edu newer_than:30d" onChange={event => setQueries(items => items.map((item, position) => position === index ? { ...item, query: event.target.value } : item))} />
+              <SourceContextFields prefix={`gmail-context-${index}`} value={query.context} sources={data.workspace.sources.filter(source => source.courseId === query.courseId)} assessments={data.workspace.courses.find(course => course.id === query.courseId)?.assessments} onChange={context => setQueries(items => items.map((item, position) => position === index ? { ...item, context } : item))}/>
               {queries.length > 1 && <button className="text-button" type="button" onClick={() => setQueries(items => items.filter((_, position) => position !== index))}>Remove selection {index + 1}</button>}
             </fieldset>)}
             <button className="text-button" type="button" disabled={queries.length >= 20} onClick={() => setQueries(items => [...items, { courseId: '', query: '' }])}>Add another course query</button>
@@ -154,7 +157,7 @@ function GoogleConnections({ data, reload }: { data: WorkspaceResponse; reload: 
 }
 
 type BrowserProvider = 'blackboard' | 'gradescope' | 'piazza';
-type BrowserTarget = { courseId: string; url: string };
+type BrowserTarget = { courseId: string; url: string; context?: SourceAuthorityContext };
 type BrowserConnection = Omit<Connection, 'configuration'> & { configuration?: { targets?: BrowserTarget[] } };
 type BrowserStatus = { configured: boolean; providers: {
   provider: BrowserProvider; label: string; homeUrl: string; connection?: BrowserConnection;
@@ -234,6 +237,7 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
             </select>
             <label className="field-label" htmlFor={`${item.provider}-url-${index}`}>Exact course page URL</label>
             <input id={`${item.provider}-url-${index}`} type="text" inputMode="url" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={target.url} required maxLength={2048} pattern="https://.*" placeholder={item.homeUrl} onChange={event => updateTarget(item.provider, index, { url: event.target.value })} />
+            <SourceContextFields prefix={`${item.provider}-context-${index}`} value={target.context} sources={data.workspace.sources.filter(source => source.courseId === target.courseId)} assessments={data.workspace.courses.find(course => course.id === target.courseId)?.assessments} onChange={context => updateTarget(item.provider, index, { context })}/>
             {selected.length > 1 && <button className="text-button" type="button" onClick={() => setTargets(current => ({ ...current, [item.provider]: selected.filter((_, position) => position !== index) }))}>Remove course page {index + 1}</button>}
           </fieldset>)}
           <button className="text-button" type="button" disabled={selected.length >= 5} onClick={() => setTargets(current => ({ ...current, [item.provider]: [...selected, { courseId: '', url: '' }] }))}>Add another course page</button>

@@ -1,9 +1,10 @@
+import { validateSourceContext, reconcileSourceRefresh, type SourceAuthorityContext } from '../../domain/source-context';
 import { createHash } from 'node:crypto';
 import type { Source, WorkspaceState } from '../../domain/types';
 import { WorkspaceStoreError } from '../store';
 
 export type CollectedSource = {
-  id: string; title: string; body: string; courseId?: string; url?: string; modifiedAt?: string;
+  id: string; title: string; body: string; courseId?: string; context?: SourceAuthorityContext; url?: string; modifiedAt?: string;
   kind: 'blackboard' | 'gradescope' | 'piazza' | 'email' | 'calendar';
 };
 export type CollectionContext = { provider: string; connectionId: string; checkedAt: string };
@@ -21,16 +22,18 @@ export function applyCollectedSources(input: WorkspaceState, records: CollectedS
       const url = new URL(record.url);
       if (url.protocol !== 'https:' || url.username || url.password || [...url.searchParams.keys()].some(key => /^(access_token|refresh_token|password|secret|authorization)$/i.test(key))) throw new WorkspaceStoreError('Source location is not safe to retain.', 422, 'source_location');
     }
+    const declaredContext = validateSourceContext(state, record.courseId, record.context, record.body);
     const sourceKey = `${context.provider}:${context.connectionId}:${record.id}`;
     const id = `live-${digest(sourceKey).slice(0, 40)}`;
     if (seen.has(id)) throw new WorkspaceStoreError('Duplicate source identity in one collection.', 422, 'source_duplicate');
     seen.add(id);
-    const fingerprint = digest(JSON.stringify({ title: record.title, body: record.body, courseId: record.courseId ?? null, url: record.url ?? null, kind: record.kind }));
+    const fingerprint = digest(JSON.stringify({ title: record.title, body: record.body, courseId: record.courseId ?? null, url: record.url ?? null, kind: record.kind, context: declaredContext ?? null }));
     const previous = state.sources.filter(source => source.id === id).sort((a, b) => b.version - a.version)[0];
     if (previous && previous.courseId !== record.courseId) throw new WorkspaceStoreError('Source mapping changed; correct the connection selection first.', 409, 'source_mapping_conflict');
     if (previous?.provenance?.contentHash === fingerprint) {
       previous.retrievedAt = context.checkedAt;
       previous.status = 'current';
+      reconcileSourceRefresh(state, previous);
       continue;
     }
     for (const source of state.sources.filter(source => source.id === id)) source.status = 'stale';
@@ -38,11 +41,11 @@ export function applyCollectedSources(input: WorkspaceState, records: CollectedS
       id, ...(record.courseId ? { courseId: record.courseId } : {}), title: record.title, body: record.body,
       kind: record.kind, version: (previous?.version ?? 0) + 1, origin: 'live', status: 'current',
       retrievedAt: context.checkedAt, observedAt: context.checkedAt,
-      ...(record.url ? { url: record.url } : {}), ...(record.modifiedAt ? { modifiedAt: record.modifiedAt } : {}),
+      ...(declaredContext ? { context: declaredContext } : {}), ...(record.url ? { url: record.url } : {}), ...(record.modifiedAt ? { modifiedAt: record.modifiedAt } : {}),
       provenance: { origin: ['email', 'calendar'].includes(record.kind) ? 'live-google' : 'live-browser', sourceKey, contentHash: fingerprint, importedAt: context.checkedAt },
     };
     state.sources.push(source); changedSourceIds.push(id);
-    for (const lesson of state.lessons) if (lesson.sourceIds.includes(id)) lesson.state = 'stale';
+    reconcileSourceRefresh(state, source, previous);
   }
   return { workspace: state, changedSourceIds };
 }

@@ -160,7 +160,8 @@ export function applyAction(input: WorkspaceState, action: WorkspaceAction, now:
     const trigger = `request:${lesson.id}`;
     if (!state.runs.some(run => run.trigger === trigger)) addRun(state, timestamp, trigger, `Reused “${lesson.title}” from the source-backed prepared library. Request text does not execute instructions or generate new content.`, lesson.sourceIds);
   } else {
-    const lesson = currentLesson(state, action.lessonId);
+    const lesson = action.type === 'assistance' ? state.lessons.find(item => item.id === action.lessonId) : currentLesson(state, action.lessonId);
+    if (!lesson) throw new Error('Lesson does not belong to this workspace.');
     if (action.type === 'prediction') {
       recordPrediction(state, lesson, action.optionIndex, timestamp);
     } else if (action.type === 'reveal-prediction') {

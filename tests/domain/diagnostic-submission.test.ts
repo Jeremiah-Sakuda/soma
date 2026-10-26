@@ -91,3 +91,15 @@ describe('diagnostic submissions store observations without grading or automatic
     expect(other).toEqual(existing);
   });
 });
+
+it('records source-disclosure help while stale without allowing stale attempts or losing exposure after recovery', () => {
+  let state = seedWorkspace('stale-disclosure');
+  const base = state.lessons.find(lesson => lesson.courseId === 'probability')!;
+  state.lessons.push({ ...base, id: 'stale-diagnostic', diagnosticInvestigationId: 'investigation-stale', exposure: 'fresh-no-diagram', state: 'stale' });
+  state = applyAction(state, { type: 'assistance', lessonId: 'stale-diagnostic', kind: 'explanation' }, '2026-10-28T13:00:00.000Z');
+  expect(() => applyAction(state, { type: 'attempt', lessonId: 'stale-diagnostic', optionIndex: 0 })).toThrow(/stale/i);
+  expect(() => applyAction(state, { type: 'assistance', lessonId: 'not-owned', kind: 'explanation' })).toThrow(/belong/);
+  state.lessons.find(lesson => lesson.id === 'stale-diagnostic')!.state = 'ready';
+  const recovered = applyAction(state, { type: 'attempt', lessonId: 'stale-diagnostic', optionIndex: 0 }, '2026-10-28T13:10:00.000Z');
+  expect(recovered.attempts.at(-1)).toMatchObject({ correct: null, assisted: true, assistance: ['2026-10-28T13:00:00.000Z · explanation'] });
+});

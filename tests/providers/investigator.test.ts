@@ -156,6 +156,9 @@ describe('integrated bounded Spark investigation', () => {
     const result = await investigateWithSpark(state, request);
     expect(fetcher).toHaveBeenCalledTimes(3);
     expect(result.lesson).toMatchObject({ kind: 'practice', diagnosticInvestigationId: result.record.id, exposure: 'fresh-no-diagram', mode: 'live', examEligible: false });
+    expect(result.record.diagnosticPlan?.rationale).toBe(plan.rationale);
+    expect(result.lesson!.reason).not.toContain(plan.rationale);
+    expect(result.lesson!.reason).not.toContain(plan.hypotheses[0].claim);
     const published = publishInvestigation(state, result);
     const answered = applyAction(published, { type: 'attempt', lessonId: result.lesson!.id, optionIndex: 1 }, at);
     const attempt = answered.attempts.at(-1)!;

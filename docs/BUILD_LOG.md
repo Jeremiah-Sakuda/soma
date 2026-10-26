@@ -700,3 +700,15 @@ Recurring source-processing approval remains pending; the GitHub activation vari
 ### P032 activation evidence
 
 GitHub `SOMA_WORKER_ENABLED=true` and the exact canonical worker URL were verified after activation. [Workflow 40413385697](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40413385697) completed successfully at 22:33:52 UTC on October 26 (6:33:52 PM America/New_York). Stored aggregate `completedTicks=2`, `lastOutcome=idle`; no due selected source work was available. No new Meta charge; ledger $0.80650275/$2. GitHub scheduling remains best-effort; Trigger credentials and real-source read/reconnect acceptance remain separate. Only deployment configuration and documentation changed, so runtime tests were not unnecessarily repeated.
+
+## P033 — Explain and audit AI decisions as they happen
+
+**Verbatim prompt:** Preserved in the canonical archive. Exact received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Inspected current investigator, model transport, domain records and investigation UI. Existing support includes exact cited passages/source versions, decision reasons, hypothesis revisions, tool outcomes, mode/model/engine labels and usage. Tool activity is accumulated during a run and published at completion; this is not a durable live audit stream. Raw provider reasoning is discarded by the client.
+2. Recommended a structured decision/event ledger: trigger and context versions; proposed action and concise stated rationale; evidence and uncertainty; application validation and rejected proposals/repairs; executed action/outcome; before/after consequence; final publication, failure or budget stop. Application-observed events and model-provided explanations must remain visibly distinct, with no invented rationale for an unrecorded step.
+3. Feasibility guidance: expose progressive status and expandable evidence-backed explanations, then retain an owner-scoped exportable run record. Preserve secret/private-data boundaries and hide diagnostic details that would reveal answers until exposure is recorded. A model explanation is a stated justification, not proof of hidden internal reasoning. This turn is assessment/design advice; no runtime, model prompt, deployment, budget or source-permission changes, and no tests/provider calls were made.
+
+**Plan deviations:** None adopted. This strengthens the existing inspectability objective; detailed implementation and acceptance tests remain future work. Preserve the concurrent uncommitted strategy proposal and PM007 log entries.

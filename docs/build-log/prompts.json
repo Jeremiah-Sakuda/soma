@@ -247,6 +247,12 @@
       "received_at": null,
       "kind": "answer",
       "prompt": "Enable selected-source processing"
+    },
+    {
+      "id": "P033",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Great, now I want the AI to be thoroughly auditable. To be able to explain its reasoning as it goes and the motivation behind key decisions. Is that feasible?"
     }
   ]
 }

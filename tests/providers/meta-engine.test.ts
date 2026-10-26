@@ -90,6 +90,22 @@ describe('Spark engine across real validation, transport and budget boundaries',
     const state = seedWorkspace('bad-quote'), before = structuredClone(state); let call = 0;
     vi.stubGlobal('fetch', vi.fn(async () => ++call === 1 ? toolResponse('read_source', { sourceId }, call) : toolResponse('prepare_practice', { ...proposal(), evidence: [{ sourceId, quote: 'This invented quotation does not occur in the source.' }] }, call)));
     await expect(prepareWithSpark(state, 'probability', 'Practice independence')).rejects.toBeInstanceOf(PreparationError);
-    expect(state).toEqual(before); expect(charges()[0].charged).toBeCloseTo(2 * usageCost(100, 10));
+    expect(state).toEqual(before); expect(charges()[0].charged).toBeCloseTo(3 * usageCost(100, 10));
+    expect(call).toBe(3);
   });
+  it('permits one validator-guided repair within the shared four-call budget', async () => {
+    let call = 0;
+    vi.stubGlobal('fetch', vi.fn(async (_url: unknown, options: RequestInit) => {
+      call++; const body = JSON.parse(String(options.body));
+      if (call === 1) return toolResponse('read_source', { sourceId }, call);
+      if (call === 2) return toolResponse('prepare_practice', { ...proposal(), title: 'x' }, call);
+      expect(JSON.parse(body.input.at(-1).output)).toMatchObject({ accepted: false, validation: 'schema (title)' });
+      return toolResponse('prepare_practice', proposal(), call);
+    }));
+    const result = await prepareWithSpark(seedWorkspace('repair'), 'probability', 'Practice independence');
+    expect(result.lesson.kind).toBe('practice'); expect(call).toBe(3);
+    expect(result.run.steps.some(step => step.includes('one permitted repair'))).toBe(true);
+    expect(charges()[0].charged).toBeCloseTo(3 * usageCost(100, 10));
+  });
+
 });

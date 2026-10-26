@@ -447,3 +447,17 @@ In the meantime, can you work on our muse integration?
 **Plan deviations:** None. Ordinary practice is existing PRD scope; the one quantitative family is unchanged. Browserbase onboarding remains on its independent pending choice. Review found and corrected model-version reuse, oversized source-job and cached-lesson navigation defects before deployment.
 
 P022 integrated validation: 209 ordinary tests passed; five explicitly gated live cases skipped. The separately enabled live Meta file passed both cases. Typecheck and production build passed. Six Chromium journeys passed in 9.6 seconds, including a response-contract regression proving that an older selected cached lesson opens correctly. Seven focused engine/semester-scope checks passed again after the final reuse guards. Remote CI and deployment are pending at this checkpoint.
+
+## P023 — Use actual classes
+
+**Verbatim prompt:** Preserved in the canonical prompt archive.
+
+**Top 3 outcomes:**
+
+1. Shifted the next demonstration and source-fit investigation to the user's actual classes; resistor material remains a synthetic implementation fixture.
+2. Read a narrowly scoped selection through the connected BU Gmail account. Actual course identifiers and current topic discussions are available; private message bodies, grades, addresses and course URLs are excluded from public documentation/fixtures.
+3. Checking authoritative lecture/source access and the correct private Soma destination before importing material. Student questions and course notifications establish context, not academic answers.
+
+**Plan deviations:** The proposed first quantitative family remains provisional until it fits actual course needs. Do not invent resistor relevance or expand numerical models before reviewing sources.
+
+P022 hosted verification correction: the first hosted generation check failed to publish a new lesson and returned the labeled prepared fallback. One diagnostic repeat also failed at proposal validation after an authorized source read; no invalid lesson was published. Both disposable workspaces were deleted. A single validator-guided repair is now implemented inside the existing four-call ceiling, with safe field/category diagnostics; it does not relax citation or publication checks. Quota-blocked jobs now remain queued without consuming a provider attempt; the real two-account Firestore regression passed in 22.91 seconds with zero Meta calls and cleanup.

@@ -58,6 +58,18 @@ try {
   await page.screenshot({ path: '.local/screenshots/connectors-account-desktop.png' });
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).not.toBeVisible();
+  // Exercise only the app return URL; do not start OAuth or fabricate a saved connection.
+  await page.goto(`${baseURL}/?view=courses&lesson=return-context&google=connected`);
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByText('Back from Google.', { exact: false })).toBeVisible();
+  await expect(page).toHaveURL(`${baseURL}/?view=courses&lesson=return-context`);
+  await page.getByRole('button', { name: 'Dismiss connection message' }).click();
+  await expect(page.getByText('Back from Google.', { exact: false })).toHaveCount(0);
+  await page.goto(`${baseURL}/?view=study&lesson=return-context&google=error`);
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByText('Google authorization did not complete.', { exact: false })).toBeVisible();
+  await expect(page).toHaveURL(`${baseURL}/?view=study&lesson=return-context`);
+  console.log('OAuth return UI passed for success/error signals: account panel opened, status explained, view/lesson preserved, temporary parameter removed.');
   console.log('Connector account UI passed: real sign-in, provider configuration controls, honest unread status, sanitized metadata, mobile layout and Escape. No provider session was started.');
 } finally {
   if (context) {

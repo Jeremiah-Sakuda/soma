@@ -66,8 +66,14 @@ export type ValidatedDiagnosticPlan = Omit<DiagnosticPlan, 'hypotheses'> & { cou
 // Zod provides the JSON schema from the same bounded input contract; refinement invariants remain application checks.
 export const diagnosticTool = { type: 'function', name: 'prepare_diagnostic', strict: true, description: 'Propose two plausible, revisable explanations grounded in current read passages and optional recorded same-course attempts. Choose a diagnostic whose predicted responses differ and explain the next activity. Text diagnostics support actual course concepts. Circuit experiments must reference a prior informative evaluate_experiment result. No mastery or learning-record writes.', parameters: z.toJSONSchema(diagnosticPlanSchema) } as const;
 
-export function validateDiagnosticPlan(raw: unknown, state: WorkspaceState, courseId: string, readSources: ReadonlyMap<string, { version: number; body: string }>, experimentRuns: ReadonlyMap<string, DiagnosticExperimentResult> = new Map()): ValidatedDiagnosticPlan {
+export type DiagnosticReadSource = { version: number; body?: string; segments?: { offset: number; body: string }[] };
+function disclosedSegments(read: DiagnosticReadSource) {
+  return read.segments ?? (read.body === undefined ? [] : [{ offset: 0, body: read.body }]);
+}
+
+export function validateDiagnosticPlan(raw: unknown, state: WorkspaceState, courseId: string, readSources: ReadonlyMap<string, DiagnosticReadSource>, experimentRuns: ReadonlyMap<string, DiagnosticExperimentResult> = new Map()): ValidatedDiagnosticPlan {
   const plan = diagnosticPlanSchema.parse(raw);
+  if ([...readSources.values()].reduce((total, read) => total + disclosedSegments(read).length, 0) > 8) throw new Error('Diagnostic investigation exceeds the eight-page read budget.');
   if (!state.courses.some(course => course.id === courseId)) throw new Error('Diagnostic course is outside this workspace.');
   for (const hypothesis of plan.hypotheses) {
     if (new Set(hypothesis.attemptIds).size !== hypothesis.attemptIds.length) throw new Error('Duplicate attempt reference.');
@@ -79,7 +85,8 @@ export function validateDiagnosticPlan(raw: unknown, state: WorkspaceState, cour
       const versions = state.sources.filter(source => source.id === evidence.sourceId);
       const source = versions.find(item => item.courseId === courseId && item.status === 'current' && item.version === evidence.version);
       const disclosed = readSources.get(evidence.sourceId);
-      if (!source || versions.filter(item => item.status === 'current').length !== 1 || versions.some(item => item.courseId !== courseId || item.version > evidence.version) || !disclosed || disclosed.version !== evidence.version || !disclosed.body || disclosed.body.length > 4000 || !source.body.slice(0, 4000).includes(disclosed.body) || !disclosed.body.includes(evidence.quote)) throw new Error('Diagnostic evidence must quote an authorized, current, actually read source version.');
+      const segments = disclosed ? disclosedSegments(disclosed) : [];
+      if (!source || versions.filter(item => item.status === 'current').length !== 1 || versions.some(item => item.courseId !== courseId || item.version > evidence.version) || !disclosed || disclosed.version !== evidence.version || !segments.length || segments.some(segment => !Number.isSafeInteger(segment.offset) || segment.offset < 0 || !segment.body || segment.body.length > 4000 || source.body.slice(segment.offset, segment.offset + segment.body.length) !== segment.body) || !segments.some(segment => segment.body.includes(evidence.quote))) throw new Error('Diagnostic evidence must quote an authorized, current, actually read source version.');
     }
   }
   if (plan.kind === 'circuit-experiment') {

@@ -67,6 +67,34 @@ describe('diagnostic plan ownership and provenance', () => {
     expect(() => validateDiagnosticPlan(foreign, state(), 'probability', read())).toThrow();
     expect(() => validateDiagnosticPlan(plan(), state(), 'probability', new Map([['source-probability', { version: 1, body: 'For independent events A and B,' }]]))).toThrow();
   });
+  it('accepts evidence actually read after character 4000 with exact offsets', () => {
+    const workspace = state(), source = workspace.sources.find(item => item.id === 'source-probability')!;
+    const original = source.body; source.body = 'Unrelated introduction. '.repeat(220) + original;
+    const offset = source.body.length - original.length;
+    expect(offset).toBeGreaterThan(4000);
+    const pages = new Map([[source.id, { version: 1, segments: [{ offset, body: original }] }]]);
+    expect(validateDiagnosticPlan(plan(), workspace, 'probability', pages).hypotheses).toHaveLength(2);
+    expect(() => validateDiagnosticPlan(plan(), workspace, 'probability', new Map([[source.id, { version: 1, body: original }]]))).toThrow();
+  });
+  it('rejects fabricated, misplaced and oversized source segments even if they contain a supporting quote', () => {
+    const workspace = state(), source = workspace.sources.find(item => item.id === 'source-probability')!;
+    for (const segment of [{ offset: 1, body: source.body }, { offset: -1, body: source.body }, { offset: 0.5, body: source.body }, { offset: 0, body: source.body + ' Fabricated extra material.' }, { offset: 0, body: 'x'.repeat(4001) + source.body }]) {
+      expect(() => validateDiagnosticPlan(plan(), workspace, 'probability', new Map([[source.id, { version: 1, segments: [segment] }]]))).toThrow();
+    }
+  });
+  it('does not concatenate separately read pages into an undisclosed quotation', () => {
+    const workspace = state(), source = workspace.sources.find(item => item.id === 'source-probability')!;
+    const split = 25;
+    const pages = new Map([[source.id, { version: 1, segments: [{ offset: 0, body: source.body.slice(0, split) }, { offset: split, body: source.body.slice(split) }] }]]);
+    expect(() => validateDiagnosticPlan(plan(), workspace, 'probability', pages)).toThrow();
+  });
+  it('enforces the total eight-segment job budget across the supplied read ledger', () => {
+    const workspace = state(), source = workspace.sources.find(item => item.id === 'source-probability')!;
+    const pages = new Map([[source.id, { version: 1, segments: Array.from({ length: 8 }, () => ({ offset: 0, body: source.body })) }]]);
+    expect(validateDiagnosticPlan(plan(), workspace, 'probability', pages).kind).toBe('text');
+    pages.set('other-read-source', { version: 1, segments: [{ offset: 0, body: 'Another actual read counts toward the budget.' }] });
+    expect(() => validateDiagnosticPlan(plan(), workspace, 'probability', pages)).toThrow(/eight-page/);
+  });
   it('requires an existing informative test result tied to these exact hypotheses', () => {
     const result = evaluateDiagnosticExperiment(experiment());
     const courseSource = state().sources.find(source => source.id === 'source-d')!;

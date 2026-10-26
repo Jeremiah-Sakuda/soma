@@ -24,13 +24,15 @@ export type AuditRunMetadata = z.infer<typeof auditRunMetadataSchema>;
 export type AuditStatus = 'running' | 'proposed' | 'published' | 'failed' | 'blocked' | 'interrupted' | 'unchanged';
 export type AuditRun = AuditRunMetadata & {
   id: string; workspaceId: string; contextRevision: number; sourceRefs: SourceRef[]; sourceRefsTruncated?: boolean;
-  status: AuditStatus; startedAt: string; updatedAt: string; journalRevision: number;
-  selectedLessonId?: string; publishedLessonId?: string; events: AuditEvent[];
+  status: AuditStatus; protectUnpublishedActivity?: boolean; startedAt: string; updatedAt: string; journalRevision: number;
+  selectedLessonId?: string; publishedLessonId?: string; selectedLessonVersion?: number; publishedLessonVersion?: number;
+  selectedLessonContext?: { modelVersion: string; sourceVersions: Record<string, number> };
+  publishedLessonContext?: { modelVersion: string; sourceVersions: Record<string, number> }; events: AuditEvent[];
 };
 export type AuditEventView = AuditEvent & { protected: boolean; rationaleStatus: 'recorded' | 'unrecorded' | 'protected' };
 export type AuditRunView = Omit<AuditRun, 'events'> & { events: AuditEventView[] };
-export type AuditFinish = { mode?: 'live' | 'prepared' | 'synthetic'; status: Exclude<AuditStatus, 'running'>; selectedLessonId?: string; publishedLessonId?: string };
-export const auditFinishSchema = z.strictObject({ mode: z.enum(['live', 'prepared', 'synthetic']).optional(), status: z.enum(['proposed', 'published', 'failed', 'blocked', 'interrupted', 'unchanged']), selectedLessonId: identifier.optional(), publishedLessonId: identifier.optional() });
+export type AuditFinish = { protectUnpublishedActivity?: boolean; mode?: 'live' | 'prepared' | 'synthetic'; status: Exclude<AuditStatus, 'running'>; selectedLessonId?: string; publishedLessonId?: string };
+export const auditFinishSchema = z.strictObject({ protectUnpublishedActivity: z.boolean().optional(), mode: z.enum(['live', 'prepared', 'synthetic']).optional(), status: z.enum(['proposed', 'published', 'failed', 'blocked', 'interrupted', 'unchanged']), selectedLessonId: identifier.optional(), publishedLessonId: identifier.optional() });
 
 /** A projection only: protected originals are never replaced or reconstructed. */
 export function auditRunView(run: AuditRun, state: WorkspaceState, now = Date.now()): AuditRunView {
@@ -38,16 +40,18 @@ export function auditRunView(run: AuditRun, state: WorkspaceState, now = Date.no
   const status = interrupted ? 'interrupted' : run.status;
   const terminal = ['published', 'unchanged'].includes(status);
   const lessonId = run.publishedLessonId ?? run.selectedLessonId;
-  const lesson = lessonId ? state.lessons.find(item => item.id === lessonId) : undefined;
-  const unlocked = terminal && (!lessonId || Boolean(lesson && (
-    state.attempts.some(attempt => attempt.lessonId === lesson.id && attempt.lessonVersion === lesson.version) ||
+  const lessonVersion = run.publishedLessonId ? run.publishedLessonVersion : run.selectedLessonVersion;
+  const context = run.publishedLessonId ? run.publishedLessonContext : run.selectedLessonContext;
+  const lesson = lessonId ? state.lessons.find(item => item.id === lessonId && item.version === lessonVersion && context?.modelVersion === item.modelVersion && Object.keys(context.sourceVersions).length === Object.keys(item.sourceVersions).length && Object.entries(context.sourceVersions).every(([id, version]) => item.sourceVersions[id] === version)) : undefined;
+  const unlocked = !run.protectUnpublishedActivity && terminal && (!lessonId || Boolean(lesson && (
+    state.attempts.some(attempt => attempt.lessonId === lesson.id && attempt.lessonVersion === lesson.version && attempt.modelVersion === lesson.modelVersion && (!attempt.sourceVersions || (Object.keys(attempt.sourceVersions).length === Object.keys(lesson.sourceVersions).length && Object.entries(lesson.sourceVersions).every(([id, version]) => attempt.sourceVersions?.[id] === version)))) ||
     (state.assistance[lesson.id] ?? []).some(entry => Date.parse(entry.split(' · ')[0]) >= Date.parse(run.startedAt))
   )));
   return { ...run, status, events: run.events.map(event => {
     const hidden = (event.actor === 'model' || event.visibility === 'protected') && !unlocked;
     if (!hidden) return { ...event, protected: false, rationaleStatus: event.rationale ? 'recorded' : 'unrecorded' };
     return { seq: event.seq, at: event.at, actor: event.actor, kind: event.kind, visibility: event.visibility,
-      summary: 'Model detail protected until this activity is attempted or help is recorded.',
+      summary: run.protectUnpublishedActivity ? 'Model details withheld to protect an unanswered or unpublished learning activity.' : 'Model detail protected until this activity is attempted or help is recorded.',
       ...(event.usage ? { usage: event.usage } : {}), protected: true, rationaleStatus: 'protected' };
   }) };
 }

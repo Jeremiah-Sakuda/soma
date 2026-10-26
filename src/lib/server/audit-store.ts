@@ -124,13 +124,28 @@ async function createAuditRunInternal(access: WorkspaceAccess, state: WorkspaceS
     },
     async finish(patch) {
       const parsedFinish = auditFinishSchema.safeParse(patch); if (!parsedFinish.success) throw new AuditStoreError('Invalid audit outcome.', 422, 'invalid_audit_outcome');
+      const finishPatch = Object.fromEntries(Object.entries(parsedFinish.data).filter(([, value]) => value !== undefined)) as AuditFinish;
+      const hasLesson = Boolean(parsedFinish.data.selectedLessonId || parsedFinish.data.publishedLessonId);
+      const fresh = hasLesson ? await readWorkspaceByAccess(access) : undefined;
+      if (hasLesson && (!fresh || fresh.id !== state.id)) throw new AuditStoreError('Workspace generation is no longer active.', 409, 'audit_generation_changed');
+      const pins: Pick<AuditRun, 'selectedLessonVersion' | 'publishedLessonVersion' | 'selectedLessonContext' | 'publishedLessonContext'> = {};
+      for (const [idKey, versionKey] of [['selectedLessonId', 'selectedLessonVersion'], ['publishedLessonId', 'publishedLessonVersion']] as const) {
+        const id = parsedFinish.data[idKey]; if (!id) continue;
+        const lesson = fresh?.lessons.find(item => item.id === id && (!parsed.data.courseId || item.courseId === parsed.data.courseId));
+        if (!lesson && parsedFinish.data.status !== 'proposed') throw new AuditStoreError('The audit outcome refers to an unavailable activity.', 422, 'invalid_audit_outcome');
+        if (lesson) { pins[versionKey] = lesson.version; pins[idKey === 'selectedLessonId' ? 'selectedLessonContext' : 'publishedLessonContext'] = { modelVersion: lesson.modelVersion, sourceVersions: { ...lesson.sourceVersions } }; }
+      }
+      let capacity = false;
       await mutate(access, state.id, run.id, current => {
         if (current.status !== 'running') {
-          if (current.status === parsedFinish.data.status && Object.entries(parsedFinish.data).every(([key, value]) => current[key as keyof AuditRun] === value)) return current;
+          if (current.status === parsedFinish.data.status && Object.entries(finishPatch).every(([key, value]) => current[key as keyof AuditRun] === value)) return current;
           throw new AuditStoreError('Audit run is already closed.', 409, 'audit_closed');
         }
-        return { ...current, ...parsedFinish.data, updatedAt: new Date().toISOString(), journalRevision: current.journalRevision + 1 };
+        const next = { ...current, ...finishPatch, ...pins, updatedAt: new Date().toISOString(), journalRevision: current.journalRevision + 1 };
+        if (Buffer.byteLength(JSON.stringify(next)) > MAX_RUN_BYTES) { capacity = true; return { ...current, status: 'interrupted', updatedAt: next.updatedAt, journalRevision: next.journalRevision }; }
+        return next;
       });
+      if (capacity) throw new AuditStoreError('Audit outcome capacity reached; confirmation is incomplete.', 413, 'audit_event_capacity');
     },
   };
 }

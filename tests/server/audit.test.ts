@@ -77,6 +77,14 @@ describe('durable audit journal and projected API', () => {
     expect((await readAuditRuns(a.access, wrongVersion))[0].events[0].protected).toBe(true);
     wrongVersion.attempts[0].lessonVersion = lesson.version;
     expect((await readAuditRuns(a.access, wrongVersion))[0].events[0].protected).toBe(false);
+    const changedInPlace = structuredClone(wrongVersion); changedInPlace.lessons[0].version++; changedInPlace.attempts[0].lessonVersion++;
+    expect((await readAuditRuns(a.access, changedInPlace))[0].events[0].protected).toBe(true);
+    const wrongModel = structuredClone(wrongVersion); wrongModel.attempts[0].modelVersion = 'different-model';
+    expect((await readAuditRuns(a.access, wrongModel))[0].events[0].protected).toBe(true);
+    const changedModel = structuredClone(wrongVersion); changedModel.lessons[0].modelVersion = 'replacement'; changedModel.attempts[0].modelVersion = 'replacement';
+    expect((await readAuditRuns(a.access, changedModel))[0].events[0].protected).toBe(true);
+    const wrongSources = structuredClone(wrongVersion); wrongSources.attempts[0].sourceVersions = { changed: 99 };
+    expect((await readAuditRuns(a.access, wrongSources))[0].events[0].protected).toBe(true);
     const helped = await updateWorkspace(a.token, state => { state.assistance[lesson.id] = [`${new Date().toISOString()} · explanation`]; return state; });
     expect((await readAuditRuns(a.access, helped))[0].events[0].protected).toBe(false);
     expect((await GET(request(a.token, `?runId=${writer.id}&format=json`))).status).toBe(200);
@@ -99,6 +107,14 @@ describe('durable audit journal and projected API', () => {
     expect((await readAuditRuns(a.access, a.workspace))[0].events[0].protected).toBe(true);
     const sourceOnly = await createAuditRun(a.access, a.workspace, metadata); await sourceOnly.append(event); await sourceOnly.finish({ status: 'proposed' });
     expect((await readAuditRuns(a.access, a.workspace, sourceOnly.id))[0].events[0].protected).toBe(true);
+  });
+
+  it('keeps discarded diagnostic motivations protected even when a source-only outcome is terminal', async () => {
+    const a = await fixture(), writer = await createAuditRun(a.access, a.workspace, metadata);
+    await writer.append(event); await writer.finish({ status: 'unchanged', protectUnpublishedActivity: true });
+    const [run] = await readAuditRuns(a.access, a.workspace);
+    expect(run.events[0]).toMatchObject({ protected: true, rationaleStatus: 'protected', summary: 'Model details withheld to protect an unanswered or unpublished learning activity.' });
+    const json = await (await GET(request(a.token, `?runId=${writer.id}&format=json`))).text(); expect(json).not.toContain(event.rationale);
   });
 
   it('allows only application source-refresh observations to reference newly persisted versions', async () => {

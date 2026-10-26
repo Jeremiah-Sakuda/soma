@@ -1,9 +1,9 @@
 import { createHash, randomBytes } from 'node:crypto';
-import type { WorkspaceState, SourceRef } from '../domain/types';
+import type { WorkspaceState, SourceRef, AgentRun } from '../domain/types';
 import { assertVerifiedAccount, type VerifiedAccount } from './account';
 import { readAccountWorkspace, updateAccountWorkspace } from './account-store';
 import { getServerFirestore } from './firebase-config';
-import { prepareWithSpark } from './meta';
+import { prepareWithSpark, PreparationError } from './meta';
 import { inferenceEnabled } from './budget';
 import { WorkspaceConflictError, WorkspaceStoreError } from './store';
 import { MODEL_VERSION } from '../domain/lessons';
@@ -12,7 +12,7 @@ export type PreparationJob = {
   id: string; ownerId: string; workspaceId: string; courseId: string; topic: string; sourceRefs: SourceRef[];
   status: 'queued' | 'generating' | 'checking' | 'ready' | 'failed' | 'stale';
   createdAt: string; updatedAt: string; attempts: number; contextRevision: number;
-  leaseId?: string; leaseUntil?: number; lessonId?: string; notice?: string;
+  leaseId?: string; leaseUntil?: number; lessonId?: string; notice?: string; failureRun?: AgentRun;
 };
 const digest = (value: string) => createHash('sha256').update(value).digest('hex');
 const LEASE_MS = 120_000;
@@ -90,13 +90,13 @@ export async function claimPreparationJob(account: VerifiedAccount, workspace: W
   });
 }
 
-async function fail(account: VerifiedAccount, job: PreparationJob, stale: boolean): Promise<void> {
+async function fail(account: VerifiedAccount, job: PreparationJob, stale: boolean, failureRun?: AgentRun): Promise<void> {
   const root = refs(account);
   await root.firestore.runTransaction(async transaction => {
     const metadata = await transaction.get(root);
     const document = await transaction.get(root.collection('jobs').doc(job.id));
     if (!metadata.exists || metadata.get('ownerId') !== account.uid || metadata.get('deleted') || metadata.get('workspaceId') !== job.workspaceId || !document.exists || document.get('ownerId') !== account.uid || document.get('leaseId') !== job.leaseId) return;
-    transaction.update(document.ref, { status: stale ? 'stale' : 'failed', updatedAt: new Date().toISOString(), leaseUntil: 0, notice: stale ? 'Context changed during preparation. No obsolete lesson was published.' : 'Preparation could not publish a checked lesson. Your imported material is still available.' });
+    transaction.update(document.ref, { status: stale ? 'stale' : 'failed', updatedAt: new Date().toISOString(), leaseUntil: 0, ...(failureRun ? { failureRun } : {}), notice: stale ? 'Context changed during preparation. No obsolete lesson was published.' : 'Preparation could not publish a validated lesson preview. Your imported material is still available.' });
   });
 }
 
@@ -130,7 +130,7 @@ export async function runPreparationJob(account: VerifiedAccount, id: string): P
       transaction.update(document.ref, { status: 'ready', lessonId: prepared.lesson.id, leaseUntil: 0, updatedAt: new Date().toISOString() });
     });
   } catch (error) {
-    await fail(account, job, error instanceof WorkspaceConflictError);
+    await fail(account, job, error instanceof WorkspaceConflictError, error instanceof PreparationError ? error.run : undefined);
     throw error;
   }
 }

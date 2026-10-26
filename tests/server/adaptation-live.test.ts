@@ -9,6 +9,7 @@ import { getServerApp, getServerFirestore } from '../../src/lib/server/firebase-
 import { exchangeAccountSession, verifyAccountSession, ACCOUNT_SESSION_COOKIE, type VerifiedAccount } from '../../src/lib/server/account';
 import { readOrCreateAccountWorkspace, readAccountWorkspace, updateAccountWorkspace, deleteAccountWorkspace } from '../../src/lib/server/account-store';
 import { enqueueAdaptation, listAdaptationJobs, runAdaptationJob, claimAdaptationJob, listNextAdaptationJob } from '../../src/lib/server/adaptation-jobs';
+import { readAuditRuns } from '../../src/lib/server/audit-store';
 import { settleInference } from '../../src/lib/server/budget';
 import { adaptationFixture } from '../fixtures/adaptation';
 import type { WorkspaceState } from '../../src/lib/domain/types';
@@ -42,6 +43,7 @@ describe.skipIf(process.env.SOMA_LIVE_ADAPTATION_TEST!=='true')('real account ad
       }
       const [a,b]=users;const owner=a.account!,other=b.account!;
       const otherBefore=await readAccountWorkspace(other);
+      const audits=async(account=owner)=>readAuditRuns({kind:'account',account},(await readAccountWorkspace(account))!);
       const submit=async(optionIndex:number,revisionOf?:string)=>{
         const response=await POST(new Request('https://soma.example/api/actions',{method:'POST',headers:{cookie:a.cookie!,Origin:'https://soma.example','Content-Type':'application/json'},body:JSON.stringify({type:'attempt',lessonId:'original-adaptive-question',optionIndex,...(revisionOf?{revisionOf}:{})})}));
         expect(response.status).toBe(200);return (await response.json()).workspace as WorkspaceState;
@@ -63,25 +65,34 @@ describe.skipIf(process.env.SOMA_LIVE_ADAPTATION_TEST!=='true')('real account ad
         if(step===0){name='read_source';args={sourceId:source.id,offset:0};}
         else if(step===1||step===2){const hypothesis=start.previous.savedResponse.hypotheses[step-1];name='revise_interpretation';args={hypothesisId:hypothesis.id,status:hypothesis.status,attemptId:start.previous.savedResponse.attemptId,reason:'The saved response and recorded support constrain this provisional explanation.'};}
         else {name='finish_investigation';args={decision:'keep-current',reason:'The original response was considered; retain current practice while uncertainty remains.',sourceRefs:[{sourceId:source.id,version:source.version,quote:source.body.slice(0,100)}],assessmentIds:[],applicability:'course',conflicts:[],selectedLessonIds:[]};if(holdFinal){arrived();await held;}}
-        return new Response(JSON.stringify({status:'completed',usage:{input_tokens:0,output_tokens:0},output:[{type:'function_call',name,arguments:JSON.stringify(args),call_id:`synthetic-${providerCalls}`}]}),{headers:{'Content-Type':'application/json'}});
+        return new Response(JSON.stringify({status:'completed',usage:{input_tokens:0,output_tokens:0},output:[{type:'function_call',name,arguments:JSON.stringify({...args as Record<string,unknown>,rationale:'Check the saved response against the available course evidence.'}),call_id:`synthetic-${providerCalls}`}]}),{headers:{'Content-Type':'application/json'}});
       });
       try{
         // The real after-response callback dispatches the same durable worker function.
         await background.callbacks.shift()!();
         expect((await listAdaptationJobs(owner))[0]).toMatchObject({status:'ready'});expect(providerCalls).toBe(4);
         saved=(await readAccountWorkspace(owner))!;expect(saved.attempts[0]).toEqual(original);expect(saved.investigations?.at(-1)?.attemptIds).toContain(original.id);
+        const firstAudit=(await audits())[0];expect(firstAudit).toMatchObject({kind:'adaptation',trigger:'diagnostic-response',status:'published'});
+        expect(firstAudit.events.some(event=>event.kind==='publication'&&event.actor==='application')).toBe(true);
+        expect(firstAudit.events.some(event=>event.kind==='proposal'&&event.actor==='model'&&event.rationale)).toBe(true);
+        expect(await audits(other)).toEqual([]);
         const count=providerCalls;expect(await runAdaptationJob(owner,first.id)).toBeNull();expect(providerCalls).toBe(count);
         saved=await submit(1,original.id);const second=(await listAdaptationJobs(owner))[0];
         holdFinal=true;held=new Promise<void>(resolve=>{release=resolve;});entered=new Promise<void>(resolve=>{arrived=resolve;});
         const pending=runAdaptationJob(owner,second.id);await entered;
+        const liveAudit=(await audits())[0];expect(liveAudit.status).toBe('running');
+        expect(liveAudit.events.length).toBeGreaterThan(3);
+        expect(liveAudit.events.filter(event=>event.actor==='model').every(event=>event.protected&&!event.rationale)).toBe(true);
+        expect(liveAudit.events.map(event=>event.seq)).toEqual(liveAudit.events.map((_,index)=>index+1));
         const newer=await submit(2,saved.attempts.at(-1)!.id);release();await expect(pending).rejects.toMatchObject({status:409});
         expect((await listAdaptationJobs(owner)).find(job=>job.id===second.id)?.status).toBe('stale');
         expect((await readAccountWorkspace(owner))?.attempts).toEqual(newer.attempts);
+        const staleAudit=(await audits())[0];expect(staleAudit.status).toBe('failed');expect(staleAudit.events.some(event=>event.kind==='publication')).toBe(false);
         const latest=(await listAdaptationJobs(owner))[0];
         vi.stubEnv('SOMA_LIVE_INFERENCE','false');const callsBefore=providerCalls;
         await expect(runAdaptationJob(owner,latest.id)).rejects.toMatchObject({reason:'configured'});
         const root=getServerFirestore().collection('somaAccounts').doc(createHash('sha256').update(owner.uid).digest('hex'));
-        expect((await root.collection('adaptationJobs').doc(latest.id).get()).data()).toMatchObject({status:'queued',attempts:0});expect(providerCalls).toBe(callsBefore);
+        expect((await root.collection('adaptationJobs').doc(latest.id).get()).data()).toMatchObject({status:'queued',attempts:0});expect(providerCalls).toBe(callsBefore);expect((await audits())[0].status).toBe('blocked');
         vi.unstubAllEnvs();
         await root.collection('adaptationJobs').doc(latest.id).update({status:'running',attempts:3,leaseUntil:0,nextAttemptAt:0});
         expect(await listNextAdaptationJob(owner)).toEqual({id:latest.id});expect(await runAdaptationJob(owner,latest.id)).toBeNull();

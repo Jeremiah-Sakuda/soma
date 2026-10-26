@@ -10,6 +10,7 @@ import { WorkspaceConflictError, WorkspaceStoreError } from './store';
 import { investigateWithSpark, publishInvestigation, InvestigationError, ENGINE_VERSION, type InvestigationResult } from './investigator';
 import { MODEL_VERSION } from '../domain/lessons';
 import { META_MODEL } from './meta-client';
+import { createAuditRun, type AuditWriter } from './audit-store';
 
 export type PreparationIntent = 'prepare-lesson' | 'investigate-change';
 export type PreparationJob = {
@@ -225,29 +226,43 @@ export function preparationReadyPatch(outcome: PreparationOutcome, now = new Dat
 /** Explicit worker invocation. Durable queue/leases exist; scheduling is a separate deployment capability. */
 export async function runPreparationJob(account: VerifiedAccount, id: string): Promise<WorkspaceState | null> {
   if (!/^[a-f0-9]{64}$/.test(id)) throw new WorkspaceStoreError('Invalid preparation ID.', 400, 'invalid_job');
-  if (!inferenceEnabled()) throw new WorkspaceStoreError('Live preparation is not enabled within the configured budget.', 503, 'inference_unavailable');
   const workspace = await readAccountWorkspace(account);
   if (!workspace) throw new WorkspaceStoreError('Private workspace is unavailable.', 404, 'workspace_missing');
   const job = await claimPreparationJob(account, workspace, id);
   if (!job) return null;
+  let audit: AuditWriter | undefined;
+  let publicationCommitted = false;
   try {
+    audit = await createAuditRun({ kind: 'account', account }, workspace, { kind: job.intent === 'investigate-change' ? 'investigation' : 'lesson-preparation', trigger: 'source-change', mode: 'live', courseId: job.courseId, model: META_MODEL, engineVersion: job.intent === 'investigate-change' ? ENGINE_VERSION : SPARK_ENGINE_VERSION, promptVersion: job.intent === 'investigate-change' ? ENGINE_VERSION : SPARK_ENGINE_VERSION });
+    if (!inferenceEnabled()) throw new InferenceBudgetError('configured');
     const modelContext = automaticModelContext(workspace);
     if (!jobSourcesCurrent(modelContext, job)) throw new WorkspaceStoreError('Select these current source versions again before automatic preparation.', 422, 'automatic_source_consent');
     const outcome: PreparationOutcome = job.intent === 'investigate-change'
-      ? { intent: 'investigate-change', result: await investigateWithSpark(modelContext, { courseId: job.courseId, goal: job.topic, initialSourceIds: [...new Set(job.sourceRefs.map(ref => ref.sourceId))].slice(0, 8) }, { automatic: true }) }
-      : { intent: 'prepare-lesson', result: await prepareWithSpark(modelContext, job.courseId, job.topic, { sourceRefs: job.sourceRefs, trigger: 'source-change' }) };
+      ? { intent: 'investigate-change', result: await investigateWithSpark(modelContext, { courseId: job.courseId, goal: job.topic, initialSourceIds: [...new Set(job.sourceRefs.map(ref => ref.sourceId))].slice(0, 8) }, { automatic: true, audit }) }
+      : { intent: 'prepare-lesson', result: await prepareWithSpark(modelContext, job.courseId, job.topic, { sourceRefs: job.sourceRefs, trigger: 'source-change', audit }) };
     const root = refs(account);
     await root.firestore.runTransaction(async transaction => {
       const document = await transaction.get(root.collection('jobs').doc(job.id));
       if (!document.exists || document.get('ownerId') !== account.uid || document.get('workspaceId') !== workspace.id || document.get('leaseId') !== job.leaseId || document.get('leaseUntil') <= Date.now()) throw new WorkspaceConflictError();
       transaction.update(document.ref, { status: 'checking', updatedAt: new Date().toISOString() });
     });
-    return await updateAccountWorkspace(account, state => publishPreparationOutcome(state, job, outcome), job.contextRevision, async (transaction, accountRoot) => {
+    const published = await updateAccountWorkspace(account, state => publishPreparationOutcome(state, job, outcome), job.contextRevision, async (transaction, accountRoot) => {
       const document = await transaction.get(accountRoot.collection('jobs').doc(job.id));
       if (!document.exists || document.get('ownerId') !== account.uid || document.get('workspaceId') !== workspace.id || document.get('leaseId') !== job.leaseId || document.get('leaseUntil') <= Date.now() || document.get('status') !== 'checking') throw new WorkspaceConflictError();
       transaction.update(document.ref, preparationReadyPatch(outcome));
     });
+    publicationCommitted = true;
+    const selectedLessonId = outcome.intent === 'prepare-lesson' ? outcome.result.lesson.id : outcome.result.selectedLessonId;
+    const publishedLessonId = outcome.intent === 'prepare-lesson' ? (outcome.result.run.status === 'unchanged' ? undefined : outcome.result.lesson.id) : outcome.result.lesson?.id;
+    await audit.append({ actor: 'application', kind: 'publication', summary: 'The current workspace revision and job lease were checked. The preparation outcome was committed to managed storage.', visibility: 'public' });
+    await audit.finish({ status: outcome.result.run.status === 'unchanged' ? 'unchanged' : 'published', ...(outcome.result.run.status === 'unchanged' ? { mode: 'prepared' } : {}), ...(selectedLessonId ? { selectedLessonId } : {}), ...(publishedLessonId ? { publishedLessonId } : {}) });
+    return published;
   } catch (error) {
+    if (publicationCommitted) throw error; // The saved workspace and ready job must not be relabeled as unpublished.
+    if (audit) {
+      await audit.append({ actor: 'application', kind: 'stopped', summary: error instanceof InferenceBudgetError ? 'The enforced model allowance blocked preparation. No new model request was made for this attempt.' : error instanceof WorkspaceConflictError ? 'The workspace context or job lease changed before publication. No obsolete result was committed.' : 'Preparation stopped before publication. Saved course material and prior learner observations remain available.', visibility: 'public' });
+      await audit.finish({ status: error instanceof InferenceBudgetError ? 'blocked' : 'failed' });
+    }
     if (error instanceof InferenceBudgetError) await requeueBudgetBlockedJob(account, job, error);
     else await fail(account, job, error);
     throw error;

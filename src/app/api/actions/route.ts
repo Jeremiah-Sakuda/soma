@@ -3,14 +3,18 @@ import { workspaceActionSchema } from '@/lib/server/action-schema';
 import { applyAction } from '@/lib/domain/learning';
 import { apiError, requireSameOrigin, workspaceResponse } from '@/lib/server/http';
 import { NextResponse, after } from 'next/server';
-import { inferenceEnabled } from '@/lib/server/budget';
-import { prepareWithSpark, PreparationError } from '@/lib/server/meta';
+import { createAuditRun, AuditStoreError, type AuditWriter } from '@/lib/server/audit-store';
+import { META_MODEL } from '@/lib/server/meta-client';
+import { InferenceBudgetError, inferenceEnabled } from '@/lib/server/budget';
+import { prepareWithSpark, PreparationError, SPARK_ENGINE_VERSION } from '@/lib/server/meta';
 import { adaptationForAttempt, runAdaptationJob, saveActionWithAdaptation } from '@/lib/server/adaptation-jobs';
 import type { AgentRun } from '@/lib/domain/types';
 export const runtime = 'nodejs';
 export const maxDuration = 120;
 
 export async function POST(request: Request) {
+  let audit: AuditWriter | undefined;
+  let auditTerminal = false;
   try {
     requireSameOrigin(request);
     if (!request.headers.get('content-type')?.startsWith('application/json')) return NextResponse.json({ error: 'JSON is required.' }, { status: 415 });
@@ -43,13 +47,16 @@ export async function POST(request: Request) {
     }
     let notice: string | undefined;
     let failedRun: AgentRun | undefined;
-    if (parsed.data.type === 'request-lesson' && inferenceEnabled()) {
+    let preparationStopped: 'failed' | 'blocked' | undefined;
+    if (parsed.data.type === 'request-lesson') {
       const before = await readWorkspaceByAccess(access);
       if (!before) return NextResponse.json({ error: 'Session expired.' }, { status: 401 });
       if (revision !== undefined && before.revision !== revision) return NextResponse.json({ error: 'This workspace changed. Refresh and try again.' }, { status: 409 });
       const topic = parsed.data.topic;
+      audit = await createAuditRun(access, before, { kind: 'lesson-preparation', trigger: 'direct-request', mode: inferenceEnabled() ? 'live' : 'prepared', courseId: parsed.data.courseId, model: META_MODEL, engineVersion: SPARK_ENGINE_VERSION, promptVersion: SPARK_ENGINE_VERSION });
+      if (inferenceEnabled()) {
         try {
-          const result = await prepareWithSpark(before, parsed.data.courseId, topic);
+          const result = await prepareWithSpark(before, parsed.data.courseId, topic, { audit });
           // Publication rechecks the full context revision. A raced job remains unpublished.
           const published = await updateWorkspaceByAccess(access, state => {
             for (const [id, version] of Object.entries(result.lesson.sourceVersions)) {
@@ -59,12 +66,26 @@ export async function POST(request: Request) {
             state.runs.unshift(result.run);
             return state;
           }, before.revision);
+          try {
+            await audit.append({ actor: 'application', kind: 'publication', summary: 'Saved the validated activity after rechecking source versions and the current workspace revision.', visibility: 'public' });
+            await audit.finish({ status: result.run.status === 'unchanged' ? 'unchanged' : 'published', ...(result.run.status === 'unchanged' ? { mode: 'prepared' } : {}), selectedLessonId: result.lesson.id, ...(result.run.status === 'unchanged' ? {} : { publishedLessonId: result.lesson.id }) });
+            auditTerminal = true;
+          } catch {
+            auditTerminal = true;
+            return workspaceResponse(published, 'Practice was saved, but its final audit confirmation could not be recorded. The audit remains incomplete.', result.lesson.id);
+          }
           return workspaceResponse(published, result.run.status === 'unchanged' ? 'Reopened saved Spark practice with unchanged context. No new inference was needed.' : before.mode === 'demo' ? 'Prepared with live Spark decisions over original synthetic sources.' : 'Prepared with live Spark decisions over your selected sources.', result.lesson.id);
         } catch (error) {
+          if (error instanceof AuditStoreError) throw error;
+          preparationStopped = error instanceof InferenceBudgetError ? 'blocked' : 'failed';
+          await audit.append({ actor: 'application', kind: 'stopped', summary: error instanceof InferenceBudgetError ? 'The enforced model allowance blocked live preparation. No new inference was made for this attempt.' : 'Live preparation stopped without publishing a new lesson. The application will check for supported prepared practice.', visibility: 'public' });
           if ((error as { status?: number }).status === 409) throw error;
           if (error instanceof PreparationError) failedRun = error.run;
           notice = 'Live preparation was unavailable or reached its limits. Showing prepared practice; no live lesson was published.';
         }
+      } else {
+        await audit.append({ actor: 'application', kind: 'decision', summary: 'Live inference is disabled. Checking supported prepared practice without a model call.', visibility: 'public' });
+      }
     }
     const workspace = await updateWorkspaceByAccess(access, state => {
       try { const updated = applyAction(state, parsed.data); if (failedRun) updated.runs.push(failedRun); return updated; }
@@ -77,6 +98,24 @@ export async function POST(request: Request) {
         throw Object.assign(error as Error, { status: 422 });
       }
     }, revision);
+    if (audit && parsed.data.type === 'request-lesson') {
+      try {
+        await audit.append({ actor: 'application', kind: 'publication', summary: 'Saved the supported prepared-practice outcome. No new live lesson was published.', visibility: 'public' });
+        await audit.finish({ status: preparationStopped ?? 'unchanged', mode: 'prepared' });
+        auditTerminal = true;
+      } catch {
+        auditTerminal = true;
+        return workspaceResponse(workspace, 'Prepared practice was saved, but its final audit confirmation could not be recorded. The audit remains incomplete.');
+      }
+    }
     return workspaceResponse(workspace, notice);
-  } catch (error) { return apiError(error); }
+  } catch (error) {
+    if (audit && !auditTerminal && !(error instanceof AuditStoreError)) {
+      try {
+        await audit.append({ actor: 'application', kind: 'stopped', summary: (error as { status?: number }).status === 409 ? 'The workspace changed before publication. No obsolete preparation result was saved.' : 'Preparation could not commit an outcome to this workspace.', visibility: 'public' });
+        await audit.finish({ status: 'failed' });
+      } catch { /* The audit remains explicitly incomplete when persistence is unavailable. */ }
+    }
+    return apiError(error);
+  }
 }

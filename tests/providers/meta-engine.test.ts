@@ -6,6 +6,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { seedWorkspace } from '../../src/lib/domain/seed';
 import { applyAction } from '../../src/lib/domain/learning';
 import { prepareWithSpark, PreparationError, selectSparkSources } from '../../src/lib/server/meta';
+import { AuditStoreError, type AuditWriter } from '../../src/lib/server/audit-store';
+import type { AuditEventInput } from '../../src/lib/domain/audit';
 import { usageCost } from '../../src/lib/server/budget';
 
 const sourceId = 'source-probability';
@@ -106,6 +108,54 @@ describe('Spark engine across real validation, transport and budget boundaries',
     expect(result.lesson.kind).toBe('practice'); expect(call).toBe(3);
     expect(result.run.steps.some(step => step.includes('one permitted repair'))).toBe(true);
     expect(charges()[0].charged).toBeCloseTo(3 * usageCost(100, 10));
+  });
+
+  it('journals model justification separately from observed reads and validation without copying sources or the private task', async () => {
+    const events: AuditEventInput[] = [];
+    const audit: AuditWriter = { id: 'synthetic-audit', append: async event => { events.push(event); }, finish: vi.fn() };
+    let call = 0;
+    vi.stubGlobal('fetch', vi.fn(async (_url: unknown, options: RequestInit) => {
+      const body = JSON.parse(String(options.body));
+      expect(body.tools.every((tool: { parameters: { required: string[] } }) => tool.parameters.required.includes('rationale'))).toBe(true);
+      return ++call === 1 ? toolResponse('read_source', { sourceId, rationale: 'Check the exact course distinction before selecting practice.' }, call)
+        : toolResponse('prepare_practice', { ...proposal(), rationale: 'Test the distinction supported by the disclosed course passage.' }, call);
+    }));
+    const result = await prepareWithSpark(seedWorkspace('audited'), 'probability', 'Private task text should not enter the journal', { audit });
+    expect(result.lesson.kind).toBe('practice');
+    expect(events.filter(event => event.actor === 'model')).toHaveLength(2);
+    expect(events.filter(event => event.actor === 'model').every(event => event.visibility === 'protected' && event.rationale)).toBe(true);
+    expect(events.some(event => event.actor === 'application' && event.kind === 'observation' && event.evidence?.some(ref => ref.sourceId === sourceId && ref.version === 1))).toBe(true);
+    expect(events.some(event => event.kind === 'validation' && event.summary.includes('Publication still requires'))).toBe(true);
+    expect(events.some(event => event.kind === 'publication')).toBe(false);
+    expect(audit.finish).not.toHaveBeenCalled(); // The caller owns actual CAS publication.
+    expect(JSON.stringify(events)).not.toContain('Private task text');
+    expect(JSON.stringify(events)).not.toContain('Independence does not mean equal probabilities.');
+    expect(call).toBe(2);
+  });
+
+  it('keeps a missing legacy tool rationale unrecorded and preserves rejection plus repair events', async () => {
+    const events: AuditEventInput[] = []; let call = 0;
+    const audit: AuditWriter = { id: 'legacy-audit', append: async event => { events.push(event); }, finish: vi.fn() };
+    vi.stubGlobal('fetch', vi.fn(async () => ++call === 1 ? toolResponse('read_source', { sourceId }, call)
+      : toolResponse('prepare_practice', { ...proposal(), title: call === 2 ? 'x' : proposal().title }, call)));
+    await prepareWithSpark(seedWorkspace('legacy-audited'), 'probability', 'Practice independence', { audit });
+    expect(events.filter(event => event.actor === 'model').every(event => !('rationale' in event))).toBe(true);
+    expect(events.some(event => event.kind === 'validation' && event.summary.includes('failed schema'))).toBe(true);
+    expect(events.at(-1)?.kind).toBe('usage');
+    expect(call).toBe(3);
+  });
+
+  it('stops before another model request when the durable journal becomes unavailable', async () => {
+    let append = 0; const events: AuditEventInput[] = [];
+    const audit: AuditWriter = { id: 'failed-audit', append: async event => {
+      if (++append === 5) throw new AuditStoreError('Audit storage unavailable.', 503, 'audit_storage_unavailable');
+      events.push(event);
+    }, finish: vi.fn() };
+    const provider = vi.fn(async () => toolResponse('read_source', { sourceId }, 1)); vi.stubGlobal('fetch', provider);
+    await expect(prepareWithSpark(seedWorkspace('audit-outage'), 'probability', 'Practice independence', { audit })).rejects.toBeInstanceOf(AuditStoreError);
+    expect(provider).toHaveBeenCalledTimes(1);
+    expect(events.some(event => event.kind === 'publication')).toBe(false);
+    expect(charges()[0].charged).toBeCloseTo(usageCost(100, 10));
   });
 
 });

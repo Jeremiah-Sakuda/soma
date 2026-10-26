@@ -11,6 +11,7 @@ import { encodeAccountRecords, readAccountWorkspace, updateAccountWorkspace, del
 import { saveConnection, acquireConnectionLease, releaseConnectionLease, connectionPublicationGuard, listConnections } from '../../src/lib/server/connectors/store';
 import { enqueuePreparation, claimPreparationJob, listPreparationJobs, runPreparationJob, mayClaimJob } from '../../src/lib/server/jobs';
 import { runWorkerTick, connectionScopeFingerprint, SOURCE_REFRESH_MS, type WorkerDependencies } from '../../src/lib/server/worker';
+import { readAuditRuns } from '../../src/lib/server/audit-store';
 import { InferenceBudgetError } from '../../src/lib/server/budget';
 
 const providerBoundary = vi.hoisted(() => ({ before: undefined as undefined | ((workspace: WorkspaceState) => Promise<void>), calls: 0 }));
@@ -104,6 +105,10 @@ describe.skipIf(process.env.SOMA_LIVE_WORKER_TEST !== 'true')('live scheduled wo
       expect((await readAccountWorkspace(accountA))?.lessons).toHaveLength(1);
       expect((await readAccountWorkspace(accountB))?.lessons).toHaveLength(0);
       expect(refreshCalls).toHaveLength(2); // Release/rotation did not schedule another refresh.
+      const audits=async(account:VerifiedAccount)=>readAuditRuns({kind:'account',account},(await readAccountWorkspace(account))!);
+      const preparedAudit=(await audits(accountA))[0];expect(preparedAudit).toMatchObject({kind:'lesson-preparation',trigger:'source-change',status:'published'});
+      expect(preparedAudit.events.some(event=>event.kind==='publication')).toBe(true);
+      expect(await audits(accountB)).toEqual([]);
 
       const bState = (await readAccountWorkspace(accountB))!, jobB = (await listPreparationJobs(accountB))[0];
       const interrupted = await claimPreparationJob(accountB, bState, jobB.id);
@@ -114,6 +119,8 @@ describe.skipIf(process.env.SOMA_LIVE_WORKER_TEST !== 'true')('live scheduled wo
       expect((await jobRef.get()).data()).toMatchObject({ status: 'stale', attempts: interrupted!.attempts + 1 });
       expect((await readAccountWorkspace(accountB))?.lessons).toHaveLength(0);
       providerBoundary.before = undefined;
+      const racedAudit=(await audits(accountB))[0];expect(racedAudit.status).toBe('failed');
+      expect(racedAudit.events.some(event=>event.kind==='publication')).toBe(false);
 
       // The source was saved without enqueue. Reconciliation discovers that gap.
       await control.update({ cursor: a.rootId });
@@ -126,6 +133,7 @@ describe.skipIf(process.env.SOMA_LIVE_WORKER_TEST !== 'true')('live scheduled wo
       expect(await tick()).toMatchObject({ status: 'deferred', outcome: 'budget-pending' });
       const recovered = (await listPreparationJobs(accountB)).find(job => job.sourceRefs.some(ref => ref.version === 2));
       expect(recovered).toMatchObject({ status: 'queued', attempts: 0 });
+      expect((await audits(accountB))[0]).toMatchObject({kind:'investigation',status:'blocked'});
       const beforeDenied = providerBoundary.calls;
       await control.update({ cursor: a.rootId });
       expect(await tick()).toMatchObject({ status: 'idle' });

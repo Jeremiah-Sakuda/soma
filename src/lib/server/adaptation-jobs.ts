@@ -10,6 +10,7 @@ import { InferenceBudgetError } from './budget';
 import { ENGINE_VERSION, investigateWithSpark, publishInvestigation, InvestigationError, type InvestigationResult } from './investigator';
 import { META_MODEL } from './meta-client';
 import { WorkspaceConflictError, WorkspaceStoreError } from './store';
+import { createAuditRun, type AuditWriter } from './audit-store';
 
 export type AdaptationJob = {
   id: string; ownerId: string; workspaceId: string; attemptId: string; lessonId: string; courseId: string; investigationId: string;
@@ -159,16 +160,28 @@ export function adaptationFailurePatch(current: WorkspaceState | null, job: Adap
 export async function runAdaptationJob(account: VerifiedAccount, id: string): Promise<WorkspaceState | null> {
   const state = await readAccountWorkspace(account); if (!state) throw new WorkspaceConflictError();
   const job = await claimAdaptationJob(account, state, id); if (!job) return null;
+  let audit: AuditWriter | undefined;
+  let publicationCommitted = false;
   try {
+    audit = await createAuditRun({ kind: 'account', account }, state, { kind: 'adaptation', trigger: 'diagnostic-response', mode: 'live', courseId: job.courseId, model: META_MODEL, engineVersion: ENGINE_VERSION, promptVersion: ENGINE_VERSION });
     await revalidateBackgroundAccount(account);
-    const result = await investigateWithSpark(state, { courseId: job.courseId, previousInvestigationId: job.investigationId, attemptId: job.attemptId, goal: 'Reconsider the provisional explanations against this actual saved response and its assistance. Choose a supported next activity when useful; keep uncertainty and preserve the original observation.' }, { automatic: true });
+    const result = await investigateWithSpark(state, { courseId: job.courseId, previousInvestigationId: job.investigationId, attemptId: job.attemptId, goal: 'Reconsider the provisional explanations against this actual saved response and its assistance. Choose a supported next activity when useful; keep uncertainty and preserve the original observation.' }, { automatic: true, audit });
     await revalidateBackgroundAccount(account);
-    return await updateAccountWorkspace(account, current => publishAdaptation(current, job, result), job.contextRevision, async (transaction, root) => {
+    const published = await updateAccountWorkspace(account, current => publishAdaptation(current, job, result), job.contextRevision, async (transaction, root) => {
       const reference = root.collection('adaptationJobs').doc(job.id), current = await transaction.get(reference);
       if (!current.exists || current.get('ownerId') !== account.uid || current.get('workspaceId') !== job.workspaceId || current.get('leaseId') !== job.leaseId || current.get('status') !== 'running' || current.get('leaseUntil') <= Date.now()) throw new WorkspaceConflictError();
       transaction.update(reference, { status: 'ready', leaseUntil: 0, updatedAt: new Date().toISOString(), ...(result.selectedLessonId ? { selectedLessonId: result.selectedLessonId } : {}), notice: result.selectedLessonId ? 'Soma reconsidered your response. A supported next activity is ready.' : 'Soma reconsidered your response and saved its decision. Your current activities remain available.' });
     });
+    publicationCommitted = true;
+    await audit.append({ actor: 'application', kind: 'publication', summary: 'Committed the follow-up after rechecking the original response, current source versions, workspace revision and adaptation lease. The saved response remains unchanged.', visibility: 'public' });
+    await audit.finish({ status: result.reused ? 'unchanged' : 'published', ...(result.reused ? { mode: 'prepared' } : {}), ...(result.selectedLessonId ? { selectedLessonId: result.selectedLessonId } : {}), ...(result.lesson ? { publishedLessonId: result.lesson.id } : {}) });
+    return published;
   } catch (error) {
+    if (publicationCommitted) throw error; // A journal outage cannot undo an already committed follow-up.
+    if (audit) {
+      await audit.append({ actor: 'application', kind: 'stopped', summary: error instanceof InferenceBudgetError ? 'The application model allowance blocked follow-up. The original response is saved.' : error instanceof WorkspaceConflictError ? 'A newer response, changed source or expired lease prevented publication. No obsolete follow-up replaced current work.' : 'Follow-up stopped before publication. The original learner response remains saved.', visibility: 'public' });
+      await audit.finish({ status: error instanceof InferenceBudgetError ? 'blocked' : 'failed' });
+    }
     if (error instanceof InferenceBudgetError) await finishJob(account, job, { status: 'queued', attempts: Math.max(0, job.attempts - 1), nextAttemptAt: Date.now() + 5 * 60_000, notice: 'Your response is saved. Follow-up is waiting for the configured model allowance; no new model call was made.' });
     else {
       const current = await readAccountWorkspace(account).catch(()=>null);

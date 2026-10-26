@@ -5,7 +5,7 @@ import { applySourceDecision, followSourceReference, listInvestigationSources, r
 import { diagnosticTool, experimentDiagnosticTool, textDiagnosticInputSchema, experimentDiagnosticInputSchema, experimentTool, evaluateDiagnosticExperiment, validateDiagnosticPlan, reviseHypothesesFromAttempt, type DiagnosticExperimentResult, type ValidatedDiagnosticPlan } from '../domain/diagnostics';
 import { MODEL_VERSION, circuitCandidate } from '../domain/lessons';
 import { withLessonMetadata } from '../domain/prediction';
-import { requestMetaResponse, MetaClientError } from './meta-client';
+import { requestMetaResponse, MetaClientError, META_MODEL } from './meta-client';
 import { MAX_INVESTIGATION_CALLS, reserveInference, settleInference, usageCost } from './budget';
 
 const identifier = z.string().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/);
@@ -45,7 +45,7 @@ function makeDiagnosticLesson(state: WorkspaceState, plan: ValidatedDiagnosticPl
     sourceIds, sourceVersions: {}, modelVersion: 'text-diagnostic-v1-development', version: 1, state: 'ready', mode: 'live', examEligible: false, question: '', options: [], answerIndex: 0, explanation: '', hint: '', exposure: 'fresh-no-diagram',
   };
   return withLessonMetadata({ ...base, id: `diagnostic-${randomUUID()}`, diagnosticInvestigationId: recordId, title: 'Try a different way to see it',
-    objective: 'Explore an interaction chosen to distinguish two provisional explanations.', reason: plan.rationale,
+    objective: 'Explore an interaction chosen to distinguish two provisional explanations.', reason: 'Soma prepared an optional interaction from your current course sources to investigate two provisional explanations. You can explore before choosing whether to answer.',
     description: 'An optional source-grounded diagnostic selected by Spark. Your response is recorded without a correctness grade; it does not establish mastery.',
     modelVersion: experiment ? MODEL_VERSION : base.modelVersion, validation: { status: 'development-preview', modelVersion: experiment ? MODEL_VERSION : base.modelVersion },
     mode: 'live', examEligible: false, question: plan.question, options: [...plan.options], answerIndex: 0,
@@ -65,7 +65,7 @@ export async function investigateWithSpark(state: WorkspaceState, raw: Investiga
   const attempt = request.attemptId ? state.attempts.find(item => item.id === request.attemptId && item.lessonId === previous?.diagnosticLessonId) : undefined;
   if (request.attemptId && (!attempt || !previous?.diagnosticPlan)) throw new Error('Use a saved response to the original diagnostic.');
   const responseEvidence = attempt && previous?.diagnosticPlan ? reviseHypothesesFromAttempt(previous.diagnosticPlan, attempt, state) : undefined;
-  const investigationKey = createHash('sha256').update(JSON.stringify({ engine: ENGINE_VERSION, model: MODEL_VERSION, workspaceId: state.id, request, sources: allCurrent.map(source => [source.id, source.version, source.context, source.relatedSourceIds]).sort(), attempt })).digest('hex');
+  const investigationKey = createHash('sha256').update(JSON.stringify({ engine: ENGINE_VERSION, runtimeModel: META_MODEL, scientificModel: MODEL_VERSION, workspaceId: state.id, request, sources: allCurrent.map(source => [source.id, source.version, source.context, source.relatedSourceIds]).sort(), attempt })).digest('hex');
   const cached = state.investigations?.find(record => record.investigationKey === investigationKey);
   const cachedSelection = cached?.selectedLessonId ?? cached?.diagnosticLessonId;
   const cachedLesson = cachedSelection ? state.lessons.find(item => item.id === cachedSelection && item.courseId === request.courseId && item.state === 'ready') : undefined;
@@ -142,7 +142,7 @@ export async function investigateWithSpark(state: WorkspaceState, raw: Investiga
           if (decision.decision === 'revise-session' && !selected) throw new Error('Revising a session needs a validated selected activity.');
           if (selected && !selected.sourceIds.every(id => state.sources.some(source => source.id === id && source.version === selected.sourceVersions[id] && source.status === 'current' && source.courseId === request.courseId))) throw new Error('Selected activity has stale sources.');
           activity.push({ tool: action.name, outcome: decision.decision });
-          const record: SomaInvestigation = { ...decision, id: recordId, workspaceId: state.id, courseId: request.courseId, createdAt: new Date().toISOString(), mode: 'live', investigationKey,
+          const record: SomaInvestigation = { ...decision, id: recordId, workspaceId: state.id, courseId: request.courseId, createdAt: new Date().toISOString(), mode: 'live', investigationKey, runtimeModel: META_MODEL, engineVersion: ENGINE_VERSION,
             ...(previous ? { supersedesId: previous.id } : {}), ...(attempt ? { attemptIds: [attempt.id] } : {}),
             ...(selection ? { selectedLessonId: selection } : {}), ...(diagnostic && selection === lesson?.id ? { diagnosticPlan: diagnostic, diagnosticLessonId: lesson!.id } : {}),
             ...(revisions.length ? { hypothesisRevisions: revisions } : {}), toolActivity: activity, usage: { calls, costUsd: cost, elapsedMs: Date.now() - started } };

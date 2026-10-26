@@ -25,7 +25,7 @@ export type Attempt = {
 };
 export type AgentRun = { id: string; trigger: string; mode: 'synthetic' | 'prepared' | 'live'; status: 'completed' | 'failed' | 'unchanged'; createdAt: string; steps: string[]; effect: string; sourceIds: string[]; };
 export type Interpretation = { id: string; courseId: string; claim: string; status: 'suspected' | 'revised' | 'supported'; evidenceIds: string[]; reason: string; updatedAt: string };
-export type SomaInvestigation = InvestigationRecord & { investigationKey?: string; selectedLessonId?: string; diagnosticPlan?: ValidatedDiagnosticPlan; diagnosticLessonId?: string; hypothesisRevisions?: { hypothesisId: string; status: DiagnosticHypothesisStatus; reason?: string }[]; toolActivity?: { tool: string; outcome: string }[]; usage?: { calls: number; costUsd: number; elapsedMs: number } };
+export type SomaInvestigation = InvestigationRecord & { investigationKey?: string; runtimeModel?: string; engineVersion?: string; selectedLessonId?: string; diagnosticPlan?: ValidatedDiagnosticPlan; diagnosticLessonId?: string; hypothesisRevisions?: { hypothesisId: string; status: DiagnosticHypothesisStatus; reason?: string }[]; toolActivity?: { tool: string; outcome: string }[]; usage?: { calls: number; costUsd: number; elapsedMs: number } };
 export type WorkspaceState = {
   investigations?: SomaInvestigation[]; recommendedLessonId?: string;
   id: string; mode: 'demo' | 'account'; createdAt: string; expiresAt: string;

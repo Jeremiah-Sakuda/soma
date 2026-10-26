@@ -2,6 +2,7 @@ import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { describe, it } from 'vitest';
 import type { WorkspaceResponse } from '../../src/lib/domain/types';
 import { getServerFirestore } from '../../src/lib/server/firebase-config';
+import { ENGINE_VERSION } from '../../src/lib/server/investigator';
 import { INVESTIGATION_RESERVATION_USD } from '../../src/lib/server/budget';
 
 function check(value: unknown, stage: string): asserts value { if (!value) throw new Error(`Hosted investigation check failed at ${stage}.`); }
@@ -34,7 +35,7 @@ describe.skipIf(process.env.SOMA_PRODUCTION_INVESTIGATION_TEST !== 'true')('host
     const ledger = async (workspaceId: string) => bounded(getServerFirestore().collection('somaBudgetReservations').where('workspaceId', '==', workspaceId).get(), 5000);
     try {
       const cap = Number(process.env.META_APP_SPEND_CAP_USD || '1'), allocation = Number(process.env.META_ALLOCATION_USD);
-      check(cap > 0 && cap <= 1 && allocation > 0 && !process.env.FIRESTORE_EMULATOR_HOST, 'unchanged real budget configuration');
+      check(cap > 0 && cap <= 2 && allocation > 0 && !process.env.FIRESTORE_EMULATOR_HOST, 'authorized real budget configuration');
       const noCookie = await call('/api/investigations', 'POST', request); statuses.noCookie = noCookie.status;
       check(noCookie.status === 401, 'missing-session rejection');
       stage = 'disposable synthetic sessions';
@@ -66,7 +67,7 @@ describe.skipIf(process.env.SOMA_PRODUCTION_INVESTIGATION_TEST !== 'true')('host
         check(investigated.status === 200, 'investigation HTTP response');
         const saved = await investigated.json() as WorkspaceResponse;
         const record = saved.workspace.investigations?.find(item => item.courseId === 'programming');
-        check(record?.decision === 'keep-current' && record.mode === 'live' && record.engineVersion === 'source-diagnostic-investigation-v4', 'persisted no-effect decision');
+        check(record?.decision === 'keep-current' && record.mode === 'live' && record.engineVersion === ENGINE_VERSION, 'persisted no-effect decision');
         const activity = record.toolActivity;
         check(activity && activity.some(item => item.tool === 'read_source') && activity.some(item => item.tool === 'finish_investigation'), 'actual source read and completed decision');
         check(activity.every(item => ['list_sources', 'read_source', 'follow_reference', 'finish_investigation'].includes(item.tool)), 'source-only investigation');

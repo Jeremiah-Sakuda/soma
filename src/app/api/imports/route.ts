@@ -10,6 +10,16 @@ import type { SourceImport } from '@/lib/server/imports';
 
 export const runtime = 'nodejs';
 
+/** A normal authenticated import explicitly opts this selected text into automatic preparation.
+ * Administrative preview transfer uses the pure importer and never receives this marker. */
+function importWithAutomation(workspace: WorkspaceState, input: SourceImport) {
+  const result = applySourceImport(workspace, input);
+  if (input.kind !== 'calendar-json') for (const source of result.workspace.sources) {
+    if (result.sourceIds.includes(source.id) && source.status === 'current' && source.provenance) source.provenance.automaticPreparation = true;
+  }
+  return result.workspace;
+}
+
 async function importedResponse(account: VerifiedAccount, workspace: WorkspaceState, input: SourceImport) {
   let notice = 'Selected material imported. This is a manual import, not a live source connection.';
   if (input.kind !== 'calendar-json') {
@@ -36,10 +46,12 @@ export async function POST(request: Request) {
     const current = await readOrCreateAccountWorkspace(account);
     // Idempotent retries return the committed result even if their old revision is stale.
     if (current.importReceipts?.some(receipt => receipt.key === input.importId)) {
-      applySourceImport(current, input);
-      return importedResponse(account, current, input);
+      const checked = applySourceImport(current, input);
+      const needsConsent = input.kind !== 'calendar-json' && checked.sourceIds.some(id => current.sources.some(source => source.id === id && source.status === 'current' && !source.provenance?.automaticPreparation));
+      const selected = needsConsent ? await updateAccountWorkspace(account, workspace => importWithAutomation(workspace, input), current.revision) : current;
+      return importedResponse(account, selected, input);
     }
-    const saved = await updateAccountWorkspace(account, workspace => applySourceImport(workspace, input).workspace, input.expectedRevision);
+    const saved = await updateAccountWorkspace(account, workspace => importWithAutomation(workspace, input), input.expectedRevision);
     return importedResponse(account, saved, input);
   } catch (error) {
     // A simultaneous retry can finish after the first import; the client can retry safely.

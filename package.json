@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "check": "npm run typecheck && npm test && npm run build",
     "check:meta": "node --env-file=.env.local scripts/check-meta.mjs",
-    "check:firestore": "node --env-file=.env.local scripts/check-firestore.mjs"
+    "check:firestore": "node --env-file=.env.local scripts/check-firestore.mjs",
+    "check:config": "node --env-file=.env.local scripts/check-production-config.mjs"
   },
   "dependencies": {
     "@tailwindcss/postcss": "4.3.3",

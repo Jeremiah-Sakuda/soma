@@ -42,7 +42,7 @@ export function applyCollectedSources(input: WorkspaceState, records: CollectedS
       kind: record.kind, version: (previous?.version ?? 0) + 1, origin: 'live', status: 'current',
       retrievedAt: context.checkedAt, observedAt: context.checkedAt,
       ...(declaredContext ? { context: declaredContext } : {}), ...(record.url ? { url: record.url } : {}), ...(record.modifiedAt ? { modifiedAt: record.modifiedAt } : {}),
-      provenance: { origin: ['email', 'calendar'].includes(record.kind) ? 'live-google' : 'live-browser', sourceKey, contentHash: fingerprint, importedAt: context.checkedAt },
+      provenance: { automaticPreparation: true, origin: ['email', 'calendar'].includes(record.kind) ? 'live-google' : 'live-browser', sourceKey, contentHash: fingerprint, importedAt: context.checkedAt },
     };
     state.sources.push(source); changedSourceIds.push(id);
     reconcileSourceRefresh(state, source, previous);

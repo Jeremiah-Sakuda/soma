@@ -6,9 +6,12 @@ import { getServerFirestore } from './firebase-config';
 import { prepareWithSpark, PreparationError, SPARK_ENGINE_VERSION } from './meta';
 import { inferenceEnabled, InferenceBudgetError } from './budget';
 import { WorkspaceConflictError, WorkspaceStoreError } from './store';
+import { investigateWithSpark, publishInvestigation, InvestigationError, type InvestigationResult } from './investigator';
 import { MODEL_VERSION } from '../domain/lessons';
 
+export type PreparationIntent = 'prepare-lesson' | 'investigate-change';
 export type PreparationJob = {
+  intent?: PreparationIntent;
   id: string; ownerId: string; workspaceId: string; courseId: string; topic: string; sourceRefs: SourceRef[];
   status: 'queued' | 'generating' | 'checking' | 'ready' | 'failed' | 'stale';
   createdAt: string; updatedAt: string; attempts: number; contextRevision: number;
@@ -23,22 +26,23 @@ function refs(account: VerifiedAccount) {
   return getServerFirestore().collection('somaAccounts').doc(digest(account.uid));
 }
 
-export function preparationJobId(workspace: WorkspaceState, courseId: string, sourceRefs: SourceRef[], topic: string, contextRevision = workspace.revision): string {
-  return digest(JSON.stringify({ workspaceId: workspace.id, courseId, sourceRefs: [...sourceRefs].sort((a, b) => a.sourceId.localeCompare(b.sourceId) || a.version - b.version), topic, contextRevision, modelVersion: MODEL_VERSION, engineVersion: SPARK_ENGINE_VERSION }));
+export function preparationJobId(workspace: WorkspaceState, courseId: string, sourceRefs: SourceRef[], topic: string, contextRevision = workspace.revision, intent: PreparationIntent = 'prepare-lesson'): string {
+  return digest(JSON.stringify({ workspaceId: workspace.id, courseId, sourceRefs: [...sourceRefs].sort((a, b) => a.sourceId.localeCompare(b.sourceId) || a.version - b.version), topic, contextRevision, modelVersion: MODEL_VERSION, engineVersion: SPARK_ENGINE_VERSION, ...(intent === 'investigate-change' ? { intent } : {}) }));
 }
 
 export function jobSourcesCurrent(workspace: WorkspaceState, job: Pick<PreparationJob, 'workspaceId' | 'courseId' | 'sourceRefs'>): boolean {
-  return workspace.id === job.workspaceId && workspace.courses.some(course => course.id === job.courseId) && job.sourceRefs.length > 0 && job.sourceRefs.every(ref => workspace.sources.some(source => source.id === ref.sourceId && source.version === ref.version && source.status === 'current' && source.courseId === job.courseId));
+  return workspace.id === job.workspaceId && workspace.courses.some(course => course.id === job.courseId) && job.sourceRefs.length > 0 && job.sourceRefs.every(ref => workspace.sources.some(source => source.id === ref.sourceId && source.version === ref.version && source.status === 'current' && source.courseId === job.courseId) && !workspace.sources.some(source => source.id === ref.sourceId && source.version > ref.version));
 }
 
 export function mayClaimJob(job: PreparationJob, now = Date.now()): boolean {
   return job.attempts < MAX_ATTEMPTS && (job.status === 'queued' || ((job.status === 'generating' || job.status === 'checking') && (job.leaseUntil ?? 0) <= now));
 }
 
-export async function enqueuePreparation(account: VerifiedAccount, workspace: WorkspaceState, courseId: string, sourceRefs: SourceRef[], topic: string, contextRevision = workspace.revision): Promise<PreparationJob> {
+export async function enqueuePreparation(account: VerifiedAccount, workspace: WorkspaceState, courseId: string, sourceRefs: SourceRef[], topic: string, contextRevision = workspace.revision, intent: PreparationIntent = 'prepare-lesson'): Promise<PreparationJob> {
   const root = refs(account);
+  if (!['prepare-lesson', 'investigate-change'].includes(intent)) throw new WorkspaceStoreError('Unsupported preparation intent.', 422, 'job_intent');
   if (topic.length > 300 || !jobSourcesCurrent(workspace, { workspaceId: workspace.id, courseId, sourceRefs })) throw new WorkspaceStoreError('Preparation requires current sources in this course.', 422, 'job_source_scope');
-  const id = preparationJobId(workspace, courseId, sourceRefs, topic, contextRevision);
+  const id = preparationJobId(workspace, courseId, sourceRefs, topic, contextRevision, intent);
   return root.firestore.runTransaction(async transaction => {
     const metadata = await transaction.get(root);
     if (!metadata.exists || metadata.get('ownerId') !== account.uid || metadata.get('workspaceId') !== workspace.id || metadata.get('deleted')) throw new WorkspaceConflictError();
@@ -50,7 +54,7 @@ export async function enqueuePreparation(account: VerifiedAccount, workspace: Wo
     const active = await transaction.get(root.collection('jobs').where('status', 'in', ['queued', 'generating', 'checking']).limit(5));
     if (active.size >= 5) throw new WorkspaceStoreError('Five preparations are already waiting. Finish one before adding another.', 429, 'job_capacity');
     const now = new Date().toISOString();
-    const job: PreparationJob = { id, ownerId: account.uid, workspaceId: workspace.id, courseId, topic, sourceRefs, status: 'queued', createdAt: now, updatedAt: now, attempts: 0, contextRevision };
+    const job: PreparationJob = { id, intent, ownerId: account.uid, workspaceId: workspace.id, courseId, topic, sourceRefs, status: 'queued', createdAt: now, updatedAt: now, attempts: 0, contextRevision };
     transaction.create(root.collection('jobs').doc(id), job);
     return job;
   });
@@ -114,8 +118,42 @@ async function fail(account: VerifiedAccount, job: PreparationJob, stale: boolea
     const metadata = await transaction.get(root);
     const document = await transaction.get(root.collection('jobs').doc(job.id));
     if (!metadata.exists || metadata.get('ownerId') !== account.uid || metadata.get('deleted') || metadata.get('workspaceId') !== job.workspaceId || !document.exists || document.get('ownerId') !== account.uid || document.get('leaseId') !== job.leaseId) return;
-    transaction.update(document.ref, { status: stale ? 'stale' : 'failed', updatedAt: new Date().toISOString(), leaseUntil: 0, ...(failureRun ? { failureRun } : {}), notice: stale ? 'Context changed during preparation. No obsolete lesson was published.' : 'Preparation could not publish a validated lesson preview. Your imported material is still available.' });
+    transaction.update(document.ref, { status: stale ? 'stale' : 'failed', updatedAt: new Date().toISOString(), leaseUntil: 0, ...(failureRun ? { failureRun } : {}), notice: stale ? 'Context changed during preparation. No obsolete result was published.' : job.intent === 'investigate-change' ? 'The source investigation did not publish a validated decision. Your imported material is still available.' : 'Preparation could not publish a validated lesson preview. Your imported material is still available.' });
   });
+}
+
+export type PreparationOutcome = { intent: 'prepare-lesson'; result: Awaited<ReturnType<typeof prepareWithSpark>> } | { intent: 'investigate-change'; result: InvestigationResult };
+
+/** Domain publication is shared by the worker and tests; persistence adds revision and lease CAS. */
+export function publishPreparationOutcome(state: WorkspaceState, job: PreparationJob, outcome: PreparationOutcome): WorkspaceState {
+  if (!jobSourcesCurrent(state, job) || (job.intent ?? 'prepare-lesson') !== outcome.intent) throw new WorkspaceConflictError();
+  const checkSources = (courseId: string, sourceRefs: SourceRef[]) => {
+    if (courseId !== job.courseId || !sourceRefs.length || !jobSourcesCurrent(state, { workspaceId: job.workspaceId, courseId, sourceRefs })) throw new WorkspaceConflictError();
+  };
+  if (outcome.intent === 'investigate-change') {
+    const result = outcome.result;
+    if (result.record.workspaceId !== state.id) throw new WorkspaceConflictError();
+    checkSources(result.record.courseId, result.record.sourceRefs);
+    if (result.selectedLessonId) {
+      const selected = result.lesson?.id === result.selectedLessonId ? result.lesson : state.lessons.find(lesson => lesson.id === result.selectedLessonId && lesson.state === 'ready');
+      if (!selected) throw new WorkspaceConflictError();
+      checkSources(selected.courseId, selected.sourceIds.map(sourceId => ({ sourceId, version: selected.sourceVersions[sourceId] })));
+    }
+    if (result.lesson) checkSources(result.lesson.courseId, result.lesson.sourceIds.map(sourceId => ({ sourceId, version: result.lesson!.sourceVersions[sourceId] })));
+    return publishInvestigation(state, result);
+  }
+  const prepared = outcome.result;
+  checkSources(prepared.lesson.courseId, prepared.lesson.sourceIds.map(sourceId => ({ sourceId, version: prepared.lesson.sourceVersions[sourceId] })));
+  if (!state.lessons.some(lesson => lesson.id === prepared.lesson.id)) state.lessons.unshift(prepared.lesson);
+  state.runs.unshift(prepared.run);
+  return state;
+}
+
+/** Every returned value is Firestore-safe, including a decision that does not create a lesson. */
+export function preparationReadyPatch(outcome: PreparationOutcome, now = new Date().toISOString()): Partial<PreparationJob> {
+  const lessonId = outcome.intent === 'prepare-lesson' ? outcome.result.lesson.id : outcome.result.selectedLessonId;
+  return { status: 'ready', ...(lessonId ? { lessonId } : {}), leaseUntil: 0, updatedAt: now,
+    notice: outcome.intent === 'prepare-lesson' ? 'A validated lesson preview is ready.' : lessonId ? 'Investigation saved and its selected activity is ready.' : 'Investigation decision saved; no new lesson was needed or published.' };
 }
 
 /** Explicit worker invocation. Durable queue/leases exist; scheduling is a separate deployment capability. */
@@ -127,29 +165,23 @@ export async function runPreparationJob(account: VerifiedAccount, id: string): P
   const job = await claimPreparationJob(account, workspace, id);
   if (!job) return null;
   try {
-    const prepared = await prepareWithSpark(workspace, job.courseId, job.topic, { sourceRefs: job.sourceRefs, trigger: 'source-change' });
+    const outcome: PreparationOutcome = job.intent === 'investigate-change'
+      ? { intent: 'investigate-change', result: await investigateWithSpark(workspace, { courseId: job.courseId, goal: job.topic, initialSourceIds: [...new Set(job.sourceRefs.map(ref => ref.sourceId))].slice(0, 8) }) }
+      : { intent: 'prepare-lesson', result: await prepareWithSpark(workspace, job.courseId, job.topic, { sourceRefs: job.sourceRefs, trigger: 'source-change' }) };
     const root = refs(account);
     await root.firestore.runTransaction(async transaction => {
       const document = await transaction.get(root.collection('jobs').doc(job.id));
       if (!document.exists || document.get('ownerId') !== account.uid || document.get('workspaceId') !== workspace.id || document.get('leaseId') !== job.leaseId || document.get('leaseUntil') <= Date.now()) throw new WorkspaceConflictError();
       transaction.update(document.ref, { status: 'checking', updatedAt: new Date().toISOString() });
     });
-    return await updateAccountWorkspace(account, state => {
-      if (!jobSourcesCurrent(state, job)) throw new WorkspaceConflictError();
-      for (const [sourceId, version] of Object.entries(prepared.lesson.sourceVersions)) {
-        if (!state.sources.some(source => source.id === sourceId && source.version === version && source.courseId === job.courseId && source.status === 'current')) throw new WorkspaceConflictError();
-      }
-      if (!state.lessons.some(lesson => lesson.id === prepared.lesson.id)) state.lessons.unshift(prepared.lesson);
-      state.runs.unshift(prepared.run);
-      return state;
-    }, job.contextRevision, async (transaction, accountRoot) => {
+    return await updateAccountWorkspace(account, state => publishPreparationOutcome(state, job, outcome), job.contextRevision, async (transaction, accountRoot) => {
       const document = await transaction.get(accountRoot.collection('jobs').doc(job.id));
       if (!document.exists || document.get('ownerId') !== account.uid || document.get('workspaceId') !== workspace.id || document.get('leaseId') !== job.leaseId || document.get('leaseUntil') <= Date.now() || document.get('status') !== 'checking') throw new WorkspaceConflictError();
-      transaction.update(document.ref, { status: 'ready', lessonId: prepared.lesson.id, leaseUntil: 0, updatedAt: new Date().toISOString() });
+      transaction.update(document.ref, preparationReadyPatch(outcome));
     });
   } catch (error) {
     if (error instanceof InferenceBudgetError) await requeueBudgetBlockedJob(account, job, error);
-    else await fail(account, job, error instanceof WorkspaceConflictError, error instanceof PreparationError ? error.run : undefined);
+    else await fail(account, job, error instanceof WorkspaceConflictError, error instanceof PreparationError || error instanceof InvestigationError ? error.run : undefined);
     throw error;
   }
 }

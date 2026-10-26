@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { seedEmptyAccountWorkspace } from '../../src/lib/domain/seed';
 import { InferenceBudgetError } from '../../src/lib/server/budget';
 import { MetaClientError } from '../../src/lib/server/meta-client';
-import { budgetBlockedJobPatch, jobSourcesCurrent, mayClaimJob, preparationJobId, type PreparationJob } from '../../src/lib/server/jobs';
+import { circuitCandidate } from '../../src/lib/domain/lessons';
+import { preparationReadyPatch, publishPreparationOutcome, type PreparationOutcome, budgetBlockedJobPatch, jobSourcesCurrent, mayClaimJob, preparationJobId, type PreparationJob } from '../../src/lib/server/jobs';
 
 describe('preparation ownership and restart contracts', () => {
   const workspace = seedEmptyAccountWorkspace('workspace-a', '2026-10-28T12:00:00Z');
@@ -28,6 +29,62 @@ describe('preparation ownership and restart contracts', () => {
     const connectorJob = preparationJobId(workspace, job.courseId, job.sourceRefs, job.topic, 0);
     expect(preparationJobId({ ...workspace, revision: 8 }, job.courseId, job.sourceRefs, job.topic, 0)).toBe(connectorJob);
     expect(preparationJobId(workspace, job.courseId, [{ sourceId: 'source-a', version: 2 }], job.topic, 0)).not.toBe(connectorJob);
+  });
+
+  it('distinguishes source investigations from lesson jobs without changing legacy default identity', () => {
+    const implicit = preparationJobId(workspace, job.courseId, job.sourceRefs, job.topic);
+    expect(preparationJobId(workspace, job.courseId, job.sourceRefs, job.topic, workspace.revision, 'prepare-lesson')).toBe(implicit);
+    expect(preparationJobId(workspace, job.courseId, job.sourceRefs, job.topic, workspace.revision, 'investigate-change')).not.toBe(implicit);
+  });
+
+  function investigationOutcome(): PreparationOutcome & { intent: 'investigate-change' } {
+    const decision = { decision: 'needs-evidence' as const, reason: 'This original source needs explicit authority evidence.', sourceRefs: [{ sourceId: 'source-a', version: 1, quote: 'Original fixture' }], assessmentId: null, applicability: 'unknown' as const, conflicts: [] };
+    return { intent: 'investigate-change', result: { decision, record: { ...decision, id: 'source-investigation', workspaceId: workspace.id, courseId: 'course-a', createdAt: workspace.createdAt, mode: 'synthetic' }, reads: new Map([['source-a', { version: 1, body: 'Original fixture' }]]), run: { id: 'run-original', trigger: 'Original source change', createdAt: workspace.createdAt, mode: 'synthetic', status: 'completed', sourceIds: ['source-a'], steps: ['Original synthetic tool result'], effect: 'Uncertainty retained.' } } };
+  }
+
+  it('persists an unresolved source investigation without manufacturing a lesson or mutating prior evidence', () => {
+    const state = structuredClone(workspace); const before = structuredClone(state);
+    const outcome = investigationOutcome(); const investigationJob = { ...job, intent: 'investigate-change' as const };
+    const published = publishPreparationOutcome(state, investigationJob, outcome);
+    expect(published.investigations).toHaveLength(1);
+    expect(published.investigations?.[0].decision).toBe('needs-evidence');
+    expect(published.runs[0].id).toBe('run-original');
+    expect(published.lessons).toEqual(before.lessons); expect(published.attempts).toEqual(before.attempts);
+    expect(state).toEqual(before);
+    const ready = preparationReadyPatch(outcome, workspace.createdAt);
+    expect(ready).toMatchObject({ status: 'ready', leaseUntil: 0, notice: expect.stringContaining('no new lesson') });
+    expect(ready).not.toHaveProperty('lessonId');
+    expect(Object.values(ready).every(value => value !== undefined)).toBe(true);
+  });
+
+  it('rechecks job references, investigation ownership, newly read versions and selected activity sources', () => {
+    const investigationJob = { ...job, intent: 'investigate-change' as const };
+    expect(() => publishPreparationOutcome(structuredClone(workspace), job, investigationOutcome())).toThrow();
+    const foreign = investigationOutcome(); foreign.result.record.workspaceId = 'foreign-workspace';
+    expect(() => publishPreparationOutcome(structuredClone(workspace), investigationJob, foreign)).toThrow();
+    const wrongCourse = investigationOutcome(); wrongCourse.result.record.courseId = 'foreign-course';
+    expect(() => publishPreparationOutcome(structuredClone(workspace), investigationJob, wrongCourse)).toThrow();
+    const stale = structuredClone(workspace); stale.sources.push({ ...stale.sources[0], version: 2, status: 'stale' });
+    expect(() => publishPreparationOutcome(stale, investigationJob, investigationOutcome())).toThrow();
+    const badCitation = investigationOutcome(); badCitation.result.record.sourceRefs = [{ sourceId: 'newly-followed-missing-source', version: 1, quote: 'Missing original fixture' }];
+    expect(() => publishPreparationOutcome(structuredClone(workspace), investigationJob, badCitation)).toThrow();
+    const staleLesson = investigationOutcome(); staleLesson.result.lesson = circuitCandidate('course-a', workspace.sources, 'parallel');
+    staleLesson.result.lesson.sourceVersions['source-a'] = 2; staleLesson.result.selectedLessonId = staleLesson.result.lesson.id;
+    expect(() => publishPreparationOutcome(structuredClone(workspace), investigationJob, staleLesson)).toThrow();
+  });
+
+  it('keeps legacy lesson jobs and cached investigation publication idempotent', () => {
+    const lesson = circuitCandidate('course-a', workspace.sources, 'parallel');
+    const run = investigationOutcome().result.run;
+    const outcome: PreparationOutcome = { intent: 'prepare-lesson', result: { lesson, run } };
+    const state = publishPreparationOutcome(structuredClone(workspace), job, outcome);
+    expect(state.lessons).toHaveLength(1);
+    publishPreparationOutcome(state, job, outcome);
+    expect(state.lessons).toHaveLength(1);
+    expect(preparationReadyPatch(outcome).lessonId).toBe(lesson.id);
+    const investigation = investigationOutcome(); const investigationJob = { ...job, intent: 'investigate-change' as const };
+    const published = publishPreparationOutcome(structuredClone(workspace), investigationJob, investigation);
+    expect(publishPreparationOutcome(published, investigationJob, { ...investigation, result: { ...investigation.result, reused: true } })).toEqual(published);
   });
 
   it('requeues budget-only denials without consuming retries or forgetting earlier real attempts', () => {

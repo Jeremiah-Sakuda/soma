@@ -27,9 +27,9 @@ export async function queueCollectedPreparation(account: VerifiedAccount, worksp
     try {
       await enqueuePreparation(account, workspace, courseId,
         sources.map(source => ({ sourceId: source.id, version: source.version })),
-        `Selected course material: ${sources.map(source => source.title).sort().join('; ')}`.slice(0, 300), 0);
+        `Selected course material: ${sources.map(source => source.title).sort().join('; ')}`.slice(0, 300), 0, 'investigate-change');
       queued++;
     } catch { pending++; }
   }
-  return `${queued ? ` ${queued} preparation job(s) saved or already queued; the worker can process them within the configured budget.` : ''}${pending ? ' Some preparation jobs could not be queued. Sources are saved; refresh again to retry.' : ''}`;
+  return `${queued ? ` ${queued} source investigation job(s) saved or already queued; the worker can process them within the configured budget.` : ''}${pending ? ' Some preparation jobs could not be queued. Sources are saved; refresh again to retry.' : ''}`;
 }

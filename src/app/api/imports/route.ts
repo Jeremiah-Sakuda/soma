@@ -17,8 +17,8 @@ async function importedResponse(account: VerifiedAccount, workspace: WorkspaceSt
     const source = workspace.sources.filter(item => item.id === receipt?.sourceId && item.provenance?.contentHash === receipt?.hash && item.status === 'current').sort((a, b) => b.version - a.version)[0];
     if (source && receipt?.preparationRevision !== undefined) {
       try {
-        await enqueuePreparation(account, workspace, input.course.id, [{ sourceId: source.id, version: source.version }], input.title, receipt.preparationRevision);
-        notice += ' A preparation job is saved; the worker can process it within the configured budget.';
+        await enqueuePreparation(account, workspace, input.course.id, [{ sourceId: source.id, version: source.version }], input.title, receipt.preparationRevision, 'investigate-change');
+        notice += ' A source investigation job is saved; the worker can process it within the configured budget.';
       } catch {
         notice += ' Automatic preparation could not be queued. Your source is saved; retry this import to queue it.';
       }

@@ -6,6 +6,7 @@ test('a reused request opens the selected saved lesson even behind a newer lesso
  workspace.lessons.unshift({...workspace.lessons[0],id:'newer-parallel',title:'A different saved parallel lesson'});
  const result={workspace,capabilities:{spark:true,persistence:'local-synthetic',liveSources:[]},selectedLessonId:'parallel-nodes'};
  // Isolate the API response contract: this case must not call a model provider.
+ await page.route('**/api/audit**', route => route.fulfill({ json: { workspaceId: workspace.id, runs: [] } }));
  await page.route('**/api/workspace',route=>route.fulfill({json:result}));
  await page.route('**/api/actions',route=>route.fulfill({json:result}));
  await page.goto('/?demo=1');await page.getByRole('button',{name:'Request a lesson',exact:true}).click();

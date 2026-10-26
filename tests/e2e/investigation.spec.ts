@@ -29,6 +29,7 @@ test('optional investigation preserves responses and exposes a provisional befor
   const reply = (selectedLessonId?: string): WorkspaceResponse => ({ workspace, capabilities: { spark: true, persistence: 'local-synthetic', liveSources: [] }, ...(selectedLessonId ? { selectedLessonId } : {}) });
   const requests: Record<string, unknown>[] = [];
   // Test the browser/API contract with original synthetic records; no model or connector is called.
+  await page.route('**/api/audit**', route => route.fulfill({ json: { workspaceId: workspace.id, runs: [] } }));
   await page.route('**/api/workspace', route => route.fulfill({ json: reply() }));
   await page.route('**/api/investigations', route => {
     const body = route.request().postDataJSON(); requests.push(body);
@@ -100,6 +101,7 @@ test('persisted diagnostic experiments restore their setup, reveal generic targe
   workspace = { ...workspace, lessons: [...lessons, ...workspace.lessons] };
   const reply = (): WorkspaceResponse => ({ workspace, capabilities: { spark: false, persistence: 'local-synthetic', liveSources: [] } });
   // Only transport is stubbed. The application reducer owns prediction and reveal records.
+  await page.route('**/api/audit**', route => route.fulfill({ json: { workspaceId: workspace.id, runs: [] } }));
   await page.route('**/api/workspace', route => route.fulfill({ json: reply() }));
   await page.route('**/api/actions', route => {
     workspace = applyAction(workspace, route.request().postDataJSON());
@@ -144,6 +146,7 @@ test('source disclosure waits for saved help and cannot rewrite an earlier unass
   workspace = { ...workspace, lessons: [lesson, { ...lesson, id: 'historical-help-boundary', state: 'stale' }, ...workspace.lessons] };
   const reply = (): WorkspaceResponse => ({ workspace, capabilities: { spark: false, persistence: 'local-synthetic', liveSources: [] } });
   let rejectHelp = true;
+  await page.route('**/api/audit**', route => route.fulfill({ json: { workspaceId: workspace.id, runs: [] } }));
   await page.route('**/api/workspace', route => route.fulfill({ json: reply() }));
   await page.route('**/api/actions', route => {
     const action = route.request().postDataJSON();

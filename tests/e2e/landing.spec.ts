@@ -60,6 +60,7 @@ test('an authenticated visitor opens their account directly and logout returns t
     if (route.request().method() === 'DELETE') authenticated = false;
     return route.fulfill({ json: { authenticated, accountWorkspaceAvailable: true } });
   });
+  await page.route('**/api/audit**', route => route.fulfill({ json: { workspaceId: workspace.id, runs: [] } }));
   await page.route('**/api/workspace', route => { workspaceRequests++; return route.fulfill({ json: { workspace, capabilities: { spark: false, persistence: 'local-synthetic', liveSources: [] } } }); });
   await page.route('**/api/jobs', route => route.fulfill({ json: { jobs: [] } }));
   await page.goto('/');
@@ -103,6 +104,7 @@ test('deleting workspace data returns to the entrance without fetching a synthet
   const workspace = { ...seedWorkspace('original-delete-account'), mode: 'account' as const };
   let reads = 0, deleted = false;
   await page.route('**/api/auth/session', route => route.fulfill({ json: { authenticated: !deleted, accountWorkspaceAvailable: true } }));
+  await page.route('**/api/audit**', route => route.fulfill({ json: { workspaceId: workspace.id, runs: [] } }));
   await page.route('**/api/workspace', route => { if (route.request().method() === 'DELETE') { deleted = true; return route.fulfill({ json: { deleted: true } }); } reads++; return route.fulfill({ json: { workspace, capabilities: { spark: false, persistence: 'local-synthetic', liveSources: [] } } }); });
   await page.route('**/api/jobs', route => route.fulfill({ json: { jobs: [] } }));
   await page.goto('/');
@@ -125,6 +127,7 @@ test('signing into another account discards delayed investigation output and que
   const capabilities = { spark: true, persistence: 'local-synthetic', liveSources: [] };
   await page.route('https://identitytoolkit.googleapis.com/**', route => route.fulfill({ json: { idToken: 'synthetic-test-token-never-valid' } }));
   await page.route('**/api/auth/session', route => { if (route.request().method() === 'DELETE') account = null; if (route.request().method() === 'POST') account = 'b'; return route.fulfill({ json: { authenticated: !!account, accountWorkspaceAvailable: true } }); });
+  await page.route('**/api/audit**', route => route.fulfill({ json: { workspaceId: (account === 'b' ? second : first).id, runs: [] } }));
   await page.route('**/api/workspace', async route => { const workspace = account === 'b' ? second : first; if (++reads === 2) { heldRead = true; await held; } await route.fulfill({ json: { workspace, capabilities } }); });
   await page.route('**/api/adaptations', async route => { const previous = account === 'a'; if (previous) await held; await route.fulfill({ json: { jobs: previous ? [{id:'a'.repeat(64),attemptId:'old-account',lessonId:first.lessons[0].id,status:'ready',notice:'Old account adaptation must stay hidden.'}] : [] } }); });
   await page.route('**/api/imports', async route => { importStarted = true; await held; await route.fulfill({ json: { workspace: first, capabilities } }); });

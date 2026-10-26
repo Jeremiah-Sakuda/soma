@@ -8,6 +8,7 @@ test('saved diagnostic queues automatic follow-up, survives reload, and offers t
   const capabilities = { spark: true, persistence: 'local-synthetic', liveSources: [] };
   const reply = () => ({ workspace, capabilities });
   await page.route('**/api/auth/session',route=>route.fulfill({json:{authenticated:true,accountWorkspaceAvailable:true}}));
+  await page.route('**/api/audit**', route => route.fulfill({ json: { workspaceId: workspace.id, runs: [] } }));
   await page.route('**/api/workspace',route=>route.fulfill({json:reply()}));
   await page.route('**/api/jobs',route=>route.fulfill({json:{jobs:[]}}));
   await page.route('**/api/adaptations',route=>route.fulfill({json:{jobs}}));
@@ -45,6 +46,7 @@ for(const origin of ['reload','adaptation'] as const){
     await page.route('**/api/auth/session',route=>route.fulfill({json:{authenticated:true,accountWorkspaceAvailable:true}}));
     await page.route('**/api/jobs',route=>route.fulfill({json:{jobs:[]}}));
     await page.route('**/api/adaptations',route=>route.fulfill({json:{jobs:origin==='adaptation'?[{id:'a'.repeat(64),attemptId:'pending-old-result',lessonId:workspace.lessons[0].id,status:'ready'}]:[]}}));
+    await page.route('**/api/audit**', route => route.fulfill({ json: { workspaceId: workspace.id, runs: [] } }));
     await page.route('**/api/workspace',async route=>{
       const snapshot=structuredClone(workspace);
       const delayed=++reads===2;if(delayed){heldRead=true;await held;}

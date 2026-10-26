@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { seedWorkspace } from '../../src/lib/domain/seed';
 import { applyAction } from '../../src/lib/domain/learning';
+import { evaluateDiagnosticExperiment } from '../../src/lib/domain/diagnostics';
 import type { SomaInvestigation, WorkspaceResponse } from '../../src/lib/domain/types';
 
 test('optional investigation preserves responses and exposes a provisional before/after comparison', async ({ page }) => {
@@ -32,7 +33,7 @@ test('optional investigation preserves responses and exposes a provisional befor
   await page.route('**/api/investigations', route => {
     const body = route.request().postDataJSON(); requests.push(body);
     if (!body.previousInvestigationId) {
-      workspace = { ...workspace, investigations: [record], lessons: [diagnostic, ...workspace.lessons] };
+      workspace = { ...workspace, recommendedLessonId: diagnostic.id, investigations: [record], lessons: [diagnostic, ...workspace.lessons] };
       return route.fulfill({ json: reply(diagnostic.id) });
     }
     workspace = { ...workspace, investigations: [...workspace.investigations!, {
@@ -48,6 +49,11 @@ test('optional investigation preserves responses and exposes a provisional befor
   });
   await page.goto('/?view=courses');
   await page.getByRole('button', { name: 'Investigate course update', exact: true }).first().click();
+  await expect(page).toHaveURL(/lesson=optional-diagnostic/);
+  await page.getByRole('button', { name: 'Back to today', exact: true }).click();
+  await expect(page.locator('.ready-card').getByRole('heading', { name: diagnostic.title, exact: true })).toBeVisible();
+  await expect(page.locator('.session-items')).not.toContainText('Fresh application');
+  await page.getByRole('button', { name: 'Open lesson', exact: true }).click();
   await expect(page).toHaveURL(/lesson=optional-diagnostic/);
   expect(requests[0].courseId).toBe('circuits');
   expect((requests[0].goal as string).length).toBeLessThanOrEqual(300);
@@ -74,4 +80,58 @@ test('optional investigation preserves responses and exposes a provisional befor
   await page.setViewportSize({ width: 360, height: 800 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: '.local/screenshots/investigation-mobile.png', fullPage: true });
+});
+
+test('persisted diagnostic experiments restore their setup, reveal generic targets, and preserve mismatched conditions', async ({ page }) => {
+  let workspace = seedWorkspace('diagnostic-experiment-ui');
+  const baseline = { topology: 'parallel' as const, voltage: 12, r1: 6, r2: 3 };
+  const voltage = evaluateDiagnosticExperiment({ baseline, change: { parameter: 'voltage', value: 24 }, observable: 'current1', predictions: [
+    { hypothesisId: 'changes', claim: 'Branch current doubles when the source voltage doubles.', predictedValue: 4 },
+    { hypothesisId: 'fixed', claim: 'Branch current stays fixed when the source voltage changes.', predictedValue: 2 },
+  ] });
+  const resistance = evaluateDiagnosticExperiment({ baseline, change: { parameter: 'r1', value: 12 }, observable: 'current1', predictions: [
+    { hypothesisId: 'changes', claim: 'Branch current halves when its branch resistance doubles.', predictedValue: 1 },
+    { hypothesisId: 'fixed', claim: 'Branch current stays fixed when its resistance changes.', predictedValue: 2 },
+  ] });
+  expect(voltage.informative && resistance.informative).toBe(true);
+  const lessons = [voltage, resistance].map((experiment, index) => ({ ...workspace.lessons[0], id: `diagnostic-experiment-${index}`, title: index ? 'A resistance experiment' : 'A voltage experiment', circuit: baseline, diagnosticInvestigationId: `investigation-${index}`, diagnosticExperiment: { input: experiment.input } }));
+  workspace = { ...workspace, lessons: [...lessons, ...workspace.lessons] };
+  const reply = (): WorkspaceResponse => ({ workspace, capabilities: { spark: false, persistence: 'local-synthetic', liveSources: [] } });
+  // Only transport is stubbed. The application reducer owns prediction and reveal records.
+  await page.route('**/api/workspace', route => route.fulfill({ json: reply() }));
+  await page.route('**/api/actions', route => {
+    workspace = applyAction(workspace, route.request().postDataJSON());
+    return route.fulfill({ json: reply() });
+  });
+  await page.goto('/?view=study&lesson=diagnostic-experiment-0');
+  await page.getByRole('spinbutton', { name: 'Resistance R₁', exact: true }).fill('10');
+  await expect.poll(() => workspace.savedInputs[lessons[0].id]?.r1).toBe(10);
+  await page.getByRole('button', { name: 'Restore experiment setup', exact: true }).click();
+  await expect(page.getByRole('spinbutton', { name: 'Resistance R₁', exact: true })).toHaveValue('6');
+  await page.locator('.predict-options').getByRole('radio').first().check();
+  await page.getByRole('button', { name: 'Save prediction', exact: true }).click();
+  await page.getByRole('button', { name: 'Set source voltage to 24 V and see', exact: true }).click();
+  await expect(page.getByRole('spinbutton', { name: 'Supply voltage', exact: true })).toHaveValue('24');
+  await expect(page.getByText('Your prediction matched.', { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('spinbutton', { name: 'Supply voltage', exact: true })).toHaveValue('24');
+  await expect(page.getByText('Your prediction matched.', { exact: true })).toBeVisible();
+  expect(workspace.predictions?.find(item => item.lessonId === lessons[0].id && item.kind === 'reveal')).toMatchObject({ resultInputs: { voltage: 24, r1: 6, r2: 3 }, comparisonValid: true, matched: true });
+
+  await page.goto('/?view=study&lesson=diagnostic-experiment-1');
+  await page.locator('.predict-options').getByRole('radio').first().check();
+  await page.getByRole('button', { name: 'Save prediction', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Set R₁ to 12 Ω and see', exact: true })).toBeVisible();
+  await page.getByRole('spinbutton', { name: 'Supply voltage', exact: true }).fill('18');
+  await expect.poll(() => workspace.savedInputs[lessons[1].id]?.voltage).toBe(18);
+  await page.getByRole('spinbutton', { name: 'Resistance R₁', exact: true }).fill('12');
+  await expect(page.getByText('Other inputs changed', { exact: true })).toBeVisible();
+  await expect(page.getByText('Your prediction matched.', { exact: true })).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByText('Other inputs changed', { exact: true })).toBeVisible();
+  const records = workspace.predictions?.filter(item => item.lessonId === lessons[1].id);
+  expect(records?.find(item => item.kind === 'selection')).toMatchObject({ inputs: baseline, checkpoint: { parameter: 'r1', targetValue: 12 } });
+  const revealed = records?.find(item => item.kind === 'reveal');
+  expect(revealed).toMatchObject({ comparisonValid: false, resultInputs: { voltage: 18, r1: 12, r2: 3 } });
+  expect(revealed).not.toHaveProperty('matched');
 });

@@ -111,3 +111,10 @@ Add later entries with the motivating observation, effect on scope, verification
 - Deployed Ready Card at https://soma-woad-beta.vercel.app. Anonymous persistence/isolation/CSRF/deletion smoke and real private-account HTTP sign-in/import/job/deletion checks passed. Browser verification opened the live lesson.
 - Scoped transitive override `jwks-rsa → jose 5.10.0` resolves the observed Vercel CommonJS/ESM startup failure. Application tests and production authentication pass with the fix.
 - Live source connectors and automatic scheduling remain pending the user’s Browserbase/Trigger.dev configuration and exact source scope. Current preparation jobs persist and recover but require an explicit worker invocation. No scheduled-collection claim is made.
+
+### October 26 — browser sessions and scoped Google sources
+
+- Jeremy requested persistent browser access to BU Blackboard (`learn.bu.edu`), Gradescope and Piazza, plus Gmail and Google Calendar connectors. This explicitly extends the earlier extra-adapter deferral; the one quantitative family and feature freeze remain unchanged.
+- Use user-completed login/MFA in Browserbase and encrypted persistent contexts rather than storing institutional passwords in prompts. Collect only selected, validated course pages through a bounded read policy. Context cleanup precedes workspace deletion; failed cleanup retains references for retry.
+- Google authorization uses a Web OAuth client with PKCE, one-use account/workspace-bound state, read-only scopes and encrypted refresh tokens. Gmail requires selected course queries; Calendar selects one calendar and a bounded seven-day window. No mail, coursework or calendar writes are implemented.
+- Google API services and production server configuration are installed. Real Firebase encryption/state/isolation tests and connection UI checks passed; no actual Google consent, selected mail/calendar read or institutional browser read has occurred yet. Browserbase credentials are still absent. Manual imports remain available and labeled.

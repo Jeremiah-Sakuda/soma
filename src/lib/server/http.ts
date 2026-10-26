@@ -27,8 +27,8 @@ export function requireSameOrigin(request: Request) {
 
 export function apiError(error: unknown) {
   const candidate = error as { status?: number; code?: string; message?: string };
-  const status = candidate.status && candidate.status >= 400 && candidate.status < 500 ? candidate.status : 500;
+  const status = candidate.status === 503 ? 503 : candidate.status && candidate.status >= 400 && candidate.status < 500 ? candidate.status : 500;
   // Avoid echoing provider/SQL details, paths, or credentials into public responses.
-  const message = status === 500 ? 'Soma could not save this change. Please try again.' : (candidate.message || 'This request could not be completed.');
+  const message = status === 503 ? 'This service is not available right now. Your saved data was retained; please try again.' : status === 500 ? 'Soma could not save this change. Please try again.' : (candidate.message || 'This request could not be completed.');
   return NextResponse.json({ error: message }, { status, headers: { 'Cache-Control': 'no-store' } });
 }

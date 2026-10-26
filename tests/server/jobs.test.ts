@@ -23,6 +23,9 @@ describe('preparation ownership and restart contracts', () => {
     expect(preparationJobId({ ...workspace, id: 'workspace-b' }, job.courseId, job.sourceRefs, job.topic)).not.toBe(first);
     expect(preparationJobId(workspace, job.courseId, [{ sourceId: 'source-a', version: 2 }], job.topic)).not.toBe(first);
     expect(preparationJobId({ ...workspace, revision: 1 }, job.courseId, job.sourceRefs, job.topic)).not.toBe(first);
+    const connectorJob = preparationJobId(workspace, job.courseId, job.sourceRefs, job.topic, 0);
+    expect(preparationJobId({ ...workspace, revision: 8 }, job.courseId, job.sourceRefs, job.topic, 0)).toBe(connectorJob);
+    expect(preparationJobId(workspace, job.courseId, [{ sourceId: 'source-a', version: 2 }], job.topic, 0)).not.toBe(connectorJob);
   });
 
   it('recovers expired work without stealing active leases or exceeding restart bounds', () => {

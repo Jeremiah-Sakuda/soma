@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyAccountSession } from '@/lib/server/account';
 import { apiError, requireSameOrigin } from '@/lib/server/http';
 import { listConnections } from '@/lib/server/connectors/store';
+import { queueCollectedPreparation } from '@/lib/server/connectors/preparation';
 import { BROWSER_PROVIDERS, browserActionSchema, browserConfigured, completeBrowserLogin, configureBrowser, disconnectBrowser, refreshBrowser, startBrowserLogin } from '@/lib/server/connectors/browser';
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -33,6 +34,8 @@ export async function POST(request: Request) {
     if (action === 'start') return response(await startBrowserLogin(owner, provider));
     if (action === 'complete') return response(await completeBrowserLogin(owner, provider));
     if (action === 'disconnect') return response(await disconnectBrowser(owner, provider));
-    return response(await refreshBrowser(owner, provider));
+    const result = await refreshBrowser(owner, provider);
+    result.notice += await queueCollectedPreparation(owner, result.workspace, `${provider}:browser-${provider}:`);
+    return response(result);
   } catch (error) { return browserError(error); }
 }

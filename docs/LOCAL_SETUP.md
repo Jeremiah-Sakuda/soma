@@ -23,7 +23,7 @@ Start with Meta and Firebase. Trigger.dev and Browserbase can be filled next for
 | `TRIGGER_SECRET_KEY` | Trigger.dev project's development environment API key | Local worker/SDK development; use the appropriate separate key for deployment |
 | `TRIGGER_PROJECT_REF` | Trigger.dev project settings (`proj_…`) | Nonsecret project identifier for worker configuration |
 | `BROWSERBASE_API_KEY` | Browserbase project dashboard | Browser session creation |
-| `BROWSERBASE_PROJECT_ID` | Browserbase project dashboard, optional | Explicit project selection when needed |
+| `BROWSERBASE_PROJECT_ID` | Browserbase project dashboard | Required project selection for owned browser sessions |
 
 Create a Firebase project and a Firestore database in Native mode. Keep client database access denied; the server authenticates requests and enforces workspace ownership. For local server access, use Application Default Credentials or a service-account JSON outside this repository, and put only its absolute path in `GOOGLE_APPLICATION_CREDENTIALS`. Later enable a Firebase Authentication sign-in provider for private student accounts. Do not paste the JSON private key into chat. Supabase fields left in an existing local file are unused.
 
@@ -35,7 +35,7 @@ Meta's guide requires participant-managed billing and credit claiming. Verify th
 - Vercel and Firebase CLI: use their account login flows when provisioning deployment. Tokens are not required in browser configuration.
 - Trigger.dev deployment: use its supported CLI login flow; headless deployment may use `TRIGGER_ACCESS_TOKEN` in CI secrets, not public app configuration.
 - Blackboard/Gradescope: authorized interactive login or supported exports; do not put institutional passwords or session cookies here.
-- Email: provider and selected course scope remain unresolved. Configure a scoped OAuth route once chosen; an email password is not requested.
+- Email: Gmail uses the server OAuth client and explicit selected course queries. A successful user-authorized read is still required; an email password is not requested.
 
 ## Official configuration references
 
@@ -70,3 +70,13 @@ The anonymous demo uses original synthetic course material and an expiring isola
 The Meta allocation is user-confirmed $150, with a $30 reserve and a more restrictive $1 development application cap. One daily preparation job per workspace, four calls per job and transactional cost reservations apply. Development circuit previews do not establish independent scientific review or real-course source fit.
 
 Vercel project `jeremiah-sakudas-projects/soma` is linked to GitHub. Deployment uses the committed `vercel.json`; private environment files, source documents, screenshots and prompt logs are excluded from its upload by `.vercelignore`. GitHub CI runs type checking, unit tests, the production build and the browser journeys.
+
+## Private source connections
+
+Google sources use Soma's own OAuth Web application client. Enable the Gmail and Calendar APIs in the same Cloud project. Set `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `SOMA_APP_URL` and `SOMA_CONNECTOR_ENCRYPTION_KEY` on the server. The encryption key is 32 random bytes encoded as 64 hex characters; keep it stable and private, as changing it makes saved authorizations unreadable. Production origin is `https://soma-woad-beta.vercel.app`, with the exact authorized redirect URI `https://soma-woad-beta.vercel.app/api/connectors/google/callback`. A local OAuth test needs its own registered loopback callback and matching `SOMA_APP_URL`; changing the app origin alone does not register a Google redirect.
+
+While the Google app is in External Testing, add each intended Google account as a test user. Requested scopes are Gmail read-only, Calendar events read-only and Calendar list read-only. Sign in to Soma, open Account → Source connections, then connect Gmail and Calendar separately. Authorizing does not collect data: save explicit course-to-query mappings for Gmail, or select one calendar and timezone, then refresh. Each Gmail refresh reads one selected query in rotation, at most 20 messages; Calendar covers the next seven days, at most 40 events. Truncation remains visible. Attachments are not collected. Google disconnect deletes Soma's stored tokens; it does not revoke another provider's shared Google grant.
+
+Browser sources require both `BROWSERBASE_API_KEY` and `BROWSERBASE_PROJECT_ID`, plus the same connector encryption key. Open the provider's private live login window, complete institutional login/MFA yourself, and finish the connection in Soma. Select exact course URLs belonging to a course in your private workspace before refreshing. Saved context and session identifiers are encrypted per account; institutional passwords never enter application prompts. Collection permits bounded read navigation and can reject unsupported provider pages; a saved login alone is not evidence of a successful source read. Disconnect releases active sessions and removes remote contexts; external cleanup failures retain references for a retry.
+
+Changed course observations enter the existing durable preparation queue. Unchanged-source retries reuse source-version job identities. A worker must still be invoked explicitly; recurring collection/worker deployment is not yet configured. Connector status, last successful read, source freshness and prepared model output remain separate.

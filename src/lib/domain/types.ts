@@ -24,7 +24,7 @@ export type AgentRun = { id: string; trigger: string; mode: 'synthetic' | 'prepa
 export type Interpretation = { id: string; courseId: string; claim: string; status: 'suspected' | 'revised' | 'supported'; evidenceIds: string[]; reason: string; updatedAt: string };
 export type WorkspaceState = {
   id: string; mode: 'demo' | 'account'; createdAt: string; expiresAt: string;
-  revision: number; importReceipts?: { key: string; sourceId: string; hash: string; importedAt: string }[]; timezone?: string; demoClock?: string;
+  revision: number; importReceipts?: { key: string; sourceId: string; hash: string; importedAt: string; preparationRevision?: number }[]; timezone?: string; demoClock?: string;
   focusWindows?: FocusWindow[]; calendarContext?: CalendarContext;
   commitmentObservations?: CommitmentObservation[]; commitments?: Commitment[]; corrections?: CommitmentCorrection[]; consequences?: Consequence[];
   selectedSessionMinutes?: 10 | 20 | 45; sessionRecommendation?: SessionRecommendation;
@@ -64,10 +64,10 @@ export type CommitmentObservation = {
   bufferBeforeMinutes: number; bufferAfterMinutes: number; sourceRefs: SourceRef[]; observedAt: string; identityBasis: string;
 };
 export type Commitment = Omit<CommitmentObservation, 'eventId' | 'status'> & { status: CommitmentStatus; observationIds: string[]; correctionId?: string };
-export type CommitmentCorrection = { id: string; workspaceId: string; commitmentId: string; createdAt: string; note: string; before: { status: CommitmentStatus; startAt: string; endAt: string; timezone: string }; after: { status: 'confirmed' | 'tentative' | 'cancelled'; startAt: string; endAt: string; timezone: string } };
+export type CommitmentCorrection = { id: string; workspaceId: string; commitmentId: string; createdAt: string; note: string; fields?: ('status' | 'startAt' | 'endAt' | 'timezone')[]; before: { status: CommitmentStatus; startAt: string; endAt: string; timezone: string }; after: { status: 'confirmed' | 'tentative' | 'cancelled'; startAt: string; endAt: string; timezone: string } };
 export type Consequence = { id: string; workspaceId: string; createdAt: string; trigger: string; classification: 'timing' | 'scope' | 'content' | 'availability' | 'uncertainty' | 'identity' | 'correction'; sourceRefs: SourceRef[]; affectedIds: string[]; before: Record<string, string | number | boolean | null>; after: Record<string, string | number | boolean | null>; reason: string; result: string };
 export type SessionRecommendation = { minutes: 10 | 20 | 45; availableMinutes: number | null; status: 'known' | 'uncertain' | 'stale' | 'missing'; sourceRefs: SourceRef[]; contextRevision: number; updatedAt: string; reason: string };
 export type PredictionCheckpoint = { id: string; question: string; options: string[]; answerIndex: number; revealLabel: string; parameter: 'r2'; multiplier: number; observedOutput: 'current1' | 'voltage2'; explanation: string };
-export type PredictionInteraction = { id: string; lessonId: string; lessonVersion: number; modelVersion: string; kind: 'selection' | 'exploration' | 'reveal'; createdAt: string; inputs: CircuitInput; optionIndex?: number; predictionId?: string; resultInputs?: CircuitInput; result?: CircuitOutput; matched?: boolean; checkpoint?: PredictionCheckpoint };
+export type PredictionInteraction = { id: string; lessonId: string; lessonVersion: number; modelVersion: string; kind: 'selection' | 'exploration' | 'reveal'; createdAt: string; inputs: CircuitInput; optionIndex?: number; predictionId?: string; resultInputs?: CircuitInput; result?: CircuitOutput; matched?: boolean; comparisonValid?: boolean; checkpoint?: PredictionCheckpoint };
 export type PredictionState = { state: 'idle' | 'exploring' | 'predicted' | 'revealed'; selectedPredictionId?: string; revealId?: string };
 export type FreshRequest = { id: string; parentLessonId: string; lessonId: string; predictionId?: string; requestedAt: string; when: 'now' | 'later'; status: 'pending' | 'opened'; openedAt?: string };

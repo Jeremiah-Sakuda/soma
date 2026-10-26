@@ -114,7 +114,9 @@ describe('R12 bounded commitments and consequences', () => {
     expect(corrected.corrections?.[0].before.status).toBe('tentative');
     const reloaded = JSON.parse(JSON.stringify(corrected));
     const refreshed = scenario(reloaded, 'commitment-no-overlap');
-    expect(refreshed.commitments?.[0].startAt).toBe('2026-10-28T16:20:00-04:00');
+    expect(refreshed.commitments?.[0].startAt).toBe('2026-10-28T17:00:00-04:00');
+    expect(refreshed.commitments?.[0].status).toBe('confirmed');
+    expect(refreshed.corrections?.[0].fields).toEqual(['status']);
     expect(refreshed.commitments?.[0].correctionId).toBe('correction-1');
     const another = seedWorkspace('other', now);
     expect(() => applyAction(another, { type: 'correct-commitment', commitmentId: 'interview-demo', status: 'confirmed', note: 'Not mine' }, now)).toThrow(/workspace/);

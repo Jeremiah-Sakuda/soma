@@ -111,8 +111,10 @@ function reconcile(state: WorkspaceState): Commitment[] {
     const signatures = new Set(active.map(item => `${instant(item.startAt)}|${instant(item.endAt)}|${item.kind}|${item.status === 'cancelled'}`));
     const status = signatures.size > 1 ? 'conflict' : active.some(item => item.status === 'confirmed') ? 'confirmed' : head.status;
     const result: Commitment = { ...head, id, status, sourceRefs: uniqueRefs(active.flatMap(item => item.sourceRefs)), observationIds: observations.map(item => item.id) };
-    const correction = (state.corrections ?? []).filter(item => item.commitmentId === id && item.workspaceId === state.id).at(-1);
-    if (correction) Object.assign(result, correction.after, { correctionId: correction.id });
+    for (const correction of (state.corrections ?? []).filter(item => item.commitmentId === id && item.workspaceId === state.id)) {
+      for (const field of correction.fields ?? ['status', 'startAt', 'endAt', 'timezone'] as const) Object.assign(result, { [field]: correction.after[field] });
+      result.correctionId = correction.id;
+    }
     return result;
   });
 }
@@ -173,6 +175,7 @@ export function correctCommitment(input: WorkspaceState, action: { commitmentId:
   if (!action.note.trim() || action.note.length > 500) throw new Error('Describe the correction in 1–500 characters.');
   state.corrections ??= [];
   const correction: CommitmentCorrection = { id: `correction-${state.corrections.length + 1}`, workspaceId: state.id, commitmentId: commitment.id, createdAt: now, note: action.note,
+    fields: (['status', 'startAt', 'endAt', 'timezone'] as const).filter(field => action[field] !== undefined),
     before: { status: commitment.status, startAt: commitment.startAt, endAt: commitment.endAt, timezone: commitment.timezone }, after };
   state.corrections.push(correction);
   state.commitments = reconcile(state);

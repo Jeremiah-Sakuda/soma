@@ -55,7 +55,9 @@ export function revealPrediction(state: WorkspaceState, lesson: Lesson, now: str
   const baseline = calculateCircuit(selection.inputs), result = calculateCircuit(resultInputs);
   const delta = result.current1 - baseline.current1;
   const outcomeIndex = Math.abs(delta) < 1e-10 ? 1 : delta > 0 ? 0 : 2;
-  const record = interaction(state, lesson, now, 'reveal', selection.inputs, { predictionId: selection.id, resultInputs: structuredClone(resultInputs), result, matched: selection.optionIndex === outcomeIndex, checkpoint });
+  const comparisonValid = resultInputs.topology === selection.inputs.topology && resultInputs.voltage === selection.inputs.voltage && resultInputs.r1 === selection.inputs.r1;
+  const revealedCheckpoint = comparisonValid ? checkpoint : { ...checkpoint, explanation: 'Other inputs changed after the prediction. This result cannot judge the original prediction; its original choice and conditions remain preserved.' };
+  const record = interaction(state, lesson, now, 'reveal', selection.inputs, { predictionId: selection.id, resultInputs: structuredClone(resultInputs), result, comparisonValid, ...(comparisonValid ? { matched: selection.optionIndex === outcomeIndex } : {}), checkpoint: revealedCheckpoint });
   state.savedInputs[lesson.id] = structuredClone(resultInputs);
   state.predictionStates![lesson.id] = { state: 'revealed', selectedPredictionId: selection.id, revealId: record.id };
   state.assistance[lesson.id] = [...(state.assistance[lesson.id] ?? []), `${now} · prediction-reveal`];

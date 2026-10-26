@@ -156,3 +156,15 @@ describe('authored content does not inherit a live inference label', () => {
     expect(revised.lessons.find(lesson => lesson.id === 'parallel-nodes-v2')?.mode).toBe('prepared');
   });
 });
+
+it('updates affected supporting passages with the source revision instead of carrying a stale live quote', () => {
+  const state = seed();
+  const originalSource = state.sources.find(source => source.id === 'source-d')!;
+  state.lessons[0].supportingPassages = [{ sourceId: originalSource.id, version: 1, quote: originalSource.body }];
+  const revised = applyAction(state, { type: 'scenario', scenario: 'source-revised' }, later);
+  const replacement = revised.lessons.find(lesson => lesson.id === 'parallel-nodes-v2')!;
+  const passage = replacement.supportingPassages![0];
+  expect(passage.version).toBe(replacement.sourceVersions[passage.sourceId]);
+  expect(revised.sources.find(source => source.id === passage.sourceId && source.version === passage.version)?.body).toContain(passage.quote);
+  expect(revised.lessons.find(lesson => lesson.id === 'parallel-nodes')?.supportingPassages?.[0].version).toBe(1);
+});

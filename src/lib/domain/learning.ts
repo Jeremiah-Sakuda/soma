@@ -63,6 +63,7 @@ function applyScenario(state: WorkspaceState, scenario: Extract<WorkspaceAction,
       lesson.state = 'stale';
       const replacement: Lesson = { ...structuredClone(lesson), id: `${lesson.id}-v${lesson.version + 1}`, version: lesson.version + 1,
         state: 'ready', mode: 'prepared', sourceVersions: { ...lesson.sourceVersions, [old.id]: updated.version },
+        ...(lesson.supportingPassages ? { supportingPassages: lesson.supportingPassages.map(passage => passage.sourceId === old.id ? { sourceId: old.id, version: updated.version, quote: updated.body } : passage) } : {}),
         reason: 'The synthetic Lecture 8 worked example changed. This replacement uses the new source version; earlier lessons and attempts remain preserved.' };
       if (replacement.circuit.topology === 'parallel') {
         replacement.circuit = { topology: 'parallel', voltage: 9, r1: 9, r2: 3 };
@@ -174,6 +175,7 @@ export function applyAction(input: WorkspaceState, action: WorkspaceAction, now:
     } else if (action.type === 'save-inputs') {
       if (lesson.kind !== 'circuit' || lesson.exposure === 'fresh-no-diagram') throw new Error('Only interactive circuit lessons accept circuit controls.');
       calculateCircuit(action.inputs);
+      if (action.inputs.topology !== lesson.circuit.topology) throw new Error('Open the matching lesson variant to change topology.');
       const predictionState = state.predictionStates?.[lesson.id];
       const selection = state.predictions?.find(item => item.id === predictionState?.selectedPredictionId);
       if (predictionState?.state === 'predicted' && selection && action.inputs.r2 !== selection.inputs.r2) revealPrediction(state, lesson, timestamp, action.inputs);

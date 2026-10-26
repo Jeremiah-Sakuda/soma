@@ -105,3 +105,19 @@ describe('optional predictions preserve original interactions without inventing 
     expect(left.lessons.at(-1)?.question).not.toBe(right.lessons.at(-1)?.question);
   });
 });
+
+describe('prediction comparisons honor their original conditions', () => {
+  it('does not score a confounded result when the source voltage changed before R2', () => {
+    const predicted = applyAction(seed(), { type: 'prediction', lessonId: 'parallel-nodes', optionIndex: 1 }, now);
+    const voltageChanged = applyAction(predicted, { type: 'save-inputs', lessonId: 'parallel-nodes', inputs: { topology: 'parallel', voltage: 24, r1: 6, r2: 3 } }, later);
+    const revealed = applyAction(voltageChanged, { type: 'save-inputs', lessonId: 'parallel-nodes', inputs: { topology: 'parallel', voltage: 24, r1: 6, r2: 6 } }, later);
+    expect(revealed.predictions?.at(-1)?.comparisonValid).toBe(false);
+    expect(revealed.predictions?.at(-1)?.matched).toBeUndefined();
+    expect(revealed.predictions?.at(-1)?.checkpoint?.explanation).toContain('cannot judge');
+    expect(revealed.predictions?.[0]).toEqual(predicted.predictions?.[0]);
+    expect(revealed.attempts).toEqual([]);
+  });
+  it('cannot replace a source-backed lesson topology using the control endpoint', () => {
+    expect(() => applyAction(seed(), { type: 'save-inputs', lessonId: 'parallel-nodes', inputs: { topology: 'series', voltage: 12, r1: 6, r2: 3 } }, now)).toThrow(/matching lesson variant/);
+  });
+});

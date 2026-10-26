@@ -49,6 +49,7 @@ function instantiate(parent: Lesson, plan: Proposal): Lesson {
   const fmt = (v: number) => Number(v.toPrecision(4));
   const parallel = circuit.topology === 'parallel';
   return { ...structuredClone(parent), id: `live-${randomUUID()}`, version: 1, mode: 'live', circuit,
+    supportingPassages: plan.evidence.map(item => ({ ...item, version: parent.sourceVersions[item.sourceId] })),
     sourceIds: [...plan.sourceIds], sourceVersions: Object.fromEntries(plan.sourceIds.map(id => [id, parent.sourceVersions[id]])),
     title: parallel ? 'Shared nodes, a new example' : 'One path, a new example', reason: plan.reason,
     description: 'Spark selected these illustrative parameters after reading the cited course material. Independent source-fit and scientific review remain pending.',
@@ -69,7 +70,9 @@ function instantiate(parent: Lesson, plan: Proposal): Lesson {
 /** Four-call, read-only source investigation. Application code alone constructs/scorers the lesson. */
 export async function prepareWithSpark(state: WorkspaceState, courseId: string, topic: string): Promise<{ lesson: Lesson; run: AgentRun }> {
   let candidates = state.lessons.filter(l => l.courseId === courseId && l.kind === 'circuit' && l.state === 'ready' && l.mode === 'prepared').slice(0, 2);
-  if (!candidates.length) candidates = ['parallel', 'series'].map(topology => circuitCandidate(courseId, state.sources, topology as 'parallel' | 'series'));
+  for (const topology of ['parallel', 'series'] as const) {
+    if (!candidates.some(candidate => candidate.circuit.topology === topology)) candidates.push(circuitCandidate(courseId, state.sources, topology));
+  }
   const candidateState = { ...state, lessons: [...state.lessons, ...candidates.filter(candidate => !state.lessons.some(lesson => lesson.id === candidate.id))] };
   const allowed = state.sources.filter(s => s.courseId === courseId && s.status === 'current');
   const key = process.env.MODEL_API_KEY;

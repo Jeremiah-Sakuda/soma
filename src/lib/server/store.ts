@@ -1,7 +1,8 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, chmodSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
+import type { DatabaseSync } from 'node:sqlite';
+import { createRequire } from 'node:module';
 import { seedWorkspace } from '../domain/seed';
 import type { WorkspaceState } from '../domain/types';
 import { insertManagedWorkspace, readManagedWorkspace, replaceManagedWorkspace, deleteManagedWorkspace } from './firestore';
@@ -29,7 +30,9 @@ export function getPersistenceMode(): 'local-synthetic' | 'firestore' {
 }
 
 function database() {
-  const path = resolve(process.env.SOMA_LOCAL_DATABASE_PATH || '.local/soma-demo.sqlite');
+  // SQLite is exclusively a local synthetic fallback; hosted runtimes use Firestore.
+  const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite') as typeof import('node:sqlite');
+  const path = resolve(/* turbopackIgnore: true */ process.env.SOMA_LOCAL_DATABASE_PATH || '.local/soma-demo.sqlite');
   let db = connections.get(path);
   if (!db) {
     mkdirSync(dirname(path), { recursive: true, mode: 0o700 });

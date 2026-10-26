@@ -64,7 +64,14 @@ export async function POST(request: Request) {
     }
     const workspace = await updateWorkspaceByAccess(access, state => {
       try { const updated = applyAction(state, parsed.data); if (failedRun) updated.runs.push(failedRun); return updated; }
-      catch (error) { throw Object.assign(error as Error, { status: 422 }); }
+      catch (error) {
+        if (failedRun && parsed.data.type === 'request-lesson') {
+          state.runs.push(failedRun);
+          notice = 'Preparation could not produce a lesson from the selected material. The failed run is saved; inspect sources or try a supported objective later.';
+          return state;
+        }
+        throw Object.assign(error as Error, { status: 422 });
+      }
     }, revision);
     return workspaceResponse(workspace, notice);
   } catch (error) { return apiError(error); }

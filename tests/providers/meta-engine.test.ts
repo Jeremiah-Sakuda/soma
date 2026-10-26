@@ -116,9 +116,9 @@ describe('Spark engine across real validation, transport and budget boundaries',
     let call = 0;
     vi.stubGlobal('fetch', vi.fn(async (_url: unknown, options: RequestInit) => {
       const body = JSON.parse(String(options.body));
-      expect(body.tools.every((tool: { parameters: { required: string[] } }) => tool.parameters.required.includes('rationale'))).toBe(true);
-      return ++call === 1 ? toolResponse('read_source', { sourceId, rationale: 'Check the exact course distinction before selecting practice.' }, call)
-        : toolResponse('prepare_practice', { ...proposal(), rationale: 'Test the distinction supported by the disclosed course passage.' }, call);
+      expect(body.tools.every((tool: { parameters: { required: string[] } }) => tool.parameters.required.includes('auditRationale'))).toBe(true);
+      return ++call === 1 ? toolResponse('read_source', { sourceId, auditRationale: 'Check the exact course distinction before selecting practice.' }, call)
+        : toolResponse('prepare_practice', { ...proposal(), auditRationale: 'Test the distinction supported by the disclosed course passage.' }, call);
     }));
     const result = await prepareWithSpark(seedWorkspace('audited'), 'probability', 'Private task text should not enter the journal', { audit });
     expect(result.lesson.kind).toBe('practice');

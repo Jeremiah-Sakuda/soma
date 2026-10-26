@@ -65,7 +65,7 @@ describe.skipIf(process.env.SOMA_LIVE_ADAPTATION_TEST!=='true')('real account ad
         if(step===0){name='read_source';args={sourceId:source.id,offset:0};}
         else if(step===1||step===2){const hypothesis=start.previous.savedResponse.hypotheses[step-1];name='revise_interpretation';args={hypothesisId:hypothesis.id,status:hypothesis.status,attemptId:start.previous.savedResponse.attemptId,reason:'The saved response and recorded support constrain this provisional explanation.'};}
         else {name='finish_investigation';args={decision:'keep-current',reason:'The original response was considered; retain current practice while uncertainty remains.',sourceRefs:[{sourceId:source.id,version:source.version,quote:source.body.slice(0,100)}],assessmentIds:[],applicability:'course',conflicts:[],selectedLessonIds:[]};if(holdFinal){arrived();await held;}}
-        return new Response(JSON.stringify({status:'completed',usage:{input_tokens:0,output_tokens:0},output:[{type:'function_call',name,arguments:JSON.stringify({...args as Record<string,unknown>,rationale:'Check the saved response against the available course evidence.'}),call_id:`synthetic-${providerCalls}`}]}),{headers:{'Content-Type':'application/json'}});
+        return new Response(JSON.stringify({status:'completed',usage:{input_tokens:0,output_tokens:0},output:[{type:'function_call',name,arguments:JSON.stringify({...args as Record<string,unknown>,auditRationale:'Check the saved response against the available course evidence.'}),call_id:`synthetic-${providerCalls}`}]}),{headers:{'Content-Type':'application/json'}});
       });
       try{
         // The real after-response callback dispatches the same durable worker function.

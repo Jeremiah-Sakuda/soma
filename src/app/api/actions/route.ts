@@ -68,7 +68,7 @@ export async function POST(request: Request) {
           }, before.revision);
           try {
             await audit.append({ actor: 'application', kind: 'publication', summary: 'Saved the validated activity after rechecking source versions and the current workspace revision.', visibility: 'public' });
-            await audit.finish({ status: result.run.status === 'unchanged' ? 'unchanged' : 'published', ...(result.run.status === 'unchanged' ? { mode: 'prepared' } : {}), selectedLessonId: result.lesson.id, ...(result.run.status === 'unchanged' ? {} : { publishedLessonId: result.lesson.id }) });
+            await audit.finish({ committedRevision: published.revision, status: result.run.status === 'unchanged' ? 'unchanged' : 'published', ...(result.run.status === 'unchanged' ? { mode: 'prepared' } : {}), selectedLessonId: result.lesson.id, ...(result.run.status === 'unchanged' ? {} : { publishedLessonId: result.lesson.id }) });
             auditTerminal = true;
           } catch {
             auditTerminal = true;

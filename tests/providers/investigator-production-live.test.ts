@@ -1,5 +1,6 @@
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { describe, it } from 'vitest';
+import type { AuditRunView } from '../../src/lib/domain/audit';
 import type { WorkspaceResponse } from '../../src/lib/domain/types';
 import { getServerFirestore } from '../../src/lib/server/firebase-config';
 import { ENGINE_VERSION } from '../../src/lib/server/investigator';
@@ -63,7 +64,18 @@ describe.skipIf(process.env.SOMA_PRODUCTION_INVESTIGATION_TEST !== 'true')('host
       } else {
         check(initial[0].capabilities.spark, 'hosted inference enabled');
         stage = 'one hosted investigation';
-        const investigated = await call('/api/investigations', 'POST', request, 0); statuses.investigate = investigated.status;
+        let settled = false, observedRunning = false;
+        const pending = call('/api/investigations', 'POST', request, 0).finally(() => { settled = true; });
+        for (let poll = 0; !settled && poll < 20; poll++) {
+          const progressResponse = await call('/api/audit', 'GET', undefined, 0);
+          check(progressResponse.status === 200, 'owner audit progress access');
+          const progress = await progressResponse.json() as { runs: AuditRunView[] };
+          const running = progress.runs.find(run => run.kind === 'investigation' && run.status === 'running');
+          if (running) { observedRunning = true; check(running.events.filter(event => event.actor === 'model').every(event => event.protected && !event.rationale), 'live model rationale protection'); }
+          if (!settled) await new Promise(resolve => setTimeout(resolve, 750));
+        }
+        const investigated = await pending; statuses.investigate = investigated.status;
+        check(observedRunning, 'durable live progress before completion');
         check(investigated.status === 200, 'investigation HTTP response');
         const saved = await investigated.json() as WorkspaceResponse;
         const record = saved.workspace.investigations?.find(item => item.courseId === 'programming');
@@ -74,6 +86,20 @@ describe.skipIf(process.env.SOMA_PRODUCTION_INVESTIGATION_TEST !== 'true')('host
         check(JSON.stringify(saved.workspace.lessons) === JSON.stringify(initial[0].workspace.lessons) && JSON.stringify(saved.workspace.attempts) === JSON.stringify(initial[0].workspace.attempts), 'no lesson regeneration or evidence mutation');
         check(saved.workspace.id === initial[0].workspace.id && saved.workspace.revision > initial[0].workspace.revision, 'owned durable revision');
         modelCalls = record.usage?.calls ?? null;
+        stage = 'hosted audit readback and protected export';
+        const auditResponse = await call('/api/audit', 'GET', undefined, 0);
+        check(auditResponse.status === 200 && /no-store/.test(auditResponse.headers.get('cache-control') ?? ''), 'private audit readback');
+        const audits = await auditResponse.json() as { runs: AuditRunView[] };
+        const journal = audits.runs.find(run => run.kind === 'investigation');
+        check(journal?.status === 'published' && journal.model && journal.engineVersion === ENGINE_VERSION, 'actual terminal audit metadata');
+        check(journal.events.some(event => event.actor === 'application' && event.kind === 'publication') && journal.events.some(event => event.kind === 'usage' && event.usage?.calls === modelCalls), 'observed commit and reconciled audit usage');
+        check(journal.events.some(event => event.actor === 'model' && event.rationaleStatus === 'recorded' && event.rationale), 'actual model stated purpose recorded');
+        const exportResponse = await call(`/api/audit?runId=${journal.id}&format=json`, 'GET', undefined, 0);
+        check(exportResponse.status === 200 && /attachment/.test(exportResponse.headers.get('content-disposition') ?? ''), 'owner export');
+        const exported = await exportResponse.json() as { run: AuditRunView; exportScope: string };
+        check(exported.exportScope === 'run' && JSON.stringify(exported.run) === JSON.stringify(journal), 'same protected projection in export');
+        check((await call(`/api/audit?runId=${journal.id}`, 'GET', undefined, 1)).status === 404, 'cross-session journal isolation');
+        check((await call(`/api/audit?workspaceId=${saved.workspace.id}`, 'GET', undefined, 1)).status === 400 && (await call('/api/audit')).status === 401, 'no arbitrary owner selection or implicit demo');
         stage = 'hosted readback and reuse';
         const readbackResponse = await call('/api/workspace', 'GET', undefined, 0); check(readbackResponse.status === 200, 'workspace readback');
         const readback = await readbackResponse.json() as WorkspaceResponse;

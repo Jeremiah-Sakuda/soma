@@ -1,3 +1,4 @@
+import { auditedSourceCollection } from '@/lib/server/source-audit';
 import { NextResponse } from 'next/server';
 import { verifyAccountSession } from '@/lib/server/account';
 import { apiError, requireSameOrigin } from '@/lib/server/http';
@@ -34,7 +35,9 @@ export async function POST(request: Request) {
     if (action === 'start') return response(await startBrowserLogin(owner, provider));
     if (action === 'complete') return response(await completeBrowserLogin(owner, provider));
     if (action === 'disconnect') return response(await disconnectBrowser(owner, provider));
-    const result = await refreshBrowser(owner, provider);
+    const collected = await auditedSourceCollection(owner, provider, () => refreshBrowser(owner, provider), value => value.workspace);
+    const result = collected.value;
+    if (!collected.auditComplete) return response({ ...result, notice: 'The selected sources were saved, but final audit confirmation is incomplete. Background handoff can recover from durable sources.' });
     result.notice += await queueCollectedPreparation(owner, result.workspace, `${provider}:browser-${provider}:`);
     return response(result);
   } catch (error) { return browserError(error); }

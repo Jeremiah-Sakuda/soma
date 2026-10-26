@@ -1,3 +1,5 @@
+import { auditedSourceCollection } from './source-audit';
+import { AuditStoreError } from './audit-store';
 import { createHash, randomBytes } from 'node:crypto';
 import { FieldPath, type DocumentSnapshot } from 'firebase-admin/firestore';
 import { assertTrustedWorker, type TrustedWorker } from './worker-auth';
@@ -37,9 +39,11 @@ async function scan(cursor: string, limit: number): Promise<DocumentSnapshot[]> 
 }
 async function refresh(account: VerifiedAccount, connection: PublicConnection): Promise<void> {
   const provider = connection.provider;
-  const workspace = provider === 'gmail' || provider === 'calendar'
+  const collected = await auditedSourceCollection(account, provider, async () => provider === 'gmail' || provider === 'calendar'
     ? await refreshGoogleConnection(account, provider as GoogleProvider)
-    : (await refreshBrowser(account, provider as BrowserProvider)).workspace;
+    : (await refreshBrowser(account, provider as BrowserProvider)).workspace, value => value);
+  const workspace = collected.value;
+  if (!collected.auditComplete) throw new AuditStoreError('Source observations were saved but audit completion is unavailable.', 503, 'audit_storage_failed');
   await queueCollectedPreparation(account, workspace, `${provider}:${connection.id}:`);
 }
 const defaults: WorkerDependencies = {

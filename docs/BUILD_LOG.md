@@ -604,3 +604,23 @@ Review fixed pre-answer diagnostic rationale disclosure (`8282798`) and added ac
 - Final estimated application ledger after the known settled probes: **$0.55817575 consumed under the unchanged $1 cap**, with the user-confirmed $150 allocation and $30 reserve. This is application token accounting, not a provider Billing balance claim. Private course review, broad unseen reliability, multimodal returned-work interpretation, institutional/browser source access, scheduled collection and genuine delayed-learning/pilot gates remain open.
 
 GitHub CI run `40401252182` passed for deployed runtime `cdfc87c`, including the full remote browser suite. Final documentation-only follow-up does not change that deployed runtime.
+
+## P029 — Agentic completeness audit and simulated Muse scenarios
+
+**Verbatim prompt:** Preserved in the canonical archive. Exact received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Began a code-backed completeness audit against the current PRD. The bounded Spark investigation/diagnostic engine is implemented; scheduled collection, model computer use, visual returned-work input, automatic post-answer reconsideration and production authority metadata/consequence wiring remain incomplete or unverified. Detailed matrix pending.
+2. Preparing fresh original synthetic live-provider cases with separate source-authority, no-effect, diagnostic revision and actual next-activity criteria. No private course source is reused. The stronger next-activity criterion will not be counted as passed merely because a hypothesis changed. Execution pending.
+3. Retaining the existing $1 application cap, $150 allocation/$30 reserve, eight-call limit, one repair, source/ownership/numerical validation, and explicit preflight headroom checks. Actual calls, failures, tool actions, latency and settled usage will be recorded.
+
+**Plan deviations:** Testing and completeness clarification only. No missing autonomy feature is declared implemented or silently added by the audit. Do not retune the core model instructions on these cases.
+
+### October 26 — P029 executed results and completeness correction
+
+1. Completed a code-backed [agentic status matrix](AGENTIC_STATUS.md). The bounded Spark engine is real, but the full PRD is incomplete: no scheduled monitoring/worker invocation, no automatic post-answer reconsideration, no model-directed external browser or returned-work image input, and incomplete production source-authority/academic-fact reconciliation. These are implementation gaps, not merely missing test evidence. No product code changed in this audit.
+2. Executed two new original synthetic scenario families through the live Spark API (`25d0697`, `17924cc`): ambiguous returned work -> new diagnostic (5 calls/14.370s/$0.03837425), actual contrary ungraded response -> two hypothesis revisions and a different existing activity (6/17.192s/$0.04933025), and conflicting-source investigation -> registered reference follow and supported replacement selection (4/15.465s/$0.03276350). All three model runs passed; one validation repair was used. Cache reopening passed with zero calls and zero new reservations. Both adaptive publications survived in-memory JSON reload; this is not new managed persistence proof, and the second activity was selected from an existing library, not newly generated. No private records were used.
+3. Preserved the $1 cap and $30 allocation reserve. Total new estimated usage $0.12046800; ledger $0.67864375, with $0.32135625 headroom below the next $0.35 investigation reservation. The new no-effect update and zero-voltage proposal cases were budget-skipped with zero calls; neither is a pass. Focused checks185 passed; full ordinary suite288 passed/20 opt-in skipped; typecheck passed. Detailed evidence, commands and limitations: [AGENTIC_EVALUATION.md](AGENTIC_EVALUATION.md).
+
+**Plan deviations:** None. This turn added tests/documentation and sharpened the completeness claim. Model instructions, product runtime, deployed app, cap and source permissions remained unchanged. Full autonomy and the larger unseen/independent-review gates are still open.

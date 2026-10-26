@@ -44,7 +44,7 @@ describe('direct preparation audit publication boundary', () => {
     boundary.finish.mockImplementation(async () => { expect(boundary.state!.lessons.some(item => item.id === 'audited-live-lesson')).toBe(true); });
     expect((await POST(request())).status).toBe(200);
     expect(boundary.prepare.mock.calls[0][3].audit.id).toBe('audit-route');
-    expect(finishes()).toEqual([{ status: 'published', selectedLessonId: 'audited-live-lesson', publishedLessonId: 'audited-live-lesson' }]);
+    expect(finishes()).toEqual([{ committedRevision: 1, status: 'published', selectedLessonId: 'audited-live-lesson', publishedLessonId: 'audited-live-lesson' }]);
     expect(events().some(event => event.kind === 'publication')).toBe(true);
   });
 

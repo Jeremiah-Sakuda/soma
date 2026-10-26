@@ -126,8 +126,9 @@ async function createAuditRunInternal(access: WorkspaceAccess, state: WorkspaceS
       const parsedFinish = auditFinishSchema.safeParse(patch); if (!parsedFinish.success) throw new AuditStoreError('Invalid audit outcome.', 422, 'invalid_audit_outcome');
       const finishPatch = Object.fromEntries(Object.entries(parsedFinish.data).filter(([, value]) => value !== undefined)) as AuditFinish;
       const hasLesson = Boolean(parsedFinish.data.selectedLessonId || parsedFinish.data.publishedLessonId);
-      const fresh = hasLesson ? await readWorkspaceByAccess(access) : undefined;
+      const fresh = hasLesson || parsedFinish.data.committedRevision !== undefined ? await readWorkspaceByAccess(access) : undefined;
       if (hasLesson && (!fresh || fresh.id !== state.id)) throw new AuditStoreError('Workspace generation is no longer active.', 409, 'audit_generation_changed');
+      if (parsedFinish.data.committedRevision !== undefined && (!fresh || fresh.id !== state.id || fresh.revision !== parsedFinish.data.committedRevision)) throw new AuditStoreError('The workspace changed before audit confirmation.', 409, 'audit_context_changed');
       const pins: Pick<AuditRun, 'selectedLessonVersion' | 'publishedLessonVersion' | 'selectedLessonContext' | 'publishedLessonContext'> = {};
       for (const [idKey, versionKey] of [['selectedLessonId', 'selectedLessonVersion'], ['publishedLessonId', 'publishedLessonVersion']] as const) {
         const id = parsedFinish.data[idKey]; if (!id) continue;
@@ -215,7 +216,7 @@ function auditDeadline<T>(operation: Promise<T>): Promise<T> {
 
 /** Bounded scheduler janitor; expiry checks do not rely on paid/optional TTL.
  * Only anonymous-demo children qualify. Every deletion rechecks expiry and parent. */
-export async function purgeExpiredDemoAuditData(limit = 25): Promise<number> {
+async function purgeExpiredDemoAuditDataInternal(limit: number): Promise<number> {
   if (getPersistenceMode() !== 'firestore') return 0;
   if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new AuditStoreError('Invalid audit cleanup bound.', 422, 'invalid_audit_cleanup');
   const db = getServerFirestore(), now = Date.now();
@@ -237,4 +238,8 @@ export async function purgeExpiredDemoAuditData(limit = 25): Promise<number> {
     if (removed) deleted++;
   }
   return deleted;
+}
+
+export async function purgeExpiredDemoAuditData(limit = 25): Promise<number> {
+  try { return await auditDeadline(purgeExpiredDemoAuditDataInternal(limit)); } catch (error) { throw auditFailure(error); }
 }

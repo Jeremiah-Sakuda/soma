@@ -79,6 +79,8 @@ describe('durable audit journal and projected API', () => {
     expect((await readAuditRuns(a.access, wrongVersion))[0].events[0].protected).toBe(false);
     const changedInPlace = structuredClone(wrongVersion); changedInPlace.lessons[0].version++; changedInPlace.attempts[0].lessonVersion++;
     expect((await readAuditRuns(a.access, changedInPlace))[0].events[0].protected).toBe(true);
+    const retainedVersions = structuredClone(wrongVersion); retainedVersions.lessons.unshift({ ...lesson, version: lesson.version + 1 });
+    expect((await readAuditRuns(a.access, retainedVersions))[0].events[0].protected).toBe(true);
     const wrongModel = structuredClone(wrongVersion); wrongModel.attempts[0].modelVersion = 'different-model';
     expect((await readAuditRuns(a.access, wrongModel))[0].events[0].protected).toBe(true);
     const changedModel = structuredClone(wrongVersion); changedModel.lessons[0].modelVersion = 'replacement'; changedModel.attempts[0].modelVersion = 'replacement';
@@ -115,6 +117,13 @@ describe('durable audit journal and projected API', () => {
     const [run] = await readAuditRuns(a.access, a.workspace);
     expect(run.events[0]).toMatchObject({ protected: true, rationaleStatus: 'protected', summary: 'Model details withheld to protect an unanswered or unpublished learning activity.' });
     const json = await (await GET(request(a.token, `?runId=${writer.id}&format=json`))).text(); expect(json).not.toContain(event.rationale);
+  });
+
+  it('rejects a finish against a different committed workspace revision', async () => {
+    const a = await fixture(), writer = await createAuditRun(a.access, a.workspace, metadata);
+    await updateWorkspace(a.token, state => state);
+    await expect(writer.finish({ status: 'published', selectedLessonId: a.workspace.lessons[0].id, committedRevision: a.workspace.revision })).rejects.toMatchObject({ code: 'audit_context_changed' });
+    expect((await readAuditRuns(a.access, (await readWorkspace(a.token))!))[0].status).toBe('running');
   });
 
   it('allows only application source-refresh observations to reference newly persisted versions', async () => {

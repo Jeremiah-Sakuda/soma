@@ -24,15 +24,15 @@ export type AuditRunMetadata = z.infer<typeof auditRunMetadataSchema>;
 export type AuditStatus = 'running' | 'proposed' | 'published' | 'failed' | 'blocked' | 'interrupted' | 'unchanged';
 export type AuditRun = AuditRunMetadata & {
   id: string; workspaceId: string; contextRevision: number; sourceRefs: SourceRef[]; sourceRefsTruncated?: boolean;
-  status: AuditStatus; protectUnpublishedActivity?: boolean; startedAt: string; updatedAt: string; journalRevision: number;
+  status: AuditStatus; committedRevision?: number; protectUnpublishedActivity?: boolean; startedAt: string; updatedAt: string; journalRevision: number;
   selectedLessonId?: string; publishedLessonId?: string; selectedLessonVersion?: number; publishedLessonVersion?: number;
   selectedLessonContext?: { modelVersion: string; sourceVersions: Record<string, number> };
   publishedLessonContext?: { modelVersion: string; sourceVersions: Record<string, number> }; events: AuditEvent[];
 };
 export type AuditEventView = AuditEvent & { protected: boolean; rationaleStatus: 'recorded' | 'unrecorded' | 'protected' };
 export type AuditRunView = Omit<AuditRun, 'events'> & { events: AuditEventView[] };
-export type AuditFinish = { protectUnpublishedActivity?: boolean; mode?: 'live' | 'prepared' | 'synthetic'; status: Exclude<AuditStatus, 'running'>; selectedLessonId?: string; publishedLessonId?: string };
-export const auditFinishSchema = z.strictObject({ protectUnpublishedActivity: z.boolean().optional(), mode: z.enum(['live', 'prepared', 'synthetic']).optional(), status: z.enum(['proposed', 'published', 'failed', 'blocked', 'interrupted', 'unchanged']), selectedLessonId: identifier.optional(), publishedLessonId: identifier.optional() });
+export type AuditFinish = { committedRevision?: number; protectUnpublishedActivity?: boolean; mode?: 'live' | 'prepared' | 'synthetic'; status: Exclude<AuditStatus, 'running'>; selectedLessonId?: string; publishedLessonId?: string };
+export const auditFinishSchema = z.strictObject({ committedRevision: z.number().int().nonnegative().optional(), protectUnpublishedActivity: z.boolean().optional(), mode: z.enum(['live', 'prepared', 'synthetic']).optional(), status: z.enum(['proposed', 'published', 'failed', 'blocked', 'interrupted', 'unchanged']), selectedLessonId: identifier.optional(), publishedLessonId: identifier.optional() });
 
 /** A projection only: protected originals are never replaced or reconstructed. */
 export function auditRunView(run: AuditRun, state: WorkspaceState, now = Date.now()): AuditRunView {
@@ -42,7 +42,8 @@ export function auditRunView(run: AuditRun, state: WorkspaceState, now = Date.no
   const lessonId = run.publishedLessonId ?? run.selectedLessonId;
   const lessonVersion = run.publishedLessonId ? run.publishedLessonVersion : run.selectedLessonVersion;
   const context = run.publishedLessonId ? run.publishedLessonContext : run.selectedLessonContext;
-  const lesson = lessonId ? state.lessons.find(item => item.id === lessonId && item.version === lessonVersion && context?.modelVersion === item.modelVersion && Object.keys(context.sourceVersions).length === Object.keys(item.sourceVersions).length && Object.entries(context.sourceVersions).every(([id, version]) => item.sourceVersions[id] === version)) : undefined;
+  const latestLesson = lessonId ? state.lessons.filter(item => item.id === lessonId).reduce<(typeof state.lessons)[number] | undefined>((latest, item) => !latest || item.version > latest.version ? item : latest, undefined) : undefined;
+  const lesson = latestLesson && latestLesson.version === lessonVersion && context?.modelVersion === latestLesson.modelVersion && Object.keys(context.sourceVersions).length === Object.keys(latestLesson.sourceVersions).length && Object.entries(context.sourceVersions).every(([id, version]) => latestLesson.sourceVersions[id] === version) ? latestLesson : undefined;
   const unlocked = !run.protectUnpublishedActivity && terminal && (!lessonId || Boolean(lesson && (
     state.attempts.some(attempt => attempt.lessonId === lesson.id && attempt.lessonVersion === lesson.version && attempt.modelVersion === lesson.modelVersion && (!attempt.sourceVersions || (Object.keys(attempt.sourceVersions).length === Object.keys(lesson.sourceVersions).length && Object.entries(lesson.sourceVersions).every(([id, version]) => attempt.sourceVersions?.[id] === version)))) ||
     (state.assistance[lesson.id] ?? []).some(entry => Date.parse(entry.split(' · ')[0]) >= Date.parse(run.startedAt))

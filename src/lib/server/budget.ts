@@ -1,7 +1,8 @@
 import { DatabaseSync } from 'node:sqlite';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, chmodSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { getServerFirestore } from './firebase-config';
 
 // Text-only standard Spark pricing verified 2026-10-26. No built-in paid tools.
 export const INPUT_USD_PER_MILLION = 1.25;
@@ -25,9 +26,10 @@ export function usageCost(input: number, output: number) {
 }
 
 function database() {
-  const path = resolve(process.env.SOMA_BUDGET_DB_PATH || '.local/budget.sqlite');
+  const path = resolve(/* turbopackIgnore: true */ process.env.SOMA_BUDGET_DB_PATH || '.local/budget.sqlite');
   mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
   const db = new DatabaseSync(path);
+  chmodSync(path, 0o600);
   db.exec('PRAGMA busy_timeout=5000; CREATE TABLE IF NOT EXISTS reservations (id TEXT PRIMARY KEY, workspace TEXT NOT NULL, day TEXT NOT NULL, reserved REAL NOT NULL, charged REAL, created_at TEXT NOT NULL);');
   return db;
 }
@@ -37,10 +39,7 @@ export async function reserveInference(workspaceId: string): Promise<string> {
   const limit = budgetLimit(Number(process.env.META_ALLOCATION_USD), Number(process.env.META_APP_SPEND_CAP_USD || '1'));
   const now = new Date(); const day = now.toISOString().slice(0, 10); const id = randomUUID();
   if (process.env.SOMA_PERSISTENCE === 'firestore') {
-    const { getApps, initializeApp, applicationDefault } = await import('firebase-admin/app');
-    const { getFirestore } = await import('firebase-admin/firestore');
-    const app = getApps().find(a => a.name === 'soma-budget') || initializeApp({ credential: applicationDefault(), projectId: process.env.FIREBASE_PROJECT_ID }, 'soma-budget');
-    const db = getFirestore(app);
+    const db = getServerFirestore();
     const global = db.doc('somaBudget/global'); const daily = db.doc(`somaBudgetDays/${workspaceId}-${day}`);
     await db.runTransaction(async tx => {
       const [g, d] = await Promise.all([tx.get(global), tx.get(daily)]);
@@ -68,9 +67,7 @@ export async function reserveInference(workspaceId: string): Promise<string> {
 export async function settleInference(id: string, cost: number, certain: boolean) {
   if (!certain || !Number.isFinite(cost) || cost < 0) return;
   if (process.env.SOMA_PERSISTENCE === 'firestore') {
-    const { getApp } = await import('firebase-admin/app');
-    const { getFirestore } = await import('firebase-admin/firestore');
-    const db = getFirestore(getApp('soma-budget'));
+    const db = getServerFirestore();
     await db.runTransaction(async tx => {
       const ref = db.doc(`somaBudgetReservations/${id}`); const global = db.doc('somaBudget/global');
       const [r, g] = await Promise.all([tx.get(ref), tx.get(global)]);

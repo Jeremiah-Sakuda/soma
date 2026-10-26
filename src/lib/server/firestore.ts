@@ -1,13 +1,9 @@
-import { applicationDefault, getApps, initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getServerFirestore } from './firebase-config';
 import type { WorkspaceState } from '../domain/types';
 
 /** Server SDK only. Client Firestore access must remain denied by firestore.rules. */
 function sessions() {
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  if (!projectId) throw new Error('FIREBASE_PROJECT_ID is required for Firestore persistence.');
-  const app = getApps().find(app => app.name === 'soma-server') ?? initializeApp({ projectId, credential: applicationDefault() }, 'soma-server');
-  return getFirestore(app).collection('somaDemoSessions');
+  return getServerFirestore().collection('somaDemoSessions');
 }
 
 export async function insertManagedWorkspace(tokenHash: string, workspace: WorkspaceState): Promise<void> {

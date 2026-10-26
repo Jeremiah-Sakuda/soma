@@ -1,0 +1,12 @@
+.env*
+.local
+docs
+design-system
+output
+tests
+test-results
+playwright-report
+coverage
+.git
+*service-account*.json
+*firebase-adminsdk*.json

@@ -14,7 +14,13 @@ export function workspaceResponse(workspace: WorkspaceState, notice?: string) {
 export function requireSameOrigin(request: Request) {
   const origin = request.headers.get('origin');
   const site = request.headers.get('sec-fetch-site');
-  if (site === 'cross-site' || !origin || origin !== new URL(request.url).origin) {
+  // Next's internal URL may normalize loopback hostnames. The browser-controlled
+  // Origin must match the actual HTTP Host; never trust forwarded-host here.
+  const url = new URL(request.url);
+  const host = request.headers.get('host') || url.host;
+  let matches = false;
+  try { const parsed = new URL(origin || ''); matches = parsed.host === host && ['http:', 'https:'].includes(parsed.protocol) && parsed.origin === origin; } catch { /* invalid Origin */ }
+  if (site === 'cross-site' || !matches) {
     throw Object.assign(new Error('This action must come from the Soma app.'), { status: 403 });
   }
 }

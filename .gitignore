@@ -3,3 +3,13 @@ node_modules/
 .env
 .env.*
 !.env.example
+.next/
+.vercel/
+.trigger/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+# Local browser authentication and private source material
+playwright/.auth/
+.local/

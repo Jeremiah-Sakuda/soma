@@ -127,6 +127,12 @@
       "kind": "answer",
       "prompt": "Install browse (Recommended)",
       "question_context": "Node.js is installed, but Browserbase’s `browse` command-line tool is missing. May I install `browse` to verify your key and start the first cloud browser session?"
+    },
+    {
+      "id": "P022",
+      "received_at": "2026-10-26T19:45:30.043Z",
+      "kind": "message",
+      "prompt": "In the meantime, can you work on our muse integration?"
     }
   ]
 }

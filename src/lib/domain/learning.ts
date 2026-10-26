@@ -1,6 +1,6 @@
 import { createEmptyCard, fsrs, Rating, type CardInput } from 'ts-fsrs';
 import { calculateCircuit } from './circuit';
-import { followupLesson, sourceVersions } from './lessons';
+import { AuthoredFollowupUnavailableError, followupLesson, sourceVersions } from './lessons';
 import { seedWorkspace, seedEmptyAccountWorkspace } from './seed';
 import { correctCommitment, recordConsequence, refreshSessionRecommendation, selectAvailability, validateInterval } from './commitments';
 import { commitmentScenario } from './commitment-scenarios';
@@ -214,7 +214,14 @@ export function applyAction(input: WorkspaceState, action: WorkspaceAction, now:
         claim: correct ? (assisted ? 'Correct response after recorded support; independent application remains unconfirmed.' : 'This response contradicts a blanket gap diagnosis; another application can test its scope.') : 'This response suggests a possible gap in this objective; its cause remains uncertain.',
         status: correct ? 'revised' : 'suspected', evidenceIds: [id, ...lesson.sourceIds],
         reason: 'A selected answer is limited evidence. Prior observations and interpretations are retained; no mastery or retention claim is inferred.', updatedAt: timestamp });
-      const next = followupLesson(lesson, state.attempts.length, assisted);
+      let next: Lesson;
+      try { next = followupLesson(lesson, state.attempts.length, assisted); }
+      catch (error) {
+        if (!(error instanceof AuthoredFollowupUnavailableError)) throw error;
+        addRun(state, timestamp, `followup:${id}`, 'Saved the original response and its assistance. No authored fresh item matches this generated practice; request another source-grounded question.', lesson.sourceIds, 'unchanged');
+        state.revision = input.revision + 1;
+        return state;
+      }
       next.duration = Math.min(next.duration, state.preferences.sessionMinutes);
       if (!correct) {
         next.title = lesson.courseId === 'circuits' ? 'Trace the path before calculating' : 'Check the underlying rule';

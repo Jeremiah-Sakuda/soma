@@ -3,7 +3,7 @@ import type { WorkspaceState, SourceRef, AgentRun } from '../domain/types';
 import { assertVerifiedAccount, type VerifiedAccount } from './account';
 import { readAccountWorkspace, updateAccountWorkspace } from './account-store';
 import { getServerFirestore } from './firebase-config';
-import { prepareWithSpark, PreparationError } from './meta';
+import { prepareWithSpark, PreparationError, SPARK_ENGINE_VERSION } from './meta';
 import { inferenceEnabled } from './budget';
 import { WorkspaceConflictError, WorkspaceStoreError } from './store';
 import { MODEL_VERSION } from '../domain/lessons';
@@ -24,7 +24,7 @@ function refs(account: VerifiedAccount) {
 }
 
 export function preparationJobId(workspace: WorkspaceState, courseId: string, sourceRefs: SourceRef[], topic: string, contextRevision = workspace.revision): string {
-  return digest(JSON.stringify({ workspaceId: workspace.id, courseId, sourceRefs: [...sourceRefs].sort((a, b) => a.sourceId.localeCompare(b.sourceId) || a.version - b.version), topic, contextRevision, modelVersion: MODEL_VERSION }));
+  return digest(JSON.stringify({ workspaceId: workspace.id, courseId, sourceRefs: [...sourceRefs].sort((a, b) => a.sourceId.localeCompare(b.sourceId) || a.version - b.version), topic, contextRevision, modelVersion: MODEL_VERSION, engineVersion: SPARK_ENGINE_VERSION }));
 }
 
 export function jobSourcesCurrent(workspace: WorkspaceState, job: Pick<PreparationJob, 'workspaceId' | 'courseId' | 'sourceRefs'>): boolean {
@@ -109,7 +109,7 @@ export async function runPreparationJob(account: VerifiedAccount, id: string): P
   const job = await claimPreparationJob(account, workspace, id);
   if (!job) return null;
   try {
-    const prepared = await prepareWithSpark(workspace, job.courseId, job.topic);
+    const prepared = await prepareWithSpark(workspace, job.courseId, job.topic, { sourceRefs: job.sourceRefs, trigger: 'source-change' });
     const root = refs(account);
     await root.firestore.runTransaction(async transaction => {
       const document = await transaction.get(root.collection('jobs').doc(job.id));
@@ -121,7 +121,7 @@ export async function runPreparationJob(account: VerifiedAccount, id: string): P
       for (const [sourceId, version] of Object.entries(prepared.lesson.sourceVersions)) {
         if (!state.sources.some(source => source.id === sourceId && source.version === version && source.courseId === job.courseId && source.status === 'current')) throw new WorkspaceConflictError();
       }
-      state.lessons.unshift(prepared.lesson);
+      if (!state.lessons.some(lesson => lesson.id === prepared.lesson.id)) state.lessons.unshift(prepared.lesson);
       state.runs.unshift(prepared.run);
       return state;
     }, job.contextRevision, async (transaction, accountRoot) => {

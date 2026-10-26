@@ -6,8 +6,8 @@ import { NextResponse } from 'next/server';
 import { inferenceEnabled } from '@/lib/server/budget';
 import { prepareWithSpark, PreparationError } from '@/lib/server/meta';
 import type { AgentRun } from '@/lib/domain/types';
-import { isSupportedCircuitRequest } from '@/lib/domain/support';
 export const runtime = 'nodejs';
+export const maxDuration = 120;
 
 export async function POST(request: Request) {
   try {
@@ -40,10 +40,7 @@ export async function POST(request: Request) {
       const before = await readWorkspaceByAccess(access);
       if (!before) return NextResponse.json({ error: 'Session expired.' }, { status: 401 });
       if (revision !== undefined && before.revision !== revision) return NextResponse.json({ error: 'This workspace changed. Refresh and try again.' }, { status: 409 });
-      // Never attach an unsupported objective to a supported model, even if the model proposes it.
       const topic = parsed.data.topic;
-      const supported = isSupportedCircuitRequest(topic);
-      if (supported) {
         try {
           const result = await prepareWithSpark(before, parsed.data.courseId, topic);
           // Publication rechecks the full context revision. A raced job remains unpublished.
@@ -51,16 +48,16 @@ export async function POST(request: Request) {
             for (const [id, version] of Object.entries(result.lesson.sourceVersions)) {
               if (!state.sources.some(s => s.id === id && s.version === version && s.status === 'current')) throw Object.assign(new Error('Sources changed during preparation. Please request again.'), { status: 409 });
             }
-            state.lessons.unshift(result.lesson); state.runs.unshift(result.run);
+            if (!state.lessons.some(lesson => lesson.id === result.lesson.id)) state.lessons.unshift(result.lesson);
+            state.runs.unshift(result.run);
             return state;
           }, before.revision);
-          return workspaceResponse(published, before.mode === 'demo' ? 'Prepared with live Spark decisions over original synthetic sources.' : 'Prepared with live Spark decisions over your selected sources.');
+          return workspaceResponse(published, result.run.status === 'unchanged' ? 'Reopened saved Spark practice with unchanged context. No new inference was needed.' : before.mode === 'demo' ? 'Prepared with live Spark decisions over original synthetic sources.' : 'Prepared with live Spark decisions over your selected sources.');
         } catch (error) {
           if ((error as { status?: number }).status === 409) throw error;
           if (error instanceof PreparationError) failedRun = error.run;
           notice = 'Live preparation was unavailable or reached its limits. Showing prepared practice; no live lesson was published.';
         }
-      }
     }
     const workspace = await updateWorkspaceByAccess(access, state => {
       try { const updated = applyAction(state, parsed.data); if (failedRun) updated.runs.push(failedRun); return updated; }

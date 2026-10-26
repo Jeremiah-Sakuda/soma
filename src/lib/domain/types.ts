@@ -14,6 +14,7 @@ export type Lesson = {
   inputRanges?: { voltage: { min: number; max: number; unit: 'V' }; r1: { min: number; max: number; unit: 'Ω' }; r2: { min: number; max: number; unit: 'Ω' } };
   checkpoint?: PredictionCheckpoint;
   supportingPassages?: { sourceId: string; version: number; quote: string }[];
+  generationKey?: string;
 };
 export type Attempt = {
   id: string; lessonId: string; lessonVersion: number; modelVersion: string; question: string;

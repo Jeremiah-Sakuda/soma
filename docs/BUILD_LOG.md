@@ -419,3 +419,19 @@ Remote GitHub checks and the automatic Vercel deployment are pending at this che
 Vercel deployment `dpl_5NbxXMJnfHLM9YgK8EgevfAwqbMX` is READY at https://soma-woad-beta.vercel.app. GitHub CI passed for `141edef`: https://github.com/Jeremiah-Sakuda/soma/actions/runs/40386878067. The hosted disposable-account check passed in 15.14 seconds: configured Google status, one-use authorization-state creation, exact callback/PKCE/read-only scope, cross-origin rejection, safe missing-browser configuration handling, and the existing import/job/deletion checks. No Google consent or data read was performed. Synthetic account and private records were removed.
 
 P020/P021 update: browse 0.11.3 installed after explicit user approval; key access verified by project listing. No project ID requested or added. The next onboarding choice is pending.
+
+## P022 — Muse runtime integration
+
+**Verbatim prompt:**
+
+```text
+In the meantime, can you work on our muse integration?
+```
+
+**Top 3 outcomes:**
+
+1. Resumed Muse Spark runtime work while the independent Browserbase onboarding choice remains pending.
+2. Identified two gaps: live generation only constructs resistor lessons, and provider output parsing lacks a response-byte ceiling.
+3. Implementing bounded provider contracts, grounded ordinary practice and learner-context-aware preparation through the existing engine; executed results pending.
+
+**Plan deviations:** None. Muse Spark remains the runtime model; this does not reuse credentials or sessions from the separate consumer Muse assistant.

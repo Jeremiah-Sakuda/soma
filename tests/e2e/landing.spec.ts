@@ -126,6 +126,7 @@ test('signing into another account discards delayed investigation output and que
   await page.route('https://identitytoolkit.googleapis.com/**', route => route.fulfill({ json: { idToken: 'synthetic-test-token-never-valid' } }));
   await page.route('**/api/auth/session', route => { if (route.request().method() === 'DELETE') account = null; if (route.request().method() === 'POST') account = 'b'; return route.fulfill({ json: { authenticated: !!account, accountWorkspaceAvailable: true } }); });
   await page.route('**/api/workspace', async route => { const workspace = account === 'b' ? second : first; if (++reads === 2) { heldRead = true; await held; } await route.fulfill({ json: { workspace, capabilities } }); });
+  await page.route('**/api/adaptations', async route => { const previous = account === 'a'; if (previous) await held; await route.fulfill({ json: { jobs: previous ? [{id:'a'.repeat(64),attemptId:'old-account',lessonId:first.lessons[0].id,status:'ready',notice:'Old account adaptation must stay hidden.'}] : [] } }); });
   await page.route('**/api/imports', async route => { importStarted = true; await held; await route.fulfill({ json: { workspace: first, capabilities } }); });
   await page.route('**/api/jobs', route => route.fulfill({ json: { jobs: [] } }));
   await page.route('**/api/investigations', async route => { started = true; await held; await route.fulfill({ json: { workspace: first, capabilities, selectedLessonId: first.lessons[0].id, notice: 'Old account response must stay hidden.' } }); });
@@ -165,5 +166,6 @@ test('signing into another account discards delayed investigation output and que
   await page.getByRole('button', { name: 'Close dialog', exact: true }).click();
   await expect(page.getByRole('heading', { name: second.lessons[0].title, exact: true })).toBeVisible();
   await expect(page.getByText('Old account response must stay hidden.', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Old account adaptation must stay hidden.', { exact: true })).toHaveCount(0);
   await expect(page).toHaveURL(/view=today/); expect(actions).toBe(0);
 });

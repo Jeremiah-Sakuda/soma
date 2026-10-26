@@ -36,3 +36,35 @@ test('saved diagnostic queues automatic follow-up, survives reload, and offers t
   expect(workspace.attempts[0]).toEqual(original); expect(investigations).toBe(0);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+for(const origin of ['reload','adaptation'] as const){
+  test(`a delayed ${origin} workspace response cannot replace a newer saved preference`,async({page})=>{
+    let workspace=adaptationFixture(`monotonic-${origin}`),reads=0,heldRead=false,delayedReturned=false;
+    const capabilities={spark:true,persistence:'local-synthetic',liveSources:[]};
+    let release!:()=>void;const held=new Promise<void>(resolve=>{release=resolve;});
+    await page.route('**/api/auth/session',route=>route.fulfill({json:{authenticated:true,accountWorkspaceAvailable:true}}));
+    await page.route('**/api/jobs',route=>route.fulfill({json:{jobs:[]}}));
+    await page.route('**/api/adaptations',route=>route.fulfill({json:{jobs:origin==='adaptation'?[{id:'a'.repeat(64),attemptId:'pending-old-result',lessonId:workspace.lessons[0].id,status:'ready'}]:[]}}));
+    await page.route('**/api/workspace',async route=>{
+      const snapshot=structuredClone(workspace);
+      const delayed=++reads===2;if(delayed){heldRead=true;await held;}
+      await route.fulfill({json:{workspace:snapshot,capabilities}});if(delayed)delayedReturned=true;
+    });
+    await page.route('**/api/actions',route=>{workspace=applyAction(workspace,route.request().postDataJSON());return route.fulfill({json:{workspace,capabilities}});});
+    await page.goto('/?view=today');
+    await expect(page.getByRole('button',{name:'Workspace menu'})).toBeVisible();
+    if(origin==='reload')await page.evaluate(()=>window.dispatchEvent(new PopStateEvent('popstate')));
+    await expect.poll(()=>heldRead).toBe(true);
+    await page.getByRole('button',{name:'Workspace menu'}).click();
+    await page.getByRole('button',{name:'Your preferences',exact:true}).click();
+    const preference=page.getByLabel('Preferred session length');
+    await preference.selectOption('45');await expect(preference).toHaveValue('45');
+    const latest=workspace.revision;release();
+    await expect.poll(()=>delayedReturned).toBe(true);
+    await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+    await page.getByRole('button',{name:'Close dialog',exact:true}).click();
+    await page.getByRole('button',{name:'Workspace menu'}).click();
+    await page.getByRole('button',{name:'Your preferences',exact:true}).click();
+    await expect(preference).toHaveValue('45');expect(workspace.revision).toBe(latest);
+  });
+}

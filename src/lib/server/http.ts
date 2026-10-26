@@ -1,0 +1,28 @@
+import { NextResponse } from 'next/server';
+import type { WorkspaceResponse, WorkspaceState } from '../domain/types';
+import { getPersistenceMode } from './store';
+import { inferenceEnabled } from './budget';
+
+export function workspaceResponse(workspace: WorkspaceState, notice?: string) {
+  const body: WorkspaceResponse = { workspace, capabilities: {
+    spark: inferenceEnabled(),
+    persistence: getPersistenceMode(), liveSources: [],
+  }, ...(notice ? { notice } : {}) };
+  return NextResponse.json(body, { headers: { 'Cache-Control': 'private, no-store' } });
+}
+
+export function requireSameOrigin(request: Request) {
+  const origin = request.headers.get('origin');
+  const site = request.headers.get('sec-fetch-site');
+  if (site === 'cross-site' || !origin || origin !== new URL(request.url).origin) {
+    throw Object.assign(new Error('This action must come from the Soma app.'), { status: 403 });
+  }
+}
+
+export function apiError(error: unknown) {
+  const candidate = error as { status?: number; code?: string; message?: string };
+  const status = candidate.status && candidate.status >= 400 && candidate.status < 500 ? candidate.status : 500;
+  // Avoid echoing provider/SQL details, paths, or credentials into public responses.
+  const message = status === 500 ? 'Soma could not save this change. Please try again.' : (candidate.message || 'This request could not be completed.');
+  return NextResponse.json({ error: message }, { status, headers: { 'Cache-Control': 'no-store' } });
+}

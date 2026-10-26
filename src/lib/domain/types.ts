@@ -23,7 +23,7 @@ export type WorkspaceState = {
   attempts: Attempt[]; runs: AgentRun[]; interpretations: Interpretation[];
   preferences: { sessionMinutes: number; workedExamples: boolean };
   assistance: Record<string, string[]>; savedInputs: Record<string, CircuitInput>;
-  reviews: { lessonId: string; dueAt: string; rating: string }[];
+  reviews: { lessonId: string; dueAt: string; rating: string; reviewedAt?: string; scheduler?: 'ts-fsrs-5.4.2'; card?: { due: string; stability: number; difficulty: number; elapsed_days: number; scheduled_days: number; learning_steps: number; reps: number; lapses: number; state: number; last_review?: string } }[];
 };
 export type WorkspaceAction =
   | { type: 'refresh' }

@@ -1,0 +1,4 @@
+import { NextResponse } from 'next/server';
+export async function GET() {
+  return NextResponse.json({ status: 'ok', product: 'Soma', version: '0.1.0' }, { headers: { 'Cache-Control': 'no-store' } });
+}

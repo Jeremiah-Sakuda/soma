@@ -27,7 +27,7 @@ try {
   browser = await chromium.launch(); context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
   const page = await context.newPage();
   await page.goto(baseURL);
-  await page.getByRole('button', { name: 'Workspace menu' }).click();
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.getByLabel('Email', { exact: true }).fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).last().click();

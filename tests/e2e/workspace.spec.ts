@@ -8,14 +8,14 @@ test('a reused request opens the selected saved lesson even behind a newer lesso
  // Isolate the API response contract: this case must not call a model provider.
  await page.route('**/api/workspace',route=>route.fulfill({json:result}));
  await page.route('**/api/actions',route=>route.fulfill({json:result}));
- await page.goto('/');await page.getByRole('button',{name:'Request a lesson',exact:true}).click();
+ await page.goto('/?demo=1');await page.getByRole('button',{name:'Request a lesson',exact:true}).click();
  await page.getByLabel('What would you like to explore?').fill('Explain parallel branch currents');
  await page.getByRole('button',{name:'Prepare a lesson',exact:true}).click();
  await expect(page).toHaveURL(/lesson=parallel-nodes/);
  await expect(page.getByRole('heading',{name:'Same voltage. Different currents.',exact:true})).toBeVisible();
 });
 test('Ready Card prediction, deterministic controls, fresh attempt and revisit persist',async({page})=>{
- await page.setViewportSize({width:1440,height:900});await page.goto('/');
+ await page.setViewportSize({width:1440,height:900});await page.goto('/?demo=1');
  const open=page.getByRole('button',{name:'Open lesson',exact:true});await expect(open).toBeVisible();expect((await open.boundingBox())!.y).toBeLessThan(850);
  await page.screenshot({path:'.local/screenshots/ready-today-desktop.png',fullPage:true});await open.click();
  await expect(page.getByRole('table')).toBeVisible();await expect(page.getByText('Preview, not checked')).toBeVisible();
@@ -30,7 +30,7 @@ test('Ready Card prediction, deterministic controls, fresh attempt and revisit p
  await page.goto('/?view=study&lesson=parallel-nodes');await expect(page.getByRole('spinbutton',{name:'Supply voltage'})).toHaveValue('18');await page.getByRole('spinbutton',{name:'Supply voltage'}).fill('19');await page.getByRole('button',{name:'Pause & save'}).click();await open.click();await expect(page.getByRole('spinbutton',{name:'Supply voltage'})).toHaveValue('19');
 });
 test('commitments change session contents, preserve sources and allow internal correction',async({page})=>{
- await page.goto('/');await scenario(page,'An interview overlaps your focus window');await expect(page.getByRole('button',{name:'20 min',exact:true})).toHaveAttribute('aria-pressed','true');
+ await page.goto('/?demo=1');await scenario(page,'An interview overlaps your focus window');await expect(page.getByRole('button',{name:'20 min',exact:true})).toHaveAttribute('aria-pressed','true');
  await expect(page.getByText('25 minutes remain for another session:',{exact:false})).toBeVisible();await page.getByRole('button',{name:'45 min',exact:true}).click();await expect(page.getByText('This choice is longer than the 20 available minutes.',{exact:false})).toBeVisible();
  await page.locator('.change-entry').first().locator('summary').click();await expect(page.getByRole('heading',{name:'Before',exact:true})).toBeVisible();await page.getByRole('button',{name:/Correct .*interview/i}).first().click();await page.getByLabel('Status',{exact:true}).selectOption('cancelled');await page.getByLabel('What needs correcting?').fill('This interview was cancelled by the organizer.');await page.getByRole('button',{name:'Save correction',exact:true}).click();await expect(page.getByText('Corrected Soma’s internal commitment.',{exact:false})).toBeVisible();
  await page.getByRole('button',{name:'Request a lesson',exact:true}).click();await page.getByLabel('What would you like to explore?').fill('How does a series resistor circuit work?');await page.getByRole('button',{name:'Prepare a lesson',exact:true}).click();await expect(page).toHaveURL(/lesson=series-contrast/);

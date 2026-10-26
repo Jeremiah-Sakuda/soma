@@ -145,13 +145,16 @@ describe.skipIf(!enabled)('independent live agentic scenarios', () => {
       check(!value.lesson, 'existing validated activity reused');
     });
     authorityState = publishInvestigation(state, result);
+    const reservationsBefore = await getServerFirestore().collection('somaBudgetReservations').where('workspaceId', '==', state.id).get();
     const originalFetch = globalThis.fetch, before = JSON.stringify(authorityState); let cacheCalls = 0;
     globalThis.fetch = (async (...args: Parameters<typeof fetch>) => { const input = args[0]; if ((input instanceof Request ? input.url : String(input)) === META_ENDPOINT) cacheCalls++; return originalFetch(...args); }) as typeof fetch;
     try {
       const cached = await investigateWithSpark(authorityState, request);
+      const reservationsAfter = await getServerFirestore().collection('somaBudgetReservations').where('workspaceId', '==', state.id).get();
       check(cached.reused && cached.record.id === result.record.id && cacheCalls === 0 && cached.run.status === 'unchanged', 'unchanged request makes no provider call');
+      check(reservationsBefore.size === reservationsAfter.size, 'unchanged request creates no budget reservation');
       check(JSON.stringify(authorityState) === before && publishInvestigation(authorityState, cached) === authorityState, 'cached result does not duplicate observations');
-      report({ stage: 'source-cache', outcome: 'passed', calls: cacheCalls, costUsd: 0, decision: cached.decision.decision, selectedLessonId: cached.selectedLessonId ?? null, reused: true });
+      report({ stage: 'source-cache', outcome: 'passed', calls: cacheCalls, costUsd: 0, additionalReservations: reservationsAfter.size - reservationsBefore.size, decision: cached.decision.decision, selectedLessonId: cached.selectedLessonId ?? null, reused: true });
     } finally { globalThis.fetch = originalFetch; }
   });
 

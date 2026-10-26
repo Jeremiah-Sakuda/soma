@@ -1,6 +1,7 @@
 import { AuditStoreError, type AuditWriter } from './audit-store';
 import { withAuditRationales, splitAuditRationale } from './audit-tools';
 import { automaticModelContext } from './automatic-context';
+import { ExecutionBoundaryError, executionFailure, type ExecutionFailure } from './execution-failure';
 import { createHash, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { AgentRun, Lesson, SomaInvestigation, WorkspaceState } from '../domain/types';
@@ -34,7 +35,7 @@ const tools = withAuditRationales([
   { ...sourceDecisionTool, parameters: z.toJSONSchema(finishSchema) },
 ]);
 export class InvestigationError extends Error {
-  constructor(public readonly run: AgentRun) { super('Investigation stopped safely without publishing a decision.'); }
+  constructor(public readonly run: AgentRun, public readonly failure?: ExecutionFailure) { super('Investigation stopped safely without publishing a decision.'); }
 }
 function catalog(state: WorkspaceState, courseId: string, offset = 0) {
   const page = listInvestigationSources(state, courseId, offset);
@@ -102,7 +103,7 @@ export async function investigateWithSpark(state: WorkspaceState, raw: Investiga
   try {
     await audit?.append({ actor: 'application', kind: 'observation', summary: 'The configured model allowance was reserved. Authorized current course sources are available for investigation.', visibility: 'public' });
     for (; calls < MAX_INVESTIGATION_CALLS;) {
-      const remaining = 90_000 - (Date.now() - started); if (remaining <= 0) throw new Error('Investigation time limit.');
+      const remaining = 90_000 - (Date.now() - started); if (remaining <= 0) throw new ExecutionBoundaryError({ kind: 'limit', code: 'time' }, 'Investigation time limit.');
       let result;
       try {
         calls++;
@@ -112,7 +113,7 @@ export async function investigateWithSpark(state: WorkspaceState, raw: Investiga
         throw error;
       }
       cost += usageCost(result.usage.input_tokens, result.usage.output_tokens);
-      if (result.status !== 'completed' || result.tools.length !== 1) throw new Error('Incomplete investigation decision.');
+      if (result.status !== 'completed' || result.tools.length !== 1) throw new ExecutionBoundaryError({ kind: 'validation', code: 'incomplete' }, 'Incomplete investigation decision.');
       const action = result.tools[0];
       if (action.name === 'prepare_diagnostic' || action.name === 'prepare_experiment_diagnostic') activityProposals++;
       let args: Record<string, unknown> = action.parsedArguments;
@@ -176,17 +177,17 @@ export async function investigateWithSpark(state: WorkspaceState, raw: Investiga
       } catch (error) {
         if (error instanceof AuditStoreError) throw error;
         await audit?.append({ actor: 'application', kind: 'validation', summary: repair || calls >= MAX_INVESTIGATION_CALLS ? 'The proposed action failed application validation. The run cannot continue within its repair or call allowance.' : 'The proposed action failed application validation. One bounded repair was allowed; no rejected action was executed.', visibility: 'public' });
-        if (repair || calls >= MAX_INVESTIGATION_CALLS) throw error;
+        if (repair || calls >= MAX_INVESTIGATION_CALLS) throw new ExecutionBoundaryError({ kind: 'validation', code: 'tool' }, error instanceof Error ? error.message : 'Invalid investigation proposal.');
         repair = true; output = { accepted: false, detail: error instanceof Error ? error.message.slice(0, 500) : 'Invalid tool operation.', validation: 'Resend COMPLETE tool arguments, not a partial patch. Every required nested field must be present. Text prepare_diagnostic has no kind or experimentRunId fields; each hypothesis includes attemptIds:[] unless saved IDs were disclosed. Interactive prepare_experiment_diagnostic requires an informative experimentRunId. Finish uses arrays: academicUpdates:[] when no supported typed assessment change, assessmentIds:[] unless explicitly assessment-scoped, selectedLessonIds:[] unless revise-session, conflict preferredSourceIds:[] unless explicit supersession. Preserve uncertainty and exact disclosed quotes.' };
         activity.push({ tool: action.name, outcome: `Rejected by application validation; one repair allowed. ${error instanceof Error ? error.message.slice(0, 360) : 'Invalid operation.'}` });
       }
       history.push({ type: 'function_call_output', call_id: action.call_id, output: JSON.stringify(output) });
     }
-    throw new Error('Investigation call limit.');
+    throw new ExecutionBoundaryError({ kind: 'limit', code: 'calls' }, 'Investigation call limit.');
   } catch (error) {
     if (error instanceof AuditStoreError) throw error;
     await audit?.append({ actor: 'application', kind: 'stopped', summary: 'The investigation stopped before publishing a new decision. Existing activities remain available.', visibility: 'public' });
-    throw new InvestigationError(makeRun('failed', `Investigation stopped safely${error instanceof MetaClientError ? ` (${error.code})` : ` at the tool or completion boundary: ${error instanceof Error ? error.message.slice(0, 180) : 'Invalid operation.'}`}. No new decision or activity was published. ${certain ? 'Reported usage reconciled.' : 'Unknown usage retains the reservation.'}`)); }
+    throw new InvestigationError(makeRun('failed', `Investigation stopped safely${error instanceof MetaClientError ? ` (${error.code})` : ` at the tool or completion boundary: ${error instanceof Error ? error.message.slice(0, 180) : 'Invalid operation.'}`}. No new decision or activity was published. ${certain ? 'Reported usage reconciled.' : 'Unknown usage retains the reservation.'}`), executionFailure(error)); }
   finally {
     await settleInference(reservation, cost, certain);
     await audit?.append({ actor: 'application', kind: 'usage', summary: certain ? 'Reported model usage was reconciled against the reserved allowance.' : 'Usage could not be fully confirmed; the reserved allowance was retained.', visibility: 'public', usage: { calls, costUsd: cost, elapsedMs: Date.now() - started } });

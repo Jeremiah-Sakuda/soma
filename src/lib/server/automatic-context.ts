@@ -8,9 +8,14 @@ export function automaticModelContext(state: WorkspaceState): WorkspaceState {
   const allowed = (id: string, version?: number) => sources.some(source => source.id === id && (version === undefined || source.version === version));
   const lessons = state.lessons.filter(lesson => lesson.sourceIds.length > 0 && lesson.sourceIds.every(id => allowed(id, lesson.sourceVersions[id])) && (lesson.supportingPassages ?? []).every(ref => allowed(ref.sourceId, ref.version)));
   const lessonIds = new Set(lessons.map(lesson => lesson.id));
-  return { ...state, sources, lessons,
-    attempts: state.attempts.filter(attempt => lessonIds.has(attempt.lessonId)),
-    investigations: state.investigations?.filter(record => record.sourceRefs.every(ref => allowed(ref.sourceId, ref.version)) && (!record.diagnosticPlan || record.diagnosticPlan.hypotheses.every(hypothesis => hypothesis.evidence.every(ref => allowed(ref.sourceId, ref.version))))),
+  const attempts = state.attempts.filter(attempt => {
+    const lesson = lessons.find(item => item.id === attempt.lessonId);
+    const versions = Object.entries(attempt.sourceVersions ?? {});
+    return lessonIds.has(attempt.lessonId) && lesson?.version === attempt.lessonVersion && lesson.modelVersion === attempt.modelVersion && versions.length > 0 && versions.every(([id, version]) => allowed(id, version));
+  });
+  const attemptIds = new Set(attempts.map(attempt => attempt.id));
+  return { ...state, sources, lessons, attempts,
+    investigations: state.investigations?.filter(record => record.sourceRefs.every(ref => allowed(ref.sourceId, ref.version)) && (record.attemptIds ?? []).every(id => attemptIds.has(id)) && (!record.diagnosticPlan || record.diagnosticPlan.hypotheses.every(hypothesis => hypothesis.evidence.every(ref => allowed(ref.sourceId, ref.version)) && hypothesis.attemptIds.every(id => attemptIds.has(id))))),
     ...(state.recommendedLessonId && !lessonIds.has(state.recommendedLessonId) ? { recommendedLessonId: undefined } : {}),
   };
 }

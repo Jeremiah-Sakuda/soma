@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { seedWorkspace } from '../../src/lib/domain/seed';
+import { applyAction } from '../../src/lib/domain/learning';
 import { automaticModelContext } from '../../src/lib/server/automatic-context';
 import { investigateWithSpark } from '../../src/lib/server/investigator';
 
@@ -28,6 +29,17 @@ describe('unattended model source consent', () => {
     state.sources.push({ ...state.sources[0], version: 2, provenance: undefined });
     expect(automaticModelContext(state).sources).toHaveLength(0);
     expect(automaticModelContext(state).lessons).toHaveLength(0);
+  });
+  it('does not send old or unversioned response text merely because its lesson ID is still selected', () => {
+    let state = fixture();
+    state = applyAction(state, { type: 'attempt', lessonId: state.lessons[0].id, optionIndex: 0 });
+    const valid = state.attempts.at(-1)!;
+    state.attempts.push({ ...valid, id: 'old-private-response', question: PRIVATE, sourceVersions: { legacy: 1 } });
+    state.attempts.push({ ...valid, id: 'unversioned-response', question: PRIVATE, sourceVersions: undefined });
+    const context = automaticModelContext(state);
+    expect(context.attempts.map(item => item.id)).toEqual([valid.id]);
+    expect(JSON.stringify(context.attempts)).not.toContain(PRIVATE);
+    expect(state.attempts).toHaveLength(3);
   });
   it('cannot disclose an unconsented source through a model-selected read after a selected source triggers work', async () => {
     const directory = mkdtempSync(join(tmpdir(), 'soma-automatic-consent-'));

@@ -1,6 +1,6 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 import type { DocumentReference, Transaction } from 'firebase-admin/firestore';
-import { assertVerifiedAccount, type VerifiedAccount } from '../account';
+import { assertVerifiedAccount, assertAccountWorkspaceGeneration, type VerifiedAccount } from '../account';
 import { getServerFirestore } from '../firebase-config';
 import { WorkspaceStoreError } from '../store';
 
@@ -52,6 +52,7 @@ function checkId(id: string) {
 }
 function checkRoot(data: Record<string, unknown> | undefined, account: VerifiedAccount, workspaceId?: string): string {
   if (!data || data.deleted || data.ownerId !== account.uid || (workspaceId && data.workspaceId !== workspaceId)) throw new WorkspaceStoreError('This workspace is no longer available.', 409, 'workspace_changed');
+  assertAccountWorkspaceGeneration(account, data.workspaceId as string);
   return data.workspaceId as string;
 }
 function hydrate<S, C>(record: Stored, account: VerifiedAccount): Connection<S, C> {
@@ -129,6 +130,7 @@ export async function releaseConnectionLease<S, C>(account: VerifiedAccount, id:
   return root.firestore.runTransaction(async transaction => {
     const metadata = await transaction.get(root);
     if (!metadata.exists || metadata.get('deleted') || metadata.get('ownerId') !== account.uid) return false;
+    assertAccountWorkspaceGeneration(account, metadata.get('workspaceId'));
     const ref = root.collection('connections').doc(id); const document = await transaction.get(ref);
     if (!document.exists || document.get('workspaceId') !== metadata.get('workspaceId') || document.get('ownerId') !== account.uid || document.get('leaseId') !== leaseId) return false;
     const { secret, ...safe } = patch;
@@ -144,6 +146,7 @@ export async function checkpointConnectionLease<S, C>(account: VerifiedAccount, 
   return root.firestore.runTransaction(async transaction => {
     const metadata = await transaction.get(root);
     if (!metadata.exists || metadata.get('deleted') || metadata.get('ownerId') !== account.uid) return false;
+    assertAccountWorkspaceGeneration(account, metadata.get('workspaceId'));
     const ref = root.collection('connections').doc(id); const document = await transaction.get(ref);
     if (!document.exists || document.get('workspaceId') !== metadata.get('workspaceId') || document.get('ownerId') !== account.uid || document.get('leaseId') !== leaseId || document.get('leaseUntil') <= Date.now()) return false;
     const { secret, ...safe } = patch;

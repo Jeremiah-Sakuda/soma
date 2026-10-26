@@ -1,0 +1,33 @@
+name: Soma scheduled worker
+on:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: soma-scheduled-worker
+  cancel-in-progress: false
+jobs:
+  tick:
+    # Activation is a separate reviewed deployment step. GitHub scheduling is best-effort.
+    if: vars.SOMA_WORKER_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Advance bounded background work
+        env:
+          SOMA_WORKER_URL: ${{ vars.SOMA_WORKER_URL }}
+          SOMA_WORKER_SECRET: ${{ secrets.SOMA_WORKER_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$SOMA_WORKER_URL" == 'https://soma-woad-beta.vercel.app/api/internal/worker' ]] || exit 1
+          [[ ${#SOMA_WORKER_SECRET} -ge 32 ]] || exit 1
+          for tick in {1..2}; do
+            response=$(curl --silent --show-error --fail --max-time 119 \
+              --request POST --header "Authorization: Bearer $SOMA_WORKER_SECRET" \
+              --header 'Content-Type: application/json' --data '{}' "$SOMA_WORKER_URL")
+            printf '%s\n' "$response"
+            if [[ "$response" == *'"cycleComplete":true'* ]]; then break; fi
+          done

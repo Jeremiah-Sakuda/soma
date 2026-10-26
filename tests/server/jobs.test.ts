@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { seedEmptyAccountWorkspace } from '../../src/lib/domain/seed';
 import { InferenceBudgetError } from '../../src/lib/server/budget';
+import { PreparationError } from '../../src/lib/server/meta';
+import { InvestigationError } from '../../src/lib/server/investigator';
+import { preparationFailurePatch } from '../../src/lib/server/jobs';
 import { MetaClientError } from '../../src/lib/server/meta-client';
 import { circuitCandidate } from '../../src/lib/domain/lessons';
 import { preparationReadyPatch, publishPreparationOutcome, type PreparationOutcome, budgetBlockedJobPatch, jobSourcesCurrent, mayClaimJob, preparationJobId, type PreparationJob } from '../../src/lib/server/jobs';
@@ -111,6 +114,23 @@ describe('preparation ownership and restart contracts', () => {
     expect(budgetBlockedJobPatch(claimed, { ...claimed, leaseId: '' }, new InferenceBudgetError('daily'))).toBeNull();
     for (const error of [new Error('Inference allowance reached.'), new MetaClientError('timeout', null, true), new MetaClientError('tool_invalid', { input_tokens: 100, output_tokens: 50 }, true)]) {
       expect(budgetBlockedJobPatch(claimed, claimed, error)).toBeNull();
+    }
+  });
+
+  it('retries only typed provider interruptions after backoff and stops at the attempt bound', () => {
+    const claimed = { ...job, attempts: 1, status: 'generating' as const, leaseId: 'lease' };
+    const run = investigationOutcome().result.run;
+    for (const code of ['network', 'timeout', 'http']) {
+      for (const error of [new PreparationError({ ...run, steps: [`Stopped at Meta ${code}.`] }), new InvestigationError({ ...run, effect: `Investigation stopped safely (${code}).` })]) {
+        const patch = preparationFailurePatch(claimed, error, 1000);
+        expect(patch).toMatchObject({ status: 'queued', nextAttemptAt: 31000, leaseId: '', leaseUntil: 0 });
+        expect(mayClaimJob({ ...claimed, ...patch }, 30999)).toBe(false);
+        expect(mayClaimJob({ ...claimed, ...patch }, 31000)).toBe(true);
+        expect(preparationFailurePatch({ ...claimed, attempts: 3 }, error, 1000).status).toBe('failed');
+      }
+    }
+    for (const error of [new Error('network'), new PreparationError({ ...run, steps: ['Stopped at proposal source, version boundary.'] }), new InvestigationError({ ...run, effect: 'Investigation stopped safely (tool_invalid).' })]) {
+      expect(preparationFailurePatch(claimed, error, 1000)).toMatchObject({ status: 'failed', nextAttemptAt: 0 });
     }
   });
 

@@ -1,21 +1,23 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { WorkspaceState, SourceRef, AgentRun } from '../domain/types';
-import { assertVerifiedAccount, type VerifiedAccount } from './account';
+import { assertVerifiedAccount, assertAccountWorkspaceGeneration, type VerifiedAccount } from './account';
 import { readAccountWorkspace, updateAccountWorkspace } from './account-store';
 import { getServerFirestore } from './firebase-config';
 import { prepareWithSpark, PreparationError, SPARK_ENGINE_VERSION } from './meta';
 import { inferenceEnabled, InferenceBudgetError } from './budget';
 import { WorkspaceConflictError, WorkspaceStoreError } from './store';
-import { investigateWithSpark, publishInvestigation, InvestigationError, type InvestigationResult } from './investigator';
+import { investigateWithSpark, publishInvestigation, InvestigationError, ENGINE_VERSION, type InvestigationResult } from './investigator';
 import { MODEL_VERSION } from '../domain/lessons';
+import { META_MODEL } from './meta-client';
 
 export type PreparationIntent = 'prepare-lesson' | 'investigate-change';
 export type PreparationJob = {
   intent?: PreparationIntent;
+  engineVersion?: string; runtimeModel?: string;
   id: string; ownerId: string; workspaceId: string; courseId: string; topic: string; sourceRefs: SourceRef[];
   status: 'queued' | 'generating' | 'checking' | 'ready' | 'failed' | 'stale';
   createdAt: string; updatedAt: string; attempts: number; contextRevision: number;
-  leaseId?: string; leaseUntil?: number; lessonId?: string; notice?: string; failureRun?: AgentRun;
+  leaseId?: string; leaseUntil?: number; nextAttemptAt?: number; lessonId?: string; notice?: string; failureRun?: AgentRun;
 };
 const digest = (value: string) => createHash('sha256').update(value).digest('hex');
 const LEASE_MS = 120_000;
@@ -27,7 +29,7 @@ function refs(account: VerifiedAccount) {
 }
 
 export function preparationJobId(workspace: WorkspaceState, courseId: string, sourceRefs: SourceRef[], topic: string, contextRevision = workspace.revision, intent: PreparationIntent = 'prepare-lesson'): string {
-  return digest(JSON.stringify({ workspaceId: workspace.id, courseId, sourceRefs: [...sourceRefs].sort((a, b) => a.sourceId.localeCompare(b.sourceId) || a.version - b.version), topic, contextRevision, modelVersion: MODEL_VERSION, engineVersion: SPARK_ENGINE_VERSION, ...(intent === 'investigate-change' ? { intent } : {}) }));
+  return digest(JSON.stringify({ workspaceId: workspace.id, courseId, sourceRefs: [...sourceRefs].sort((a, b) => a.sourceId.localeCompare(b.sourceId) || a.version - b.version), topic, contextRevision, modelVersion: MODEL_VERSION, engineVersion: intent === 'investigate-change' ? ENGINE_VERSION : SPARK_ENGINE_VERSION, ...(intent === 'investigate-change' ? { intent, runtimeModel: META_MODEL } : {}) }));
 }
 
 export function jobSourcesCurrent(workspace: WorkspaceState, job: Pick<PreparationJob, 'workspaceId' | 'courseId' | 'sourceRefs'>): boolean {
@@ -35,11 +37,12 @@ export function jobSourcesCurrent(workspace: WorkspaceState, job: Pick<Preparati
 }
 
 export function mayClaimJob(job: PreparationJob, now = Date.now()): boolean {
-  return job.attempts < MAX_ATTEMPTS && (job.status === 'queued' || ((job.status === 'generating' || job.status === 'checking') && (job.leaseUntil ?? 0) <= now));
+  return job.attempts < MAX_ATTEMPTS && (job.nextAttemptAt ?? 0) <= now && (job.status === 'queued' || ((job.status === 'generating' || job.status === 'checking') && (job.leaseUntil ?? 0) <= now));
 }
 
 export async function enqueuePreparation(account: VerifiedAccount, workspace: WorkspaceState, courseId: string, sourceRefs: SourceRef[], topic: string, contextRevision = workspace.revision, intent: PreparationIntent = 'prepare-lesson'): Promise<PreparationJob> {
   const root = refs(account);
+  assertAccountWorkspaceGeneration(account, workspace.id);
   if (!['prepare-lesson', 'investigate-change'].includes(intent)) throw new WorkspaceStoreError('Unsupported preparation intent.', 422, 'job_intent');
   if (topic.length > 300 || !jobSourcesCurrent(workspace, { workspaceId: workspace.id, courseId, sourceRefs })) throw new WorkspaceStoreError('Preparation requires current sources in this course.', 422, 'job_source_scope');
   const id = preparationJobId(workspace, courseId, sourceRefs, topic, contextRevision, intent);
@@ -54,7 +57,7 @@ export async function enqueuePreparation(account: VerifiedAccount, workspace: Wo
     const active = await transaction.get(root.collection('jobs').where('status', 'in', ['queued', 'generating', 'checking']).limit(5));
     if (active.size >= 5) throw new WorkspaceStoreError('Five preparations are already waiting. Finish one before adding another.', 429, 'job_capacity');
     const now = new Date().toISOString();
-    const job: PreparationJob = { id, intent, ownerId: account.uid, workspaceId: workspace.id, courseId, topic, sourceRefs, status: 'queued', createdAt: now, updatedAt: now, attempts: 0, contextRevision };
+    const job: PreparationJob = { id, intent, engineVersion: intent === 'investigate-change' ? ENGINE_VERSION : SPARK_ENGINE_VERSION, runtimeModel: META_MODEL, ownerId: account.uid, workspaceId: workspace.id, courseId, topic, sourceRefs, status: 'queued', createdAt: now, updatedAt: now, attempts: 0, contextRevision };
     transaction.create(root.collection('jobs').doc(id), job);
     return job;
   });
@@ -64,6 +67,7 @@ export async function listPreparationJobs(account: VerifiedAccount): Promise<Omi
   const root = refs(account);
   const metadata = await root.get();
   if (!metadata.exists || metadata.get('ownerId') !== account.uid || metadata.get('deleted')) return [];
+  assertAccountWorkspaceGeneration(account, metadata.get('workspaceId'));
   const snapshot = await root.collection('jobs').orderBy('createdAt', 'desc').limit(50).get();
   return snapshot.docs.filter(document => document.get('ownerId') === account.uid && document.get('workspaceId') === metadata.get('workspaceId')).map(document => {
     const { ownerId: _owner, leaseId: _lease, ...job } = document.data() as PreparationJob;
@@ -71,8 +75,53 @@ export async function listPreparationJobs(account: VerifiedAccount): Promise<Omi
   });
 }
 
+/** Scheduler selection covers the active queue, including interrupted leases. */
+export async function listNextPreparationJob(account: VerifiedAccount): Promise<{ id: string } | null> {
+  const root = refs(account), metadata = await root.get();
+  if (!metadata.exists || metadata.get('ownerId') !== account.uid || metadata.get('deleted')) return null;
+  assertAccountWorkspaceGeneration(account, metadata.get('workspaceId'));
+  const snapshot = await root.collection('jobs').where('status', 'in', ['queued', 'generating', 'checking']).get();
+  const candidates = snapshot.docs.map(document => document.data() as PreparationJob)
+    .filter(job => job.ownerId === account.uid && job.workspaceId === metadata.get('workspaceId') && (mayClaimJob(job) || ((job.status === 'generating' || job.status === 'checking') && (job.leaseUntil ?? 0) <= Date.now())))
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
+  return candidates[0] ? { id: candidates[0].id } : null;
+}
+
+export function automaticPreparationSources(workspace: WorkspaceState) {
+  const latest = new Map<string, number>();
+  for (const source of workspace.sources) latest.set(source.id, Math.max(latest.get(source.id) ?? 0, source.version));
+  return workspace.sources.filter(source => source.status === 'current' && latest.get(source.id) === source.version && source.courseId && workspace.courses.some(course => course.id === source.courseId) && source.provenance?.automaticPreparation === true);
+}
+
+/** Bounded recovery for consented source persistence followed by an interrupted enqueue. */
+export async function reconcilePreparationOutbox(account: VerifiedAccount, workspace: WorkspaceState, cursor = ''): Promise<{ cursor: string; queued: boolean }> {
+  const root = refs(account);
+  assertAccountWorkspaceGeneration(account, workspace.id);
+  const sources = automaticPreparationSources(workspace);
+  const key = (source: typeof sources[number]) => `${source.id}:${source.version}`;
+  const page = sources.sort((a, b) => key(a).localeCompare(key(b))).filter(source => !cursor || key(source).localeCompare(cursor) > 0).slice(0, 20);
+  if (!page.length) return { cursor: '', queued: false };
+  const missing: typeof sources = [];
+  const lookups = await Promise.all(page.map(source => root.collection('jobs').where('sourceRefs', 'array-contains', { sourceId: source.id, version: source.version }).get()));
+  for (const [index, source] of page.entries()) {
+    const covered = lookups[index].docs.some(document => document.get('ownerId') === account.uid && document.get('workspaceId') === workspace.id && document.get('courseId') === source.courseId && document.get('status') !== 'stale' && (document.get('intent') !== 'investigate-change' || (document.get('engineVersion') === ENGINE_VERSION && document.get('runtimeModel') === META_MODEL)));
+    if (!covered && (!missing.length || missing[0].courseId === source.courseId)) missing.push(source);
+  }
+  if (missing.length) {
+    try {
+      await enqueuePreparation(account, workspace, missing[0].courseId!, missing.map(source => ({ sourceId: source.id, version: source.version })), 'Investigate the updated course material and its consequence for the next study activity.', workspace.revision, 'investigate-change');
+    } catch (error) {
+      if ((error as { code?: string }).code === 'job_capacity') return { cursor, queued: false };
+      throw error;
+    }
+  }
+  // Rescan a page with several uncovered courses on the next tick; existing refs deduplicate it.
+  return { cursor: missing.length ? cursor : key(page.at(-1)!), queued: missing.length > 0 };
+}
+
 export async function claimPreparationJob(account: VerifiedAccount, workspace: WorkspaceState, id: string): Promise<PreparationJob | null> {
   const root = refs(account);
+  assertAccountWorkspaceGeneration(account, workspace.id);
   return root.firestore.runTransaction(async transaction => {
     const metadata = await transaction.get(root);
     const document = await transaction.get(root.collection('jobs').doc(id));
@@ -112,13 +161,29 @@ async function requeueBudgetBlockedJob(account: VerifiedAccount, job: Preparatio
   });
 }
 
-async function fail(account: VerifiedAccount, job: PreparationJob, stale: boolean, failureRun?: AgentRun): Promise<void> {
+/** Retry only typed provider transport failures, never model validation or unknown errors. */
+export function preparationFailurePatch(job: PreparationJob, error: unknown, now = Date.now()): Partial<PreparationJob> {
+  const stale = error instanceof WorkspaceConflictError;
+  const failureRun = error instanceof PreparationError || error instanceof InvestigationError ? error.run : undefined;
+  const transient = error instanceof InvestigationError ? /\((network|timeout|http)\)/.test(error.run.effect)
+    : error instanceof PreparationError && error.run.steps.some(step => /^Stopped at Meta (network|timeout|http)\.$/.test(step));
+  const retry = !stale && transient && job.attempts < MAX_ATTEMPTS;
+  return { status: stale ? 'stale' : retry ? 'queued' : 'failed', leaseId: '', leaseUntil: 0,
+    nextAttemptAt: retry ? now + Math.min(300_000, 30_000 * 2 ** Math.max(0, job.attempts - 1)) : 0,
+    updatedAt: new Date(now).toISOString(), ...(failureRun ? { failureRun } : {}),
+    notice: stale ? 'Context changed during preparation. No obsolete result was published.'
+      : retry ? 'Preparation paused after a temporary provider interruption and will retry automatically within its existing attempt and spending limits.'
+      : job.intent === 'investigate-change' ? 'The source investigation did not publish a validated decision. Your imported material is still available.'
+      : 'Preparation could not publish a validated lesson preview. Your imported material is still available.' };
+}
+
+async function fail(account: VerifiedAccount, job: PreparationJob, error: unknown): Promise<void> {
   const root = refs(account);
   await root.firestore.runTransaction(async transaction => {
     const metadata = await transaction.get(root);
     const document = await transaction.get(root.collection('jobs').doc(job.id));
     if (!metadata.exists || metadata.get('ownerId') !== account.uid || metadata.get('deleted') || metadata.get('workspaceId') !== job.workspaceId || !document.exists || document.get('ownerId') !== account.uid || document.get('leaseId') !== job.leaseId) return;
-    transaction.update(document.ref, { status: stale ? 'stale' : 'failed', updatedAt: new Date().toISOString(), leaseUntil: 0, ...(failureRun ? { failureRun } : {}), notice: stale ? 'Context changed during preparation. No obsolete result was published.' : job.intent === 'investigate-change' ? 'The source investigation did not publish a validated decision. Your imported material is still available.' : 'Preparation could not publish a validated lesson preview. Your imported material is still available.' });
+    transaction.update(document.ref, preparationFailurePatch(job, error));
   });
 }
 
@@ -181,7 +246,7 @@ export async function runPreparationJob(account: VerifiedAccount, id: string): P
     });
   } catch (error) {
     if (error instanceof InferenceBudgetError) await requeueBudgetBlockedJob(account, job, error);
-    else await fail(account, job, error instanceof WorkspaceConflictError, error instanceof PreparationError || error instanceof InvestigationError ? error.run : undefined);
+    else await fail(account, job, error);
     throw error;
   }
 }

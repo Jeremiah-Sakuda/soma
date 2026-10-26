@@ -12,6 +12,18 @@ export const MAX_CALLS = 4;
 export const MAX_OUTPUT_TOKENS = 2048;
 export const MAX_REQUEST_BYTES = 24000;
 
+/** A denied reservation is preflight-only: no provider request has been authorized. */
+export class InferenceBudgetError extends Error {
+  readonly status: 429 | 503;
+  readonly code: string;
+  constructor(public readonly reason: 'configured' | 'daily' | 'global') {
+    super(reason === 'configured' ? 'Live inference requires configured allocation and application budgets.' : 'Inference allowance reached. Prepared lessons remain available.');
+    this.name = 'InferenceBudgetError';
+    this.status = reason === 'configured' ? 503 : 429;
+    this.code = `inference_budget_${reason}`;
+  }
+}
+
 export function budgetLimit(allocation: number, cap: number) {
   if (!Number.isFinite(allocation) || allocation <= 0 || !Number.isFinite(cap) || cap <= 0) return 0;
   return Math.min(allocation * 0.8, cap);
@@ -35,7 +47,7 @@ function database() {
 }
 
 export async function reserveInference(workspaceId: string): Promise<string> {
-  if (!inferenceEnabled()) throw new Error('Live inference requires configured allocation and application budgets.');
+  if (!inferenceEnabled()) throw new InferenceBudgetError('configured');
   const limit = budgetLimit(Number(process.env.META_ALLOCATION_USD), Number(process.env.META_APP_SPEND_CAP_USD || '1'));
   const now = new Date(); const day = now.toISOString().slice(0, 10); const id = randomUUID();
   if (process.env.SOMA_PERSISTENCE === 'firestore') {
@@ -44,7 +56,8 @@ export async function reserveInference(workspaceId: string): Promise<string> {
     await db.runTransaction(async tx => {
       const [g, d] = await Promise.all([tx.get(global), tx.get(daily)]);
       const consumed = Number(g.data()?.consumed || 0);
-      if (d.exists || consumed + JOB_RESERVATION_USD > limit) throw new Error('Inference allowance reached. Prepared lessons remain available.');
+      if (d.exists) throw new InferenceBudgetError('daily');
+      if (consumed + JOB_RESERVATION_USD > limit) throw new InferenceBudgetError('global');
       tx.set(global, { consumed: consumed + JOB_RESERVATION_USD });
       tx.create(daily, { reservationId: id, createdAt: now.toISOString() });
       tx.create(db.doc(`somaBudgetReservations/${id}`), { reserved: JOB_RESERVATION_USD, workspaceId, createdAt: now.toISOString(), charged: null });
@@ -54,7 +67,8 @@ export async function reserveInference(workspaceId: string): Promise<string> {
     try {
       db.exec('BEGIN IMMEDIATE');
       const total = Number((db.prepare('SELECT COALESCE(SUM(COALESCE(charged, reserved)), 0) AS total FROM reservations').get() as { total: number }).total);
-      if (db.prepare('SELECT id FROM reservations WHERE workspace=? AND day=?').get(workspaceId, day) || total + JOB_RESERVATION_USD > limit) throw new Error('Inference allowance reached. Prepared lessons remain available.');
+      if (db.prepare('SELECT id FROM reservations WHERE workspace=? AND day=?').get(workspaceId, day)) throw new InferenceBudgetError('daily');
+      if (total + JOB_RESERVATION_USD > limit) throw new InferenceBudgetError('global');
       db.prepare('INSERT INTO reservations VALUES (?,?,?,?,NULL,?)').run(id, workspaceId, day, JOB_RESERVATION_USD, now.toISOString());
       db.exec('COMMIT');
     } catch (error) { db.exec('ROLLBACK'); throw error; }

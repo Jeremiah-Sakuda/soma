@@ -1,10 +1,10 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { budgetLimit, reserveInference, settleInference, usageCost } from '../../src/lib/server/budget';
+import { InferenceBudgetError, budgetLimit, reserveInference, settleInference, usageCost } from '../../src/lib/server/budget';
 const original = { ...process.env }; const directories: string[] = [];
-afterEach(() => { process.env = { ...original }; directories.splice(0).forEach(d => rmSync(d, { recursive: true, force: true })); });
+afterEach(() => { vi.useRealTimers(); process.env = { ...original }; directories.splice(0).forEach(d => rmSync(d, { recursive: true, force: true })); });
 function configure(cap = '0.4') {
   const directory = mkdtempSync(join(tmpdir(), 'soma-budget-')); directories.push(directory);
   Object.assign(process.env, { SOMA_PERSISTENCE: 'local-synthetic', SOMA_LIVE_INFERENCE: 'true', MODEL_API_KEY: 'test-only-never-sent', META_ALLOCATION_USD: '1', META_APP_SPEND_CAP_USD: cap, SOMA_BUDGET_DB_PATH: join(directory, 'budget.sqlite') });
@@ -33,8 +33,27 @@ describe('application-enforced inference budget', () => {
     await settleInference(first.value, 0, true);
     await expect(reserveInference('d')).rejects.toThrow();
   });
+  it('identifies preflight daily/global denials without spending or losing next-day eligibility', async () => {
+    configure('0.4');
+    vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2026-10-28T23:59:00Z'));
+    const first = await reserveInference('same-workspace');
+    await settleInference(first, 0, true);
+    await expect(reserveInference('same-workspace')).rejects.toMatchObject({ name: 'InferenceBudgetError', reason: 'daily', status: 429 });
+    await reserveInference('second-workspace');
+    await reserveInference('third-workspace');
+    const globalError = await reserveInference('fourth-workspace').catch(error => error);
+    expect(globalError).toBeInstanceOf(InferenceBudgetError);
+    expect(globalError.reason).toBe('global');
+    // A rejected reservation added no charge; settlement opens one slot for tomorrow.
+    const db = new (await import('node:sqlite')).DatabaseSync(process.env.SOMA_BUDGET_DB_PATH!);
+    expect(db.prepare('SELECT COUNT(*) AS count FROM reservations').get()?.count).toBe(3);
+    const second = db.prepare('SELECT id FROM reservations WHERE workspace=?').get('second-workspace') as { id: string };
+    db.close(); await settleInference(second.id, 0, true);
+    vi.setSystemTime(new Date('2026-10-29T00:01:00Z'));
+    await expect(reserveInference('same-workspace')).resolves.toEqual(expect.any(String));
+  });
   it('fails closed when allocation is unknown', async () => {
     configure(); delete process.env.META_ALLOCATION_USD;
-    await expect(reserveInference('a')).rejects.toThrow(/configured allocation/);
+    await expect(reserveInference('a')).rejects.toMatchObject({ name: 'InferenceBudgetError', reason: 'configured', status: 503, message: expect.stringContaining('configured allocation') });
   });
 });

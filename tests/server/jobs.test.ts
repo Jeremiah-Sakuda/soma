@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { seedEmptyAccountWorkspace } from '../../src/lib/domain/seed';
-import { jobSourcesCurrent, mayClaimJob, preparationJobId, type PreparationJob } from '../../src/lib/server/jobs';
+import { InferenceBudgetError } from '../../src/lib/server/budget';
+import { MetaClientError } from '../../src/lib/server/meta-client';
+import { budgetBlockedJobPatch, jobSourcesCurrent, mayClaimJob, preparationJobId, type PreparationJob } from '../../src/lib/server/jobs';
 
 describe('preparation ownership and restart contracts', () => {
   const workspace = seedEmptyAccountWorkspace('workspace-a', '2026-10-28T12:00:00Z');
@@ -26,6 +28,33 @@ describe('preparation ownership and restart contracts', () => {
     const connectorJob = preparationJobId(workspace, job.courseId, job.sourceRefs, job.topic, 0);
     expect(preparationJobId({ ...workspace, revision: 8 }, job.courseId, job.sourceRefs, job.topic, 0)).toBe(connectorJob);
     expect(preparationJobId(workspace, job.courseId, [{ sourceId: 'source-a', version: 2 }], job.topic, 0)).not.toBe(connectorJob);
+  });
+
+  it('requeues budget-only denials without consuming retries or forgetting earlier real attempts', () => {
+    const claimed = { ...job, status: 'generating' as const, attempts: 2, leaseId: 'owned-lease', leaseUntil: 2000 };
+    for (const reason of ['configured', 'daily', 'global'] as const) {
+      const patch = budgetBlockedJobPatch(claimed, claimed, new InferenceBudgetError(reason), '2026-10-28T13:00:00Z');
+      expect(patch).toMatchObject({ status: 'queued', attempts: 1, leaseId: '', leaseUntil: 0, updatedAt: '2026-10-28T13:00:00Z', notice: expect.stringContaining('no Meta request was made') });
+      expect(mayClaimJob({ ...claimed, ...patch })).toBe(true);
+    }
+    let retried: PreparationJob = { ...job };
+    for (let count = 0; count < 5; count++) {
+      const leased = { ...retried, status: 'generating' as const, attempts: retried.attempts + 1, leaseId: `lease-${count}` };
+      retried = { ...leased, ...budgetBlockedJobPatch(leased, leased, new InferenceBudgetError('daily')) };
+    }
+    expect(retried.attempts).toBe(0);
+    expect(mayClaimJob(retried)).toBe(true);
+  });
+
+  it('never refunds another lease, completed work, different owner/generation, or provider failures', () => {
+    const claimed = { ...job, status: 'generating' as const, attempts: 1, leaseId: 'owned-lease' };
+    for (const changed of [undefined, { ...claimed, ownerId: 'other' }, { ...claimed, workspaceId: 'recreated' }, { ...claimed, id: 'other-job' }, { ...claimed, leaseId: 'new-lease' }, { ...claimed, status: 'checking' as const }, { ...claimed, status: 'ready' as const }, { ...claimed, attempts: 2 }]) {
+      expect(budgetBlockedJobPatch(changed, claimed, new InferenceBudgetError('daily'))).toBeNull();
+    }
+    expect(budgetBlockedJobPatch(claimed, { ...claimed, leaseId: '' }, new InferenceBudgetError('daily'))).toBeNull();
+    for (const error of [new Error('Inference allowance reached.'), new MetaClientError('timeout', null, true), new MetaClientError('tool_invalid', { input_tokens: 100, output_tokens: 50 }, true)]) {
+      expect(budgetBlockedJobPatch(claimed, claimed, error)).toBeNull();
+    }
   });
 
   it('recovers expired work without stealing active leases or exceeding restart bounds', () => {

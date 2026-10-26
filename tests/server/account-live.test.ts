@@ -1,11 +1,12 @@
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
 import { deleteApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { getServerApp, getServerFirestore } from '../../src/lib/server/firebase-config';
 import { exchangeAccountSession, verifyAccountSession, ACCOUNT_SESSION_COOKIE, type VerifiedAccount } from '../../src/lib/server/account';
 import { readOrCreateAccountWorkspace, readAccountWorkspace, updateAccountWorkspace, deleteAccountWorkspace } from '../../src/lib/server/account-store';
-import { enqueuePreparation, listPreparationJobs, claimPreparationJob } from '../../src/lib/server/jobs';
+import { enqueuePreparation, listPreparationJobs, claimPreparationJob, runPreparationJob } from '../../src/lib/server/jobs';
+import { reserveInference, settleInference, InferenceBudgetError } from '../../src/lib/server/budget';
 import { applySourceImport, sourceImportSchema } from '../../src/lib/server/imports';
 
 // Explicit live integration only; creates disposable synthetic users, never uses real learner data.
@@ -13,6 +14,7 @@ describe.skipIf(process.env.SOMA_LIVE_FIRESTORE_TEST !== 'true')('live Firebase 
   it('isolates authenticated users, survives connection restart, resolves CAS and deletes private records', async () => {
     if (process.env.FIREBASE_AUTH_EMULATOR_HOST || process.env.FIRESTORE_EMULATOR_HOST) throw new Error('This check requires real Firebase services.');
     const created: { uid: string; account?: VerifiedAccount }[] = [];
+    const budgetFixtures: { id: string; dailyId: string }[] = [];
     try {
       for (let index = 0; index < 2; index++) {
         const email = `soma-integration-${randomUUID()}@example.invalid`;
@@ -47,6 +49,31 @@ describe.skipIf(process.env.SOMA_LIVE_FIRESTORE_TEST !== 'true')('live Firebase 
       expect(duplicate.id).toBe(job.id);
       expect(await listPreparationJobs(a)).toHaveLength(1);
       expect(await listPreparationJobs(b)).toHaveLength(0);
+      if (process.env.SOMA_LIVE_JOB_BUDGET_TEST === 'true') {
+        const reservation = await reserveInference(material.id);
+        budgetFixtures.push({ id: reservation, dailyId: `${material.id}-${new Date().toISOString().slice(0, 10)}` });
+        await settleInference(reservation, 0, true);
+        const originalFetch = globalThis.fetch;
+        let metaCalls = 0;
+        const guarded = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+          const url = input instanceof Request ? input.url : String(input);
+          if (new URL(url).hostname === 'api.meta.ai') { metaCalls++; throw new Error('No provider calls are allowed in this budget test.'); }
+          return originalFetch(input, init);
+        });
+        try {
+          for (let repeat = 0; repeat < 4; repeat++) {
+            const denied = await runPreparationJob(a, job.id).catch(error => error);
+            expect(denied).toBeInstanceOf(InferenceBudgetError);
+            expect(denied.reason).toBe('daily');
+            const stored = await getServerFirestore().collection('somaAccounts').doc(createHash('sha256').update(a.uid).digest('hex')).collection('jobs').doc(job.id).get();
+            expect(stored.data()).toMatchObject({ status: 'queued', attempts: 0, leaseId: '', leaseUntil: 0, ownerId: a.uid, notice: expect.stringContaining('no Meta request was made') });
+          }
+          expect(metaCalls).toBe(0);
+          expect(await listPreparationJobs(b)).toEqual([]);
+          expect(await readAccountWorkspace(b)).toEqual(other);
+          expect(await readAccountWorkspace(a)).toEqual(material);
+        } finally { guarded.mockRestore(); }
+      }
       const lease = await claimPreparationJob(a, material, job.id);
       expect(lease?.attempts).toBe(1);
       expect(await claimPreparationJob(a, material, job.id)).toBeNull();
@@ -81,6 +108,11 @@ describe.skipIf(process.env.SOMA_LIVE_FIRESTORE_TEST !== 'true')('live Firebase 
       expect(recreated.sources).toHaveLength(0);
       expect((await readAccountWorkspace(b))?.id).toBe(other.id);
     } finally {
+      for (const fixture of budgetFixtures) {
+        await settleInference(fixture.id, 0, true);
+        await getServerFirestore().doc(`somaBudgetReservations/${fixture.id}`).delete();
+        await getServerFirestore().doc(`somaBudgetDays/${fixture.dailyId}`).delete();
+      }
       for (const record of created) {
         if (record.account) await deleteAccountWorkspace(record.account);
         const accountPath = createHash('sha256').update(record.uid).digest('hex');

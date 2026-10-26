@@ -4,7 +4,7 @@ import { assertVerifiedAccount, type VerifiedAccount } from './account';
 import { readAccountWorkspace, updateAccountWorkspace } from './account-store';
 import { getServerFirestore } from './firebase-config';
 import { prepareWithSpark, PreparationError, SPARK_ENGINE_VERSION } from './meta';
-import { inferenceEnabled } from './budget';
+import { inferenceEnabled, InferenceBudgetError } from './budget';
 import { WorkspaceConflictError, WorkspaceStoreError } from './store';
 import { MODEL_VERSION } from '../domain/lessons';
 
@@ -90,6 +90,24 @@ export async function claimPreparationJob(account: VerifiedAccount, workspace: W
   });
 }
 
+/** Only the unchanged owner lease can refund a preflight claim; provider failures never qualify. */
+export function budgetBlockedJobPatch(current: PreparationJob | undefined, claimed: PreparationJob, error: unknown, now = new Date().toISOString()): Partial<PreparationJob> | null {
+  if (!(error instanceof InferenceBudgetError) || !current || !claimed.leaseId || current.id !== claimed.id || current.ownerId !== claimed.ownerId || current.workspaceId !== claimed.workspaceId || current.leaseId !== claimed.leaseId || current.status !== 'generating' || current.attempts !== claimed.attempts) return null;
+  const reason = error.reason === 'daily' ? 'The daily workspace allowance is used. Try after the next UTC day.' : error.reason === 'global' ? 'The application allowance is used. Waiting for budget availability.' : 'Live inference needs configured allocation and application budgets.';
+  return { status: 'queued', attempts: Math.max(0, claimed.attempts - 1), leaseId: '', leaseUntil: 0, updatedAt: now, notice: `${reason} This job remains queued; no Meta request was made for this attempt.` };
+}
+
+async function requeueBudgetBlockedJob(account: VerifiedAccount, job: PreparationJob, error: InferenceBudgetError): Promise<void> {
+  const root = refs(account);
+  await root.firestore.runTransaction(async transaction => {
+    const metadata = await transaction.get(root);
+    const document = await transaction.get(root.collection('jobs').doc(job.id));
+    if (!metadata.exists || metadata.get('ownerId') !== account.uid || metadata.get('deleted') || metadata.get('workspaceId') !== job.workspaceId) return;
+    const patch = budgetBlockedJobPatch(document.exists ? document.data() as PreparationJob : undefined, job, error);
+    if (patch) transaction.update(document.ref, patch);
+  });
+}
+
 async function fail(account: VerifiedAccount, job: PreparationJob, stale: boolean, failureRun?: AgentRun): Promise<void> {
   const root = refs(account);
   await root.firestore.runTransaction(async transaction => {
@@ -130,7 +148,8 @@ export async function runPreparationJob(account: VerifiedAccount, id: string): P
       transaction.update(document.ref, { status: 'ready', lessonId: prepared.lesson.id, leaseUntil: 0, updatedAt: new Date().toISOString() });
     });
   } catch (error) {
-    await fail(account, job, error instanceof WorkspaceConflictError, error instanceof PreparationError ? error.run : undefined);
+    if (error instanceof InferenceBudgetError) await requeueBudgetBlockedJob(account, job, error);
+    else await fail(account, job, error instanceof WorkspaceConflictError, error instanceof PreparationError ? error.run : undefined);
     throw error;
   }
 }

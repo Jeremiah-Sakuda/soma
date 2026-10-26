@@ -6,6 +6,25 @@ export const INPUT_RANGES: NonNullable<Lesson['inputRanges']> = { voltage: { min
 
 /** The outcome and answer are derived from the same numerical model as every visual readout. */
 export function getPredictionCheckpoint(lesson: Lesson, inputs: CircuitInput = lesson.circuit): PredictionCheckpoint {
+  if (lesson.diagnosticExperiment) {
+    const experiment = lesson.diagnosticExperiment.input, baseline = experiment.baseline;
+    const { parameter, value: targetValue } = experiment.change;
+    const before = calculateCircuit(baseline), after = calculateCircuit({ ...baseline, [parameter]: targetValue });
+    const observable = experiment.observable, unit = observable.startsWith('current') ? 'A' : 'V';
+    const label = { r1: 'R₁', r2: 'R₂', voltage: 'source voltage' }[parameter];
+    const readout = { current1: 'current through R₁', current2: 'current through R₂', voltage1: 'voltage across R₁', voltage2: 'voltage across R₂' }[observable];
+    const format = (value: number) => `${Number(value.toPrecision(6))} ${unit}`;
+    const candidates = [after[observable], before[observable], ...experiment.predictions.map(prediction => prediction.predictedValue), 0, 1, 24];
+    const options = [...new Set(candidates.map(format))].slice(0, 3);
+    const parameterUnit = parameter === 'voltage' ? 'V' : 'Ω';
+    return {
+      id: `${lesson.id}-${parameter}-${observable}`, parameter, targetValue, observedOutput: observable,
+      multiplier: baseline[parameter] === 0 ? 1 : targetValue / baseline[parameter],
+      question: `Starting from ${label} = ${baseline[parameter]} ${parameterUnit} and ${readout} = ${format(before[observable])}, set ${label} to ${targetValue} ${parameterUnit} with every other input fixed. What is the resulting ${readout}?`,
+      options, answerIndex: options.indexOf(format(after[observable])), revealLabel: `Set ${label} to ${targetValue} ${parameterUnit} and see`,
+      explanation: `The ideal DC calculation gives ${format(after[observable])} for the ${readout}, compared with ${format(before[observable])} at the tested baseline. Only ${label} changed. This calculated result is model support, not evidence of independent understanding.`,
+    };
+  }
   const multiplier = inputs.r2 <= 50 ? 2 : 0.5;
   const before = calculateCircuit(inputs), after = calculateCircuit({ ...inputs, r2: inputs.r2 * multiplier });
   const difference = after.current1 - before.current1;
@@ -32,6 +51,7 @@ export function recordPrediction(state: WorkspaceState, lesson: Lesson, optionIn
   if (!Number.isInteger(optionIndex) || optionIndex < 0 || optionIndex > 2) throw new Error('Choose an available prediction.');
   if (state.predictionStates?.[lesson.id]?.state === 'revealed') throw new Error('The original reveal is preserved. Use a fresh question or another lesson to predict again.');
   const inputs = state.savedInputs[lesson.id] ?? lesson.circuit;
+  if (lesson.diagnosticExperiment && (['topology', 'voltage', 'r1', 'r2'] as const).some(parameter => inputs[parameter] !== lesson.diagnosticExperiment!.input.baseline[parameter])) throw new Error('Restore the tested experiment baseline before predicting, or keep exploring freely.');
   const checkpoint = getPredictionCheckpoint(lesson, inputs);
   const record = interaction(state, lesson, now, 'selection', inputs, { optionIndex, checkpoint });
   state.predictionStates ??= {};
@@ -50,13 +70,14 @@ export function revealPrediction(state: WorkspaceState, lesson: Lesson, now: str
   const selection = state.predictions?.find(item => item.id === predictionState?.selectedPredictionId && item.kind === 'selection');
   if (!selection) throw new Error('Choose a prediction before revealing, or explore freely.');
   const checkpoint = selection.checkpoint ?? getPredictionCheckpoint(lesson, selection.inputs);
-  const resultInputs = manualInputs ?? { ...selection.inputs, r2: selection.inputs.r2 * checkpoint.multiplier };
+  const targetValue = checkpoint.targetValue ?? selection.inputs[checkpoint.parameter] * checkpoint.multiplier;
+  const resultInputs = manualInputs ?? { ...selection.inputs, [checkpoint.parameter]: targetValue };
   calculateCircuit(resultInputs);
   const baseline = calculateCircuit(selection.inputs), result = calculateCircuit(resultInputs);
-  const delta = result.current1 - baseline.current1;
-  const outcomeIndex = Math.abs(delta) < 1e-10 ? 1 : delta > 0 ? 0 : 2;
-  const comparisonValid = resultInputs.topology === selection.inputs.topology && resultInputs.voltage === selection.inputs.voltage && resultInputs.r1 === selection.inputs.r1;
-  const revealedCheckpoint = comparisonValid ? checkpoint : { ...checkpoint, explanation: 'Other inputs changed after the prediction. This result cannot judge the original prediction; its original choice and conditions remain preserved.' };
+  const delta = result[checkpoint.observedOutput] - baseline[checkpoint.observedOutput];
+  const outcomeIndex = checkpoint.targetValue !== undefined ? checkpoint.answerIndex : Math.abs(delta) < 1e-10 ? 1 : delta > 0 ? 0 : 2;
+  const comparisonValid = resultInputs.topology === selection.inputs.topology && (['voltage', 'r1', 'r2'] as const).every(parameter => parameter === checkpoint.parameter || resultInputs[parameter] === selection.inputs[parameter]) && (checkpoint.targetValue === undefined || resultInputs[checkpoint.parameter] === targetValue);
+  const revealedCheckpoint = comparisonValid ? checkpoint : { ...checkpoint, explanation: 'The control change did not match the original prediction conditions. This result cannot judge the original prediction; its original choice and conditions remain preserved.' };
   const record = interaction(state, lesson, now, 'reveal', selection.inputs, { predictionId: selection.id, resultInputs: structuredClone(resultInputs), result, comparisonValid, ...(comparisonValid ? { matched: selection.optionIndex === outcomeIndex } : {}), checkpoint: revealedCheckpoint });
   state.savedInputs[lesson.id] = structuredClone(resultInputs);
   state.predictionStates![lesson.id] = { state: 'revealed', selectedPredictionId: selection.id, revealId: record.id };
@@ -65,6 +86,7 @@ export function revealPrediction(state: WorkspaceState, lesson: Lesson, now: str
 
 /** A fresh item has no diagram. Prior lab help is linked context; new help on this item remains separately recorded. */
 export function prepareFreshQuestion(state: WorkspaceState, lesson: Lesson, when: 'now' | 'later', now: string) {
+  if (lesson.diagnosticInvestigationId) throw new Error('Reconsider the saved diagnostic response to select the next source-grounded activity.');
   if (lesson.exposure === 'fresh-no-diagram') throw new Error('This is already a fresh question.');
   state.freshRequests ??= [];
   const predictionId = state.predictionStates?.[lesson.id]?.selectedPredictionId;

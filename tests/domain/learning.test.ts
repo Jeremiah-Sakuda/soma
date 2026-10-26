@@ -92,11 +92,11 @@ describe('learning records preserve the difference between support and independe
     const answered = applyAction(original, { type: 'attempt', lessonId: 'parallel-nodes', optionIndex: 0 }, later);
     expect(answered.interpretations[0]).toEqual(original.interpretations[0]);
     expect(answered.interpretations.at(-1)?.status).toBe('revised');
-    expect(answered.interpretations.at(-1)?.claim).toContain('contradicts');
+    expect(answered.interpretations.at(-1)?.claim).toContain('support');
     expect(answered.lessons.at(-1)?.question).not.toBe(original.lessons[0].question);
     expect(answered.lessons.at(-1)?.options).not.toEqual(original.lessons[0].options);
-    expect(answered.attempts[0].assisted).toBe(false);
-    expect(answered.attempts[0].feedback).toContain('external help is unknown');
+    expect(answered.attempts[0].assisted).toBe(true);
+    expect(answered.attempts[0].assistance.some(item => item.includes('diagram-visible'))).toBe(true);
     expect(answered.lessons[0]).toEqual(original.lessons[0]);
   });
   it('saves controls and records exploration support without demanding an attempt', () => {
@@ -136,5 +136,23 @@ describe('learning records preserve the difference between support and independe
     expect(next.kind).toBe('practice');
     expect(next.question).not.toBe(answered.attempts[0].question);
     expect(next.sourceIds).toEqual(['source-probability']);
+  });
+});
+
+describe('authored content does not inherit a live inference label', () => {
+  it('marks a deterministic follow-up of a live parent prepared', () => {
+    const state = seed();
+    state.lessons[0].mode = 'live';
+    const answered = applyAction(state, { type: 'attempt', lessonId: 'parallel-nodes', optionIndex: 0 }, later);
+    expect(answered.lessons[0].mode).toBe('live');
+    expect(answered.lessons.at(-1)?.mode).toBe('prepared');
+    expect(answered.runs.at(-1)?.mode).toBe('synthetic');
+  });
+  it('marks a fixture content replacement of a live parent prepared', () => {
+    const state = seed();
+    state.lessons[0].mode = 'live';
+    const revised = applyAction(state, { type: 'scenario', scenario: 'source-revised' }, later);
+    expect(revised.lessons.find(lesson => lesson.id === 'parallel-nodes')?.mode).toBe('live');
+    expect(revised.lessons.find(lesson => lesson.id === 'parallel-nodes-v2')?.mode).toBe('prepared');
   });
 });

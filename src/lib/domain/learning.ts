@@ -1,7 +1,11 @@
 import { createEmptyCard, fsrs, Rating, type CardInput } from 'ts-fsrs';
 import { calculateCircuit } from './circuit';
 import { followupLesson, sourceVersions } from './lessons';
-import { seedWorkspace } from './seed';
+import { seedWorkspace, seedEmptyAccountWorkspace } from './seed';
+import { correctCommitment, recordConsequence, refreshSessionRecommendation, selectAvailability, validateInterval } from './commitments';
+import { commitmentScenario } from './commitment-scenarios';
+import { exploreLesson, prepareFreshQuestion, recordPrediction, revealPrediction, withLessonMetadata } from './prediction';
+import { isSupportedCircuitRequest } from './support';
 import type { AgentRun, Lesson, Source, WorkspaceAction, WorkspaceState } from './types';
 
 function currentLesson(state: WorkspaceState, id: string): Lesson {
@@ -16,8 +20,8 @@ function currentLesson(state: WorkspaceState, id: string): Lesson {
 }
 
 function addRun(state: WorkspaceState, timestamp: string, trigger: string, effect: string, sourceIds: string[] = [], status: AgentRun['status'] = 'completed') {
-  state.runs.push({ id: `run-${state.runs.length + 1}`, trigger, mode: 'synthetic', status, createdAt: timestamp,
-    steps: ['Applied a deterministic development scenario or user action in this workspace.', 'No external source collection or live model call occurred.'], effect, sourceIds });
+  state.runs.push({ id: `run-${state.runs.length + 1}`, trigger, mode: state.mode === 'demo' ? 'synthetic' : 'prepared', status, createdAt: timestamp,
+    steps: [state.mode === 'demo' ? 'Applied a deterministic development scenario or user action in this workspace.' : 'Applied a deterministic user action to this private workspace.', 'No external source collection or live model call occurred.'], effect, sourceIds });
 }
 
 function addSource(state: WorkspaceState, timestamp: string, id: string, title: string, body: string): void {
@@ -58,7 +62,7 @@ function applyScenario(state: WorkspaceState, scenario: Extract<WorkspaceAction,
     for (const lesson of affected) {
       lesson.state = 'stale';
       const replacement: Lesson = { ...structuredClone(lesson), id: `${lesson.id}-v${lesson.version + 1}`, version: lesson.version + 1,
-        state: 'ready', sourceVersions: { ...lesson.sourceVersions, [old.id]: updated.version },
+        state: 'ready', mode: 'prepared', sourceVersions: { ...lesson.sourceVersions, [old.id]: updated.version },
         reason: 'The synthetic Lecture 8 worked example changed. This replacement uses the new source version; earlier lessons and attempts remain preserved.' };
       if (replacement.circuit.topology === 'parallel') {
         replacement.circuit = { topology: 'parallel', voltage: 9, r1: 9, r2: 3 };
@@ -67,7 +71,7 @@ function applyScenario(state: WorkspaceState, scenario: Extract<WorkspaceAction,
         replacement.answerIndex = 0;
         replacement.explanation = 'The shared nodes give both branches 9 V. Ohm’s law gives 9/9 = 1 A and 9/3 = 3 A.';
       }
-      state.lessons.push(replacement);
+      state.lessons.push(withLessonMetadata(replacement));
     }
     addRun(state, timestamp, trigger, 'Retained source version 1 and invalidated its affected lessons. Published prepared replacements against source version 2. Original attempts were not changed.', ['source-d']);
   } else if (scenario === 'source-expired') {
@@ -91,20 +95,53 @@ function applyScenario(state: WorkspaceState, scenario: Extract<WorkspaceAction,
 export function applyAction(input: WorkspaceState, action: WorkspaceAction, now: Date | string = new Date()): WorkspaceState {
   const timestamp = new Date(now).toISOString();
   if (action.type === 'reset') {
-    const fresh = seedWorkspace(input.id, now);
+    const fresh = input.mode === 'account' ? seedEmptyAccountWorkspace(input.id, now) : seedWorkspace(input.id, now);
     fresh.mode = input.mode;
     fresh.createdAt = input.createdAt;
     fresh.revision = input.revision + 1;
     fresh.expiresAt = input.expiresAt;
     return fresh;
   }
-  const state = structuredClone(input);
-  if (action.type === 'scenario') {
+  let state = structuredClone(input);
+  if (action.type === 'select-session') {
+    if (![10, 20, 45].includes(action.minutes)) throw new Error('Choose a 10, 20, or 45 minute session.');
+    state.selectedSessionMinutes = action.minutes;
+  } else if (action.type === 'focus-window') {
+    validateInterval(action.startAt, action.endAt, action.timezone);
+    if (Date.parse(action.endAt) - Date.parse(action.startAt) > 8 * 60 * 60 * 1000) throw new Error('A focus window may be at most eight hours.');
+    const before = selectAvailability(state);
+    state.focusWindows = [{ id: 'focus-declared', startAt: action.startAt, endAt: action.endAt, timezone: action.timezone, declaredAt: timestamp }];
+    state.timezone = action.timezone;
+    refreshSessionRecommendation(state, timestamp, 'Student declared focus window', before);
+  } else if (action.type === 'correct-commitment') {
+    state = correctCommitment(state, action, timestamp);
+  } else if (action.type === 'scenario') {
     if (state.mode !== 'demo') throw new Error('Synthetic scenarios are available only in demo workspaces.');
-    applyScenario(state, action.scenario, timestamp);
+    if (action.scenario.startsWith('commitment-')) {
+      state = commitmentScenario(state, action.scenario as 'commitment-overlap' | 'commitment-no-overlap' | 'commitment-tentative' | 'commitment-duplicate', timestamp);
+    } else {
+      const before = selectAvailability(state);
+      const runCount = state.runs.length;
+      const previousCourse = state.courses.find(course => course.id === 'circuits');
+      const oldDeadline = previousCourse?.deadline ?? '';
+      const oldReady = state.lessons.filter(lesson => lesson.state === 'ready').length;
+      applyScenario(state, action.scenario, timestamp);
+      if (state.runs.length !== runCount && ['exam-moved', 'scope-change', 'source-revised', 'injection'].includes(action.scenario)) {
+        const run = state.runs.at(-1)!;
+        recordConsequence(state, { createdAt: timestamp, trigger: run.trigger, classification: action.scenario === 'exam-moved' ? 'timing' : action.scenario === 'source-revised' ? 'content' : 'scope',
+          sourceRefs: run.sourceIds.map(id => ({ sourceId: id, version: Math.max(...state.sources.filter(source => source.id === id).map(source => source.version)) })), affectedIds: ['circuits'],
+          before: { examDeadline: oldDeadline, readyLessons: oldReady, scope: input.sources.some(source => source.id === 'source-c') ? 'Series and parallel resistors; capacitor transients excluded' : 'Series, parallel, and capacitor transients in original notice' },
+          after: { examDeadline: state.courses.find(course => course.id === 'circuits')?.deadline ?? oldDeadline, readyLessons: state.lessons.filter(lesson => lesson.state === 'ready').length, scope: state.sources.some(source => source.id === 'source-c') ? 'Series and parallel resistors; capacitor transients excluded' : 'Series, parallel, and capacitor transients in original notice' },
+          reason: run.effect, result: action.scenario === 'source-revised' ? 'Affected lesson versions replaced; prior attempts preserved.' : 'Valid lesson content reused; only supported context changed.' });
+      }
+      if (action.scenario === 'source-expired' || action.scenario === 'reconnect') {
+        if (state.calendarContext) state.calendarContext.status = action.scenario === 'source-expired' ? 'stale' : 'current';
+        refreshSessionRecommendation(state, timestamp, action.scenario, before);
+      }
+    }
   } else if (action.type === 'refresh') {
     const stale = state.sources.some(source => source.status === 'stale' && !state.sources.some(newer => newer.id === source.id && newer.version > source.version && newer.status === 'current'));
-    addRun(state, timestamp, 'Refresh synthetic sources', stale ? 'Sources remain stale. Reconnect is required; this check cannot establish no change.' : 'Prepared synthetic sources are unchanged; reused lessons without inference.', [], stale ? 'failed' : 'unchanged');
+    addRun(state, timestamp, state.mode === 'demo' ? 'Refresh synthetic sources' : 'Check stored source versions', stale ? 'Sources remain stale. Reconnect or re-import is required; this check cannot establish no change.' : 'Stored source versions are unchanged; reused lessons without inference. No external collection occurred.', [], stale ? 'failed' : 'unchanged');
   } else if (action.type === 'preference') {
     if (action.sessionMinutes !== undefined) {
       if (!Number.isInteger(action.sessionMinutes) || action.sessionMinutes < 5 || action.sessionMinutes > 120) throw new Error('Choose 5–120 whole minutes.');
@@ -113,22 +150,33 @@ export function applyAction(input: WorkspaceState, action: WorkspaceAction, now:
     if (action.workedExamples !== undefined) state.preferences.workedExamples = action.workedExamples;
   } else if (action.type === 'request-lesson') {
     if (!state.courses.some(course => course.id === action.courseId)) throw new Error('Course does not belong to this workspace.');
-    if (/capacitor|transient|quantum|arbitrary|execute|ignore.{0,20}instructions/i.test(action.topic)) throw new Error('That topic is outside the source-backed prepared library. Choose a listed lesson; live generation is not connected.');
+    if ((action.courseId === 'circuits' || state.lessons.some(lesson => lesson.courseId === action.courseId && lesson.kind === 'circuit')) && !isSupportedCircuitRequest(action.topic)) throw new Error('That topic is outside the checked resistor family. Choose series or parallel ideal DC resistor practice.');
     const candidates = state.lessons.filter(lesson => lesson.courseId === action.courseId && lesson.state === 'ready');
     const wanted = /series/i.test(action.topic) && !/parallel/i.test(action.topic) ? 'series' : 'parallel';
-    const lesson = candidates.find(item => item.courseId !== 'circuits' || item.circuit.topology === wanted);
+    const lesson = candidates.find(item => item.kind !== 'circuit' || item.circuit.topology === wanted);
     if (!lesson) throw new Error('No current prepared lesson is available for this course.');
     currentLesson(state, lesson.id);
     const trigger = `request:${lesson.id}`;
     if (!state.runs.some(run => run.trigger === trigger)) addRun(state, timestamp, trigger, `Reused “${lesson.title}” from the source-backed prepared library. Request text does not execute instructions or generate new content.`, lesson.sourceIds);
   } else {
     const lesson = currentLesson(state, action.lessonId);
-    if (action.type === 'assistance') {
+    if (action.type === 'prediction') {
+      recordPrediction(state, lesson, action.optionIndex, timestamp);
+    } else if (action.type === 'reveal-prediction') {
+      revealPrediction(state, lesson, timestamp);
+    } else if (action.type === 'explore-lesson') {
+      exploreLesson(state, lesson, timestamp);
+    } else if (action.type === 'fresh-question') {
+      prepareFreshQuestion(state, lesson, action.when, timestamp);
+    } else if (action.type === 'assistance') {
       if (!['hint', 'explanation', 'exploration'].includes(action.kind)) throw new Error('Unknown assistance kind.');
       state.assistance[lesson.id] = [...(state.assistance[lesson.id] ?? []), `${timestamp} · ${action.kind}`];
     } else if (action.type === 'save-inputs') {
-      if (lesson.kind !== 'circuit') throw new Error('Only circuit lessons accept circuit controls.');
+      if (lesson.kind !== 'circuit' || lesson.exposure === 'fresh-no-diagram') throw new Error('Only interactive circuit lessons accept circuit controls.');
       calculateCircuit(action.inputs);
+      const predictionState = state.predictionStates?.[lesson.id];
+      const selection = state.predictions?.find(item => item.id === predictionState?.selectedPredictionId);
+      if (predictionState?.state === 'predicted' && selection && action.inputs.r2 !== selection.inputs.r2) revealPrediction(state, lesson, timestamp, action.inputs);
       state.savedInputs[lesson.id] = structuredClone(action.inputs);
       // Exploring the model is support; absence of a hint click does not make a later answer independent.
       if (!(state.assistance[lesson.id] ?? []).some(item => item.includes('exploration'))) state.assistance[lesson.id] = [...(state.assistance[lesson.id] ?? []), `${timestamp} · exploration`];
@@ -141,16 +189,21 @@ export function applyAction(input: WorkspaceState, action: WorkspaceAction, now:
       state.reviews.push({ lessonId: lesson.id, rating: action.rating, reviewedAt: timestamp, dueAt: scheduled.card.due.toISOString(), scheduler: 'ts-fsrs-5.4.2',
         card: { ...scheduled.card, due: scheduled.card.due.toISOString(), last_review: scheduled.card.last_review?.toISOString() } });
     } else if (action.type === 'attempt') {
+      if (lesson.exposure === 'fresh-no-diagram') {
+        const freshRequest = state.freshRequests?.find(item => item.lessonId === lesson.id);
+        if (freshRequest && freshRequest.status !== 'opened') throw new Error('Open the pending fresh question before answering.');
+      }
       if (!Number.isInteger(action.optionIndex) || action.optionIndex < 0 || action.optionIndex >= lesson.options.length) throw new Error('Choose an available response.');
       const original = action.revisionOf ? state.attempts.find(attempt => attempt.id === action.revisionOf) : undefined;
       if (action.revisionOf && (!original || original.lessonId !== lesson.id)) throw new Error('A revision must reference an original attempt on this lesson in this workspace.');
-      const assistance = [...new Set([...(original?.assistance ?? []), ...(state.assistance[lesson.id] ?? [])])];
+      const visibleSupport = lesson.kind === 'circuit' && lesson.exposure !== 'fresh-no-diagram' ? [`${timestamp} · diagram-visible`] : [];
+      const assistance = [...new Set([...(original?.assistance ?? []), ...(state.assistance[lesson.id] ?? []), ...visibleSupport])];
       const correct = action.optionIndex === lesson.answerIndex;
       const novel = !state.attempts.some(attempt => attempt.question === lesson.question);
       const id = `attempt-${state.attempts.length + 1}`;
       const assisted = assistance.length > 0;
       state.attempts.push({ id, lessonId: lesson.id, lessonVersion: lesson.version, modelVersion: lesson.modelVersion,
-        sourceVersions: structuredClone(lesson.sourceVersions), question: lesson.question, response: lesson.options[action.optionIndex], correct, assisted, assistance,
+        sourceVersions: structuredClone(lesson.sourceVersions), exposure: lesson.exposure ?? 'lab', ...(lesson.predictionId ? { predictionId: lesson.predictionId } : {}), question: lesson.question, response: lesson.options[action.optionIndex], correct, assisted, assistance,
         createdAt: timestamp, ...(action.revisionOf ? { revisionOf: action.revisionOf } : {}), novel,
         feedback: `${correct ? 'This selected explanation is correct.' : 'This answer needs another look.'} ${assisted ? 'Recorded help preceded this response.' : 'Answered without recorded help in Soma; external help is unknown.'} ${novel ? 'First recorded response to this question.' : 'Repeated exposed question; this is not fresh transfer evidence.'} ${lesson.explanation}` });
       // Feedback is a solution reveal for any subsequent response to this item.
@@ -165,7 +218,7 @@ export function applyAction(input: WorkspaceState, action: WorkspaceAction, now:
         next.title = lesson.courseId === 'circuits' ? 'Trace the path before calculating' : 'Check the underlying rule';
         next.reason = 'The last response suggests revisiting the source-backed relationship before another application. This remains a hypothesis.';
       }
-      state.lessons.push(next);
+      state.lessons.push(withLessonMetadata(next));
       if (state.preferences.workedExamples) {
         // Preference makes support explicit on the next activity instead of silently converting it into evidence.
         next.description = `Worked example available: ${next.description}`;

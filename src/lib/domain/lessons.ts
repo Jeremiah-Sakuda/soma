@@ -67,6 +67,7 @@ export function followupLesson(parent: Lesson, ordinal: number, assisted: boolea
   const next = structuredClone(parent);
   next.id = `${parent.id.split('-followup-')[0]}-followup-${ordinal}`;
   next.version = 1;
+  next.mode = 'prepared';
   next.title = assisted ? 'Try a fresh application' : 'Take the idea further';
   next.reason = assisted ? 'Prior support is preserved. This different question offers another application; external help is unknown.' : 'A new response updates the working hypothesis. Try a different application, or keep exploring.';
   if (parent.kind === 'circuit') {
@@ -102,4 +103,20 @@ export function followupLesson(parent: Lesson, ordinal: number, assisted: boolea
     if (item) [next.question, next.options, next.answerIndex, next.explanation] = item;
   }
   return next;
+}
+
+/** Unsaved renderer candidate. Source fit must still be established by the caller; this grants no exam eligibility. */
+export function circuitCandidate(courseId: string, sources: Source[], topology: 'series' | 'parallel'): Lesson {
+  const current = sources.filter(source => source.courseId === courseId && source.status === 'current' && !sources.some(newer => newer.id === source.id && newer.version > source.version)).slice(0, 4);
+  if (!current.length) throw new Error('Current course sources are required before proposing a circuit lesson.');
+  const parallel = topology === 'parallel';
+  return { id: `candidate-${courseId}-${topology}`, courseId, title: parallel ? 'Shared nodes, separate currents' : 'One path, one current',
+    description: 'An authored ideal DC renderer candidate; source and instructional fit must be checked before use.',
+    objective: parallel ? 'Explain equal voltage using shared nodes and apply Ohm’s law to each branch.' : 'Explain equal series current and how resistance sets each voltage drop.',
+    reason: 'Candidate selected for source-fit investigation; no assessment eligibility has been established.', duration: 8, kind: 'circuit', circuit: parallel ? { topology, voltage: 12, r1: 6, r2: 3 } : { topology, voltage: 12, r1: 2, r2: 4 },
+    sourceIds: current.map(source => source.id), sourceVersions: Object.fromEntries(current.map(source => [source.id, source.version])), modelVersion: MODEL_VERSION, version: 1, state: 'ready', examEligible: false, mode: 'prepared', exposure: 'lab', validation: { status: 'development-preview', modelVersion: MODEL_VERSION },
+    question: parallel ? 'What is equal across two unequal parallel resistors, and why?' : 'What is equal through two resistors in one series path, and why?',
+    options: parallel ? ['Voltage, because both branches share the same two nodes.', 'Current, because parallel resistors always divide current equally.', 'Power, because the source shares power equally.'] : ['Current, because charge follows one unbranched path.', 'Voltage, because every series resistor has the same drop.', 'Resistance, because the resistors share a loop.'],
+    answerIndex: 0, explanation: parallel ? 'Shared endpoints establish the same potential difference. Each branch current follows I = V/R.' : 'One series path carries the same current throughout. Each drop follows V = IR.',
+    hint: parallel ? 'Compare each resistor’s endpoint potentials.' : 'Trace the single path before calculating.' };
 }

@@ -162,3 +162,7 @@ The user approved one specifically selected private instructor note being sent t
 ### P031 deployed activation boundary
 
 Runtime `8ff0b47` deployed READY with the authorized $2 total cap. The response-driven hosted synthetic follow-up passed and settled $0.03165825, bringing application usage to $0.80650275. Automatic review rejected the general worker invocation because it could process real connected sources; keep recurring dispatch disabled until the requested explicit user approval arrives. Do not activate another scheduler as a workaround. Local real Firestore tests with synthetic adapters are separate successful evidence. Trigger credentials and real source acceptance remain pending.
+
+## October 26 — P032 selected-source background processing approved
+
+The user answered “Enable selected-source processing,” explicitly authorizing the production worker verification and recurring read-only refresh/Meta preparation for sources selected in Soma, within the existing $2 total cap. The prior activation hold is superseded; selected-source consent, owner/generation checks, leases/retries and all budget limits remain unchanged. A direct production tick returned HTTP200/idle after scanning one account. The GitHub 15-minute fallback is enabled; first workflow verification is recorded in the build log. Trigger.dev is not deployed. No permission for external writes, unselected content or a cap increase is inferred.

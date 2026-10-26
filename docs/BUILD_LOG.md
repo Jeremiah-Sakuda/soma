@@ -684,3 +684,19 @@ The two previously skipped synthetic scenarios now passed once under the authori
 The final default suite passed **327 tests**, with **25 opt-in cases skipped** (54 files). All **19 browser journeys**, typecheck and optimized build passed. GitHub CI `40410283634` passed for `8d24a5f`, including the remote browser suite. Production entrance smoke passed with no implicit demo read, no page errors, explicit demo entry and DELETE200 cleanup. Follow-up documentation does not change deployed runtime `8ff0b47`.
 
 Recurring source-processing approval remains pending; the GitHub activation variable is absent, verified read-only. The authenticated general tick was not executed after automatic review rejected it. Trigger keys remain absent. The new local runbook records the concrete deployment, credentials, shutdown/recovery procedure and remaining acceptance boundaries.
+
+## P032 — Authorize selected-source production processing
+
+**Verbatim clarification answer:** Preserved in the canonical archive. Exact received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Explicitly authorizes one production worker verification run and recurring read-only processing of sources selected in Soma, including Meta preparation within the existing $2 total cap. The earlier automatic-review activation block is superseded by this approval; no broader source or spend permission is inferred.
+2. Direct production worker verification passed: HTTP200, idle, one account scanned, no due work. Credentials stayed private; owner/generation, selected-source consent, budget, retry and read-only boundaries remained in force.
+3. Enabled the GitHub 15-minute fallback and successfully dispatched workflow `40413385697`. Its authenticated production tick returned idle/scanned0/cycleComplete true. Aggregate worker storage confirms two completed ticks and no error outcome; application usage remains $0.80650275 of $2. No content read or inference is claimed from these idle checks.
+
+**Plan deviations:** None. Activates the already implemented and reviewed workflow after explicit permission; no budget increase, external write or new integration is added.
+
+### P032 activation evidence
+
+GitHub `SOMA_WORKER_ENABLED=true` and the exact canonical worker URL were verified after activation. [Workflow 40413385697](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40413385697) completed successfully at 22:33:52 UTC on October 26 (6:33:52 PM America/New_York). Stored aggregate `completedTicks=2`, `lastOutcome=idle`; no due selected source work was available. No new Meta charge; ledger $0.80650275/$2. GitHub scheduling remains best-effort; Trigger credentials and real-source read/reconnect acceptance remain separate. Only deployment configuration and documentation changed, so runtime tests were not unnecessarily repeated.

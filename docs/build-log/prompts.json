@@ -241,6 +241,12 @@
       "received_at": null,
       "kind": "message",
       "prompt": "I want you to also ensure the architecture is production ready and we have sufficient tests. I want the remainder of the work to be fine tuning after I connect all my stuff in a moment"
+    },
+    {
+      "id": "P032",
+      "received_at": null,
+      "kind": "answer",
+      "prompt": "Enable selected-source processing"
     }
   ]
 }

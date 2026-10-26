@@ -9,7 +9,7 @@ October 26, 2026. This is a build-status record, not a declaration that the beta
 - Firebase/Firestore is provisioned. A synthetic write/read/delete probe passed, deny-all client rules are published, and server-side ownership remains enforced.
 - Two disposable Firebase users exercised real password sign-in, token verification, session cookies, isolated owned records, reconnection, revision conflicts, deletion/recreation and cleanup. Private full-semester records use named record subcollections.
 - Live Spark preparation over original synthetic sources produced a validated development preview through actual source reads and tool decisions. The first run failed safely; a second completed in about 10 seconds. This is two development runs, not the unseen generation release evaluation. Supporting passages are exact-match validated against current cited sources. Model output cannot alter equations or learner evidence.
-- The integrated suite passed 123 unit tests, with two opt-in live tests skipped. Five Chromium journeys passed, including keyboard, reduced motion and 360–1440px layouts.
+- The integrated suite passed 123 unit tests, with three opt-in live tests skipped. Five Chromium journeys passed, including keyboard, reduced motion and 360–1440px layouts.
 - Production is deployed at https://soma-woad-beta.vercel.app with self-hosted Manrope, encrypted server configuration, Firebase account routes, imports and jobs. Production HTTP checks passed page/health, Firestore-backed isolated demo sessions, persisted session selection, cross-origin rejection and disposable-session deletion.
 
 ## Source support

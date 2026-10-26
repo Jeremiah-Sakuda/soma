@@ -713,18 +713,6 @@ GitHub `SOMA_WORKER_ENABLED=true` and the exact canonical worker URL were verifi
 
 **Plan deviations:** None adopted. This strengthens the existing inspectability objective; detailed implementation and acceptance tests remain future work. Preserve the concurrent uncommitted strategy proposal and PM007 log entries.
 
-## P033 — Explain and audit AI decisions as they happen
-
-**Verbatim prompt:** Preserved in the canonical archive. Exact received timestamp unavailable.
-
-**Top 3 outcomes:**
-
-1. Inspected current investigator, model transport, domain records and investigation UI. Existing support includes exact cited passages/source versions, decision reasons, hypothesis revisions, tool outcomes, mode/model/engine labels and usage. Tool activity is accumulated during a run and published at completion; this is not a durable live audit stream. Raw provider reasoning is discarded by the client.
-2. Recommended a structured decision/event ledger: trigger and context versions; proposed action and concise stated rationale; evidence and uncertainty; application validation and rejected proposals/repairs; executed action/outcome; before/after consequence; final publication, failure or budget stop. Application-observed events and model-provided explanations must remain visibly distinct, with no invented rationale for an unrecorded step.
-3. Feasibility guidance: expose progressive status and expandable evidence-backed explanations, then retain an owner-scoped exportable run record. Preserve secret/private-data boundaries and hide diagnostic details that would reveal answers until exposure is recorded. A model explanation is a stated justification, not proof of hidden internal reasoning. This turn is assessment/design advice; no runtime, model prompt, deployment, budget or source-permission changes, and no tests/provider calls were made.
-
-**Plan deviations:** None adopted. This strengthens the existing inspectability objective; detailed implementation and acceptance tests remain future work. Preserve the concurrent uncommitted strategy proposal and PM007 log entries.
-
 ## P034 — Implement progressive AI auditability and list remaining user work
 
 **Verbatim prompt:** Preserved in the canonical archive. Exact received timestamp unavailable.
@@ -732,8 +720,12 @@ GitHub `SOMA_WORKER_ENABLED=true` and the exact canonical worker URL were verifi
 **Top 3 outcomes:**
 
 1. Implemented a durable owner-scoped journal independent of workspace revisions, actual source/model/tool/check events, concise model-stated purposes, publication confirmation, bounded repair/usage/failure history and protected JSON export. Engine/collection integration `3bf1a9c`, `f74e882`, `a70f547`; storage `f741ac7`, `7cf23bf`, `12e9f3f`. Journal outage stops further inference; a post-commit outage preserves saved work with an incomplete notice. No raw provider reasoning or extra narration calls.
-2. Shipped the Ready Card AI activity disclosure with live progress, source/model labels, evidence versions, full retained-history pagination and exports (`d2afb3d`, `00eb4b1`). Fixed the tool-field collision using distinct `auditRationale`, pinned disclosure to lesson/model/source context and committed revision, and withheld discarded diagnostic explanations (`166fb73`, `710e197`, `bf62b5f`). Typecheck/build, **364 default tests** (27 opt-in skipped), **23 browser journeys**, and **2 real Firestore audit cases** passed. The managed worker/adaptation boundary checks also passed with scripted Meta transport, separately from real inference. Final deployment/hosted model check pending at this checkpoint.
+2. Shipped the Ready Card AI activity disclosure with live progress, source/model labels, evidence versions, full retained-history pagination and exports (`d2afb3d`, `00eb4b1`). Fixed the tool-field collision using distinct `auditRationale`, pinned disclosure to lesson/model/source context and committed revision, and withheld discarded diagnostic explanations (`166fb73`, `710e197`, `bf62b5f`). Typecheck/build, **364 default tests** (27 opt-in skipped), **23 browser journeys**, and **2 real Firestore audit cases** passed. The final two managed worker/adaptation boundary cases passed in 67.47s with scripted Meta transport, separately from real inference. Runtime `00eb4b1` deployed READY as `dpl_49WFE1KpromZZ5WZCpTWabaG7nh6` at the production alias.
 3. Wrote [AI auditability](AI_AUDITABILITY.md) and [remaining user work](USER_REMAINING_WORK.md), distinguishing immediate source selection, content review/pilots, optional Trigger setup and submission decisions from engineering/release gates. Trigger secrets remain absent; the existing authorized GitHub scheduler remains active. Actual institutional source acceptance and independent learning/scientific validation are not implied by audit tests.
+
+**Hosted evidence:** One actual Spark source-only no-effect run over disposable synthetic demo material passed in 12.56s: durable live progress, protected in-flight model text, recorded short stated purpose, actual application publication/usage, same projection in JSON export, owner/session denial, reload persistence and zero-inference reuse. Two Meta calls cost $0.01678750; aggregate ledger $0.82329025/$2. Both sessions deleted. No private course material used. This does not certify diagnostic teaching quality or real connector access.
+
+**Remote verification:** [GitHub CI 40418506341](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40418506341) passed for `19f0af3`, covering clean install, module restrictions, typecheck, default suite, optimized build and all browser journeys. Subsequent evidence/documentation edits do not change deployed runtime `00eb4b1`.
 
 **Verification corrections:** The first broad test run hit a five-second existing ordering stress-test deadline under 60 concurrent workers; the whole suite passed with four workers, now the default. An intermediate exact route assertion needed the new committed-revision field; corrected and the final suite passed. A proposed diagnostic field initially collided with domain `rationale`; fixed before release and regression-tested. Historical failures are retained, not counted as successful executions. Firestore cleanup initially required missing collection-group indexes; the two ASC `expiresAt` indexes were provisioned without enabling billing and both managed cases then passed in 10.41s. All these managed fixtures used original synthetic data and no Meta calls.
 

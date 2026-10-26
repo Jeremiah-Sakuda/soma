@@ -55,3 +55,17 @@ Independent scientific/instructional review, broader held-out reliability, genui
 ### P032 recurring processing activation
 
 The user's explicit approval supersedes the earlier activation hold. The direct authenticated check passed HTTP200/idle/scanned1. GitHub variable `SOMA_WORKER_ENABLED=true` is active; [workflow 40413385697](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40413385697) passed with idle/scanned0/cycleComplete true. Firestore aggregate confirms two completed ticks and idle outcome. No selected work was due; this establishes deployed invocation and scheduler authentication, not actual connector access. Application usage stayed $0.80650275/$2. The recurring workflow runs every 15 minutes, best-effort, under the existing selected-source and budget controls. Trigger.dev remains undeployed.
+
+### P034 progressive AI auditability
+
+Runtime `00eb4b1` deployed READY as `dpl_49WFE1KpromZZ5WZCpTWabaG7nh6` at the canonical alias. [AI auditability](AI_AUDITABILITY.md) documents actual support, protected explanations/export, retention, failure handling and the distinction between application observations and model-stated purposes. These are not hidden-reasoning transcripts or a tamper-evident forensic log. All direct/preparation/adaptation model paths and selected-source refreshes now create owned durable journals. No new source permission or budget was added.
+
+Typecheck, optimized build, 364 default tests (27 opt-in skipped) and all 23 browser journeys passed. Real Firestore audit lifecycle/pagination/isolation/deletion and indexed demo-expiry cleanup passed 2/2 in 10.41s, with no Meta calls. A five-second journal confirmation deadline halts further inference; post-commit confirmation failure preserves saved work with an explicit incomplete-audit notice. Source-refresh job handoff can recover from durable observations. Scheduler housekeeping uses a bounded deadline and reports deferred cleanup independently of source work.
+
+The hosted synthetic model/audit check passed in 12.56s: actual live progress before completion, protected in-flight model text, two real Spark calls, application commit and usage events, recorded short stated purposes, same projection in JSON export, cross-session denial, durable readback and zero-call cache reuse. Both disposable sessions were deleted. Estimated settled charge $0.01678750; aggregate application ledger $0.82329025/$2. This verifies the deployed source-only no-effect investigation and journal, not real institutional access or diagnostic learning benefit. Discarded diagnostic protection and version/context/race disclosure were verified separately with scripted transport and actual persistence.
+
+Final managed worker/adaptation regression passed 2/2 in 67.47s against real Firebase after the publication-revision guard was added: original synthetic accounts, scripted Meta boundaries and fixture cleanup; no new inference charge.
+
+See [remaining user work](USER_REMAINING_WORK.md) for source selections, content review, optional Trigger setup and submission inputs. Existing independent-review, real-source and held-out/learner gates remain open.
+
+GitHub CI [40418506341](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40418506341) passed for `19f0af3` with the full default/build/browser checks. Later evidence-only documentation does not change the deployed runtime `00eb4b1`.

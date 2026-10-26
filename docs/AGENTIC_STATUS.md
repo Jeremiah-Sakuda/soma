@@ -1,5 +1,7 @@
 # Agentic implementation audit
 
+P034 adds durable progressive AI activity journals and protected owner exports across source checks, model preparation, investigation and automatic adaptation. See [audit contract](AI_AUDITABILITY.md), [production evidence](PRODUCTION_READINESS.md) and [remaining user inputs](USER_REMAINING_WORK.md). This does not close the real-source, content-review or learning-evidence gates.
+
 ## Current P031 hardening checkpoint
 
 The table below the divider is the **historical post-cdfc87c audit**. P031 now adds durable worker dispatch/recovery, atomically queued automatic diagnostic adaptation, source-authority registration, owner-confirmed academic fact publication and safe timing-only lesson rebasing. Real Firestore worker/adaptation tests have passed with synthetic external boundaries; complete final verification/deployment is recorded in [production readiness](PRODUCTION_READINESS.md). These changes supersede the historical statements that no worker or automatic queue exists.

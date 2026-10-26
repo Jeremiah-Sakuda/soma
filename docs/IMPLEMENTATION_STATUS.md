@@ -1,5 +1,7 @@
 # Soma implementation evidence
 
+P034 adds durable progressive AI activity journals and protected owner exports across source checks, model preparation, investigation and automatic adaptation. See [audit contract](AI_AUDITABILITY.md), [production evidence](PRODUCTION_READINESS.md) and [remaining user inputs](USER_REMAINING_WORK.md). This does not close the real-source, content-review or learning-evidence gates.
+
 October 26, 2026. This is a build-status record, not a declaration that the beta release gates have passed.
 
 Latest P031 hardening: durable page-closed worker/recovery, atomic diagnostic adaptation, declared source authority/facts and safe teaching reuse are implemented. Real Firestore synthetic integration checks passed; final checks/deployment and limitations are maintained in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md). Earlier chronological results below are historical, including the prior $1 cap and missing-worker audit. P030 authorized a $2 total cap and the two skipped model cases subsequently passed; [AGENTIC_EVALUATION.md](AGENTIC_EVALUATION.md) has the exact results.

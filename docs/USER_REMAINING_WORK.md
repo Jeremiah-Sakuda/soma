@@ -4,7 +4,7 @@ October 26, 2026. This separates inputs that require you from engineering and re
 
 ## Next: connect and select your actual course context
 
-1. Sign in to [Soma](https://soma-woad-beta.vercel.app) with your BU account. Connect Google and select the calendars and course-specific Gmail queries you want Soma to read. Authorization alone does not select or prove access to course content.
+1. Sign in to [Soma](https://soma-woad-beta.vercel.app) using your existing Soma account. Connect Google and select the calendars and course-specific Gmail queries you want Soma to read. Authorization alone does not select or prove access to course content.
 2. Connect the institutional browser sessions for Blackboard (`learn.bu.edu`), Gradescope and Piazza as needed. Complete password and MFA only in the private provider browser, then select supported exact course pages. Do not put credentials in chat, a source document or Git. Institutional SSO can require manual reconnection; if a page is unsupported, use the labeled course text/import route while we fix or report the connector.
 3. Select one real course/topic and a useful sequence to validate: a source change, returned response and next activity. Identify which source actually controls dates/coverage; confirm typed academic facts when needed. The CS 440 preview exists, but it does not establish a full live course integration. The resistor development lab has not yet been confirmed against your actual course sources.
 

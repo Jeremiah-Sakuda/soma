@@ -1,5 +1,4 @@
-import type { DatabaseSync } from 'node:sqlite';
-import { createRequire } from 'node:module';
+import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, chmodSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -27,8 +26,6 @@ export function usageCost(input: number, output: number) {
 }
 
 function database() {
-  // SQLite is exclusively a local synthetic fallback; hosted runtimes use Firestore.
-  const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite') as typeof import('node:sqlite');
   const path = resolve(/* turbopackIgnore: true */ process.env.SOMA_BUDGET_DB_PATH || '.local/budget.sqlite');
   mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
   const db = new DatabaseSync(path);

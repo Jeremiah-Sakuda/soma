@@ -116,4 +116,36 @@ describe('investigator and actual durable SQLite audit integration', () => {
     expect((await readWorkspace(fixture.token))!.investigations ?? []).toHaveLength(0);
     await fixture.writer.finish({ status: 'failed' });
   });
+  it('keeps a discarded diagnostic proposal protected after a source-only terminal decision', async () => {
+    const fixture = await setup(); let calls = 0;
+    const spoiler = 'SPOILER: the unpublished diagnostic expects the unequal-probability option.';
+    const diagnostic = {
+      hypotheses: [
+        { id: 'equal-probabilities', claim: 'The learner may confuse independence with equal probabilities.', evidence: fixture.evidence, attemptIds: [] },
+        { id: 'diagram-reading', claim: 'The learner may have misread a diagram.', evidence: fixture.evidence, attemptIds: [] },
+      ],
+      question: 'Must two independent events have equal probabilities?', options: ['They must be equal', 'They may differ', 'They must be zero'],
+      predictions: [{ hypothesisId: 'equal-probabilities', predictedOptionIndex: 0 }, { hypothesisId: 'diagram-reading', predictedOptionIndex: 1 }],
+      rationale: 'The different predictions provide an optional way to distinguish provisional explanations.', nextActivity: 'Try an independent-event comparison.', auditRationale: spoiler,
+    };
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      calls++;
+      if (calls === 1) return reply('read_source', { sourceId: fixture.source.id, offset: 0, auditRationale: rationale }, calls);
+      if (calls === 2) return reply('prepare_diagnostic', diagnostic, calls);
+      return reply('finish_investigation', fixture.finish(), calls);
+    }));
+    const result = await investigateWithSpark(fixture.workspace, request, { audit: fixture.writer });
+    expect(result.lesson).toBeUndefined(); expect(result.selectedLessonId).toBeUndefined();
+    expect(result.protectUnpublishedActivity).toBe(true);
+    const published = await updateWorkspace(fixture.token, state => publishInvestigation(state, result), fixture.workspace.revision);
+    await fixture.writer.finish({ status: 'published', protectUnpublishedActivity: result.protectUnpublishedActivity });
+    const [run] = await readAuditRuns(fixture.access, published, fixture.writer.id);
+    expect(run.status).toBe('published');
+    expect(run.events.filter(event => event.actor === 'model').every(event => event.protected && !event.rationale)).toBe(true);
+    expect(JSON.stringify(run)).not.toContain(spoiler);
+    const db = new DatabaseSync(join(directory, 'workspace.sqlite'));
+    try { expect(String(db.prepare('SELECT payload FROM audit_runs').get()?.payload)).toContain(spoiler); } finally { db.close(); }
+    expect(calls).toBe(3);
+  });
+
 });

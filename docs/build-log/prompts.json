@@ -259,6 +259,12 @@
       "received_at": null,
       "kind": "message",
       "prompt": "Great implement that. And then give me the remaining work I need to do"
+    },
+    {
+      "id": "P035",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "[https://github.com/EAIconsulting/mattpock-skills/blob/main/skills/engineering/improve-codebase-architecture/SKILL.md](https://github.com/EAIconsulting/mattpock-skills/blob/main/skills/engineering/improve-codebase-architecture/SKILL.md) use this skill to iterate on the architecture "
     }
   ]
 }

@@ -96,3 +96,5 @@ Two additional paid cases were skipped before inference under the unchanged $1 d
 ## P031 deployed hardening checkpoint
 
 Runtime `8ff0b47` is READY on the production alias. Typecheck/build, 327 default checks and 19 browser journeys passed; separate real Firestore worker/adaptation/1,000-record ordering checks passed with disposable synthetic records and scripted external boundaries. One actual hosted automatic Spark follow-up passed on an authored synthetic diagnostic, costing $0.03165825; application total $0.80650275/$2. Worker authentication/selector rejection passed. General production worker invocation was blocked by automatic approval review; recurring activation awaits explicit user approval, with Trigger credentials still absent. Full evidence, recovery and remaining acceptance boundaries: [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
+
+CI `40410283634` passed at `8d24a5f`; final default count327 passed/25 opt-in skipped and all19 browser journeys passed. The production entrance smoke also passed with explicit demo choice and complete disposable cleanup. General recurring dispatch remains pending approval.

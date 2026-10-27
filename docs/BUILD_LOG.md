@@ -810,3 +810,15 @@ GitHub `SOMA_WORKER_ENABLED=true` and the exact canonical worker URL were verifi
 **Plan deviations:** Explicit user-directed sequencing change: synthetic polish precedes personal-course testing, superseding the original Day 1/PM012/P037 real-course-first dependency. Real-course fit, two live source types, independent review, numerical, held-out, R9/privacy and genuine pilot gates remain required. Keep one quantitative family, $2 aggregate cap, October 31 freeze and November 4 deadline. Fine-tuning and a cross-course bridge remain conditional stretches. Unrelated advisory prompts and rubric proposal are preserved.
 
 P040 documentation verification: local links in eleven adopted planning documents resolved; canonical attachment text matches the supplied file exactly; all six milestone sections present. Whitespace checked separately. No application tests were run for this documentation-only change.
+
+## P041 — Implement and audit learning graph milestones 1–5
+
+**Verbatim prompt:** Canonical archive; received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. M1 original synthetic scenario, source versions, returned-work SVG and analytical oracle authored; milestone audit in progress.
+2. M2–M5 implementation queued behind per-milestone review checkpoints; existing account/worker/checked-family infrastructure reused.
+3. Frequent focused commits, synthetic/managed/browser verification and final main push pending. No private coursework required.
+
+**Plan deviations:** None adopted. Preserve $2 budget and independent/release gates; milestone status will be updated from executed evidence.

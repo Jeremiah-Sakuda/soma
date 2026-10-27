@@ -7,6 +7,8 @@ import {verifyWorkerRequest} from '../../src/lib/server/worker-auth';
 import {withBrowserRead,remainingReadTime} from '../../src/lib/server/connectors/browser';
 import {readGradescopeCatalog,readGradescopeAssignmentMetadata} from '../../src/lib/server/connectors/gradescope-materials';
 import {isAllowedGradescopeRequest,filterGradescopeFall2026,canonicalGradescopeCourseUrl} from '../../src/lib/domain/gradescope-navigation';
+import {readAccountWorkspace} from '../../src/lib/server/account-store';
+import {listConnections} from '../../src/lib/server/connectors/store';
 
 async function scopedAccount(){
  if(!process.env.SOMA_GRADESCOPE_OWNER_EMAIL)throw new Error('Explicit owner scope required.');
@@ -70,5 +72,21 @@ describe.skipIf(process.env.SOMA_GRADESCOPE_LIVE_TEST!=='true')('authorized Grad
    return {value:{verifiedOverviews:selected.length,assignmentRows},notice:'Current-semester Gradescope assignment metadata verified. No grades, responses, files or material publication in this access probe.'};
   });
   process.stdout.write(JSON.stringify({...result,modelCalls:0,persistedMaterial:0})+'\n');
+ },120_000);
+ it.skipIf(process.env.SOMA_GRADESCOPE_VERIFY_SAVED!=='true')('verifies owned saved metadata matches the selected course scope',async()=>{
+  const account=await scopedAccount(),workspace=await readAccountWorkspace(account);expect(workspace).toBeTruthy();
+  const connection=(await listConnections(account)).find(item=>item.id==='browser-gradescope');expect(connection?.status).toBe('current');
+  const targets=connection!.configuration.targets as {url:string;courseId:string}[];expect(targets.length).toBeGreaterThan(0);
+  const current=workspace!.sources.filter(source=>source.kind==='gradescope'&&source.origin==='live'&&source.status==='current');
+  expect(current.length).toBe(targets.length);let assignmentRows=0;
+  for(const source of current){
+   expect(targets.some(target=>target.url===source.url&&target.courseId===source.courseId)).toBe(true);
+   expect(source.provenance?.sourceKey).toBe('gradescope:browser-gradescope:'+source.url);
+   expect(source.body).not.toContain('/submissions/');
+   for(const line of source.body.split('\n').slice(1)){
+    const row=JSON.parse(line);expect(Object.keys(row).every(key=>['assignmentId','identity','name','releaseDisplayed','dueDisplayed'].includes(key))).toBe(true);assignmentRows++;
+   }
+  }
+  process.stdout.write(JSON.stringify({selectedCourses:targets.length,currentOwnedOverviews:current.length,assignmentRows,verifiedSelectedScope:true})+'\n');
  },120_000);
 });

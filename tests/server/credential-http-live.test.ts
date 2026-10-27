@@ -2,6 +2,7 @@ import {randomBytes,randomUUID,createHash} from 'node:crypto';
 import {getAuth} from 'firebase-admin/auth';
 import {describe,expect,it} from 'vitest';
 import {getServerApp,getServerFirestore} from '../../src/lib/server/firebase-config';
+import {CredentialCipher,credentialBinding} from '../../src/lib/server/credential-crypto';
 
 describe.skipIf(process.env.SOMA_CREDENTIAL_HTTP_TEST!=='true')('hosted credential request checks',()=>{
  it('verifies cookies, origin, body limits and deletion without material or provider login',async()=>{
@@ -18,7 +19,7 @@ describe.skipIf(process.env.SOMA_CREDENTIAL_HTTP_TEST!=='true')('hosted credenti
    expect(exchange.status).toBe(200);const header=exchange.headers.get('set-cookie')||'';
    expect(/httponly/i.test(header)&&/secure/i.test(header)&&/samesite=lax/i.test(header)).toBe(true);
    const token=/soma_account=([^;]+)/.exec(header)?.[1];if(!token)throw new Error('Hosted account cookie missing.');cookie=`soma_account=${token}`;
-   const workspace=await call('/api/workspace');expect(workspace.status).toBe(200);expect((await workspace.json()).workspace.sources).toHaveLength(0);
+   const workspace=await call('/api/workspace');expect(workspace.status).toBe(200);const workspaceData=(await workspace.json()).workspace;expect(workspaceData.sources).toHaveLength(0);
    expect(workspace.headers.get('cache-control')).toContain('no-store');
    const invalid=JSON.stringify({provider:'blackboard',action:'start',password:'original-synthetic-canary'});
    expect((await call('/api/connectors/browser','POST',invalid,'https://other.example')).status).toBe(403);
@@ -28,6 +29,11 @@ describe.skipIf(process.env.SOMA_CREDENTIAL_HTTP_TEST!=='true')('hosted credenti
    expect(oversized.status).toBe(413);expect((await oversized.text()).includes('界')).toBe(false);
    const status=await call('/api/connectors/browser');expect(status.status).toBe(200);expect(status.headers.get('cache-control')).toContain('no-store');
    expect((await status.json()).providers.every((item:{connection?:unknown})=>!item.connection)).toBe(true);
+   // A deployed reader must open v2 even while default production writes remain v1.
+   // Disconnected synthetic authorization is never selected for a background refresh.
+   const root=getServerFirestore().collection('somaAccounts').doc(createHash('sha256').update(user.uid).digest('hex'));
+   const cipher=new CredentialCipher({...process.env,SOMA_CONNECTOR_WRITE_FORMAT:'v2'}),secret={refreshToken:'original-hosted-v2-synthetic-token'};
+   await root.collection('connections').doc('google-gmail').set({id:'google-gmail',provider:'gmail',ownerId:user.uid,workspaceId:workspaceData.id,version:1,status:'disconnected',configuration:{},encryptedSecret:cipher.encrypt(secret,credentialBinding(user.uid,workspaceData.id,'google-gmail'))});
    const oauth=await call('/api/connectors/google/start','POST',JSON.stringify({provider:'gmail'}));expect(oauth.status).toBe(200);
    const authorization=new URL((await oauth.json()).authorizationUrl);expect(authorization.origin).toBe('https://accounts.google.com');expect(authorization.searchParams.has('client_secret')).toBe(false);expect(authorization.searchParams.get('code_challenge_method')).toBe('S256');
    const deleted=await call('/api/workspace','DELETE');expect(deleted.status).toBe(200);expect((await deleted.json()).deleted).toBe(true);

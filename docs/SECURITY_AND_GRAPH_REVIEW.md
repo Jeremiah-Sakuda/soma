@@ -52,7 +52,7 @@ These are engineering/operational gates, not requests for passwords or private c
 
 ## Executed evidence
 
-- Default suite: **449 passed, 40 opt-in skipped** in **8.83s** after P044; earlier P042 pass was 442/39.
+- Default suite: **453 passed, 40 opt-in skipped** in **7.21s** after P044; earlier passes were 442/39 and 449/40. Five CLI invalid-scope variants are now separate test cases instead of a single loop; this increases reporting granularity, not unique scenario coverage.
 - Browser journeys: **31/31 passed** in **20.8s**, including diagnostic identity, transient login links, keyboard/mobile deletion recovery and existing account/source races.
 - Real Firebase credential lease/projection/deletion recovery plus graph restart: **4/4 passed in 16.13s**. Disposable original synthetic accounts were removed. This combines one SQLite test and three managed tests; it does not imply four independent model cases.
 - Type checking, production configuration and local webpack production compilation passed for P042. A narrow scan of 263 tracked files plus the client bundle found none of the five configured credential values; this is not a comprehensive historical secret scan. P044 type checking, configuration and webpack production build also passed. Its current-value scan checked 265 tracked files plus 45 client files against five configured credentials and found no matches.
@@ -61,3 +61,5 @@ These are engineering/operational gates, not requests for passwords or private c
 - No new Meta calls, private source reads, Browserbase login, institutional credential entry or production key rotation. Disposable synthetic key migrations are separate mechanism tests. Existing Meta consumption remains **$1.55875225/$2**.
 
 The first new disclosure test failed because it had not opened the connection section; a subsequent run exposed duplicate disclosure copy and an ambiguous test alert selector. Those were corrected. Final browser results above are executed passes, not a retrospective claim that the first run passed.
+
+P044 hosted follow-up on deployment `dpl_8ikHg4wpddjvfkYTeqCvbaa8TXoG` / commit `0cedfc8`: **1/1 passed in 10.66s**, including an actual deployed read of a v2-encrypted disconnected synthetic credential while the original write format remains configured. It created no provider token exchange or source job, and deleted the disposable account records. Vercel reported Ready. CI run 40575691424 failed only because the existing 200-insertion ordering stress case exceeded its five-second deadline (5.931s on the shared runner); all 200 iterations/assertions are retained with a case-specific 15-second timeout. CLI subprocess variants are split so each retains its own five-second deadline. Final CI result follows after rerun.

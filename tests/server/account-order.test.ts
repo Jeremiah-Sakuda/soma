@@ -23,6 +23,7 @@ describe('stable semester record ordering',()=>{
     expect(accountRecordChanges(before,after)).toHaveLength(1);
     expect(decodeAccountRecords(after).lessons.map(item=>item.id)).toEqual(next.lessons.map(item=>item.id));
   });
+  // This is a 200-step correctness stress case, not a five-second performance SLA.
   it('retains exact order through repeated middle insertions beyond floating-point precision',()=>{
     let state=fixture();state.lessons=state.lessons.slice(0,2);let saved=encodeAccountRecords(state);
     for(let i=0;i<200;i++){
@@ -32,5 +33,5 @@ describe('stable semester record ordering',()=>{
       expect(accountRecordChanges(saved,next)).toHaveLength(1);
       expect(decodeAccountRecords(next).lessons.map(item=>item.id)).toEqual(state.lessons.map(item=>item.id));saved=next;
     }
-  });
+  },15_000);
 });

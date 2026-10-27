@@ -1,3 +1,4 @@
+import { materiallyDifferentActivity } from '../domain/activity-change';
 import { AuditStoreError, type AuditWriter } from './audit-store';
 import { withAuditRationales, splitAuditRationale } from './audit-tools';
 import { automaticModelContext } from './automatic-context';
@@ -89,7 +90,9 @@ export async function investigateWithSpark(state: WorkspaceState, raw: Investiga
   let activityProposals = 0;
   let calls = 0, cost = 0, certain = true, repair = false, diagnostic: ValidatedDiagnosticPlan | undefined, lesson: Lesson | undefined;
   const recordId = `investigation-${randomUUID()}`, started = Date.now();
-  const summary = previous ? { id: previous.id, decision: previous.decision, reason: previous.reason.slice(0, 300), conflicts: previous.conflicts, hypotheses: previous.diagnosticPlan?.hypotheses.map(hypothesis => ({ id: hypothesis.id, claim: hypothesis.claim, status: hypothesis.status })), savedResponse: responseEvidence ? { ...responseEvidence, hypotheses: responseEvidence.hypotheses.map(hypothesis => ({ id: hypothesis.id, claim: hypothesis.claim, status: hypothesis.status })) } : null } : null;
+  const retainedStatuses = new Map(previous?.diagnosticPlan?.hypotheses.map(hypothesis => [hypothesis.id, hypothesis.status]) ?? []);
+  for (const record of [...(state.investigations ?? [])].filter(record => record.courseId === request.courseId && record.workspaceId === state.id && record.attemptIds?.some(id => state.attempts.some(item => item.id === id && item.lessonId === previous?.diagnosticLessonId))).sort((a,b) => a.createdAt.localeCompare(b.createdAt))) for (const revision of record.hypothesisRevisions ?? []) if (retainedStatuses.has(revision.hypothesisId)) retainedStatuses.set(revision.hypothesisId, revision.status);
+  const summary = previous ? { id: previous.id, decision: previous.decision, reason: previous.reason.slice(0, 300), conflicts: previous.conflicts, hypotheses: previous.diagnosticPlan?.hypotheses.map(hypothesis => ({ id: hypothesis.id, claim: hypothesis.claim, status: retainedStatuses.get(hypothesis.id) ?? hypothesis.status })), savedResponse: responseEvidence ? { ...responseEvidence, hypotheses: responseEvidence.hypotheses.map(hypothesis => ({ id: hypothesis.id, claim: hypothesis.claim, status: hypothesis.status })) } : null } : null;
   const history: unknown[] = [{ role: 'user', content: JSON.stringify({ goal: request.goal, courseId: request.courseId, initialSourceIds: request.initialSourceIds ?? [], sourceCatalog: firstPage, previous: summary, currentRecommendation: state.recommendedLessonId ?? null, availableLessons: state.lessons.filter(item => item.courseId === request.courseId && item.state === 'ready').slice(0, 8).map(item => ({ id: item.id, objective: item.objective, sourceVersions: item.sourceVersions })) }) }];
   const rememberRead = (result: ReturnType<typeof readInvestigationSource>) => {
     const body = result.body.slice(0, 1200), segments = reads.get(result.sourceId)?.segments ?? [];
@@ -146,19 +149,23 @@ export async function investigateWithSpark(state: WorkspaceState, raw: Investiga
           if (!responseEvidence || value.attemptId !== responseEvidence.attemptId || !hypothesis || revisions.some(item => item.hypothesisId === value.hypothesisId)) throw new Error('Revision requires the original saved diagnostic response.');
           const constrained = responseEvidence.hypotheses.find(item => item.id === value.hypothesisId)!;
           if (value.status !== 'unresolved' && value.status !== constrained.status) throw new Error('The revision must respect the actual response prediction; uncertainty can be retained.');
-          revisions.push({ hypothesisId: value.hypothesisId, status: value.status, reason: value.reason });
+          const priorRevision = revisions.findIndex(item => item.hypothesisId === value.hypothesisId);
+          const nextRevision = { hypothesisId: value.hypothesisId, status: value.status, reason: value.reason };
+          if (priorRevision >= 0) revisions[priorRevision] = nextRevision; else revisions.push(nextRevision);
           output = { accepted: true, provisional: true, originalObservationPreserved: true };
         } else if (action.name === 'finish_investigation') {
           const { selectedLessonIds, assessmentIds, conflicts, ...fields } = finishSchema.parse(args);
           const selection = selectedLessonIds[0] ?? null;
           const rawDecision = { ...fields, assessmentId: assessmentIds[0] ?? null, conflicts: conflicts.map(({ preferredSourceIds, ...conflict }) => ({ ...conflict, preferredSourceId: preferredSourceIds[0] ?? null })) };
           const decision = validateInvestigationDecision(rawDecision, state, request.courseId, reads, previous);
-          if (responseEvidence && !revisions.length) throw new Error('A saved response needs an explicit reconsideration before completion.');
+          if (responseEvidence && previous?.diagnosticPlan?.hypotheses.some(hypothesis => !revisions.some(revision => revision.hypothesisId === hypothesis.id))) throw new Error('A saved response needs explicit reconsideration of both prior hypotheses before completion.');
           if (decision.decision !== 'revise-session' && selection !== null) throw new Error('An unchanged or unresolved decision cannot replace the session.');
           const selected = selection === lesson?.id ? lesson : state.lessons.find(item => item.id === selection && item.courseId === request.courseId && item.state === 'ready');
           if (selected?.diagnosticExperiment && !recheckDiagnosticExperimentInput(selected.diagnosticExperiment.input).informative) throw new Error('Selected experiment no longer has a checked informative approved-form comparison.');
           if (selection && !selected) throw new Error('Selected lesson is outside this investigation.');
           if (decision.decision === 'revise-session' && !selected) throw new Error('Revising a session needs a validated selected activity.');
+          const previousActivity = previous?.diagnosticLessonId && state.lessons.find(item => item.id === previous.diagnosticLessonId);
+          if (responseEvidence && selected && previousActivity && !materiallyDifferentActivity(previousActivity, selected)) throw new Error('A revised next activity must change the question or meaningful experiment configuration; retain the valid current activity with keep-current instead.');
           if (selected && !selected.sourceIds.every(id => state.sources.some(source => source.id === id && source.version === selected.sourceVersions[id] && source.status === 'current' && source.courseId === request.courseId))) throw new Error('Selected activity has stale sources.');
           await audit?.append({ actor: 'application', kind: 'validation', summary: 'The proposed decision passed source, scope, diagnostic and selected-activity checks. Publication still requires a current workspace commit.', visibility: 'public', evidence: decision.sourceRefs.map(({ sourceId, version }) => ({ sourceId, version })) });
           await audit?.append({ actor: 'model', kind: 'decision', summary: 'Spark proposed a next-step decision.', rationale: decision.reason.slice(0, 280), visibility: 'protected', evidence: decision.sourceRefs.map(({ sourceId, version }) => ({ sourceId, version })) });
@@ -203,6 +210,9 @@ export function publishInvestigation(state: WorkspaceState, result: Investigatio
   for (const [id, read] of result.reads) if (!state.sources.some(source => source.id === id && source.version === read.version && source.courseId === result.record.courseId && source.status === 'current')) throw new Error('An investigated source changed before publication.');
   const selected = result.lesson ?? state.lessons.find(lesson => lesson.id === result.selectedLessonId);
   if (result.selectedLessonId && (!selected || selected.id !== result.selectedLessonId || selected.courseId !== result.record.courseId || selected.state !== 'ready' || !selected.sourceIds.every(id => state.sources.some(source => source.id === id && source.version === selected.sourceVersions[id] && source.courseId === selected.courseId && source.status === 'current')))) throw new Error('Selected activity changed before publication.');
+  const parent = state.investigations?.find(record => record.id === result.record.supersedesId);
+  const parentActivity = parent?.diagnosticLessonId && state.lessons.find(lesson => lesson.id === parent.diagnosticLessonId);
+  if (result.record.attemptIds?.length && result.decision.decision === 'revise-session' && selected && parentActivity && !materiallyDifferentActivity(parentActivity, selected)) throw new Error('Publication requires a materially different next activity.');
   for (const ref of result.record.sourceRefs) if (!state.sources.some(source => source.id === ref.sourceId && source.version === ref.version && source.courseId === result.record.courseId && source.status === 'current')) throw new Error('Investigation sources changed before publication.');
   const next = applySourceDecision(state, result.record.courseId, result.decision, result.reads, { id: result.record.id, createdAt: result.record.createdAt, mode: result.record.mode, ...(result.record.supersedesId ? { supersedesId: result.record.supersedesId } : {}), ...(result.record.attemptIds ? { attemptIds: result.record.attemptIds } : {}) });
   next.investigations[next.investigations.length - 1] = result.record;

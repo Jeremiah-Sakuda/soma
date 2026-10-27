@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     const rawRevision = request.headers.get('x-workspace-revision');
     const revision = rawRevision === null ? undefined : Number(rawRevision);
     if (revision !== undefined && (!Number.isSafeInteger(revision) || revision < 0)) return NextResponse.json({ error: 'Invalid workspace revision.' }, { status: 400 });
-    if (access.kind === 'account' && parsed.data.type === 'attempt') {
+    if (access.kind === 'account' && (parsed.data.type === 'attempt' || parsed.data.type === 'correct-learning')) {
       const saved = await saveActionWithAdaptation(access.account, parsed.data, revision);
       const job = adaptationForAttempt(saved, access.account.uid, saved.attempts.at(-1)!.id);
       if(job)after(async()=>{try{await runAdaptationJob(access.account,job.id);}catch{/* Durable queue/backoff retains the outcome for the scheduled worker. */}});

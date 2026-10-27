@@ -60,7 +60,7 @@ export async function saveActionWithAdaptation(account: VerifiedAccount, action:
   let job: AdaptationJob | null = null;
   return updateAccountWorkspace(account, state => {
     const saved = applyAction(state, action);
-    if (action.type === 'attempt') job = adaptationForAttempt(saved, account.uid, saved.attempts.at(-1)!.id);
+    if (action.type === 'attempt' || action.type === 'correct-learning') job = adaptationForAttempt(saved, account.uid, saved.attempts.at(-1)!.id);
     return saved;
   }, expectedRevision, async (transaction, root) => { if (job) await writeQueuedJob(transaction, root, job); });
 }

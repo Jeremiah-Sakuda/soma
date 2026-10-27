@@ -251,11 +251,12 @@ it('rejects reversed hypothesis judgments but accepts a conservative unresolved 
   expect(answered.investigations).toHaveLength(1);
   const conservative = script([readUpdate,
     { name: 'revise_interpretation', args: { hypothesisId: 'voltage-rule', status: 'unresolved', attemptId: attempt.id, reason: 'A single response is insufficient to settle the learner explanation.' } },
+    { name: 'revise_interpretation', args: { hypothesisId: 'fixed-current', status: 'unresolved', attemptId: attempt.id, reason: 'The competing explanation also remains provisional after this observation.' } },
     { name: 'finish_investigation', args: finishToolArgs(decision(answered, 'keep-current', false)) },
   ]);
   const result = await investigateWithSpark(answered, revisionRequest);
-  expect(conservative).toHaveBeenCalledTimes(3);
-  expect(result.record.hypothesisRevisions).toMatchObject([{ hypothesisId: 'voltage-rule', status: 'unresolved' }]);
+  expect(conservative).toHaveBeenCalledTimes(4);
+  expect(result.record.hypothesisRevisions).toMatchObject([{ hypothesisId: 'voltage-rule', status: 'unresolved' }, { hypothesisId: 'fixed-current', status: 'unresolved' }]);
   expect(publishInvestigation(answered, result).attempts.at(-1)).toEqual(attempt);
 });
 
@@ -386,4 +387,19 @@ it('refuses republishing historical numeric-only experiment artifacts as checked
   script([readUpdate, finish, finish]);
   await expect(investigateWithSpark(state, request)).rejects.toBeInstanceOf(InvestigationError);
   expect(state).toEqual(before);
+});
+
+it('discloses retained prior statuses and refuses partial reconsideration on a later response', async()=>{
+ const state=fixture(),plan=originalTextPlan(state);
+ script([readUpdate,{name:'prepare_diagnostic',args:textToolArgs(plan)},body=>({name:'finish_investigation',args:finishToolArgs({...decision(state,'keep-current',false),decision:'revise-session'},lastToolOutput(body).lessonId)})]);
+ const initial=await investigateWithSpark(state,request);
+ const answered=applyAction(publishInvestigation(state,initial),{type:'attempt',lessonId:initial.lesson!.id,optionIndex:0},at),attempt=answered.attempts.at(-1)!;
+ answered.investigations!.push({...initial.record,id:'retained-reconsideration',supersedesId:initial.record.id,diagnosticPlan:undefined,diagnosticLessonId:undefined,attemptIds:[attempt.id],hypothesisRevisions:[{hypothesisId:'voltage-rule',status:'supported'},{hypothesisId:'fixed-current',status:'weakened'}]});
+ const original=structuredClone(answered);
+ script([body=>{const context=JSON.parse(body.input[0].content!);expect(context.previous.hypotheses.map((item:any)=>item.status)).toEqual(['supported','weakened']);return readUpdate;},
+ {name:'revise_interpretation',args:{hypothesisId:'voltage-rule',status:'unresolved',attemptId:attempt.id,reason:'This later response still leaves uncertainty about the first explanation.'}},
+ {name:'finish_investigation',args:finishToolArgs(decision(answered,'keep-current',false))},
+ {name:'finish_investigation',args:finishToolArgs(decision(answered,'keep-current',false))}]);
+ await expect(investigateWithSpark(answered,{...request,previousInvestigationId:initial.record.id,attemptId:attempt.id})).rejects.toBeInstanceOf(InvestigationError);
+ expect(answered).toEqual(original);
 });

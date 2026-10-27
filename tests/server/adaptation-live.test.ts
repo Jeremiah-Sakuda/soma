@@ -113,6 +113,14 @@ describe.skipIf(process.env.SOMA_LIVE_ADAPTATION_TEST!=='true')('real account ad
         expect((await readAccountWorkspace(owner))!.attempts).toEqual(beforePublication.attempts);
         expect((await listAdaptationJobs(owner))[0].status).toBe('failed');
         await getAuth(getServerApp()).updateUser(a.uid,{disabled:false});
+        const originalObservations=structuredClone((await readAccountWorkspace(owner))!.attempts);
+        const correction=await POST(new Request('https://soma.example/api/actions',{method:'POST',headers:{cookie:a.cookie!,Origin:'https://soma.example','Content-Type':'application/json'},body:JSON.stringify({type:'correct-learning',lessonId:'original-adaptive-question',revisionOf:originalObservations.at(-1)!.id,note:'I interpreted the prompt differently; please reconsider the observation.'})}));
+        expect(correction.status).toBe(200);
+        const correctionState=(await correction.json()).workspace as WorkspaceState, corrected=correctionState.attempts.at(-1)!;
+        expect(corrected).toMatchObject({correct:null,responseKind:'correction',correctionOf:originalObservations.at(-1)!.id});
+        expect(correctionState.attempts.slice(0,-1)).toEqual(originalObservations);
+        expect((await listAdaptationJobs(owner)).some(job=>job.attemptId===corrected.id&&job.status==='queued')).toBe(true);
+        await deleteApp(getServerApp());expect((await readAccountWorkspace(owner))!.attempts.at(-1)).toEqual(corrected);
         await deleteAccountWorkspace(owner);expect(await listAdaptationJobs(owner)).toEqual([]);
         expect(await readAccountWorkspace(other)).toEqual(otherBefore);
       }finally{release?.();intercepted.mockRestore();}

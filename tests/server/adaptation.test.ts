@@ -16,6 +16,15 @@ describe('automatic adaptation immutable evidence boundary', () => {
     const helped = structuredClone(state); helped.attempts[0].assisted = true; helped.attempts[0].assistance.push('original recorded hint');
     expect(adaptationContextCurrent(helped, job)).toBe(false);
   });
+  it('queues a correction as a new ungraded observation and invalidates the older response job',()=>{
+    const state=answer(), old=state.attempts[0], job=adaptationForAttempt(state,'owner',old.id)!;
+    const corrected=applyAction(state,{type:'correct-learning',lessonId:old.lessonId,note:'I read the diagram in a different way.',revisionOf:old.id});
+    const observation=corrected.attempts.at(-1)!;
+    expect(observation).toMatchObject({correct:null,responseKind:'correction',correctionOf:old.id});
+    expect(corrected.attempts[0]).toEqual(old);
+    expect(adaptationContextCurrent(corrected,job)).toBe(false);
+    expect(adaptationForAttempt(corrected,'owner',observation.id)).toMatchObject({status:'queued',attemptId:observation.id});
+  });
   it('rejects old jobs after a revised response, source/version change, model change or workspace replacement', () => {
     const state = answer(), job = adaptationForAttempt(state, 'owner', state.attempts[0].id)!;
     const revised = applyAction(state, { type: 'attempt', lessonId: job.lessonId, optionIndex: 1, revisionOf: job.attemptId });

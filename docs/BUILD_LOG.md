@@ -822,3 +822,39 @@ P040 documentation verification: local links in eleven adopted planning document
 3. Implemented M5 Ready Card local evidence inspection, saved-support disclosure, correction history and an authored no-call demo entry. Audit fixed disclosure on worker arrival and reset identity reuse. All 429 default tests and 28 browser journeys passed; managed outbox and fresh-activity restart/readback checks passed, along with type checking and the webpack production build. Pushed implementation `99adaca` and audit `574c84e` to main. Production deployment is Ready; isolated no-model hosted graph/persistence/mobile checks passed and its disposable demo was deleted. CI run 40566599806 passed type checking, default tests and the default production build; hosted CI browser verification is pending its dependency installation. UI checkpoints `95400d2`, `18577de`.
 
 **Plan deviations:** M5 uses its documented typed-observation fallback: R9 image/PDF extraction and region evidence remain incomplete. Student corrections may revise provisional explanations with an explicit self-report/not-independent qualification; original evidence remains ungraded. Local default Turbopack compilation hit a host port-binding EPERM; webpack compilation passed locally and the default Turbopack build passed on Linux CI and Vercel. No budget, family, private-source permissions or dates changed. Independent scientific/instructional review, held-out/live-source/pilot gates and M6 real coursework remain open.
+
+## P042 — Verify learning graph edge cases and credential architecture
+
+**Verbatim prompt:** Canonical archive; received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Reproduced and fixed three graph projection/lineage errors and an inspection error: revised original and new diagnostic claims remain separate, reused local IDs cannot inherit old diagnoses, and continuations retain status/observations. Cosmetic text edits cannot establish a fresh activity. Commits `269dfa0`, `ef15cbe`; [scope matrix](SECURITY_AND_GRAPH_REVIEW.md) explicitly leaves teaching relationships and R9 extraction open.
+2. Traced credential trust boundaries and fixed deletion/reconnect and settings/lease races, rotated-refresh-token loss after read failure, origin scheme checks, byte-bounded request parsing and private-field projection. Commit `7fdbe86`; deletion recovery and cloud-browser trust disclosure in `ef15cbe`.
+3. Executed 442 default tests (39 opt-in skipped), 31 browser journeys, a 4-test managed/SQLite bundle and one hosted credential HTTP test; type/config/build and narrow actual-value secret scan passed. Existing budget remains $1.55875225/$2; no private-course/model calls. Later P044 expands default checks to 449 and managed bundle to five.
+
+**Plan deviations:** Additional hardening prompted by reproduced failures, within the requested review. This does not close independent instructional, held-out, real-source, IAM/privacy or complete-graph acceptance gates.
+
+## P043 — Continue additional verification and credential review
+
+**Verbatim prompt:** Canonical archive; received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Completed P042 regression work and pushed `269dfa0`, `7fdbe86`, `ef15cbe` to main. CI runs 40566599806, 40567991916 and 40573113950 passed; ef15cbe deployed Ready and its hosted synthetic credential check passed 1/1 in 8.18s.
+2. Reviewed deletion recovery on mobile and generated an inspectable architecture report comparing key lifecycle, remote allocation reconciliation and diagnostic-lineage queries. Key rotation was selected in P044. Full findings and remaining scope are in [the review](SECURITY_AND_GRAPH_REVIEW.md).
+3. Parallel reviewers reached their usage limit; root completed the review/testing. No independent security certification, production key rotation, new private-course access or new inference is claimed.
+
+**Plan deviations:** Root continued after subagent interruption. Initial disclosure-test setup/selector failures were corrected and final 31/31 journeys passed; they are retained in the review rather than represented as first-run successes.
+
+## P044 — Prioritize credential key rotation and recovery
+
+**Verbatim clarification:** Canonical archive; received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Implemented bounded versioned credential protection with authenticated key IDs, original-format compatibility, reader-first rollout, prior/future key readers and rollback. Commit `73fa35f`; no production key value was changed.
+2. Added admin-only dry-run/apply migration with transactional owner/generation/lease checks, idempotent partial progress, preserved OAuth expiry/one-use state and pending-deletion recovery. Tool output has counts and hashed identifiers, never plaintext. Commit `58b3d71`; [runbook](CREDENTIAL_KEY_ROTATION.md) covers missing keys, interruption, rollback and retirement gates.
+3. Verified 449 default tests (40 opt-in skipped, 8.83s), 5/5 combined managed/SQLite checks (23.10s), type/config checks and webpack production build. The managed check exercised the real maintenance CLI with disposable synthetic data. Five current credential values were absent from 265 tracked files and 45 client files; this narrow scan is not a historical-secret certification. Hosted CI/deploy status recorded in the final follow-up below.
+
+**Plan deviations:** Adds operational key recovery to the credential hardening work, within the chosen architecture follow-up. Actual production rollover/retirement, secret custody/IAM, orphan reconciliation and real-provider privacy checks remain gates; no product-family or inference-budget expansion.

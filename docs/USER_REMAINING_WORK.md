@@ -36,3 +36,7 @@ The P041 synthetic development verification leaves **$1.55875225 consumed of the
 ## Engineering work remains ours
 
 Real-source acceptance and connector fixes, broader held-out reliability cases, independent-review fixes, accessibility/recovery verification and final demo preparation remain our work. Returned-work image/PDF interpretation, general prose extraction of assessment facts, comprehensive prerequisite mapping and model-directed browser navigation are not established by the current text collector. Any decision to deliver, cut or defer these must be explicit against the PRD and freeze. The remaining release work cannot yet honestly be described as visual fine-tuning only.
+
+## Credential review follow-up — P042–P044
+
+The synthetic credential lifecycle, reload recovery and key-rotation mechanism are implemented and tested. No new key or password is needed from you to finish these changes. Production replacement/retirement is a separate controlled rollout under [the runbook](CREDENTIAL_KEY_ROTATION.md), with protected recovery-key custody. We still own deployment/IAM review, remote allocation reconciliation and dedicated-account provider verification before broader use. Read [the graph/security review](SECURITY_AND_GRAPH_REVIEW.md) for the explicit remaining scope; the complete teaching-relationship graph and R9 image extraction are not implemented merely because the bounded diagnostic loop works.

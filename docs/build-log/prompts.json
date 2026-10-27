@@ -307,6 +307,25 @@
       "received_at": null,
       "kind": "message",
       "prompt": "Okay, I want you to implement 1 - 5. After every major milestone, stop to review and thoroughly audit your work. Commit very frequently and push to main when done"
+    },
+    {
+      "id": "P042",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Okay, are you sure the learning graph has been implemented as specified? Can you do additional testing and look at edge cases? And then also thoroughly review the architecture for credential handling "
+    },
+    {
+      "id": "P043",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "continue "
+    },
+    {
+      "id": "P044",
+      "received_at": null,
+      "kind": "clarification",
+      "question": "The architecture report is ready. Which follow-up should we prioritize after these fixes?",
+      "prompt": "Credential key rotation and recovery (Recommended)"
     }
   ]
 }

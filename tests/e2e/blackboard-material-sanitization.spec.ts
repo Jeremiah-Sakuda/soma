@@ -6,7 +6,7 @@ test('course HTML is converted in an inert fragment without executing or loading
   await page.goto('about:blank');
   const requests: string[] = []; page.on('request', request => requests.push(request.url()));
   const body = '<h2>Loop invariant</h2><p>After each iteration, the prefix is sorted.</p><script>globalThis.somaInjected=true</script><style>secret-style</style><iframe src="https://example.invalid/private">private-frame</iframe><form>private-form<input value="private-password"></form><img src="https://example.invalid/image.png" onerror="globalThis.somaInjected=true">';
-  const request = { get: async (url: string) => ({ status: () => 200, headers: () => ({}), body: async () => Buffer.from(JSON.stringify({ results: url.includes('/announcements') ? [] : [{ id: '_content_1', title: 'Invariant', body }] })), dispose: async () => undefined }) };
+  const request = { get: async (url: string) => ({ status: () => 200, headers: () => ({}), body: async () => Buffer.from(JSON.stringify({ paging:{}, results: url.includes('/announcements') ? [] : [{ id: '_content_1', title: 'Invariant', body }] })), dispose: async () => undefined }) };
   const browser = { request, evaluate: page.evaluate.bind(page) } as unknown as Pick<Page, 'request' | 'evaluate'>;
   const result = await collectBlackboardMaterials(browser, '_course_1', undefined, Date.now() + 10000);
   expect(result.records[0].body).toBe('Loop invariant\nAfter each iteration, the prefix is sorted.');

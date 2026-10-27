@@ -128,3 +128,7 @@ The detailed storyboard is in [Demo and Evaluation](DEMO_AND_EVALUATION.md). P03
 ## P041 — Synthetic graph implementation checkpoints
 
 Implementation and per-milestone audits for M1–M5 are recorded in [Learning Graph Audit](LEARNING_GRAPH_AUDIT.md), including all live-model development failures/fixes and final observed change/no-change branches. M5's original marked-up image has a labeled authored transcription; image/PDF extraction and region evidence remain an explicit open R9 gate. Continue with Jeremy's synthetic usability feedback before M6 personal-course tests. Independent review, held-out release cases, actual sources and pilot evidence remain scheduled acceptance work, not completed by the synthetic implementation. No date or budget is changed.
+
+## P050–P051 — Selected Blackboard validation and next sources
+
+Implement deterministic course discovery, an explicit course picker, resumable supported text collection and versioned publication before model-directed browser recovery. Reuse the signed-in context, keep discovery free of inference, preserve the existing Meta cap and review each milestone. Fresh-session discovery and one bounded actual-course text probe passed; complete selected-course ingestion and the teaching loop still need verification. Unsupported files/images/embedded tools remain labeled. Next validate Gradescope (primary assignments), then Piazza, with independent private sign-in and read-only source checks. This does not move the freeze, waive M6/held-out gates or add a lesson family.

@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {seedEmptyAccountWorkspace} from '../../src/lib/domain/seed';
+import {seedWorkspace,seedEmptyAccountWorkspace} from '../../src/lib/domain/seed';
 import {publishBlackboardRead} from '../../src/lib/server/connectors/blackboard-publication';
 import type {WorkspaceState} from '../../src/lib/domain/types';
 const checkedAt='2026-10-27T16:00:00Z';
@@ -34,3 +34,10 @@ describe('Blackboard observation publication',()=>{
  });
  it('rejects a missing workspace mapping without mutating input',()=>{const state=empty();state.courses=[];expect(()=>publish(state,[record('_one_1')])).toThrow();expect(state.sources).toEqual([]);});
 });
+
+ it('marks a prepared lesson stale immediately when its exact observed support is withdrawn',()=>{
+  const state=publish(empty(),[record('_one_1')]).workspace,source=state.sources[0];
+  const lesson={...seedWorkspace('original-fixture').lessons[0],id:'blackboard-supported',courseId:'course-a',sourceIds:[source.id],sourceVersions:{[source.id]:source.version},state:'ready' as const};state.lessons=[lesson];
+  const partial=publish(state,[],false);expect(partial.workspace.lessons[0].state).toBe('ready');
+  const withdrawn=publish(partial.workspace,[]);expect(withdrawn.workspace.lessons[0].state).toBe('stale');expect(state.lessons[0].state).toBe('ready');
+ });

@@ -1042,3 +1042,27 @@ P040 documentation verification: local links in eleven adopted planning document
    - Browser checks at desktop and 375 px for Today, Map, Activity and the lesson: no horizontal page scroll, and visible keyboard focus through the sidebar and onto map stations. Reduced motion relies on the existing global rule.
 
 **Plan deviations:** User-authorized. The Map destination narrowly supersedes Learning Graph Scope's "not a new full-screen graph destination", and navigation replaces Ready Card's Today · Courses · Study. Course detail and lesson deep links (`?view=courses`, `?view=study`) still work. Quiz and flashcard generation formats stay unbuilt proposals. The concurrent Blackboard work (`source-connections.tsx`, Blackboard files) was not touched or committed.
+
+## P050 — Implement lightweight Blackboard navigation
+
+**Verbatim prompt:** Canonical archive; received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Committed blank-login recovery (`835f31c`), bounded read policy/runner (`c4a4d05`) and course discovery/selection/resumable supported text collection (`f90e5fe`). Fresh-session discovery verified 36 actual course metadata rows with institutional identity binding and zero inference. A bounded BI 107 text probe extracted 16 items with further folders pending, zero inference and zero material publication. No private body, login screenshot or control URL enters committed fixtures.
+2. Milestone review found and fixed missing pagination proof, actual Blackboard string handlers/rawText/empty-page sentinels, historical remap bypass, lost traversal progress, failed-course starvation, stale lesson withdrawal, account identity changes and browser-budget cadence. Eighty-six focused tests, nine orchestration tests, five actual managed synthetic-account selection cases and the four picker browser journeys passed; final aggregate results follow below. Navigation uses application-authored GETs, while Spark investigates committed sources through the existing tools.
+3. The production build passed with normal network access. One sandbox build failed on Google Fonts DNS; the first aggregate browser run passed 35 journeys and failed the new sanitizer because its fixture omitted the newly required paging proof. The fixture was corrected and is being rechecked. Full source publication through the selected-course hosted UI, actual expiry/deletion and real-course teaching quality are still separate gates. No Meta call or budget increase occurred.
+
+**Plan deviations:** Implements the requested lightweight adapter. The Ultra frontend attempted a preference PUT during exploration; collection instead uses exact authenticated GET JSON reads. Scheduled browser starts retain headroom under the existing daily cap, so larger selections/multi-slice walks can take longer than six hours. Files/images/embedded tools remain unsupported. Gradescope then Piazza follow under P051; no new model/framework or teaching family.
+
+## P051 — Piazza and Gradescope after Blackboard
+
+**Verbatim prompt:** Canonical archive; received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Recorded the requested next integrations: Piazza for a class and Gradescope as the main assignment source.
+2. Continuing the in-progress Blackboard milestone first; Gradescope is the next validation priority, followed by Piazza. No access, collection or model-processing outcome is claimed for either provider.
+3. Existing separate encrypted browser contexts, user-entered login/MFA and selected read-only scope apply to the follow-up. No new credentials requested in chat.
+
+**Plan deviations:** Sequencing clarification within the existing source-integration scope; no new product family or budget.

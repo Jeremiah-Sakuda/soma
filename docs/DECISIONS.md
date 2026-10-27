@@ -221,3 +221,7 @@ Jeremy adopted the direction explored on the design canvas (PM014–PM023) and a
 - The visual language moves to the canvas's Playground look: Geist and Geist Mono self-hosted via `next/font`, warm paper-white ground, indigo accent, tactile primary buttons, and animated current in the circuit that respects reduced motion.
 
 Scope, evidence rules, budgets, the one-family limit, the October 31 freeze and the November 4 deadline are unchanged. The concurrent Blackboard connector work in `source-connections.tsx` is left untouched by this overhaul.
+
+## P050–P051 — Use deterministic Blackboard navigation; validate Gradescope next
+
+October 27, 2026. Jeremy authorized implementing lightweight navigation and requested Piazza afterward, noting assignments primarily live on Gradescope. Use the existing saved browser session for exact read-only BU JSON routes, explicit course discovery/mapping and bounded resumable text reads. Routine navigation requires no Meta inference. Preserve subject identity, account ownership, leases, historical mapping, source versions, partial states and provider budgets; Spark investigates committed evidence through its existing tools. The browser UI's preference-writing calls are not enabled. Actual text navigation passed a bounded probe; this does not prove image/PDF support, a complete course walk or the teaching loop. Validate Gradescope then Piazza with separate contexts and user-entered MFA. No new credential store, general agent framework or budget increase.

@@ -127,7 +127,7 @@ export function BlackboardCoursePicker({ data, reload, disabled = false }: {
 
   return <section aria-label="Blackboard course selection" aria-busy={!!busy} style={spacing}>
     <h3>Choose your Blackboard courses</h3>
-    <p className="meta" style={spacing}>Soma finds courses using your saved sign-in. You choose which courses it may read. Finding and opening courses uses no AI inference.</p>
+    <p className="meta" style={spacing}>Soma finds courses using your saved sign-in. You choose which courses it may read. Finding and opening courses uses no AI inference. Saved course material may then be sent to Meta to prepare private study activities within your account limits.</p>
     <form onSubmit={event => { event.preventDefault(); void discover(); }} style={spacing}>
       <label htmlFor={`${prefix}-query`} className="field-label">Filter this course page by name or code (optional)</label>
       <input id={`${prefix}-query`} type="text" value={query} maxLength={200} disabled={blocked} onChange={event => setQuery(event.target.value)} placeholder="Course name or code" />
@@ -150,13 +150,14 @@ export function BlackboardCoursePicker({ data, reload, disabled = false }: {
       {status.catalog.nextCursor && <button type="button" className="secondary-button" style={spacing} disabled={blocked || query.trim() !== catalogQuery} onClick={() => void discover(true)}>{busy === 'more' ? 'Loading more courses…' : 'Load more courses'}</button>}
       {status.catalog.nextCursor && query.trim() !== catalogQuery && <p className="meta" style={{ marginTop: 8 }}>Check the course list with your changed filter before loading more.</p>}
       <p className="meta" style={spacing}>{selection.length} {selection.length === 1 ? 'course selected' : 'courses selected'}{dirty ? ' · unsaved changes' : ' · saved selection'}</p>
+      <p className="meta" style={spacing}>Each refresh checks one selected course in turn. Large folders resume on later passes; files, images and external tools remain unsupported.</p>
       <div className="action-row" style={spacing}>
         <button className="secondary-button" type="button" disabled={blocked || !dirty} onClick={() => void save()}>{busy === 'save' ? 'Saving courses…' : 'Save selected courses'}</button>
         <button className="primary-button" type="button" disabled={blocked || dirty || !status.selected.length} onClick={() => void run('refresh', async () => {
-          await request('/api/connectors/browser', { provider: 'blackboard', action: 'refresh' });
+          const result = await request('/api/connectors/browser', { provider: 'blackboard', action: 'refresh' }) as BlackboardStatus & { notice?: string };
           if (!mounted.current) return;
           await reload();
-          if (mounted.current) setNotice('Refresh finished. Review source timestamps and any sign-in or read notices.');
+          if (mounted.current) setNotice(result.notice ?? 'Refresh finished. Review source timestamps and any sign-in or read notices.');
         })}>{busy === 'refresh' ? 'Reading selected courses…' : 'Refresh selected courses'}</button>
       </div>
     </>}

@@ -68,7 +68,7 @@ test('selected course IDs and explicit mappings are saved before refresh, with n
   expect(requests).toEqual([{ action: 'select', courseIds: courses.map(course => course.id), mappings: { [courses[0].id]: workspace.courses[0].id } }]);
   const beforeRefresh = reads();
   await refresh.click();
-  await expect(picker.getByText('Refresh finished.', { exact: false })).toBeVisible();
+  await expect(picker.getByText('Synthetic refresh complete.', { exact: true })).toBeVisible();
   expect(requests[1]).toEqual({ provider: 'blackboard', action: 'refresh' });
   expect(reads()).toBeGreaterThan(beforeRefresh);
   await picker.getByRole('checkbox', { name: 'Synthetic Ecology', exact: false }).uncheck();

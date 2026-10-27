@@ -10,3 +10,7 @@ coverage
 .git
 *service-account*.json
 *firebase-adminsdk*.json
+
+.claude
+.codex
+.agents

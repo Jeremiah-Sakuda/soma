@@ -17,6 +17,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - name: Verify browser runtime in an isolated production trace
+        run: npm run check:browser-artifact
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4

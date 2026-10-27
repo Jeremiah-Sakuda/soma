@@ -18,7 +18,8 @@
     "check:meta": "node --env-file=.env.local scripts/check-meta.mjs",
     "check:firestore": "node --env-file=.env.local scripts/check-firestore.mjs",
     "check:config": "node --experimental-strip-types --env-file=.env.local scripts/check-production-config.mjs",
-    "credentials:rotate": "node --experimental-strip-types --env-file=.env.local scripts/rotate-connector-key.mjs"
+    "credentials:rotate": "node --experimental-strip-types --env-file=.env.local scripts/rotate-connector-key.mjs",
+    "check:browser-artifact": "node scripts/check-browser-artifact.mjs --next-trace"
   },
   "dependencies": {
     "@tailwindcss/postcss": "4.3.3",

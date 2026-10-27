@@ -2,7 +2,10 @@ import type { NextConfig } from 'next';
 const config: NextConfig = {
   poweredByHeader: false,
   serverExternalPackages: ['firebase-admin', '@google-cloud/firestore'],
-  outputFileTracingExcludes: { '*': ['.env*', '.local/**', 'tests/**', 'output/**', 'docs/**', '.git/**', '**/*firebase-adminsdk*.json', '**/*service-account*.json'] },
+  // Playwright reads its browser registry during import, including CDP-only use.
+  // Vercel's traced function omitted this JSON while local node_modules masked it.
+  outputFileTracingIncludes: Object.fromEntries(['/api/connectors/browser', '/api/connectors/blackboard', '/api/internal/worker'].map(route => [route, ['./node_modules/playwright-core/browsers.json']])),
+  outputFileTracingExcludes: { '/*': ['.env*', '.local/**', 'tests/**', 'output/**', 'docs/**', '.git/**', '**/*firebase-adminsdk*.json', '**/*service-account*.json'] },
   async headers() {
     return [{ source: '/:path*', headers: [
       { key: 'X-Content-Type-Options', value: 'nosniff' },

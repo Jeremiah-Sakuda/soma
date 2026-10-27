@@ -1,0 +1,32 @@
+{
+  "id": "synthetic-node-reading-development",
+  "mode": "original-synthetic-development",
+  "courseId": "circuits",
+  "objective": "Use endpoint connectivity and Ohm's law to distinguish common voltage from common current in ideal two-resistor networks.",
+  "source": {
+    "id": "synthetic-node-note",
+    "versions": [
+      {"version": 1, "text": "Ideal resistors connected in parallel share both endpoint nodes and equal voltage. Each branch current is voltage divided by that branch resistance. In a single series path the current is common and each voltage drop is current times resistance. A bent wire does not create another component or change endpoint connectivity."},
+      {"version": 2, "text": "Correction to the synthetic example: use a 12 V ideal source with parallel 6 ohm and 3 ohm branches. Branch currents are 2 A and 4 A. Equal voltage does not imply equal current. Changing one parallel branch resistance at fixed ideal source voltage leaves the other branch current unchanged. Series current is voltage divided by the sum of resistances."}
+    ]
+  },
+  "observation": {
+    "id": "synthetic-returned-work",
+    "origin": "authored-synthetic-returned-work",
+    "image": "returned-work.svg",
+    "transcription": "The fictional student wrote: Each branch gets 3 A because parallel means equal current. The fictional marking asks: Which nodes does each resistor connect to?",
+    "limitations": "The marking does not establish whether this is a diagram-reading mistake, a relationship error or another explanation. Typed transcription is not a vision result."
+  },
+  "reviewCandidates": [
+    "The student may be applying the common-current rule for a single series path.",
+    "The student may recognize two branches but conflate common voltage with equal branch current."
+  ],
+  "reviewStatus": "Independent scientific and instructional review pending; candidate explanations are not ground truth about a learner.",
+  "referenceCases": [
+    {"inputs": {"topology":"parallel","voltage":12,"r1":6,"r2":3},"expected":{"current1":2,"current2":4,"voltage1":12,"voltage2":12},"derivation":"12/6=2; 12/3=4; both branches span the ideal 12 V source."},
+    {"inputs": {"topology":"parallel","voltage":12,"r1":12,"r2":3},"expected":{"current1":1,"current2":4,"voltage1":12,"voltage2":12},"derivation":"12/12=1; 12/3=4; the second branch stays at 4 A."},
+    {"inputs": {"topology":"series","voltage":12,"r1":6,"r2":3},"expected":{"current1":1.3333333333333333,"current2":1.3333333333333333,"voltage1":8,"voltage2":4},"derivation":"I=12/(6+3)=4/3; V1=(4/3)*6=8; V2=(4/3)*3=4."},
+    {"inputs": {"topology":"parallel","voltage":0,"r1":1,"r2":100},"expected":{"current1":0,"current2":0,"voltage1":0,"voltage2":0},"derivation":"With zero source voltage both ideal branch currents are zero."},
+    {"inputs": {"topology":"series","voltage":24,"r1":100,"r2":100},"expected":{"current1":0.12,"current2":0.12,"voltage1":12,"voltage2":12},"derivation":"I=24/200=0.12 A; each equal resistor drops 12 V."}
+  ]
+}

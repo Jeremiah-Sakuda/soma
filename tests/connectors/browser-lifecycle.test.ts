@@ -6,6 +6,7 @@ vi.mock('../../src/lib/server/account-store', () => ({
   updateAccountWorkspace: vi.fn(async (_account: unknown, action: any) => action(state.workspace)),
 }));
 vi.mock('../../src/lib/server/connectors/store', () => ({
+  connectionsForDeletion: vi.fn(async () => state.connection ? [state.connection] : []),
   readConnection: vi.fn(async () => state.connection),
   listConnections: vi.fn(async () => state.connection ? [state.connection] : []),
   saveConnection: vi.fn(async (_a, _w, id, input) => { state.connection = { ...input, id, workspaceId: state.workspace.id }; return state.connection; }),
@@ -15,7 +16,7 @@ vi.mock('../../src/lib/server/connectors/store', () => ({
   connectionPublicationGuard: vi.fn(),
   deleteConnection: vi.fn(async () => { state.calls.push('delete-local'); state.connection = null; }),
 }));
-import { browserConfigured, resolveBrowserProjectId, configureBrowser, disconnectBrowser, refreshBrowser, startBrowserLogin } from '../../src/lib/server/connectors/browser';
+import { browserConfigured, resolveBrowserProjectId, configureBrowser, disconnectBrowser, refreshBrowser, startBrowserLogin, cleanupBrowsersForDeletion } from '../../src/lib/server/connectors/browser';
 import { createHash } from 'node:crypto';
 const account = {} as VerifiedAccount; // Store/account integration tests verify the actual authenticated brand; this suite tests orchestration.
 const makeConnection = (secret: Record<string, unknown> = {}) => ({ id: 'browser-gradescope', workspaceId: 'workspace-one', provider: 'gradescope', version: 1, status: 'connected', configuration: { targets: [{ courseId: 'course-one', url: 'https://www.gradescope.com/courses/123' }] }, secret });
@@ -69,6 +70,18 @@ describe('browser lifecycle orchestration with synthetic provider responses', ()
     state.connection = makeConnection({ contextId: 'context-one' }); vi.mocked(fetch).mockResolvedValue(new Response('failed', { status: 503 }));
     await expect(disconnectBrowser(account, 'gradescope')).rejects.toMatchObject({ code: 'browser_provider' });
     expect(state.connection.secret.contextId).toBe('context-one'); expect(state.calls).not.toContain('delete-local');
+  });
+  it('cleans a frozen deletion snapshot without normal connection mutation or losing retry references', async () => {
+    state.connection = makeConnection({ contextId: 'context-for-frozen-cleanup' });
+    vi.mocked(fetch).mockResolvedValueOnce(new Response('unavailable', {status:503}));
+    await expect(cleanupBrowsersForDeletion(account,'workspace-one')).rejects.toMatchObject({code:'browser_provider'});
+    expect(state.connection.secret.contextId).toBe('context-for-frozen-cleanup');
+    expect(state.calls).not.toContain('delete-local');
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(null,{status:204}));
+    await cleanupBrowsersForDeletion(account,'workspace-one');
+    expect(String(vi.mocked(fetch).mock.calls.at(-1)![0])).toContain('/contexts/context-for-frozen-cleanup');
+    expect(vi.mocked(fetch).mock.calls.at(-1)![1]?.method).toBe('DELETE');
+    expect(state.calls).toEqual([]);
   });
   it('deletes remote context before discarding local encrypted authorization', async () => {
     state.connection = makeConnection({ contextId: 'context-one' });

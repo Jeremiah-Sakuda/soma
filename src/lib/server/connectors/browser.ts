@@ -4,7 +4,7 @@ import type { Browser, Page } from 'playwright-core';
 import type { VerifiedAccount } from '../account';
 import { readAccountWorkspace, updateAccountWorkspace } from '../account-store';
 import { WorkspaceStoreError } from '../store';
-import { acquireConnectionLease, checkpointConnectionLease, connectionPublicationGuard, deleteConnection, listConnections, readConnection, releaseConnectionLease, saveConnection, type Connection } from './store';
+import { acquireConnectionLease, checkpointConnectionLease, connectionsForDeletion, connectionPublicationGuard, deleteConnection, listConnections, readConnection, releaseConnectionLease, saveConnection, type Connection } from './store';
 import { applyCollectedSources, type CollectedSource } from './ingest';
 import { sourceAuthorityContextSchema, validateSourceContext, type SourceAuthorityContext } from '../../domain/source-context';
 
@@ -287,4 +287,13 @@ export async function disconnectBrowser(account: VerifiedAccount, provider: Brow
 }
 export async function disconnectAllBrowserConnections(account: VerifiedAccount) {
   for (const connection of await listConnections(account)) if (connection.id === ID(connection.provider as BrowserProvider) && connection.provider in BROWSER_PROVIDERS && connection.status !== 'disconnected') await disconnectBrowser(account, connection.provider as BrowserProvider);
+}
+
+/** The account store has already frozen this generation and excluded active leases. */
+export async function cleanupBrowsersForDeletion(account: VerifiedAccount, workspaceId: string): Promise<void> {
+  for (const saved of await connectionsForDeletion(account, workspaceId)) {
+    const connection = saved as BrowserConnection;
+    if (connection.secret.sessionId) await releaseSession(connection);
+    if (connection.secret.contextId) await api(`/contexts/${encodeURIComponent(connection.secret.contextId)}`, 'DELETE', undefined, true);
+  }
 }

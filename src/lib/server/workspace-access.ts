@@ -1,3 +1,4 @@
+import { cleanupBrowsersForDeletion } from './connectors/browser';
 import type { WorkspaceState } from '../domain/types';
 import { ACCOUNT_SESSION_COOKIE, AccountSessionError, verifyAccountSession, type VerifiedAccount } from './account';
 import { readAccountWorkspace, readOrCreateAccountWorkspace, updateAccountWorkspace, deleteAccountWorkspace } from './account-store';
@@ -22,5 +23,5 @@ export async function updateWorkspaceByAccess(access: WorkspaceAccess, mutator: 
   return access.kind === 'account' ? updateAccountWorkspace(access.account, mutator, expectedRevision) : updateWorkspace(access.token, mutator, expectedRevision);
 }
 export async function deleteWorkspaceByAccess(access: WorkspaceAccess): Promise<void> {
-  return access.kind === 'account' ? deleteAccountWorkspace(access.account) : deleteWorkspace(access.token);
+  return access.kind === 'account' ? deleteAccountWorkspace(access.account, generation => cleanupBrowsersForDeletion(access.account, generation)) : deleteWorkspace(access.token);
 }

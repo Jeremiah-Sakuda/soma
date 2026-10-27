@@ -37,11 +37,15 @@ describe.skipIf(process.env.SOMA_CONNECTOR_LIVE_TEST !== 'true')('live encrypted
       await expect(consumeConnectionState(accountA, expiring)).rejects.toMatchObject({ code: 'oauth_state' });
       expect((await expiryRef.get()).exists).toBe(false);
       await saveConnection(accountA, a.id, 'google-gmail', { provider: 'gmail', configuration: {}, status: 'connected', secret: { refreshToken: 'original-synthetic-refresh-fixture' } }, 0);
+      await root.collection('connections').doc('google-gmail').update({internalFutureSecret:'synthetic-future-secret-canary'});
       const raw = await root.collection('connections').doc('google-gmail').get();
       expect(JSON.stringify(raw.data()).includes('original-synthetic-refresh-fixture')).toBe(false);
       expect(await readConnection(accountB, 'google-gmail')).toBeNull();
       expect(JSON.stringify(await listConnections(accountA)).includes('refreshToken')).toBe(false);
+      expect(JSON.stringify(await listConnections(accountA))).not.toContain('synthetic-future-secret-canary');
+      expect(JSON.stringify(await readConnection(accountA,'google-gmail'))).not.toContain('synthetic-future-secret-canary');
       const lease = await acquireConnectionLease(accountA, 'google-gmail', 'synthetic-read');
+      await expect(saveConnection(accountA,a.id,'google-gmail',{provider:'gmail',configuration:{},status:'connected',secret:{refreshToken:'stale-synthetic-token'}},1)).rejects.toMatchObject({code:'connection_busy'});
       await expect(acquireConnectionLease(accountA, 'google-gmail', 'second-read')).rejects.toMatchObject({ code: 'connection_busy' });
       expect(await checkpointConnectionLease(accountA, 'google-gmail', lease.leaseId, { secret: { refreshToken: 'original-synthetic-updated-fixture' } })).toBe(true);
       expect((await readConnection(accountA, 'google-gmail'))?.secret.refreshToken).toBe('original-synthetic-updated-fixture');

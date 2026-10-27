@@ -157,7 +157,7 @@ export async function updateAccountWorkspace(account: VerifiedAccount, mutator: 
   return next;
 }
 
-export async function deleteAccountWorkspace(account: VerifiedAccount): Promise<void> {
+export async function deleteAccountWorkspace(account: VerifiedAccount, cleanup?: (workspaceId: string) => Promise<void>): Promise<void> {
   const ref = accountRef(account);
   // Every deletion batch checks this generation. Retries can resume safely;
   // an old request cannot erase a subsequently recreated account workspace.
@@ -167,10 +167,18 @@ export async function deleteAccountWorkspace(account: VerifiedAccount): Promise<
     const data = document.data() as Metadata;
     assertOwner(data, account);
     if (data.deleted && data.deletionComplete) return null;
+    const connections = await transaction.get(ref.collection('connections'));
+    // Freeze before remote cleanup. Never erase references while an operation still
+    // holds a lease, including an interrupted lease that must first be recovered.
+    if (connections.docs.some(connection => connection.get('leaseId'))) throw new WorkspaceStoreError('Finish or disconnect the active source connection, then retry deletion.', 409, 'connection_busy');
+    if (!cleanup && connections.docs.some(connection => connection.get('status') !== 'disconnected')) throw new WorkspaceStoreError('Connected sources must be cleaned up before deletion.', 409, 'source_cleanup_required');
     if (!data.deleted) transaction.update(ref, { deleted: true, revision: data.revision + 1 });
     return data.workspaceId;
   });
   if (!generation) return;
+  // A failed remote deletion leaves the tombstone and encrypted cleanup references
+  // intact. Normal connections, publication and recreation remain blocked on retry.
+  if (cleanup) await cleanup(generation);
   for (const group of await ref.listCollections()) {
     let remaining = true;
     while (remaining) {

@@ -55,10 +55,13 @@ function checkRoot(data: Record<string, unknown> | undefined, account: VerifiedA
   assertAccountWorkspaceGeneration(account, data.workspaceId as string);
   return data.workspaceId as string;
 }
+function publicConnection(record: Stored): PublicConnection {
+  return {id:record.id,provider:record.provider,workspaceId:record.workspaceId,version:record.version,status:record.status,configuration:record.configuration,
+    ...(record.lastSuccessAt ? {lastSuccessAt:record.lastSuccessAt}:{}), ...(record.lastAttemptAt ? {lastAttemptAt:record.lastAttemptAt}:{}), ...(record.notice ? {notice:record.notice}:{})};
+}
 function hydrate<S, C>(record: Stored, account: VerifiedAccount): Connection<S, C> {
   if (record.ownerId !== account.uid) throw new WorkspaceStoreError('Source ownership could not be verified.', 403, 'connection_owner');
-  const { ownerId: _owner, encryptedSecret, leaseId: _lease, leaseUntil: _until, leasePurpose: _purpose, ...publicFields } = record;
-  return { ...publicFields, configuration: publicFields.configuration as C, secret: decryptConnectionSecret<S>(encryptedSecret, binding(account.uid, record.workspaceId, record.id)) };
+  return { ...publicConnection(record), configuration: record.configuration as C, secret: decryptConnectionSecret<S>(record.encryptedSecret, binding(account.uid, record.workspaceId, record.id)) };
 }
 
 export async function readConnection<S = Record<string, unknown>, C = Record<string, unknown>>(account: VerifiedAccount, id: string): Promise<Connection<S, C> | null> {
@@ -73,14 +76,30 @@ export async function readConnection<S = Record<string, unknown>, C = Record<str
   }, { readOnly: true });
 }
 
+/** Private cleanup path, available only after the account generation was frozen. */
+export async function connectionsForDeletion(account: VerifiedAccount, workspaceId: string): Promise<Connection[]> {
+  const root = rootRef(account);
+  return root.firestore.runTransaction(async transaction => {
+    const metadata = (await transaction.get(root)).data();
+    if (!metadata || metadata.ownerId !== account.uid || metadata.workspaceId !== workspaceId || !metadata.deleted || metadata.deletionComplete) throw new WorkspaceStoreError('Workspace deletion context changed.', 409, 'workspace_changed');
+    assertAccountWorkspaceGeneration(account, workspaceId);
+    const documents = await transaction.get(root.collection('connections'));
+    return documents.docs.map(document => {
+      const record = document.data() as Stored;
+      if (record.workspaceId !== workspaceId || record.ownerId !== account.uid || record.leaseId) throw new WorkspaceStoreError('Source cleanup is not ready.', 409, 'connection_changed');
+      // Google tokens need no remote browser deletion; do not decrypt them here.
+      return ['blackboard','gradescope','piazza'].includes(record.provider) && record.id === `browser-${record.provider}` && record.status !== 'disconnected' ? hydrate(record, account) : null;
+    }).filter((record): record is Connection => record !== null);
+  }, {readOnly:true});
+}
+
 export async function listConnections(account: VerifiedAccount): Promise<PublicConnection[]> {
   const root = rootRef(account);
   return root.firestore.runTransaction(async transaction => {
     const metadata = await transaction.get(root); const workspaceId = checkRoot(metadata.data(), account);
     const documents = await transaction.get(root.collection('connections'));
     return documents.docs.filter(document => document.get('ownerId') === account.uid && document.get('workspaceId') === workspaceId).map(document => {
-      const { ownerId: _owner, encryptedSecret: _secret, leaseId: _lease, leaseUntil: _until, leasePurpose: _purpose, ...publicFields } = document.data() as Stored;
-      return publicFields;
+      return publicConnection(document.data() as Stored);
     });
   }, { readOnly: true });
 }
@@ -92,6 +111,7 @@ export async function saveConnection<S, C>(account: VerifiedAccount, workspaceId
     checkRoot((await transaction.get(root)).data(), account, workspaceId);
     const ref = root.collection('connections').doc(id); const current = await transaction.get(ref);
     if (current.exists && (current.get('ownerId') !== account.uid || current.get('workspaceId') !== workspaceId)) throw new WorkspaceStoreError('Source ownership changed.', 409, 'connection_changed');
+    if (current.exists && current.get('leaseId')) throw new WorkspaceStoreError('This source is in use. Finish or disconnect it before changing authorization.', 409, 'connection_busy');
     const version = current.exists ? current.get('version') as number : 0;
     if (expectedVersion !== undefined && version !== expectedVersion) throw new WorkspaceStoreError('Source settings changed. Try again.', 409, 'connection_changed');
     const { secret: _secret, ...safe } = input;

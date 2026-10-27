@@ -1,7 +1,7 @@
 import { auditedSourceCollection } from '@/lib/server/source-audit';
 import { NextResponse } from 'next/server';
 import { verifyAccountSession } from '@/lib/server/account';
-import { apiError, requireSameOrigin } from '@/lib/server/http';
+import { apiError, requireSameOrigin, readJsonBody } from '@/lib/server/http';
 import { listConnections } from '@/lib/server/connectors/store';
 import { queueCollectedPreparation } from '@/lib/server/connectors/preparation';
 import { BROWSER_PROVIDERS, browserActionSchema, browserConfigured, completeBrowserLogin, configureBrowser, disconnectBrowser, refreshBrowser, startBrowserLogin } from '@/lib/server/connectors/browser';
@@ -25,9 +25,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     requireSameOrigin(request); const owner = await account(request);
-    const raw = await request.text(); if (raw.length > 16_384) throw Object.assign(new Error('Source settings are too large.'), { status: 413 });
-    let json: unknown; try { json = JSON.parse(raw); } catch { throw Object.assign(new Error('Invalid source settings.'), { status: 400 }); }
-    const parsed = browserActionSchema.safeParse(json);
+    const parsed = browserActionSchema.safeParse(await readJsonBody(request));
     if (!parsed.success) throw Object.assign(new Error('Invalid source settings.'), { status: 400 });
     const { provider, action, targets } = parsed.data;
     if (action === 'configure') return response(await configureBrowser(owner, provider, targets ?? []));

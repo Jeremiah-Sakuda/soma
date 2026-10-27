@@ -1,3 +1,4 @@
+import { readJsonBody } from '../http';
 import { sourceAuthorityContextSchema, validateSourceContext, type SourceAuthorityContext } from '../../domain/source-context';
 import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
@@ -72,7 +73,7 @@ async function boundedJson(response: Response, maxBytes = 1_048_576): Promise<an
 
 async function tokenRequest(parameters: Record<string, string>): Promise<any> {
   const config = oauthConfiguration();
-  const response = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ ...parameters, client_id: config.clientId, client_secret: config.clientSecret }), signal: AbortSignal.timeout(15_000), cache: 'no-store' });
+  const response = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ ...parameters, client_id: config.clientId, client_secret: config.clientSecret }), signal: AbortSignal.timeout(15_000), cache: 'no-store', redirect: 'error' });
   const body = await boundedJson(response, 32_768);
   if (!response.ok || typeof body.access_token !== 'string') throw new WorkspaceStoreError('Google authorization expired or was not granted. Reconnect the source.', 401, 'google_authorization');
   return body;
@@ -124,7 +125,9 @@ async function freshSecret(secret: GoogleSecret): Promise<GoogleSecret> {
   if (secret.accessToken && secret.expiresAt > Date.now() + 60_000) return secret;
   if (!secret.refreshToken) throw new WorkspaceStoreError('Reconnect this Google source.', 401, 'google_authorization');
   const body = await tokenRequest({ grant_type: 'refresh_token', refresh_token: secret.refreshToken });
-  return { ...secret, accessToken: body.access_token, expiresAt: Date.now() + Math.min(86400, Number(body.expires_in) || 3600) * 1000, ...(typeof body.refresh_token === 'string' ? { refreshToken: body.refresh_token } : {}) };
+  const result = z.object({access_token:z.string().min(1).max(8192),token_type:z.string().refine(value=>value.toLowerCase()==='bearer'),expires_in:z.number().int().min(1).max(86_400),refresh_token:z.string().min(1).max(8192).optional()}).safeParse(body);
+  if (!result.success) throw new WorkspaceStoreError('Google returned invalid authorization. Reconnect the source.', 401, 'google_authorization');
+  return { ...secret, accessToken: result.data.access_token, expiresAt: Date.now() + result.data.expires_in * 1000, ...(result.data.refresh_token ? { refreshToken: result.data.refresh_token } : {}) };
 }
 
 async function googleRead(url: URL, secret: GoogleSecret, deadline: number): Promise<any> {
@@ -209,7 +212,7 @@ export async function listGoogleCalendars(account: VerifiedAccount) {
     }, 2, 100);
     await releaseConnectionLease(account, leased.connection.id, leased.leaseId, { secret });
     return { calendars: result.items.map(item => ({ id: String(item.id), summary: String(item.summary || 'Calendar'), timeZone: String(item.timeZone || ''), primary: item.primary === true })), truncated: result.truncated };
-  } catch (error) { await releaseConnectionLease(account, leased.connection.id, leased.leaseId, { status: 'login-required', notice: 'Could not list calendars. Reconnect if access expired.' }); throw error; }
+  } catch (error) { await releaseConnectionLease(account, leased.connection.id, leased.leaseId, { secret, status: 'login-required', notice: 'Could not list calendars. Reconnect if access expired.' }); throw error; }
 }
 
 export async function refreshGoogleConnection(account: VerifiedAccount, provider: GoogleProvider): Promise<WorkspaceState> {
@@ -290,7 +293,7 @@ export async function refreshGoogleConnection(account: VerifiedAccount, provider
         return current;
       }, undefined, connectionPublicationGuard(account, connection.id, leased.leaseId));
     } catch { /* A changed/deleted workspace must not be recreated by failure handling. */ }
-    await releaseConnectionLease(account, connection.id, leased.leaseId, { status: error instanceof WorkspaceStoreError && error.status === 401 ? 'login-required' : 'stale', lastAttemptAt: checkedAt, notice: 'The last refresh did not complete. Previously saved sources may be out of date.' });
+    await releaseConnectionLease(account, connection.id, leased.leaseId, { secret, status: error instanceof WorkspaceStoreError && error.status === 401 ? 'login-required' : 'stale', lastAttemptAt: checkedAt, notice: 'The last refresh did not complete. Previously saved sources may be out of date.' });
     throw error;
   }
 }
@@ -314,6 +317,5 @@ export async function disconnectGoogleConnection(account: VerifiedAccount, provi
 }
 
 export async function readGoogleJson(request: Request): Promise<unknown> {
-  if (request.headers.get('content-type')?.split(';')[0].trim() !== 'application/json') throw new WorkspaceStoreError('JSON is required.', 415, 'json_required');
-  return boundedJson(new Response(request.body), 16_384);
+  return readJsonBody(request);
 }

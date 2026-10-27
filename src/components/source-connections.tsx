@@ -201,7 +201,8 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
   }
   return <div style={fieldSpacing}>
     <h3>Course sites</h3>
-    <p className="meta">Sign in in your own interactive browser window. Enter passwords and MFA only on the provider’s login page, never in chat or a Soma form.</p>
+    <p className="meta">Sign in through a browser hosted by Browserbase, separate from your everyday browser. Enter passwords and MFA only on the provider’s actual login page; do not save passwords in the hosted browser.</p>
+    <p className="meta">Browserbase retains sensitive browser state, including cookies and site storage. Soma’s authorized server can use that session. Page selection limits Soma’s collection; the underlying login can have broader account access. Disconnect deletes the saved context; failed cleanup is retained for retry. Sessions can expire and require MFA again.</p>
     {!status && !error && <p className="meta" role="status">Checking browser connection availability…</p>}
     {status && !status.configured && <p className="inline-caution">Persistent browser access is not configured on this deployment. New login sessions are unavailable until configuration is restored.</p>}
     {status?.providers.map(item => {
@@ -221,7 +222,7 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
         </div>
         {session && <section className="settings-status" aria-label={`${item.label} login window`}>
           <h3>Finish signing in</h3>
-          <p>The private login window is available until {new Date(session.expiresAt).toLocaleTimeString()}. Complete the provider’s login and any MFA, then return here.</p>
+          <p>The Browserbase login window is available until {new Date(session.expiresAt).toLocaleTimeString()}. Complete the provider’s login and any MFA, then return here.</p>
           <a className="primary-button" style={{ marginTop: 14, textDecoration: 'none' }} href={session.loginUrl} target="_blank" rel="noopener noreferrer">Open secure login window</a>
           <button className="secondary-button" style={fieldSpacing} disabled={!!busy} onClick={() => void action(item.provider, 'complete')}>I’ve finished signing in</button>
           <p className="meta">Saving the browser session does not prove source access. A successful read of your selected course page establishes that separately.</p>

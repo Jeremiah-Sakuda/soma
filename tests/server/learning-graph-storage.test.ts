@@ -1,3 +1,4 @@
+import { localLearningGraph } from '../../src/lib/domain/learning-graph';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -65,6 +66,8 @@ describe.skipIf(process.env.SOMA_LIVE_GRAPH_TEST!=='true')('managed synthetic gr
       await deleteApp(getServerApp());const final=await readAccountWorkspace(account);
       expect(final).toEqual(followed);expect(final!.recommendedLessonId).toBe('managed-fresh-application');
       expect(final!.attempts).toEqual(revised.attempts);
+      expect(localLearningGraph(final!,state.lessons[0].id).find(record=>record.kind==='interpretation'&&record.hypothesisId==='one')).toMatchObject({status:'weakened',observationIds:['managed-response']});
+      expect(localLearningGraph(final!,'managed-fresh-application').filter(record=>record.kind==='interpretation').every(record=>record.kind==='interpretation'&&record.version===1&&record.status==='plausible'&&record.diagnosticInvestigationId==='managed-fresh-investigation')).toBe(true);
       expect(final!.learningGraph!.some(record=>record.kind==='relationship'&&record.from.kind==='activity'&&record.from.id==='managed-fresh-application')).toBe(true);
 
 

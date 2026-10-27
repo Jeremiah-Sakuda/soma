@@ -114,3 +114,28 @@ test('a later worker artifact closes an open inspection before its new activity 
   expect(workspace.assistance[next.id].some(item=>item.includes('explanation'))).toBe(true);
   expect(staleSupportSaves).toBe(0);
 });
+
+test('a new diagnostic cannot inherit the revised status of a different explanation sharing its ID',async({page})=>{
+  const before=seedWorkspace('inspection-distinct-hypotheses');
+  let workspace=prepareLearningGraphPreview(structuredClone(before),'2026-10-27T16:00:00Z');
+  const initial=workspace.investigations![0],lesson=workspace.lessons[0];
+  workspace=reconcileLearningGraph({...workspace,investigations:[]},workspace);
+  const original=structuredClone(workspace);
+  const plan=structuredClone(initial.diagnosticPlan!);plan.hypotheses[0].claim='A distinct new explanation sharing a short identifier.';
+  const fresh={...lesson,id:'distinct-hypothesis-activity',kind:'practice' as const,exposure:'fresh-no-diagram' as const,objective:'A fresh representation',question:'Which two endpoint nodes establish the branch voltage?',diagnosticInvestigationId:'new-diagnostic',diagnosticExperiment:undefined};
+  workspace.lessons.push(fresh);workspace.investigations!.push({...initial,id:'new-diagnostic',supersedesId:initial.id,createdAt:'2026-10-27T16:03:00Z',diagnosticPlan:plan,diagnosticLessonId:fresh.id,selectedLessonId:fresh.id,hypothesisRevisions:[{hypothesisId:plan.hypotheses[0].id,status:'weakened',reason:'The previous explanation was weakened; the new claim is separate.'},{hypothesisId:plan.hypotheses[1].id,status:'unresolved',reason:'The previous alternative remains uncertain.'}]});
+  workspace=reconcileLearningGraph(original,workspace);
+  const reply=()=>({workspace,capabilities:{spark:false,persistence:'local-synthetic',liveSources:[]}});
+  await page.route('**/api/workspace',route=>route.fulfill({json:reply()}));
+  await page.route('**/api/audit**',route=>route.fulfill({json:{workspaceId:workspace.id,runs:[]}}));
+  await page.route('**/api/actions',route=>{workspace=applyAction(workspace,route.request().postDataJSON());return route.fulfill({json:reply()});});
+  await page.goto(`/?view=study&lesson=${lesson.id}`);
+  const panel=page.getByRole('region',{name:'What Soma is checking'});
+  await panel.getByRole('button',{name:'Inspect explanations and evidence'}).click();
+  const oldCard=panel.locator('.evidence-card').filter({has:page.getByRole('heading',{name:initial.diagnosticPlan!.hypotheses[0].claim,exact:true})});
+  await expect(oldCard).toContainText('Weakened');
+  await panel.getByRole('button',{name:'Open fresh application',exact:true}).click();
+  await panel.getByRole('button',{name:'Inspect explanations and evidence'}).click();
+  const newCard=panel.locator('.evidence-card').filter({has:page.getByRole('heading',{name:plan.hypotheses[0].claim,exact:true})});
+  await expect(newCard).toContainText('Plausible');await expect(newCard).not.toContainText('Weakened');
+});

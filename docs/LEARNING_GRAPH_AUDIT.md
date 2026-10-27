@@ -12,6 +12,12 @@ Checkpoint `5a29ee2`; type-only correction `06dc934`.
 
 Decision: proceed to M2. No private material or live inference used for M1.
 
-## M2 — Audit in progress
+## M2 — Durable graph reviewed
 
-Root code review identified invalid predecessor references for new hypotheses and incomplete consent filtering for graph claims/edges. Both required correction before dependent M3 work. Final managed persistence results and checkpoint pending.
+Checkpoint `2f85467`.
+
+Root review found and required fixes for invalid predecessor references on new hypotheses and incomplete automatic-consent filtering for graph claims/edges. New hypotheses now start at version one; graph claims/links are filtered through authorized parent investigations and exact source versions. Historical records remain append-only; current inspection excludes stale/superseded entries.
+
+Verification: root broad suite 410 default passes / 36 opt-in skipped during implementation; final agent focused checks 24 pass / one managed opt-in skipped plus typecheck/diff checks. Expanded actual Firestore synthetic test 2/2 passed in 13.73s, covering initial diagnosis, assisted response, weakened interpretation, Firebase reconnect/readback, retry deduplication, stale CAS and foreign workspace rejection. Disposable test account deleted. No private sources or model calls.
+
+Decision: proceed to M3. General prerequisite discovery and independent instructional truth are not established by these storage checks.

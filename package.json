@@ -17,7 +17,8 @@
     "check": "npm run typecheck && npm test && npm run build",
     "check:meta": "node --env-file=.env.local scripts/check-meta.mjs",
     "check:firestore": "node --env-file=.env.local scripts/check-firestore.mjs",
-    "check:config": "node --env-file=.env.local scripts/check-production-config.mjs"
+    "check:config": "node --experimental-strip-types --env-file=.env.local scripts/check-production-config.mjs",
+    "credentials:rotate": "node --experimental-strip-types --env-file=.env.local scripts/rotate-connector-key.mjs"
   },
   "dependencies": {
     "@tailwindcss/postcss": "4.3.3",

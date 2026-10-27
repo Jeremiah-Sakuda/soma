@@ -1,5 +1,6 @@
 // Configuration-only preflight. Does not contact providers, authenticate a source, or print values.
 import { existsSync } from 'node:fs';
+import { CredentialCipher } from '../src/lib/server/credential-crypto.ts';
 const env = process.env;
 const checks = [];
 const check = (name, valid) => checks.push({ name, status: valid ? 'pass' : 'fail' });
@@ -15,7 +16,9 @@ check('Firebase server credential configured', serverCredential);
 let productionOrigin = false;
 try { const url = new URL(env.SOMA_APP_URL); productionOrigin = url.protocol === 'https:' && url.origin === env.SOMA_APP_URL && !url.username && !url.password; } catch { /* Failed below. */ }
 check('canonical HTTPS application origin', productionOrigin);
-check('connector encryption key format', /^[a-fA-F0-9]{64}$/.test(env.SOMA_CONNECTOR_ENCRYPTION_KEY ?? ''));
+let credentialKeysValid=false;
+try { new CredentialCipher(env); credentialKeysValid=true; } catch { /* Never report configuration values. */ }
+check('connector encryption key set and write format', credentialKeysValid);
 check('Google OAuth client configured', Boolean(env.GOOGLE_OAUTH_CLIENT_ID && env.GOOGLE_OAUTH_CLIENT_SECRET));
 check('Browserbase API key configured', Boolean(env.BROWSERBASE_API_KEY));
 check('Meta endpoint and model pinned', env.META_API_BASE_URL === 'https://api.meta.ai/v1' && env.META_MODEL_ID === 'muse-spark-1.3');

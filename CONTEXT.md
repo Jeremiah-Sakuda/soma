@@ -30,3 +30,15 @@ The supported next activity or session Soma currently suggests, given course evi
 
 **Assistance**:
 Help or revealing exposure associated with a response, including explanations and guided demonstrations. Completing an activity after assistance does not become independent-understanding evidence.
+
+**Saved authorization**:
+The sensitive grant or browser state that lets Soma revisit a selected external source. Its lifetime and permissions are distinct from the student's Soma sign-in.
+
+**Credential key version**:
+The identity of a protection key used for saved authorization. It is not the authorization itself or a provider access token.
+
+**Credential rotation**:
+Changing the key protecting saved authorization while preserving ownership and the ability to recover or remove saved access. It does not automatically revoke the external provider's grant.
+
+**Credential recovery**:
+Restoring access to protected authorization or completing its cleanup after an interruption, without changing its owner or authorized scope.

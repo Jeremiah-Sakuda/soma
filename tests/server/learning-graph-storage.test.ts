@@ -55,6 +55,18 @@ describe.skipIf(process.env.SOMA_LIVE_GRAPH_TEST!=='true')('managed synthetic gr
       expect(reopened).toEqual(revised);
       expect(reopened!.learningGraph!.filter(record=>record.kind==='interpretation')).toHaveLength(4);
       expect(reopened!.attempts.at(-1)!.assisted).toBe(true);
+      const followed=await updateAccountWorkspace(account,current=>{
+        const original=current.lessons[0],first=current.investigations![0];
+        const fresh={...original,id:'managed-fresh-application',kind:'practice' as const,exposure:'fresh-no-diagram' as const,diagnosticInvestigationId:'managed-fresh-investigation',question:'Which endpoint comparison identifies the shared branch voltage in a new drawing?',mode:'prepared' as const};
+        current.lessons.unshift(fresh);current.recommendedLessonId=fresh.id;
+        current.investigations!.push({...first,id:'managed-fresh-investigation',supersedesId:'managed-revision',createdAt:'2026-10-27T12:03:00Z',selectedLessonId:fresh.id,diagnosticLessonId:fresh.id,attemptIds:['managed-response'],diagnosticPlan:{...first.diagnosticPlan!,question:fresh.question},hypothesisRevisions:[{hypothesisId:'one',status:'weakened',reason:'Original scripted synthetic response warrants a fresh condition.'},{hypothesisId:'two',status:'unresolved',reason:'Independent understanding remains unconfirmed.'}]});
+        return current;
+      });
+      await deleteApp(getServerApp());const final=await readAccountWorkspace(account);
+      expect(final).toEqual(followed);expect(final!.recommendedLessonId).toBe('managed-fresh-application');
+      expect(final!.attempts).toEqual(revised.attempts);
+      expect(final!.learningGraph!.some(record=>record.kind==='relationship'&&record.from.kind==='activity'&&record.from.id==='managed-fresh-application')).toBe(true);
+
 
     }finally{await getServerFirestore().recursiveDelete(getServerFirestore().collection('somaAccounts').doc(rootId));await getAuth(getServerApp()).deleteUser(user.uid);vi.unstubAllEnvs();}
   },60000);

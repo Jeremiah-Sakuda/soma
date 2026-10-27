@@ -45,7 +45,7 @@ export type WorkspaceState = {
 };
 export type WorkspaceAction =
   | { type: 'refresh' }
-  | { type: 'scenario'; scenario: 'exam-moved' | 'scope-change' | 'source-revised' | 'source-expired' | 'reconnect' | 'injection' | 'commitment-overlap' | 'commitment-no-overlap' | 'commitment-tentative' | 'commitment-duplicate' }
+  | { type: 'scenario'; scenario: 'learning-graph' | 'exam-moved' | 'scope-change' | 'source-revised' | 'source-expired' | 'reconnect' | 'injection' | 'commitment-overlap' | 'commitment-no-overlap' | 'commitment-tentative' | 'commitment-duplicate' }
   | { type: 'assistance'; lessonId: string; kind: 'hint' | 'explanation' | 'exploration' }
   | { type: 'correct-learning'; lessonId: string; note: string; revisionOf?: string }
   | { type: 'attempt'; lessonId: string; optionIndex: number; revisionOf?: string }

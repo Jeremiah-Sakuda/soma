@@ -403,3 +403,17 @@ it('discloses retained prior statuses and refuses partial reconsideration on a l
  await expect(investigateWithSpark(answered,{...request,previousInvestigationId:initial.record.id,attemptId:attempt.id})).rejects.toBeInstanceOf(InvestigationError);
  expect(answered).toEqual(original);
 });
+
+it('qualifies a correction-based interpretation as self-report without upgrading independent performance',async()=>{
+ const state=fixture(),plan=originalTextPlan(state);
+ script([readUpdate,{name:'prepare_diagnostic',args:textToolArgs(plan)},body=>({name:'finish_investigation',args:finishToolArgs({...decision(state,'keep-current',false),decision:'revise-session'},lastToolOutput(body).lessonId)})]);
+ const initial=await investigateWithSpark(state,request);
+ const answered=applyAction(publishInvestigation(state,initial),{type:'attempt',lessonId:initial.lesson!.id,optionIndex:0},at);
+ const corrected=applyAction(answered,{type:'correct-learning',lessonId:initial.lesson!.id,note:'I know the relationship, but I read the diagram incorrectly.',revisionOf:answered.attempts.at(-1)!.id},at),observation=structuredClone(corrected.attempts.at(-1)!);
+ script([body=>{const context=JSON.parse(body.input[0].content!);expect(context.previous.savedResponse.correctedObservation.response).toBe(answered.attempts[0].response);return readUpdate;},{name:'revise_interpretation',args:{hypothesisId:'voltage-rule',status:'supported',attemptId:observation.id,reason:'The student reports recognizing this relationship; this is provisional self-report.'}}, {name:'revise_interpretation',args:{hypothesisId:'fixed-current',status:'weakened',attemptId:observation.id,reason:'The correction weakens this explanation without establishing independent understanding.'}}, {name:'finish_investigation',args:finishToolArgs({...decision(corrected,'keep-current',false),sourceRefs:[...decision(corrected,'keep-current',false).sourceRefs,...decision(corrected,'keep-current',false).sourceRefs]})}]);
+ const result=await investigateWithSpark(corrected,{...request,previousInvestigationId:initial.record.id,attemptId:observation.id});
+ expect(result.record.sourceRefs).toHaveLength(1);
+ expect(result.record.hypothesisRevisions?.every(item=>item.reason?.startsWith('Student-reported correction; provisional and not independently verified.'))).toBe(true);
+ const published=publishInvestigation(corrected,result);
+ expect(published.attempts.at(-1)).toEqual(observation);expect(observation).toMatchObject({correct:null,novel:false,responseKind:'correction'});
+});

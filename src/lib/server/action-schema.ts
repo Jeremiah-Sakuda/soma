@@ -12,7 +12,7 @@ const circuit = z.strictObject({
 /** Untrusted actions never carry workspace, owner, scoring, or evidence fields. */
 export const workspaceActionSchema: z.ZodType<WorkspaceAction> = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('refresh') }),
-  z.strictObject({ type: z.literal('scenario'), scenario: z.enum(['exam-moved', 'scope-change', 'source-revised', 'source-expired', 'reconnect', 'injection', 'commitment-overlap', 'commitment-no-overlap', 'commitment-tentative', 'commitment-duplicate']) }),
+  z.strictObject({ type: z.literal('scenario'), scenario: z.enum(['learning-graph', 'exam-moved', 'scope-change', 'source-revised', 'source-expired', 'reconnect', 'injection', 'commitment-overlap', 'commitment-no-overlap', 'commitment-tentative', 'commitment-duplicate']) }),
   z.strictObject({ type: z.literal('assistance'), lessonId: id, kind: z.enum(['hint', 'explanation', 'exploration']) }),
   z.strictObject({ type: z.literal('correct-learning'), lessonId: id, note: z.string().trim().min(1).max(1000), revisionOf: id.optional() }),
   z.strictObject({ type: z.literal('attempt'), lessonId: id, optionIndex: z.number().int().min(0).max(15), revisionOf: id.optional() }),

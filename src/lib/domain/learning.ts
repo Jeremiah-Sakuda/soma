@@ -1,3 +1,4 @@
+import { prepareLearningGraphPreview } from './learning-preview';
 import { createEmptyCard, fsrs, Rating, type CardInput } from 'ts-fsrs';
 import { calculateCircuit } from './circuit';
 import { AuthoredFollowupUnavailableError, followupLesson, sourceVersions } from './lessons';
@@ -36,7 +37,10 @@ function applyScenario(state: WorkspaceState, scenario: Extract<WorkspaceAction,
   if (alreadyApplied && scenario !== 'source-expired' && scenario !== 'reconnect') return;
   const course = state.courses.find(item => item.id === 'circuits');
   if (!course) throw new Error('Synthetic circuit course is missing.');
-  if (scenario === 'exam-moved') {
+  if (scenario === 'learning-graph') {
+    prepareLearningGraphPreview(state, timestamp);
+    addRun(state, timestamp, trigger, 'Opened an authored synthetic graph activity. No model call, image extraction or live collection occurred.', state.lessons.find(lesson=>lesson.id===state.recommendedLessonId)?.sourceIds??[]);
+  } else if (scenario === 'exam-moved') {
     addSource(state, timestamp, 'source-b', 'Exam moved · synthetic announcement', 'Synthetic October 28 announcement: Exam 2 has moved to Friday, October 30 at 10 AM. This replaces the November 2 date. Read today’s Exam 2 scope email for revised coverage and use Lecture 8.');
     course.deadline = '2026-10-30T10:00:00-04:00';
     addRun(state, timestamp, trigger, 'Moved the synthetic exam date; reused valid lesson versions. The earlier Writing draft deadline remains visible.', ['source-a', 'source-b']);

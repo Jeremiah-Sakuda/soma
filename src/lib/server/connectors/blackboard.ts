@@ -105,7 +105,7 @@ export async function selectBlackboardCourses(account:VerifiedAccount,ids:string
 
 /** One bounded slice of one selected course; subsequent runs rotate fairly and resume folders. */
 export async function refreshBlackboardCourses(account:VerifiedAccount){
- return withBrowserRead(account,'blackboard',request=>isAllowedBlackboardRequest(request,[],'collect'),async({page,workspace,connection,guard,deadline,checkpointConfiguration})=>{
+ return withBrowserRead(account,'blackboard',request=>isAllowedBlackboardRequest(request,[],'collect'),async({page,workspace,connection,guard,deadline,checkpointConfiguration,markPhase})=>{
   const bb=connection.configuration.blackboard;
   if(bb?.mode!=='courses'||!bb.selected.length)throw fail('Choose at least one Blackboard course before refreshing.',400,'source_course_scope');
   const index=Math.max(0,Math.trunc(bb.nextCourseIndex??0))%bb.selected.length,choice=bb.selected[index];
@@ -121,6 +121,7 @@ export async function refreshBlackboardCourses(account:VerifiedAccount){
    if((error as {code?:string}).code!=='browser_login_required')await checkpointConfiguration({...connection.configuration,blackboard:{...bb,nextCourseIndex:(index+1)%bb.selected.length}});
    throw error;
   }
+  markPhase?.('source-publication');
   const checkedAt=new Date().toISOString();let changedSourceIds:string[]=[];
   const updated=await updateAccountWorkspace(account,state=>{
    const result=publishBlackboardRead(state,{providerCourseId:choice.id,courseId:choice.courseId,...read,checkedAt});

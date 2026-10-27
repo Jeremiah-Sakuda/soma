@@ -4,10 +4,13 @@ import {describe,it,expect,vi} from 'vitest';
 import {getServerApp,getServerFirestore} from '../../src/lib/server/firebase-config';
 import {verifyWorkerAccount} from '../../src/lib/server/account';
 import {verifyWorkerRequest} from '../../src/lib/server/worker-auth';
-import {withBrowserRead} from '../../src/lib/server/connectors/browser';
+import {refreshBrowser,withBrowserRead} from '../../src/lib/server/connectors/browser';
 import {readBlackboardJson} from '../../src/lib/server/connectors/blackboard-api';
 import {collectBlackboardMaterials} from '../../src/lib/server/connectors/blackboard-materials';
 import * as policy from '../../src/lib/domain/blackboard-navigation';
+import {readAccountWorkspace} from '../../src/lib/server/account-store';
+import {auditedSourceCollection} from '../../src/lib/server/source-audit';
+import {queueCollectedPreparation} from '../../src/lib/server/connectors/preparation';
 import {blackboardStatus,discoverBlackboardCourses} from '../../src/lib/server/connectors/blackboard';
 
 describe.skipIf(process.env.SOMA_BLACKBOARD_LIVE_TEST!=='true')('authorized Blackboard saved-session discovery',()=>{
@@ -44,6 +47,28 @@ describe.skipIf(process.env.SOMA_BLACKBOARD_LIVE_TEST!=='true')('authorized Blac
   });
   process.stdout.write(JSON.stringify({textItems:result.records.length,complete:result.complete,warnings:result.warnings,pendingPages:result.cursor?.pending.length??0,modelCalls:0,persistedMaterial:0})+'\n');
   expect(result.records.length).toBeGreaterThan(0);
+ },120_000);
+
+ it.skipIf(process.env.SOMA_BLACKBOARD_SELECTED_READ!=='true')('publishes one explicitly selected semester slice and verifies saved observations',async()=>{
+  if(!process.env.SOMA_BLACKBOARD_OWNER_EMAIL||!process.env.SOMA_BLACKBOARD_SEMESTER_PREFIX)throw new Error('Explicit owner and semester scope required.');
+  const user=await getAuth(getServerApp()).getUserByEmail(process.env.SOMA_BLACKBOARD_OWNER_EMAIL),rootId=createHash('sha256').update(user.uid).digest('hex');
+  const metadata=(await getServerFirestore().collection('somaAccounts').doc(rootId).get()).data();
+  const capability=verifyWorkerRequest(new Request('https://soma.example/api/internal/worker',{headers:{authorization:`Bearer ${process.env.SOMA_WORKER_SECRET}`}}));
+  const account=await verifyWorkerAccount(capability,rootId,metadata?.workspaceId);if(!account)throw new Error('Explicit account unavailable.');
+  const status=await blackboardStatus(account),expected=status.catalog.courses.filter(course=>course.code?.startsWith(process.env.SOMA_BLACKBOARD_SEMESTER_PREFIX!)).map(course=>course.id).sort();
+  expect(expected.length).toBeGreaterThan(0);expect(status.selected.map(choice=>choice.id).sort()).toEqual(expected);
+  let phase='audit';
+  try{
+   const collected=await auditedSourceCollection(account,'blackboard',()=>{phase='collection';return refreshBrowser(account,'blackboard');},result=>result.workspace);
+   phase='readback';const saved=await readAccountWorkspace(account);expect(saved).toBeTruthy();
+   expect(saved!.sources).toEqual(collected.value.workspace.sources);
+   if(collected.auditComplete){phase='handoff';await queueCollectedPreparation(account,collected.value.workspace,'blackboard:browser-blackboard:');}
+   console.log(JSON.stringify({selectedCourses:status.selected.length,notice:collected.value.notice,auditComplete:collected.auditComplete,savedBlackboardVersions:saved!.sources.filter(source=>source.kind==='blackboard'&&source.origin==='live').length,modelCalls:0}));
+  }catch(error){
+   const e=error as {name?:string;code?:string|number;status?:number;stack?:string};
+   const frames=e.stack?.split('\n').filter(line=>/^\s+at /.test(line)).slice(0,5).map(line=>line.replace(/(?:https?|wss):\/\/\S+/g,'[location]').replace(/\([^)]*\)/g,'(location withheld)'));
+   throw new Error(JSON.stringify({phase,name:e.name,code:e.code,status:e.status,frames}));
+  }
  },120_000);
 
 });

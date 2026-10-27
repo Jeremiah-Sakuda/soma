@@ -1,3 +1,4 @@
+import {logBrowserReadFailure,type BrowserReadPhase} from './browser-diagnostics';
 import { createHash, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { Browser, Page } from 'playwright-core';
@@ -237,19 +238,23 @@ export async function completeBrowserLogin(account: VerifiedAccount, provider: B
  * the page, connection secret or policy callback. Authorization is rechecked at publication. */
 export async function withBrowserRead<T>(account: VerifiedAccount, provider: BrowserProvider,
   allow: (request: {url:string;method:string;resourceType:string;topLevel:boolean})=>boolean,
-  operation: (input: {page:Page;connection:BrowserConnection;workspace:NonNullable<Awaited<ReturnType<typeof readAccountWorkspace>>>;guard:ReturnType<typeof connectionPublicationGuard>;deadline:number;blockedOrigins:Set<string>;checkpointConfiguration:(configuration:Configuration)=>Promise<void>})=>Promise<{value:T;configuration?:Configuration;notice?:string;lastSuccessAt?:string;status?:'connected'|'current'}>
+  operation: (input: {page:Page;connection:BrowserConnection;workspace:NonNullable<Awaited<ReturnType<typeof readAccountWorkspace>>>;guard:ReturnType<typeof connectionPublicationGuard>;deadline:number;blockedOrigins:Set<string>;checkpointConfiguration:(configuration:Configuration)=>Promise<void>;markPhase?:(phase:'source-read'|'source-publication')=>void})=>Promise<{value:T;configuration?:Configuration;notice?:string;lastSuccessAt?:string;status?:'connected'|'current'}>
 ): Promise<T> {
   const deadline=Date.now()+80_000;
   const lease=await acquireConnectionLease<Secret,Configuration>(account,ID(provider),'discover-or-read',240_000);
   let connection=lease.connection,browser:Browser|undefined,allocated=false;
+  let phase:BrowserReadPhase='workspace-read';
   const timer=setTimeout(()=>{void browser?.close().catch(()=>undefined);},Math.max(1,deadline-Date.now()));timer.unref();
   try {
     const workspace=await readAccountWorkspace(account);if(!workspace)throw fail('Private workspace is unavailable.',404);
     if(!connection.secret.contextId)throw fail('Sign in to this provider first.',409,'browser_login_required');
+    phase='session-read';
     if(active(await getSession(connection)))throw fail('Finish the sign-in session before reading courses.');
     if(connection.secret.sessionId){await releaseSession(connection);connection.secret=clearSession(connection.secret);await checkpointConnectionLease(account,connection.id,lease.leaseId,{secret:connection.secret});throw fail('The previous session ended. Wait a few seconds, then retry.');}
-    const created=await allocateSession(account,lease.leaseId,connection,180);connection=created.connection;allocated=true;browser=await connect(created.session);
+    phase='session-allocation';
+    const created=await allocateSession(account,lease.leaseId,connection,180);connection=created.connection;allocated=true;phase='cdp-connect';browser=await connect(created.session);
     const context=browser.contexts()[0];if(!context)throw fail('Browser is not ready.');
+    phase='policy-install';
     const blockedOrigins=new Set<string>();
     await context.route('**/*',async route=>{
       const request=route.request();let topLevel=false;
@@ -259,15 +264,18 @@ export async function withBrowserRead<T>(account: VerifiedAccount, provider: Bro
     });
     await context.routeWebSocket('**/*',socket=>socket.close());
     for(const old of context.pages())await old.close();
+    phase='page-init';
     const page=await context.newPage(),cdp=await context.newCDPSession(page);await cdp.send('Network.setBypassServiceWorker',{bypass:true});await cdp.send('ServiceWorker.enable');await cdp.send('ServiceWorker.stopAllWorkers');
     const guard=connectionPublicationGuard(account,connection.id,lease.leaseId);
     const checkpointConfiguration=async(configuration:Configuration)=>{if(!await checkpointConnectionLease(account,connection.id,lease.leaseId,{configuration}))throw fail('Source authorization changed.',409,'connection_changed');connection.configuration=configuration;};
-    const result=await operation({page,connection,workspace,guard,deadline,blockedOrigins,checkpointConfiguration});
+    phase='source-read';
+    const result=await operation({page,connection,workspace,guard,deadline,blockedOrigins,checkpointConfiguration,markPhase:value=>{phase=value;}});
     remainingReadTime(deadline,1);
-    await browser.close();browser=undefined;await releaseSession(connection);
-    await persistLease(account,connection,lease.leaseId,{secret:clearSession(connection.secret),...(result.configuration?{configuration:result.configuration}:{}),...(result.lastSuccessAt?{lastSuccessAt:result.lastSuccessAt}:{}),...(result.status?{status:result.status}:{}),notice:result.notice??'Read-only course check finished.'});
+    phase='browser-close';await browser.close();browser=undefined;phase='session-release';await releaseSession(connection);
+    phase='lease-persist';await persistLease(account,connection,lease.leaseId,{secret:clearSession(connection.secret),...(result.configuration?{configuration:result.configuration}:{}),...(result.lastSuccessAt?{lastSuccessAt:result.lastSuccessAt}:{}),...(result.status?{status:result.status}:{}),notice:result.notice??'Read-only course check finished.'});
     return result.value;
   } catch(error) {
+    logBrowserReadFailure(phase,error);
     if(browser)await browser.close().catch(()=>undefined);
     let secret=connection.secret;
     if(allocated){try{await releaseSession(connection);secret=clearSession(secret);}catch{ /* Keep encrypted cleanup references. */ }}

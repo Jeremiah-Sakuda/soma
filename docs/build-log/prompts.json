@@ -461,6 +461,21 @@
       "kind": "message",
       "prompt": "When done,we'll connect Piazza too because I also have a class on there, and my assignments are primarily on gradescope. ",
       "timestamp_note": "Exact received timestamp unavailable; platform browser context excluded."
+    },
+    {
+      "id": "P052",
+      "received_at": null,
+      "kind": "clarification",
+      "prompt": "All the ones from this semester (Fall 2026)",
+      "question_context": "The Blackboard course picker is now live in Soma. Which courses should it collect? Select and save them under Workspace menu → Connect course sites, Gmail and Calendar, or name the courses here. I’ve left all courses unselected.",
+      "timestamp_note": "Received timestamp unavailable; platform browser context excluded."
+    },
+    {
+      "id": "P053",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "There are also UI UX updated, and a new file ",
+      "timestamp_note": "Received timestamp unavailable. Platform open-Page and ambient browser context excluded."
     }
   ]
 }

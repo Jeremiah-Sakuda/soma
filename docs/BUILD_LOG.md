@@ -1068,3 +1068,27 @@ P040 documentation verification: local links in eleven adopted planning document
 3. Existing separate encrypted browser contexts, user-entered login/MFA and selected read-only scope apply to the follow-up. No new credentials requested in chat.
 
 **Plan deviations:** Sequencing clarification within the existing source-integration scope; no new product family or budget.
+
+## P052 — Collect all Fall 2026 Blackboard courses
+
+**Verbatim clarification:** Canonical archive; received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. User selected the current semester, Fall 2026, as the private Blackboard collection scope. Verified all 36 catalog entries and saved the three matching Fall 2026 courses in the signed-in deployed workspace. The existing imported course and all older courses were preserved.
+2. The first hosted collection returned a generic HTTP 500; no successful full read is inferred. Diagnosing the audited collection path with bounded live checks and secret-safe diagnostics. Existing account isolation, read-only access and Meta spending cap apply.
+3. Older courses remain outside the selection. Gradescope and Piazza remain separate follow-ups with their own login/MFA.
+
+**Plan deviations:** None; this supplies the previously missing selected-course scope.
+
+## P053 — Updated UI/UX guidance and new file
+
+**Verbatim prompt:** Canonical archive; received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Read the new docs/UI_UX_GUIDE.md completely and checked updated AGENTS.md, UI_DIRECTION.md and LEARNING_GRAPH_SCOPE.md guidance. Today · Map · Activity and the Playground visual language now own navigation/layout; previous Ready Card evidence and interaction rules remain where not superseded.
+2. Confirmed the deployed app already uses that guide’s new navigation and styling. Continuing Fall 2026 source setup within the updated interface; no additional redesign was requested.
+3. New study formats stay hidden until supported; source labels, private account separation, reduced motion and evidence honesty remain required. PRD/release gates and unsupported image/PDF status are unchanged.
+
+**Plan deviations:** None; incorporated the already adopted UI guidance without reopening design selection.

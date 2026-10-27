@@ -1,3 +1,4 @@
+import {logBrowserReadFailure,type BrowserReadPhase} from '@/lib/server/connectors/browser-diagnostics';
 import { auditedSourceCollection } from '@/lib/server/source-audit';
 import { NextResponse } from 'next/server';
 import { verifyAccountSession } from '@/lib/server/account';
@@ -23,6 +24,7 @@ export async function GET(request: Request) {
   catch (error) { return browserError(error); }
 }
 export async function POST(request: Request) {
+  let phase:BrowserReadPhase='request';
   try {
     requireSameOrigin(request); const owner = await account(request);
     const parsed = browserActionSchema.safeParse(await readJsonBody(request));
@@ -33,10 +35,12 @@ export async function POST(request: Request) {
     if (action === 'start') return response(await startBrowserLogin(owner, provider));
     if (action === 'complete') return response(await completeBrowserLogin(owner, provider));
     if (action === 'disconnect') return response(await disconnectBrowser(owner, provider));
+    phase='source-collection';
     const collected = await auditedSourceCollection(owner, provider, () => refreshBrowser(owner, provider), value => value.workspace);
     const result = collected.value;
     if (!collected.auditComplete) return response({ ...result, notice: 'The selected sources were saved, but final audit confirmation is incomplete. Background handoff can recover from durable sources.' });
+    phase='preparation-handoff';
     result.notice += await queueCollectedPreparation(owner, result.workspace, `${provider}:browser-${provider}:`);
     return response(result);
-  } catch (error) { return browserError(error); }
+  } catch (error) { if(!(error as {status?:number}).status)logBrowserReadFailure(phase,error);return browserError(error); }
 }

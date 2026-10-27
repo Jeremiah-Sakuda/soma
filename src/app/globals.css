@@ -565,11 +565,11 @@ h2 { font-weight: 700; letter-spacing: -.01em; }
 .strip-station:hover { background: var(--surface-muted); }
 .strip-station .station-glyph { width: 18px; height: 18px; }
 .strip-station .station-glyph.split { width: 22px; height: 22px; }
-@media(max-width:640px) { .stack>.map-strip { order:2; } .map-line-label { width: 120px; } .ready-card h1 { font-size: 30px; } .page-heading h1 { font-size: 30px; } }
+@media(max-width:640px) { .stack>.map-strip { order:2; } .map-line { flex-direction: column; gap: 2px; } .map-line-label { width: auto; } .map-card { padding: 14px; } .ready-card h1 { font-size: 30px; } .page-heading h1 { font-size: 30px; } }
 
 /* Activity page */
 .activity-page>p { color: var(--muted); font-size: 14px; margin: 12px 0; }
 
 /* Animated current along wires: speed comes from the checked model's current. */
-.wire.flow { background-color: transparent; background-image: radial-gradient(circle, var(--current) 0 2.5px, transparent 3px), linear-gradient(var(--ink), var(--ink)); background-size: 16px 7px, 100% 3px; background-position: 0 50%, 0 50%; background-repeat: repeat-x, no-repeat; height: 9px; animation: wire-flow var(--flow-duration, 2s) linear infinite; }
-@keyframes wire-flow { from { background-position: 0 50%, 0 50%; } to { background-position: 16px 50%, 0 50%; } }
+.wire.flow { background-color: transparent; background-image: radial-gradient(circle, var(--current) 0 4px, rgb(23 23 28) 4.5px 5.5px, transparent 6px), linear-gradient(var(--ink), var(--ink)); background-size: 22px 12px, 100% 3px; background-position: 0 50%, 0 50%; background-repeat: repeat-x, no-repeat; height: 12px; animation: wire-flow var(--flow-duration, 2s) linear infinite; }
+@keyframes wire-flow { from { background-position: 0 50%, 0 50%; } to { background-position: 22px 50%, 0 50%; } }

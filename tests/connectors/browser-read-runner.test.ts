@@ -137,3 +137,17 @@ describe('private read runner lifecycle with synthetic browser/provider', () => 
     expect(fixture.released).toBe(true);
   });
 });
+
+it('records the exact publication phase without exposing an unknown exception or changing cleanup', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  const error = new TypeError('wss://synthetic.invalid/private?token=never-log-this');
+  try {
+    await expect(withBrowserRead(account, 'blackboard', allow, async ({ markPhase }) => {
+      markPhase?.('source-publication'); throw error;
+    })).rejects.toBe(error);
+    expect(warn).toHaveBeenCalledExactlyOnceWith(JSON.stringify({ event: 'browser_read_failed', phase: 'source-publication', errorType: 'TypeError' }));
+    expect(JSON.stringify(warn.mock.calls)).not.toContain('never-log-this');
+    expect(fixture.calls).toContain('release-session');
+    expect(fixture.connection.secret.sessionId).toBeUndefined();
+  } finally { warn.mockRestore(); }
+});

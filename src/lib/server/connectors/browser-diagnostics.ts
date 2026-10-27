@@ -1,5 +1,5 @@
 const phases = [
-  'request', 'workspace-read', 'session-read', 'session-allocation', 'cdp-connect',
+  'request', 'workspace-read', 'session-read', 'session-allocation', 'playwright-import', 'cdp-connect',
   'policy-install', 'page-init', 'source-read', 'source-publication', 'browser-close',
   'session-release', 'lease-persist', 'source-collection', 'preparation-handoff',
 ] as const;

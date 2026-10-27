@@ -113,11 +113,13 @@ function clearSession(secret: Secret): Secret {
   const { sessionId: _id, sessionExpiresAt: _expiry, loginPageId: _page, ...rest } = secret;
   return { ...rest, readyAt: new Date(Date.now() + 5000).toISOString() };
 }
-async function connect(session: Session): Promise<Browser> {
+async function connect(session: Session, markPhase?:(phase:'playwright-import'|'cdp-connect')=>void): Promise<Browser> {
   if (!session.connectUrl) throw fail('Browser session is not ready. Try again shortly.');
   const address = new URL(session.connectUrl);
   if (address.protocol !== 'wss:' || !(address.hostname === 'connect.browserbase.com' || /^connect\.[a-z0-9-]+\.browserbase\.com$/.test(address.hostname))) throw fail('Browser service returned an invalid connection.', 503);
+  markPhase?.('playwright-import');
   const { chromium } = await import('playwright-core');
+  markPhase?.('cdp-connect');
   return chromium.connectOverCDP(session.connectUrl, { timeout: 15_000 });
 }
 async function allocateSession(account: VerifiedAccount, leaseId: string, connection: BrowserConnection, seconds: number): Promise<{ connection: BrowserConnection; session: Session }> {
@@ -252,7 +254,7 @@ export async function withBrowserRead<T>(account: VerifiedAccount, provider: Bro
     if(active(await getSession(connection)))throw fail('Finish the sign-in session before reading courses.');
     if(connection.secret.sessionId){await releaseSession(connection);connection.secret=clearSession(connection.secret);await checkpointConnectionLease(account,connection.id,lease.leaseId,{secret:connection.secret});throw fail('The previous session ended. Wait a few seconds, then retry.');}
     phase='session-allocation';
-    const created=await allocateSession(account,lease.leaseId,connection,180);connection=created.connection;allocated=true;phase='cdp-connect';browser=await connect(created.session);
+    const created=await allocateSession(account,lease.leaseId,connection,180);connection=created.connection;allocated=true;phase='cdp-connect';browser=await connect(created.session,value=>{phase=value;});
     const context=browser.contexts()[0];if(!context)throw fail('Browser is not ready.');
     phase='policy-install';
     const blockedOrigins=new Set<string>();

@@ -54,7 +54,7 @@ export function MapView({ ws, selected, select, openLesson, freshQuestion, askAb
               <ol className="map-track">
                 {past.map(m => <li className="map-milestone past" key={m.id}><span className="milestone-glyph" aria-hidden="true" /><span className="station-label">{m.title}<small>{day(m.at, ws.timezone)}</small></span></li>)}
                 {item.stations.map(s => <li key={s.lessonId}>
-                  <button className="station-button" aria-pressed={s.lessonId === currentId} aria-label={`${s.title}. ${s.word}${s.stale ? '. Source changed' : ''}${s.recommended ? '. Soma suggests this next' : ''}`} onClick={() => select(s.lessonId)}>
+                  <button className="station-button" aria-pressed={s.lessonId === currentId} aria-label={`${s.title.replace(/[.\s]+$/, '')}. ${s.word}${s.stale ? '. Source changed' : ''}${s.recommended ? '. Soma suggests this next' : ''}`} onClick={() => select(s.lessonId)}>
                     <StationGlyph station={s} /><span className="station-label">{s.title}</span>
                   </button>
                 </li>)}

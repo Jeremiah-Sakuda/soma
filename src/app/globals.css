@@ -482,7 +482,7 @@ h2 { font-weight: 700; letter-spacing: -.01em; }
 @media(min-width:960px) {
   .app-shell { display: grid; grid-template-columns: 236px minmax(0,1fr); min-height: 100dvh; }
   .app-header { position: sticky; top: 0; height: 100dvh; overflow-y: auto; background: var(--sidebar); border-bottom: 0; border-right: 1px solid var(--border); }
-  .header-inner { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 20px; height: 100%; padding: 18px 14px; }
+  .header-inner { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 20px; height: 100%; padding: 18px 14px 76px; } /* bottom space keeps controls clear of the framework dev indicator */
   .wordmark { padding: 0 10px; }
   .primary-nav { flex-direction: column; gap: 2px; }
   .primary-nav button { border-radius: 10px; padding: 9px 10px; font-size: 15px; color: var(--ink-2); }

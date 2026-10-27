@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { BlackboardCoursePicker } from './blackboard-course-picker';
 import { SourceContextFields } from './source-context-fields';
 import type { SourceAuthorityContext } from '@/lib/domain/source-context';
 import type { WorkspaceResponse } from '@/lib/domain/types';
@@ -227,7 +228,8 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
           <button className="secondary-button" style={fieldSpacing} disabled={!!busy} onClick={() => void action(item.provider, 'complete')}>I’ve finished signing in</button>
           <p className="meta">Saving the browser session does not prove source access. A successful read of your selected course page establishes that separately.</p>
         </section>}
-        {connected && <form onSubmit={event => { event.preventDefault(); void action(item.provider, 'configure'); }}>
+        {connected && item.provider === 'blackboard' && <BlackboardCoursePicker data={data} disabled={!!busy} reload={async () => { await read(); await reload(); }} />}
+        {connected && item.provider !== 'blackboard' && <form onSubmit={event => { event.preventDefault(); void action(item.provider, 'configure'); }}>
           <p className="meta" style={fieldSpacing}>Choose exact, read-only course page URLs. Collection stays within the pages you select; it does not submit work or post messages.</p>
           {!data.workspace.courses.length && <p className="inline-caution">Add a course using a selected material import before mapping course-site pages.</p>}
           {selected.map((target, index) => <fieldset key={index} style={fieldSpacing}>

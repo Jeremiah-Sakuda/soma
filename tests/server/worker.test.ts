@@ -44,6 +44,59 @@ describe('scheduled worker authentication and due work', () => {
     expect(connectionDue({ ...selected, lastSuccessAt: new Date(now).toISOString() }, undefined, now + SOURCE_REFRESH_MS / 5)).toBe(true);
     expect(connectionRefreshInterval({ ...selected, provider: 'calendar' })).toBe(SOURCE_REFRESH_MS);
   });
+  const blackboard: PublicConnection = {
+    id: 'browser-blackboard', provider: 'blackboard', workspaceId: 'original-synthetic-workspace', version: 1, status: 'current',
+    configuration: { targets: [{ courseId: 'course-one', url: 'https://learn.bu.edu/ultra/courses/_101_1/outline' }], blackboard: { mode: 'courses', selected: [{ id: '_101_1', courseId: 'course-one' }, { id: '_102_1', courseId: 'course-two' }], catalogIds: ['_101_1', '_102_1'], catalogCheckedAt: '2026-10-27T12:00:00Z', catalogComplete: false, nextCourseIndex: 0 } },
+  };
+  it('keeps Blackboard discovery, traversal and rotation progress out of authorization-scope scheduling', () => {
+    const configuration = blackboard.configuration.blackboard as Record<string, unknown>;
+    const advanced = { ...blackboard, version: 9, configuration: { targets: [], blackboard: { ...configuration,
+      selected: [...configuration.selected as unknown[]].reverse(), catalogIds: ['_101_1', '_102_1', '_103_1'], catalogCheckedAt: '2026-10-28T12:00:00Z', catalogComplete: true, nextCourseIndex: 1,
+      traversal: { providerCourseId: '_101_1', pending: ['contents-page-two'], seen: ['contents-page-one'], materialIds: ['_101_1:content:_material_1'] },
+    } } };
+    expect(connectionScopeFingerprint(advanced)).toBe(connectionScopeFingerprint(blackboard));
+    const now = Date.parse('2026-10-28T12:00:00Z');
+    const schedule = { [blackboard.id]: { scope: connectionScopeFingerprint(blackboard), nextAt: now + 60_000, failures: 0, lastAttemptAt: new Date(now).toISOString(), outcome: 'completed' } };
+    expect(connectionDue(advanced, schedule, now)).toBe(false);
+  });
+  it('invalidates a Blackboard schedule when selected provider courses or workspace mappings change', () => {
+    const now = Date.parse('2026-10-28T12:00:00Z');
+    const schedule = { [blackboard.id]: { scope: connectionScopeFingerprint(blackboard), nextAt: now + SOURCE_REFRESH_MS, failures: 0, lastAttemptAt: new Date(now).toISOString(), outcome: 'completed' } };
+    for (const selected of [
+      [{ id: '_101_1', courseId: 'course-one' }],
+      [{ id: '_101_1', courseId: 'corrected-course' }, { id: '_102_1', courseId: 'course-two' }],
+      [{ id: '_101_1', courseId: 'course-one' }, { id: '_103_1', courseId: 'course-two' }],
+    ]) {
+      const changed = { ...blackboard, configuration: { ...blackboard.configuration, blackboard: { ...blackboard.configuration.blackboard as object, selected } } };
+      expect(connectionScopeFingerprint(changed)).not.toBe(connectionScopeFingerprint(blackboard));
+      expect(connectionDue(changed, schedule, now)).toBe(true);
+    }
+  });
+  it('pauses explicit empty course selection even when older exact-page targets remain', () => {
+    const paused = { ...blackboard, configuration: { ...blackboard.configuration, blackboard: { mode: 'courses', selected: [] } } };
+    expect(connectionDue(paused, undefined)).toBe(false);
+    expect(connectionRefreshInterval(paused)).toBe(SOURCE_REFRESH_MS);
+    const legacy = { ...blackboard, configuration: { targets: blackboard.configuration.targets } };
+    expect(connectionDue(legacy, undefined)).toBe(true);
+  });
+  it('retains every Blackboard course while reserving browser starts and allowing larger cycles to take longer', () => {
+    const selected = Array.from({ length: 11 }, (_, index) => ({ id: `_course_${index}`, courseId: `course-${index}` }));
+    const many = { ...blackboard, configuration: { blackboard: { mode: 'courses', selected } } };
+    const now = Date.parse('2026-10-28T12:00:00Z');
+    const interval = SOURCE_REFRESH_MS / 4;
+    expect(connectionRefreshInterval(many)).toBe(interval);
+    expect(connectionDue({ ...many, lastSuccessAt: new Date(now).toISOString() }, undefined, now + interval - 1)).toBe(false);
+    expect(connectionDue({ ...many, lastSuccessAt: new Date(now).toISOString() }, undefined, now + interval)).toBe(true);
+    const more = { ...many, configuration: { blackboard: { mode: 'courses', selected: [...selected, { id: '_course_12', courseId: 'course-12' }] } } };
+    expect(connectionRefreshInterval(more)).toBe(interval);
+    expect(24 * 60 * 60_000 / interval).toBe(16);
+    expect(interval * selected.length).toBeGreaterThan(SOURCE_REFRESH_MS);
+    expect(connectionScopeFingerprint(more)).not.toBe(connectionScopeFingerprint(many));
+    for (const count of [1, 2, 4]) {
+      const fewer = { ...many, configuration: { blackboard: { mode: 'courses', selected: selected.slice(0, count) } } };
+      expect(connectionRefreshInterval(fewer)).toBe(SOURCE_REFRESH_MS / count);
+    }
+  });
   it('respects manual success, missing scope and reconnect states, and bounds failure backoff', () => {
     const now = Date.parse('2026-10-28T12:00:00Z');
     const schedule = { [connection.id]: { scope: connectionScopeFingerprint(connection), nextAt: now, failures: 0, lastAttemptAt: new Date(now - SOURCE_REFRESH_MS).toISOString(), outcome: 'completed' } };

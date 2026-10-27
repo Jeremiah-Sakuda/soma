@@ -115,14 +115,14 @@ export async function deleteConnection(account: VerifiedAccount, id: string): Pr
   });
 }
 
-export async function acquireConnectionLease<S = Record<string, unknown>, C = Record<string, unknown>>(account: VerifiedAccount, id: string, purpose: string, ttlMs = 120_000): Promise<{ connection: Connection<S, C>; leaseId: string }> {
+export async function acquireConnectionLease<S = Record<string, unknown>, C = Record<string, unknown>>(account: VerifiedAccount, id: string, purpose: string, ttlMs = 120_000, options: {recoverExpired?: boolean} = {}): Promise<{ connection: Connection<S, C>; leaseId: string }> {
   checkId(id); const root = rootRef(account);
   if (ttlMs < 1000 || ttlMs > 10 * 60_000) throw new Error('Invalid connection lease duration.');
   return root.firestore.runTransaction(async transaction => {
     const workspaceId = checkRoot((await transaction.get(root)).data(), account);
     const ref = root.collection('connections').doc(id); const document = await transaction.get(ref);
     if (!document.exists || document.get('workspaceId') !== workspaceId || document.get('ownerId') !== account.uid || document.get('status') === 'disconnected') throw new WorkspaceStoreError('Connect this source first.', 409, 'connection_missing');
-    if (Number(document.get('leaseUntil') || 0) > Date.now()) throw new WorkspaceStoreError('This source is already in use. Try again shortly.', 409, 'connection_busy');
+    if (Number(document.get('leaseUntil') || 0) > Date.now() || (options.recoverExpired === false && document.get('leaseId'))) throw new WorkspaceStoreError('This source is already in use. Try again shortly.', 409, 'connection_busy');
     const leaseId = randomBytes(24).toString('hex');
     transaction.update(ref, { leaseId, leaseUntil: Date.now() + ttlMs, leasePurpose: purpose, lastAttemptAt: new Date().toISOString() });
     return { connection: hydrate<S, C>(document.data() as Stored, account), leaseId };

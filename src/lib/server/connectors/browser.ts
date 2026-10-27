@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { Browser, Page } from 'playwright-core';
 import type { VerifiedAccount } from '../account';
@@ -16,7 +16,7 @@ export const BROWSER_PROVIDERS = {
 export type BrowserProvider = keyof typeof BROWSER_PROVIDERS;
 export type BrowserTarget = { courseId: string; url: string; context?: SourceAuthorityContext };
 export type BlackboardSelection = { id: string; courseId: string };
-export type Configuration = { targets: BrowserTarget[]; blackboard?: { selected: BlackboardSelection[]; catalogIds: string[]; catalogCheckedAt: string; catalogComplete: boolean; nextCourseIndex?: number } };
+export type Configuration = { targets: BrowserTarget[]; blackboard?: { mode?: 'courses'; selected: BlackboardSelection[]; catalogIds: string[]; catalogCheckedAt: string; catalogComplete: boolean; nextCourseIndex?: number; nextCatalogPath?: string; catalogQuery?: string; catalogSubjectId?: string; selectedSubjectId?: string; catalogEpoch?: string; traversals?: Record<string,{providerCourseId:string;pending:string[];seen:string[];materialIds:string[]}> } };
 type Secret = { contextId?: string; sessionId?: string; sessionExpiresAt?: string; loginPageId?: string; readyAt?: string; day?: string; starts?: number };
 type BrowserConnection = Connection<Secret, Configuration>;
 const ID = (provider: BrowserProvider) => `browser-${provider}`;
@@ -216,7 +216,9 @@ export async function startBrowserLogin(account: VerifiedAccount, provider: Brow
     if (login.protocol !== 'https:' || login.username || login.password || (login.port && login.port !== '443') || !(login.hostname === 'browserbase.com' || login.hostname.endsWith('.browserbase.com'))
       || socket.protocol !== 'wss:' || socket.username || socket.password || (socket.port && socket.port !== '443') || !(socket.hostname === 'connect.browserbase.com' || /^connect\.[a-z0-9-]+\.browserbase\.com$/.test(socket.hostname))
       || socket.pathname !== `/debug/${session!.id}/devtools/page/${pageId}`) throw fail('Browser service returned an invalid sign-in link.', 503, 'browser_login_target');
-    await persistLease(account, connection, lease.leaseId, { secret: connection.secret, status: 'connecting', notice: 'Finish sign-in in the private browser. Course access is not verified yet.' });
+    const previousCatalog=connection.configuration.blackboard;
+    const configuration=provider==='blackboard'?{...connection.configuration,blackboard:{...(previousCatalog?.mode?{mode:previousCatalog.mode}:{}),selected:previousCatalog?.selected??[],catalogIds:[],catalogCheckedAt:'',catalogComplete:false,catalogEpoch:randomUUID()}}:connection.configuration;
+    await persistLease(account, connection, lease.leaseId, { configuration, secret: connection.secret, status: 'connecting', notice: 'Finish sign-in in the private browser. Course access is not verified yet.' });
     return { loginUrl: login.href, expiresAt: session!.expiresAt, notice: 'Enter credentials and MFA only in the provider page. Finish sign-in, then select Refresh to verify course access.' };
   } catch (error) {
     await releaseConnectionLease(account, connection.id, lease.leaseId, { secret: connection.secret, status: 'error', notice: 'Sign-in did not finish. Reconnect or disconnect to clean up the saved browser.' }); throw error;
@@ -235,7 +237,7 @@ export async function completeBrowserLogin(account: VerifiedAccount, provider: B
  * the page, connection secret or policy callback. Authorization is rechecked at publication. */
 export async function withBrowserRead<T>(account: VerifiedAccount, provider: BrowserProvider,
   allow: (request: {url:string;method:string;resourceType:string;topLevel:boolean})=>boolean,
-  operation: (input: {page:Page;connection:BrowserConnection;workspace:NonNullable<Awaited<ReturnType<typeof readAccountWorkspace>>>;guard:ReturnType<typeof connectionPublicationGuard>;deadline:number;blockedOrigins:Set<string>})=>Promise<{value:T;configuration?:Configuration;notice?:string}>
+  operation: (input: {page:Page;connection:BrowserConnection;workspace:NonNullable<Awaited<ReturnType<typeof readAccountWorkspace>>>;guard:ReturnType<typeof connectionPublicationGuard>;deadline:number;blockedOrigins:Set<string>;checkpointConfiguration:(configuration:Configuration)=>Promise<void>})=>Promise<{value:T;configuration?:Configuration;notice?:string;lastSuccessAt?:string;status?:'connected'|'current'}>
 ): Promise<T> {
   const deadline=Date.now()+80_000;
   const lease=await acquireConnectionLease<Secret,Configuration>(account,ID(provider),'discover-or-read',240_000);
@@ -259,10 +261,11 @@ export async function withBrowserRead<T>(account: VerifiedAccount, provider: Bro
     for(const old of context.pages())await old.close();
     const page=await context.newPage(),cdp=await context.newCDPSession(page);await cdp.send('Network.setBypassServiceWorker',{bypass:true});await cdp.send('ServiceWorker.enable');await cdp.send('ServiceWorker.stopAllWorkers');
     const guard=connectionPublicationGuard(account,connection.id,lease.leaseId);
-    const result=await operation({page,connection,workspace,guard,deadline,blockedOrigins});
+    const checkpointConfiguration=async(configuration:Configuration)=>{if(!await checkpointConnectionLease(account,connection.id,lease.leaseId,{configuration}))throw fail('Source authorization changed.',409,'connection_changed');connection.configuration=configuration;};
+    const result=await operation({page,connection,workspace,guard,deadline,blockedOrigins,checkpointConfiguration});
     remainingReadTime(deadline,1);
     await browser.close();browser=undefined;await releaseSession(connection);
-    await persistLease(account,connection,lease.leaseId,{secret:clearSession(connection.secret),...(result.configuration?{configuration:result.configuration}:{}),notice:result.notice??'Read-only course check finished.'});
+    await persistLease(account,connection,lease.leaseId,{secret:clearSession(connection.secret),...(result.configuration?{configuration:result.configuration}:{}),...(result.lastSuccessAt?{lastSuccessAt:result.lastSuccessAt}:{}),...(result.status?{status:result.status}:{}),notice:result.notice??'Read-only course check finished.'});
     return result.value;
   } catch(error) {
     if(browser)await browser.close().catch(()=>undefined);
@@ -291,6 +294,10 @@ async function readPage(page: Page, provider: BrowserProvider, target: BrowserTa
   return { id: target.url, title: (await page.title()).slice(0, 300) || BROWSER_PROVIDERS[provider].label, body, courseId: target.courseId, url: target.url, kind: provider, ...(target.context ? { context: target.context } : {}) };
 }
 export async function refreshBrowser(account: VerifiedAccount, provider: BrowserProvider) {
+  if (provider === 'blackboard') {
+    const saved = await readConnection<Secret, Configuration>(account, ID(provider));
+    if (saved?.configuration.blackboard?.mode === 'courses') return (await import('./blackboard')).refreshBlackboardCourses(account);
+  }
   // Reserve 40 seconds of the 120-second route for release, context sync and persistence.
   const deadline = Date.now() + 80_000;
   const lease = await acquireConnectionLease<Secret, Configuration>(account, ID(provider), 'collect', 240_000);

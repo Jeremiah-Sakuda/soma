@@ -53,19 +53,24 @@ const defaults: WorkerDependencies = {
 };
 
 export function connectionScopeFingerprint(connection: PublicConnection): string {
-  const { nextQueryIndex: _rotation, ...configuration } = connection.configuration;
+  const { nextQueryIndex: _rotation, ...retainedConfiguration } = connection.configuration;
+  const bb=retainedConfiguration.blackboard as {mode?:string;selected?:{id:string;courseId:string}[]}|undefined;
+  const configuration=connection.provider==='blackboard'&&bb?.mode==='courses'?{blackboard:{mode:'courses',selected:[...(bb.selected??[])].sort((a,b)=>a.id.localeCompare(b.id))}}:retainedConfiguration;
   const canonical = (value: unknown): unknown => Array.isArray(value) ? value.map(canonical) : value && typeof value === 'object' ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => [key, canonical(item)])) : value;
   return createHash('sha256').update(JSON.stringify({ provider: connection.provider, configuration: canonical(configuration) })).digest('hex');
 }
-/** Gmail rotates one selected query per read; each selection retains a six-hour target. */
+/** Gmail targets six hours per query. Blackboard reserves daily browser starts for login/manual checks; large selections rotate more slowly. */
 export function connectionRefreshInterval(connection: PublicConnection): number {
+  const bb=connection.configuration.blackboard as {mode?:string;selected?:unknown[]}|undefined;
+  if(connection.provider==='blackboard'&&bb?.mode==='courses')return SOURCE_REFRESH_MS/Math.max(1,Math.min(4,bb.selected?.length??0));
   const count = connection.provider === 'gmail' && Array.isArray(connection.configuration.queries) ? Math.max(1, Math.min(20, connection.configuration.queries.length)) : 1;
   return SOURCE_REFRESH_MS / count;
 }
 export function connectionDue(connection: PublicConnection, schedule: Schedule['connections'], now = Date.now()): boolean {
   if (!['connected', 'current', 'stale', 'error'].includes(connection.status)) return false;
   const config = connection.configuration;
-  const hasScope = connection.provider === 'gmail' ? Array.isArray(config.queries) && config.queries.length > 0
+  const bb=config.blackboard as {mode?:string;selected?:unknown[]}|undefined;
+  const hasScope = connection.provider==='blackboard'&&bb?.mode==='courses'?Array.isArray(bb.selected)&&bb.selected.length>0:connection.provider === 'gmail' ? Array.isArray(config.queries) && config.queries.length > 0
     : connection.provider === 'calendar' ? Array.isArray(config.calendarIds) && config.calendarIds.length > 0
     : ['blackboard', 'gradescope', 'piazza'].includes(connection.provider) && Array.isArray(config.targets) && config.targets.length > 0;
   if (!hasScope) return false;

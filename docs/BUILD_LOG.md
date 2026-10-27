@@ -1064,3 +1064,16 @@ P040 documentation verification: local links in eleven adopted planning document
 3. New study formats stay hidden until supported; source labels, private account separation, reduced motion and evidence honesty remain required. PRD/release gates and unsupported image/PDF status are unchanged.
 
 **Plan deviations:** None; incorporated the already adopted UI guidance without reopening design selection.
+
+## P054 — Gradescope completed sign-in (October 27, 2026)
+
+Prompt: [canonical verbatim clarification](build-log/prompts.json), `P054`.
+
+Top three outcomes:
+1. Completed Soma’s save-session action after the user reported Gradescope sign-in/MFA finished. The UI confirms saved context, with source access explicitly still unverified.
+2. Fresh-session read-only access passed: 17 enrolled course links, explicit term containers, and an EC 417 assignment-table structure with seven rows. The current Fall 2026 catalog contains three courses. No grades, submission responses, material publication or model inference in these probes.
+3. Added strict Gradescope document navigation/catalog normalization with 57 passing synthetic cases. Assignment-only collection is in progress; Piazza remains unconnected. No source or teaching capability is inferred from sign-in alone.
+
+Executed checks: fresh-context live catalog probes and two read-only assignment-table structure probes passed; metadata counts and safe shape facts only were emitted. Navigation suite: 57 passing tests; typecheck passed at this checkpoint.
+
+Deviations: none established. Preserve concurrent PM028 generated-lesson correction; no course content or browser-control material is included here.

@@ -457,6 +457,14 @@
       "kind": "message",
       "prompt": "There are also UI UX updated, and a new file ",
       "timestamp_note": "Received timestamp unavailable. Platform open-Page and ambient browser context excluded."
+    },
+    {
+      "id": "P054",
+      "received_at": null,
+      "kind": "clarification",
+      "prompt": "Signed in to Gradescope",
+      "question_context": "The separate Gradescope browser window is open. Complete sign-in and any MFA there, then reply “Signed in to Gradescope.” Enter credentials only on the provider’s page, not in chat.",
+      "timestamp_note": "Exact received timestamp unavailable; platform context excluded."
     }
   ]
 }

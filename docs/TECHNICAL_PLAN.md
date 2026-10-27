@@ -83,6 +83,8 @@ Supersede an interpretation while retaining the observations that supported it. 
 
 ## Spark's graph authority
 
+The October 27 [Learning Graph Scope](LEARNING_GRAPH_SCOPE.md) specifies the concept, relationship, observation, interpretation, diagnostic and revision records for the flagship loop. Extend the existing versioned Firestore records and bounded tools. Keep local relationship inspection in the current lesson surface; no graph database, new agent framework or per-student model training is required.
+
 Give one orchestrator sufficient scope to investigate a course event and the relevant evidence neighborhood. Useful typed operations include reading source versions/images, following permitted course links, querying topic and assessment evidence, proposing scoped facts, proposing or revising interpretations, selecting an activity/model, and preparing a lesson specification.
 
 Application validation must enforce:

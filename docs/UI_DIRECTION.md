@@ -236,6 +236,8 @@ Evidence recording (PRD R5, R10, R11):
 
 ### Right rail: Why this lesson · sources
 
+The October 27 [Learning Graph Scope](LEARNING_GRAPH_SCOPE.md) adds local concept/evidence inspection to this existing surface. Show the relevant concept, provisional explanations and their supporting observations as linked cards or a small accessible diagram. Links open evidence or the associated interaction; preserve source labels, uncertainty and before/after revisions. This is not a new navigation destination or semester-wide canvas. Exposing an explanation that helps answer a diagnostic must be recorded as support for that response.
+
 A disclosure card, collapsed by default, containing a timeline drawn from recorded consequences and source versions. Example items:
 
 1. "OCT 26 · GRADESCOPE: Quiz 3 returned: you wrote 'equal currents… each gets 3 A.'"

@@ -4,7 +4,11 @@ October 27, 2026. This separates inputs that require you from engineering and re
 
 Read-only setup check for P038: the existing owner account is enabled and its workspace is active, but it has **no saved provider connections**. This checked connection metadata only, without opening course content or decrypting credentials. Creating the account and configuring the Google OAuth client do not complete provider connection or source selection.
 
-## Next: connect and select your actual course context
+## Current priority: review the synthetic learning experience
+
+P040 defers testing personal coursework until the simulated learning-graph experience is polished and reviewed. You do not need to connect accounts or supply private course material to unblock M1–M5. Codex owns the [milestones](LEARNING_GRAPH_MILESTONES.md); your next input is feedback on the working synthetic journey. The setup steps below apply to M6 afterward. Actual-course fit and real-source release checks remain required.
+
+## Later: connect and select your actual course context
 
 1. Sign in to [Soma](https://soma-woad-beta.vercel.app) using your existing Soma account; no new account or OAuth client is needed. Connect Google and select the calendars and course-specific Gmail queries you want Soma to read. Authorization alone does not select or prove access to course content.
 2. Connect Blackboard (`learn.bu.edu`) first, then Gradescope and Piazza as needed. Complete password and MFA only on the actual provider/SSO page in the hosted browser, then select supported exact course pages. Browserbase hosts this browser and retains sensitive session state; it does not inherit your everyday browser's login. Soma does not need your institutional password in chat, `.env`, a source document or Git. Read [the authentication approach and trust model](BROWSER_AUTHENTICATION.md). Institutional SSO can require manual reconnection; if a page is unsupported, use the labeled course text/import route while we fix or report the connector.

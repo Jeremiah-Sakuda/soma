@@ -4,6 +4,11 @@
 
 ## The product to build
 
+**Current sequence — P040, October 27:** Polish the complete learning-graph experience on labeled synthetic data before testing Jeremy's real coursework. Start with [Learning Graph Milestones](docs/LEARNING_GRAPH_MILESTONES.md) and the current Build Plan. Real-source access and actual-course family fit remain later release gates; existing accounts/connectors are reused. This supersedes the earlier real-course-first execution order, not the release requirements.
+
+
+**October 27 learning-graph refinement:** Read [Learning Graph Scope](docs/LEARNING_GRAPH_SCOPE.md) with PRD R10/R11. Scope the existing hero around competing explanations, a checked interactive comparison, a response-driven graph revision and a fresh application. Reuse the current engine and Ready Card; local relationship inspection is part of the lesson. Broad cross-course discovery, a semester canvas and a fine-tuned model are not P0 dependencies. This scoping work does not establish implemented capability.
+
 **Before you can study, you have to figure out what to study.** Soma brings together your course material, upcoming deadlines, available time, and learning progress to prepare interactive lessons and practice for what matters next. As your classes and circumstances change, your preparation keeps up.
 
 **Read [the student-hub scope update](docs/SCOPE_UPDATE.md) first.** Course content and surrounding context feed the same preparation loop. Keep the small shared view of source-linked deadlines and confirmed events, including career and personal context. A change can affect the student's next study recommendation; learning remains the deepest action Soma performs. Continue the existing implementation and preserve its account, Firestore, lesson, and evidence services.

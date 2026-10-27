@@ -796,3 +796,17 @@ GitHub `SOMA_WORKER_ENABLED=true` and the exact canonical worker URL were verifi
 3. Reran **43 existing synthetic checks**: 33 browser policy/lifecycle cases plus 10 Google/shared connection encryption cases, all passed. `git diff --check` passed. These establish tested application behavior, not live institutional access, provider retention guarantees or a security certification. No source content, tokens, credentials or hosted browser were opened; no live provider/model calls, spend, runtime changes or deployment occurred.
 
 **Plan deviations:** None adopted. This clarifies the October 26 session-based login decision and existing read-only access objective. No local companion/extension, new infrastructure, source scope, password handling or budget increase is adopted. Prior architecture candidates and production acceptance work remain pending. Preserve concurrent PM007/PM008 advisory content and the unadopted rubric proposal.
+
+## P040 — Plan synthetic learning-graph polish before real coursework
+
+**Verbatim prompt and attachment:** Preserved in the canonical archive, including the complete supplied scope. Exact received timestamp unavailable. Work dated October 27, 2026 in the client timezone.
+
+**Top 3 outcomes:**
+
+1. Read the attachment and existing PM012 planning edits, PRD, build plan and implementation contracts. Adopted the bounded graph scope without restarting the app: evidence → competing explanations → checked experiment → response-driven revision → useful next activity → fresh application. Existing hypotheses/experiments/jobs/audit are reuse points; linked concept records, approved prediction forms, exposure completeness, meaningful follow-up and R9 image/region support still require implementation/verification.
+2. Added [Learning Graph Milestones](LEARNING_GRAPH_MILESTONES.md) with six manageable increments, reviewable tasks, dependencies, owners, explicit exit evidence, a synthetic scenario matrix and conditional real-source validation. Updated PRD acceptance and build-plan priority, scope delivery override, handoff, decisions and owner checklist. Jeremy's account connections are no longer a prerequisite for the next development increments. Preserve existing planning refinements; the original attachment remains verbatim in the archive.
+3. Documentation verification checks local links, whitespace, archive equality and milestone identifiers; results recorded below. This turn is planning only: no application implementation/tests, private course reads, live model calls, training, spend, deployment or scheduler changes. All milestone completion claims remain pending executed evidence.
+
+**Plan deviations:** Explicit user-directed sequencing change: synthetic polish precedes personal-course testing, superseding the original Day 1/PM012/P037 real-course-first dependency. Real-course fit, two live source types, independent review, numerical, held-out, R9/privacy and genuine pilot gates remain required. Keep one quantitative family, $2 aggregate cap, October 31 freeze and November 4 deadline. Fine-tuning and a cross-course bridge remain conditional stretches. Unrelated advisory prompts and rubric proposal are preserved.
+
+P040 documentation verification: local links in eleven adopted planning documents resolved; canonical attachment text matches the supplied file exactly; all six milestone sections present. Whitespace checked separately. No application tests were run for this documentation-only change.

@@ -4,9 +4,24 @@
 
 No milestone is marked complete by this handoff. One builder is assumed available; a second is not confirmed. The two workstreams below organize dependencies rather than authorize delegation.
 
+## Current priority — P040, October 27
+
+The user selected simulated-data polish before personal-course testing. Follow [Learning Graph Milestones](LEARNING_GRAPH_MILESTONES.md); it contains commit-sized tasks, dependencies, acceptance evidence and a scenario matrix. This sequence supersedes the original real-source-first targets and PM012/P037's actual-course-first dependency below. Preserve their product/release requirements and the fixed freeze/deadline.
+
+| Milestone | Target | Exit condition |
+| --- | --- | --- |
+| M1 Synthetic scenario contract | Oct 27 | Fictional objective, sources, ambiguous observation, reference quantities and development/held-out split specified |
+| M2 Durable graph path | Oct 28 | Course-scoped concepts/evidence/interpretations survive managed reload; ownership/version/retry checks pass |
+| M3 Checked Spark diagnostic | Oct 28–29 | Approved prediction forms, useful comparison and rejection/repair; existing 4/5 development gate passes on actual Spark calls within budget |
+| M4 Revision and fresh application | Oct 29–30 | Contrary response prepares a materially different follow-up; ambiguous branch retains valid work; exposure/history preserved |
+| M5 Synthetic experience polish | Oct 30, checkpoint by Oct 31 | Ready Card → lesson → local evidence → revised next activity works accessibly, persists and resumes; synthetic image path verified or explicitly incomplete |
+| M6 Real-course validation | After M5 acceptance, aim before freeze | Selected Blackboard/course fit and source/SSO/reconnect verified, then appropriate Gradescope/Piazza/Google checks; real-source gates separately evidenced |
+
+Dates are targets. If M5 or source readiness slips, record unmet release gates; do not invent real access, move the October 31 freeze or compress genuine pilot intervals. November 1–2 remain verification/repair, November 3 assets, November 4 submission. No private-source testing is required now, and this documentation turn neither changes the active scheduler nor starts processing. Existing connected-source authorizations do not expand.
+
 ## Dependency order
 
-**Student-hub extension:** Follow [Scope Update](SCOPE_UPDATE.md) and PRD R12 within the existing milestones. Add source-linked commitments and consequences, then overlap/no-overlap/tentative fixtures feeding the current study path. One selected calendar read/import route is the additional adapter ceiling. Time-box its first access experiment to four focused hours and label any import fallback. Direct Notion/Granola integrations, extra source adapters, graph views, career workflows and extra models remain deferred. Preserve the October 31 freeze and existing release gates.
+**Student-hub extension:** Follow [Scope Update](SCOPE_UPDATE.md) and PRD R12 within the existing milestones. Add source-linked commitments and consequences, then overlap/no-overlap/tentative fixtures feeding the current study path. One selected calendar read/import route is the additional adapter ceiling. Time-box its first access experiment to four focused hours and label any import fallback. Direct Notion/Granola integrations, extra source adapters, semester-wide graph views and career workflows remain deferred. Extra models remain conditional stretch work under the October 27 refinement. Preserve the October 31 freeze and existing release gates.
 
 The existing implementation is underway; do not repeat completed scaffold/model work. The organizer's start clarification and Firestore substitution are recorded in [Decisions](DECISIONS.md). Dates below retain the existing delivery milestones; the hub extension is not a new sprint.
 
@@ -51,7 +66,11 @@ Confirm the first model family against those sources. The current synthetic seme
 
 **Day 3:** run five representative development requests. Continue the generator only if four yield usable, checked lessons within the job budget and at most one repair. Otherwise freeze breadth and use a small checked parameterized set. If that also fails scientific or interaction checks, withhold labs and report that the flagship scope has not been met. Do not quietly call ordinary practice equivalent.
 
-**Day 5:** freeze feature additions. Defer graph visualization, extra model families, extra LMS adapters, calendar optimization, Notion/Granola automation beyond useful imports, Glimmer/Wonder/SAM experiments, voice, recording, and custom audio/video production.
+**Day 5:** freeze feature additions. Defer semester-wide graph visualization, extra model families, extra LMS adapters, calendar optimization, Notion/Granola automation beyond useful imports, voice, recording, and custom audio/video production. Extra-model experiments remain conditional stretch work; no training infrastructure is added after freeze. Local concept/evidence inspection inside the lesson follows the October 27 refinement below.
+
+### October 27 learning-graph refinement
+
+Follow [Learning Graph Scope](LEARNING_GRAPH_SCOPE.md) within these same dates. Confirm the source-supported objective and competing explanations on October 27; connect persisted concepts, evidence and one diagnostic/revision path on October 28; validate the interactive comparison through the existing October 29 lab gate; complete changed and unchanged branches, fresh application, managed restart and local inspection on October 30. This refines the existing hero rather than starting a second build. The earlier general deferral of graph views now applies to a semester-wide canvas, not local evidence links in the lesson. One verified cross-course bridge and the specialist-model experiment are conditional stretches, not prerequisites. Preserve source-fit, one-family, budget, release and October 31 freeze requirements.
 
 **Release:** ownership violations, confidently wrong critical facts, scientifically incorrect published content, and lost/misattributed attempt history block the affected release. Fix or withdraw the route; do not mask it with a presentation.
 

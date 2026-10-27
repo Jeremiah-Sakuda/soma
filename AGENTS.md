@@ -6,7 +6,7 @@ This folder contains the Soma hackathon handoff. Follow the current user request
 
 - docs/PRD.md owns product scope and release acceptance. docs/HACKATHON_REQUIREMENTS.md records the supplied event requirements. docs/BUILD_PLAN.md owns the current dated sequence. Record later decisions in docs/DECISIONS.md.
 - Read docs/SCOPE_UPDATE.md for the student-hub extension: commitment context and consequences feeding the existing learning engine. PRD R12 adds the acceptance boundary; do not restart the application or build a career suite.
-- `docs/UI_DIRECTION.md` owns the selected Ready Card interface. It supersedes the provisional visual master; Fieldnotes and directions A–E remain unselected explorations. Preserve the existing app and verified behavior when applying it.
+- **Before any UI or UX work, read `docs/UI_UX_GUIDE.md` first.** It owns personas, navigation (Today · Map · Activity), screen layouts, the visual language, motion and the accessibility checklist, and it links the design canvas and its references. It supersedes the visual language and navigation in `docs/UI_DIRECTION.md` (Ready Card), whose behavioral, evidence and copy rules still apply where the guide doesn't replace them. Preserve the existing app and verified behavior when applying it.
 - The historical PDF and older online companion plans can lag these files.
 - No integrations, test outcomes, pilots, or benchmark results are established merely by their appearance in a plan. Preserve explicit status.
 - Jeremy supplied the organizer's hacking-start announcement and authorized October 26 implementation; see docs/DECISIONS.md. Keep the October 31 feature freeze and November 4, 9 PM America/New_York submission deadline.

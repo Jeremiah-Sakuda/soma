@@ -1,5 +1,7 @@
 # Soma UI direction: Ready Card
 
+> **Partly superseded October 27, 2026 (PM024).** [UI/UX Guide](UI_UX_GUIDE.md) now owns navigation, layout and visual language: Today · Map · Activity, the semester map, the Playground look, Geist and the indigo tokens. The tokens, app shell and navigation below are historical. The hero states, prediction states, evidence recording, label rules, copy rules and accessibility requirements here still apply unless the guide replaces them.
+
 **Selected by Jeremy on October 26, 2026. Design specification, not an implementation.** This document turns the selected direction into screens, states and tokens for the existing app. The [PRD](PRD.md) (including R12) and the [scope update](SCOPE_UPDATE.md) still own scope and acceptance. Where this document conflicts with them, follow them and record the conflict in [Decisions](DECISIONS.md).
 
 ## Relationship to existing work

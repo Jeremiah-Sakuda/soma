@@ -35,6 +35,8 @@ The same engine serves automatic preparation, direct requests and revisits. Exis
 
 Use the existing Ready Card and lesson/why/evidence surfaces. The local connection view can use linked cards or a small accessible diagram; it is not a new full-screen graph destination. Every visible link should lead to evidence or an action. No force-directed semester canvas, new navigation hierarchy or arbitrary graph editor is required.
 
+**October 27 update (PM024):** Jeremy adopted a semester **Map** destination ([UI/UX Guide](UI_UX_GUIDE.md) §4). It's a transit-style projection: course lines, lesson stations whose status comes only from saved evidence, and dated assessments. It is not a force-directed canvas or a graph editor, and it adds no new graph records or inferred mastery.
+
 ## Records and model authority
 
 Extend the current Firestore records and investigation contracts; do not introduce a graph database or replace existing histories.

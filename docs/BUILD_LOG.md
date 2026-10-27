@@ -548,20 +548,6 @@ The repaired hosted path passed in 11.20 seconds: a cited ordinary-practice prev
 
 **Plan deviations:** Adds an explanatory entry surface before the existing Ready Card. Does not replace the selected visual direction, lesson engine or account/source boundaries.
 
-## PM004 — Evaluate winning potential against the rubric
-
-**Recorded:** October 26, 2026, in a separate advisory conversation. Exact received timestamp unavailable.
-
-**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM004`, including the pasted participant guide. The guide matches the P004 copy apart from trailing whitespace; it adds no new event requirement.
-
-**Top 3 outcomes:**
-
-1. Scored the documented plan against the Stage Two rubric as advisory judgment, not a predicted ranking. Technical depth is the strongest criterion. Impact faces the crowded study-tool category, and Meta tooling use is narrower than the PRD describes because computer use and returned-work image reading are conditional in the build plan. Demo is the largest gap because the three-minute video is the primary artifact and the only artifact in the final round.
-2. Recommended raising the ceiling without new feature categories: make Spark's discriminating-diagnostic decision the central Meta moment, feed it from a real returned-work image, open the video on no-prompt autonomy from a real class source, and attach one measured preparation-time result. Also recommended moving research-grade evaluation effort (the StudyFetch comparison and multi-student delayed-attempt study) toward video production, and keeping R12 to a short beat or the judge route.
-3. Confirmed eligibility hygiene: the pre-event planning baseline `1a7d3a2` is dated 11:10 AM ET and the first code commit `87747d7` is dated 12:42 PM ET on October 26, after the kickoff and organizer start announcement. The repository is still private, and the public contribution record remains a pending release step.
-
-**Plan deviations:** None adopted. These are recommendations only. No PRD, build plan, decision, code or deployment changed, and the October 31 freeze is unchanged. The deployed Today and lesson screens were viewed read-only; no tests or model calls were run.
-
 ## PM005 — Evaluate open-weight Muse for Soma
 
 **Recorded:** October 26, 2026, in the planning conversation. Exact received timestamp unavailable.
@@ -711,7 +697,7 @@ GitHub `SOMA_WORKER_ENABLED=true` and the exact canonical worker URL were verifi
 2. Recommended a structured decision/event ledger: trigger and context versions; proposed action and concise stated rationale; evidence and uncertainty; application validation and rejected proposals/repairs; executed action/outcome; before/after consequence; final publication, failure or budget stop. Application-observed events and model-provided explanations must remain visibly distinct, with no invented rationale for an unrecorded step.
 3. Feasibility guidance: expose progressive status and expandable evidence-backed explanations, then retain an owner-scoped exportable run record. Preserve secret/private-data boundaries and hide diagnostic details that would reveal answers until exposure is recorded. A model explanation is a stated justification, not proof of hidden internal reasoning. This turn is assessment/design advice; no runtime, model prompt, deployment, budget or source-permission changes, and no tests/provider calls were made.
 
-**Plan deviations:** None adopted. This strengthens the existing inspectability objective; detailed implementation and acceptance tests remain future work. Preserve the concurrent uncommitted strategy proposal and PM007 log entries.
+**Plan deviations:** None adopted. This strengthens the existing inspectability objective; detailed implementation and acceptance tests remain future work.
 
 ## P034 — Implement progressive AI auditability and list remaining user work
 
@@ -729,7 +715,7 @@ GitHub `SOMA_WORKER_ENABLED=true` and the exact canonical worker URL were verifi
 
 **Verification corrections:** The first broad test run hit a five-second existing ordering stress-test deadline under 60 concurrent workers; the whole suite passed with four workers, now the default. An intermediate exact route assertion needed the new committed-revision field; corrected and the final suite passed. A proposed diagnostic field initially collided with domain `rationale`; fixed before release and regression-tested. Historical failures are retained, not counted as successful executions. Firestore cleanup initially required missing collection-group indexes; the two ASC `expiresAt` indexes were provisioned without enabling billing and both managed cases then passed in 10.41s. All these managed fixtures used original synthetic data and no Meta calls.
 
-**Plan deviations:** None adopted. Strengthens existing inspectability following P033 without a new model family, provider, spend cap or source scope. The concurrent PM007/PM008 advisory entries and strategy proposal remain unadopted and untouched.
+**Plan deviations:** None adopted. Strengthens existing inspectability following P033 without a new model family, provider, spend cap or source scope.
 
 ## P035 — Iterate on architecture with the supplied skill
 
@@ -741,16 +727,16 @@ GitHub `SOMA_WORKER_ENABLED=true` and the exact canonical worker URL were verifi
 2. Completed a read-only subagent walk plus direct code/test inspection. Found three candidates: typed failure propagation/recovery (recommended first; existing engine errors reduce typed Meta failures to prose that job regexes parse), concentrated audited publication (four callers independently own ordering/commit flags), and journal adapter contract consistency (lower priority; caller interface already small). Each has evidence links, deletion test, preserved guarantees and specific test improvements. No interfaces or runtime refactor were adopted before the skill's candidate selection.
 3. Created and opened `/private/var/folders/2k/24m45bdj4h51j76jmdm0kf9h0000gn/T/architecture-review-20261026T232407992365Z.html`. Browser rendering verified three candidate cards, three before/after diagram pairs, a rendered Mermaid diagram, desktop 1440/mobile 390 layouts without overflow and no page errors. Fixed CDN heading-style precedence and improved graph orientation after visual inspection. Actual application tests were not rerun; no live model/source calls, spend or deployment changes were made. User candidate selection is the next required step.
 
-**Plan deviations:** None adopted. The invoked skill explicitly asks the user to choose a candidate before interface design and the grilling loop; implementation remains pending that selection. Preserve source consent, immutable evidence, ownership, budgets, freeze and release gates. The HTML report stays in the OS temp directory as required; only build-log maintenance belongs in the repository. Concurrent PM007/PM008 advisory work remains untouched.
+**Plan deviations:** None adopted. The invoked skill explicitly asks the user to choose a candidate before interface design and the grilling loop; implementation remains pending that selection. Preserve source consent, immutable evidence, ownership, budgets, freeze and release gates. The HTML report stays in the OS temp directory as required; only build-log maintenance belongs in the repository.
 
-## P036 — Rubric feedback and a single diagnostic demo moment
+## P036 — Feedback and a single diagnostic demo moment
 
-**Verbatim prompt:** Preserved in the canonical archive. Exact received timestamp unavailable. This is the newly supplied feedback message; existing advisory PM008 remains a separate historical entry and is not rewritten.
+**Verbatim prompt:** Preserved in the canonical archive. Exact received timestamp unavailable. The pasted evaluation text was removed from the archive at the user's request; the instruction framing is kept.
 
 **Top 3 outcomes:**
 
-1. Reviewed the supplied assessment against PRD R9/R10/R11, the student-hub scope and S1/S2/D3 in the unadopted strategy proposal. The focused returned-work → competing hypotheses → discriminating activity → response → revised next activity sequence fits existing scope; reducing R12's video role is a proposed presentation change, not deletion of its product behavior. Numerical award scores and claims about other entrants remain judgments, not verified forecasts.
-2. Identified two necessary qualifications: a single prediction changes support for provisional hypotheses rather than proving a misconception, and an exact quiz circuit can be interactive only if it fits the approved checked family and source interpretation is supported. Preserve the user's earlier actual-class direction; do not select resistors solely for visual drama. Current image/PDF interpretation and model-directed browser navigation remain unimplemented; the fully-built assessment does not establish them as working.
+1. Reviewed the supplied feedback against PRD R9/R10/R11 and the student-hub scope. The focused returned-work → competing hypotheses → discriminating activity → response → revised next activity sequence fits existing scope; reducing R12's video role is a proposed presentation change, not deletion of its product behavior.
+2. Identified two necessary qualifications: a single prediction changes support for provisional hypotheses rather than proving a misconception, and an exact quiz circuit can be interactive only if it fits the approved checked family and source interpretation is supported. Preserve the user's earlier actual-class direction; do not select resistors solely for visual drama. Current image/PDF interpretation and model-directed browser navigation remain unimplemented; the feedback does not establish them as working.
 3. Recommended tying architecture iteration to this vertical slice: a short typed-failure recovery improvement, real-course returned-work/diagnostic integration, and audited-publication concentration only where that work requires it. Defer journal-adapter cleanup absent concrete drift. This is prioritization advice; no candidate was selected by this message, no interface/runtime/PRD/build-plan change was adopted, and no tests, provider calls or deployment occurred.
 
 **Plan deviations:** None adopted. D1 family choice, D2 evaluation deferrals and D3 video emphasis remain explicit choices; forwarding feedback alone is not approval to remove gates or change the quantitative family. Preserve consent, read-only sources, original attempts, uncertainty, $2 operating cap and the October 31 freeze.
@@ -771,7 +757,7 @@ GitHub `SOMA_WORKER_ENABLED=true` and the exact canonical worker URL were verifi
 
 **Verification corrections:** An initial browser run passed 22/23 and then hit the pre-existing 200-demo-session limit in the reused test SQLite database. A fresh per-run temporary database plus guarded teardown fixed test isolation without weakening the application limit; final 23/23 passed. During focused development, one lifecycle fixture assumed the wrong revision increment and one configuration fixture was blocked earlier by the correct budget preflight; both test setups were corrected and rerun. These are recorded failures, not extra successes.
 
-**Plan deviations:** P035's selection gate is satisfied by the user's explicit “Do all 3.” No further confirmation was needed for the reviewed refactors or hero-story documentation. The three-minute presentation emphasis changes under P037; no research-grade evaluation deferral, second family or removal of product scope is adopted. Preserve the October 31 freeze, November 4 deadline and $2 operating cap. Concurrent PM007/PM008 advisory entries and proposal remain untouched.
+**Plan deviations:** P035's selection gate is satisfied by the user's explicit “Do all 3.” No further confirmation was needed for the reviewed refactors or hero-story documentation. The three-minute presentation emphasis changes under P037; no research-grade evaluation deferral, second family or removal of product scope is adopted. Preserve the October 31 freeze, November 4 deadline and $2 operating cap.
 
 ## P038 — Rerun architecture review and refresh manual work
 
@@ -783,7 +769,7 @@ GitHub `SOMA_WORKER_ENABLED=true` and the exact canonical worker URL were verifi
 2. Confirmed the owner account is enabled with an active workspace but **zero saved provider connections**, using safe metadata only. No course bodies, credential values or decrypted tokens were read; no provider requests or cloud changes were made. Trigger keys remain absent; ledger is **$0.83999350/$2**. Updated [remaining user work](USER_REMAINING_WORK.md): connect/select Google and institutional pages, supply an actual-class returned-work example, then review/test/public-submission inputs; image/PDF/region work and release acceptance remain engineering tasks, not visual fine-tuning.
 3. Created and opened `/private/var/folders/2k/24m45bdj4h51j76jmdm0kf9h0000gn/T/architecture-review-20261027T133220857920Z.html`. Browser check: three candidate cards, three before/after pairs, rendered Mermaid, no page errors or horizontal overflow at 1440/390 widths. A direct synthetic local probe reproduced an unversioned lesson surviving automatic-context selection; code inspection also found ordinary preparation counts an unsent preflight request while investigation reverses it. These remain unfixed review findings; the call-count case was not engine-reproduced. No application suites, live model calls or deployments were executed this review.
 
-**Plan deviations:** None adopted. The skill says “Do NOT propose interfaces yet” and requests candidate selection after the report; that next step remains pending. Recommend the two small correctness fixes and evidence deepening alongside existing R9 work rather than another broad architecture-only round. Preserve the hero objective, one-family scope, source/privacy gates, $2 cap and October 31 freeze. Concurrent PM007/PM008 advisory work remains untouched.
+**Plan deviations:** None adopted. The skill says “Do NOT propose interfaces yet” and requests candidate selection after the report; that next step remains pending. Recommend the two small correctness fixes and evidence deepening alongside existing R9 work rather than another broad architecture-only round. Preserve the hero objective, one-family scope, source/privacy gates, $2 cap and October 31 freeze.
 
 ## P039 — Secure institutional login and primary Blackboard access
 
@@ -795,7 +781,7 @@ GitHub `SOMA_WORKER_ENABLED=true` and the exact canonical worker URL were verifi
 2. Wrote [institutional authentication and trust model](BROWSER_AUTHENTICATION.md), distinguishing existing controls from unverified production gates. Browserbase hosts the login and sensitive browser state; contexts may contain cookies, storage and saved form data. The authorized application runtime remains trusted with account access. Page selection enforces collection scope but does not make the website session a provider-issued read-only grant. Onboarding disclosure, hosted no-recording/logging proof, actual BU SSO/read/expiry/reconnect, retention/rotation and cleanup verification remain open engineering work. Updated decisions and Jeremy's manual checklist accordingly.
 3. Reran **43 existing synthetic checks**: 33 browser policy/lifecycle cases plus 10 Google/shared connection encryption cases, all passed. `git diff --check` passed. These establish tested application behavior, not live institutional access, provider retention guarantees or a security certification. No source content, tokens, credentials or hosted browser were opened; no live provider/model calls, spend, runtime changes or deployment occurred.
 
-**Plan deviations:** None adopted. This clarifies the October 26 session-based login decision and existing read-only access objective. No local companion/extension, new infrastructure, source scope, password handling or budget increase is adopted. Prior architecture candidates and production acceptance work remain pending. Preserve concurrent PM007/PM008 advisory content and the unadopted rubric proposal.
+**Plan deviations:** None adopted. This clarifies the October 26 session-based login decision and existing read-only access objective. No local companion/extension, new infrastructure, source scope, password handling or budget increase is adopted. Prior architecture candidates and production acceptance work remain pending.
 
 ## P040 — Plan synthetic learning-graph polish before real coursework
 
@@ -807,7 +793,7 @@ GitHub `SOMA_WORKER_ENABLED=true` and the exact canonical worker URL were verifi
 2. Added [Learning Graph Milestones](LEARNING_GRAPH_MILESTONES.md) with six manageable increments, reviewable tasks, dependencies, owners, explicit exit evidence, a synthetic scenario matrix and conditional real-source validation. Updated PRD acceptance and build-plan priority, scope delivery override, handoff, decisions and owner checklist. Jeremy's account connections are no longer a prerequisite for the next development increments. Preserve existing planning refinements; the original attachment remains verbatim in the archive.
 3. Documentation verification checks local links, whitespace, archive equality and milestone identifiers; results recorded below. This turn is planning only: no application implementation/tests, private course reads, live model calls, training, spend, deployment or scheduler changes. All milestone completion claims remain pending executed evidence.
 
-**Plan deviations:** Explicit user-directed sequencing change: synthetic polish precedes personal-course testing, superseding the original Day 1/PM012/P037 real-course-first dependency. Real-course fit, two live source types, independent review, numerical, held-out, R9/privacy and genuine pilot gates remain required. Keep one quantitative family, $2 aggregate cap, October 31 freeze and November 4 deadline. Fine-tuning and a cross-course bridge remain conditional stretches. Unrelated advisory prompts and rubric proposal are preserved.
+**Plan deviations:** Explicit user-directed sequencing change: synthetic polish precedes personal-course testing, superseding the original Day 1/PM012/P037 real-course-first dependency. Real-course fit, two live source types, independent review, numerical, held-out, R9/privacy and genuine pilot gates remain required. Keep one quantitative family, $2 aggregate cap, October 31 freeze and November 4 deadline. Fine-tuning and a cross-course bridge remain conditional stretches. Unrelated advisory prompts are preserved.
 
 P040 documentation verification: local links in eleven adopted planning documents resolved; canonical attachment text matches the supplied file exactly; all six milestone sections present. Whitespace checked separately. No application tests were run for this documentation-only change.
 
@@ -919,23 +905,9 @@ P040 documentation verification: local links in eleven adopted planning document
 
 **Plan deviations:** None adopted in this advisory turn. A richer source adapter fits the existing read-only collector boundary; model-directed UI exploration remains conditional pending explicit implementation and verification.
 
-## PM014 — Re-ask whether the fully implemented plan could win
-
-**Recorded:** October 27, 2026, in a new advisory conversation. Exact received timestamp unavailable.
-
-**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM014`. The typed text is identical to PM008, and the pasted guide is referenced to the PM008 copy (see the archive's paste note).
-
-**Top 3 outcomes:**
-
-1. Re-read the current scope with full implementation assumed: [Product Brief](PRODUCT_BRIEF.md), PRD hero moment, storyboard and Meta tooling sections, [Learning Graph Scope](LEARNING_GRAPH_SCOPE.md), the unadopted [Rubric Strategy Proposal](RUBRIC_STRATEGY_PROPOSAL.md), and the PM008/PM013 assessments. The pasted guide adds no new event requirement.
-2. Scored it independently as advisory judgment, not a predicted ranking: Impact 7–7.5, Meta tooling 7.5–8, Technical depth about 9, Demo 7.5–8, about 7.6–8.1 weighted. Verdict: yes, it could win, but it is a finalist-range contender rather than the favorite. This agrees with PM013. Best Agentic Use-Case is the most natural bonus; the open-weight bonus applies only if the specialist stretch ships.
-3. Named what limits the ceiling: the study-tool first impression next to the guide's anti-project list, a one-person impact base, a modest intro-circuit visual, a payoff that is intellectual rather than visceral in a live video round, and use of one Meta model. Named the moment most likely to lift it: show Spark's discriminating experiment, including the rejected or repaired uninformative one, as the "surprised even us" beat.
-
-**Plan deviations:** None adopted. No PRD, build plan, decision, code or deployment changed. No tests or model calls were run. Concurrent uncommitted implementation work, the PM013 entry and the strategy proposal were left untouched.
-
 ## PM015 — Explore alternative UI directions in parallel with graph work
 
-**Recorded:** October 27, 2026, in the PM014 advisory conversation. Exact received timestamp unavailable.
+**Recorded:** October 27, 2026, in the PM015 advisory conversation. Exact received timestamp unavailable.
 
 **Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM015`.
 
@@ -950,9 +922,9 @@ P040 documentation verification: local links in eleven adopted planning document
 
 ## PM017 — Give the explored directions personality
 
-**Recorded:** October 27, 2026, in the PM014 advisory conversation. Exact received timestamp unavailable.
+**Recorded:** October 27, 2026, in the PM015 advisory conversation. Exact received timestamp unavailable.
 
-**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM017`. PM016 was taken by a separate Antigravity advisory turn before this entry was written.
+**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM017`.
 
 **Top 3 outcomes:**
 
@@ -964,7 +936,7 @@ P040 documentation verification: local links in eleven adopted planning document
 
 ## PM018 — Still not sold on the explored directions (PM019 clarification answers)
 
-**Recorded:** October 27, 2026, in the PM014 advisory conversation. Exact received timestamp unavailable.
+**Recorded:** October 27, 2026, in the PM015 advisory conversation. Exact received timestamp unavailable.
 
 **Verbatim prompt:** Preserved in the canonical prompt archive, entries `PM018` (message) and `PM019` (answers to four multiple-choice clarification questions).
 
@@ -978,7 +950,7 @@ P040 documentation verification: local links in eleven adopted planning document
 
 ## PM020 / PM021 — Rethink functionality and layout around the knowledge graph
 
-**Recorded:** October 27, 2026, in the PM014 advisory conversation. Exact received timestamps unavailable.
+**Recorded:** October 27, 2026, in the PM015 advisory conversation. Exact received timestamps unavailable.
 
 **Verbatim prompts:** Preserved in the canonical prompt archive, entries `PM020` (functionality and layouts) and `PM021` (knowledge graph as the central premise, sent while PM020 work was in progress).
 
@@ -992,7 +964,7 @@ P040 documentation verification: local links in eleven adopted planning document
 
 ## PM022 — Personas, usage and navigation for the graph-first direction
 
-**Recorded:** October 27, 2026, in the PM014 advisory conversation. Exact received timestamp unavailable.
+**Recorded:** October 27, 2026, in the PM015 advisory conversation. Exact received timestamp unavailable.
 
 **Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM022`.
 
@@ -1006,7 +978,7 @@ P040 documentation verification: local links in eleven adopted planning document
 
 ## PM023 — Let students make their own quizzes and flashcards from any card
 
-**Recorded:** October 27, 2026, in the PM014 advisory conversation. Exact received timestamp unavailable.
+**Recorded:** October 27, 2026, in the PM015 advisory conversation. Exact received timestamp unavailable.
 
 **Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM023`.
 
@@ -1020,7 +992,7 @@ P040 documentation verification: local links in eleven adopted planning document
 
 ## PM024 / PM025 — UI overhaul to graph-first navigation, plus a UI/UX guide
 
-**Recorded:** October 27, 2026, in the PM014 advisory conversation. Exact received timestamps unavailable.
+**Recorded:** October 27, 2026, in the PM015 advisory conversation. Exact received timestamps unavailable.
 
 **Verbatim prompts:** Preserved in the canonical prompt archive, entries `PM024` (overhaul plus guide) and `PM025` ("COmmit frequently, push to main when done", sent mid-turn).
 

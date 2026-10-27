@@ -22,7 +22,7 @@ export type Lesson = {
 };
 export type Attempt = {
   id: string; lessonId: string; lessonVersion: number; modelVersion: string; question: string;
-  response: string; correct: boolean | null; assisted: boolean; assistance: string[];
+  responseKind?: 'correction'; correctionOf?: string; response: string; correct: boolean | null; assisted: boolean; assistance: string[];
   createdAt: string; revisionOf?: string; novel: boolean; feedback: string; sourceVersions?: Record<string, number>; exposure?: 'lab' | 'fresh-no-diagram'; predictionId?: string;
 };
 export type AgentRun = { id: string; trigger: string; mode: 'synthetic' | 'prepared' | 'live'; status: 'completed' | 'failed' | 'unchanged'; createdAt: string; steps: string[]; effect: string; sourceIds: string[]; };
@@ -47,6 +47,7 @@ export type WorkspaceAction =
   | { type: 'refresh' }
   | { type: 'scenario'; scenario: 'exam-moved' | 'scope-change' | 'source-revised' | 'source-expired' | 'reconnect' | 'injection' | 'commitment-overlap' | 'commitment-no-overlap' | 'commitment-tentative' | 'commitment-duplicate' }
   | { type: 'assistance'; lessonId: string; kind: 'hint' | 'explanation' | 'exploration' }
+  | { type: 'correct-learning'; lessonId: string; note: string; revisionOf?: string }
   | { type: 'attempt'; lessonId: string; optionIndex: number; revisionOf?: string }
   | { type: 'request-lesson'; courseId: string; topic: string }
   | { type: 'save-inputs'; lessonId: string; inputs: CircuitInput }
@@ -76,6 +77,6 @@ export type CommitmentCorrection = { id: string; workspaceId: string; commitment
 export type Consequence = { id: string; workspaceId: string; createdAt: string; trigger: string; classification: 'timing' | 'scope' | 'content' | 'availability' | 'uncertainty' | 'identity' | 'correction'; sourceRefs: SourceRef[]; affectedIds: string[]; before: Record<string, string | number | boolean | null>; after: Record<string, string | number | boolean | null>; reason: string; result: string };
 export type SessionRecommendation = { minutes: 10 | 20 | 45; availableMinutes: number | null; status: 'known' | 'uncertain' | 'stale' | 'missing'; sourceRefs: SourceRef[]; contextRevision: number; updatedAt: string; reason: string };
 export type PredictionCheckpoint = { id: string; question: string; options: string[]; answerIndex: number; revealLabel: string; parameter: 'r1' | 'r2' | 'voltage'; multiplier: number; targetValue?: number; observedOutput: 'current1' | 'current2' | 'voltage1' | 'voltage2'; explanation: string };
-export type PredictionInteraction = { id: string; lessonId: string; lessonVersion: number; modelVersion: string; kind: 'selection' | 'exploration' | 'reveal'; createdAt: string; inputs: CircuitInput; optionIndex?: number; predictionId?: string; resultInputs?: CircuitInput; result?: CircuitOutput; matched?: boolean; comparisonValid?: boolean; checkpoint?: PredictionCheckpoint };
+export type PredictionInteraction = { id: string; lessonId: string; lessonVersion: number; modelVersion: string; kind: 'selection' | 'exploration' | 'reveal'; sourceVersions?: Record<string, number>; assistance?: string[]; createdAt: string; inputs: CircuitInput; optionIndex?: number; predictionId?: string; resultInputs?: CircuitInput; result?: CircuitOutput; matched?: boolean; comparisonValid?: boolean; checkpoint?: PredictionCheckpoint };
 export type PredictionState = { state: 'idle' | 'exploring' | 'predicted' | 'revealed'; selectedPredictionId?: string; revealId?: string };
 export type FreshRequest = { id: string; parentLessonId: string; lessonId: string; predictionId?: string; requestedAt: string; when: 'now' | 'later'; status: 'pending' | 'opened'; openedAt?: string };

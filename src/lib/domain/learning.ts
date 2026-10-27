@@ -162,7 +162,21 @@ export function applyAction(input: WorkspaceState, action: WorkspaceAction, now:
   } else {
     const lesson = action.type === 'assistance' ? state.lessons.find(item => item.id === action.lessonId) : currentLesson(state, action.lessonId);
     if (!lesson) throw new Error('Lesson does not belong to this workspace.');
-    if (action.type === 'prediction') {
+    if (action.type === 'correct-learning') {
+      if (!lesson.diagnosticInvestigationId) throw new Error('Corrections require a diagnostic observation.');
+      const note = action.note.trim();
+      if (!note || note.length > 1000) throw new Error('Describe the correction in 1–1000 characters.');
+      const original = action.revisionOf ? state.attempts.find(item => item.id === action.revisionOf && item.lessonId === lesson.id && item.lessonVersion === lesson.version) : undefined;
+      if (action.revisionOf && !original) throw new Error('A correction must reference an observation on this lesson version.');
+      const assistance = [...new Set([...(original?.assistance ?? []), ...(state.assistance[lesson.id] ?? []), ...(lesson.kind === 'circuit' && lesson.exposure !== 'fresh-no-diagram' ? [`${timestamp} · diagram-visible`] : [])])];
+      const id = `attempt-${state.attempts.length + 1}`;
+      state.attempts.push({ id, lessonId: lesson.id, lessonVersion: lesson.version, modelVersion: lesson.modelVersion,
+        question: lesson.question, response: note, responseKind: 'correction', ...(original ? { correctionOf: original.id, revisionOf: original.id } : {}),
+        correct: null, assisted: assistance.length > 0, assistance, novel: false, createdAt: timestamp,
+        sourceVersions: structuredClone(lesson.sourceVersions), exposure: lesson.exposure ?? 'lab',
+        feedback: 'Your correction is preserved as a separate observation for reconsideration. The original material and responses remain unchanged. This is not independent-understanding evidence.' });
+      addRun(state, timestamp, `diagnostic:${id}`, 'Saved a student correction without changing the original source or response. Interpretation remains provisional pending reconsideration.', lesson.sourceIds, 'unchanged');
+    } else if (action.type === 'prediction') {
       recordPrediction(state, lesson, action.optionIndex, timestamp);
     } else if (action.type === 'reveal-prediction') {
       revealPrediction(state, lesson, timestamp);

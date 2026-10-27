@@ -44,7 +44,7 @@ export function withLessonMetadata(lesson: Lesson): Lesson {
 
 function interaction(state: WorkspaceState, lesson: Lesson, now: string, kind: PredictionInteraction['kind'], inputs: CircuitInput, extra: Partial<PredictionInteraction> = {}) {
   state.predictions ??= [];
-  const record: PredictionInteraction = { id: `interaction-${state.predictions.length + 1}`, lessonId: lesson.id, lessonVersion: lesson.version, modelVersion: lesson.modelVersion, kind, createdAt: now, inputs: structuredClone(inputs), ...extra };
+  const record: PredictionInteraction = { id: `interaction-${state.predictions.length + 1}`, lessonId: lesson.id, lessonVersion: lesson.version, modelVersion: lesson.modelVersion, kind, createdAt: now, sourceVersions: structuredClone(lesson.sourceVersions), assistance: [...(state.assistance[lesson.id] ?? [])], inputs: structuredClone(inputs), ...extra };
   state.predictions.push(record);
   return record;
 }

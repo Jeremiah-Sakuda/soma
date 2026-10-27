@@ -4,6 +4,9 @@
 
 ## The product to build
 
+**P041 implementation checkpoint:** M1–M5 synthetic graph implementation and audits are in [Learning Graph Audit](docs/LEARNING_GRAPH_AUDIT.md). Use the quick demo's Demo controls → Explore learning graph for the authored starting activity. Actual Spark development checks separately verify generation and response-based change/no-change decisions, with failures retained. R9 image/PDF/region extraction still uses an explicit typed fallback and remains an open gate. M6 actual-course access/fit and independent/held-out/pilot acceptance have not passed merely because this checkpoint exists.
+
+
 **Current sequence — P040, October 27:** Polish the complete learning-graph experience on labeled synthetic data before testing Jeremy's real coursework. Start with [Learning Graph Milestones](docs/LEARNING_GRAPH_MILESTONES.md) and the current Build Plan. Real-source access and actual-course family fit remain later release gates; existing accounts/connectors are reused. This supersedes the earlier real-course-first execution order, not the release requirements.
 
 

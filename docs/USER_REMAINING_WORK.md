@@ -6,7 +6,7 @@ Read-only setup check for P038: the existing owner account is enabled and its wo
 
 ## Current priority: review the synthetic learning experience
 
-P040 defers testing personal coursework until the simulated learning-graph experience is polished and reviewed. You do not need to connect accounts or supply private course material to unblock M1–M5. Codex owns the [milestones](LEARNING_GRAPH_MILESTONES.md); your next input is feedback on the working synthetic journey. The setup steps below apply to M6 afterward. Actual-course fit and real-source release checks remain required.
+P040 defers testing personal coursework until the simulated learning-graph experience is polished and reviewed. You do not need to connect accounts or supply private course material to unblock M1–M5. Codex owns the [milestones](LEARNING_GRAPH_MILESTONES.md); your next input is feedback on the working synthetic journey. Open the quick demo (use a signed-out/private browser if already signed in), then choose **Demo controls → Explore learning graph**. Inspect the comparison/evidence and try a prediction or correction. The starting artifact is prepared without a live call; its original image and typed observation do not demonstrate image extraction. The setup steps below apply to M6 afterward. Actual-course fit and real-source release checks remain required.
 
 ## Later: connect and select your actual course context
 
@@ -25,7 +25,7 @@ After connection, tell me the selections are ready. I own verifying actual read,
 
 Trigger.dev remains unconfigured. If you want the intended dedicated scheduler, fill `TRIGGER_SECRET_KEY` and `TRIGGER_PROJECT_REF` in `.env.local`, then tell me they are ready. I handle configuration/deployment. The authenticated GitHub fallback is already active every 15 minutes, best-effort; this is not currently blocking background processing. Do not add a second scheduler until we coordinate overlap behavior.
 
-The read-only ledger check for P038 shows **$0.83999350 consumed of the $2 total app cap**, separate from the $150 provider allocation and $30 reserve. No increase is needed to connect sources. A future increase requires your explicit decision; I will not reset spending records or assume the entire allocation is available for unattended use.
+The P041 synthetic development verification leaves **$1.55875225 consumed of the $2 total app cap**, separate from the $150 provider allocation and $30 reserve. No increase is needed to connect sources. A future increase requires your explicit decision; I will not reset spending records or assume the entire allocation is available for unattended use.
 
 ## Before the hackathon submission
 

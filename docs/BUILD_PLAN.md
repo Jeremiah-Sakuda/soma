@@ -124,3 +124,7 @@ Architecture consolidation implements the three selected candidates before the h
 5. Rehearse the single-course three-minute story before the October 31 freeze. R12 remains functional and tested; its video role is at most ten relevant seconds or the judge route. Preserve the final evidence segment, actual later interval and all research-grade/independent-review/held-out gates. November 1–2 quality work and November 3 submission assets remain scheduled; no evaluation deferral or second family is adopted.
 
 The detailed storyboard is in [Demo and Evaluation](DEMO_AND_EVALUATION.md). P037 selects this presentation focus; it does not adopt every recommendation in the separate rubric proposal or assert missing vision/browser capability has shipped.
+
+## P041 — Synthetic graph implementation checkpoints
+
+Implementation and per-milestone audits for M1–M5 are recorded in [Learning Graph Audit](LEARNING_GRAPH_AUDIT.md), including all live-model development failures/fixes and final observed change/no-change branches. M5's original marked-up image has a labeled authored transcription; image/PDF extraction and region evidence remain an explicit open R9 gate. Continue with Jeremy's synthetic usability feedback before M6 personal-course tests. Independent review, held-out release cases, actual sources and pilot evidence remain scheduled acceptance work, not completed by the synthetic implementation. No date or budget is changed.

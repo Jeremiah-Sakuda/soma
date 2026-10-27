@@ -2,6 +2,12 @@
 
 October 27, 2026 — P040. The user wants simulated-data polish before testing personal coursework. [PRD](PRD.md) owns acceptance, [Build Plan](BUILD_PLAN.md) owns dates, and [Learning Graph Scope](LEARNING_GRAPH_SCOPE.md) defines the experience. These are planned increments, not completion claims.
 
+## P041 implementation checkpoint
+
+Milestones 1–5 now have implementation and per-milestone audit records in [Learning Graph Audit](LEARNING_GRAPH_AUDIT.md). Synthetic scenarios, managed graph persistence, approved numerical prediction forms, immutable corrections/exposure, material follow-up checks and local inspection are implemented. An early actual-Spark generation checkpoint passed 4/5; the final fresh adaptation comparison produced a new activity for contrary evidence and kept current work for ambiguity after recorded failures/fixes. These are development results, not held-out or independent review.
+
+M5 uses its explicit labeled typed-observation fallback: image/PDF extraction and region citations remain incomplete. M6 personal-course testing has not begun. Scientific/instructional approval and release gates remain open. See the audit for exact execution evidence and limits.
+
 ## Delivery contract
 
 Build one complete loop: **evidence → competing explanations → checked experiment → response → revised interpretation → useful next activity → fresh application**. Reuse the current app, worker, Firestore, audit journal and Ready Card. Start with original synthetic course material and fictional student observations. The existing ideal DC resistor family is a development fixture only; it does not select Jeremy's real-course hero objective. Do not add a second family to make the demo fit.

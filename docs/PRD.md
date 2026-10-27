@@ -396,6 +396,9 @@ For each case, record active preparation time, uploads, prompts, corrections, ve
 
 ## Evaluation and release acceptance
 
+**P041 implementation evidence:** [Learning Graph Audit](LEARNING_GRAPH_AUDIT.md) records implemented synthetic graph behavior, managed storage and browser checks, actual Spark development outcomes and retained failures. The demo's source image currently has an authored typed observation; this does not satisfy R9 image/PDF extraction or region evidence. Development model checks do not substitute for the held-out, scientific/instructional, real-source and learning-evidence gates below.
+
+
 Build a fixed, human-labeled evaluation set spanning a five-course semester and several accounts. Include new material, repeated import, a moved exam that changes priority without rebuilding valid lessons, changed coverage, a source update with no relevant effect, conflicting deadlines, an individual extension, a late-penalty grade, ambiguous course email, unrelated email, expired authentication, unreadable handwriting, feedback mapped to the wrong topic, revised answers, and attempted cross-account access. Reserve ten unseen change scenarios for release evaluation.
 
 ### Lab quality and release gates

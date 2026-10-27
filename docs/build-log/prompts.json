@@ -465,6 +465,14 @@
       "prompt": "Signed in to Gradescope",
       "question_context": "The separate Gradescope browser window is open. Complete sign-in and any MFA there, then reply “Signed in to Gradescope.” Enter credentials only on the provider’s page, not in chat.",
       "timestamp_note": "Exact received timestamp unavailable; platform context excluded."
+    },
+    {
+      "id": "P055",
+      "received_at": null,
+      "kind": "clarification",
+      "prompt": "Signed in",
+      "question_context": "The separate Piazza browser window is open. Complete sign-in and any MFA there, then reply “Signed in to Piazza.” Enter credentials only on Piazza’s page, not in chat.",
+      "timestamp_note": "Exact received timestamp unavailable; platform context excluded."
     }
   ]
 }

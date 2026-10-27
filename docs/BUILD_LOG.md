@@ -1079,3 +1079,14 @@ Executed checks: fresh-context live catalog and assignment-structure probes pass
 Commits: `1db43fc` access/navigation checkpoint; `7bfbd59` metadata collection/recovery deployed and pushed to main; this final checkpoint records the independent owned readback.
 
 Deviations: none established. Preserve concurrent PM028 generated-lesson correction; no course content or browser-control material is included here.
+
+## P055 — Piazza completed sign-in (October 27, 2026)
+
+Prompt: [canonical verbatim clarification](build-log/prompts.json), `P055`.
+
+Top three outcomes:
+1. Saved the separate Piazza context after the user reported completed sign-in. Saving alone is not a source-access claim.
+2. Fresh-context rendering with exact inventoried first-party scripts and all APIs/writes blocked reached the CS 440 class shell. The three discovered class links are repeated navigation links to the same class, not three enrolled courses. Explicit semester metadata and supported content extraction remain under verification.
+3. Added strict Piazza document/static-script policies and catalog normalization with 58 passing synthetic cases. Review identified gaps in the older generic whole-page collector; it has not been used for actual Piazza publication. No discussion bodies, model calls or material publication in these discovery probes.
+
+Deviations: none established. Preserve the current source authorization, $2 Meta cap and concurrent PM028 product-document edits.

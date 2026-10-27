@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { browserActionSchema, remainingReadTime, isAllowedReadRequest, validateCourseTarget, validatesCourseSnapshot, validateSessionOwnership } from '../../src/lib/server/connectors/browser';
+import { browserActionSchema, browserReadBatch, remainingReadTime, isAllowedReadRequest, validateCourseTarget, validatesCourseSnapshot, validateSessionOwnership } from '../../src/lib/server/connectors/browser';
 import { createHash } from 'node:crypto';
 
 const target = { courseId: 'real-course', url: 'https://www.gradescope.com/courses/123/assignments/456' };
@@ -57,6 +57,18 @@ describe('browser collection boundaries (development checks, not a provider acce
   it('rejects passwords, arbitrary actions and oversized page selections at the route boundary', () => {
     expect(browserActionSchema.safeParse({ provider: 'gradescope', action: 'start', password: 'never-send' }).success).toBe(false);
     expect(browserActionSchema.safeParse({ provider: 'gradescope', action: 'evaluate', code: 'arbitrary' }).success).toBe(false);
-    expect(browserActionSchema.safeParse({ provider: 'gradescope', action: 'configure', targets: Array(6).fill(target) }).success).toBe(false);
+    expect(browserActionSchema.safeParse({ provider: 'gradescope', action: 'configure', targets: Array(6).fill(target) }).success).toBe(true);
+    expect(browserActionSchema.safeParse({ provider: 'gradescope', action: 'configure', targets: Array(1001).fill(target) }).success).toBe(false);
+  });
+  it('rotates a full course load through bounded page reads without losing the sixth course',()=>{
+    const targets=Array.from({length:6},(_,i)=>({courseId:`course-${i}`,url:`https://www.gradescope.com/courses/${i+1}`}));
+    const first=browserReadBatch(targets),second=browserReadBatch(targets,first.nextTargetIndex);
+    expect(first.targets.map(x=>x.courseId)).toEqual(['course-0','course-1','course-2','course-3']);
+    expect(second.targets.map(x=>x.courseId)).toEqual(['course-4','course-5','course-0','course-1']);
+    expect(new Set([...first.targets,...second.targets].map(x=>x.courseId)).size).toBe(6);
+    expect(first.partial).toBe(true);expect(second.nextTargetIndex).toBe(2);
+    expect(browserReadBatch(targets.slice(0,3)).partial).toBe(false);
+    expect(browserReadBatch([],99)).toEqual({targets:[],nextTargetIndex:0,partial:false});
+    expect(browserReadBatch(targets,NaN)).toEqual(first);
   });
 });

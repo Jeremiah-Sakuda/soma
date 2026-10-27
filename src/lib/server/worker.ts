@@ -53,7 +53,7 @@ const defaults: WorkerDependencies = {
 };
 
 export function connectionScopeFingerprint(connection: PublicConnection): string {
-  const { nextQueryIndex: _rotation, ...retainedConfiguration } = connection.configuration;
+  const { nextQueryIndex: _rotation,nextTargetIndex:_pageRotation, ...retainedConfiguration } = connection.configuration;
   const bb=retainedConfiguration.blackboard as {mode?:string;selected?:{id:string;courseId:string}[]}|undefined;
   const configuration=connection.provider==='blackboard'&&bb?.mode==='courses'?{blackboard:{mode:'courses',selected:[...(bb.selected??[])].sort((a,b)=>a.id.localeCompare(b.id))}}:retainedConfiguration;
   const canonical = (value: unknown): unknown => Array.isArray(value) ? value.map(canonical) : value && typeof value === 'object' ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => [key, canonical(item)])) : value;

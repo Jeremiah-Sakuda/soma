@@ -5,69 +5,70 @@ import {getServerApp,getServerFirestore} from '../../src/lib/server/firebase-con
 import {verifyWorkerAccount} from '../../src/lib/server/account';
 import {verifyWorkerRequest} from '../../src/lib/server/worker-auth';
 import {withBrowserRead,remainingReadTime} from '../../src/lib/server/connectors/browser';
+import {readGradescopeCatalog,readGradescopeAssignmentMetadata} from '../../src/lib/server/connectors/gradescope-materials';
+import {isAllowedGradescopeRequest,filterGradescopeFall2026,canonicalGradescopeCourseUrl} from '../../src/lib/domain/gradescope-navigation';
 
-/** Explicitly opted-in access proof, never a fixture of private course material.
- * No publication, inference, submission, feedback or grade extraction occurs here. */
+async function scopedAccount(){
+ if(!process.env.SOMA_GRADESCOPE_OWNER_EMAIL)throw new Error('Explicit owner scope required.');
+ const user=await getAuth(getServerApp()).getUserByEmail(process.env.SOMA_GRADESCOPE_OWNER_EMAIL);
+ const rootId=createHash('sha256').update(user.uid).digest('hex');
+ const metadata=(await getServerFirestore().collection('somaAccounts').doc(rootId).get()).data();
+ const capability=verifyWorkerRequest(new Request('https://soma.example/api/internal/worker',{headers:{authorization:`Bearer ${process.env.SOMA_WORKER_SECRET}`}}));
+ const account=await verifyWorkerAccount(capability,rootId,metadata?.workspaceId);
+ if(!account)throw new Error('Explicit account unavailable.');
+ return account;
+}
+
+/** Explicitly opted-in access proof; no private fixtures, material publication or inference. */
 describe.skipIf(process.env.SOMA_GRADESCOPE_LIVE_TEST!=='true')('authorized Gradescope saved-session access',()=>{
- it('reopens the saved context and discovers enrolled course links read only',async()=>{
-  if(!process.env.SOMA_GRADESCOPE_OWNER_EMAIL)throw new Error('Explicit owner scope required.');
-  const user=await getAuth(getServerApp()).getUserByEmail(process.env.SOMA_GRADESCOPE_OWNER_EMAIL);
-  const rootId=createHash('sha256').update(user.uid).digest('hex');
-  const metadata=(await getServerFirestore().collection('somaAccounts').doc(rootId).get()).data();
-  const capability=verifyWorkerRequest(new Request('https://soma.example/api/internal/worker',{headers:{authorization:`Bearer ${process.env.SOMA_WORKER_SECRET}`}}));
-  const account=await verifyWorkerAccount(capability,rootId,metadata?.workspaceId);
-  if(!account)throw new Error('Explicit account unavailable.');
-  const result=await withBrowserRead(account,'gradescope',request=>{
-   try{
-    const url=new URL(request.url);
-    return request.method==='GET'&&url.protocol==='https:'&&!url.username&&!url.password&&!url.search
-     &&['gradescope.com','www.gradescope.com'].includes(url.hostname)&&(!url.port||url.port==='443')
-     &&request.resourceType==='document'&&['/','/account','/account/'].includes(url.pathname);
-   }catch{return false;}
-  },async({page,deadline})=>{
+ it('reopens the saved context and discovers explicit semester metadata read only',async()=>{
+  const result=await withBrowserRead(await scopedAccount(),'gradescope',request=>isAllowedGradescopeRequest(request,[],'catalog'),async({page,deadline})=>{
    const response=await page.goto('https://www.gradescope.com/',{waitUntil:'domcontentloaded',timeout:remainingReadTime(deadline,20_000)});
    expect(response?.ok()).toBe(true);
-   expect(new URL(page.url()).pathname).toMatch(/^\/(?:account\/?)?$/);
-   expect(await page.locator('input[type="password"]').count()).toBe(0);
-   expect(await page.locator('a[href*="logout"], a[href*="signout"], form[action*="logout"]').count()).toBeGreaterThan(0);
-   const courses=await page.locator('a[href]').evaluateAll(anchors=>anchors.flatMap(anchor=>{
-    let url:URL;try{url=new URL(anchor.getAttribute('href')??'',location.href);}catch{return [];}
-    return url.origin===location.origin&&/^\/courses\/\d+\/?$/.test(url.pathname)&&!url.search
-     ?[{path:url.pathname,title:(anchor.textContent??'').trim().slice(0,300)}]:[];
-   }));
-   expect(courses.length).toBeGreaterThan(0);
-   const headings=await page.locator('h1,h2,h3,h4').allTextContents();
-   const structure=await page.locator('a[href^="/courses/"]').first().evaluate(anchor=>[anchor.parentElement,anchor.parentElement?.parentElement,anchor.parentElement?.parentElement?.parentElement].map(element=>element?{tag:element.tagName,class:element.className}:null));
-   return {value:{courses,headings,structure},notice:'Saved Gradescope sign-in reopened successfully. Course list verified; no assignment pages collected.'};
+   const courses=await readGradescopeCatalog(page,deadline);expect(courses.length).toBeGreaterThan(0);
+   return {value:{courses},notice:'Saved Gradescope sign-in reopened successfully. Course list verified; no assignment pages collected.'};
   });
-  // Deliberately print counts only. Course identifiers/titles and session material stay private.
-  process.stdout.write(JSON.stringify({enrolledCourseLinks:result.courses.length,modelCalls:0,persistedMaterial:0,...(process.env.SOMA_GRADESCOPE_COURSE_METADATA==='true'?{courses:result.courses,headings:result.headings,structure:result.structure}:{})})+'\n');
+  process.stdout.write(JSON.stringify({enrolledCourses:result.courses.length,fall2026Courses:filterGradescopeFall2026(result.courses).length,modelCalls:0,persistedMaterial:0})+'\n');
  },120_000);
- it.skipIf(!process.env.SOMA_GRADESCOPE_TEST_COURSE_ID)('inspects one explicitly scoped assignment table without grades or publication',async()=>{
-  const courseId=process.env.SOMA_GRADESCOPE_TEST_COURSE_ID!;
-  if(!/^\d{1,20}$/.test(courseId)||!process.env.SOMA_GRADESCOPE_OWNER_EMAIL)throw new Error('Explicit owner and course scope required.');
-  const user=await getAuth(getServerApp()).getUserByEmail(process.env.SOMA_GRADESCOPE_OWNER_EMAIL),rootId=createHash('sha256').update(user.uid).digest('hex');
-  const metadata=(await getServerFirestore().collection('somaAccounts').doc(rootId).get()).data();
-  const capability=verifyWorkerRequest(new Request('https://soma.example/api/internal/worker',{headers:{authorization:`Bearer ${process.env.SOMA_WORKER_SECRET}`}}));
-  const account=await verifyWorkerAccount(capability,rootId,metadata?.workspaceId);if(!account)throw new Error('Explicit account unavailable.');
-  const path=`/courses/${courseId}`;
-  const result=await withBrowserRead(account,'gradescope',request=>{
-   try{const url=new URL(request.url);return request.method==='GET'&&url.origin==='https://www.gradescope.com'&&!url.username&&!url.password&&!url.search&&!url.hash&&[path,'/','/account','/account/'].includes(url.pathname)&&request.resourceType==='document';}catch{return false;}
-  },async({page,deadline})=>{
-   await page.goto('https://www.gradescope.com/',{waitUntil:'domcontentloaded',timeout:remainingReadTime(deadline,20_000)});
-   const terms=await page.locator('.courseList').evaluateAll(lists=>lists.map(list=>Array.from(list.children).map(child=>({tag:child.tagName,class:child.className,...(!child.classList.contains('courseList--coursesForTerm')?{label:child.textContent?.trim().slice(0,100)}:{})}))));
-   const response=await page.goto('https://www.gradescope.com'+path,{waitUntil:'domcontentloaded',timeout:remainingReadTime(deadline,20_000)});
-   expect(response?.ok()).toBe(true);expect(new URL(page.url()).pathname).toBe(path);
-   expect(await page.locator('input[type="password"]').count()).toBe(0);
-   expect(await page.locator('a[href*="logout"], a[href*="signout"], form[action*="logout"]').count()).toBeGreaterThan(0);
-   const tables=await page.locator('table').evaluateAll(tables=>tables.map(table=>({
-    id:table.id,linkShapes:Array.from(table.querySelectorAll('tbody th a[href]')).slice(0,2).map(anchor=>(anchor.getAttribute('href')??'').replace(/\d+/g,'[id]')),headers:Array.from(table.querySelectorAll('thead th')).map(cell=>cell.textContent?.trim()),
-    rows:table.querySelectorAll('tbody tr').length,
-    firstRowShape:Array.from(table.querySelector('tbody tr')?.children??[]).map(cell=>({tag:cell.tagName,class:cell.className,children:Array.from(cell.children).map(child=>({tag:child.tagName,class:child.className,attributes:Array.from(child.attributes).map(attribute=>attribute.name)}))}))
-   })));
-   expect(tables.length).toBeGreaterThan(0);
-   return {value:{tables,terms},notice:'Selected Gradescope assignment table inspected read only; no grades, student responses or material collected.'};
+ it.skipIf(!process.env.SOMA_GRADESCOPE_TEST_COURSE_ID)('reads one explicitly scoped assignment overview without grades or publication',async()=>{
+  const url=canonicalGradescopeCourseUrl(process.env.SOMA_GRADESCOPE_TEST_COURSE_ID!);
+  const result=await withBrowserRead(await scopedAccount(),'gradescope',request=>isAllowedGradescopeRequest(request,[process.env.SOMA_GRADESCOPE_TEST_COURSE_ID!],'collect'),async({page,deadline})=>{
+   const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:remainingReadTime(deadline,20_000)});
+   expect(response?.ok()).toBe(true);
+   let source;
+   try{source=await readGradescopeAssignmentMetadata(page,{url,courseId:'private-access-probe'},deadline);}
+   catch(error){
+    if(process.env.SOMA_GRADESCOPE_READ_DIAGNOSTICS==='true'){
+     const shapes=await page.locator('table#assignments-student-table').evaluate(table=>({
+      headers:Array.from(table.querySelectorAll('thead th')).map(cell=>cell.textContent?.trim()),
+      rows:Array.from(table.querySelectorAll('tbody tr')).map(row=>({attributes:Array.from(row.attributes).map(attribute=>attribute.name),cells:Array.from(row.children).map(cell=>({tag:cell.tagName,class:cell.className,childTags:Array.from(cell.children).map(child=>child.tagName)})),links:Array.from(row.querySelectorAll('th a[href]')).map(anchor=>({path:(anchor.getAttribute('href')??'').replace(/\d+/g,'[id]'),nameLength:anchor.textContent?.trim().length})),dateLengths:[3,4].map(index=>row.children[index]?.textContent?.trim().length)}))
+     }));
+     process.stdout.write(JSON.stringify({code:(error as {code?:string}).code,shapes})+'\n');
+    }
+    throw error;
+   }
+   expect(source.kind).toBe('gradescope');expect(source.body.length).toBeGreaterThan(0);
+   expect(source.url).toBe(url);expect(source.body).not.toContain('/submissions/');
+   return {value:{bodyLength:source.body.length},notice:'Selected Gradescope assignment metadata verified read only; no material collected.'};
   });
-  process.stdout.write(JSON.stringify(result)+'\n');
+  process.stdout.write(JSON.stringify({...result,modelCalls:0,persistedMaterial:0})+'\n');
+ },120_000);
+ it.skipIf(process.env.SOMA_GRADESCOPE_SEMESTER_READ!=='Fall 2026')('verifies current-semester assignment metadata with no publication or inference',async()=>{
+  let mode:'catalog'|'collect'='catalog';let selectedIds:string[]=[];
+  const result=await withBrowserRead(await scopedAccount(),'gradescope',request=>isAllowedGradescopeRequest(request,selectedIds,mode),async({page,deadline})=>{
+   const response=await page.goto('https://www.gradescope.com/',{waitUntil:'domcontentloaded',timeout:remainingReadTime(deadline,20_000)});expect(response?.ok()).toBe(true);
+   const selected=filterGradescopeFall2026(await readGradescopeCatalog(page,deadline));expect(selected.length).toBeGreaterThan(0);
+   // Access proof is a single bounded slice, not an unbounded semester collector.
+   if(selected.length>4)throw new Error('Select an explicit smaller access-proof slice.');
+   selectedIds=selected.map(course=>course.id);mode='collect';let assignmentRows=0;
+   for(const course of selected){
+    const loaded=await page.goto(course.url,{waitUntil:'domcontentloaded',timeout:remainingReadTime(deadline,20_000)});expect(loaded?.ok()).toBe(true);
+    const source=await readGradescopeAssignmentMetadata(page,{url:course.url,courseId:'private-access-probe'},deadline);
+    expect(source.body).not.toContain('/submissions/');expect(source.kind).toBe('gradescope');
+    assignmentRows+=await page.locator('table#assignments-student-table tbody tr').count();
+   }
+   return {value:{verifiedOverviews:selected.length,assignmentRows},notice:'Current-semester Gradescope assignment metadata verified. No grades, responses, files or material publication in this access probe.'};
+  });
+  process.stdout.write(JSON.stringify({...result,modelCalls:0,persistedMaterial:0})+'\n');
  },120_000);
 });

@@ -231,6 +231,7 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
         {connected && item.provider === 'blackboard' && <BlackboardCoursePicker data={data} disabled={!!busy} reload={async () => { await read(); await reload(); }} />}
         {connected && item.provider !== 'blackboard' && <form onSubmit={event => { event.preventDefault(); void action(item.provider, 'configure'); }}>
           <p className="meta" style={fieldSpacing}>Choose exact, read-only course page URLs. Collection stays within the pages you select; it does not submit work or post messages.</p>
+          {item.provider==='gradescope'&&<p className="meta">Use each course’s overview URL. Soma reads assignment names and displayed dates; scores, responses and returned-work files are excluded. Each check reads up to four saved pages, then later checks continue through your selection.</p>}
           {!data.workspace.courses.length && <p className="inline-caution">Add a course using a selected material import before mapping course-site pages.</p>}
           {selected.map((target, index) => <fieldset key={index} style={fieldSpacing}>
             <legend className="field-label">Course page {index + 1}</legend>
@@ -243,7 +244,7 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
             <SourceContextFields prefix={`${item.provider}-context-${index}`} value={target.context} sources={data.workspace.sources.filter(source => source.courseId === target.courseId)} assessments={data.workspace.courses.find(course => course.id === target.courseId)?.assessments} onChange={context => updateTarget(item.provider, index, { context })}/>
             {selected.length > 1 && <button className="text-button" type="button" onClick={() => setTargets(current => ({ ...current, [item.provider]: selected.filter((_, position) => position !== index) }))}>Remove course page {index + 1}</button>}
           </fieldset>)}
-          <button className="text-button" type="button" disabled={selected.length >= 5} onClick={() => setTargets(current => ({ ...current, [item.provider]: [...selected, { courseId: '', url: '' }] }))}>Add another course page</button>
+          <button className="text-button" type="button" onClick={() => setTargets(current => ({ ...current, [item.provider]: [...selected, { courseId: '', url: '' }] }))}>Add another course page</button>
           <div className="action-row" style={fieldSpacing}>
             <button type="submit" className="secondary-button" disabled={!!busy || !data.workspace.courses.length}>Save selected pages</button>
             <button type="button" className="primary-button" disabled={!!busy || !saved || scopeChanged || !status.configured} onClick={() => void action(item.provider, 'refresh')}>Refresh saved pages</button>

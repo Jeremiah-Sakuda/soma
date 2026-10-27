@@ -6,8 +6,9 @@ import type { VerifiedAccount } from '../account';
 import { readAccountWorkspace, updateAccountWorkspace } from '../account-store';
 import { WorkspaceStoreError } from '../store';
 import { acquireConnectionLease, checkpointConnectionLease, connectionsForDeletion, connectionPublicationGuard, deleteConnection, listConnections, readConnection, releaseConnectionLease, saveConnection, type Connection } from './store';
-import { applyCollectedSources, type CollectedSource } from './ingest';
+import { applyCollectedSources,staleCollectedSources, type CollectedSource } from './ingest';
 import { sourceAuthorityContextSchema, validateSourceContext, type SourceAuthorityContext } from '../../domain/source-context';
+import {isAllowedGradescopeRequest,parseGradescopeCourseUrl} from '../../domain/gradescope-navigation';
 
 export const BROWSER_PROVIDERS = {
   blackboard: { label: 'BU Blackboard', homeUrl: 'https://learn.bu.edu/', hosts: ['learn.bu.edu'] },
@@ -17,15 +18,16 @@ export const BROWSER_PROVIDERS = {
 export type BrowserProvider = keyof typeof BROWSER_PROVIDERS;
 export type BrowserTarget = { courseId: string; url: string; context?: SourceAuthorityContext };
 export type BlackboardSelection = { id: string; courseId: string };
-export type Configuration = { targets: BrowserTarget[]; blackboard?: { mode?: 'courses'; selected: BlackboardSelection[]; catalogIds: string[]; catalogCheckedAt: string; catalogComplete: boolean; nextCourseIndex?: number; nextCatalogPath?: string; catalogQuery?: string; catalogSubjectId?: string; selectedSubjectId?: string; catalogEpoch?: string; traversals?: Record<string,{providerCourseId:string;pending:string[];seen:string[];materialIds:string[]}> } };
+export type Configuration = { targets: BrowserTarget[]; nextTargetIndex?:number; blackboard?: { mode?: 'courses'; selected: BlackboardSelection[]; catalogIds: string[]; catalogCheckedAt: string; catalogComplete: boolean; nextCourseIndex?: number; nextCatalogPath?: string; catalogQuery?: string; catalogSubjectId?: string; selectedSubjectId?: string; catalogEpoch?: string; traversals?: Record<string,{providerCourseId:string;pending:string[];seen:string[];materialIds:string[]}> } };
 type Secret = { contextId?: string; sessionId?: string; sessionExpiresAt?: string; loginPageId?: string; readyAt?: string; day?: string; starts?: number };
 type BrowserConnection = Connection<Secret, Configuration>;
 const ID = (provider: BrowserProvider) => `browser-${provider}`;
 const fail = (message: string, status = 409, code = 'browser_connection') => new WorkspaceStoreError(message, status, code);
+const localGradescopeReadFailures=new Set(['gradescope_read_structure','gradescope_read_scope','gradescope_assignment_overflow','gradescope_assignment_conflict','gradescope_assignment_capacity']);
 export const browserActionSchema = z.object({
   provider: z.enum(['blackboard', 'gradescope', 'piazza']),
   action: z.enum(['start', 'complete', 'configure', 'refresh', 'disconnect']),
-  targets: z.array(z.object({ courseId: z.string().min(1).max(128), url: z.string().max(2048), context: sourceAuthorityContextSchema.optional() }).strict()).max(5).optional(),
+  targets: z.array(z.object({ courseId: z.string().min(1).max(128), url: z.string().max(2048), context: sourceAuthorityContextSchema.optional() }).strict()).max(1000).optional(),
 }).strict();
 export function browserConfigured(): boolean { return Boolean(process.env.BROWSERBASE_API_KEY && process.env.SOMA_CONNECTOR_ENCRYPTION_KEY); }
 function settings() {
@@ -146,7 +148,12 @@ async function persistLease(account: VerifiedAccount, connection: BrowserConnect
 async function validateTargets(account: VerifiedAccount, provider: BrowserProvider, targets: BrowserTarget[]) {
   const workspace = await readAccountWorkspace(account);
   if (!workspace) throw fail('Create your private workspace first.', 404);
-  const valid = targets.map(target => { const valid = validateCourseTarget(provider, target); validateSourceContext(workspace, target.courseId, target.context); return valid; });
+  const valid = targets.map(target => {
+    const course=provider==='gradescope'?parseGradescopeCourseUrl(target.url):null;
+    if(provider==='gradescope'&&!course)throw fail('Select the HTTPS Gradescope course overview on www.gradescope.com. Submission and returned-work pages are not collected by this reader.',400,'source_course_scope');
+    const valid = validateCourseTarget(provider, {...target,...(course?{url:course.url}:{})});
+    validateSourceContext(workspace, target.courseId, target.context); return valid;
+  });
   if (valid.some(target => !workspace.courses.some(course => course.id === target.courseId))) throw fail('Choose a course from this workspace.', 400);
   if (new Set(valid.map(target => target.url)).size !== valid.length) throw fail('Select each page only once.', 400);
   return { workspace, targets: valid };
@@ -156,7 +163,7 @@ export async function configureBrowser(account: VerifiedAccount, provider: Brows
   const previous = await readConnection<Secret, Configuration>(account, id);
   if (previous && previous.status !== 'disconnected') {
     const { connection, leaseId } = await acquireConnectionLease<Secret, Configuration>(account, id, 'configure');
-    await updateAccountWorkspace(account, state => ({ ...state, sources: state.sources.map(source => source.provenance?.sourceKey.startsWith(`${provider}:${connection.id}:`) ? { ...source, status: 'stale' as const } : source) }), undefined, connectionPublicationGuard(account, connection.id, leaseId));
+    await updateAccountWorkspace(account, state => staleCollectedSources(state,source=>!!source.provenance?.sourceKey.startsWith(`${provider}:${connection.id}:`)), undefined, connectionPublicationGuard(account, connection.id, leaseId));
     await persistLease(account, connection, leaseId, { configuration: { targets: validated.targets }, status: connection.secret.contextId ? 'connected' : 'login-required', notice: 'Selected pages changed. Refresh to verify current access.' });
   } else await saveConnection(account, validated.workspace.id, id, { provider, status: 'login-required', secret: {}, configuration: { targets: validated.targets }, notice: 'Sign in, then refresh selected pages to verify access.' }, previous?.version || 0);
   return { notice: 'Selected pages saved. Only these pages will be collected.' };
@@ -291,9 +298,17 @@ export function remainingReadTime(deadline: number, maximum: number, now = Date.
   if (left <= 0) throw fail('The selected-page read reached its time limit. Try fewer pages.', 408, 'browser_timeout');
   return Math.min(left, maximum);
 }
+/** Four pages per session, rotating over the complete saved scope. */
+export function browserReadBatch(targets:BrowserTarget[],cursor=0){
+  if(!targets.length)return {targets:[],nextTargetIndex:0,partial:false};
+  const start=Number.isSafeInteger(cursor)&&cursor>=0?cursor%targets.length:0;
+  const count=Math.min(4,targets.length);
+  return {targets:Array.from({length:count},(_,offset)=>targets[(start+offset)%targets.length]),nextTargetIndex:(start+count)%targets.length,partial:targets.length>count};
+}
 async function readPage(page: Page, provider: BrowserProvider, target: BrowserTarget, deadline: number): Promise<CollectedSource> {
   const response = await page.goto(target.url, { waitUntil: 'domcontentloaded', timeout: remainingReadTime(deadline, 20_000) });
   if (!response?.ok()) throw fail('This selected page is unavailable. Sign in again or check its URL.', 409, 'browser_login_required');
+  if(provider==='gradescope')return (await import('./gradescope-materials')).readGradescopeAssignmentMetadata(page,target,deadline);
   // Positive authenticated navigation plus useful course content are both required.
   const auth = page.locator('a[href*="logout"], a[href*="signout"], button[aria-label*="Account"], [data-testid="user-menu"]');
   await auth.first().waitFor({ state: 'attached', timeout: remainingReadTime(deadline, 8000) }).catch(() => undefined);
@@ -312,11 +327,13 @@ export async function refreshBrowser(account: VerifiedAccount, provider: Browser
   const deadline = Date.now() + 80_000;
   const lease = await acquireConnectionLease<Secret, Configuration>(account, ID(provider), 'collect', 240_000);
   let connection = lease.connection, browser: Browser | undefined, allocatedHere = false;
+  let batch:ReturnType<typeof browserReadBatch>|undefined;
   const deadlineTimer = setTimeout(() => { void browser?.close().catch(() => undefined); }, Math.max(1, deadline - Date.now()));
   deadlineTimer.unref();
   try {
     const selected = await validateTargets(account, provider, connection.configuration.targets);
     if (!selected.targets.length) throw fail('Select at least one course page first.', 400);
+    batch=browserReadBatch(selected.targets,connection.configuration.nextTargetIndex);
     if (!connection.secret.contextId) throw fail('Sign in to this provider first.', 409, 'browser_login_required');
     if (active(await getSession(connection))) throw fail('Finish the sign-in session before refreshing.');
     if (connection.secret.sessionId) {
@@ -330,7 +347,9 @@ export async function refreshBrowser(account: VerifiedAccount, provider: Browser
     await context.route('**/*', async route => {
       const request = route.request();
       const navigation = request.isNavigationRequest();
-      const allowed = isAllowedReadRequest(provider, request.url(), request.method()) && (!navigation || selected.targets.some(target => {
+      const allowed = provider==='gradescope'
+        ?isAllowedGradescopeRequest({url:request.url(),method:request.method(),resourceType:request.resourceType(),topLevel:navigation&&!request.frame().parentFrame()},batch!.targets.flatMap(target=>{const course=parseGradescopeCourseUrl(target.url);return course?[course.id]:[];}),'collect')
+        :isAllowedReadRequest(provider, request.url(), request.method()) && (!navigation || selected.targets.some(target => {
         try { return validateCourseTarget(provider, { ...target, url: request.url() }).url === target.url; } catch { return false; }
       }));
       if (allowed) await route.continue(); else await route.abort('blockedbyclient');
@@ -342,23 +361,36 @@ export async function refreshBrowser(account: VerifiedAccount, provider: Browser
     await cdp.send('Network.setBypassServiceWorker', { bypass: true });
     await cdp.send('ServiceWorker.enable');await cdp.send('ServiceWorker.stopAllWorkers');
     const records: CollectedSource[] = [];
-    for (const target of selected.targets) records.push(await readPage(page, provider, target, deadline));
+    const failedTargets:BrowserTarget[]=[];
+    for (const target of batch.targets) {
+      try{records.push(await readPage(page,provider,target,deadline));}
+      catch(error){
+        // Unsupported course layouts must not prevent supported courses in the same
+        // batch from publishing. Authentication/deadline/authorization failures remain global.
+        if(provider==='gradescope'&&localGradescopeReadFailures.has((error as {code?:string}).code??''))failedTargets.push(target);
+        else throw error;
+      }
+    }
+    if(!records.length)throw fail('No selected overview could be verified. Previous material was retained; check the selected pages.',422,'gradescope_no_supported_overview');
     remainingReadTime(deadline, 1);
     const checkedAt = new Date().toISOString();
     let changedSourceIds: string[] = [];
     const workspace = await updateAccountWorkspace(account, state => {
-      const result = applyCollectedSources(state, records, { provider, connectionId: connection.id, checkedAt }); changedSourceIds = result.changedSourceIds; return result.workspace;
+      const result = applyCollectedSources(state, records, { provider, connectionId: connection.id, checkedAt }); changedSourceIds = result.changedSourceIds;
+      const failedKeys=new Set(failedTargets.map(target=>`${provider}:${connection.id}:${target.url}`));
+      return staleCollectedSources(result.workspace,source=>failedKeys.has(source.provenance?.sourceKey??''));
     }, selected.workspace.revision, connectionPublicationGuard(account, connection.id, lease.leaseId));
     await browser.close(); browser = undefined; await releaseSession(connection);
-    await persistLease(account, connection, lease.leaseId, { secret: clearSession(connection.secret), status: 'current', lastSuccessAt: checkedAt, notice: `Read ${records.length} selected page(s).` });
-    return { workspace, changedSourceIds, notice: `Read ${records.length} selected page(s); ${changedSourceIds.length} changed source(s).` };
+    const notice=`Read ${records.length} selected page(s); ${changedSourceIds.length} changed source(s).${failedTargets.length?` ${failedTargets.length} selected page(s) could not be verified; any previous material remains stale.`:''}${batch.partial?' More selected pages remain; later checks rotate through them.':''}${provider==='gradescope'?' Assignment names and displayed dates only; scores, student responses and returned-work files are not collected.':''}`;
+    await persistLease(account, connection, lease.leaseId, { secret: clearSession(connection.secret), configuration:{...connection.configuration,nextTargetIndex:batch.nextTargetIndex},status: failedTargets.length?'stale':batch.partial?'connected':'current', lastSuccessAt: checkedAt, notice });
+    return { workspace, changedSourceIds, notice };
   } catch (error) {
     if (browser) await browser.close().catch(() => undefined);
     if (!allocatedHere) { await releaseConnectionLease(account, connection.id, lease.leaseId); throw error; }
     let secret = connection.secret;
     try { await releaseSession(connection); secret = clearSession(secret); } catch { /* Retain session ID for cleanup/reconnect. */ }
-    await updateAccountWorkspace(account, state => ({ ...state, sources: state.sources.map(source => source.provenance?.sourceKey.startsWith(`${provider}:${connection.id}:`) ? { ...source, status: 'stale' as const } : source) }), undefined, connectionPublicationGuard(account, connection.id, lease.leaseId)).catch(() => undefined);
-    await releaseConnectionLease(account, connection.id, lease.leaseId, { secret, status: (error as {code?:string}).code === 'browser_login_required' ? 'login-required' : 'stale', notice: 'Refresh did not verify current course content. Previous sources are stale; reconnect or try again.' });
+    await updateAccountWorkspace(account, state => staleCollectedSources(state,source=>!!source.provenance?.sourceKey.startsWith(`${provider}:${connection.id}:`)), undefined, connectionPublicationGuard(account, connection.id, lease.leaseId)).catch(() => undefined);
+    await releaseConnectionLease(account, connection.id, lease.leaseId, { secret,...(batch?.partial&&(error as {code?:string}).code!=='browser_login_required'?{configuration:{...connection.configuration,nextTargetIndex:batch.nextTargetIndex}}:{}),status: (error as {code?:string}).code === 'browser_login_required' ? 'login-required' : 'stale', notice: 'Refresh did not verify current course content. Previous sources are stale; reconnect or try again.' });
     throw error;
   } finally { clearTimeout(deadlineTimer); }
 }
@@ -370,7 +402,7 @@ export async function disconnectBrowser(account: VerifiedAccount, provider: Brow
     if (connection.secret.sessionId) await releaseSession(connection);
     // Browserbase documents DELETE /v1/contexts/{id}; do not erase our only cleanup reference on failure.
     if (connection.secret.contextId) await api(`/contexts/${encodeURIComponent(connection.secret.contextId)}`, 'DELETE', undefined, true);
-    await updateAccountWorkspace(account, state => ({ ...state, sources: state.sources.map(source => source.provenance?.sourceKey.startsWith(`${provider}:${connection.id}:`) ? { ...source, status: 'stale' as const } : source) }), undefined, connectionPublicationGuard(account, connection.id, leaseId));
+    await updateAccountWorkspace(account, state => staleCollectedSources(state,source=>!!source.provenance?.sourceKey.startsWith(`${provider}:${connection.id}:`)), undefined, connectionPublicationGuard(account, connection.id, leaseId));
     await deleteConnection(account, connection.id);
     return { notice: 'Disconnected and deleted the saved provider browser context.' };
   } catch (error) { await releaseConnectionLease(account, connection.id, leaseId, { status: 'error', notice: 'Browser cleanup failed. Authorization references were retained so cleanup can be retried.' }); throw error; }

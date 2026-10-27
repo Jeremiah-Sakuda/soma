@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import type { VerifiedAccount } from '../../src/lib/server/account';
-const state = vi.hoisted(() => ({ connection: null as any, workspace: { id: 'workspace-one', revision: 1, courses: [{ id: 'course-one' }], sources: [] }, calls: [] as string[] }));
+const state = vi.hoisted(() => ({ connection: null as any, workspace: { id: 'workspace-one', revision: 1, courses: [{ id: 'course-one' }], sources: [],lessons:[] }, calls: [] as string[] }));
 vi.mock('../../src/lib/server/account-store', () => ({
   readAccountWorkspace: vi.fn(async () => state.workspace),
   updateAccountWorkspace: vi.fn(async (_account: unknown, action: any) => action(state.workspace)),
@@ -55,6 +55,10 @@ describe('browser lifecycle orchestration with synthetic provider responses', ()
   it('rejects cross-workspace course selections before creating a paid session', async () => {
     await expect(configureBrowser(account, 'gradescope', [{ courseId: 'another-workspace-course', url: 'https://www.gradescope.com/courses/123' }])).rejects.toMatchObject({ status: 400 });
     expect(fetch).not.toHaveBeenCalled(); expect(state.connection).toBeNull();
+  });
+  it('rejects Gradescope submission/detail targets before allocating a browser',async()=>{
+    await expect(configureBrowser(account,'gradescope',[{courseId:'course-one',url:'https://www.gradescope.com/courses/123/assignments/456'}])).rejects.toMatchObject({code:'source_course_scope'});
+    expect(fetch).not.toHaveBeenCalled();expect(state.connection).toBeNull();
   });
   it('rechecks saved selected courses before starting a browser', async () => {
     state.connection = makeConnection(); state.connection.configuration.targets[0].courseId = 'removed-course';

@@ -1,12 +1,10 @@
 import type { Source, WorkspaceState } from '../../domain/types';
-import { applyCollectedSources, type CollectedSource } from './ingest';
+import { applyCollectedSources,staleCollectedSources, type CollectedSource } from './ingest';
 
 
 /** Withdrawal is visible immediately in both observations and prepared lessons. */
 export function withdrawBlackboardSources(state:WorkspaceState, matches:(source:Source)=>boolean):WorkspaceState {
-  state.sources=state.sources.map(source=>matches(source)?{...source,status:'stale' as const}:source);
-  state.lessons=state.lessons.map(lesson=>lesson.sourceIds.some(id=>!state.sources.some(source=>source.id===id&&source.version===lesson.sourceVersions[id]&&source.status==='current'&&!state.sources.some(newer=>newer.id===id&&newer.version>source.version)))?{...lesson,state:'stale' as const}:lesson);
-  return state;
+  return staleCollectedSources(state,matches);
 }
 
 /** Publish only observed text. A finished walk may stale missing observations, never erase them. */

@@ -10,6 +10,13 @@ export type CollectedSource = {
 export type CollectionContext = { provider: string; connectionId: string; checkedAt: string };
 const digest = (value: string) => createHash('sha256').update(value).digest('hex');
 
+/** Retain observations and attempts while withdrawing unavailable teaching evidence. */
+export function staleCollectedSources(state:WorkspaceState,matches:(source:Source)=>boolean):WorkspaceState{
+  state.sources=state.sources.map(source=>matches(source)?{...source,status:'stale' as const}:source);
+  state.lessons=state.lessons.map(lesson=>lesson.sourceIds.some(id=>!state.sources.some(source=>source.id===id&&source.version===lesson.sourceVersions[id]&&source.status==='current'&&!state.sources.some(newer=>newer.id===id&&newer.version>source.version)))?{...lesson,state:'stale' as const}:lesson);
+  return state;
+}
+
 /** Version normalized observations, without executing source text or inferring facts. */
 export function applyCollectedSources(input: WorkspaceState, records: CollectedSource[], context: CollectionContext): { workspace: WorkspaceState; changedSourceIds: string[] } {
   if (input.mode !== 'account') throw new WorkspaceStoreError('Live collection requires a private account.', 403, 'account_required');

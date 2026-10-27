@@ -29,6 +29,11 @@ describe('scheduled worker authentication and due work', () => {
     expect((await POST(request(token, 'x'.repeat(33)))).status).toBe(400);
   });
   const connection: PublicConnection = { id: 'google-gmail', provider: 'gmail', workspaceId: 'original-synthetic-workspace', version: 1, status: 'current', configuration: { queries: [{ courseId: 'original-course', query: 'subject:original' }], nextQueryIndex: 0 } };
+  it('ignores exact-page rotation progress but detects a changed Gradescope selection',()=>{
+    const saved:PublicConnection={...connection,id:'browser-gradescope',provider:'gradescope',configuration:{targets:[{courseId:'original-course',url:'https://www.gradescope.com/courses/42'}],nextTargetIndex:0}};
+    expect(connectionScopeFingerprint({...saved,configuration:{...saved.configuration,nextTargetIndex:4}})).toBe(connectionScopeFingerprint(saved));
+    expect(connectionScopeFingerprint({...saved,configuration:{targets:[{courseId:'original-course',url:'https://www.gradescope.com/courses/43'}],nextTargetIndex:0}})).not.toBe(connectionScopeFingerprint(saved));
+  });
   it('does not refresh on lease versions or query rotation; changed selection invalidates schedule', () => {
     const now = Date.parse('2026-10-28T12:00:00Z');
     const schedule = { [connection.id]: { scope: connectionScopeFingerprint(connection), nextAt: now + SOURCE_REFRESH_MS, failures: 0, lastAttemptAt: new Date(now).toISOString(), outcome: 'completed' } };

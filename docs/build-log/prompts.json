@@ -283,6 +283,12 @@
       "received_at": null,
       "kind": "message",
       "prompt": "re run the imporve architechuture, also what else do I need to do by hand?"
+    },
+    {
+      "id": "P039",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "**Connect sources in Soma.** Your account is active, but currently has zero saved connections. Select Gmail queries/calendars and complete institutional login/MFA. We need to figure out a secure way of handling user login credentials for other sites. My schoolwork is primarily on blackboard, with piazza and gradescope used as well "
     }
   ]
 }

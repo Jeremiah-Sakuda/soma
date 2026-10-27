@@ -277,6 +277,12 @@
       "received_at": null,
       "kind": "message",
       "prompt": "Typed failure recovery — recommended first. Retry decisions currently parse English log text; preserve structured failure facts instead.\n2. Audited publication. Concentrate commit-and-audit rules repeated across four entry points.\n3. Journal storage consistency. Align behavior and tests across Firestore and synthetic SQLite. Do all 3, then update documentation around the proposed hero moment"
+    },
+    {
+      "id": "P038",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "re run the imporve architechuture, also what else do I need to do by hand?"
     }
   ]
 }

@@ -1,3 +1,4 @@
+import type { LearningGraphRecord } from './learning-graph';
 import type { Assessment } from './source-context';
 import type { InvestigationRecord, SourceAuthorityContext } from './investigation';
 import type { ValidatedDiagnosticPlan, DiagnosticHypothesisStatus, DiagnosticExperimentInput } from './diagnostics';
@@ -28,6 +29,7 @@ export type AgentRun = { id: string; trigger: string; mode: 'synthetic' | 'prepa
 export type Interpretation = { id: string; courseId: string; claim: string; status: 'suspected' | 'revised' | 'supported'; evidenceIds: string[]; reason: string; updatedAt: string };
 export type SomaInvestigation = InvestigationRecord & { investigationKey?: string; runtimeModel?: string; engineVersion?: string; selectedLessonId?: string; diagnosticPlan?: ValidatedDiagnosticPlan; diagnosticLessonId?: string; hypothesisRevisions?: { hypothesisId: string; status: DiagnosticHypothesisStatus; reason?: string }[]; toolActivity?: { tool: string; outcome: string }[]; usage?: { calls: number; costUsd: number; elapsedMs: number } };
 export type WorkspaceState = {
+  learningGraph?: LearningGraphRecord[];
   investigations?: SomaInvestigation[]; recommendedLessonId?: string;
   id: string; mode: 'demo' | 'account'; createdAt: string; expiresAt: string;
   revision: number; importReceipts?: { key: string; sourceId: string; hash: string; importedAt: string; preparationRevision?: number }[]; timezone?: string; demoClock?: string;

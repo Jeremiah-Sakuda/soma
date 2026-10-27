@@ -1,3 +1,4 @@
+import { reconcileLearningGraph } from '../domain/learning-graph';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, chmodSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -99,7 +100,7 @@ export async function updateWorkspace(token: string, mutator: (workspace: Worksp
   const current = await readWorkspace(token);
   if (!current) throw new WorkspaceNotFoundError();
   if (expectedRevision !== undefined && current.revision !== expectedRevision) throw new WorkspaceConflictError();
-  const next = await mutator(structuredClone(current));
+  const next = reconcileLearningGraph(current, await mutator(structuredClone(current)));
   if (next.id !== current.id || next.mode !== current.mode || next.createdAt !== current.createdAt || next.expiresAt !== current.expiresAt) {
     throw new WorkspaceStoreError('Workspace ownership and lifetime cannot be changed by an action.', 422, 'immutable_workspace');
   }

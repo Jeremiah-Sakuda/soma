@@ -1,3 +1,4 @@
+import { reconcileLearningGraph } from '../domain/learning-graph';
 import { createHash, randomUUID } from 'node:crypto';
 import type { DocumentReference, Transaction } from 'firebase-admin/firestore';
 import type { WorkspaceState } from '../domain/types';
@@ -138,7 +139,7 @@ export async function updateAccountWorkspace(account: VerifiedAccount, mutator: 
   const current = await readAccountWorkspace(account);
   if (!current) throw new WorkspaceStoreError('Create a private workspace before saving changes.', 404, 'workspace_missing');
   if (expectedRevision !== undefined && current.revision !== expectedRevision) throw new WorkspaceConflictError();
-  const next = await mutator(structuredClone(current));
+  const next = reconcileLearningGraph(current, await mutator(structuredClone(current)));
   if (next.id !== current.id || next.mode !== current.mode || next.createdAt !== current.createdAt || next.expiresAt !== current.expiresAt) throw new WorkspaceStoreError('Workspace identity cannot be changed by an action.', 422, 'immutable_workspace');
   next.revision = current.revision + 1;
   const before = snapshots.get(current)!;

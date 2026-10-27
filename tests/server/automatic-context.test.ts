@@ -7,6 +7,9 @@ import { applyAction } from '../../src/lib/domain/learning';
 import { automaticModelContext } from '../../src/lib/server/automatic-context';
 import { investigateWithSpark } from '../../src/lib/server/investigator';
 
+import { graphFixture } from '../helpers/learning-graph';
+import { reconcileLearningGraph } from '../../src/lib/domain/learning-graph';
+
 const PRIVATE = 'PRIVATE ADMINISTRATIVE PREVIEW MUST NOT BE RESENT';
 function fixture() {
   const state = seedWorkspace('automatic-consent-boundary', '2026-10-28T12:00:00Z');
@@ -29,6 +32,24 @@ describe('unattended model source consent', () => {
     state.sources.push({ ...state.sources[0], version: 2, provenance: undefined });
     expect(automaticModelContext(state).sources).toHaveLength(0);
     expect(automaticModelContext(state).lessons).toHaveLength(0);
+  });
+  it('excludes a lesson when even one selected source version is missing', () => {
+    const state = fixture(); state.lessons[0].sourceVersions = {};
+    expect(automaticModelContext(state).lessons).toEqual([]);
+  });
+  it('filters partial graph claims when their parent diagnostic contains unselected evidence', () => {
+    const state = graphFixture();
+    state.sources.forEach(source => { source.provenance = { automaticPreparation: true, origin: 'manual-course', sourceKey: source.id, contentHash: 'test', importedAt: state.createdAt }; });
+    const graph = reconcileLearningGraph({ ...state, investigations: [] }, state);
+    expect(automaticModelContext(graph).learningGraph!.some(record => record.kind === 'interpretation')).toBe(true);
+    const other = { ...graph.sources[0], id: 'unselected-evidence', provenance: undefined };
+    graph.sources.push(other);
+    graph.investigations![0].diagnosticPlan!.hypotheses[1].evidence.push({ sourceId: other.id, version: other.version, quote: other.body.slice(0, 30) });
+    const filtered = automaticModelContext(graph);
+    expect(filtered.investigations).toHaveLength(0);
+    expect(filtered.learningGraph!.some(record => record.kind === 'interpretation' || (record.kind === 'relationship' && record.to.kind === 'interpretation'))).toBe(false);
+    graph.lessons[0].sourceVersions = {};
+    expect(automaticModelContext(graph).learningGraph).toEqual([]);
   });
   it('does not send old or unversioned response text merely because its lesson ID is still selected', () => {
     let state = fixture();

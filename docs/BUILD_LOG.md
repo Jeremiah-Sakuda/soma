@@ -918,3 +918,127 @@ P040 documentation verification: local links in eleven adopted planning document
 3. Proposed staged acceptance: correct login target plus fresh-context reuse; course selection and versioned scoped reads; bounded model-selected evidence investigation and navigation recovery. Consulted primary Playwright locator/frame and Browserbase live-view documentation. The existing account currently lists only its imported course, so discovery must map/register actual courses without dummy material. No new dependency, real-course model processing or larger budget was enabled.
 
 **Plan deviations:** None adopted in this advisory turn. A richer source adapter fits the existing read-only collector boundary; model-directed UI exploration remains conditional pending explicit implementation and verification.
+
+## PM014 — Re-ask whether the fully implemented plan could win
+
+**Recorded:** October 27, 2026, in a new advisory conversation. Exact received timestamp unavailable.
+
+**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM014`. The typed text is identical to PM008, and the pasted guide is referenced to the PM008 copy (see the archive's paste note).
+
+**Top 3 outcomes:**
+
+1. Re-read the current scope with full implementation assumed: [Product Brief](PRODUCT_BRIEF.md), PRD hero moment, storyboard and Meta tooling sections, [Learning Graph Scope](LEARNING_GRAPH_SCOPE.md), the unadopted [Rubric Strategy Proposal](RUBRIC_STRATEGY_PROPOSAL.md), and the PM008/PM013 assessments. The pasted guide adds no new event requirement.
+2. Scored it independently as advisory judgment, not a predicted ranking: Impact 7–7.5, Meta tooling 7.5–8, Technical depth about 9, Demo 7.5–8, about 7.6–8.1 weighted. Verdict: yes, it could win, but it is a finalist-range contender rather than the favorite. This agrees with PM013. Best Agentic Use-Case is the most natural bonus; the open-weight bonus applies only if the specialist stretch ships.
+3. Named what limits the ceiling: the study-tool first impression next to the guide's anti-project list, a one-person impact base, a modest intro-circuit visual, a payoff that is intellectual rather than visceral in a live video round, and use of one Meta model. Named the moment most likely to lift it: show Spark's discriminating experiment, including the rejected or repaired uninformative one, as the "surprised even us" beat.
+
+**Plan deviations:** None adopted. No PRD, build plan, decision, code or deployment changed. No tests or model calls were run. Concurrent uncommitted implementation work, the PM013 entry and the strategy proposal were left untouched.
+
+## PM015 — Explore alternative UI directions in parallel with graph work
+
+**Recorded:** October 27, 2026, in the PM014 advisory conversation. Exact received timestamp unavailable.
+
+**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM015`.
+
+**Top 3 outcomes:**
+
+1. Reviewed the selected [UI Direction](UI_DIRECTION.md), the earlier unselected directions in `design-system/soma/directions/` (Fieldnotes, Daylight, Focus, Notebook, Agenda) and the deployed synthetic demo's Today and lesson screens, viewed read-only. Each earlier option restyles a study dashboard, and none shows the competing explanations or the discriminating experiment on the first screen.
+2. Used Jeremy's locally installed UI/UX Pro Max skill (search only, nothing persisted). Its `--design-system` result (Neumorphism, Poppins) was a poor fit and was not applied, so targeted style, type and product searches guided the directions instead. Built four interactive, unselected directions as a private design canvas (https://claude.ai/artifact/5NaNL77LNFvGKhbWzFuyBk): F Casebook, G Bench, H Plate and I Studio. Each puts the Quiz 3 answer, explanations A and B, the R₂ experiment with a hidden checked trace, the optional prediction and a response-dependent revision on the first screen. Sources and rationale are in [the canvas folder](../design-system/soma/directions/2026-10-27-hypothesis-canvas/README.md).
+3. Unverified: no render, contrast, keyboard or reduced-motion check was run on the canvas boards. The revision states are scripted for the mockup, not Spark output. No direction is selected.
+
+**Plan deviations:** None adopted. UI Direction (Ready Card) remains authoritative until Jeremy selects a change and it is recorded in Decisions. No `src/` files, PRD, build plan or deployment changed, so there is no overlap with the concurrent graph session's files. The physics in the mockups is computed in the board script for illustration; production lessons must still read from the checked model.
+
+
+## PM017 — Give the explored directions personality
+
+**Recorded:** October 27, 2026, in the PM014 advisory conversation. Exact received timestamp unavailable.
+
+**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM017`. PM016 was taken by a separate Antigravity advisory turn before this entry was written.
+
+**Top 3 outcomes:**
+
+1. Diagnosed the PM015 boards: F–I change typeface and palette but share a generic dashboard skeleton with stock-style icons. Soma doesn't own anything in them. Personality needs one idea that sets the mark, symbols, voice and motion together.
+2. Added three static personality concept sheets to the same private canvas: J Neuron (the meaning of "soma": dendrite sources converge and one activity fires), K Margin notes (Soma as a TA's margin pen, with graphite student, red instructor and violet Soma inks expressing the observation/interpretation separation rule) and L Specimen (periodic-table tiles for Soma's own concepts; a lesson's history reads as a formula). Each sheet has a mark, six custom symbols, the hero moment in the product, voice samples and a signature motion with a reduced-motion fallback. Sources and rationale were added to [the canvas folder README](../design-system/soma/directions/2026-10-27-hypothesis-canvas/README.md).
+3. Unverified and unselected: the sheets were not rendered or checked for accessibility, and no direction or concept is adopted.
+
+**Plan deviations:** None adopted. UI Direction remains authoritative; no `src/`, PRD, build plan or deployment change.
+
+## PM018 — Still not sold on the explored directions (PM019 clarification answers)
+
+**Recorded:** October 27, 2026, in the PM014 advisory conversation. Exact received timestamp unavailable.
+
+**Verbatim prompt:** Preserved in the canonical prompt archive, entries `PM018` (message) and `PM019` (answers to four multiple-choice clarification questions).
+
+**Top 3 outcomes:**
+
+1. Stopped generating options blind and asked about references, the first feeling, a character and what missed. Jeremy picked Linear, Raycast and Arc; Duolingo and Headspace; and Things, Notion and Readwise. The first feeling should be "curious, want to touch it", with no character, and J–L were "too conceptual".
+2. Built one real Today screen from those answers, M · Playground, in light and dark on the same private canvas. It has an Arc-like course sidebar and ⌘K bar, Geist type, tactile press-down buttons and a dial slider, and amber current dots flowing through the circuit. R₁'s branch stays switched off until the student guesses or chooses to skip the guess, which is recorded as help. The scripted revision and next activity follow the guess. Sources and rationale are in [the canvas folder README](../design-system/soma/directions/2026-10-27-hypothesis-canvas/README.md).
+3. Unverified and unselected: no render, animation, contrast, keyboard or reduced-motion check was run, and no direction is adopted.
+
+**Plan deviations:** None adopted. UI Direction remains authoritative; no `src/`, PRD, build plan or deployment change.
+
+## PM020 / PM021 — Rethink functionality and layout around the knowledge graph
+
+**Recorded:** October 27, 2026, in the PM014 advisory conversation. Exact received timestamps unavailable.
+
+**Verbatim prompts:** Preserved in the canonical prompt archive, entries `PM020` (functionality and layouts) and `PM021` (knowledge graph as the central premise, sent while PM020 work was in progress).
+
+**Top 3 outcomes:**
+
+1. Redirected the PM020 layout pass to PM021: proposed the semester as a transit map. Courses are lines; syllabus concepts are stations by week; station looks come from evidence (own, with help, two explanations being tested, coming up, deadline); cross-course links are shown only as "proposed · not verified"; zoom levels (map → line → station → playground) replace separate destinations; Today is the map's frontier.
+2. Built three boards on the private canvas: an interactive semester-map home (frontier chips, selectable stations, a station inspector with evidence labeled by who said it, change cards linked to stations), a station concept and evidence page (direct neighbors only, versioned interpretation, evidence timeline) and a mobile vertical-line view. Rationale is in [the canvas folder README](../design-system/soma/directions/2026-10-27-hypothesis-canvas/README.md).
+3. Flagged the conflict: UI Direction and Learning Graph Scope currently exclude a semester-wide graph destination for P0. N is unselected and unverified (no render, accessibility or reduced-motion check).
+
+**Plan deviations:** None adopted. A graph-first home would deviate from UI Direction and Learning Graph Scope and needs Jeremy's decision recorded in Decisions before implementation. No `src/`, PRD, build plan or deployment change.
+
+## PM022 — Personas, usage and navigation for the graph-first direction
+
+**Recorded:** October 27, 2026, in the PM014 advisory conversation. Exact received timestamp unavailable.
+
+**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM022`.
+
+**Top 3 outcomes:**
+
+1. Grounded five representative personas in the PRD and [user stories](USER_STORIES.md): Jordan (juggler), Sam (short windows), Ana (returned work), Leo (exam week) and a no-account visitor. Mapped how often each needs eight functions, and concluded that the graph should be the premise while the next action is the home. This is consistent with the PRD's deferral of graph and mastery dashboards.
+2. Recommended navigation of Today · Map · Activity, with course lines and Sources below and ⌘K for asking and jumping; on phones, Today · Map · ＋Ask · Activity; no Courses or Study tabs. Added five layout principles.
+3. Added a personas and navigation board and four annotated low-fidelity wireframes (Jordan desktop Today, Ana returned work, Leo exam scope on the map, Sam phone Today) to the private canvas, with rationale in [the canvas folder README](../design-system/soma/directions/2026-10-27-hypothesis-canvas/README.md). None of this is verified or adopted.
+
+**Plan deviations:** None adopted. Changing the navigation away from UI Direction (Today, Courses, Study) would need Jeremy's decision recorded in Decisions. No `src/`, PRD, build plan or deployment change.
+
+## PM023 — Let students make their own quizzes and flashcards from any card
+
+**Recorded:** October 27, 2026, in the PM014 advisory conversation. Exact received timestamp unavailable.
+
+**Verbatim prompt:** Preserved in the canonical prompt archive, entry `PM023`.
+
+**Top 3 outcomes:**
+
+1. Designed "study your way" as a Make panel on every station card, extending the existing direct-request, ordinary-practice and review-card scope through the same engine. Formats: interactive lesson (only with a checked model), practice quiz, flashcards, worked example, explain it plainly, exam-style set. Options cover scope (this station, plus neighbors, exam scope) and mode (closed book, or hints recorded as help). Soma's suggestion is labeled in the same grid.
+2. Kept the evidence invariants: generated items cite the station's sources; closed-book correct fresh answers can count as "on your own", hints count as "with help", and flashcard ratings only schedule review. A repeated miss can trigger a suggested experiment, joining self-directed and agent-suggested study on one map.
+3. Added three boards to the private canvas (an interactive Make panel, quiz and flashcard views with "where results go", and a phone bottom sheet), with rationale and a positioning-risk note in [the canvas folder README](../design-system/soma/directions/2026-10-27-hypothesis-canvas/README.md). Unverified and not adopted.
+
+**Plan deviations:** None adopted. No `src/`, PRD, build plan or deployment change. Self-made sets should support rather than lead the demo, given the guide's anti-project list.
+
+## PM024 / PM025 — UI overhaul to graph-first navigation, plus a UI/UX guide
+
+**Recorded:** October 27, 2026, in the PM014 advisory conversation. Exact received timestamps unavailable.
+
+**Verbatim prompts:** Preserved in the canonical prompt archive, entries `PM024` (overhaul plus guide) and `PM025` ("COmmit frequently, push to main when done", sent mid-turn).
+
+**Top 3 outcomes:**
+
+1. Added [UI/UX Guide](UI_UX_GUIDE.md), which owns personas, Today · Map · Activity navigation, layouts, tokens, motion, evidence-honesty rules and the accessibility checklist, with references to the design canvas. AGENTS.md now says to read it before any UI work. UI Direction, the handoff and Learning Graph Scope were marked accordingly, and the decision is recorded in [Decisions](DECISIONS.md).
+2. Overhauled the app without changing its data or server behavior:
+   - a sidebar shell with Today, Map, Activity and course lines;
+   - Geist and Geist Mono via `next/font`, indigo and paper tokens, tactile buttons;
+   - a semester map projected only from saved records (`semester-map.ts`, 6 unit tests);
+   - a station inspector with who-said-what evidence and a Make panel (open lesson, fresh question, ask for something new);
+   - Today's map strip;
+   - an Activity page behind the same help-disclosure gate as the dialog;
+   - animated current along wires, its speed set by the checked model, with reduced motion respected.
+3. Verification, all executed:
+   - Typecheck passed. The unit suite passed (591 passed, 45 skipped), including 6 new semester-map tests. `npm run build` passed.
+   - Playwright: 35 passed and 1 failed. The failure is `blackboard-material-sanitization.spec.ts`, which exercises the concurrent session's uncommitted Blackboard material reader and fails server-side; it isn't caused by the UI change.
+   - The first run surfaced two overhaul regressions, both fixed: the Next dev indicator covered the sidebar's workspace menu, and one journey still clicked the removed Courses tab (it now uses the course line).
+   - Browser checks at desktop and 375 px for Today, Map, Activity and the lesson: no horizontal page scroll, and visible keyboard focus through the sidebar and onto map stations. Reduced motion relies on the existing global rule.
+
+**Plan deviations:** User-authorized. The Map destination narrowly supersedes Learning Graph Scope's "not a new full-screen graph destination", and navigation replaces Ready Card's Today · Courses · Study. Course detail and lesson deep links (`?view=courses`, `?view=study`) still work. Quiz and flashcard generation formats stay unbuilt proposals. The concurrent Blackboard work (`source-connections.tsx`, Blackboard files) was not touched or committed.

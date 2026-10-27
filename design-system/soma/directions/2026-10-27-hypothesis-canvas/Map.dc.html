@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Soma · Semester map</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F7F6F3}
+.mp{--bg:#F7F6F3;--side:#EFEDE8;--surface:#FFFFFF;--stage:#FBFAF7;--ink:#17171C;--ink2:#45454F;--muted:#62626D;--line:#E4E1DB;--accent:#5551F5;--accent-shade:#3B37C9;--accent-soft:#ECEBFF;--on-accent:#FFFFFF;--good-bg:#E3F4EA;--good-fg:#145C36;--warn-bg:#FFF2D2;--warn-fg:#6E4500;--shadow:0 1px 0 rgba(23,23,28,0.04),0 12px 32px -18px rgba(23,23,28,0.28)}
+.mp a{color:var(--accent)}
+.mp button:focus-visible,.mp a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.mp .stn{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;padding:0;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mp .stn:hover .glyph{transform:scale(1.15)}
+.mp .glyph{display:block;transition:transform 140ms ease}
+.mp .ready-ring{animation:mp-pulse 2.4s ease-out infinite}
+@keyframes mp-pulse{0%{box-shadow:0 0 0 0 rgba(85,81,245,0.45)}70%{box-shadow:0 0 0 14px rgba(85,81,245,0)}100%{box-shadow:0 0 0 0 rgba(85,81,245,0)}}
+.mp button.tactile:active{transform:translateY(3px);box-shadow:none !important}
+@media (prefers-reduced-motion: reduce){.mp .ready-ring{animation:none;box-shadow:0 0 0 6px rgba(85,81,245,0.25)}.mp .glyph{transition:none}}
+</style>
+</helmet>
+<div class="mp" style="font-family: Geist, Inter, system-ui, sans-serif; color: var(--ink); background: var(--bg); min-height: 100%; display: flex; flex-wrap: wrap">
+
+<aside style="flex: 1 1 220px; max-width: 240px; min-width: 0; background: var(--side); padding: 18px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px; border-right: 1px solid var(--line)">
+<div style="display: flex; align-items: center; gap: 8px; padding: 4px 8px"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 4px; background: var(--accent); transform: rotate(45deg)"></span><span style="font-size: 19px; font-weight: 800; letter-spacing: -0.02em">soma</span></div>
+<button type="button" style="display: flex; align-items: center; justify-content: space-between; min-height: 40px; padding: 0 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font: inherit; font-size: 14px; cursor: pointer"><span>Find a concept or ask</span><kbd style="font-family: 'Geist Mono', monospace; font-size: 12px; border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; color: var(--muted)">⌘K</kbd></button>
+<nav aria-label="Primary" style="display: flex; flex-direction: column; gap: 2px; font-size: 15px; font-weight: 600">
+<a href="#" aria-current="page" style="color: var(--ink); background: var(--surface); text-decoration: none; padding: 9px 10px; border-radius: 9px; box-shadow: var(--shadow)">Map</a>
+<a href="#" style="color: var(--ink2); text-decoration: none; padding: 9px 10px; border-radius: 9px">Activity</a>
+<a href="#" style="color: var(--ink2); text-decoration: none; padding: 9px 10px; border-radius: 9px">Sources</a>
+</nav>
+<div>
+<p style="margin: 0 0 6px; padding: 0 10px; font-size: 12px; font-weight: 600; color: var(--muted)">Lines</p>
+<div style="display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: var(--ink2)">
+<a href="#" style="display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; padding: 7px 10px"><span aria-hidden="true" style="width: 16px; height: 5px; border-radius: 3px; background: #5551F5"></span>EE 201 Circuits</a>
+<a href="#" style="display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; padding: 7px 10px"><span aria-hidden="true" style="width: 16px; height: 5px; border-radius: 3px; background: #12A594"></span>Linear Algebra</a>
+<a href="#" style="display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; padding: 7px 10px"><span aria-hidden="true" style="width: 16px; height: 5px; border-radius: 3px; background: #D97706"></span>Organic Chemistry</a>
+<a href="#" style="display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; padding: 7px 10px"><span aria-hidden="true" style="width: 16px; height: 5px; border-radius: 3px; background: #E5487C"></span>Scientific Writing</a>
+<a href="#" style="display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; padding: 7px 10px"><span aria-hidden="true" style="width: 16px; height: 5px; border-radius: 3px; background: #8B5CF6"></span>Microeconomics</a>
+</div>
+</div>
+<div style="margin-top: auto; padding: 0 10px; font-size: 12px; line-height: 1.6; color: var(--muted)">
+<p style="margin: 0"><span style="background: var(--warn-bg); color: var(--warn-fg); padding: 2px 8px; border-radius: 999px; font-weight: 600">Synthetic demo</span></p>
+<p style="margin: 8px 0 0">Sources checked 9:14 AM</p>
+</div>
+</aside>
+
+<main style="flex: 999 1 900px; min-width: 0; padding: 24px 32px 40px; box-sizing: border-box">
+<p style="margin: 0; font-size: 14px; color: var(--muted)">Week 9 · Wednesday · 20 minutes before your 4:20 PM interview</p>
+<h1 style="margin: 6px 0 0; font-size: 40px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.06">One spot on your map is uncertain. It’s testable.</h1>
+
+<div role="group" aria-label="Where to go now" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px">
+<sc-for list="{{frontier}}" as="f" hint-placeholder-count="3">
+<button type="button" class="tactile" aria-pressed="{{f.pressed}}" onClick="{{f.go}}" style="display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 16px; background: var(--surface); border: 2px solid {{f.bd}}; border-radius: 14px; box-shadow: 0 3px 0 var(--line); font: inherit; font-size: 15px; color: var(--ink); cursor: pointer"><span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 50%; background: {{f.color}}"></span><b>{{f.title}}</b><span style="color: var(--muted); font-size: 13px">{{f.meta}}</span></button>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 18px; margin-top: 18px; align-items: flex-start">
+<section aria-label="Semester map" style="flex: 999 1 640px; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); padding: 16px 16px 10px; overflow-x: auto">
+<div style="position: relative; width: 1000px; height: 470px">
+<svg viewBox="0 0 1000 470" width="1000" height="470" aria-hidden="true" style="position: absolute; left: 0; top: 0">
+<rect x="560" y="18" width="440" height="410" style="fill: var(--stage)"></rect>
+<line x1="560" x2="560" y1="18" y2="428" stroke="#17171C" stroke-width="1.5" stroke-dasharray="4 4"></line>
+<text x="566" y="32" font-family="Geist, sans-serif" font-size="12" font-weight="700" fill="#17171C">Now · week 9</text>
+<path d="M60 70 L560 70" stroke="#5551F5" stroke-width="7" stroke-linecap="round"></path><path d="M560 70 L980 70" stroke="#5551F5" stroke-opacity="0.35" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 12"></path>
+<path d="M60 150 L560 150" stroke="#12A594" stroke-width="7" stroke-linecap="round"></path><path d="M560 150 L980 150" stroke="#12A594" stroke-opacity="0.35" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 12"></path>
+<path d="M120 230 L560 230" stroke="#D97706" stroke-width="7" stroke-linecap="round"></path><path d="M560 230 L980 230" stroke="#D97706" stroke-opacity="0.35" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 12"></path>
+<path d="M120 310 L560 310" stroke="#E5487C" stroke-width="7" stroke-linecap="round"></path><path d="M560 310 L980 310" stroke="#E5487C" stroke-opacity="0.35" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 12"></path>
+<path d="M60 390 L560 390" stroke="#8B5CF6" stroke-width="7" stroke-linecap="round"></path><path d="M560 390 L980 390" stroke="#8B5CF6" stroke-opacity="0.35" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 12"></path>
+<path d="M370 150 C 470 150, 600 112, 700 72" stroke="#45454F" stroke-width="2" fill="none" stroke-dasharray="5 5"></path>
+<text x="470" y="122" font-family="Geist, sans-serif" font-size="11" fill="#45454F">proposed link · not verified</text>
+<text x="106" y="452" text-anchor="middle" font-family="Geist Mono, monospace" font-size="11" fill="#62626D">wk 2</text>
+<text x="304" y="452" text-anchor="middle" font-family="Geist Mono, monospace" font-size="11" fill="#62626D">wk 5</text>
+<text x="502" y="452" text-anchor="middle" font-family="Geist Mono, monospace" font-size="11" fill="#62626D">wk 8</text>
+<text x="700" y="452" text-anchor="middle" font-family="Geist Mono, monospace" font-size="11" fill="#62626D">wk 11</text>
+<text x="898" y="452" text-anchor="middle" font-family="Geist Mono, monospace" font-size="11" fill="#62626D">wk 14</text>
+</svg>
+<sc-for list="{{stations}}" as="s" hint-placeholder-count="25">
+<button type="button" class="stn" aria-pressed="{{s.pressed}}" aria-label="{{s.aria}}" onClick="{{s.pick}}" style="left: {{s.x}}px; top: {{s.y}}px"><span class="glyph {{s.ringClass}}" style="width: {{s.size}}px; height: {{s.size}}px; border-radius: {{s.radius}}; background: {{s.bg}}; border: {{s.border}}; transform: {{s.rot}}; box-shadow: {{s.sel}}"></span></button>
+<span aria-hidden="true" style="position: absolute; left: {{s.x}}px; top: {{s.ly}}px; transform: translateX(-50%); white-space: nowrap; font-size: 11px; font-weight: {{s.weight}}; color: {{s.labelColor}}; pointer-events: none">{{s.label}}</span>
+</sc-for>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 18px; padding: 10px 6px 4px; border-top: 1px solid var(--line); margin-top: 6px; font-size: 12px; color: var(--ink2)">
+<span style="display: inline-flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 50%; background: #45454F"></span>Worked on your own</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 50%; border: 3px solid #45454F; box-sizing: border-box; background: linear-gradient(90deg, #45454F 50%, #FFFFFF 50%)"></span>With help</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 50%; border: 3px dashed #5551F5; box-sizing: border-box"></span>Two explanations, testing</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #C9C6BF; box-sizing: border-box"></span>Coming up (from the syllabus)</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 11px; height: 11px; background: #17171C; transform: rotate(45deg)"></span>Exam or deadline</span>
+<span>No percentages. Every station opens its evidence.</span>
+</div>
+</section>
+
+<aside aria-label="Selected station" style="flex: 1 1 340px; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); padding: 20px 22px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--ink2)"><span aria-hidden="true" style="width: 16px; height: 5px; border-radius: 3px; background: {{sel.color}}"></span>{{sel.course}} · week {{sel.week}}</div>
+<h2 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.12">{{sel.title}}</h2>
+<p style="margin: 0; align-self: flex-start; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: {{sel.statusBg}}; color: {{sel.statusFg}}">{{sel.status}}</p>
+<sc-if value="{{isParallel}}" hint-placeholder-val="{{ true }}">
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink2)">Quiz 3: <b style="color: var(--ink)">“each branch gets 3 A.”</b> Two ideas lead there:</p>
+<div style="display: flex; gap: 8px">
+<div style="flex: 1; border: 2px dashed #5551F5; border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.4"><b style="color: #3B37C9">Maybe A</b><br>split the 6 A evenly</div>
+<div style="flex: 1; border: 2px dashed #B45309; border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.4"><b style="color: #8A4206">Maybe B</b><br>battery always gives 6 A</div>
+</div>
+<a href="Playground.dc.html" class="tactile" style="display: flex; align-items: center; justify-content: center; min-height: 52px; background: var(--accent); color: var(--on-accent); border-radius: 14px; box-shadow: 0 5px 0 var(--accent-shade); text-decoration: none; font-weight: 700; font-size: 16px">Test it · Crank R₂ · 9 min</a>
+<p style="margin: 0; font-size: 12px; color: var(--muted)">Your guess decides which maybe survives. Nothing is scored.</p>
+</sc-if>
+<div>
+<p style="margin: 0 0 6px; font-size: 12px; font-weight: 600; color: var(--muted)">Evidence</p>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.45">
+<sc-for list="{{sel.evidence}}" as="e" hint-placeholder-count="2">
+<li style="display: flex; gap: 8px"><span style="flex: none; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px; background: var(--bg); color: var(--ink2); height: fit-content">{{e.who}}</span><span>{{e.text}}</span></li>
+</sc-for>
+</ul>
+</div>
+<div style="font-size: 13px; line-height: 1.6; color: var(--ink2); border-top: 1px solid var(--line); padding-top: 10px">
+<p style="margin: 0"><b style="color: var(--ink)">Builds on</b> {{sel.before}}</p>
+<p style="margin: 0"><b style="color: var(--ink)">Leads to</b> {{sel.after}}</p>
+</div>
+<sc-if value="{{notParallel}}" hint-placeholder-val="{{ false }}">
+<button type="button" class="tactile" style="min-height: 48px; background: var(--surface); color: var(--ink); border: 2px solid var(--line); border-radius: 14px; box-shadow: 0 3px 0 var(--line); font: inherit; font-weight: 700; cursor: pointer">{{sel.action}}</button>
+</sc-if>
+<p style="margin: 0; font-size: 12px; color: var(--muted)"><a href="Station.dc.html">Open full evidence</a> · <a href="#">Correct this</a></p>
+</aside>
+</div>
+
+<section aria-labelledby="mp-since" style="margin-top: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); padding: 16px 20px">
+<div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline">
+<h2 id="mp-since" style="margin: 0; font-size: 16px; font-weight: 700">Since you last looked</h2>
+<span style="font-size: 13px; color: var(--muted)">9 sources checked · 6 unchanged, no model calls</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px">
+<sc-for list="{{changes}}" as="c" hint-placeholder-count="3">
+<button type="button" onClick="{{c.go}}" style="flex: 1 1 260px; text-align: left; min-height: 64px; padding: 10px 14px; background: var(--stage); border: 1px solid var(--line); border-radius: 14px; font: inherit; color: var(--ink); cursor: pointer"><span style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: var(--muted)">{{c.src}}</span><span style="display: block; font-size: 14px; line-height: 1.4; margin-top: 3px"><b>{{c.fact}}</b> {{c.effect}}</span></button>
+</sc-for>
+</div>
+</section>
+<p style="margin: 16px 0 0; font-size: 12px; color: var(--muted)">Illustrative mockup. Synthetic semester; stations, evidence and links are scripted, not live Spark output.</p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1160}}'>
+const C = { ee: ['EE 201 Circuits', '#5551F5'], la: ['Linear Algebra', '#12A594'], oc: ['Organic Chemistry', '#D97706'], wr: ['Scientific Writing', '#E5487C'], me: ['Microeconomics', '#8B5CF6'] };
+const Y = { ee: 70, la: 150, oc: 230, wr: 310, me: 390 };
+const ST = [
+  ['ohm', 'ee', 2, 106, 'own', 'Ohm’s law'], ['series', 'ee', 4, 238, 'own', 'Series circuits'], ['kirch', 'ee', 6, 370, 'help', 'Kirchhoff’s laws'], ['parallel', 'ee', 8, 502, 'split', 'Parallel branches'], ['exam2', 'ee', 9, 594, 'exam', 'Exam 2 · Fri'], ['nodal', 'ee', 11, 700, 'future', 'Nodal analysis'], ['thev', 'ee', 13, 832, 'future', 'Thévenin'], ['rc', 'ee', 15, 964, 'future', 'RC circuits'],
+  ['vec', 'la', 2, 106, 'own', 'Vectors'], ['mat', 'la', 4, 238, 'own', 'Matrices'], ['sys', 'la', 6, 370, 'own', 'Systems of equations'], ['det', 'la', 8, 502, 'help', 'Determinants'], ['eig', 'la', 11, 700, 'future', 'Eigenvalues'],
+  ['nom', 'oc', 3, 172, 'own', 'Nomenclature'], ['stereo', 'oc', 5, 304, 'help', 'Stereochemistry'], ['sn', 'oc', 7, 436, 'own', 'SN1 vs SN2'], ['elim', 'oc', 10, 634, 'future', 'E1 / E2'],
+  ['thesis', 'wr', 3, 172, 'own', 'Thesis statements'], ['lit', 'wr', 6, 370, 'own', 'Literature review'], ['intro', 'wr', 9, 581, 'exam', 'Intro draft · Thu'], ['methods', 'wr', 12, 766, 'future', 'Methods section'],
+  ['sd', 'me', 2, 106, 'own', 'Supply and demand'], ['elas', 'me', 5, 304, 'own', 'Elasticity'], ['cons', 'me', 7, 436, 'help', 'Consumer choice'], ['mkt', 'me', 11, 700, 'future', 'Market structures']
+];
+const STATUS = { own: ['Worked on your own', 'var(--good-bg)', 'var(--good-fg)'], help: ['Worked with help', 'var(--warn-bg)', 'var(--warn-fg)'], split: ['Two explanations · testing', 'var(--accent-soft)', 'var(--accent-shade)'], future: ['Coming up in the syllabus', 'var(--bg)', 'var(--ink2)'], exam: ['Deadline', 'var(--bg)', 'var(--ink)'] };
+const DETAIL = {
+  parallel: { evidence: [['You', 'Quiz 3, Q2: “each branch gets 3 A” (returned Oct 27)'], ['Instructor', '“Are the branch currents equal?”'], ['Soma', 'Two explanations proposed; experiment checked against model v1']], before: 'Ohm’s law (on your own), Kirchhoff’s laws (with help)', after: 'Nodal analysis, Exam 2 on Friday', action: '' },
+  exam2: { evidence: [['Blackboard', 'Moved from Monday to Fri Oct 30, 10 AM'], ['Soma', 'Circuits work moved up; lesson content unchanged']], before: 'Series circuits through parallel branches', after: '—', action: 'See what Exam 2 covers' },
+  kirch: { evidence: [['You', 'HW 4, Q3 solved after one hint (Oct 14)'], ['Soma', 'Fresh question pending; no independent attempt yet']], before: 'Series circuits', after: 'Parallel branches, nodal analysis', action: 'Try a fresh question · 4 min' },
+  det: { evidence: [['You', 'Two review cards answered with help'], ['Soma', '3 review cards due today']], before: 'Matrices', after: 'Eigenvalues', action: 'Review 3 cards · 4 min' },
+  intro: { evidence: [['Blackboard', 'Intro draft due Thu 5 PM'], ['Soma', 'Outline practice prepared from the rubric']], before: 'Thesis statements, literature review', after: 'Methods section', action: 'Outline the intro · 15 min' },
+  sn: { evidence: [['Blackboard', 'Lecture 7 slides re-uploaded Oct 28'], ['Soma', 'Compared versions: typo fix only, practice unchanged']], before: 'Stereochemistry', after: 'E1 / E2', action: 'Reopen saved practice' },
+  sys: { evidence: [['You', 'Quiz 2 solved without help (Oct 9)']], before: 'Matrices', after: 'Determinants · possibly nodal analysis in EE 201 (not verified)', action: 'Reopen saved lesson' }
+};
+const DEFAULT_DETAIL = (k) => k === 'future' ? { evidence: [['Syllabus', 'Scheduled for a later week; nothing to do yet']], before: 'Earlier stations on this line', after: 'Later stations', action: 'Show me how this works' } : { evidence: [['You', 'Earlier work saved in Soma']], before: 'Earlier stations on this line', after: 'Later stations', action: 'Reopen saved work' };
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { sel: 'parallel' }; }
+  renderVals() {
+    const sel = this.state.sel;
+    const stations = ST.map(([id, c, wk, x, kind, label]) => {
+      const col = C[c][1], on = id === sel;
+      const g = { own: { size: 18, radius: '50%', bg: col, border: '3px solid ' + col, rot: 'none' }, help: { size: 18, radius: '50%', bg: 'linear-gradient(90deg, ' + col + ' 50%, #FFFFFF 50%)', border: '3px solid ' + col, rot: 'none' }, split: { size: 24, radius: '50%', bg: '#FFFFFF', border: '4px dashed ' + col, rot: 'none' }, future: { size: 16, radius: '50%', bg: '#FFFFFF', border: '3px solid #C9C6BF', rot: 'none' }, exam: { size: 15, radius: '2px', bg: '#17171C', border: '2px solid #17171C', rot: 'rotate(45deg)' } }[kind];
+      return { ...g, x, y: Y[c], ly: Y[c] + 18, label, pressed: on ? 'true' : 'false', ringClass: kind === 'split' ? 'ready-ring' : '', sel: on ? '0 0 0 4px #FFFFFF, 0 0 0 7px #17171C' : 'none', weight: on ? '700' : '500', labelColor: kind === 'future' ? '#62626D' : '#17171C', aria: label + ', ' + C[c][0] + ', ' + STATUS[kind][0], pick: () => this.setState({ sel: id }) };
+    });
+    const row = ST.find(s => s[0] === sel);
+    const d = DETAIL[sel] || DEFAULT_DETAIL(row[4]);
+    const st = STATUS[row[4]];
+    const go = id => () => this.setState({ sel: id });
+    const frontier = [['parallel', 'Crank R₂', 'EE 201 · 9 min · ready', '#5551F5'], ['intro', 'Intro draft', 'Writing · due Thu', '#E5487C'], ['det', '3 review cards', 'Linear Algebra · 4 min', '#12A594']].map(([id, title, meta, color]) => ({ title, meta, color, pressed: id === sel ? 'true' : 'false', bd: id === sel ? '#17171C' : 'var(--line)', go: go(id) }));
+    const changes = [['GRADESCOPE · 9:02', 'Quiz 3 returned.', 'Parallel branches now has two explanations to test.', 'parallel'], ['BLACKBOARD · 9:00', 'Exam 2 moved to Friday.', 'Circuits moved up; content unchanged.', 'exam2'], ['BLACKBOARD · 8:40', 'Org Chem slides re-uploaded.', 'Typo fix only; practice kept.', 'sn']].map(([src, fact, effect, id]) => ({ src, fact, effect, go: go(id) }));
+    return {
+      stations, frontier, changes, isParallel: sel === 'parallel', notParallel: sel !== 'parallel',
+      sel: { title: row[5], course: C[row[1]][0], color: C[row[1]][1], week: row[2], status: st[0], statusBg: st[1], statusFg: st[2], evidence: d.evidence.map(([who, text]) => ({ who, text })), before: d.before, after: d.after, action: d.action }
+    };
+  }
+}
+</script>
+</body>
+</html>

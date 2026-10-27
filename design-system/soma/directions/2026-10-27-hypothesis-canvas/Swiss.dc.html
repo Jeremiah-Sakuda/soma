@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Soma · Plate</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#000000}a:hover{color:#D4231A}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #1A47C8;outline-offset:2px}
+input[type=range]{accent-color:#000000}
+</style>
+</helmet>
+<div style="font-family: 'Inter Tight', 'Helvetica Neue', Arial, sans-serif; color: #000000; background: #FFFFFF; min-height: 100%">
+<div style="max-width: 1320px; margin: 0 auto; padding: 0 48px 56px; box-sizing: border-box">
+
+<header style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 20px 0; border-bottom: 1px solid #000000; font-size: 14px; align-items: center">
+<span style="font-size: 18px; font-weight: 800">Soma</span>
+<nav aria-label="Primary" style="display: flex; gap: 18px; font-weight: 600">
+<a href="#" aria-current="page" style="text-decoration: underline; text-underline-offset: 4px">Today</a>
+<a href="#" style="text-decoration: none; color: #4A4A4A">Courses</a>
+<a href="#" style="text-decoration: none; color: #4A4A4A">Study</a>
+</nav>
+<span style="color: #4A4A4A; font-variant-numeric: tabular-nums">Wed 28.10 · 20 min free</span>
+<span style="justify-self: end; font-weight: 700; color: #B01C14">Synthetic demo</span>
+</header>
+
+<section style="padding: 40px 0 36px; border-bottom: 1px solid #000000">
+<p style="margin: 0; font-size: 15px; font-weight: 600">Prepared after Quiz 3 was returned. EE 201.</p>
+<h1 style="margin: 14px 0 0; font-size: 112px; line-height: 0.92; font-weight: 800; letter-spacing: -0.045em">Two explanations.<br>One experiment.</h1>
+</section>
+
+<section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; padding: 32px 0 36px; border-bottom: 1px solid #000000">
+<div>
+<p style="margin: 0; font-size: 56px; font-weight: 800; line-height: 1; letter-spacing: -0.03em">01</p>
+<h2 style="margin: 16px 0 0; font-size: 15px; font-weight: 700">The evidence</h2>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 1.5; color: #333333">6 Ω and 3 Ω in parallel across 12 V. Your answer:</p>
+<p style="margin: 8px 0 0; font-size: 28px; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em">“Each branch gets 3 A.”</p>
+<p style="margin: 10px 0 0; font-size: 13px; color: #4A4A4A">Gradescope, returned Oct 27. <a href="#">Source</a></p>
+</div>
+<div>
+<div style="display: flex; align-items: center; gap: 14px"><span aria-hidden="true" style="display: inline-block; width: 56px; height: 56px; background: #D4231A"></span><span style="font-size: 56px; font-weight: 800; line-height: 1; letter-spacing: -0.03em">02</span></div>
+<h2 style="margin: 16px 0 0; font-size: 15px; font-weight: 700; color: #B01C14">Explanation A · splits the total evenly</h2>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 1.5; color: #333333">Correct 6 A total, shared equally between branches.</p>
+<p style="margin: 10px 0 0; font-size: 13px; font-weight: 600">{{statusA}}</p>
+</div>
+<div>
+<div style="display: flex; align-items: center; gap: 14px"><span aria-hidden="true" style="display: inline-block; width: 56px; height: 56px; background: #1A47C8; border-radius: 50%"></span><span style="font-size: 56px; font-weight: 800; line-height: 1; letter-spacing: -0.03em">03</span></div>
+<h2 style="margin: 16px 0 0; font-size: 15px; font-weight: 700; color: #1A47C8">Explanation B · a fixed 6 A battery</h2>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 1.5; color: #333333">The source always delivers 6 A; the branches divide it.</p>
+<p style="margin: 10px 0 0; font-size: 13px; font-weight: 600">{{statusB}}</p>
+</div>
+</section>
+
+<section aria-labelledby="plate-exp" style="padding: 32px 0 36px; border-bottom: 1px solid #000000">
+<div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 12px">
+<h2 id="plate-exp" style="margin: 0; font-size: 15px; font-weight: 700">04 · Raise R₂. Read I₁.</h2>
+<p style="margin: 0; font-size: 13px; color: #4A4A4A">Suspected, not confirmed. Nothing is scored.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-top: 20px; font-variant-numeric: tabular-nums">
+<div style="border-top: 6px solid #D4231A; padding-top: 10px"><p style="margin: 0; font-size: 13px; font-weight: 700; color: #B01C14">A predicts</p><p style="margin: 4px 0 0; font-size: 88px; font-weight: 800; line-height: 1; letter-spacing: -0.04em">{{iA}}<span style="font-size: 32px"> A</span></p></div>
+<div style="border-top: 6px solid #1A47C8; padding-top: 10px"><p style="margin: 0; font-size: 13px; font-weight: 700; color: #1A47C8">B predicts</p><p style="margin: 4px 0 0; font-size: 88px; font-weight: 800; line-height: 1; letter-spacing: -0.04em">{{iB}}<span style="font-size: 32px"> A</span></p></div>
+<div style="border-top: 6px solid #000000; padding-top: 10px"><p style="margin: 0; font-size: 13px; font-weight: 700">Checked model</p><p style="margin: 4px 0 0; font-size: 88px; font-weight: 800; line-height: 1; letter-spacing: -0.04em">{{iChkBig}}<span style="font-size: 32px">{{iChkUnit}}</span></p></div>
+</div>
+<svg viewBox="0 0 580 270" role="img" aria-label="{{chartLabel}}" style="width: 100%; height: auto; display: block; margin-top: 28px">
+<line x1="56" x2="544" y1="232" y2="232" stroke="#000000" stroke-width="2"></line>
+<line x1="56" x2="56" y1="24" y2="232" stroke="#000000" stroke-width="1"></line>
+<text x="46" y="236" text-anchor="end" font-size="10" font-weight="600" fill="#000000">0</text>
+<text x="46" y="132" text-anchor="end" font-size="10" font-weight="600" fill="#000000">2 A</text>
+<text x="46" y="28" text-anchor="end" font-size="10" font-weight="600" fill="#000000">4 A</text>
+<text x="56" y="250" text-anchor="middle" font-size="10" font-weight="600" fill="#000000">2 Ω</text>
+<text x="300" y="250" text-anchor="middle" font-size="10" font-weight="600" fill="#000000">R₂</text>
+<text x="544" y="250" text-anchor="middle" font-size="10" font-weight="600" fill="#000000">12 Ω</text>
+<line x1="{{mx}}" x2="{{mx}}" y1="18" y2="232" stroke="#000000" stroke-width="1"></line>
+<path d="{{pathA}}" fill="none" stroke="#D4231A" stroke-width="3"></path>
+<path d="M56 76 L544 76" fill="none" stroke="#1A47C8" stroke-width="3" stroke-dasharray="1 6" stroke-linecap="round"></path>
+<g opacity="{{chkOpacity}}">
+<path d="M56 128 L544 128" fill="none" stroke="#000000" stroke-width="5"></path>
+</g>
+<rect x="{{sqx}}" y="{{sqy}}" width="11" height="11" fill="#D4231A"></rect>
+<circle cx="{{mx}}" cy="76" r="6" fill="#1A47C8"></circle>
+<text x="112" y="66" font-size="10" font-weight="600" fill="#000000">Quiz answer, 3 Ω</text>
+<line x1="104.8" x2="104.8" y1="70" y2="82" stroke="#000000" stroke-width="2"></line>
+</svg>
+<div style="display: flex; align-items: center; gap: 20px; margin-top: 14px; flex-wrap: wrap">
+<label for="r2-plate" style="font-size: 15px; font-weight: 700; min-width: 100px; font-variant-numeric: tabular-nums">R₂ = {{r2Label}}</label>
+<input id="r2-plate" type="range" min="2" max="12" step="1" value="{{r2}}" onChange="{{onR2}}" style="flex: 1 1 260px; min-height: 44px">
+</div>
+</section>
+
+<section aria-labelledby="plate-predict" style="padding: 32px 0 36px">
+<h2 id="plate-predict" style="margin: 0; font-size: 40px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05">At 12 Ω, I₁ will be…</h2>
+<div role="group" aria-label="Your prediction" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 20px">
+<sc-for list="{{opts}}" as="o" hint-placeholder-count="3">
+<button type="button" aria-pressed="{{o.pressed}}" disabled="{{o.disabled}}" onClick="{{o.pick}}" style="min-height: 96px; padding: 14px 18px; border: 2px solid {{o.bd}}; background: {{o.bg}}; color: {{o.fg}}; font: inherit; text-align: left; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between"><span style="font-size: 40px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums">{{o.label}}</span><span style="font-size: 12px; font-weight: 600">{{o.tag}}</span></button>
+</sc-for>
+</div>
+<div style="display: flex; gap: 20px; align-items: center; margin-top: 16px; flex-wrap: wrap">
+<button type="button" disabled="{{cannotReveal}}" onClick="{{reveal}}" style="min-height: 56px; padding: 0 28px; background: #000000; color: #FFFFFF; border: 0; font: inherit; font-size: 17px; font-weight: 700; cursor: pointer; opacity: {{revealOpacity}}">Set 12 Ω →</button>
+<sc-if value="{{showExplore}}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{explore}}" style="min-height: 44px; background: none; border: 0; padding: 0; font: inherit; font-size: 15px; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; cursor: pointer">Explore first</button>
+</sc-if>
+<span style="font-size: 13px; color: #4A4A4A">{{assistNote}}</span>
+</div>
+</section>
+
+<sc-if value="{{revealed}}" hint-placeholder-val="{{ false }}">
+<section aria-label="What changes" style="background: #000000; color: #FFFFFF; padding: 36px 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px">
+<div>
+<p style="margin: 0; font-size: 13px; font-weight: 700; color: #BDBDBD">05 · Revision</p>
+<p style="margin: 10px 0 0; font-size: 32px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1">{{outTitle}}</p>
+<p style="margin: 12px 0 0; font-size: 16px; line-height: 1.55; color: #E0E0E0">{{outBody}}</p>
+<button type="button" onClick="{{reset}}" style="margin-top: 14px; min-height: 44px; background: none; border: 0; padding: 0; font: inherit; font-size: 15px; font-weight: 600; color: #FFFFFF; text-decoration: underline; cursor: pointer">Try a different response</button>
+</div>
+<div style="border-top: 6px solid #FFFFFF; padding-top: 12px">
+<p style="margin: 0; font-size: 13px; font-weight: 700; color: #BDBDBD">Prepared next</p>
+<p style="margin: 8px 0 0; font-size: 40px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.02">{{nextTitle}}</p>
+<p style="margin: 8px 0 16px; font-size: 14px; color: #E0E0E0">{{nextMeta}}</p>
+<button type="button" style="min-height: 52px; padding: 0 24px; background: #FFFFFF; color: #000000; border: 0; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer">Open it →</button>
+</div>
+</section>
+</sc-if>
+
+<section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; padding-top: 32px; margin-top: 32px; border-top: 1px solid #000000; font-size: 14px; line-height: 1.5; font-variant-numeric: tabular-nums">
+<p style="margin: 0"><b>Changed</b><br>Exam 2 moved to Fri 10:00.<br>Quiz 3 returned Tue 09:02.</p>
+<p style="margin: 0"><b>Today</b><br>16:20 Interview, confirmed.<br>Session fits in 20 min.</p>
+<p style="margin: 0"><b>Coming up</b><br>Thu 17:00 Writing draft.<br>Fri 10:00 EE 201 Exam 2.</p>
+<p style="margin: 0; color: #4A4A4A">Illustrative mockup. Synthetic course; response states are scripted, not live Spark output.</p>
+</section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1700}}'>
+const PAL = { onBg: '#000000', onFg: '#FFFFFF', onBd: '#000000', offBg: '#FFFFFF', offFg: '#000000', offBd: '#000000' };
+const OUT = {
+  a: { title: 'Your prediction followed explanation A.', body: 'You expected 1.50 A. I₁ holds at 2.00 A: R₁ keeps the full 12 V across it, whatever R₂ does. Your prediction is kept as written.', next: 'Unequal branches, side by side', meta: 'Interactive lesson · 9 min · prepared from this response', sa: 'A · more likely, provisional', sb: 'B · less likely' },
+  b: { title: 'Your prediction followed explanation B.', body: 'You expected 3.00 A, as if the battery always supplies 6 A. I₁ is 2.00 A and the total current changes with R₂. Your prediction is kept as written.', next: 'Where current comes from', meta: 'Interactive lesson · vary the supply · 9 min', sa: 'A · less likely', sb: 'B · more likely, provisional' },
+  c: { title: 'Neither explanation fits.', body: 'You predicted 2.00 A, matching the checked model. Quiz 3 may have been a slip, so both explanations stay unresolved.', next: 'A fresh question, no diagram', meta: 'Practice · 4 min · on your own', sa: 'A · not supported', sb: 'B · not supported' }
+};
+const TAGS = { a: 'Fits A', b: 'Fits B', c: 'Checked model' };
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { r2: 3, pick: null, explored: false, revealed: false }; }
+  renderVals() {
+    const s = this.state, V = 12, R1 = 6;
+    const eqSplit = r => (V / R1 + V / r) / 2;
+    const sx = r => 56 + (r - 2) / 10 * 488;
+    const sy = i => 232 - Math.min(i, 4) / 4 * 208;
+    let pathA = '';
+    for (let r = 2; r <= 12.001; r += 0.25) pathA += (pathA ? ' L' : 'M') + sx(r).toFixed(1) + ' ' + sy(eqSplit(r)).toFixed(1);
+    const shown = s.explored || s.revealed;
+    const iA = eqSplit(s.r2).toFixed(2);
+    const out = s.revealed && s.pick ? OUT[s.pick] : null;
+    const opts = [{ id: 'a', label: '1.50 A' }, { id: 'c', label: '2.00 A' }, { id: 'b', label: '3.00 A' }].map(o => {
+      const on = s.pick === o.id;
+      return { ...o, pressed: on ? 'true' : 'false', disabled: s.revealed, bg: on ? PAL.onBg : PAL.offBg, fg: on ? PAL.onFg : PAL.offFg, bd: on ? PAL.onBd : PAL.offBd, tag: s.revealed ? TAGS[o.id] : (on ? 'Your prediction, saved' : ''), pick: () => { if (!this.state.revealed) this.setState({ pick: o.id }); } };
+    });
+    return {
+      r2: s.r2, r2Label: s.r2 + ' Ω', iA, iB: '3.00', iChkBig: shown ? '2.00' : '?', iChkUnit: shown ? ' A' : '',
+      pathA, mx: sx(s.r2).toFixed(1), sqx: (sx(s.r2) - 5.5).toFixed(1), sqy: (sy(eqSplit(s.r2)) - 5.5).toFixed(1),
+      chkOpacity: shown ? '1' : '0', showExplore: !shown, revealed: s.revealed,
+      cannotReveal: !s.pick || s.revealed, revealOpacity: (!s.pick || s.revealed) ? '0.4' : '1',
+      opts, outTitle: out ? out.title : '', outBody: out ? out.body : '', nextTitle: out ? out.next : '', nextMeta: out ? out.meta : '',
+      statusA: out ? out.sa : 'Fits your quiz answer. Untested.', statusB: out ? out.sb : 'Fits your quiz answer. Untested.',
+      assistNote: s.explored ? 'Explored with the model visible: recorded as supported.' : 'Saved before the reveal.',
+      chartLabel: 'Current through R₁ as R₂ changes. A predicts ' + iA + ' A, B predicts 3.00 A at R₂ = ' + s.r2 + ' Ω. Checked model ' + (shown ? '2.00 A at every R₂.' : 'hidden until you predict or explore.'),
+      onR2: e => this.setState({ r2: Number(e.target.value) }),
+      explore: () => this.setState({ explored: true }),
+      reveal: () => this.setState({ revealed: true, r2: 12 }),
+      reset: () => this.setState({ r2: 3, pick: null, explored: false, revealed: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

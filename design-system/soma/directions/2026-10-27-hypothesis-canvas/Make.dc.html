@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Soma · Make from any card</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F7F6F3}
+.mk{--bg:#F7F6F3;--surface:#FFFFFF;--stage:#FBFAF7;--ink:#17171C;--ink2:#45454F;--muted:#62626D;--line:#E4E1DB;--accent:#5551F5;--accent-shade:#3B37C9;--accent-soft:#ECEBFF;--good-bg:#E3F4EA;--good-fg:#145C36;--warn-bg:#FFF2D2;--warn-fg:#6E4500;--shadow:0 1px 0 rgba(23,23,28,0.04),0 12px 32px -18px rgba(23,23,28,0.28)}
+.mk a{color:var(--accent)}
+.mk button:focus-visible,.mk a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.mk button.tactile:active{transform:translateY(3px);box-shadow:none !important}
+.mk button:disabled{cursor:not-allowed}
+@media (prefers-reduced-motion: reduce){.mk *{transition:none !important}}
+</style>
+</helmet>
+<div class="mk" style="font-family: Geist, Inter, system-ui, sans-serif; color: var(--ink); background: var(--bg); min-height: 100%; padding: 24px 32px 40px; box-sizing: border-box">
+<div style="max-width: 1300px; margin: 0 auto">
+<p style="margin: 0; font-size: 14px; color: var(--muted)">Map · pick any station, then make what you want from it</p>
+<h1 style="margin: 6px 0 0; font-size: 38px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.06">Soma suggests. You can always choose.</h1>
+
+<div style="display: flex; flex-wrap: wrap; gap: 18px; margin-top: 20px; align-items: flex-start">
+<section aria-label="Stations" style="flex: 1 1 280px; max-width: 320px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{stations}}" as="s" hint-placeholder-count="3">
+<button type="button" aria-pressed="{{s.pressed}}" onClick="{{s.pick}}" style="text-align: left; padding: 14px 16px; background: var(--surface); border: 2px solid {{s.bd}}; border-radius: 16px; box-shadow: var(--shadow); font: inherit; color: var(--ink); cursor: pointer; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--ink2)"><span aria-hidden="true" style="width: 14px; height: 4px; border-radius: 2px; background: {{s.color}}"></span>{{s.course}}</span>
+<span style="font-size: 17px; font-weight: 700">{{s.title}}</span>
+<span style="font-size: 13px; color: var(--muted)">{{s.status}} · {{s.setCount}}</span>
+</button>
+</sc-for>
+<p style="margin: 4px 2px 0; font-size: 12px; line-height: 1.5; color: var(--muted)">Every station card, on the map, Today or a course line, has the same Make panel. ⌘K works too: “10 flashcards on Kirchhoff”.</p>
+</section>
+
+<section aria-labelledby="mk-h" style="flex: 999 1 760px; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); padding: 22px 24px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap">
+<h2 id="mk-h" style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em">Study {{sel.title}} your way</h2>
+<span style="font-size: 13px; color: var(--muted)">Made only from this station’s sources</span>
+</div>
+
+<div role="group" aria-label="Format" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 16px">
+<sc-for list="{{formats}}" as="f" hint-placeholder-count="6">
+<button type="button" class="tactile" aria-pressed="{{f.pressed}}" disabled="{{f.disabled}}" onClick="{{f.pick}}" style="position: relative; text-align: left; min-height: 96px; padding: 12px 14px; border: 2px solid {{f.bd}}; background: {{f.bg}}; border-radius: 14px; box-shadow: 0 3px 0 {{f.shade}}; font: inherit; color: {{f.fg}}; cursor: pointer; display: flex; flex-direction: column; gap: 4px; opacity: {{f.opacity}}">
+<span style="font-size: 15px; font-weight: 700">{{f.name}}</span>
+<span style="font-size: 12px; line-height: 1.4">{{f.desc}}</span>
+<span style="margin-top: auto; font-size: 11px; font-weight: 600">{{f.note}}</span>
+</button>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 22px; margin-top: 18px">
+<div style="flex: 1 1 260px">
+<p style="margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--ink2)">Cover</p>
+<div role="group" aria-label="Scope" style="display: flex; gap: 8px; flex-wrap: wrap">
+<sc-for list="{{scopes}}" as="c" hint-placeholder-count="3">
+<button type="button" aria-pressed="{{c.pressed}}" onClick="{{c.pick}}" style="min-height: 40px; padding: 0 14px; border-radius: 999px; border: 2px solid {{c.bd}}; background: var(--surface); font: inherit; font-size: 14px; font-weight: {{c.weight}}; color: var(--ink); cursor: pointer">{{c.label}}</button>
+</sc-for>
+</div>
+<p style="margin: 8px 0 0; font-size: 12px; color: var(--muted)">{{scopeNote}}</p>
+</div>
+<div style="flex: 1 1 260px">
+<p style="margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--ink2)">How it counts</p>
+<div role="group" aria-label="Mode" style="display: flex; gap: 8px; flex-wrap: wrap">
+<sc-for list="{{modes}}" as="m" hint-placeholder-count="2">
+<button type="button" aria-pressed="{{m.pressed}}" onClick="{{m.pick}}" style="min-height: 40px; padding: 0 14px; border-radius: 999px; border: 2px solid {{m.bd}}; background: var(--surface); font: inherit; font-size: 14px; font-weight: {{m.weight}}; color: var(--ink); cursor: pointer">{{m.label}}</button>
+</sc-for>
+</div>
+<p style="margin: 8px 0 0; font-size: 12px; color: var(--muted)">{{modeNote}}</p>
+</div>
+</div>
+
+<div style="margin-top: 16px; padding: 12px 14px; background: var(--stage); border: 1px solid var(--line); border-radius: 14px">
+<p style="margin: 0; font-size: 13px; font-weight: 600; color: var(--ink2)">Using these sources</p>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 1.6">{{sel.sources}}</p>
+</div>
+
+<div style="display: flex; align-items: center; gap: 14px; margin-top: 16px; flex-wrap: wrap">
+<button type="button" class="tactile" onClick="{{make}}" disabled="{{busy}}" style="min-height: 52px; padding: 0 24px; border: 0; border-radius: 14px; background: var(--accent); color: #FFFFFF; box-shadow: 0 5px 0 var(--accent-shade); font: inherit; font-size: 16px; font-weight: 700; cursor: pointer">Make {{fmtName}}</button>
+<span role="status" style="font-size: 14px; font-weight: 600; color: {{phaseColor}}">{{phaseText}}</span>
+</div>
+
+<sc-if value="{{ready}}" hint-placeholder-val="{{ false }}">
+<div style="margin-top: 16px; border: 2px solid var(--ink); border-radius: 16px; padding: 16px 18px; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+<div style="flex: 999 1 380px; min-width: 0">
+<p style="margin: 0; font-size: 12px; font-weight: 600; color: var(--muted)">{{resultMeta}}</p>
+<p style="margin: 6px 0 0; font-size: 17px; font-weight: 700; line-height: 1.35">{{previewQ}}</p>
+<p style="margin: 6px 0 0; font-size: 12px; color: var(--muted)">Grounded in {{previewSrc}}</p>
+</div>
+<div style="flex: 1 1 200px; display: flex; flex-direction: column; gap: 8px">
+<a href="SetViews.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 46px; background: var(--ink); color: #FFFFFF; border-radius: 12px; text-decoration: none; font-weight: 700">Start now</a>
+<button type="button" style="min-height: 44px; background: var(--surface); border: 2px solid var(--line); border-radius: 12px; font: inherit; font-weight: 600; color: var(--ink); cursor: pointer">Save to this station</button>
+</div>
+</div>
+</sc-if>
+
+<div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line)">
+<p style="margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--ink2)">Already on this station</p>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<sc-for list="{{sel.sets}}" as="t" hint-placeholder-count="2">
+<span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 13px"><b>{{t.name}}</b><span style="color: var(--muted)">{{t.meta}}</span></span>
+</sc-for>
+</div>
+</div>
+</section>
+</div>
+<p style="margin: 16px 0 0; font-size: 12px; color: var(--muted)">Illustrative mockup. Synthetic semester; generation states and previews are scripted, not live Spark output.</p>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+const ST = {
+  parallel: { title: 'Parallel branches', course: 'EE 201 Circuits', color: '#5551F5', status: 'Two explanations · testing', checked: true, exam: true, sources: 'Lecture 8 slides (p. 10–14) · Quiz 3 as returned · HW 4 · Exam 2 scope email', sets: [{ name: 'Crank R₂', meta: 'Soma’s suggestion · ready' }], card: 'In a parallel circuit, what do all branches share?', q: 'R₂ in a parallel pair doubles. What happens to the current through R₁, and why?', src: 'Lecture 8 slides, p. 12' },
+  kirch: { title: 'Kirchhoff’s laws', course: 'EE 201 Circuits', color: '#5551F5', status: 'Worked with help', checked: true, exam: true, sources: 'Lecture 6 slides · HW 4 Q3 (solved after a hint) · Textbook §2.4', sets: [{ name: 'Flashcards', meta: '12 cards · 3 due' }, { name: 'Practice quiz', meta: '8 of 10 · with hints' }], card: 'What does Kirchhoff’s current law say about a node?', q: 'At a node, 2 A and 3 A flow in. One branch carries 1 A out. What does the other branch carry?', src: 'Lecture 6 slides, p. 4' },
+  det: { title: 'Determinants', course: 'Linear Algebra', color: '#12A594', status: 'Worked with help', checked: false, exam: false, sources: 'Lecture 15 notes · Problem set 6 · Textbook §3.1', sets: [{ name: 'Review cards', meta: '3 due today' }], card: 'What does a zero determinant tell you about a matrix?', q: 'Swapping two rows of a 3×3 matrix changes its determinant how?', src: 'Lecture 15 notes, p. 2' }
+};
+const FMT = [
+  ['lesson', 'Interactive lesson', 'Play with a checked model of this idea', 'checked'],
+  ['quiz', 'Practice quiz', 'Questions from your sources, one at a time', 'any'],
+  ['cards', 'Flashcards', 'Spaced review that comes back when due', 'any'],
+  ['worked', 'Worked example', 'Step by step, then you try one', 'any'],
+  ['explain', 'Explain it plainly', 'Short and in your lecture’s notation', 'any'],
+  ['exam', 'Exam-style set', 'Matches Exam 2’s format and timing', 'exam']
+];
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { st: 'parallel', fmt: 'lesson', scope: 'this', mode: 'closed', phase: 'idle' }; this.timers = []; }
+  componentWillUnmount() { this.timers.forEach(clearTimeout); }
+  renderVals() {
+    const s = this.state, sel = ST[s.st];
+    const avail = id => FMT.find(f => f[0] === id)[3] === 'any' || (FMT.find(f => f[0] === id)[3] === 'checked' ? sel.checked : sel.exam);
+    const fmt = avail(s.fmt) ? s.fmt : 'quiz';
+    const suggested = s.st === 'parallel' ? 'lesson' : s.st === 'kirch' ? 'worked' : 'cards';
+    const formats = FMT.map(([id, name, desc, need]) => {
+      const ok = avail(id), on = id === fmt;
+      return { name, desc, pressed: on ? 'true' : 'false', disabled: !ok, opacity: ok ? '1' : '0.55', bg: on ? 'var(--accent-soft)' : 'var(--surface)', bd: on ? 'var(--accent)' : 'var(--line)', shade: on ? 'var(--accent-shade)' : 'var(--line)', fg: 'var(--ink)', note: !ok ? (need === 'checked' ? 'No checked model for this topic yet' : 'No exam scope found for this course') : (id === suggested ? 'Soma suggests this' : (id === 'lesson' ? 'Checked model v1' : '')), pick: () => this.setState({ fmt: id, phase: 'idle' }) };
+    });
+    const scopeDefs = [['this', 'Just this station'], ['near', '+ direct neighbors'], ['exam', 'Exam 2 scope']].filter(x => x[0] !== 'exam' || sel.exam);
+    const scope = scopeDefs.find(x => x[0] === s.scope) ? s.scope : 'this';
+    const scopes = scopeDefs.map(([id, label]) => ({ label, pressed: id === scope ? 'true' : 'false', bd: id === scope ? 'var(--ink)' : 'var(--line)', weight: id === scope ? '700' : '500', pick: () => this.setState({ scope: id, phase: 'idle' }) }));
+    const modes = [['closed', 'Closed book'], ['hints', 'Hints allowed']].map(([id, label]) => ({ label, pressed: id === s.mode ? 'true' : 'false', bd: id === s.mode ? 'var(--ink)' : 'var(--line)', weight: id === s.mode ? '700' : '500', pick: () => this.setState({ mode: id, phase: 'idle' }) }));
+    const fmtName = FMT.find(f => f[0] === fmt)[1].toLowerCase();
+    const phases = { idle: ['', 'var(--muted)'], queued: ['Queued', 'var(--muted)'], preparing: ['Preparing from your sources…', 'var(--accent-shade)'], checking: ['Checking answers against the sources…', 'var(--accent-shade)'], ready: ['Ready', 'var(--good-fg)'] };
+    const stations = Object.keys(ST).map(id => ({ title: ST[id].title, course: ST[id].course, color: ST[id].color, status: ST[id].status, setCount: ST[id].sets.length + (ST[id].sets.length === 1 ? ' set' : ' sets'), pressed: id === s.st ? 'true' : 'false', bd: id === s.st ? 'var(--ink)' : 'var(--line)', pick: () => this.setState({ st: id, phase: 'idle' }) }));
+    const make = () => {
+      this.timers.forEach(clearTimeout);
+      this.setState({ phase: 'queued' });
+      this.timers = [setTimeout(() => this.setState({ phase: 'preparing' }), 400), setTimeout(() => this.setState({ phase: 'checking' }), 1300), setTimeout(() => this.setState({ phase: 'ready' }), 2200)];
+    };
+    const count = fmt === 'cards' ? '12 cards' : fmt === 'quiz' || fmt === 'exam' ? '10 questions' : fmt === 'lesson' ? '9 min' : '1 example + 1 to try';
+    return {
+      stations, formats, scopes, modes, sel, fmtName, make,
+      scopeNote: scope === 'this' ? 'Only ' + sel.title + '.' : scope === 'near' ? 'Adds the stations it builds on, so gaps underneath show up.' : 'Everything Exam 2 covers, thinnest evidence first.',
+      modeNote: s.mode === 'closed' ? 'Answers without help can count as your own work.' : 'Hints are offered and recorded as help, never hidden.',
+      busy: s.phase === 'queued' || s.phase === 'preparing' || s.phase === 'checking',
+      phaseText: phases[s.phase][0], phaseColor: phases[s.phase][1], ready: s.phase === 'ready',
+      resultMeta: FMT.find(f => f[0] === fmt)[1] + ' · ' + sel.title + ' · ' + count + ' · ' + (s.mode === 'closed' ? 'closed book' : 'hints allowed'),
+      previewQ: fmt === 'cards' ? 'Front: ' + sel.card : fmt === 'lesson' ? 'Drag R₂ and watch which current changes.' : sel.q,
+      previewSrc: sel.src
+    };
+  }
+}
+</script>
+</body>
+</html>

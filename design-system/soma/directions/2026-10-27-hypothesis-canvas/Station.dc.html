@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Soma · Station: Parallel branches</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F7F6F3}
+.st{--bg:#F7F6F3;--surface:#FFFFFF;--stage:#FBFAF7;--ink:#17171C;--ink2:#45454F;--muted:#62626D;--line:#E4E1DB;--accent:#5551F5;--accent-shade:#3B37C9;--accent-soft:#ECEBFF;--good-bg:#E3F4EA;--good-fg:#145C36;--warn-bg:#FFF2D2;--warn-fg:#6E4500;--shadow:0 1px 0 rgba(23,23,28,0.04),0 12px 32px -18px rgba(23,23,28,0.28)}
+.st a{color:var(--accent)}
+.st button:focus-visible,.st a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+</style>
+</helmet>
+<div class="st" style="font-family: Geist, Inter, system-ui, sans-serif; color: var(--ink); background: var(--bg); min-height: 100%; padding: 22px 32px 40px; box-sizing: border-box">
+<div style="max-width: 1240px; margin: 0 auto">
+<nav aria-label="Breadcrumb" style="display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); flex-wrap: wrap"><a href="Map.dc.html" style="text-decoration: none">← Map</a><span aria-hidden="true">/</span><span>EE 201 Circuits</span><span aria-hidden="true">/</span><span style="color: var(--ink)">Parallel branches</span></nav>
+
+<div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-top: 12px">
+<div>
+<h1 style="margin: 0; font-size: 42px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.05">Parallel branches</h1>
+<p style="margin: 6px 0 0; font-size: 15px; color: var(--ink2)">Lecture 8 objective: <i>explain why parallel branches share voltage but not current.</i> <a href="#">Source</a></p>
+</div>
+<span style="font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-shade)">Two explanations · testing</span>
+</div>
+
+<section aria-label="Neighborhood" style="margin-top: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); padding: 18px 20px">
+<p style="margin: 0 0 12px; font-size: 12px; font-weight: 600; color: var(--muted)">Where this sits · only direct neighbors, never the whole web</p>
+<div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+<div style="display: flex; flex-direction: column; gap: 8px; flex: 1 1 200px">
+<a href="#" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); text-decoration: none; font-size: 14px"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 50%; background: #5551F5"></span>Ohm’s law <span style="margin-left: auto; font-size: 12px; color: var(--good-fg)">on your own</span></a>
+<a href="#" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); text-decoration: none; font-size: 14px"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 50%; border: 3px solid #5551F5; box-sizing: border-box; background: linear-gradient(90deg, #5551F5 50%, #FFFFFF 50%)"></span>Kirchhoff’s laws <span style="margin-left: auto; font-size: 12px; color: var(--warn-fg)">with help</span></a>
+</div>
+<span aria-hidden="true" style="font-size: 22px; color: var(--muted)">→</span>
+<div style="flex: 1 1 240px; padding: 16px 18px; border: 3px dashed #5551F5; border-radius: 16px; background: var(--accent-soft)">
+<p style="margin: 0; font-size: 17px; font-weight: 700">Parallel branches</p>
+<p style="margin: 4px 0 0; font-size: 13px; color: var(--accent-shade)">Maybe A or maybe B? One experiment ready.</p>
+</div>
+<span aria-hidden="true" style="font-size: 22px; color: var(--muted)">→</span>
+<div style="display: flex; flex-direction: column; gap: 8px; flex: 1 1 200px">
+<a href="#" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); text-decoration: none; font-size: 14px"><span aria-hidden="true" style="width: 13px; height: 13px; background: #17171C; transform: rotate(45deg)"></span>Exam 2 · Fri 10 AM</a>
+<a href="#" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink2); text-decoration: none; font-size: 14px"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 50%; border: 3px solid #C9C6BF; box-sizing: border-box"></span>Nodal analysis <span style="margin-left: auto; font-size: 12px; color: var(--muted)">week 11</span></a>
+</div>
+</div>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 18px; margin-top: 18px; align-items: flex-start">
+<section aria-labelledby="st-now" style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+<div style="background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); padding: 20px 22px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><h2 id="st-now" style="margin: 0; font-size: 17px; font-weight: 700">What Soma thinks now</h2><span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted)">v1 · Oct 27</span></div>
+<p style="margin: 10px 0 0; font-size: 15px; line-height: 1.55; color: var(--ink2)">Your Quiz 3 answer fits two explanations equally well. Neither is confirmed. One response to the R₂ experiment should separate them.</p>
+<div style="display: flex; gap: 8px; margin-top: 12px">
+<div style="flex: 1; border: 2px dashed #5551F5; border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.4"><b style="color: #3B37C9">A</b> · split the 6 A evenly<br><span style="color: var(--muted)">predicts 1.50 A at 12 Ω</span></div>
+<div style="flex: 1; border: 2px dashed #B45309; border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.4"><b style="color: #8A4206">B</b> · battery always gives 6 A<br><span style="color: var(--muted)">predicts 3.00 A at 12 Ω</span></div>
+</div>
+<div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap">
+<a href="Playground.dc.html" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 18px; background: var(--accent); color: #FFFFFF; border-radius: 14px; box-shadow: 0 4px 0 var(--accent-shade); text-decoration: none; font-weight: 700">Test it · 9 min</a>
+<button type="button" style="min-height: 48px; padding: 0 16px; background: var(--surface); border: 2px solid var(--line); border-radius: 14px; font: inherit; font-weight: 600; color: var(--ink); cursor: pointer">That’s not what happened</button>
+</div>
+</div>
+<div style="background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 18px 22px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 700">Who said what</h2>
+<p style="margin: 8px 0 0; font-size: 13px; line-height: 1.6; color: var(--ink2)"><b style="color: var(--ink)">You</b> your own work, kept exactly · <b style="color: var(--ink)">Instructor</b> marks and comments · <b style="color: var(--ink)">Source</b> course material and dates · <b style="color: var(--accent-shade)">Soma</b> interpretations, always revisable</p>
+</div>
+</section>
+
+<section aria-labelledby="st-hist" style="flex: 999 1 560px; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); padding: 20px 22px">
+<h2 id="st-hist" style="margin: 0; font-size: 17px; font-weight: 700">Evidence, oldest first</h2>
+<ol style="list-style: none; margin: 14px 0 0; padding: 0; position: relative">
+<li style="display: flex; gap: 14px; padding-bottom: 16px"><span style="flex: none; width: 86px; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); padding-top: 3px">Oct 22 · 10:00</span><span style="flex: none; font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 6px; background: var(--bg); color: var(--ink2); height: fit-content">Source</span><span style="font-size: 14px; line-height: 1.5">Lecture 8 slides introduce parallel branches. <a href="#">p. 12</a></span></li>
+<li style="display: flex; gap: 14px; padding-bottom: 16px"><span style="flex: none; width: 86px; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); padding-top: 3px">Oct 27 · 9:02</span><span style="flex: none; font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 6px; background: var(--bg); color: var(--ink2); height: fit-content">You</span><span style="font-size: 14px; line-height: 1.5">Quiz 3, Q2: “Each branch gets 3 A.” <a href="#">See the page</a></span></li>
+<li style="display: flex; gap: 14px; padding-bottom: 16px"><span style="flex: none; width: 86px; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); padding-top: 3px">Oct 27 · 9:02</span><span style="flex: none; font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 6px; background: var(--warn-bg); color: var(--warn-fg); height: fit-content">Instructor</span><span style="font-size: 14px; line-height: 1.5">“Are the branch currents equal?”</span></li>
+<li style="display: flex; gap: 14px; padding-bottom: 16px"><span style="flex: none; width: 86px; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); padding-top: 3px">Oct 27 · 9:05</span><span style="flex: none; font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 6px; background: var(--accent-soft); color: var(--accent-shade); height: fit-content">Soma</span><span style="font-size: 14px; line-height: 1.5">Proposed explanations A and B. Designed the R₂ experiment; the checked model confirmed the two predictions differ (1.50 A vs 3.00 A). <a href="#">Activity</a></span></li>
+<li style="display: flex; gap: 14px; padding-bottom: 16px; opacity: 0.75"><span style="flex: none; width: 86px; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); padding-top: 3px">Next</span><span style="flex: none; font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 6px; border: 1px dashed var(--muted); color: var(--ink2); height: fit-content">You</span><span style="font-size: 14px; line-height: 1.5; color: var(--ink2)">Your guess at 12 Ω, saved before the reveal. Soma revises A and B from it, and v1 stays on record.</span></li>
+<li style="display: flex; gap: 14px; opacity: 0.75"><span style="flex: none; width: 86px; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); padding-top: 3px">Later</span><span style="flex: none; font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 6px; border: 1px dashed var(--muted); color: var(--ink2); height: fit-content">You</span><span style="font-size: 14px; line-height: 1.5; color: var(--ink2)">A fresh question with no diagram. Only that, done without help, can mark this station “on your own.”</span></li>
+</ol>
+</section>
+</div>
+<p style="margin: 18px 0 0; font-size: 12px; color: var(--muted)">Illustrative mockup. Synthetic semester; evidence and revisions are scripted, not live Spark output.</p>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1060}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

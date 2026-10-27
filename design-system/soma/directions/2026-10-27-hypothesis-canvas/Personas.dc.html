@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Soma · Personas, usage and navigation</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ps td,.ps th{padding:10px 12px;border-top:1px solid #E4E1DB;text-align:center;font-size:14px}
+.ps th[scope=row]{text-align:left;font-weight:600}
+</style>
+</helmet>
+<div class="ps" style="width: 1440px; min-height: 1760px; box-sizing: border-box; padding: 56px 64px; background: #F7F6F3; color: #17171C; font-family: Geist, Inter, system-ui, sans-serif; display: flex; flex-direction: column; gap: 36px">
+
+<div>
+<p style="margin: 0; font-size: 14px; font-weight: 600; color: #62626D">Step back · who opens Soma, and why</p>
+<h1 style="margin: 8px 0 0; font-size: 48px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.05">The graph is the premise. The next action is the home.</h1>
+<p style="margin: 12px 0 0; font-size: 18px; line-height: 1.5; color: #45454F; max-width: 1040px">Four of five people open Soma to answer “what now?”, not to browse a map. So the map should explain every recommendation and sit one tap away, and Today should show the slice of the map that matters this week. Personas are hypotheses drawn from the PRD and user stories, not interview results.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px">
+<article style="background: #FFFFFF; border: 1px solid #E4E1DB; border-radius: 18px; padding: 18px">
+<p style="margin: 0; font-size: 12px; font-weight: 600; color: #5551F5">PRD persona · juggler</p>
+<h2 style="margin: 6px 0 0; font-size: 22px; font-weight: 700">Jordan</h2>
+<p style="margin: 6px 0 0; font-size: 14px; line-height: 1.45; color: #45454F">Five courses, three AI tools, notes everywhere.</p>
+<p style="margin: 12px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Rhythm</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">Laptop morning and evening; phone glances</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Opens Soma to ask</p><p style="margin: 2px 0 0; font-size: 15px; line-height: 1.4; font-weight: 600">“What changed, and is my plan still right?”</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Surface</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">Changes with consequences, why and sources, correct this, ⌘K requests, Activity</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Success</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">Checks Soma instead of five sites</p>
+</article>
+<article style="background: #FFFFFF; border: 1px solid #E4E1DB; border-radius: 18px; padding: 18px">
+<p style="margin: 0; font-size: 12px; font-weight: 600; color: #5551F5">PRD persona · short windows</p>
+<h2 style="margin: 6px 0 0; font-size: 22px; font-weight: 700">Sam</h2>
+<p style="margin: 6px 0 0; font-size: 14px; line-height: 1.45; color: #45454F">Works 20 hours a week; studies in 10–20 minute gaps.</p>
+<p style="margin: 12px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Rhythm</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">Phone, three or four short opens a day, often interrupted</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Opens Soma to ask</p><p style="margin: 2px 0 0; font-size: 15px; line-height: 1.4; font-weight: 600">“Give me one thing that fits right now.”</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Surface</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">One card, time chips, one-tap start, exact resume</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Success</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">Useful work in 30 seconds; stopping costs nothing</p>
+</article>
+<article style="background: #FFFFFF; border: 1px solid #E4E1DB; border-radius: 18px; padding: 18px">
+<p style="margin: 0; font-size: 12px; font-weight: 600; color: #5551F5">PRD situation · returned work</p>
+<h2 style="margin: 6px 0 0; font-size: 22px; font-weight: 700">Ana</h2>
+<p style="margin: 6px 0 0; font-size: 14px; line-height: 1.45; color: #45454F">Quiz 3 came back marked; Exam 2 is Friday.</p>
+<p style="margin: 12px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Rhythm</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">One urgent evening session on a laptop</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Opens Soma to ask</p><p style="margin: 2px 0 0; font-size: 15px; line-height: 1.4; font-weight: 600">“What did I actually get wrong, and can I fix it by Friday?”</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Surface</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">The marked page, slip or concept, the experiment, a plan to Friday</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Success</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">Knows which idea to fix, and it’s scheduled</p>
+</article>
+<article style="background: #FFFFFF; border: 1px solid #E4E1DB; border-radius: 18px; padding: 18px">
+<p style="margin: 0; font-size: 12px; font-weight: 600; color: #5551F5">Exam week · planner</p>
+<h2 style="margin: 6px 0 0; font-size: 22px; font-weight: 700">Leo</h2>
+<p style="margin: 6px 0 0; font-size: 14px; line-height: 1.45; color: #45454F">Has 45–90 minute blocks the week before exams.</p>
+<p style="margin: 12px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Rhythm</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">Laptop, long sessions, plans ahead</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Opens Soma to ask</p><p style="margin: 2px 0 0; font-size: 15px; line-height: 1.4; font-weight: 600">“What does Exam 2 cover, and where is my evidence thin?”</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Surface</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">Exam scope on the map, evidence states, a session builder</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Success</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">A plan that covers the scope, thinnest evidence first</p>
+</article>
+<article style="background: #FFFFFF; border: 1px dashed #9C9AA8; border-radius: 18px; padding: 18px">
+<p style="margin: 0; font-size: 12px; font-weight: 600; color: #62626D">Visitor · judge or classmate</p>
+<h2 style="margin: 6px 0 0; font-size: 22px; font-weight: 700">Visitor</h2>
+<p style="margin: 6px 0 0; font-size: 14px; line-height: 1.45; color: #45454F">Three minutes, no account, synthetic semester.</p>
+<p style="margin: 12px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Rhythm</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">One visit, any device</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Opens Soma to ask</p><p style="margin: 2px 0 0; font-size: 15px; line-height: 1.4; font-weight: 600">“Show me what this does.”</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Surface</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">The toy within 5 seconds, the map one click away, clear demo labels</p>
+<p style="margin: 10px 0 0; font-size: 12px; font-weight: 600; color: #62626D">Success</p><p style="margin: 2px 0 0; font-size: 14px; line-height: 1.45">Understands the loop without being told</p>
+</article>
+</div>
+
+<div style="display: flex; gap: 24px; align-items: flex-start">
+<section aria-labelledby="ps-use" style="flex: 1 1 760px; background: #FFFFFF; border: 1px solid #E4E1DB; border-radius: 18px; padding: 18px 20px">
+<h2 id="ps-use" style="margin: 0 0 10px; font-size: 18px; font-weight: 700">How often each person needs each function</h2>
+<table style="width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums">
+<thead><tr><th scope="col" style="text-align: left; font-size: 12px; color: #62626D; border-top: 0">Function</th><th scope="col" style="font-size: 12px; color: #62626D; border-top: 0">Jordan</th><th scope="col" style="font-size: 12px; color: #62626D; border-top: 0">Sam</th><th scope="col" style="font-size: 12px; color: #62626D; border-top: 0">Ana</th><th scope="col" style="font-size: 12px; color: #62626D; border-top: 0">Leo</th><th scope="col" style="font-size: 12px; color: #62626D; border-top: 0">Visitor</th></tr></thead>
+<tbody>
+<tr><th scope="row">Next activity, sized to my time</th><td>●●</td><td>●●</td><td>●</td><td>●</td><td>●</td></tr>
+<tr><th scope="row">Play a lesson or experiment</th><td>●</td><td>●●</td><td>●●</td><td>●●</td><td>●●</td></tr>
+<tr><th scope="row">What changed, and what Soma did about it</th><td>●●</td><td>●</td><td>●</td><td>●</td><td>–</td></tr>
+<tr><th scope="row">Semester map</th><td>●</td><td>–</td><td>●</td><td>●●</td><td>●</td></tr>
+<tr><th scope="row">Station evidence and “correct this”</th><td>●</td><td>–</td><td>●●</td><td>●</td><td>●</td></tr>
+<tr><th scope="row">Ask: “show me how this works”</th><td>●●</td><td>●</td><td>●</td><td>●</td><td>–</td></tr>
+<tr><th scope="row">Activity: what Soma ran, and job status</th><td>●</td><td>–</td><td>–</td><td>–</td><td>●</td></tr>
+<tr><th scope="row">Sources and setup</th><td>once</td><td>once</td><td>–</td><td>–</td><td>–</td></tr>
+</tbody>
+</table>
+<p style="margin: 10px 0 0; font-size: 12px; color: #62626D">●● most visits · ● some visits · – rarely</p>
+</section>
+<section aria-labelledby="ps-tiers" style="flex: 1 1 460px; display: flex; flex-direction: column; gap: 12px">
+<h2 id="ps-tiers" style="margin: 0; font-size: 18px; font-weight: 700">So what gets surfaced where</h2>
+<div style="background: #17171C; color: #FFFFFF; border-radius: 16px; padding: 16px 18px"><p style="margin: 0; font-size: 12px; font-weight: 600; color: #C8C8D2">Always on screen</p><p style="margin: 4px 0 0; font-size: 15px; line-height: 1.5">The next activity with time chips and its station chip; a count of what changed; where you are this week on the map</p></div>
+<div style="background: #FFFFFF; border: 2px solid #17171C; border-radius: 16px; padding: 16px 18px"><p style="margin: 0; font-size: 12px; font-weight: 600; color: #62626D">One tap</p><p style="margin: 4px 0 0; font-size: 15px; line-height: 1.5">Full map and exam scope · station evidence and correction · Ask (⌘K) · Activity</p></div>
+<div style="background: #FFFFFF; border: 1px dashed #9C9AA8; border-radius: 16px; padding: 16px 18px"><p style="margin: 0; font-size: 12px; font-weight: 600; color: #62626D">Tucked away</p><p style="margin: 4px 0 0; font-size: 15px; line-height: 1.5">Sources and connections, privacy, account, export</p></div>
+</section>
+</div>
+
+<div style="display: flex; gap: 24px; align-items: stretch">
+<section aria-labelledby="ps-nav" style="flex: 1 1 700px; background: #FFFFFF; border: 1px solid #E4E1DB; border-radius: 18px; padding: 20px 22px">
+<h2 id="ps-nav" style="margin: 0; font-size: 18px; font-weight: 700">Recommended navigation</h2>
+<div style="display: flex; gap: 20px; margin-top: 14px; flex-wrap: wrap">
+<div style="flex: 1 1 280px">
+<p style="margin: 0; font-size: 12px; font-weight: 600; color: #62626D">Desktop sidebar</p>
+<ol style="margin: 8px 0 0; padding-left: 20px; font-size: 15px; line-height: 1.8"><li><b>Today</b>: the next action plus this week’s slice of the map</li><li><b>Map</b>: the whole semester; filter by course or exam</li><li><b>Activity</b>: what Soma checked, ran and changed</li></ol>
+<p style="margin: 8px 0 0; font-size: 14px; line-height: 1.5; color: #45454F">Then course lines (each opens the map filtered) and, pinned at the bottom, <b>Sources</b> with a freshness dot. <b>⌘K</b> handles asking and jumping.</p>
+</div>
+<div style="flex: 1 1 240px">
+<p style="margin: 0; font-size: 12px; font-weight: 600; color: #62626D">Phone tab bar</p>
+<div style="display: flex; justify-content: space-between; margin-top: 10px; padding: 10px 12px; border: 1px solid #E4E1DB; border-radius: 14px; font-size: 13px; font-weight: 600"><span>Today</span><span>Map</span><span style="background: #5551F5; color: #FFFFFF; padding: 2px 10px; border-radius: 999px">＋ Ask</span><span>Activity</span></div>
+<p style="margin: 10px 0 0; font-size: 14px; line-height: 1.5; color: #45454F">Sources live under the profile.</p>
+</div>
+</div>
+<p style="margin: 14px 0 0; font-size: 14px; line-height: 1.55; color: #45454F"><b style="color: #17171C">Why not Courses or Study tabs?</b> A course is a line on the map, so a separate Courses area would duplicate it. Lessons open from wherever you are, so they don’t need a destination of their own. Activity earns a top-level spot because trust is Jordan’s reason to adopt Soma and the visitor’s proof that the agent really works.</p>
+</section>
+<section aria-labelledby="ps-rules" style="flex: 1 1 520px; background: #FFFFFF; border: 1px solid #E4E1DB; border-radius: 18px; padding: 20px 22px">
+<h2 id="ps-rules" style="margin: 0; font-size: 18px; font-weight: 700">Layout principles</h2>
+<ol style="margin: 12px 0 0; padding-left: 20px; font-size: 15px; line-height: 1.55; display: flex; flex-direction: column; gap: 8px">
+<li><b>One primary action per screen</b>, sized to the time you have.</li>
+<li><b>The graph explains; it never blocks.</b> Every card carries its station chip, and the map is one tap away.</li>
+<li><b>One object everywhere.</b> A station chip opens the same inspector on desktop or sheet on phone.</li>
+<li><b>Time is an input, not a calendar.</b> 10, 20 or 45 minute chips set the plan; a commitment sets the default and says why.</li>
+<li><b>Honest by default.</b> Who-said-what labels, “suspected” wording, synthetic-mode labels.</li>
+</ol>
+</section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1760}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

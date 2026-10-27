@@ -89,12 +89,12 @@ test('persisted diagnostic experiments restore their setup, reveal generic targe
   let workspace = seedWorkspace('diagnostic-experiment-ui');
   const baseline = { topology: 'parallel' as const, voltage: 12, r1: 6, r2: 3 };
   const voltage = evaluateDiagnosticExperiment({ baseline, change: { parameter: 'voltage', value: 24 }, observable: 'current1', predictions: [
-    { hypothesisId: 'changes', claim: 'Branch current doubles when the source voltage doubles.', predictedValue: 4 },
-    { hypothesisId: 'fixed', claim: 'Branch current stays fixed when the source voltage changes.', predictedValue: 2 },
+    { hypothesisId: 'changes', claim: 'Branch current doubles when the source voltage doubles.', predictionForm: 'checked-model' },
+    { hypothesisId: 'fixed', claim: 'Branch current stays fixed when the source voltage changes.', predictionForm: 'unchanged' },
   ] });
   const resistance = evaluateDiagnosticExperiment({ baseline, change: { parameter: 'r1', value: 12 }, observable: 'current1', predictions: [
-    { hypothesisId: 'changes', claim: 'Branch current halves when its branch resistance doubles.', predictedValue: 1 },
-    { hypothesisId: 'fixed', claim: 'Branch current stays fixed when its resistance changes.', predictedValue: 2 },
+    { hypothesisId: 'changes', claim: 'Branch current halves when its branch resistance doubles.', predictionForm: 'checked-model' },
+    { hypothesisId: 'fixed', claim: 'Branch current stays fixed when its resistance changes.', predictionForm: 'unchanged' },
   ] });
   expect(voltage.informative && resistance.informative).toBe(true);
   const lessons = [voltage, resistance].map((experiment, index) => ({ ...workspace.lessons[0], id: `diagnostic-experiment-${index}`, title: index ? 'A resistance experiment' : 'A voltage experiment', circuit: baseline, diagnosticInvestigationId: `investigation-${index}`, diagnosticExperiment: { input: experiment.input } }));

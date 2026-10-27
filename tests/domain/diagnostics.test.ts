@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { diagnosticPlanSchema, evaluateDiagnosticExperiment, reviseHypothesesFromAttempt, validateDiagnosticPlan } from '../../src/lib/domain/diagnostics';
+import { diagnosticPlanSchema, evaluateDiagnosticExperiment, recheckDiagnosticExperimentInput, reviseHypothesesFromAttempt, validateDiagnosticPlan } from '../../src/lib/domain/diagnostics';
 import { seedWorkspace } from '../../src/lib/domain/seed';
 import type { Attempt } from '../../src/lib/domain/types';
 const now = '2026-10-26T15:00:00.000Z';
@@ -13,7 +13,7 @@ const plan = () => ({ kind: 'text' as const, experimentRunId: null,
   rationale: 'The choices separate applying independence from assuming equality.', nextActivity: 'Compare the chosen explanation with the cited source and request another application.',
 });
 const read = () => new Map([['source-probability', { version: 1, body: state().sources.find(source => source.id === 'source-probability')!.body }]]);
-const experiment = () => ({ baseline: { topology: 'parallel', voltage: 12, r1: 6, r2: 3 }, change: { parameter: 'r2', value: 6 }, observable: 'current2', predictions: [{ hypothesisId: 'h-rule', claim: 'The branch current follows voltage divided by resistance.', predictedValue: 2 }, { hypothesisId: 'h-equal', claim: 'The branch current stays fixed when its resistance changes.', predictedValue: 4 }] });
+const experiment = () => ({ baseline: { topology: 'parallel', voltage: 12, r1: 6, r2: 3 }, change: { parameter: 'r2', value: 6 }, observable: 'current2', predictions: [{ hypothesisId: 'h-rule', claim: 'The branch current follows voltage divided by resistance.', predictionForm: 'checked-model' }, { hypothesisId: 'h-equal', claim: 'The branch current stays fixed when its resistance changes.', predictionForm: 'unchanged' }] });
 function withResponse(option = 0) {
   const workspace = state(), diagnostic = validateDiagnosticPlan(plan(), workspace, 'probability', read());
   const lesson = workspace.lessons.find(item => item.courseId === 'probability')!;
@@ -31,13 +31,30 @@ describe('deterministic diagnostic experiment feedback', () => {
   it('rejects unchanged controls, zero-power experiments and identical predictions as uninformative', () => {
     expect(evaluateDiagnosticExperiment({ ...experiment(), change: { parameter: 'r2', value: 3 } }).informative).toBe(false);
     expect(evaluateDiagnosticExperiment({ ...experiment(), baseline: { ...experiment().baseline, voltage: 0 } }).informative).toBe(false);
-    expect(evaluateDiagnosticExperiment({ ...experiment(), predictions: experiment().predictions.map(item => ({ ...item, predictedValue: 2 })) }).informative).toBe(false);
+    expect(evaluateDiagnosticExperiment({ ...experiment(), predictions: experiment().predictions.map(item => ({ ...item, predictionForm: 'checked-model' })) }).informative).toBe(false);
   });
-  it('does not equate merely different predictions with a useful separating experiment', () => {
-    const result = evaluateDiagnosticExperiment({ ...experiment(), predictions: [{ ...experiment().predictions[0], predictedValue: 1 }, { ...experiment().predictions[1], predictedValue: 3 }] });
-    expect(result.informative).toBe(false); expect(result.margin).toBe(0); expect(result.compatibleHypothesisIds).toEqual([]);
-    const nearlySame = evaluateDiagnosticExperiment({ ...experiment(), predictions: [{ ...experiment().predictions[0], predictedValue: 2 }, { ...experiment().predictions[1], predictedValue: 2.0000001 }] });
-    expect(nearlySame.informative).toBe(false);
+  it('computes each approved illustrative form instead of accepting free model numbers', () => {
+    const equalCurrent = evaluateDiagnosticExperiment({ ...experiment(), predictions: [experiment().predictions[0], { ...experiment().predictions[1], predictionForm: 'equal-branch-current' }] });
+    expect(equalCurrent.input.predictions.map(item => item.predictedValue)).toEqual([2, 2]);
+    expect(equalCurrent.informative).toBe(false);
+    const splitVoltage = evaluateDiagnosticExperiment({ baseline: { topology: 'series', voltage: 12, r1: 2, r2: 4 }, change: { parameter: 'r1', value: 8 }, observable: 'voltage1', predictions: [{ ...experiment().predictions[0], predictionForm: 'checked-model' }, { ...experiment().predictions[1], predictionForm: 'equal-voltage-drop' }] });
+    expect(splitVoltage.input.predictions.map(item => item.predictedValue)).toEqual([8, 6]);
+    expect(splitVoltage.unit).toBe('V'); expect(splitVoltage.informative).toBe(true);
+    expect(splitVoltage.diagnosticOptions).toEqual(['8 V', '6 V', 'A different value.']);
+    for (const prediction of [{ ...experiment().predictions[0], predictedValue: 1 }, { hypothesisId: 'h-rule', claim: 'A model supplied free numerical prediction.', predictedValue: 2 }, { ...experiment().predictions[0], predictionForm: 'custom-equation' }]) expect(() => evaluateDiagnosticExperiment({ ...experiment(), predictions: [prediction, experiment().predictions[1]] })).toThrow();
+    expect(() => evaluateDiagnosticExperiment({ ...experiment(), predictions: [experiment().predictions[0], { ...experiment().predictions[1], predictionForm: 'equal-voltage-drop' }] })).toThrow(/series/);
+  });
+  it('rejects comparisons that collapse into the same displayed quantity despite numeric separation', () => {
+    const result = evaluateDiagnosticExperiment({ ...experiment(), baseline: { topology: 'parallel', voltage: 12.00004, r1: 1, r2: 2 }, change: { parameter: 'voltage', value: 12.00001 }, observable: 'current1' });
+    expect(result.predictionSeparation).toBeGreaterThan(2 * result.tolerance);
+    expect(result.diagnosticOptions[0]).toBe(result.diagnosticOptions[1]); expect(result.informative).toBe(false);
+  });
+  it('rechecks persisted approved forms without trusting stored scalar values, preserving legacy artifacts as unsupported', () => {
+    const result = evaluateDiagnosticExperiment(experiment());
+    const tampered = structuredClone(result.input); tampered.predictions[0].predictedValue = 999;
+    expect(recheckDiagnosticExperimentInput(tampered).input.predictions[0].predictedValue).toBe(2);
+    const legacy = { ...result.input, predictions: result.input.predictions.map(({ predictionForm: _form, ...item }) => item) };
+    expect(() => recheckDiagnosticExperimentInput(legacy)).toThrow();
   });
   it('keeps the approved model limits and rejects extra controls or executable payloads', () => {
     expect(() => evaluateDiagnosticExperiment({ ...experiment(), change: { parameter: 'r2', value: 0 } })).toThrow();
@@ -101,13 +118,16 @@ describe('diagnostic plan ownership and provenance', () => {
     const circuitReads = new Map([[courseSource.id, { version: courseSource.version, body: courseSource.body }]]);
     const circuit = { ...plan(), kind: 'circuit-experiment', experimentRunId: result.id,
       hypotheses: plan().hypotheses.map((hypothesis, index) => ({ ...hypothesis, claim: result.input.predictions[index].claim, evidence: [{ sourceId: courseSource.id, version: 1, quote: 'For ideal resistors, voltage drop equals current times resistance.' }] })),
-      question: 'What happens to branch current when its resistance doubles at fixed voltage?', options: ['It halves.', 'It remains the same.', 'It doubles.'],
+      question: result.diagnosticQuestion, options: result.diagnosticOptions, predictions: result.optionMappings,
     };
     expect(() => validateDiagnosticPlan(circuit, state(), 'circuits', circuitReads)).toThrow();
     expect(validateDiagnosticPlan(circuit, state(), 'circuits', circuitReads, new Map([[result.id, result]])).experimentRunId).toBe(result.id);
     expect(() => validateDiagnosticPlan({ ...plan(), kind: 'circuit-experiment', experimentRunId: result.id }, state(), 'probability', read(), new Map([[result.id, result]]))).toThrow();
     const weak = evaluateDiagnosticExperiment({ ...experiment(), change: { parameter: 'r2', value: 3 } });
     expect(() => validateDiagnosticPlan({ ...circuit, experimentRunId: weak.id }, state(), 'circuits', circuitReads, new Map([[weak.id, weak]]))).toThrow();
+    expect(() => validateDiagnosticPlan({ ...circuit, question: 'What is the total voltage rather than the checked branch current?' }, state(), 'circuits', circuitReads, new Map([[result.id, result]]))).toThrow(/computed/);
+    expect(() => validateDiagnosticPlan({ ...circuit, options: ['Wrong labels', 'Wrong units', 'Other'] }, state(), 'circuits', circuitReads, new Map([[result.id, result]]))).toThrow(/computed/);
+    expect(() => validateDiagnosticPlan({ ...circuit, predictions: [...circuit.predictions].reverse() }, state(), 'circuits', circuitReads, new Map([[result.id, result]]))).toThrow(/computed/);
     const changed = { ...circuit, hypotheses: circuit.hypotheses.map(item => ({ ...item, claim: 'A different explanation never tested.' })) };
     expect(() => validateDiagnosticPlan(changed, state(), 'circuits', circuitReads, new Map([[result.id, result]]))).toThrow();
   });

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { seedWorkspace } from '../../src/lib/domain/seed';
 import { applyAction } from '../../src/lib/domain/learning';
 import { getPredictionCheckpoint, recordPrediction, revealPrediction, withLessonMetadata } from '../../src/lib/domain/prediction';
-import type { DiagnosticExperimentInput } from '../../src/lib/domain/diagnostics';
+import { evaluateDiagnosticExperiment, type DiagnosticExperimentInput } from '../../src/lib/domain/diagnostics';
 const now = '2026-10-26T16:00:00.000Z';
 const later = '2026-10-26T16:05:00.000Z';
 const experiment = (change?: Partial<DiagnosticExperimentInput>): DiagnosticExperimentInput => ({
@@ -10,6 +10,7 @@ const experiment = (change?: Partial<DiagnosticExperimentInput>): DiagnosticExpe
   predictions: [{ hypothesisId: 'proportional', claim: 'The voltage changes with the resistor ratio.', predictedValue: 6 }, { hypothesisId: 'unchanged', claim: 'The voltage stays unchanged despite resistance changes.', predictedValue: 4 }], ...change,
 });
 function setup(input = experiment()) {
+  if (input.predictions.every(prediction => !prediction.predictionForm)) input = evaluateDiagnosticExperiment({ ...input, predictions: input.predictions.map(({ predictedValue: _stored, ...prediction }, index) => ({ ...prediction, predictionForm: index === 0 ? 'checked-model' : 'unchanged' })) }).input;
   const state = seedWorkspace('diagnostic-experiment', now);
   const lesson = withLessonMetadata({ ...state.lessons[0], id: 'model-experiment', diagnosticInvestigationId: 'model-investigation', diagnosticExperiment: { input }, circuit: { ...input.baseline }, examEligible: false, mode: 'live' as const });
   state.lessons.push(lesson); return { state, lesson };
@@ -68,6 +69,19 @@ describe('diagnostic prediction binds the actual proposed experiment', () => {
     const result = applyAction(predicted, { type: 'save-inputs', lessonId: lesson.id, inputs: { ...lesson.circuit, r1: 4 } }, later);
     expect(result.predictionStates?.[lesson.id].state).toBe('revealed');
     expect(result.predictions!.at(-1)).toMatchObject({ comparisonValid: true, matched: true, result: { voltage1: 6 } });
+  });
+  it('uses the same canonical option order even when the checked model is the second hypothesis', () => {
+    const input = evaluateDiagnosticExperiment({ baseline: { topology: 'parallel', voltage: 12, r1: 6, r2: 3 }, change: { parameter: 'r1', value: 12 }, observable: 'current1', predictions: [{ hypothesisId: 'fixed', claim: 'Current stays constant despite the change.', predictionForm: 'unchanged' }, { hypothesisId: 'rule', claim: 'Current follows the checked circuit model.', predictionForm: 'checked-model' }] });
+    const { lesson } = setup(input.input), checkpoint = getPredictionCheckpoint(lesson);
+    expect(checkpoint.options).toEqual(input.diagnosticOptions); expect(checkpoint.question).toBe(input.diagnosticQuestion); expect(checkpoint.answerIndex).toBe(1);
+    lesson.diagnosticExperiment!.input.predictions[0].predictedValue = 999;
+    expect(getPredictionCheckpoint(lesson).options).toEqual(input.diagnosticOptions);
+  });
+  it('preserves historical numeric artifacts but refuses new prediction and reveal evidence', () => {
+    const { state, lesson } = setup(); lesson.diagnosticExperiment!.input = experiment();
+    expect(getPredictionCheckpoint(lesson).options).toContain('6 V');
+    expect(() => recordPrediction(state, lesson, 0, now)).toThrow();
+    expect(() => revealPrediction(state, lesson, later)).toThrow(); expect(state.predictions).toEqual([]);
   });
   it('requires reconsideration instead of manufacturing an authored diagnostic follow-up', () => {
     const { state, lesson } = setup(), before = structuredClone(state);

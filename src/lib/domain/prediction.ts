@@ -1,4 +1,5 @@
 import { calculateCircuit } from './circuit';
+import { recheckDiagnosticExperimentInput } from './diagnostics';
 import { followupLesson } from './lessons';
 import type { CircuitInput, Lesson, PredictionCheckpoint, PredictionInteraction, WorkspaceState } from './types';
 
@@ -13,14 +14,15 @@ export function getPredictionCheckpoint(lesson: Lesson, inputs: CircuitInput = l
     const observable = experiment.observable, unit = observable.startsWith('current') ? 'A' : 'V';
     const label = { r1: 'R₁', r2: 'R₂', voltage: 'source voltage' }[parameter];
     const readout = { current1: 'current through R₁', current2: 'current through R₂', voltage1: 'voltage across R₁', voltage2: 'voltage across R₂' }[observable];
+    const checked = experiment.predictions.some(prediction => prediction.predictionForm) ? recheckDiagnosticExperimentInput(experiment) : undefined;
     const format = (value: number) => `${Number(value.toPrecision(6))} ${unit}`;
     const candidates = [after[observable], before[observable], ...experiment.predictions.map(prediction => prediction.predictedValue), 0, 1, 24];
-    const options = [...new Set(candidates.map(format))].slice(0, 3);
+    const options = checked?.diagnosticOptions ?? [...new Set(candidates.map(format))].slice(0, 3);
     const parameterUnit = parameter === 'voltage' ? 'V' : 'Ω';
     return {
       id: `${lesson.id}-${parameter}-${observable}`, parameter, targetValue, observedOutput: observable,
       multiplier: baseline[parameter] === 0 ? 1 : targetValue / baseline[parameter],
-      question: `Starting from ${label} = ${baseline[parameter]} ${parameterUnit} and ${readout} = ${format(before[observable])}, set ${label} to ${targetValue} ${parameterUnit} with every other input fixed. What is the resulting ${readout}?`,
+      question: checked?.diagnosticQuestion ?? `Starting from ${label} = ${baseline[parameter]} ${parameterUnit} and ${readout} = ${format(before[observable])}, set ${label} to ${targetValue} ${parameterUnit} with every other input fixed. What is the resulting ${readout}?`,
       options, answerIndex: options.indexOf(format(after[observable])), revealLabel: `Set ${label} to ${targetValue} ${parameterUnit} and see`,
       explanation: `The ideal DC calculation gives ${format(after[observable])} for the ${readout}, compared with ${format(before[observable])} at the tested baseline. Only ${label} changed. This calculated result is model support, not evidence of independent understanding.`,
     };
@@ -47,6 +49,7 @@ function interaction(state: WorkspaceState, lesson: Lesson, now: string, kind: P
   return record;
 }
 export function recordPrediction(state: WorkspaceState, lesson: Lesson, optionIndex: number, now: string) {
+  if (lesson.diagnosticExperiment) recheckDiagnosticExperimentInput(lesson.diagnosticExperiment.input);
   if (lesson.kind !== 'circuit' || lesson.exposure === 'fresh-no-diagram') throw new Error('Predictions belong to the interactive circuit lesson.');
   if (!Number.isInteger(optionIndex) || optionIndex < 0 || optionIndex > 2) throw new Error('Choose an available prediction.');
   if (state.predictionStates?.[lesson.id]?.state === 'revealed') throw new Error('The original reveal is preserved. Use a fresh question or another lesson to predict again.');
@@ -65,6 +68,7 @@ export function exploreLesson(state: WorkspaceState, lesson: Lesson, now: string
   state.assistance[lesson.id] = [...(state.assistance[lesson.id] ?? []), `${now} · exploration`];
 }
 export function revealPrediction(state: WorkspaceState, lesson: Lesson, now: string, manualInputs?: CircuitInput) {
+  if (lesson.diagnosticExperiment) recheckDiagnosticExperimentInput(lesson.diagnosticExperiment.input);
   const predictionState = state.predictionStates?.[lesson.id];
   if (predictionState?.state === 'revealed') return;
   const selection = state.predictions?.find(item => item.id === predictionState?.selectedPredictionId && item.kind === 'selection');

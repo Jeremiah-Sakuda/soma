@@ -6,42 +6,77 @@ import type { Attempt, WorkspaceState } from './types';
 const identifier = z.string().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/);
 const boundedText = (max: number) => z.string().trim().min(10).max(max);
 const circuitInput = z.strictObject({ topology: z.enum(['series', 'parallel']), voltage: z.number().min(0).max(24), r1: z.number().min(1).max(100), r2: z.number().min(1).max(100) });
+const predictionForm = z.enum(['checked-model', 'unchanged', 'equal-branch-current', 'equal-voltage-drop']);
+const predictionSchema = z.strictObject({ hypothesisId: identifier, claim: boundedText(400), predictionForm });
 const experimentSchema = z.strictObject({
   baseline: circuitInput, change: z.strictObject({ parameter: z.enum(['r1', 'r2', 'voltage']), value: z.number().finite() }),
   observable: z.enum(['current1', 'current2', 'voltage1', 'voltage2']),
-  predictions: z.array(z.strictObject({ hypothesisId: identifier, claim: boundedText(400), predictedValue: z.number().min(0).max(24) })).length(2),
+  predictions: z.array(predictionSchema).length(2),
 }).refine(input => input.predictions[0].hypothesisId !== input.predictions[1].hypothesisId, 'Experiment hypotheses must be distinct.');
-export type DiagnosticExperimentInput = z.infer<typeof experimentSchema>;
+/** Older artifacts retain their original values, but cannot enter the checked live path without approved forms. */
+export type DiagnosticExperimentInput = Omit<z.infer<typeof experimentSchema>, 'predictions'> & {
+  predictions: { hypothesisId: string; claim: string; predictionForm?: z.infer<typeof predictionForm>; predictedValue: number }[];
+};
 export type DiagnosticExperimentResult = ReturnType<typeof evaluateDiagnosticExperiment>;
+const quantity = (value: number, unit: string) => `${Number(value.toPrecision(6))} ${unit}`;
 
-/** Application-owned numerical check. A supported difference in predictions is not evidence about a learner. */
+/** Application-owned numerical check. Forms are illustrative competing predictions, never learner facts. */
 export function evaluateDiagnosticExperiment(raw: unknown) {
-  const input = experimentSchema.parse(raw);
-  const changed = { ...input.baseline, [input.change.parameter]: input.change.value };
-  const before = calculateCircuit(input.baseline), after = calculateCircuit(changed);
+  const proposed = experimentSchema.parse(raw);
+  const changed = { ...proposed.baseline, [proposed.change.parameter]: proposed.change.value };
+  const before = calculateCircuit(proposed.baseline), after = calculateCircuit(changed);
+  const unit = proposed.observable.startsWith('current') ? 'A' : 'V';
+  const predictions = proposed.predictions.map(prediction => {
+    let predictedValue: number;
+    switch (prediction.predictionForm) {
+      case 'checked-model': predictedValue = after[proposed.observable]; break;
+      case 'unchanged': predictedValue = before[proposed.observable]; break;
+      case 'equal-branch-current':
+        if (changed.topology !== 'parallel' || unit !== 'A') throw new Error('Equal-branch-current is supported only for a parallel branch-current observable.');
+        predictedValue = after.totalCurrent / 2; break;
+      case 'equal-voltage-drop':
+        if (changed.topology !== 'series' || unit !== 'V') throw new Error('Equal-voltage-drop is supported only for a series voltage-drop observable.');
+        predictedValue = changed.voltage / 2; break;
+    }
+    return { ...prediction, predictedValue };
+  });
+  const input = { ...proposed, predictions };
   const actual = after[input.observable], tolerance = Math.max(1e-8, Math.abs(actual) * 1e-6);
-  const errors = input.predictions.map(prediction => Math.abs(prediction.predictedValue - actual));
-  const separation = Math.abs(input.predictions[0].predictedValue - input.predictions[1].predictedValue);
+  const errors = predictions.map(prediction => Math.abs(prediction.predictedValue - actual));
+  const separation = Math.abs(predictions[0].predictedValue - predictions[1].predictedValue);
   const margin = Math.abs(errors[0] - errors[1]);
-  const matches = input.predictions.filter((_prediction, index) => errors[index] <= tolerance).map(prediction => prediction.hypothesisId);
+  const matches = predictions.filter((_prediction, index) => errors[index] <= tolerance).map(prediction => prediction.hypothesisId);
   const unchangedInput = input.baseline[input.change.parameter] === input.change.value;
   const unpowered = input.baseline.voltage === 0 && changed.voltage === 0;
-  const informative = !unchangedInput && !unpowered && separation > 2 * tolerance && matches.length === 1 && margin > tolerance;
+  const diagnosticOptions = [...predictions.map(prediction => quantity(prediction.predictedValue, unit)), 'A different value.'];
+  const label = { r1: 'R₁', r2: 'R₂', voltage: 'source voltage' }[input.change.parameter];
+  const readout = { current1: 'current through R₁', current2: 'current through R₂', voltage1: 'voltage across R₁', voltage2: 'voltage across R₂' }[input.observable];
+  const parameterUnit = input.change.parameter === 'voltage' ? 'V' : 'Ω';
+  const diagnosticQuestion = `Starting from ${label} = ${input.baseline[input.change.parameter]} ${parameterUnit} and ${readout} = ${quantity(before[input.observable], unit)}, set ${label} to ${input.change.value} ${parameterUnit} with every other input fixed. What is the resulting ${readout}?`;
+  const readableSeparation = new Set(diagnosticOptions).size === 3;
+  const informative = readableSeparation && !unchangedInput && !unpowered && separation > 2 * tolerance && matches.length === 1 && margin > tolerance;
   return {
-    id: `experiment-${crypto.randomUUID()}`, input, before, after, changed, observable: input.observable,
+    id: `experiment-${crypto.randomUUID()}`, input, before, after, changed, observable: input.observable, unit,
+    diagnosticOptions, diagnosticQuestion,
+    optionMappings: predictions.map((prediction, predictedOptionIndex) => ({ hypothesisId: prediction.hypothesisId, predictedOptionIndex })),
     observedBefore: before[input.observable], observedAfter: actual, margin, predictionSeparation: separation, tolerance,
     informative, compatibleHypothesisIds: matches, reviewStatus: 'development-preview; source fit and independent scientific review pending' as const,
-    reason: unchangedInput ? 'The proposed parameter did not change.' : unpowered ? 'Both configurations have zero source voltage; this does not distinguish the intended resistor explanations.' : separation <= 2 * tolerance ? 'The predictions are indistinguishable within the declared numerical tolerance.' : matches.length !== 1 ? 'The calculated outcome does not uniquely match one proposed prediction; revise the experiment or hypotheses.' : 'The calculated outcome separates the proposed predictions. This checks an experiment, not learner understanding.',
+    reason: unchangedInput ? 'The proposed parameter did not change.' : unpowered ? 'Both configurations have zero source voltage; this does not distinguish the intended resistor explanations.' : !readableSeparation || separation <= 2 * tolerance ? 'The predictions are indistinguishable within the declared numerical tolerance.' : matches.length !== 1 ? 'The calculated outcome does not uniquely match one proposed prediction; revise the experiment or hypotheses.' : 'The calculated outcome separates the proposed predictions. This checks an experiment, not learner understanding.',
   };
+}
+
+/** Recompute saved approved forms; stored values never control the result. Legacy numeric-only artifacts stay unsupported. */
+export function recheckDiagnosticExperimentInput(input: DiagnosticExperimentInput) {
+  return evaluateDiagnosticExperiment({ ...input, predictions: input.predictions.map(({ predictedValue: _storedValue, ...prediction }) => prediction) });
 }
 export const experimentTool = {
   type: 'function', name: 'evaluate_experiment', strict: true,
-  description: 'Check one proposed experiment in the existing ideal DC two-resistor family. Choose a baseline, change exactly one parameter, and supply two competing numerical predictions. Use feedback to revise an uninformative experiment before proposing a diagnostic. No learner evidence is written.',
+  description: 'Check one ideal DC two-resistor experiment. Select approved predictionForm for each hypothesis: checked-model uses the changed circuit; unchanged uses the baseline readout; equal-branch-current splits total current equally in parallel (current observable only); equal-voltage-drop splits source voltage equally in series (voltage observable only). Application computes all numbers and units. No predictedValue, equations or code are accepted. Inspect feedback and revise an uninformative comparison. Returned diagnosticQuestion, diagnosticOptions and optionMappings must be copied exactly into prepare_experiment_diagnostic. No learner evidence is written.',
   parameters: { type: 'object', properties: {
     baseline: { type: 'object', properties: { topology: { type: 'string', enum: ['series', 'parallel'] }, voltage: { type: 'number', minimum: 0, maximum: 24 }, r1: { type: 'number', minimum: 1, maximum: 100 }, r2: { type: 'number', minimum: 1, maximum: 100 } }, required: ['topology', 'voltage', 'r1', 'r2'], additionalProperties: false },
     change: { type: 'object', properties: { parameter: { type: 'string', enum: ['r1', 'r2', 'voltage'] }, value: { type: 'number' } }, required: ['parameter', 'value'], additionalProperties: false },
     observable: { type: 'string', enum: ['current1', 'current2', 'voltage1', 'voltage2'] },
-    predictions: { type: 'array', minItems: 2, maxItems: 2, items: { type: 'object', properties: { hypothesisId: { type: 'string' }, claim: { type: 'string', minLength: 10, maxLength: 400 }, predictedValue: { type: 'number', minimum: 0, maximum: 24 } }, required: ['hypothesisId', 'claim', 'predictedValue'], additionalProperties: false } },
+    predictions: { type: 'array', minItems: 2, maxItems: 2, items: { type: 'object', properties: { hypothesisId: { type: 'string' }, claim: { type: 'string', minLength: 10, maxLength: 400 }, predictionForm: { type: 'string', enum: ['checked-model', 'unchanged', 'equal-branch-current', 'equal-voltage-drop'] } }, required: ['hypothesisId', 'claim', 'predictionForm'], additionalProperties: false } },
   }, required: ['baseline', 'change', 'observable', 'predictions'], additionalProperties: false },
 } as const;
 
@@ -68,7 +103,7 @@ const { kind: _kind, experimentRunId: _experiment, ...diagnosticFields } = diagn
 export const textDiagnosticInputSchema = z.strictObject(diagnosticFields);
 export const experimentDiagnosticInputSchema = z.strictObject({ ...diagnosticFields, experimentRunId: identifier.describe('ID returned by a prior informative evaluate_experiment call for these exact hypotheses.') });
 export const diagnosticTool = { type: 'function', name: 'prepare_diagnostic', strict: true, description: 'Prepare a TEXT diagnostic for an ordinary course concept. Propose two plausible revisable explanations grounded in current read passages. Each hypothesis requires evidence and attemptIds (use [] without disclosed saved IDs). Choose different predicted option indices and explain the next activity. No kind or experimentRunId fields belong in this tool. No mastery or learner-record writes.', parameters: z.toJSONSchema(textDiagnosticInputSchema) } as const;
-export const experimentDiagnosticTool = { type: 'function', name: 'prepare_experiment_diagnostic', strict: true, description: 'Prepare an interactive resistor diagnostic using a prior informative evaluate_experiment result ID and the exact same two hypothesis IDs and claims. Each hypothesis requires evidence and attemptIds (use [] without disclosed saved IDs). Choose distinct predicted option indices. Application validates source fit and calculated experiment before creating a lesson. No kind field belongs in this tool.', parameters: z.toJSONSchema(experimentDiagnosticInputSchema) } as const;
+export const experimentDiagnosticTool = { type: 'function', name: 'prepare_experiment_diagnostic', strict: true, description: 'Prepare an interactive resistor diagnostic using a prior informative evaluate_experiment result ID and the exact same two hypothesis IDs and claims. Each hypothesis requires evidence and attemptIds (use [] without disclosed saved IDs). Copy evaluated diagnosticQuestion, diagnosticOptions and optionMappings exactly as question, options and predictions. Application validates source fit and calculated experiment before creating a lesson. No kind field belongs in this tool.', parameters: z.toJSONSchema(experimentDiagnosticInputSchema) } as const;
 
 export type DiagnosticReadSource = { version: number; body?: string; segments?: { offset: number; body: string }[] };
 function disclosedSegments(read: DiagnosticReadSource) {
@@ -97,6 +132,7 @@ export function validateDiagnosticPlan(raw: unknown, state: WorkspaceState, cour
     if (!plan.hypotheses.some(hypothesis => hypothesis.evidence.some(evidence => isSupportedCircuitRequest(evidence.quote)))) throw new Error('A circuit diagnostic needs a cited passage supporting the approved resistor family.');
     const run = experimentRuns.get(plan.experimentRunId!);
     if (!run || run.id !== plan.experimentRunId || !run.informative || !plan.hypotheses.every(hypothesis => run.input.predictions.some(prediction => prediction.hypothesisId === hypothesis.id && prediction.claim === hypothesis.claim))) throw new Error('Circuit diagnostics require a previously evaluated informative experiment for these hypotheses.');
+    if (plan.question !== run.diagnosticQuestion || JSON.stringify(plan.options) !== JSON.stringify(run.diagnosticOptions) || JSON.stringify(plan.predictions) !== JSON.stringify(run.optionMappings)) throw new Error('Circuit question, options and prediction mappings must exactly match the application-computed diagnosticQuestion, diagnosticOptions and optionMappings.');
   }
   return { ...plan, courseId, hypotheses: plan.hypotheses.map(hypothesis => ({ ...hypothesis, status: 'plausible' })) };
 }

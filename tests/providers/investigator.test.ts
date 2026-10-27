@@ -201,7 +201,7 @@ it('revises an uninformative experiment before persisting the exact informative 
   const state = fixture(), plan = originalTextPlan(state);
   const input = {
     baseline: { topology: 'parallel', voltage: 12, r1: 6, r2: 3 }, change: { parameter: 'voltage', value: 24 }, observable: 'current1',
-    predictions: plan.hypotheses.map((hypothesis, index) => ({ hypothesisId: hypothesis.id, claim: hypothesis.claim, predictedValue: index === 0 ? 4 : 2 })),
+    predictions: plan.hypotheses.map((hypothesis, index) => ({ hypothesisId: hypothesis.id, claim: hypothesis.claim, predictionForm: index === 0 ? 'checked-model' : 'unchanged' })),
   };
   const fetcher = script([readUpdate,
     { name: 'evaluate_experiment', args: { ...input, change: { parameter: 'voltage', value: 12 } } },
@@ -212,7 +212,7 @@ it('revises an uninformative experiment before persisting the exact informative 
     body => {
       const experiment = lastToolOutput(body);
       expect(experiment).toMatchObject({ informative: true, observedAfter: 4 });
-      return { name: 'prepare_experiment_diagnostic', args: experimentToolArgs(plan, experiment.id) };
+      return { name: 'prepare_experiment_diagnostic', args: experimentToolArgs({ ...plan, question: experiment.diagnosticQuestion, options: experiment.diagnosticOptions, predictions: experiment.optionMappings }, experiment.id) };
     },
     body => ({ name: 'finish_investigation', args: finishToolArgs({ ...decision(state, 'keep-current', false), decision: 'revise-session' }, lastToolOutput(body).lessonId) }),
   ]);
@@ -220,7 +220,7 @@ it('revises an uninformative experiment before persisting the exact informative 
   expect(fetcher).toHaveBeenCalledTimes(5);
   expect(result.record.toolActivity?.filter(item => item.tool === 'evaluate_experiment')).toHaveLength(2);
   const published = publishInvestigation(state, result);
-  expect(published.lessons.find(lesson => lesson.id === result.selectedLessonId)).toMatchObject({ kind: 'circuit', circuit: input.baseline, diagnosticExperiment: { input }, diagnosticInvestigationId: result.record.id });
+  expect(published.lessons.find(lesson => lesson.id === result.selectedLessonId)).toMatchObject({ kind: 'circuit', circuit: input.baseline, diagnosticExperiment: { input: { ...input, predictions: input.predictions.map((item, index) => ({ ...item, predictedValue: index === 0 ? 4 : 2 })) } }, diagnosticInvestigationId: result.record.id });
   expect(published.attempts).toEqual(state.attempts);
 });
 
@@ -316,17 +316,17 @@ it.each(['wrong-kind', 'null-run'] as const)('rejects malformed experiment tool 
   const state = fixture(), plan = originalTextPlan(state);
   const input = {
     baseline: { topology: 'parallel', voltage: 12, r1: 6, r2: 3 }, change: { parameter: 'voltage', value: 24 }, observable: 'current1',
-    predictions: plan.hypotheses.map((hypothesis, index) => ({ hypothesisId: hypothesis.id, claim: hypothesis.claim, predictedValue: index === 0 ? 4 : 2 })),
+    predictions: plan.hypotheses.map((hypothesis, index) => ({ hypothesisId: hypothesis.id, claim: hypothesis.claim, predictionForm: index === 0 ? 'checked-model' : 'unchanged' })),
   };
   let experimentId: unknown;
   script([readUpdate, { name: 'evaluate_experiment', args: input },
     body => {
       const experiment = lastToolOutput(body); expect(experiment.informative).toBe(true); experimentId = experiment.id;
-      return { name: 'prepare_experiment_diagnostic', args: { ...experimentToolArgs(plan, experimentId), ...(failure === 'wrong-kind' ? { kind: 'text' } : { experimentRunId: null }) } };
+      return { name: 'prepare_experiment_diagnostic', args: { ...experimentToolArgs({ ...plan, question: 'Starting from source voltage = 12 V and current through R₁ = 2 A, set source voltage to 24 V with every other input fixed. What is the resulting current through R₁?', options: ['4 A', '2 A', 'A different value.'], predictions: plan.predictions }, experimentId), ...(failure === 'wrong-kind' ? { kind: 'text' } : { experimentRunId: null }) } };
     },
     body => {
       expect(lastToolOutput(body).accepted).toBe(false);
-      return { name: 'prepare_experiment_diagnostic', args: experimentToolArgs(plan, experimentId) };
+      return { name: 'prepare_experiment_diagnostic', args: experimentToolArgs({ ...plan, question: 'Starting from source voltage = 12 V and current through R₁ = 2 A, set source voltage to 24 V with every other input fixed. What is the resulting current through R₁?', options: ['4 A', '2 A', 'A different value.'], predictions: plan.predictions }, experimentId) };
     },
     body => {
       const prepared = lastToolOutput(body); expect(prepared.accepted).toBe(true);
@@ -335,7 +335,7 @@ it.each(['wrong-kind', 'null-run'] as const)('rejects malformed experiment tool 
   ]);
   const result = await investigateWithSpark(state, request);
   expect(result.record.diagnosticPlan).toMatchObject({ kind: 'circuit-experiment', experimentRunId: experimentId });
-  expect(result.lesson?.diagnosticExperiment?.input).toEqual(input);
+  expect(result.lesson?.diagnosticExperiment?.input).toEqual({ ...input, predictions: input.predictions.map((item, index) => ({ ...item, predictedValue: index === 0 ? 4 : 2 })) });
   expect(result.record.toolActivity?.filter(item => item.outcome.includes('Rejected'))).toHaveLength(1);
 });
 
@@ -376,4 +376,14 @@ it.each([
   expect(schema.properties).not.toHaveProperty('selectedLessonId');
   expect(schema.properties.assessmentIds).toMatchObject({ type: 'array', maxItems: 1 });
   expect(schema.properties.selectedLessonIds).toMatchObject({ type: 'array', maxItems: 1 });
+});
+
+it('refuses republishing historical numeric-only experiment artifacts as checked live work', async () => {
+  const state = fixture(), lesson = state.lessons.find(item => item.id === 'parallel-nodes')!;
+  lesson.diagnosticExperiment = { input: { baseline: lesson.circuit, change: { parameter: 'voltage', value: 24 }, observable: 'current1', predictions: [{ hypothesisId: 'old-a', claim: 'A historical scalar prediction retained for inspection.', predictedValue: 4 }, { hypothesisId: 'old-b', claim: 'A competing historical scalar prediction retained for inspection.', predictedValue: 2 }] } };
+  const before = structuredClone(state);
+  const finish = { name: 'finish_investigation', args: finishToolArgs({ ...decision(state, 'keep-current', false), decision: 'revise-session' }, lesson.id) };
+  script([readUpdate, finish, finish]);
+  await expect(investigateWithSpark(state, request)).rejects.toBeInstanceOf(InvestigationError);
+  expect(state).toEqual(before);
 });

@@ -3,7 +3,7 @@ import { appendFileSync, mkdirSync } from 'node:fs';
 import { describe, it, type TestContext } from 'vitest';
 import { seedEmptyAccountWorkspace } from '../../src/lib/domain/seed';
 import type { Lesson, Source, WorkspaceState } from '../../src/lib/domain/types';
-import { evaluateDiagnosticExperiment } from '../../src/lib/domain/diagnostics';
+import { recheckDiagnosticExperimentInput } from '../../src/lib/domain/diagnostics';
 import { investigateWithSpark, publishInvestigation, type InvestigationRequest, type InvestigationResult } from '../../src/lib/server/investigator';
 import { budgetLimit, INVESTIGATION_RESERVATION_USD, MAX_INVESTIGATION_CALLS } from '../../src/lib/server/budget';
 import { getServerFirestore } from '../../src/lib/server/firebase-config';
@@ -189,7 +189,7 @@ describe.skipIf(!enabled)('independent live agentic scenarios', () => {
       check(!result.lesson?.examEligible, 'no invented assessment applicability');
       if (result.record.diagnosticPlan?.kind === 'circuit-experiment') {
         check(result.lesson?.diagnosticExperiment && result.record.diagnosticPlan.experimentRunId, 'actual renderer retains evaluated experiment');
-        const independent = evaluateDiagnosticExperiment(result.lesson.diagnosticExperiment.input);
+        const independent = recheckDiagnosticExperimentInput(result.lesson.diagnosticExperiment.input);
         check(independent.informative, 'published circuit independently distinguishes predictions');
         check(!trace.experiments.get(result.record.diagnosticPlan.experimentRunId)?.baselineZeroVoltage || !trace.experiments.get(result.record.diagnosticPlan.experimentRunId)?.changedZeroVoltage, 'unpowered proposal is never published as informative');
         check(trace.experiments.get(result.record.diagnosticPlan.experimentRunId)?.informative, 'published experiment was actually evaluated');

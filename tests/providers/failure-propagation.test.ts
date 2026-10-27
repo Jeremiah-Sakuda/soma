@@ -12,6 +12,7 @@ import { executionFailure, retryableExecutionFailure, type ExecutionFailure } fr
 import { MetaClientError } from '../../src/lib/server/meta-client';
 import { preparationFailurePatch, type PreparationJob } from '../../src/lib/server/jobs';
 import { adaptationForAttempt, adaptationFailurePatch } from '../../src/lib/server/adaptation-jobs';
+import type { AuditEventInput } from '../../src/lib/domain/audit';
 import { usageCost } from '../../src/lib/server/budget';
 
 const usage = { input_tokens: 100, output_tokens: 10 };
@@ -78,7 +79,9 @@ for (const engine of ['preparation', 'investigation'] as const) describe(`${engi
   it('preserves pre-request configuration failure facts without a provider call or retained reservation', async () => {
     vi.stubEnv('META_API_BASE_URL', 'https://unsupported.example.invalid'); const provider = vi.fn(); vi.stubGlobal('fetch', provider);
     const state = seedWorkspace(`configuration-${engine}`);
-    const error = await failed(engine === 'preparation' ? prepareWithSpark(state, 'probability', 'Practice independence') : investigateWithSpark(state, { courseId: 'probability', goal: 'Investigate independence' }));
+    const events: AuditEventInput[] = []; const audit = { id: 'synthetic-audit', append: async (event: AuditEventInput) => { events.push(event); }, finish: async () => {} };
+    const error = await failed(engine === 'preparation' ? prepareWithSpark(state, 'probability', 'Practice independence', { audit }) : investigateWithSpark(state, { courseId: 'probability', goal: 'Investigate independence' }, { audit }));
+    expect(events.find(event => event.kind === 'usage')?.usage?.calls).toBe(0);
     expect(error.failure).toEqual({ kind: 'provider', code: 'configuration', requestSent: false, usage: null });
     expect(retryableExecutionFailure(error.failure)).toBe(false); expect(provider).not.toHaveBeenCalled(); expect(charges()[0].charged).toBe(0);
   });

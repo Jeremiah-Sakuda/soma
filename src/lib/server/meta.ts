@@ -134,6 +134,7 @@ export async function prepareWithSpark(state: WorkspaceState, courseId: string, 
         });
       } catch (error) {
         if (error instanceof MetaClientError) {
+          if (!error.requestSent) calls--;
           if (error.usage) cost += usageCost(error.usage.input_tokens, error.usage.output_tokens);
           else if (error.requestSent) certain = false;
           stage = `Meta ${error.code}`;

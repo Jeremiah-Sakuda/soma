@@ -26,7 +26,7 @@ describe('durable local learning graph', () => {
     const state=graphFixture(), original=reconcileLearningGraph({...state,investigations:[]},state), next=structuredClone(original);
     const revised=structuredClone(state.investigations![0]); revised.id='new-explanation';revised.supersedesId=state.investigations![0].id;revised.createdAt='2026-10-27T12:02:00Z';revised.diagnosticPlan!.hypotheses[0].id='new-hypothesis';
     next.investigations!.push(revised);
-    const graph=reconcileLearningGraph(original,next), fresh=graph.learningGraph!.find(record=>record.kind==='interpretation'&&record.investigationId==='new-explanation'&&record.claim===revised.diagnosticPlan!.hypotheses[0].claim)!;
+    const graph=reconcileLearningGraph(original,next), fresh=graph.learningGraph!.find(record=>record.kind==='interpretation'&&record.investigationId==='new-explanation'&&record.hypothesisId==='new-hypothesis')!;
     expect(fresh.version).toBe(1);expect(fresh.supersedes).toBeUndefined();
   });
   it('finds the nearest diagnostic after an earlier source-only investigation', () => {

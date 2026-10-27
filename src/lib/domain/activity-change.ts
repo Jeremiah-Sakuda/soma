@@ -1,5 +1,5 @@
 import type { Lesson } from './types';
-const normalize = (text: string) => text.normalize('NFKC').replace(/\s+/g,' ').trim().toLowerCase();
+const normalize = (text: string) => text.normalize('NFKC').replace(/[\u200b\ufeff]/g,'').replace(/\s+/g,' ').trim().replace(/[.!?…]+$/u,'').trim().toLowerCase();
 /** Identity/status/source revision alone cannot demonstrate a changed learning interaction. */
 export function materiallyDifferentActivity(before: Lesson, after: Lesson): boolean {
   if (before.id === after.id) return false;

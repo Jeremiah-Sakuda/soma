@@ -870,3 +870,51 @@ P040 documentation verification: local links in eleven adopted planning document
 3. Requested user sign-in to Soma before starting Blackboard authorization in the private workspace. Provider login/MFA and exact course-page selection remain pending. No code changed, so no new runtime test result is claimed; existing budget and read-only boundaries remain.
 
 **Plan deviations:** Jeremy now requests the Blackboard trial, advancing selected real-source validation after the synthetic review. This does not establish complete learning-graph or release acceptance.
+
+## P046 — Owner signed in to Soma
+
+**Verbatim clarification:** Canonical archive; received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Verified the visible hosted workspace is authenticated, with Blackboard connecting and no successful live read yet.
+2. User had already opened the hosted login windows. No new context/session was allocated by the agent in this step.
+3. Institutional login and exact course selection remain pending. Live control links are excluded from logs and source control as credentials.
+
+**Plan deviations:** None.
+
+## P047 — Blackboard login window was blank
+
+**Verbatim prompt:** Canonical archive; received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Verified the hosted live-view target remained about:blank, then navigated its address bar to the configured BU Blackboard origin. It reached the BU shibboleth login form; credential fields were empty at the pre-handoff check.
+2. Handed credential entry/MFA back to the user and requested one course name/page URL. No private course material or login values were read, stored in the repository or sent to a model.
+3. Permanent startup correction remains open. Browserbase documents blank live views from wrong tab selection; exact startup/live-target mapping still needs reproduction and a regression. Manual login and one course opening succeeded later, but fresh-session collection remains unverified.
+
+**Plan deviations:** Time-boxed recovery of an actual login-window failure. No budget or source-write expansion.
+
+## P048 — Blackboard sign-in completed; expect course navigation
+
+**Verbatim clarification:** Canonical archive; received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Observed the authenticated Blackboard course list and manually opened one current course through the hosted live view. This proves interactive access only, not autonomous Spark browsing or saved-context collection. Private course contents and control URLs are excluded from committed assets.
+2. Clarified that the current connector reads exact selected pages; course discovery and autonomous navigation are not implemented. No new model call occurred.
+3. After the user confirmed login completion, finished the interactive session in Soma. The UI confirms connected / browser saved and retains no successful live-read claim. Reopening a fresh collection session still needs verification.
+
+**Plan deviations:** Interactive read-only validation within the requested Blackboard trial. No source inference/budget expansion.
+
+## P049 — Lightweight Blackboard navigation architecture
+
+**Verbatim prompt:** Canonical archive; received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Reviewed the current exact-URL collector: it does not discover courses, traverse folders, handle nested content frames or expose navigation choices to Spark. Its blanket same-host GET/HEAD policy needs verification against actual Blackboard reads and assets.
+2. Recommended deterministic Playwright course discovery/collection using the existing Browserbase session, with structured list-courses/list-materials/read-material tools for Spark. Routine navigation needs no model inference; browser runtime costs remain. This is a recommendation, not an implemented capability.
+3. Proposed staged acceptance: correct login target plus fresh-context reuse; course selection and versioned scoped reads; bounded model-selected evidence investigation and navigation recovery. Consulted primary Playwright locator/frame and Browserbase live-view documentation. The existing account currently lists only its imported course, so discovery must map/register actual courses without dummy material. No new dependency, real-course model processing or larger budget was enabled.
+
+**Plan deviations:** None adopted in this advisory turn. A richer source adapter fits the existing read-only collector boundary; model-directed UI exploration remains conditional pending explicit implementation and verification.

@@ -332,6 +332,32 @@
       "received_at": null,
       "kind": "message",
       "prompt": "Okay, now can we try with blackboard? "
+    },
+    {
+      "id": "P046",
+      "received_at": null,
+      "kind": "clarification",
+      "question": "Please sign in to your Soma account in the browser panel, then reply “Signed in.” This tab is currently in the synthetic demo; Blackboard needs to be connected to your private workspace. Enter your password only in Soma.",
+      "prompt": "Signed in"
+    },
+    {
+      "id": "P047",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Browserbase opened an about blank page when I tried signing in with blackboard"
+    },
+    {
+      "id": "P048",
+      "received_at": null,
+      "kind": "clarification",
+      "question": "BU’s login page is now open in Browserbase. Complete login/MFA, then open one course you want to test. Reply with the course name and the course-page URL shown inside Browserbase. Don’t send your password or MFA code.",
+      "prompt": "Signed in, now Muse should be able to navigate the various courses"
+    },
+    {
+      "id": "P049",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Wait actually what would we need to do to sort out navigation as well? We can use a more lightweight tool if using muse is too expensive "
     }
   ]
 }

@@ -55,3 +55,5 @@ Partial writes remain valid and reruns are idempotent. The default administrativ
 ## Verification boundary
 
 Synthetic cipher tests compare legacy compatibility against an independent AES reader, authenticate envelope labels and owner binding, reject damaged/missing keys and check rollover/rollback. Actual Firestore tests exercise dry-run, partial progress, active leases, OAuth one-use state, frozen deletion recovery, malformed ownership and the maintenance command. They use disposable synthetic records and delete them afterward. This establishes mechanism behavior, not deployed key custody, IAM least privilege, provider privacy settings or a completed production rotation. See [the security review](SECURITY_AND_GRAPH_REVIEW.md) for remaining gates.
+
+Hosted compatibility also passed on commit `0cedfc8`: the deployed Google start flow opened a v2-encrypted disconnected synthetic record while original-format writes remained configured. No provider login/token exchange or source job was created. CI 40576121991 passed the final implementation at `b778a73`, which Vercel reported Ready. Existing production keys were not replaced.

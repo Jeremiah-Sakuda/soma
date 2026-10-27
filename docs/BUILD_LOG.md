@@ -858,3 +858,15 @@ P040 documentation verification: local links in eleven adopted planning document
 3. Verified 453 default tests (40 opt-in skipped, 7.21s; CLI variants separated), 5/5 combined managed/SQLite checks (23.10s), type/config checks and webpack production build. The managed check exercised the real maintenance CLI with disposable synthetic data. Five current credential values were absent from 265 tracked files and 45 client files; this narrow scan is not a historical-secret certification. Vercel 0cedfc8 deployed Ready; hosted credential check passed 1/1 in 10.66s including a real deployed v2 read. CI 40575691424 hit the existing ordering stress case’s five-second timeout; all assertions/iterations remain, with a case-specific 15-second bound. [CI 40576121991](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40576121991) passed tests, default production build and browser journeys for `b778a73`, also Ready on Vercel. PRD status now explicitly records the open teaching-relationship requirement.
 
 **Plan deviations:** Adds operational key recovery to the credential hardening work, within the chosen architecture follow-up. Actual production rollover/retirement, secret custody/IAM, orphan reconciliation and real-provider privacy checks remain gates; no product-family or inference-budget expansion.
+
+## P045 — Try the actual Blackboard connection
+
+**Verbatim prompt:** Canonical archive; received timestamp unavailable.
+
+**Top 3 outcomes:**
+
+1. Reloaded the existing hosted Soma tab to the current deployment. It was in an anonymous synthetic demo, so opened private-account sign-in and prefilled the previously supplied BU email; the browser is left visible for the user. Blackboard access is not yet established.
+2. Reviewed the existing read-only Blackboard login/collection path and recording/log settings. No Browserbase context was allocated, no institutional page or private course source was read, and no model call or key change occurred.
+3. Requested user sign-in to Soma before starting Blackboard authorization in the private workspace. Provider login/MFA and exact course-page selection remain pending. No code changed, so no new runtime test result is claimed; existing budget and read-only boundaries remain.
+
+**Plan deviations:** Jeremy now requests the Blackboard trial, advancing selected real-source validation after the synthetic review. This does not establish complete learning-graph or release acceptance.

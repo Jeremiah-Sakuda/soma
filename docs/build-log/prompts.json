@@ -326,6 +326,12 @@
       "kind": "clarification",
       "question": "The architecture report is ready. Which follow-up should we prioritize after these fixes?",
       "prompt": "Credential key rotation and recovery (Recommended)"
+    },
+    {
+      "id": "P045",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Okay, now can we try with blackboard? "
     }
   ]
 }

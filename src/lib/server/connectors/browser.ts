@@ -231,6 +231,48 @@ export async function completeBrowserLogin(account: VerifiedAccount, provider: B
     return { notice: 'Saved the browser context. Wait a few seconds for sync, then refresh selected pages to verify access.' };
   } catch (error) { await releaseConnectionLease(account, connection.id, leaseId); throw error; }
 }
+/** Shared private runner for application-authored read adapters. Model tools never receive
+ * the page, connection secret or policy callback. Authorization is rechecked at publication. */
+export async function withBrowserRead<T>(account: VerifiedAccount, provider: BrowserProvider,
+  allow: (request: {url:string;method:string;resourceType:string;topLevel:boolean})=>boolean,
+  operation: (input: {page:Page;connection:BrowserConnection;workspace:NonNullable<Awaited<ReturnType<typeof readAccountWorkspace>>>;guard:ReturnType<typeof connectionPublicationGuard>;deadline:number;blockedOrigins:Set<string>})=>Promise<{value:T;configuration?:Configuration;notice?:string}>
+): Promise<T> {
+  const deadline=Date.now()+80_000;
+  const lease=await acquireConnectionLease<Secret,Configuration>(account,ID(provider),'discover-or-read',240_000);
+  let connection=lease.connection,browser:Browser|undefined,allocated=false;
+  const timer=setTimeout(()=>{void browser?.close().catch(()=>undefined);},Math.max(1,deadline-Date.now()));timer.unref();
+  try {
+    const workspace=await readAccountWorkspace(account);if(!workspace)throw fail('Private workspace is unavailable.',404);
+    if(!connection.secret.contextId)throw fail('Sign in to this provider first.',409,'browser_login_required');
+    if(active(await getSession(connection)))throw fail('Finish the sign-in session before reading courses.');
+    if(connection.secret.sessionId){await releaseSession(connection);connection.secret=clearSession(connection.secret);await checkpointConnectionLease(account,connection.id,lease.leaseId,{secret:connection.secret});throw fail('The previous session ended. Wait a few seconds, then retry.');}
+    const created=await allocateSession(account,lease.leaseId,connection,180);connection=created.connection;allocated=true;browser=await connect(created.session);
+    const context=browser.contexts()[0];if(!context)throw fail('Browser is not ready.');
+    const blockedOrigins=new Set<string>();
+    await context.route('**/*',async route=>{
+      const request=route.request();let topLevel=false;
+      try{topLevel=request.isNavigationRequest()&&!request.frame().parentFrame();}catch{ /* Service worker requests are not allowed navigation. */ }
+      if(allow({url:request.url(),method:request.method(),resourceType:request.resourceType(),topLevel}))await route.continue();
+      else{try{blockedOrigins.add(new URL(request.url()).origin);}catch{}await route.abort('blockedbyclient');}
+    });
+    await context.routeWebSocket('**/*',socket=>socket.close());
+    for(const old of context.pages())await old.close();
+    const page=await context.newPage(),cdp=await context.newCDPSession(page);await cdp.send('Network.setBypassServiceWorker',{bypass:true});await cdp.send('ServiceWorker.enable');await cdp.send('ServiceWorker.stopAllWorkers');
+    const guard=connectionPublicationGuard(account,connection.id,lease.leaseId);
+    const result=await operation({page,connection,workspace,guard,deadline,blockedOrigins});
+    remainingReadTime(deadline,1);
+    await browser.close();browser=undefined;await releaseSession(connection);
+    await persistLease(account,connection,lease.leaseId,{secret:clearSession(connection.secret),...(result.configuration?{configuration:result.configuration}:{}),notice:result.notice??'Read-only course check finished.'});
+    return result.value;
+  } catch(error) {
+    if(browser)await browser.close().catch(()=>undefined);
+    let secret=connection.secret;
+    if(allocated){try{await releaseSession(connection);secret=clearSession(secret);}catch{ /* Keep encrypted cleanup references. */ }}
+    await releaseConnectionLease(account,connection.id,lease.leaseId,{secret,...(allocated?{status:(error as {code?:string}).code==='browser_login_required'?'login-required' as const:'stale' as const,notice:'Course check did not complete. Saved authorization was retained.'}:{})});
+    throw error;
+  }finally{clearTimeout(timer);}
+}
+
 export function remainingReadTime(deadline: number, maximum: number, now = Date.now()): number {
   const left = deadline - now;
   if (left <= 0) throw fail('The selected-page read reached its time limit. Try fewer pages.', 408, 'browser_timeout');

@@ -73,6 +73,7 @@ From top to bottom:
 | Filled | On your own | A correct, unassisted attempt on a fresh item without the diagram |
 | Half-filled | With help | Any assisted attempt, or recorded assistance for the activity |
 | Dashed, pulsing ring | Two explanations | An open diagnostic, or a graph interpretation still plausible or unresolved |
+| Ringed with a center dot | Worked in the lesson | Attempts in the lesson with no help recorded, but no fresh unassisted success yet |
 | Hollow | Ready, not started | A lesson with no attempts |
 | Hollow, amber outline | Source changed | The lesson's state is `stale` |
 | Diamond | Exam or deadline | A course assessment with a date |

@@ -1047,11 +1047,11 @@ P040 documentation verification: local links in eleven adopted planning document
 
 **Top 3 outcomes:**
 
-1. User selected the current semester, Fall 2026, as the private Blackboard collection scope. Verified all 36 catalog entries and saved the three matching Fall 2026 courses in the signed-in deployed workspace. The existing imported course and all older courses were preserved.
-2. The first hosted collection returned a generic HTTP 500; no successful full read is inferred. Diagnosing the audited collection path with bounded live checks and secret-safe diagnostics. Existing account isolation, read-only access and Meta spending cap apply.
-3. Older courses remain outside the selection. Gradescope and Piazza remain separate follow-ups with their own login/MFA.
+1. Verified the complete 36-entry private Blackboard catalog and saved all three Fall 2026 selections in the deployed account. A final owned-record readback confirmed exact semester selection, one healthy connection and 36 current text observations across the three selected courses (16, 16 and 4). Older courses and the existing imported course were preserved. All three traversals still have pending pages; files/images/external tools remain unsupported.
+2. Fixed the hosted-only HTTP 500. Direct audited publication worked locally, but isolated Vercel packaging reproduced a missing Playwright registry JSON. `4bcdbfa` includes that asset for all browser-reading routes and adds an isolated import gate to CI; a negative trace without the asset correctly fails. Browser, Blackboard and worker traces pass, and a clean Vercel staging build passes with zero dotenv mappings. The temporary staging and unsafe local prebuilt output were deleted; the active env file was unchanged. Safe diagnostics log only fixed phase/error-type facts.
+3. Hosted partial reads now publish actual source versions and save/reuse source-investigation jobs within the unchanged budget. CI [40591134458](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40591134458) passed typecheck, tests, production build, the new isolated artifact check and the full browser suite. Gradescope and Piazza remain separate login/MFA follow-ups. No full-course completion, image/PDF access or instructional-quality claim follows from these source checks.
 
-**Plan deviations:** None; this supplies the previously missing selected-course scope.
+**Plan deviations:** Real verification exposed and repaired deployment packaging before continuing source onboarding. No session/inference budget or source permission was expanded beyond the user's Fall 2026 selection. The existing release gates remain.
 
 ## P053 — Updated UI/UX guidance and new file
 

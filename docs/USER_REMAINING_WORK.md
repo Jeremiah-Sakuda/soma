@@ -2,19 +2,17 @@
 
 October 27, 2026. This separates inputs that require you from engineering and release verification that remain ours. The audit interface and completed architecture refactors do not waive the existing release gates.
 
-Read-only setup check for P038: the existing owner account is enabled and its workspace is active, but it has **no saved provider connections**. This checked connection metadata only, without opening course content or decrypting credentials. Creating the account and configuring the Google OAuth client do not complete provider connection or source selection.
+**P052 setup update:** Blackboard is connected. All three courses listed for Fall 2026 are selected, with 36 current text observations saved across them. Larger folders are still being traversed; PDFs/images/external tools are unsupported. The first hosted import failure was fixed and actual publication now passes. The earlier P038 finding of zero saved connections is historical, not the current status.
 
-## Current priority: review the synthetic learning experience
+## Current input: finish source onboarding and review the learning experience
 
-P040 defers testing personal coursework until the simulated learning-graph experience is polished and reviewed. You do not need to connect accounts or supply private course material to unblock M1–M5. Codex owns the [milestones](LEARNING_GRAPH_MILESTONES.md); your next input is feedback on the working synthetic journey. Open the quick demo (use a signed-out/private browser if already signed in), then choose **Demo controls → Explore learning graph**. Inspect the comparison/evidence and try a prediction or correction. The starting artifact is prepared without a live call; its original image and typed observation do not demonstrate image extraction. The setup steps below apply to M6 afterward. Actual-course fit and real-source release checks remain required.
+The synthetic learning-graph journey remains available for feedback through the quick demo's **Demo controls → Explore learning graph**. P045–P052 additionally authorized actual Blackboard setup; there is no need to repeat that login now. Actual-course lesson fit and independent instructional review remain separate from source access.
 
-## Later: connect and select your actual course context
+1. Connect **Gradescope next**, since assignments primarily live there, then **Piazza** for the additional class. Complete password/MFA only on the provider or institutional SSO page in the hosted browser. Each provider has a separate context and still needs its own successful selected-source check; its button is not proof of assignment/returned-work extraction. Read [the authentication approach](BROWSER_AUTHENTICATION.md). Do not send passwords or MFA codes in chat or env files.
+2. Connect Google inside your Soma account and select the calendars and course-specific Gmail queries you want it to read. The OAuth client is already configured, but this account still showed no saved Gmail/Calendar connection during P052. No new OAuth client is needed.
+3. Choose one actual course/topic and representative returned work for the hero sequence. Confirm which source controls dates/coverage and whether the generated activity is useful. The existing CS 440 preview does not establish complete integration or prove resistor-family relevance. Public demo permission is separate from private processing.
 
-1. Sign in to [Soma](https://soma-woad-beta.vercel.app) using your existing Soma account; no new account or OAuth client is needed. Connect Google and select the calendars and course-specific Gmail queries you want Soma to read. Authorization alone does not select or prove access to course content.
-2. Connect Blackboard (`learn.bu.edu`) first, then Gradescope and Piazza as needed. Complete password and MFA only on the actual provider/SSO page in the hosted browser, then select supported exact course pages. Browserbase hosts this browser and retains sensitive session state; it does not inherit your everyday browser's login. Soma does not need your institutional password in chat, `.env`, a source document or Git. Read [the authentication approach and trust model](BROWSER_AUTHENTICATION.md). Institutional SSO can require manual reconnection; if a page is unsupported, use the labeled course text/import route while we fix or report the connector.
-3. Select one real course/topic and representative returned work for the hero sequence: visible marking, plausible explanations and a useful follow-up. Choose material we may process privately; public demo permission is a separate decision. Identify which source actually controls dates/coverage; confirm typed academic facts when needed. The CS 440 preview exists, but it does not establish a full live course integration. The resistor development lab has not yet been confirmed against your actual course sources.
-
-After connection, tell me the selections are ready. I own verifying actual read, unchanged refresh, changed-source recovery, expiry/reconnect, course fit and the full learning path. Your selections authorize only that scope, under the existing $2 total application cap.
+I own verifying complete traversal, unchanged refresh, changed-source recovery, expiry/reconnect, course fit and the full learning path. Your selected scope remains under the existing $2 total application cap. P040's synthetic-first decision and the later actual-source authorization do not waive any release gate.
 
 ## Content and learning checks that need people
 
@@ -25,7 +23,7 @@ After connection, tell me the selections are ready. I own verifying actual read,
 
 Trigger.dev remains unconfigured. If you want the intended dedicated scheduler, fill `TRIGGER_SECRET_KEY` and `TRIGGER_PROJECT_REF` in `.env.local`, then tell me they are ready. I handle configuration/deployment. The authenticated GitHub fallback is already active every 15 minutes, best-effort; this is not currently blocking background processing. Do not add a second scheduler until we coordinate overlap behavior.
 
-The P041 synthetic development verification leaves **$1.55875225 consumed of the $2 total app cap**, separate from the $150 provider allocation and $30 reserve. No increase is needed to connect sources. A future increase requires your explicit decision; I will not reset spending records or assume the entire allocation is available for unattended use.
+At the historical P041 checkpoint, synthetic development verification had consumed **$1.55875225 of the $2 total app cap**, separate from the $150 provider allocation and $30 reserve. Subsequent selected-source processing may have consumed more; the current application ledger enforces the cap. No increase is needed to connect sources. A future increase requires your explicit decision; I will not reset spending records or assume the entire allocation is available for unattended use.
 
 ## Before the hackathon submission
 

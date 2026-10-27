@@ -1,5 +1,7 @@
 # Soma implementation evidence
 
+**Latest source checkpoint — P052, October 27:** Actual Fall 2026 Blackboard selection and partial versioned publication passed across three courses, saving 36 current text observations. Traversals remain partial; file/image/external-tool reads and actual teaching fit are unverified. A deployment-only Playwright registry omission was reproduced in an isolated Vercel artifact and fixed; CI now checks isolated runtime import, with a separate dotenv packaging gate. CI 40591134458 passed. [Institutional sign-in](BROWSER_AUTHENTICATION.md) and [remaining inputs](USER_REMAINING_WORK.md) distinguish this from Gradescope/Piazza/Google setup still needing user sign-in and verification. Current UI authority is [UI/UX Guide](UI_UX_GUIDE.md); earlier counts and visual descriptions below are historical.
+
 P037 implements the three selected architecture refactors: typed execution failures, shared audited publication and matching journal contracts over real Firestore/synthetic SQLite. The selected [returned-work hero story](DEMO_AND_EVALUATION.md) is now documented; its vision/region-evidence path and actual-course family fit remain open. See [production evidence](PRODUCTION_READINESS.md) for executed checks and deployment.
 
 P034 adds durable progressive AI activity journals and protected owner exports across source checks, model preparation, investigation and automatic adaptation. See [audit contract](AI_AUDITABILITY.md), [production evidence](PRODUCTION_READINESS.md) and [remaining user inputs](USER_REMAINING_WORK.md). This does not close the real-source, content-review or learning-evidence gates.
@@ -25,7 +27,8 @@ Latest P031 hardening: durable page-closed worker/recovery, atomic diagnostic ad
 | Judge semester | Original synthetic fixtures | No claim of institution access |
 | Selected course and email text | Manual import and one approved private-course Spark preview saved to the owner account; scoped Gmail OAuth collector implemented | First live Soma OAuth read and independent source/instructional fit remain unverified |
 | Selected calendar | Structured JSON import plus implemented read-only Google OAuth collector | User consent and first selected live read remain unverified |
-| Blackboard / Gradescope / Piazza | Persistent connector implemented; local Browserbase key/CLI verified, institution access not verified | Key-only connector compatibility, deployment configuration, user login, selected URLs and read/reconnect experiment |
+| Blackboard | Actual owned semester selection and partial supported text collection/versioned publication verified; 36 current text items across three selected courses | Complete traversal, unsupported files/images, expiry/reconnect, actual teaching fit |
+| Gradescope / Piazza | Separate persistent browser entry points implemented | User login/MFA, selected-source read, assignment/returned-work extraction and recovery remain unverified |
 | Preparation jobs | Durable Firestore queue, explicit owner-triggered worker | Scheduled Trigger.dev/browser collection awaits keys and access |
 | Spark | Live bounded preparation and scoped investigation/reconsideration exercised on labeled cases | Independent scientific/source/instructional fit, broader unseen reliability and genuine delayed learning evidence |
 

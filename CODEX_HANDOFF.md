@@ -4,7 +4,7 @@
 
 ## The product to build
 
-**P050–P051 source checkpoint:** Deterministic Blackboard discovery/selection and resumable supported text collection now reuse the private saved context. A fresh-session metadata check and a sixteen-item actual-course text probe passed without inference; full selected-course publication and teaching remain separate gates. See [Institutional sign-in](docs/BROWSER_AUTHENTICATION.md). Next validate Gradescope (primary assignments), then Piazza, with separate contexts.
+**P050–P051 source checkpoint:** Deterministic Blackboard discovery/selection and resumable supported text collection now reuse the private saved context. Fresh-session metadata and a read-only text probe passed. P052 then selected all three Fall 2026 Blackboard courses and verified initial versioned publication of 36 current text items, with resumable folders still pending. The hosted browser packaging defect is fixed and isolated artifact import is now a CI gate; complete course walks and teaching fit remain separate gates. See [Institutional sign-in](docs/BROWSER_AUTHENTICATION.md). Next validate Gradescope (primary assignments), then Piazza, with separate contexts.
 
 **P042–P044 review:** Read [Graph and Credential Review](docs/SECURITY_AND_GRAPH_REVIEW.md) and [Credential Key Rotation](docs/CREDENTIAL_KEY_ROTATION.md). Additional graph identity/retention and credential deletion/refresh races were fixed with synthetic regressions. Key rollover/recovery is backward compatible; production keys were not replaced. Explicit teaching relationships, R9 image extraction and release/security operational gates remain open.
 

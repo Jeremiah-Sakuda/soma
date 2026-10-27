@@ -1,4 +1,5 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
+import { CredentialCipher, CredentialCryptoError, credentialBinding } from '../credential-crypto';
 import type { DocumentReference, Transaction } from 'firebase-admin/firestore';
 import { assertVerifiedAccount, assertAccountWorkspaceGeneration, type VerifiedAccount } from '../account';
 import { getServerFirestore } from '../firebase-config';
@@ -13,34 +14,17 @@ export type PublicConnection = Omit<Connection, 'secret'>;
 type Stored = Omit<Connection, 'secret'> & { ownerId: string; encryptedSecret: string; leaseId?: string; leaseUntil?: number; leasePurpose?: string };
 type ConnectionInput<S, C> = Omit<Connection<S, C>, 'id' | 'workspaceId' | 'version'>;
 const hash = (value: string) => createHash('sha256').update(value).digest('hex');
-const binding = (uid: string, workspaceId: string, id: string) => JSON.stringify({ uid, workspaceId, id });
-
-function encryptionKey(): Buffer {
-  const raw = process.env.SOMA_CONNECTOR_ENCRYPTION_KEY || '';
-  const key = /^[a-f0-9]{64}$/i.test(raw) ? Buffer.from(raw, 'hex') : Buffer.from(raw, 'base64');
-  if (key.length !== 32) throw new WorkspaceStoreError('Source connections are not configured.', 503, 'connector_configuration');
-  return key;
+const binding = credentialBinding;
+function cryptoFailure(error: unknown): WorkspaceStoreError {
+  if (error instanceof CredentialCryptoError && error.code === 'configuration') return new WorkspaceStoreError('Source connections are not configured.', 503, 'connector_configuration');
+  if (error instanceof CredentialCryptoError && error.code === 'capacity') return new WorkspaceStoreError('Connection state is too large.', 413, 'connection_capacity');
+  return new WorkspaceStoreError('Saved source authorization could not be opened. Reconnect this source.', 503, 'connection_unavailable');
 }
-
 export function encryptConnectionSecret(value: unknown, context: string): string {
-  const plaintext = Buffer.from(JSON.stringify(value), 'utf8');
-  if (plaintext.length > 64 * 1024) throw new WorkspaceStoreError('Connection state is too large.', 413, 'connection_capacity');
-  const nonce = randomBytes(12);
-  const cipher = createCipheriv('aes-256-gcm', encryptionKey(), nonce);
-  cipher.setAAD(Buffer.from(context));
-  const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
-  return ['v1', nonce.toString('base64url'), cipher.getAuthTag().toString('base64url'), ciphertext.toString('base64url')].join('.');
+  try { return new CredentialCipher().encrypt(value, context); } catch (error) { throw cryptoFailure(error); }
 }
-
 export function decryptConnectionSecret<T>(encrypted: string, context: string): T {
-  try {
-    const [version, nonce, tag, ciphertext, extra] = encrypted.split('.');
-    if (version !== 'v1' || extra !== undefined || Buffer.from(nonce, 'base64url').length !== 12 || Buffer.from(tag, 'base64url').length !== 16) throw new Error();
-    const decipher = createDecipheriv('aes-256-gcm', encryptionKey(), Buffer.from(nonce, 'base64url'));
-    decipher.setAAD(Buffer.from(context));
-    decipher.setAuthTag(Buffer.from(tag, 'base64url'));
-    return JSON.parse(Buffer.concat([decipher.update(Buffer.from(ciphertext, 'base64url')), decipher.final()]).toString('utf8')) as T;
-  } catch { throw new WorkspaceStoreError('Saved source authorization could not be opened. Reconnect this source.', 503, 'connection_unavailable'); }
+  try { return new CredentialCipher().decrypt<T>(encrypted, context); } catch (error) { throw cryptoFailure(error); }
 }
 
 function rootRef(account: VerifiedAccount) {

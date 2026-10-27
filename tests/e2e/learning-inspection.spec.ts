@@ -80,3 +80,37 @@ test('local inspection links a saved reconsideration to its materially different
   await expect(page).toHaveURL(/lesson=new-condition/);
   await expect(page.getByRole('table')).toHaveCount(0);
 });
+
+test('a later worker artifact closes an open inspection before its new activity is exposed',async({page})=>{
+  const before=seedWorkspace('inspection-context-change');
+  let workspace=prepareLearningGraphPreview(structuredClone(before),'2026-10-27T16:00:00.000Z');
+  const id='graph-preview-parallel', initial=workspace.investigations![0];
+  // A stale historical sibling must not block disclosure of current material.
+  workspace.lessons.push({...workspace.lessons[0],id:'historical-sibling',state:'stale'});
+  let supportSaves=0, staleSupportSaves=0;
+  const reply=()=>({workspace,capabilities:{spark:false,persistence:'local-synthetic',liveSources:[]}});
+  await page.route('**/api/workspace',route=>route.fulfill({json:reply()}));
+  await page.route('**/api/audit**',route=>route.fulfill({json:{workspaceId:workspace.id,runs:[]}}));
+  await page.route('**/api/actions',route=>{
+    const action=route.request().postDataJSON();
+    if(action.type==='assistance'){supportSaves++;if(action.lessonId==='historical-sibling'){staleSupportSaves++;return route.fulfill({status:422,json:{error:'Historical activity unavailable.'}});}}
+    workspace=applyAction(workspace,action);return route.fulfill({json:reply()});
+  });
+  await page.goto(`/?view=study&lesson=${id}`);
+  const panel=page.getByRole('region',{name:'What Soma is checking'});
+  await panel.getByRole('button',{name:'Inspect explanations and evidence'}).click();
+  await expect(panel.getByRole('heading',{name:'Two provisional explanations'})).toBeVisible();
+  const beforeSaves=supportSaves;expect(staleSupportSaves).toBe(0);
+  const next={...workspace.lessons[0],id:'arriving-condition',title:'A later condition',question:'A previously unseen new condition chosen by the worker.',exposure:'fresh-no-diagram' as const,kind:'practice' as const,diagnosticInvestigationId:'arriving-investigation'};
+  workspace={...workspace,revision:workspace.revision+1,lessons:[...workspace.lessons,next],investigations:[...workspace.investigations!,{...initial,id:'arriving-investigation',supersedesId:initial.id,createdAt:'2026-10-27T16:10:00.000Z',diagnosticLessonId:undefined,diagnosticPlan:undefined,selectedLessonId:next.id,reason:'A newly published rationale must wait for saved support.',hypothesisRevisions:[{hypothesisId:'diagram-reading',status:'supported',reason:'Provisional only.'}]}]};
+  await page.evaluate(()=>window.dispatchEvent(new PopStateEvent('popstate')));
+  await expect(panel.getByRole('button',{name:'Inspect explanations and evidence'})).toBeVisible();
+  await expect(panel.getByText(next.question,{exact:true})).toHaveCount(0);
+  await expect(panel.getByText('A newly published rationale must wait for saved support.',{exact:true})).toHaveCount(0);
+  expect(supportSaves).toBe(beforeSaves);expect(workspace.assistance[next.id]??[]).toHaveLength(0);
+  await panel.getByRole('button',{name:'Inspect explanations and evidence'}).click();
+  await expect(panel.getByText(next.question,{exact:true})).toBeVisible();
+  await expect(panel.getByText('Provisionally supported',{exact:true})).toBeVisible();
+  expect(workspace.assistance[next.id].some(item=>item.includes('explanation'))).toBe(true);
+  expect(staleSupportSaves).toBe(0);
+});

@@ -9,7 +9,7 @@ import { type Act, time } from './today-view';
 export function LearningInspection({ ws, lesson, act, busy, openLesson }: {
   ws: WorkspaceState; lesson: Lesson; act: Act; busy: boolean; openLesson: (id: string) => void;
 }) {
-  const [visible, setVisible] = useState(false), [saving, setSaving] = useState(false), [error, setError] = useState('');
+  const [disclosedContext, setDisclosedContext] = useState<string>(), [saving, setSaving] = useState(false), [error, setError] = useState('');
   const records = ws.investigations ?? [];
   const initial = records.find(record => record.id === lesson.diagnosticInvestigationId);
   if (!initial?.diagnosticPlan) return null;
@@ -22,18 +22,31 @@ export function LearningInspection({ ws, lesson, act, busy, openLesson }: {
   const interpretations = local.filter(record => record.kind === 'interpretation');
   const nextId = latest.selectedLessonId ?? latest.diagnosticLessonId;
   const next = ws.lessons.find(item => item.id === nextId);
+  const connected = ws.lessons.filter(item => item.id === lesson.id || (item.courseId === lesson.courseId &&
+    (lineage.has(item.diagnosticInvestigationId ?? '') || item.sourceIds.some(id => lesson.sourceIds.includes(id)))));
+  const related = connected.filter(item => item.state === 'ready' && item.sourceIds.length > 0 && item.sourceIds.every(id =>
+    ws.sources.some(source => source.id === id && source.courseId === item.courseId && source.version === item.sourceVersions[id] && source.status === 'current') &&
+    !ws.sources.some(source => source.id === id && source.version > item.sourceVersions[id])));
+  const sourceIds = new Set([...connected.flatMap(item => item.sourceIds), ...descendants.flatMap(record => record.sourceRefs.map(ref => ref.sourceId))]);
+  // Bind permission to the exact artifacts visible now, excluding mutable support/revision counters.
+  // A new worker publication closes synchronously on its first render, even during a save.
+  const context = JSON.stringify({ workspaceId: ws.id, lessonId: lesson.id, lessonVersion: lesson.version,
+    investigations: descendants, activities: connected,
+    sources: ws.sources.filter(source => sourceIds.has(source.id)).map(source => ({id:source.id,version:source.version,status:source.status})),
+    graph: local,
+  });
+  const visible = disclosedContext === context;
+  const statusLabel = (status: string) => status === 'supported' ? 'Provisionally supported' : status === 'plausible' ? 'Plausible' : status === 'weakened' ? 'Weakened' : 'Unresolved';
   let checked: ReturnType<typeof recheckDiagnosticExperimentInput> | undefined;
   if (lesson.diagnosticExperiment) { try { checked = recheckDiagnosticExperimentInput(lesson.diagnosticExperiment.input); } catch { /* Historical artifact remains explicitly unchecked. */ } }
   async function disclose() {
     setSaving(true); setError('');
     try {
       // Only existing activities connected to this evidence/lineage acquire support.
-      const related = ws.lessons.filter(item => item.id === lesson.id || (item.courseId === lesson.courseId &&
-        (lineage.has(item.diagnosticInvestigationId ?? '') || item.sourceIds.some(id => lesson.sourceIds.includes(id)))));
       for (const item of related) if (!await act({ type: 'assistance', lessonId: item.id, kind: 'explanation' })) {
         setError('The inspection could not save its support record. Your explanations remain closed. Try again.'); return;
       }
-      setVisible(true);
+      setDisclosedContext(context);
     } catch { setError('The inspection could not save its support record. Your explanations remain closed. Try again.'); } finally { setSaving(false); }
   }
   return <section className="card learning-inspection" aria-label="What Soma is checking">
@@ -41,12 +54,12 @@ export function LearningInspection({ ws, lesson, act, busy, openLesson }: {
     <p>{concepts.map(record => record.kind === 'concept' ? record.objective : '').join(' · ') || lesson.objective}</p>
     <p className="meta">{initial.mode === 'live' ? 'Actual Spark investigation on the labeled sources.' : 'Prepared synthetic investigation · authored starting artifact.'} Provisional explanations can change. A comparison does not establish mastery.</p>
     {!visible ? <><p>Inspect the competing explanations, exact evidence and checked comparison. Opening them records support for connected activities; predicting remains optional.</p><button className="secondary-button" disabled={busy || saving} onClick={() => void disclose()}>{saving ? 'Saving support…' : 'Inspect explanations and evidence'}</button></> : <>
-      <div className="inspection-header"><p role="status" className="meta">Inspection opened with recorded support. Original responses keep their original conditions.</p><button className="text-button" onClick={() => setVisible(false)}>Close evidence inspection</button></div>
+      <div className="inspection-header"><p role="status" className="meta">Inspection opened with recorded support. Original responses keep their original conditions.</p><button className="text-button" onClick={() => setDisclosedContext(undefined)}>Close evidence inspection</button></div>
       {lesson.id.startsWith('graph-preview-parallel') && <details><summary>View fictional returned work</summary><figure><img src="/synthetic/returned-work.svg" width={800} height={480} alt="Original synthetic returned work: a 12 V parallel circuit with 6 Ω and 3 Ω branches. Fictional answer says each branch gets 3 A; the authored marking asks which nodes each resistor connects to."/><figcaption className="meta">Original authored development image and typed observation. This walkthrough does not demonstrate model image extraction.</figcaption></figure></details>}
       <section><h3>Two provisional explanations</h3><p>{initial.diagnosticPlan.rationale}</p><div className="inspection-pair">{initial.diagnosticPlan.hypotheses.map(hypothesis => {
         const interpretation = interpretations.find(record => record.kind === 'interpretation' && record.claim === hypothesis.claim);
         const revision = latest.hypothesisRevisions?.find(item => item.hypothesisId === hypothesis.id);
-        return <article className="evidence-card" key={hypothesis.id}><span className="status-chip">{revision?.status ?? (interpretation?.kind === 'interpretation' ? interpretation.status : hypothesis.status)}</span><h4>{hypothesis.claim}</h4><p className="meta">{revision?.reason ?? (interpretation?.kind === 'interpretation' ? interpretation.uncertainty : 'Plausible explanation; not an established learner belief.')}</p>{hypothesis.evidence.map((ref, index) => {
+        return <article className="evidence-card" key={hypothesis.id}><span className="status-chip">{statusLabel(revision?.status ?? (interpretation?.kind === 'interpretation' ? interpretation.status : hypothesis.status))}</span><h4>{hypothesis.claim}</h4><p className="meta">{revision?.reason ?? (interpretation?.kind === 'interpretation' ? interpretation.uncertainty : 'Plausible explanation; not an established learner belief.')}</p>{hypothesis.evidence.map((ref, index) => {
           const source = ws.sources.find(item => item.id === ref.sourceId && item.version === ref.version);
           return <details key={`${ref.sourceId}-${index}`}><summary>Supporting evidence: {source?.title ?? 'Source unavailable'} · v{ref.version}</summary><blockquote>{ref.quote}</blockquote><p className="meta">{source?.origin ?? source?.kind} · {source?.status ?? 'unavailable'}{ws.sources.some(item => item.id === ref.sourceId && item.version > ref.version) ? ' · Newer version exists' : ''}</p></details>;
         })}{hypothesis.attemptIds.map(id => {
@@ -58,7 +71,7 @@ export function LearningInspection({ ws, lesson, act, busy, openLesson }: {
       <section><h3>{latest.id !== initial.id ? 'What changed after your response' : 'What comes next'}</h3>{latest.id !== initial.id ? <><div className="inspection-pair"><article className="evidence-card"><h4>Before</h4><p>{initial.diagnosticPlan.nextActivity}</p><p className="meta">{lesson.question}</p></article><article className="evidence-card"><h4>After</h4><p>{latest.reason}</p><p>{latest.decision === 'keep-current' ? 'The existing preparation remains useful.' : latest.decision === 'needs-evidence' ? 'The evidence is still uncertain. Further clarification may help.' : next && next.id !== lesson.id ? next.question : 'A revision is recorded; no different activity has been published here.'}</p></article></div>{latest.attemptIds?.map(id => {
         const attempt = ws.attempts.find(item => item.id === id); return attempt ? <details key={id}><summary>{attempt.responseKind === 'correction' ? 'Student correction' : 'Saved response'} · {time(attempt.createdAt)} Eastern</summary><p>{attempt.response}</p><p className="meta">{attempt.assisted ? 'Recorded support preceded this observation.' : 'No help recorded in Soma; external support is unknown.'} Original observations are preserved.</p></details> : null;
       })}</> : <p>{initial.diagnosticPlan.nextActivity}</p>}{next && next.id !== lesson.id && <button className="primary-button" disabled={next.state !== 'ready'} onClick={() => openLesson(next.id)}>Open {next.exposure === 'fresh-no-diagram' ? 'fresh application' : 'next activity'}</button>}</section>
-      <details><summary>Interpretation history and model versions</summary>{descendants.map(record => <article key={record.id}><h4>{record.mode === 'live' ? 'Actual Spark decision' : 'Prepared synthetic decision'} · {time(record.createdAt)} Eastern</h4><p>{record.reason}</p>{record.hypothesisRevisions?.map(revision => <p key={revision.hypothesisId}>{initial.diagnosticPlan!.hypotheses.find(item => item.id === revision.hypothesisId)?.claim ?? revision.hypothesisId}: {revision.status} · {revision.reason}</p>)}</article>)}<p className="meta">Lesson v{lesson.version} · {lesson.modelVersion} · {lesson.sourceIds.map(id => `${id} v${lesson.sourceVersions[id]}`).join(' · ')}. Actual timestamps; no simulated delay is evidence of retention.</p></details>
+      <details><summary>Interpretation history and model versions</summary>{descendants.map(record => <article key={record.id}><h4>{record.mode === 'live' ? 'Actual Spark decision' : 'Prepared synthetic decision'} · {time(record.createdAt)} Eastern</h4><p>{record.reason}</p>{record.hypothesisRevisions?.map(revision => <p key={revision.hypothesisId}>{initial.diagnosticPlan!.hypotheses.find(item => item.id === revision.hypothesisId)?.claim ?? revision.hypothesisId}: {statusLabel(revision.status)} · {revision.reason}</p>)}</article>)}<p className="meta">Lesson v{lesson.version} · {lesson.modelVersion} · {lesson.sourceIds.map(id => `${id} v${lesson.sourceVersions[id]}`).join(' · ')}. Actual timestamps; no simulated delay is evidence of retention.</p></details>
     </>}{error && <p role="alert">{error}</p>}
   </section>;
 }

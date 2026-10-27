@@ -439,3 +439,13 @@ blockquote { margin: 12px 0; padding: 0; color: var(--ink-2); font-size: 14px; l
 .audit-event p + p { margin-top: 6px; }
 .audit-rationale { padding-left: 12px; border-left: 2px solid var(--accent); }
 @media(max-width:600px) { .ai-activity { padding: 12px 14px; } .audit-context { grid-template-columns: 1fr; } }
+
+/* Source-linked local inspection stays inside Study's Ready Card rail. */
+.learning-inspection{min-width:0}.learning-inspection h3{margin:24px 0 12px}.learning-inspection h4{margin:12px 0;font-size:15px}.learning-inspection details{margin-top:12px}.learning-inspection summary{min-height:44px;padding:10px 0;cursor:pointer}.learning-inspection p,.learning-inspection blockquote,.learning-inspection th{overflow-wrap:anywhere}.learning-inspection blockquote{margin:12px 0;padding:12px;background:var(--surface-muted);border-radius:10px}.inspection-pair{display:grid;gap:12px}.inspection-header{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.inspection-table{overflow-x:auto}.inspection-table table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}.inspection-table th,.inspection-table td{text-align:left;padding:12px 6px;border-bottom:1px solid var(--divider)}.inspection-table td{white-space:nowrap}.inspection-table small{display:block;font-weight:500;color:var(--muted)}.inspection-table caption{text-align:left;color:var(--muted);font-size:13px;padding-bottom:8px}.learning-correction{margin-top:20px}.learning-correction summary{cursor:pointer;min-height:44px;padding:12px 0}.learning-correction textarea{display:block;width:100%;max-width:100%;min-height:96px}.learning-correction form{padding-top:8px}.learning-inspection .evidence-card{min-width:0}
+@media(max-width:900px){.learning-inspection .inspection-pair{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:540px){.learning-inspection .inspection-pair{grid-template-columns:minmax(0,1fr)}}
+
+.learning-inspection figure{margin:12px 0}.learning-inspection img{display:block;max-width:100%;height:auto}.learning-inspection figcaption{margin-top:8px}
+
+.study-grid>.learning-inspection{grid-area:inspection}.learning-inspection .inspection-pair{grid-template-columns:repeat(2,minmax(0,1fr))}.study-grid:has(>.learning-inspection){grid-template-areas:'heading predict' 'stage predict' 'practice context' 'inspection inspection' 'review review'}
+@media(max-width:900px){.study-grid:has(>.learning-inspection){grid-template-areas:'heading' 'predict' 'stage' 'practice' 'inspection' 'review' 'context'}}
+@media(max-width:540px){.learning-inspection .inspection-pair{grid-template-columns:minmax(0,1fr)}}

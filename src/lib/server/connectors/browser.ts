@@ -15,8 +15,9 @@ export const BROWSER_PROVIDERS = {
 } as const;
 export type BrowserProvider = keyof typeof BROWSER_PROVIDERS;
 export type BrowserTarget = { courseId: string; url: string; context?: SourceAuthorityContext };
-type Configuration = { targets: BrowserTarget[] };
-type Secret = { contextId?: string; sessionId?: string; sessionExpiresAt?: string; readyAt?: string; day?: string; starts?: number };
+export type BlackboardSelection = { id: string; courseId: string };
+export type Configuration = { targets: BrowserTarget[]; blackboard?: { selected: BlackboardSelection[]; catalogIds: string[]; catalogCheckedAt: string; catalogComplete: boolean; nextCourseIndex?: number } };
+type Secret = { contextId?: string; sessionId?: string; sessionExpiresAt?: string; loginPageId?: string; readyAt?: string; day?: string; starts?: number };
 type BrowserConnection = Connection<Secret, Configuration>;
 const ID = (provider: BrowserProvider) => `browser-${provider}`;
 const fail = (message: string, status = 409, code = 'browser_connection') => new WorkspaceStoreError(message, status, code);
@@ -108,7 +109,7 @@ async function releaseSession(connection: BrowserConnection) {
   if (session && ['RUNNING', 'PENDING'].includes(session.status)) await api(`/sessions/${encodeURIComponent(session.id)}`, 'POST', { status: 'REQUEST_RELEASE' });
 }
 function clearSession(secret: Secret): Secret {
-  const { sessionId: _id, sessionExpiresAt: _expiry, ...rest } = secret;
+  const { sessionId: _id, sessionExpiresAt: _expiry, loginPageId: _page, ...rest } = secret;
   return { ...rest, readyAt: new Date(Date.now() + 5000).toISOString() };
 }
 async function connect(session: Session): Promise<Browser> {
@@ -178,13 +179,43 @@ export async function startBrowserLogin(account: VerifiedAccount, provider: Brow
         if (!await checkpointConnectionLease(account, connection.id, lease.leaseId, { secret: connection.secret })) { await api(`/contexts/${encodeURIComponent(context.id)}`, 'DELETE'); throw fail('Source settings changed.'); }
       }
       const created = await allocateSession(account, lease.leaseId, connection, 600); connection = created.connection; session = created.session;
-      const browser = await connect(session);
-      try { const context = browser.contexts()[0]; if (!context) throw fail('Browser is not ready.'); const page = context.pages()[0] || await context.newPage(); await page.goto(BROWSER_PROVIDERS[provider].homeUrl, { waitUntil: 'domcontentloaded', timeout: 20_000 }); }
-      finally { await browser.close(); }
     }
-    const debug = z.object({ debuggerFullscreenUrl: z.string().url() }).parse(await api(`/sessions/${encodeURIComponent(session!.id)}/debug?expiresIn=600`));
-    const login = new URL(debug.debuggerFullscreenUrl);
-    if (login.protocol !== 'https:' || !(login.hostname === 'browserbase.com' || login.hostname.endsWith('.browserbase.com'))) throw fail('Browser service returned an invalid sign-in link.', 503);
+    const browser = await connect(session!);
+    let pageId: string;
+    try {
+      const context = browser.contexts()[0]; if (!context) throw fail('Browser is not ready.');
+      const targets = await Promise.all(context.pages().filter(page => !page.isClosed()).map(async page => {
+        const cdp = await context.newCDPSession(page);
+        try {
+          const info = z.object({ targetInfo: z.object({ targetId: z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/) }) }).parse(await cdp.send('Target.getTargetInfo'));
+          return { page, id: info.targetInfo.targetId };
+        } finally { await cdp.detach(); }
+      }));
+      const nonblank = targets.filter(target => !/^about:blank(?:[?#]|$)/.test(target.page.url()));
+      // A reconnect must not reload a provider/SSO/MFA page that the student is already using.
+      const existing = nonblank.find(target => target.id === connection.secret.loginPageId) ?? nonblank.at(-1);
+      let selected = existing ?? targets.find(target => target.id === connection.secret.loginPageId) ?? targets[0];
+      if (!selected) {
+        const page = await context.newPage(), cdp = await context.newCDPSession(page);
+        try {
+          const info = z.object({ targetInfo: z.object({ targetId: z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/) }) }).parse(await cdp.send('Target.getTargetInfo'));
+          selected = { page, id: info.targetInfo.targetId };
+        } finally { await cdp.detach(); }
+      }
+      if (!existing) await selected.page.goto(BROWSER_PROVIDERS[provider].homeUrl, { waitUntil: 'domcontentloaded', timeout: 20_000 });
+      pageId = selected.id;
+      connection.secret = { ...connection.secret, loginPageId: pageId };
+      if (!await checkpointConnectionLease(account, connection.id, lease.leaseId, { secret: connection.secret })) throw fail('Source settings changed. Reopen the connection.');
+    } finally { await browser.close(); }
+    const debug = z.object({ pages: z.array(z.object({ id: z.string(), debuggerFullscreenUrl: z.string().url() })).max(100) }).parse(await api(`/sessions/${encodeURIComponent(session!.id)}/debug?expiresIn=600`));
+    const matches = debug.pages.filter(page => page.id === pageId);
+    if (matches.length !== 1) throw fail('The sign-in page is not available yet. Reconnect to retry.', 503, 'browser_login_target');
+    const login = new URL(matches[0].debuggerFullscreenUrl);
+    const rawSocket = login.searchParams.get('wss');
+    let socket: URL; try { socket = new URL(rawSocket?.startsWith('wss://') ? rawSocket : `wss://${rawSocket ?? ''}`); } catch { throw fail('Browser service returned an invalid sign-in link.', 503, 'browser_login_target'); }
+    if (login.protocol !== 'https:' || login.username || login.password || (login.port && login.port !== '443') || !(login.hostname === 'browserbase.com' || login.hostname.endsWith('.browserbase.com'))
+      || socket.protocol !== 'wss:' || socket.username || socket.password || (socket.port && socket.port !== '443') || !(socket.hostname === 'connect.browserbase.com' || /^connect\.[a-z0-9-]+\.browserbase\.com$/.test(socket.hostname))
+      || socket.pathname !== `/debug/${session!.id}/devtools/page/${pageId}`) throw fail('Browser service returned an invalid sign-in link.', 503, 'browser_login_target');
     await persistLease(account, connection, lease.leaseId, { secret: connection.secret, status: 'connecting', notice: 'Finish sign-in in the private browser. Course access is not verified yet.' });
     return { loginUrl: login.href, expiresAt: session!.expiresAt, notice: 'Enter credentials and MFA only in the provider page. Finish sign-in, then select Refresh to verify course access.' };
   } catch (error) {
@@ -250,7 +281,7 @@ export async function refreshBrowser(account: VerifiedAccount, provider: Browser
     const page = await context.newPage();
     const cdp = await context.newCDPSession(page);
     await cdp.send('Network.setBypassServiceWorker', { bypass: true });
-    await cdp.send('ServiceWorker.stopAllWorkers');
+    await cdp.send('ServiceWorker.enable');await cdp.send('ServiceWorker.stopAllWorkers');
     const records: CollectedSource[] = [];
     for (const target of selected.targets) records.push(await readPage(page, provider, target, deadline));
     remainingReadTime(deadline, 1);

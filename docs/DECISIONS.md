@@ -266,3 +266,7 @@ P064 executed checkpoint: worker revision `soma-browser-00004-k8g` (2,100-second
 ## October 28 — P068 distinguish reading, decisions and usable learning
 
 Treat source collection, investigation decisions, prepared activities and demonstrated learning as separate gates. Metadata/announcements can support planning but do not prove lecture/slides or returned-work access. A completed keep-current investigation is not a newly prepared lesson. Fix stale queued work using same-transaction workspace revision/ownership checks and clear expired lease tokens; never remove active leases, increase the five-job admission cap or reset the model ledger to make verification pass. Preserve typed safe enqueue failure facts instead of a generic handoff warning. The existing $2 cap remains; actual remaining headroom is below a new reservation, so paid source-use checks require available budget rather than a synthetic success claim. Blackboard requested fresh human authentication during the new check.
+
+### P070 — Authorized bounded verification allowance
+
+Jeremy explicitly approved $1 additional model testing, total cap $3, for a course-grounded activity, citation/correctness check, saved reuse and bounded follow-up. Preserve the existing global ledger, unknown-usage reservations, daily limits and twenty-percent reserve of the $150 allocation. Local verification now selects cap $3; production activation and actual run evidence must be recorded separately. This supersedes the P068 $2 blocking threshold, not the source/privacy or release gates.

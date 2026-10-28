@@ -1301,3 +1301,31 @@ Five jobs are queued, one with obsolete source references. The exact production 
 Two implementation fixes are under review: transactional stale-job cleanup/selection with source revision and lease fencing, and typed sanitized source-to-preparation handoff facts that distinguish queued work, completed decisions, capacity and changed sources. Original synthetic managed-Firestore queue cases preserve the five-job cap and confirm no model budget or source content mutation. A separate bounded initial ordinary-practice tool is being added to prevent a missing learning activity from being concealed by a saved keep-current decision; actual model use is a later gate.
 
 P068 queue milestone audit: independent review confirmed ownership/generation checks, atomic stale retirement and five-slot admission. It identified an expired-token resurrection risk, fixed by clearing leaseId/leaseUntil in both stale paths. The managed original-synthetic Firestore test passed in 9.19 seconds, including stale-first dispatch, rollback, old-snapshot rejection, active lease retention, unchanged source/budget and disposable cleanup. A first sandbox attempt failed DNS before creating a fixture; the network-authorized run passed. The final clean staged artifact excludes all pre-existing orchestration changes and passed typecheck plus 34 focused queue/handoff/worker/job tests. No real-account writes, source collection or model calls were made by these tests.
+
+## P069 — Reopen BU sign-in (October 28, 2026)
+
+Prompt: canonical verbatim clarification `P069`.
+
+Top three outcomes:
+1. Reopened the active BU allocation using the normal owned reconnect flow and a fresh one-use viewer link. The protected window visibly connected with approximately thirteen minutes remaining; its original deadline was preserved.
+2. Kept the new viewer and Soma tabs for human login/MFA; no credentials were entered or read by the agent. Fresh material read remains pending.
+3. Preserved selected courses, state isolation and handoff. Screenshot proof captures the viewer header only to avoid sensitive provider inputs. No code, budget or permission change for this routine reopen.
+
+Deviations: none; routine reauthentication recovery.
+
+## P070 — Authorize bounded $3 model-testing cap (October 28, 2026)
+
+Prompt: canonical verbatim clarification `P070`.
+
+Top three outcomes:
+1. Jeremy explicitly approved an additional $1 for the concrete course-source activity/reuse/follow-up test, raising the total application cap from $2 to $3.
+2. Updated the ignored local testing configuration to $3 while preserving the global ledger, per-job limits and twenty-percent reserve of the $150 allocation. Production cap activation and actual paid checks are separate pending actions.
+3. Continue source access and correctness verification; no model call or successful lesson is implied by this approval.
+
+Deviations: approved testing-cap increase, replacing P068’s previous $2 gate; no change to the Meta allocation or unbounded inference authority.
+
+### P068 initial ordinary-practice milestone
+
+Implemented a source-grounded ordinary-practice branch for initial investigations, replacing the inapplicable response-revision tool slot so the eight-tool bound stays intact. It reuses the existing text-practice validator, only actually disclosed offset-zero segments, fresh-question checks and normal final-decision/publication fencing. It never invents learner hypotheses or writes understanding evidence. Optional reviewer work remains excluded from this change/deployment; the shared working copy retains that separate in-progress integration. Engine v9 invalidates old cached decisions for the new tool contract.
+
+Thirteen new scripted-provider cases passed, including read-to-practice-to-finish publication, unread/later-page/forged/foreign quotes, stale source rejection, unoffered tool calls, protected rejected candidates and administrative keep-current. Independent review found no blocking P0/P1 issue. The isolated clean artifact passed typecheck and the full suite: 1,036 tests, 55 opt-in skips. Initial harness runs failed due to missing separate browser-runner dependencies and sandboxed loopback access; one dependency-link correction was needed, with no application changes. The successful rerun used the pinned installed dependency directory and permitted original-synthetic loopback tests; no live models/providers were enabled. A clean production build initially rejected an external node_modules symlink; rerun with a real pinned dependency directory is in progress. Actual new-model usefulness and fresh Blackboard teaching-content access are still separate pending gates.

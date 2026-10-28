@@ -17,7 +17,7 @@ Owner-scoped read-only inspection found five queued jobs, including one with obs
 
 The queue repair preserves five active admission slots and ownership/generation/lease fencing. Only a current transaction snapshot may retire obsolete queued work; it clears old lease tokens and never steals an active lease. Safe handoff facts distinguish capacity, changed source versions and unavailable preparation from a successful source save. Managed synthetic checks do not use real coursework or inference.
 
-An initial-source ordinary-practice option is being implemented using the existing checked text-practice contract, within the same investigation call/time/spend bounds. It must cite an actually disclosed current source passage, create no learner diagnosis/evidence, retain the development-preview label and require normal final-decision/publication checks. Administrative snippets alone do not justify invented teaching content.
+An initial-source ordinary-practice option is implemented and synthetically verified using the existing checked text-practice contract, within the same investigation call/time/spend bounds. It must cite an actually disclosed current source passage, create no learner diagnosis/evidence, retain the development-preview label and require normal final-decision/publication checks. Administrative snippets alone do not justify invented teaching content.
 
 ## Concrete next live check
 
@@ -29,8 +29,15 @@ An initial-source ordinary-practice option is being implemented using the existi
 
 ## Budget gate
 
-The authorized application cap remains $2, separate from the $150 allocation and its twenty-percent reserve. The inspected consumed amount is $1.85152875: $0.14847125 remains, below a new $0.20 lesson or $0.35 investigation reservation. No ledger reset, reduced safety reservation or cap increase is authorized by this report. A proposed additional $1 (cap $3) would bound the next actual-course preparation/follow-up check; approval is still required before enabling it. Unchanged/cached readback and synthetic checks remain possible meanwhile.
+The authorized application cap remains $2, separate from the $150 allocation and its twenty-percent reserve. The inspected consumed amount is $1.85152875: $0.14847125 remains, below a new $0.20 lesson or $0.35 investigation reservation. No ledger reset, reduced safety reservation or cap increase is authorized by this report. A proposed additional $1 (cap $3) would bound the next actual-course preparation/follow-up check; P070 explicitly approved that additional $1 on October 28. The ignored local verification configuration now selects cap $3; production activation and actual paid-check evidence are still separate pending steps. The historical $2 preflight figures above are preserved. Unchanged/cached readback and synthetic checks remain possible meanwhile.
 
 ## Acceptance interpretation
 
 Reading, a saved decision, a published activity, reviewed instructional correctness and a measured learning benefit are separate outcomes. Report each executed result and limitation; do not infer usefulness from schema validity or a learning gain from one generated question.
+
+
+## Implemented verification checkpoint
+
+Queue recovery and typed handoff fixes are committed in `3121cf7`. Initial ordinary practice passes thirteen new provider-scripted cases and independent security review; the clean combined artifact passes typecheck and 1,036 tests / 55 opt-in skips. This is synthetic execution and contract evidence, not a successful new live Spark decision. The actual $3 bounded test awaits fresh instructional source selection and execution.
+
+For the future file reader, Anthology documents [content attachment discovery and download](https://docs.blackboard.com/docs/blackboard/rest-apis/demo-code/curl-attach-demo). Documentation alone does not establish access through this student account or implement PDF extraction. The current collector still excludes files; no download restriction was bypassed.

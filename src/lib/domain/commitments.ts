@@ -129,7 +129,7 @@ const fitMinutes = (available: number | null): 10 | 20 | 45 => available === nul
 
 /** Updates an internal recommendation only. The caller persists under its workspace revision transaction. */
 export function refreshSessionRecommendation(state: WorkspaceState, now: string, trigger: string, previous?: Availability, classification: Consequence['classification'] = 'availability') {
-  const availability = selectAvailability(state);
+  const availability = selectAvailability(state, state.demoClock ?? now);
   const prior = previous ?? availability;
   const oldMinutes = state.sessionRecommendation?.minutes ?? fitMinutes(prior.availableMinutes);
   const minutes = fitMinutes(availability.availableMinutes);
@@ -146,7 +146,7 @@ export function refreshSessionRecommendation(state: WorkspaceState, now: string,
 /** Shared ingestion path for selected calendar imports, scoped email observations, and labeled synthetic fixtures. */
 export function ingestCommitments(input: WorkspaceState, observations: CommitmentObservation[], now: Date | string = new Date(), previousAvailability?: Availability): WorkspaceState {
   const state = structuredClone(input), timestamp = new Date(now).toISOString();
-  const before = previousAvailability ?? selectAvailability(state);
+  const before = previousAvailability ?? selectAvailability(state, state.demoClock ?? timestamp);
   state.commitmentObservations ??= [];
   let added = false;
   for (const observation of observations) {

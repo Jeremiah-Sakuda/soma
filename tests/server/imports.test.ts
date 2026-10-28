@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { seedEmptyAccountWorkspace, seedWorkspace } from '../../src/lib/domain/seed';
 import { applySourceImport, readSourceImport, sourceImportSchema } from '../../src/lib/server/imports';
 
@@ -47,6 +47,20 @@ describe('manual source ingestion', () => {
     expect(imported.sessionRecommendation?.availableMinutes).toBe(20);
     expect(imported.attempts).toHaveLength(0);
     expect(imported.commitmentObservations?.[0].workspaceId).toBe('account');
+  });
+
+  it('uses the supplied processing time even when the machine clock is years later', () => {
+    vi.useFakeTimers({toFake:['Date']});
+    try {
+      vi.setSystemTime(new Date('2035-01-01T00:00:00Z'));
+      const workspace=seedEmptyAccountWorkspace('original-processing-time-fixture',now);
+      workspace.focusWindows=[{id:'focus',startAt:'2026-10-28T16:00:00-04:00',endAt:'2026-10-28T16:45:00-04:00',timezone:'America/New_York',declaredAt:now}];
+      workspace.selectedSessionMinutes=45;
+      const imported=applySourceImport(workspace,calendarImport(),now).workspace;
+      expect(imported.sessionRecommendation?.availableMinutes).toBe(20);
+      expect(imported.sessionRecommendation?.updatedAt).toBe(new Date(now).toISOString());
+      expect(imported.attempts).toHaveLength(0);
+    } finally {vi.useRealTimers();}
   });
 
   it('keeps a tentative invitation uncertain and prevents a second calendar silently joining scope', () => {

@@ -22,7 +22,7 @@
   canvas.onmousemove=event=>{if(event.buttons)send({type:'mouse',event:'mouseMoved',...point(event)});};
   canvas.addEventListener('wheel',event=>{event.preventDefault();send({type:'wheel',deltaY:Math.max(-5000,Math.min(5000,event.deltaY))});},{passive:false});
   const modifiers=event=>(event.altKey?1:0)+(event.ctrlKey?2:0)+(event.metaKey?4:0)+(event.shiftKey?8:0);
-  canvas.onkeydown=event=>{if(event.key==='Escape'){canvas.blur();return;}event.preventDefault();if(event.key.length===1&&!event.ctrlKey&&!event.metaKey&&!event.altKey)send({type:'text',text:event.key});else send({type:'key',event:'keyDown',key:event.key,code:event.code,keyCode:event.keyCode,modifiers:modifiers(event)});};
+  canvas.onkeydown=event=>{if(event.key==='Escape'){canvas.blur();return;}if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='v')return;event.preventDefault();if(event.key.length===1&&!event.ctrlKey&&!event.metaKey&&!event.altKey)send({type:'text',text:event.key});else send({type:'key',event:'keyDown',key:event.key,code:event.code,keyCode:event.keyCode,modifiers:modifiers(event)});};
   canvas.onkeyup=event=>{if(event.key!=='Escape'){event.preventDefault();send({type:'key',event:'keyUp',key:event.key,code:event.code,keyCode:event.keyCode,modifiers:modifiers(event)});}};
   canvas.onpaste=event=>{event.preventDefault();const text=event.clipboardData?.getData('text')??'';if(text.length<=4096)send({type:'text',text});};
  }catch{status.textContent='This sign-in link is invalid or expired. Return to Soma and reconnect.';}

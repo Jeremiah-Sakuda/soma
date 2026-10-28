@@ -46,7 +46,7 @@ export function createRunner({store,engine,controlKey,publicOrigin,projectId,pro
   try{
    if(!request.url||!request.url.startsWith('/')||request.url.startsWith('//')||request.url.length>2048||request.url.includes('%')||request.url.includes('\\'))throw failure(400,'request_path');
    const url=new URL(request.url,origin),path=url.pathname;
-   if(request.method==='GET'&&path==='/healthz'&&!url.search){send(response,200,{status:'ok'});return;}
+   if(request.method==='GET'&&path==='/health'&&!url.search){send(response,200,{status:'ok'});return;}
    if(request.method==='GET'&&assets.has(path)&&!url.search){const [file,type]=assets.get(path);response.writeHead(200,{'Content-Type':type,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});response.end(await readFile(new URL(file,import.meta.url)));return;}
    const viewer=/^\/viewer\/([a-f0-9-]+)(?:\/(bootstrap))?$/.exec(path);
    if(viewer){

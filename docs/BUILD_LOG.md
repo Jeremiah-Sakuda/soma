@@ -1094,3 +1094,16 @@ Verification checkpoint: shared-checkout full default suite passed 893 tests wit
 Commits: `ae61ae6` discovery/access checkpoint; `3efb1cf` structured preview collection, privacy/recovery tests and operating boundary, pushed to main and deployed. This documentation checkpoint records the final clean verification and remaining provider gate.
 
 Deviations: collection is deliberately limited to partial class-visible instructor-note previews rather than full discussion bodies. The live gate is deferred due to the provider billing refusal, not declared passed. Current source authorization, $2 Meta cap and concurrent PM028/PM029 work are preserved.
+
+## P056 — Retry Piazza after provider allowance update (October 27, 2026)
+
+Prompt: [canonical verbatim clarification](build-log/prompts.json), `P056`.
+
+Top three outcomes:
+1. Retried the existing opt-in saved-context access check once under the explicit private owner/class scope. It failed after 4.45 seconds during session allocation with safe upstream `providerStatus: 402`; no Piazza page opened, material was published or model was called. Saved authorization was retained.
+2. Checked provider project identity and usage using read-only GETs. The existing connector has no explicit project override and its key resolves to exactly one project, named “Personal project,” with concurrency three. Project-list and usage reads both returned HTTP 200; usage remains 60 browser minutes and zero proxy bytes. A first diagnostic required an explicit project and stopped locally; the corrected check used the connector’s existing single-project fallback. No billing change or second session allocation was made.
+3. Asked whether the user changed the allowance in this same Browserbase account or another one; any replacement key must remain in the local env file. Actual structured extraction, source selection, production collection/readback and full discussion access remain unverified. No application changes, new Meta calls or payment actions; existing deployed implementation and concurrent lesson work were preserved.
+
+Executed checks: one opt-in actual-provider test failed at the allocation gate; two bounded read-only service requests succeeded. Canonical prompt/archive and scoped documentation checks follow before commit. No broad synthetic suite was rerun for this documentation-only checkpoint. These results supersede the expectation that provider access had recovered, not the recorded earlier CI success.
+
+Deviations: retry remains blocked by the provider’s HTTP 402 response. No supported-reader or release gate is declared passed.

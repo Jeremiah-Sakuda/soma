@@ -473,6 +473,14 @@
       "prompt": "Signed in",
       "question_context": "The separate Piazza browser window is open. Complete sign-in and any MFA there, then reply “Signed in to Piazza.” Enter credentials only on Piazza’s page, not in chat.",
       "timestamp_note": "Exact received timestamp unavailable; platform context excluded."
+    },
+    {
+      "id": "P056",
+      "received_at": null,
+      "kind": "clarification",
+      "prompt": "It should work now try again",
+      "question_context": "Browserbase reports 60 browser minutes used and rejects new sessions with HTTP 402. Please review the project’s billing/usage allowance and let me know when sessions are available again. Your saved Piazza login can be reused.",
+      "timestamp_note": "Exact received timestamp unavailable; platform context excluded."
     }
   ]
 }

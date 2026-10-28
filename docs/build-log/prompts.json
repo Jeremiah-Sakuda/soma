@@ -542,6 +542,13 @@
       "kind": "prompt",
       "prompt": "Why is the window so short? It disconnected again ",
       "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York; trailing space preserved; platform browser/Page context excluded."
+    },
+    {
+      "id": "P065",
+      "received_at": null,
+      "kind": "prompt",
+      "prompt": "done",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York. Platform browser context excluded."
     }
   ]
 }

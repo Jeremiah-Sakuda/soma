@@ -1258,3 +1258,14 @@ Top three outcomes:
 3. Started Piazza reconnect through its recorded legacy cleanup/GCP migration path and verified the new protected viewer connected at the Piazza origin with approximately 29 minutes remaining. Opened its login control for human handoff. No Piazza source read/publication is established, and no course selection was invented. Both tabs retained; screenshot proof stays ignored locally.
 
 Deviations: no scope or budget expansion. One Gradescope page remains unverified and some preparation queuing is incomplete; retain those as open follow-up work. This operational verification changed no application code, so the previous CI was not redundantly rerun. Two short UI automation waits expired while work continued; current status was inspected rather than repeating the requests.
+
+## P066 — Save completed Piazza sign-in (October 28, 2026)
+
+Prompt: canonical verbatim archive entry `P066`.
+
+Top three outcomes:
+1. Completed the normal owned Piazza save action before the active login deadline. The production UI confirms connected and Browser saved; the agent entered no credentials and recorded no session material.
+2. The current connection has no saved class targets. Requested the current-semester class name and canonical overview URL, or equivalent selection in Soma, before collection. Course reading and the structured preview/publication gate remain unverified; saved sign-in alone is not read evidence.
+3. Preserved Blackboard and Gradescope authorization/scopes, the stale third Gradescope page, existing budget and concurrent implementation. No new collection, inference, permission change or application code was introduced; prior CI was not redundantly rerun. Local screenshot proof is ignored.
+
+Deviations: no scope change. Piazza collection awaits an explicit class target; its current UI uses exact-page selection rather than an implemented automatic class picker.

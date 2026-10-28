@@ -1,12 +1,12 @@
 # Institutional sign-in and saved browser authorization
 
-October 27, 2026 — P039. This specifies the existing browser-session approach for BU Blackboard, Piazza and Gradescope, its trust assumptions and the remaining acceptance work. It is not a claim of live institutional access or a completed security certification.
+Originally October 27, 2026 — P039; updated October 28 for GCP hosting and sign-in recovery (P061–P064). This specifies the browser-session approach for BU Blackboard, Piazza and Gradescope, its trust assumptions and remaining acceptance work. Earlier Browserbase evidence remains historical; current hosted results are in BUILD_LOG and GCP_BROWSER_MIGRATION. This is not a completed security certification.
 
 ## Recommended user journey
 
 1. In the signed-in Soma workspace, choose **Connect Blackboard**. Prioritize `https://learn.bu.edu/`, where Jeremy's primary coursework lives; add Piazza and Gradescope as separate connections afterward.
-2. Soma opens a short-lived Browserbase live browser at the provider's official home page. The student enters credentials on the actual provider or institutional SSO page and completes MFA there. No Soma password form, `.env` entry, chat message or model tool receives the institutional password. Password autofill/saving must not be encouraged in this hosted browser.
-3. The student finishes sign-in and returns to Soma. End the interactive session, allow context synchronization, then open a fresh collection session with the saved context. Saving a context is not successful course-access verification.
+2. Soma opens a bounded private browser on its configured host (currently the dedicated GCP worker) at the provider's official home page. The student enters credentials on the actual provider or institutional SSO page and completes MFA there. No Soma password form, `.env` entry, chat message or model tool receives the institutional password. Password autofill/saving must not be encouraged in this hosted browser.
+3. The student finishes sign-in, returns to Soma and clicks **I’ve finished signing in** to save the authorization and end the interactive session. A fresh collection session later restores the saved authorization. GCP release awaits encrypted persistence/close synchronously; legacy Browserbase requires its sync delay. Saving authorization is distinct from successful course-access verification.
 4. For Blackboard, the student discovers and selects verified courses (P050); for other providers, the current route selects exact supported course pages. Only a successful scoped read with positive account/content checks marks those pages current. Preserve unsupported-page and expired-session states honestly.
 5. A future refresh reuses the saved authorization while it remains valid. If the school requires sign-in/MFA again, pause collection and ask the student to reconnect. Do not retry passwords, bypass MFA, or continuously prompt Duo approvals.
 6. Disconnect ends the hosted session, deletes its saved context and removes local authorization references. If remote deletion fails, retain protected cleanup references for retry and show the failure. This removes Soma's saved access; it is not a global logout of the student's other browsers or an institution-wide session revocation.
@@ -15,15 +15,15 @@ Google remains a separate OAuth flow for selected read-only Gmail and Calendar a
 
 ## What is actually trusted
 
-The hosted browser processes the student's login and holds authenticated cookies. Browserbase is therefore a trusted processor, not a credential-blind relay. Soma's authorized server runtime can control that browser; application code, deployed operators, server secrets and provider administration are part of the trust model. “The model does not receive passwords” must not be presented as “the platform cannot access the authenticated account.”
+The hosted browser processes the student's login and holds authenticated cookies. Its configured host (currently Soma’s GCP worker; Browserbase for legacy contexts) is a trusted processor, not a credential-blind relay. Soma's authorized server runtime can control that browser; application code, deployed operators, server secrets and provider administration are part of the trust model. “The model does not receive passwords” must not be presented as “the platform cannot access the authenticated account.”
 
-Browserbase documents that a context contains a Chromium user-data directory, including cookies, local storage, IndexedDB and potentially saved form data. It documents per-context encryption at rest. Do not promise that a context contains only cookies or cannot retain sensitive form data. Do not deliberately save passwords or TOTP seeds. See [Contexts](https://docs.browserbase.com/platform/browser/core-features/contexts).
+For legacy Browserbase contexts, Browserbase documents a Chromium user-data directory, including cookies, local storage, IndexedDB and potentially saved form data. It documents per-context encryption at rest. Do not promise that a context contains only cookies or cannot retain sensitive form data. Do not deliberately save passwords or TOTP seeds. See [Contexts](https://docs.browserbase.com/platform/browser/core-features/contexts).
 
 Authenticated cookies can grant access without another password. Treat the entire context, its references, control links and provider key as credentials. Course-page selection is an application-enforced collection restriction; the underlying website session may have broader account permissions. It is not a provider-issued read-only token.
 
 If a user requires credentials and browser state to remain entirely on their own device, use a separately designed local companion/extension or the manual-import fallback. Cloud contexts cannot satisfy that requirement. A local companion is not implemented and is not added to P0 by this document.
 
-## Current implementation and evidence
+## Original P039 implementation and evidence (Browserbase checkpoint)
 
 | Concern | Current implementation | Evidence and limit |
 | --- | --- | --- |
@@ -79,3 +79,14 @@ The existing exact-page form maps selected course overviews to owned Soma course
 Versioned ingestion, owner/workspace publication guards, source auditing and the existing preparation budget remain unchanged. Routine assignment sync does not establish R9 image/PDF interpretation. Actual account expiry, provider-context deletion and the returned-work learning loop remain separate verification gates. Piazza still requires its own sign-in and read verification.
 
 **Hosted publication evidence:** deployment `7bfbd59` saved three verified current-semester course mappings through the owner’s UI. The production refresh persisted three current assignment overviews covering twenty-six rows; a separate owned readback confirmed exact selected-course mapping and the allowed metadata-only JSON fields. The UI initially reported a network error despite committed server success; retrying status recovered the actual successful timestamp without repeating collection. This is source publication evidence, not a claim that model preparation or returned-work interpretation completed.
+
+
+## P064 — GCP sign-in timer and recovery
+
+The GCP update uses a fixed thirty-minute interactive sign-in allocation, counted from session creation. Open its one-use link within ten minutes. The viewer shows the actual remaining time; reconnecting to an existing active browser preserves its original deadline and the provider page. The browser's countdown uses server-reported remaining time and a monotonic local clock, so a device wall-clock adjustment does not restart or expire it. Background collection stays at 180 seconds and the existing source-read budget; legacy Browserbase login stays at 600 seconds. The deployed GCP request ceiling is 2,100 seconds, exceeding the bounded sign-in allocation.
+
+If the viewer stream drops or the viewer page is reloaded, its existing scoped HttpOnly cookie can resume the same active session. The server requires exact Origin and rechecks durable ownership, expiry and the current grant at the final authorization boundary. Resume does not issue another entry token/cookie or prolong the session. Five bounded automatic retries are followed by an explicit retry control; a genuinely expired/revoked/unavailable browser returns the user to Soma. Local editing and input forwarding are disabled before authorization and while offline, and interrupted input is not queued/replayed.
+
+A new expired GCP allocation can be started in one reconnect action. An early session disappearance is not proof that its durable lease ended: retain its references and expiry instead of abandoning a possibly active session. Hard worker-loss/instance replacement remains an explicit recovery limit. Disconnect/revocation is still checked before any further browser access.
+
+After successful login, always click **I’ve finished signing in** in Soma before the timer ends. This saves permitted cookies/localStorage/IndexedDB in encrypted private storage; the short-lived viewer is separate from the saved provider authorization used by later read-only checks. The school may independently expire that authorization or require MFA again. No password form, recording, input log, model browser handle or broader course scope is added. Executed local/hosted checks and final deployed status are recorded in [GCP Browser Migration](GCP_BROWSER_MIGRATION.md) and [BUILD_LOG](BUILD_LOG.md); implementation alone is not live evidence.

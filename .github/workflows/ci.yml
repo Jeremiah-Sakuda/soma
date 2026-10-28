@@ -20,6 +20,8 @@ jobs:
         run: node --no-experimental-require-module -e "require('firebase-admin/auth')"
       - run: npm run typecheck
       - run: npm test
+      - name: Verify bounded credential-service diagnostic contracts
+        run: node --test scripts/check-credential-service.test.mjs
       - run: npm run build
       - name: Verify browser runtime in an isolated production trace
         run: npm run check:browser-artifact

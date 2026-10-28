@@ -31,7 +31,7 @@ describe.runIf(process.env.SOMA_CREDENTIAL_BROWSER_TESTS === 'true')('credential
     <input name="csrf_token" type="hidden" value="original-synthetic-csrf">
     <button name="_eventId_proceed" ${extra}>Continue</button></form><script>${script}</script>`;
 
-  async function fixture(html: string, redirectStatus = 303, redirectTarget = 'https://learn.bu.edu/synthetic-auth', responseBody = '', authenticatedHtml = '<!doctype html><h1>Original synthetic MFA step</h1>', inputState: any = null) {
+  async function fixture(html: string, redirectStatus = 303, redirectTarget = 'https://learn.bu.edu/synthetic-auth', responseBody = '', authenticatedHtml = '<!doctype html><h1>Original synthetic MFA step</h1>', inputState: any = null,transitionDelay = 0) {
     let context: BrowserContext;let importedState:any='not-started';
     const transmitted: { url: string; method: string; body: string; dom?: unknown }[] = [];
     const sockets = new Set<any>();
@@ -41,7 +41,7 @@ describe.runIf(process.env.SOMA_CREDENTIAL_BROWSER_TESTS === 'true')('credential
       const url = 'https://' + request.headers.host + request.url;
       const body = Buffer.concat(chunks).toString('utf8');
       transmitted.push({ url, method: request.method!, body });
-      if (url === 'https://learn.bu.edu/') { response.writeHead(302, { location: login }); response.end(); return; }
+      if (url === 'https://learn.bu.edu/') { if(transitionDelay){response.writeHead(200,{'content-type':'text/html'});response.end(`<!doctype html><p>Original synthetic identity transition</p><script>setTimeout(()=>location.replace(${JSON.stringify(login)}),${transitionDelay})</script>`);}else{response.writeHead(302, { location: login });response.end();}return; }
       if (url.startsWith(login) && request.method === 'GET') { response.writeHead(200, { 'content-type': 'text/html' }); response.end(html); return; }
       if (url === action && request.method === 'POST') { response.writeHead(redirectStatus, { location: redirectTarget, 'content-type': 'text/html' }); response.end(responseBody); return; }
       if (url === 'https://learn.bu.edu/learn/api/v1/users/me') { response.writeHead(200, { 'content-type': 'application/json' }); response.end('{"id":"synthetic_student_1"}'); return; }
@@ -92,6 +92,11 @@ describe.runIf(process.env.SOMA_CREDENTIAL_BROWSER_TESTS === 'true')('credential
       for (const socket of sockets) socket.destroy(); tls.close(); proxy.close(); throw error;
     }
   }
+
+  it('waits for a delayed federated transition before inspecting the strict empty login form',async()=>{
+    const test=await fixture(form(),303,'https://learn.bu.edu/synthetic-auth','','<!doctype html><h1>Original synthetic MFA step</h1>',null,250);
+    try{expect(await test.session.inspect()).toEqual({reviewed:true});expect(test.transmitted.some(request=>request.url===login)).toBe(true);expect(test.transmitted.filter(request=>request.method==='POST')).toHaveLength(0);expect(test.domEvents).toEqual([]);}finally{await test.close();}
+  });
 
   it('starts credential enrollment without importing previously saved private authorization',async()=>{
     const privateState={cookies:[{name:'synthetic_saved_auth',value:'original-private-state-canary',domain:'learn.bu.edu',secure:true,httpOnly:true}],origins:[{origin:'https://learn.bu.edu',localStorage:[{name:'private',value:'original-private-state-canary'}]}]};

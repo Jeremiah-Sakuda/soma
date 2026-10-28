@@ -54,7 +54,13 @@ export function createLoginEngine(engine=defaultEngine()) {
   });
   let page=context.pages()[0];if(!page)page=await context.newPage();
   const onlyPage=()=>{if(invalid||context.pages().length!==1||page.frames().length!==1)unavailable();};
-  try {await page.goto(START_URL,{waitUntil:'domcontentloaded',timeout:30_000});}
+  try {
+   await page.goto(START_URL,{waitUntil:'domcontentloaded',timeout:30_000});
+   // BU's initial page can finish before its federated document transition.
+   // Wait only for the reviewed main-document field; facts() still enforces
+   // the exact origin, form action, method, frames and submitter contract.
+   await page.locator('input[name="j_password"]').waitFor({state:'attached',timeout:10_000}).catch(()=>undefined);
+  }
   catch {await browser.close();unavailable();}
   async function facts() {
    onlyPage();

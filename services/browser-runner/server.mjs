@@ -11,7 +11,7 @@ const failure=(status,code)=>Object.assign(new Error('Browser operation unavaila
 const assets=new Map([['/assets/viewer.js',['viewer.js','text/javascript']],['/assets/viewer.css',['viewer.css','text/css']]]);
 async function jsonBody(request){
  if(request.headers['content-type']?.split(';')[0]!=='application/json')throw failure(415,'content_type');
- let body='';for await(const piece of request){body+=piece;if(Buffer.byteLength(body)>16384)throw failure(413,'body_size');}try{return JSON.parse(body);}catch{throw failure(400,'body_json');}
+ const chunks=[];let size=0;for await(const piece of request){size+=piece.length;if(size>16384)throw failure(413,'body_size');chunks.push(piece);}try{return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks)));}catch{throw failure(400,'body_json');}
 }
 function send(response,status,body){response.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});response.end(body===undefined?'':JSON.stringify(body));}
 
@@ -28,10 +28,18 @@ export function createRunner({store,engine,controlKey,publicOrigin,projectId,pro
  const getSession=async(id,owner)=>{const session=sessions.get(id);if(!session||session.owner!==owner)throw failure(404,'session_missing');await fence(session);return session;};
  const revoke=session=>{session.tokens.clear();session.cookies.clear();for(const socket of [...session.viewers,...session.controllers])socket.close(1000);};
  async function finish(session,persist=true){
-  if(session.ending)return;session.ending=true;revoke(session);clearTimeout(session.timer);
-  try{if(persist&&session.expires>now())await store.finish(session.contextId,session.owner,session.id,await session.browser.snapshot());}
-  catch(error){await store.abandon(session.contextId,session.owner,session.id).catch(()=>undefined);throw error;}
-  finally{await session.browser.close();sessions.delete(session.id);}
+  if(session.cleanup)return session.cleanup;
+  const alreadyEnding=session.ending;session.ending=true;revoke(session);clearTimeout(session.timer);
+  session.cleanup=(async()=>{
+   let saveError;
+   try{if(persist&&!alreadyEnding&&session.expires>now())await store.finish(session.contextId,session.owner,session.id,await session.browser.snapshot());}
+   catch(error){await store.abandon(session.contextId,session.owner,session.id).catch(()=>undefined);saveError=error;}
+   // A failed close retains a revoked session reference and capacity until retry.
+   // DELETE cannot report successful cleanup while this close remains unconfirmed.
+   await session.browser.close();sessions.delete(session.id);
+   if(saveError)throw saveError;
+  })();
+  try{return await session.cleanup;}finally{session.cleanup=null;}
  }
  const metadata=session=>({id:session.id,projectId,contextId:session.contextId,status:'RUNNING',expiresAt:new Date(session.expires).toISOString(),connectUrl:origin.replace(/^http/,'ws')+'/cdp/'+session.id,userMetadata:{somaOwner:session.owner}});
  const server=http.createServer(async(request,response)=>{
@@ -85,7 +93,7 @@ export function createRunner({store,engine,controlKey,publicOrigin,projectId,pro
    if(sessionPath&&uuid.test(sessionPath[1])){
     if(request.method==='POST'&&!sessionPath[2]){
      const body=await jsonBody(request);if(body.status!=='REQUEST_RELEASE')throw failure(400,'release_status');
-     const session=await getSession(sessionPath[1],owner);await finish(session,true);send(response,200,{status:'COMPLETED'});return;
+     const session=sessions.get(sessionPath[1]);if(!session||session.owner!==owner)throw failure(404,'session_missing');if(!session.ending)await fence(session);await finish(session,true);send(response,200,{status:'COMPLETED'});return;
     }
     const session=await getSession(sessionPath[1],owner);
     if(request.method==='GET'&&!sessionPath[2]){send(response,200,metadata(session));return;}

@@ -16,6 +16,7 @@ const cleanups: (() => Promise<unknown>)[] = [];
 afterEach(async () => { for (const close of cleanups.splice(0).reverse()) await close(); vi.unstubAllEnvs(); });
 
 async function fixture() {
+  let clock = Date.now();
   const objects = new Map<string, { generation: string; data: unknown }>();
   let generation = 0;
   const adapter = {
@@ -25,7 +26,7 @@ async function fixture() {
       objects.set(id, { generation: String(++generation), data: structuredClone(data) });
     },
   };
-  const store = createStateStore(adapter, Buffer.alloc(32, 7).toString('base64'));
+  const store = createStateStore(adapter, Buffer.alloc(32, 7).toString('base64'), { now: () => clock });
   const browser = {
     connectUrl: 'ws://127.0.0.1:1/devtools/browser/synthetic',
     snapshot: vi.fn(async () => ({ cookies: [], origins: [] })),
@@ -34,7 +35,7 @@ async function fixture() {
     view: vi.fn(async (_page: string, _socket: unknown) => {}),
   };
   const engine = { start: vi.fn(async (_input: unknown) => browser) };
-  const runner = createRunner({ store, engine, controlKey: KEY, publicOrigin: ORIGIN, projectId: PROJECT, proxyUrl: 'http://127.0.0.1:1' });
+  const runner = createRunner({ store, engine, controlKey: KEY, publicOrigin: ORIGIN, projectId: PROJECT, proxyUrl: 'http://127.0.0.1:1', now: () => clock });
   await new Promise<void>((resolve, reject) => { runner.server.once('error', reject); runner.server.listen(0, '127.0.0.1', resolve); });
   const base = `http://127.0.0.1:${(runner.server.address() as AddressInfo).port}`;
   cleanups.push(() => runner.close());
@@ -57,7 +58,7 @@ async function fixture() {
     return link.hash.slice(1);
   }
   const bootstrap = (id: string, token: string, origin = ORIGIN) => fetch(`${base}/viewer/${id}/bootstrap`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin }, body: JSON.stringify({ token }) });
-  return { store, browser, engine, api, context, start, debug, bootstrap, base };
+  return { store, browser, engine, api, context, start, debug, bootstrap, base, advance: (ms: number) => { clock += ms; } };
 }
 
 function socketAttempt(url: string, headers: Record<string, string>): Promise<{ status: number; socket?: any }> {
@@ -116,6 +117,19 @@ describe('private GCP runner control and viewer boundaries', () => {
     expect((await f.bootstrap(collection.id, token)).status).toBe(403);
   });
 
+  it('permits only one concurrent bootstrap exchange and rejects an expired session capability', async () => {
+    const f = await fixture(), session = await (await f.start(await f.context())).json();
+    const token = await f.debug(session.id);
+    const attempts = await Promise.all([f.bootstrap(session.id, token), f.bootstrap(session.id, token)]);
+    expect(attempts.map(response => response.status).sort()).toEqual([200, 401]);
+    const cookie = attempts.find(response => response.status === 200)!.headers.get('set-cookie')!.split(';')[0];
+    const nextToken = await f.debug(session.id);
+    f.advance(600001);
+    expect((await f.bootstrap(session.id, nextToken)).status).toBe(404);
+    expect((await socketAttempt(f.base.replace('http:', 'ws:') + `/viewer/${session.id}/socket`, { Origin: ORIGIN, Cookie: cookie })).status).toBe(401);
+    expect(f.browser.view).not.toHaveBeenCalled();
+  });
+
   it('revokes an established viewer and its cookie on release while preserving the saved authorization', async () => {
     const f = await fixture(), id = await f.context(), session = await (await f.start(id)).json();
     const response = await f.bootstrap(session.id, await f.debug(session.id)), cookie = response.headers.get('set-cookie')!.split(';')[0];
@@ -143,6 +157,13 @@ describe('private GCP runner control and viewer boundaries', () => {
     expect(f.engine.start).not.toHaveBeenCalled();
   });
 
+  it('rejects malformed UTF-8 instead of silently replacing control bytes', async () => {
+    const f = await fixture();
+    const body = Buffer.concat([Buffer.from(`{"projectId":"${PROJECT}","userMetadata":{"somaOwner":"${OWNER}"},"extra":"`), Buffer.from([0xc3]), Buffer.from('"}')]);
+    const response = await fetch(f.base + '/v1/contexts', { method: 'POST', headers: { Authorization: 'Bearer ' + KEY, 'X-Soma-Owner': OWNER, 'Content-Type': 'application/json' }, body });
+    expect(response.status).toBe(400); expect(f.engine.start).not.toHaveBeenCalled();
+  });
+
   it('abandons a failed startup claim without replacing previously encrypted authorization and permits immediate retry', async () => {
     const f = await fixture(), id = await f.context();
     const oldSession = '11111111-1111-4111-8111-111111111111';
@@ -163,6 +184,33 @@ describe('private GCP runner control and viewer boundaries', () => {
     expect(f.browser.close).toHaveBeenCalledOnce(); expect(f.browser.snapshot).not.toHaveBeenCalled();
     await expect(f.store.inspect(id, OWNER)).rejects.toMatchObject({ code: 'state_not_found' });
     expect((await f.start(await f.context())).status).toBe(201);
+  });
+
+  it('preserves old authorization and abandons the lease when snapshot persistence fails during release', async () => {
+    const f = await fixture(), id = await f.context(), oldSession = '11111111-1111-4111-8111-111111111111';
+    const previous = { cookies: [], origins: [{ origin: 'https://course.example.invalid', localStorage: [{ name: 'synthetic-auth', value: 'retained' }] }] };
+    await f.store.claim(id, OWNER, oldSession, Date.now() + 10000); await f.store.finish(id, OWNER, oldSession, previous);
+    const session = await (await f.start(id)).json();
+    f.browser.snapshot.mockRejectedValueOnce(new Error('PRIVATE synthetic snapshot error'));
+    const rejected = await f.api(`/v1/sessions/${session.id}`, 'POST', { status: 'REQUEST_RELEASE' });
+    expect(rejected.status).toBe(503); expect(await rejected.text()).not.toContain('PRIVATE');
+    expect(f.browser.close).toHaveBeenCalledOnce();
+    expect(await f.store.inspect(id, OWNER)).toEqual({ active: null });
+    expect(await f.store.read(id, OWNER)).toEqual(previous);
+    expect((await f.start(id)).status).toBe(201);
+  });
+
+  it('retains revoked cleanup capacity after a failed browser close and retries deletion without resurrecting state', async () => {
+    const f = await fixture(), id = await f.context(); await f.start(id);
+    f.browser.close.mockRejectedValueOnce(new Error('PRIVATE synthetic close failure'));
+    const rejected = await f.api(`/v1/contexts/${id}`, 'DELETE');
+    expect(rejected.status).toBe(503); expect(await rejected.text()).not.toContain('PRIVATE');
+    await expect(f.store.inspect(id, OWNER)).rejects.toMatchObject({ code: 'state_not_found' });
+    const next = await f.context();
+    expect((await f.start(next)).status).toBe(429);
+    expect((await f.api(`/v1/contexts/${id}`, 'DELETE')).status).toBe(204);
+    expect(f.browser.close).toHaveBeenCalledTimes(2); expect(f.browser.snapshot).not.toHaveBeenCalled();
+    expect((await f.start(next)).status).toBe(201);
   });
 });
 
@@ -220,11 +268,12 @@ describe('Chromium viewer revocation and process boundaries', () => {
     vi.stubEnv('SOMA_GCP_BROWSER_STATE_KEY', 'synthetic-encryption-secret');
     vi.stubEnv('GOOGLE_APPLICATION_CREDENTIALS', '/synthetic/private-service-account.json');
     const f = await engineFixture(); await f.browser.view('synthetic-page', f.socket);
-    const launchOptions = f.launch.mock.calls[0][1] as { env: Record<string, string>; args: string[]; acceptDownloads: boolean; serviceWorkers: string };
+    const launchOptions = f.launch.mock.calls[0][1] as { env: Record<string, string>; args: string[]; chromiumSandbox: boolean; acceptDownloads: boolean; serviceWorkers: string };
     expect(launchOptions.env).toEqual({ PATH: '/usr/local/bin:/usr/bin:/bin', HOME: '/tmp', LANG: 'C.UTF-8', TZ: 'UTC' });
     expect(JSON.stringify(launchOptions.env)).not.toContain('synthetic');
     expect(launchOptions.args).toContain('--proxy-bypass-list=<-loopback>');
     expect(launchOptions.args).toContain('--disable-quic');
+    expect(launchOptions.chromiumSandbox).toBe(true);
     expect(launchOptions.acceptDownloads).toBe(false); expect(launchOptions.serviceWorkers).toBe('block');
     f.socket.emit('message', Buffer.from(JSON.stringify({ method: 'Network.getAllCookies', params: {} })));
     await new Promise(resolve => setImmediate(resolve));

@@ -22,7 +22,7 @@ export function createChromiumEngine(runtime=chromium){
    }));
    return {context,connectUrl:`ws://127.0.0.1:${port}${path}`,pages,
     snapshot:()=>context.storageState({indexedDB:true}),
-    async close(){await context.close().catch(()=>undefined);await rm(directory,{recursive:true,force:true});},
+    async close(){await context.close();await rm(directory,{recursive:true,force:true});},
     async view(pageId,socket){
      let cdp,timer,alive=true;
      const attached=new Set();

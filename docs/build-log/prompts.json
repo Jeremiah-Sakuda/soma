@@ -519,6 +519,14 @@
       "prompt": "Allow the protected sign-in window",
       "question_context": "May I allow internet access to the GCP `soma-browser` service so you can open its sign-in window? This removes Google’s IAM entry gate for this one service. Browser control still requires Soma’s private key and ownership check; the login viewer requires a one-use link and secure session cookie.",
       "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York; platform context excluded."
+    },
+    {
+      "id": "P062",
+      "received_at": null,
+      "kind": "clarification",
+      "prompt": "reconnect",
+      "question_context": "BU’s sign-in page is open in the new GCP window. Complete login/MFA there, return to Soma and click “I’ve finished signing in,” then reply “Blackboard signed in.” Enter your password only on BU’s page, not in chat.",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York; platform context excluded."
     }
   ]
 }

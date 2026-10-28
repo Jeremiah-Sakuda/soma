@@ -1,6 +1,6 @@
 # Piazza read-only connector
 
-Status: October 27, 2026. Saved-login access reached a real authenticated class shell and class picker. The new structured preview reader has synthetic coverage; its actual extraction and publication are **not yet verified**. No Piazza source material has been published by this implementation work.
+Status: October 27, 2026. Connector safety boundary deployed from `3efb1cf`; clean CI passed 911 tests, 37 browser journeys, production build and isolated browser-runtime import. These checks do not close the live gate. Saved-login access reached a real authenticated class shell and class picker. The new structured preview reader has synthetic coverage; its actual extraction and publication are **not yet verified**. No Piazza source material has been published by this implementation work.
 
 ## Supported boundary
 

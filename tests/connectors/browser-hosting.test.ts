@@ -43,6 +43,18 @@ describe('browser hosting discrimination and private transport', () => {
     vi.stubEnv('SOMA_GCP_BROWSER_CONTROL_KEY', 'k'.repeat(40));
     expect(browserHostingSettings('gcp').backend).toBe('gcp');
   });
+  it.each(['browserbase', 'gcp'] as const)('omits JSON content type on body-less %s requests while preserving authentication', async backend => {
+    vi.mocked(fetch).mockImplementation(async (_url, init) => {
+      if ((init?.headers as Record<string, string>)['Content-Type'] && init?.body === undefined) return new Response(null, { status: 400 });
+      return init?.method === 'DELETE' ? new Response(null, { status: 204 }) : Response.json({ id: 'synthetic-context' });
+    });
+    await expect(browserControlRequest(backend, owner, '/contexts/synthetic-context', 'DELETE')).resolves.toBeUndefined();
+    await expect(browserControlRequest(backend, owner, '/contexts/synthetic-context')).resolves.toEqual({ id: 'synthetic-context' });
+    for (const [, init] of vi.mocked(fetch).mock.calls) {
+      expect(init!.headers).not.toHaveProperty('Content-Type');
+      expect(init!.headers).toMatchObject(backend === 'gcp' ? { Authorization: `Bearer ${key}`, 'X-Soma-Owner': owner } : { 'X-BB-API-Key': 'original-synthetic-legacy-key' });
+    }
+  });
   it('requires exact GCP CDP session and origin, sending private authorization only in headers', () => {
     expect(browserCdpOptions('gcp', origin.replace('https:', 'wss:') + '/cdp/synthetic-session', 'synthetic-session', owner)).toEqual({ timeout: 15_000, headers: { Authorization: `Bearer ${key}`, 'X-Soma-Owner': owner } });
     for (const address of ['wss://connect.browserbase.com/synthetic-session', origin.replace('https:', 'wss:') + '/cdp/other-session', origin.replace('https:', 'wss:') + '/cdp/synthetic-session?token=private', origin.replace('https:', 'wss:') + '/cdp/synthetic-session#private', 'wss://evil.test/cdp/synthetic-session']) expect(() => browserCdpOptions('gcp', address, 'synthetic-session', owner)).toThrow();

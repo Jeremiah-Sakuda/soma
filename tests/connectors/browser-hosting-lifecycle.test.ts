@@ -32,6 +32,8 @@ function respond() {
   vi.mocked(fetch).mockImplementation(async (input, init) => {
     const url = new URL(String(input)), method = init?.method ?? 'GET';
     fixture.calls.push({ origin: url.origin, path: url.pathname, method, headers: init?.headers as Record<string, string>, ...(init?.body ? { body: JSON.parse(String(init.body)) } : {}) });
+    // Match the observed legacy API's strict empty-JSON rejection during cutover.
+    if (method === 'DELETE' && !init?.body && (init?.headers as Record<string, string>)['Content-Type'] === 'application/json') return Response.json({ code: 'empty_json_body' }, { status: 400 });
     if (url.hostname === 'api.browserbase.com') {
       if (method === 'GET' && url.pathname === '/v1/sessions/bb-session') return Response.json(session('browserbase'));
       if (method === 'POST' && url.pathname === '/v1/sessions/bb-session') return new Response(null, { status: 204 });
@@ -70,7 +72,8 @@ describe('GCP cutover and recorded-backend cleanup with original synthetic respo
       ['https://api.browserbase.com', '/v1/contexts/bb-context', 'DELETE'], [origin, '/v1/contexts', 'POST'],
     ]);
     expect(fixture.calls.find(call => call.path === '/v1/contexts')!.body).toEqual({ projectId: 'gcp-project', userMetadata: { somaOwner: owner } });
-    for (const call of fixture.calls.filter(call => call.origin === origin)) expect(call.headers).toEqual({ Authorization: `Bearer ${controlKey}`, 'X-Soma-Owner': owner, 'Content-Type': 'application/json' });
+    for (const call of fixture.calls.filter(call => call.origin === origin)) expect(call.headers).toEqual({ Authorization: `Bearer ${controlKey}`, 'X-Soma-Owner': owner, ...(call.body ? { 'Content-Type': 'application/json' } : {}) });
+    expect(fixture.calls.find(call => call.method === 'DELETE')!.headers).not.toHaveProperty('Content-Type');
     expect(chromium.connectOverCDP).toHaveBeenCalledWith(origin.replace('https:', 'wss:') + '/cdp/gcp-session', { timeout: 15_000, headers: { Authorization: `Bearer ${controlKey}`, 'X-Soma-Owner': owner } });
     expect(fixture.connection.secret).toMatchObject({ backend: 'gcp', version: 1, contextId: 'gcp-context', sessionId: 'gcp-session' });
     expect(fixture.connection.configuration.targets).toEqual(targets);

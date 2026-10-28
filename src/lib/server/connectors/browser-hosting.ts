@@ -43,8 +43,11 @@ export function browserControlHeaders(backend: BrowserBackend, owner: string | u
 export async function browserControlRequest<T>(backend: BrowserBackend, owner: string | undefined, path: string, method = 'GET', body?: unknown, missingOk = false): Promise<T> {
   if (!/^\/(?:projects|contexts(?:\/[A-Za-z0-9_-]{1,160})?|sessions(?:\/[A-Za-z0-9_-]{1,160}(?:\/debug\?expiresIn=600)?)?)$/.test(path)) throw fail('browser_control_path');
   const config = browserHostingSettings(backend);
+  const headers = browserControlHeaders(backend, owner, path);
+  // Empty DELETE requests must not advertise JSON: strict upstream parsers reject them.
+  if (body === undefined) delete headers['Content-Type'];
   const response = await fetch(`${config.origin}/v1${path}`, {
-    method, headers: browserControlHeaders(backend, owner, path), ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    method, headers, ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     signal: AbortSignal.timeout(15_000), cache: 'no-store', redirect: 'error',
   });
   if (missingOk && response.status === 404) return undefined as T;

@@ -1107,3 +1107,18 @@ Top three outcomes:
 Executed checks: one opt-in actual-provider test failed at the allocation gate; two bounded read-only service requests succeeded. Canonical prompt/archive and scoped documentation checks follow before commit. No broad synthetic suite was rerun for this documentation-only checkpoint. These results supersede the expectation that provider access had recovered, not the recorded earlier CI success.
 
 Deviations: retry remains blocked by the provider’s HTTP 402 response. No supported-reader or release gate is declared passed.
+
+## P057 — Browser hosting cost and Google Cloud credits comparison (October 27, 2026)
+
+Prompt: [canonical verbatim clarification and pasted plan screen](build-log/prompts.json), `P057`.
+
+Top three outcomes:
+1. The supplied account screen still labels Free as the current plan, consistent with the actual HTTP 402 refusal. Verified official Browserbase pricing: Developer $20/month, 100 browser hours, 25 concurrent browsers, $0.12/hour overage and a one-minute session billing minimum. The separate 15 Agents calls are not the limit for Soma’s direct Playwright/session API path. Developer is the recommended existing-provider tier for this hackathon, not a purchased or activated plan.
+2. Compared lower-cash-cost alternatives: a local Playwright companion requires the computer to stay available; a Google Cloud browser worker could use eligible Cloud Run/Compute Engine credits while the app stays on Vercel. Google explicitly documents Chromium/Playwright and interactive streaming on Cloud Run. Credit eligibility/expiry is unknown: the Billing Credits page exposes restrictions by service/SKU. Credits do not automatically fund the current external Browserbase subscription.
+3. Inspected the current connector: browser lifecycle, encrypted context references, session ownership and interactive sign-in handoff are coupled to Browserbase. A Google Cloud runner is feasible but requires an adapter, encrypted persistent browser state, user isolation, authenticated login/MFA streaming and recovery tests. Existing saved logins cannot simply be assumed portable. No infrastructure, plan, credentials, source selection, deployment or spending limit was changed; this is an advisory comparison.
+
+Estimate: 24 checks/day at one to two billed minutes/check for 30 days equals 12–24 browser hours, excluding development/MFA/retries. This is arithmetic for illustration, not measured workload performance or a cost ceiling. Paid overages remain possible.
+
+Sources checked: [Browserbase plans](https://docs.browserbase.com/account/billing/plans), [contexts](https://docs.browserbase.com/platform/browser/core-features/contexts), [Google Cloud browser automation](https://docs.cloud.google.com/run/docs/browser-automation), [Cloud Run pricing](https://cloud.google.com/run/pricing), [credit scope](https://docs.cloud.google.com/billing/docs/how-to/resolve-issues#view_promotional_credits_applied_to_your_account). Documentation/archive validation only; no application tests or additional browser session allocation needed for this comparison.
+
+Deviations: none selected. A Google Cloud migration is an option, not an authorized or completed scope change. Existing live Piazza extraction/publication remains unverified.

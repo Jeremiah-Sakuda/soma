@@ -24,8 +24,15 @@ export function parsePiazzaCourseUrl(raw:string):{id:string;url:string}|null{
  const url=safeUrl(raw),match=url&&/^\/class\/([A-Za-z0-9_-]{1,160})\/?$/.exec(url.pathname);
  return match?{id:match[1],url:canonicalPiazzaCourseUrl(match[1])}:null;
 }
+/** The app may add empty history delimiters after rendering. These carry no
+ * post selection; configured targets and network requests retain stricter rules. */
+export function parsePiazzaRenderedCourseUrl(raw:string):{id:string;url:string}|null{
+ if(typeof raw!=='string')return null;
+ try{const url=new URL(raw);if(url.search||url.hash)return null;}catch{return null;}
+ return parsePiazzaCourseUrl(raw.replace(/\?(?:#)?$|#$/,''));
+}
 function scriptPath(raw:string):boolean{
- return typeof raw==='string'&&raw.length<=2048&&/^\/[A-Za-z0-9_./-]+\.js$/.test(raw)
+ return typeof raw==='string'&&raw.length<=2048&&/^\/[A-Za-z0-9_./~-]+\.js$/.test(raw)
   &&!raw.includes('//')&&!/(?:^|\/)\.{1,2}(?:\/|$)/.test(raw);
 }
 /** The script list must be an application-authored inventory observed on the initial shell,

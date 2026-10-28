@@ -232,6 +232,7 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
         {connected && item.provider !== 'blackboard' && <form onSubmit={event => { event.preventDefault(); void action(item.provider, 'configure'); }}>
           <p className="meta" style={fieldSpacing}>Choose exact, read-only course page URLs. Collection stays within the pages you select; it does not submit work or post messages.</p>
           {item.provider==='gradescope'&&<p className="meta">Use each course’s overview URL. Soma reads assignment names and displayed dates; scores, responses and returned-work files are excluded. Each check reads up to four saved pages, then later checks continue through your selection.</p>}
+          {item.provider==='piazza'&&<p className="meta">Use each class’s overview URL. Soma reads public instructor-note previews from the initial visible feed. Full posts, replies, private or section posts, graded content and attachments are excluded. Later checks continue through your selected classes.</p>}
           {!data.workspace.courses.length && <p className="inline-caution">Add a course using a selected material import before mapping course-site pages.</p>}
           {selected.map((target, index) => <fieldset key={index} style={fieldSpacing}>
             <legend className="field-label">Course page {index + 1}</legend>

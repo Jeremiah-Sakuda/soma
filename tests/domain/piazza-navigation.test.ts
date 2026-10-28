@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {canonicalPiazzaCourseUrl,filterPiazzaFall2026,isAllowedPiazzaRequest,normalizePiazzaCatalog,parsePiazzaCourseUrl,PIAZZA_CATALOG_BATCH_LIMIT,PiazzaCatalogError} from '../../src/lib/domain/piazza-navigation';
+import {canonicalPiazzaCourseUrl,filterPiazzaFall2026,isAllowedPiazzaRequest,normalizePiazzaCatalog,parsePiazzaCourseUrl,parsePiazzaRenderedCourseUrl,PIAZZA_CATALOG_BATCH_LIMIT,PiazzaCatalogError} from '../../src/lib/domain/piazza-navigation';
 const origin='https://piazza.com';
 const request=(url:string)=>({url,method:'GET',resourceType:'document',topLevel:true});
 const candidate=(id:string,title='Synthetic Algorithms',term:string|undefined='Fall 2026')=>({url:`${origin}/class/${id}`,title,term});
@@ -31,6 +31,12 @@ describe('Piazza exact browser navigation boundaries',()=>{
   expect(isAllowedPiazzaRequest({...script,url:origin+'/javascripts/synthetic-shell.v2.js'},[],'catalog',['/javascripts/synthetic-shell.v1.js'])).toBe(false);
   expect(isAllowedPiazzaRequest({...script,url:'https://cdn.example/javascripts/synthetic-shell.v1.js'},[],'catalog',['/javascripts/synthetic-shell.v1.js'])).toBe(false);
  });
+ it('permits an exact inventoried webpack tilde filename without widening script scope',()=>{
+  const path='/packs/js/runtime~qa-synthetic-bundle.js';
+  const script={...request(origin+path),resourceType:'script',topLevel:false};
+  expect(isAllowedPiazzaRequest(script,[],'catalog',[path])).toBe(true);
+  expect(isAllowedPiazzaRequest({...script,url:origin+'/packs/js/vendors~qa-other.js'},[],'catalog',[path])).toBe(false);
+ });
  it.each(['/javascripts/*.js','https://piazza.com/static/synthetic.js','//piazza.com/static/synthetic.js','/static/../static/synthetic.js','/static/synthetic.js?v=1','/static/synthetic.js#x','/static/%73ynthetic.js','/static/synthetic.mjs'])('rejects unsupported script inventory entries: %s',entry=>{
   expect(isAllowedPiazzaRequest({...request(origin+'/static/synthetic.js'),resourceType:'script',topLevel:false},[],'catalog',[entry])).toBe(false);
  });
@@ -53,6 +59,23 @@ describe('Piazza exact browser navigation boundaries',()=>{
   expect(parsePiazzaCourseUrl('https://piazza.com:443/class/Synthetic_1-/')).toEqual({id:'Synthetic_1-',url:origin+'/class/Synthetic_1-'});
   expect(canonicalPiazzaCourseUrl('Synthetic_1-')).toBe(origin+'/class/Synthetic_1-');
   expect(()=>canonicalPiazzaCourseUrl('../unsafe')).toThrow(PiazzaCatalogError);
+ });
+ it.each(['?','#','?#'])('accepts only an empty rendered history suffix %s while keeping network/configured targets strict',suffix=>{
+  const rendered=origin+'/class/synthetic_1'+suffix;
+  expect(parsePiazzaRenderedCourseUrl(rendered)).toEqual({id:'synthetic_1',url:origin+'/class/synthetic_1'});
+  expect(parsePiazzaCourseUrl(rendered)).toBeNull();
+  expect(isAllowedPiazzaRequest(request(rendered),['synthetic_1'],'collect')).toBe(false);
+ });
+ it.each([
+  '?cid=42','#post','?cid=42#','?#post','??','##','#?',
+ ])('rejects rendered URL suffixes carrying post/query content: %s',suffix=>{
+  expect(parsePiazzaRenderedCourseUrl(origin+'/class/synthetic_1'+suffix)).toBeNull();
+ });
+ it.each([
+  'https://evil.example/class/synthetic_1?','https://user:secret@piazza.com/class/synthetic_1?',
+  origin+'/unsafe/../class/synthetic_1?',origin+'/class/%73ynthetic_1?',origin+'/class/synthetic_1%3f',
+ ])('retains all origin/credential/path guards for rendered URLs: %s',raw=>{
+  expect(parsePiazzaRenderedCourseUrl(raw)).toBeNull();
  });
 });
 describe('Piazza catalog metadata normalization',()=>{

@@ -34,6 +34,12 @@ describe('scheduled worker authentication and due work', () => {
     expect(connectionScopeFingerprint({...saved,configuration:{...saved.configuration,nextTargetIndex:4}})).toBe(connectionScopeFingerprint(saved));
     expect(connectionScopeFingerprint({...saved,configuration:{targets:[{courseId:'original-course',url:'https://www.gradescope.com/courses/43'}],nextTargetIndex:0}})).not.toBe(connectionScopeFingerprint(saved));
   });
+  it('rotates Piazza classes while reserving manual browser starts for a larger course load',()=>{
+    const base:PublicConnection={...connection,id:'browser-piazza',provider:'piazza',configuration:{targets:Array.from({length:7},(_,i)=>({courseId:`course-${i}`,url:`https://piazza.com/class/class-${i}`})),nextTargetIndex:0}};
+    expect(connectionRefreshInterval(base)).toBe(SOURCE_REFRESH_MS/4);
+    expect(connectionRefreshInterval({...base,configuration:{targets:(base.configuration.targets as unknown[]).slice(0,2)}})).toBe(SOURCE_REFRESH_MS/2);
+    expect(connectionScopeFingerprint({...base,configuration:{...base.configuration,nextTargetIndex:1}})).toBe(connectionScopeFingerprint(base));
+  });
   it('does not refresh on lease versions or query rotation; changed selection invalidates schedule', () => {
     const now = Date.parse('2026-10-28T12:00:00Z');
     const schedule = { [connection.id]: { scope: connectionScopeFingerprint(connection), nextAt: now + SOURCE_REFRESH_MS, failures: 0, lastAttemptAt: new Date(now).toISOString(), outcome: 'completed' } };

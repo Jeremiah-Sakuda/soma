@@ -63,6 +63,7 @@ export function connectionScopeFingerprint(connection: PublicConnection): string
 export function connectionRefreshInterval(connection: PublicConnection): number {
   const bb=connection.configuration.blackboard as {mode?:string;selected?:unknown[]}|undefined;
   if(connection.provider==='blackboard'&&bb?.mode==='courses')return SOURCE_REFRESH_MS/Math.max(1,Math.min(4,bb.selected?.length??0));
+  if(connection.provider==='piazza'&&Array.isArray(connection.configuration.targets))return SOURCE_REFRESH_MS/Math.max(1,Math.min(4,connection.configuration.targets.length));
   const count = connection.provider === 'gmail' && Array.isArray(connection.configuration.queries) ? Math.max(1, Math.min(20, connection.configuration.queries.length)) : 1;
   return SOURCE_REFRESH_MS / count;
 }

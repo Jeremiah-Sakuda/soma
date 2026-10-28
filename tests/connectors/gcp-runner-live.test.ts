@@ -5,12 +5,14 @@ import {createRequire} from 'node:module';
 import {describe,it,expect} from 'vitest';
 import {chromium} from 'playwright-core';
 const {WebSocket}=createRequire(new URL('../../services/browser-runner/package.json',import.meta.url))('ws');
+const holdSeconds=Number(process.env.SOMA_GCP_RUNNER_HOLD_SECONDS??0);
 
 /** Original synthetic browser state only. No course account or Meta call. */
 describe.skipIf(process.env.SOMA_GCP_RUNNER_LIVE_TEST!=='true')('GCP deployed browser runtime',()=>{
  it('proves private invocation, browser sandbox startup, CDP, encrypted restart and metadata denial',async()=>{
   const origin=process.env.SOMA_GCP_BROWSER_URL,projectId=process.env.SOMA_GCP_BROWSER_PROJECT_ID;
   if(!origin||!projectId)throw new Error('Explicit deployed runner scope required.');
+  if(!Number.isInteger(holdSeconds)||holdSeconds<0||holdSeconds>180)throw new Error('Synthetic hold must be between zero and 180 seconds.');
   const control=readFileSync('.local/gcp-browser-secrets/control','utf8');
   const publicEntry=process.env.SOMA_GCP_RUNNER_PUBLIC_ENTRY==='true';
   const identity=publicEntry?undefined:execFileSync('gcloud',['auth','print-identity-token','--quiet'],{encoding:'utf8'}).trim();
@@ -52,12 +54,15 @@ describe.skipIf(process.env.SOMA_GCP_RUNNER_LIVE_TEST!=='true')('GCP deployed br
    expect((await contextBrowser.cookies('https://example.com')).some(cookie=>cookie.name==='soma_synthetic'&&cookie.value==='original-synthetic-state')).toBe(true);
    expect(await page.evaluate(()=>localStorage.getItem('soma-synthetic'))).toBe('retained');
    expect(await page.evaluate(()=>new Promise((resolve,reject)=>{const request=indexedDB.open('soma-synthetic',1);request.onerror=()=>reject(new Error('Synthetic restore failed.'));request.onsuccess=()=>{const db=request.result,get=db.transaction('values').objectStore('values').get('key');get.onsuccess=()=>{db.close();resolve(get.result);};get.onerror=()=>reject(new Error('Synthetic restore failed.'));};}))).toBe('retained');
-   await release();contextBrowser=await start(600);page=await contextBrowser.newPage();await page.setContent('<html><body><h1>Original synthetic sign-in check</h1><input aria-label="Synthetic field"></body></html>');
+   await release();contextBrowser=await start(1800);page=await contextBrowser.newPage();await page.setContent('<html><body><h1>Original synthetic sign-in check</h1><input aria-label="Synthetic field"></body></html>');
    const debugResponse=await call('/v1/sessions/'+sessionId+'/debug?expiresIn=600');expect(debugResponse.status).toBe(200);
    const debug=await debugResponse.json() as {pages:{id:string;debuggerFullscreenUrl:string}[]};const login=new URL(debug.pages.at(-1)!.debuggerFullscreenUrl);
    const bootstrap=await call(login.pathname+'/bootstrap','POST',{token:login.hash.slice(1)});expect(bootstrap.status).toBe(403);
    const boot=await fetch(origin+login.pathname+'/bootstrap',{method:'POST',headers:{...iamHeaders,Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({token:login.hash.slice(1)}),signal:AbortSignal.timeout(15000)});expect(boot.status).toBe(200);
    const cookie=boot.headers.get('set-cookie')!.split(';')[0];
+   const timing=await boot.json() as {expiresAt:string;remainingMs:number};expect(timing.remainingMs).toBeGreaterThan(28*60000);
+   const resume=await fetch(origin+login.pathname+'/resume',{method:'POST',headers:{...iamHeaders,Origin:origin,Cookie:cookie,'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(15000)});
+   expect(resume.status).toBe(200);expect(resume.headers.get('set-cookie')).toBeNull();expect((await resume.json()).expiresAt).toBe(timing.expiresAt);
    const socket=new WebSocket(origin.replace(/^http/,'ws')+login.pathname+'/socket',{headers:{...iamHeaders,Origin:origin,Cookie:cookie}});
    try{
     await new Promise<void>((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Synthetic viewer frame timed out.')),10000);socket.on('error',()=>{clearTimeout(timer);reject(new Error('Synthetic viewer unavailable.'));});socket.on('message',(bytes:Buffer)=>{const value=JSON.parse(bytes.toString());if(value.type==='frame'&&typeof value.data==='string'&&value.data.startsWith('/9j/')){clearTimeout(timer);resolve();}});});
@@ -65,11 +70,15 @@ describe.skipIf(process.env.SOMA_GCP_RUNNER_LIVE_TEST!=='true')('GCP deployed br
     for(const event of ['mousePressed','mouseReleased'])socket.send(JSON.stringify({type:'mouse',event,x:box!.x+box!.width/2,y:box!.y+box!.height/2}));
     socket.send(JSON.stringify({type:'text',text:'original-synthetic-input'}));
     await expect.poll(()=>field.inputValue(),{timeout:5000}).toBe('original-synthetic-input');
+    if(holdSeconds)await new Promise<void>((resolve,reject)=>{
+     const lost=()=>{clearTimeout(timer);reject(new Error('Synthetic viewer disconnected during stability hold.'));};
+     const timer=setTimeout(()=>{socket.off('close',lost);resolve();},holdSeconds*1000);socket.once('close',lost);
+    });
     const closed=new Promise<void>(resolve=>socket.once('close',()=>resolve()));await release();await closed;
    }finally{socket.close();}
    expect((await call('/v1/contexts/'+context.id,'DELETE')).status).toBe(204);expect((await call('/v1/contexts/'+context.id)).status).toBe(404);
    const erased=JSON.parse(execFileSync('gcloud',['storage','cat',objectUrl,'--quiet'],{encoding:'utf8'}));expect(erased.deleted).toBe(true);expect(erased.state).toBeNull();expect(erased.active).toBeNull();
-   process.stdout.write(JSON.stringify({syntheticGcpRuntime:true,publicEntry,anonymousControlDenied:true,stateRestored:['cookies','localStorage','IndexedDB'],encryptedAtRest:true,metadataDenied:true,viewerFrame:true,viewerInput:true,viewerRevoked:true,contextDeleted:true,modelCalls:0})+'\n');
+   process.stdout.write(JSON.stringify({syntheticGcpRuntime:true,publicEntry,anonymousControlDenied:true,stateRestored:['cookies','localStorage','IndexedDB'],encryptedAtRest:true,metadataDenied:true,viewerFrame:true,viewerInput:true,cookieResume:true,viewerStableSeconds:holdSeconds,viewerRevoked:true,contextDeleted:true,modelCalls:0})+'\n');
   }finally{if(browser)await browser.close().catch(()=>undefined);if(sessionId)await call('/v1/sessions/'+sessionId,'POST',{status:'REQUEST_RELEASE'}).catch(()=>undefined);await call('/v1/contexts/'+context.id,'DELETE').catch(()=>undefined);}
- },150000);
+ },Math.max(150000,(Number.isInteger(holdSeconds)&&holdSeconds>=0&&holdSeconds<=180?holdSeconds:0)*1000+60000));
 });

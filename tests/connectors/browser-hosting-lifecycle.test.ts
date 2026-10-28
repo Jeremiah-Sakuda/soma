@@ -72,6 +72,7 @@ describe('GCP cutover and recorded-backend cleanup with original synthetic respo
       ['https://api.browserbase.com', '/v1/contexts/bb-context', 'DELETE'], [origin, '/v1/contexts', 'POST'],
     ]);
     expect(fixture.calls.find(call => call.path === '/v1/contexts')!.body).toEqual({ projectId: 'gcp-project', userMetadata: { somaOwner: owner } });
+    expect(fixture.calls.find(call => call.path === '/v1/sessions' && call.method === 'POST')!.body.timeout).toBe(1800);
     for (const call of fixture.calls.filter(call => call.origin === origin)) expect(call.headers).toEqual({ Authorization: `Bearer ${controlKey}`, 'X-Soma-Owner': owner, ...(call.body ? { 'Content-Type': 'application/json' } : {}) });
     expect(fixture.calls.find(call => call.method === 'DELETE')!.headers).not.toHaveProperty('Content-Type');
     expect(chromium.connectOverCDP).toHaveBeenCalledWith(origin.replace('https:', 'wss:') + '/cdp/gcp-session', { timeout: 15_000, headers: { Authorization: `Bearer ${controlKey}`, 'X-Soma-Owner': owner } });
@@ -81,6 +82,23 @@ describe('GCP cutover and recorded-backend cleanup with original synthetic respo
     expect(fixture.connection.configuration.blackboard.catalogEpoch).not.toBe('old-synthetic-epoch');
     expect(result.loginUrl).toBe(`${origin}/viewer/gcp-session#${'t'.repeat(43)}`);
     expect(JSON.stringify(fixture.connection.secret)).not.toContain('t'.repeat(43));
+  });
+  it('replaces an expired GCP session in one action without the legacy sync delay', async () => {
+    fixture.connection = connection({ backend: 'gcp', version: 1, contextId: 'gcp-context', sessionId: 'expired-gcp-session', sessionExpiresAt: new Date(Date.now() - 1000).toISOString(), readyAt: new Date(Date.now() + 5000).toISOString() });
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation(async (input, init) => String(input).endsWith('/sessions/expired-gcp-session') ? new Response(null, { status: 404 }) : original(input, init));
+    const result = await startBrowserLogin(account, 'blackboard');
+    expect(result.loginUrl).toContain('/viewer/gcp-session#');
+    expect(fixture.connection.secret).not.toHaveProperty('readyAt');
+    expect(fixture.calls.filter(call => call.path === '/v1/sessions' && call.method === 'POST')).toHaveLength(1);
+  });
+  it('preserves early missing-session facts and does not reclaim a potentially live durable lease', async () => {
+    fixture.connection = connection({ backend: 'gcp', version: 1, contextId: 'gcp-context', sessionId: 'missing-gcp-session', sessionExpiresAt: new Date(Date.now() + 120000).toISOString() });
+    const before = structuredClone(fixture.connection.secret);
+    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 404 }));
+    await expect(startBrowserLogin(account, 'blackboard')).rejects.toMatchObject({ code: 'browser_session_lost', status: 409 });
+    expect(fixture.connection.secret).toEqual(before);
+    expect(vi.mocked(fetch).mock.calls.every(([, init]) => init?.method === 'GET')).toBe(true);
   });
   it('retains exact legacy authorization and configuration if cutover cleanup fails, without allocating GCP resources', async () => {
     fixture.connection = connection({ contextId: 'bb-context' });

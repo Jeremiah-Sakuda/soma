@@ -535,6 +535,13 @@
       "prompt": "reconnect",
       "question_context": "Blackboard is reconnected and its course list is verified. The Gradescope login form is now open in the GCP window. Sign in there, complete any MFA, then return to Soma and click “I’ve finished signing in.” Reply “Gradescope signed in” when done. Enter credentials only on the provider page.",
       "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York; platform context excluded."
+    },
+    {
+      "id": "P064",
+      "received_at": null,
+      "kind": "prompt",
+      "prompt": "Why is the window so short? It disconnected again ",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York; trailing space preserved; platform browser/Page context excluded."
     }
   ]
 }

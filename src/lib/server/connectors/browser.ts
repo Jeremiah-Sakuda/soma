@@ -123,8 +123,8 @@ async function deleteContext(connection: BrowserConnection): Promise<void> {
   }
 }
 function clearSession(secret: Secret): Secret {
-  const { sessionId: _id, sessionExpiresAt: _expiry, loginPageId: _page, ...rest } = secret;
-  return { ...rest, readyAt: new Date(Date.now() + 5000).toISOString() };
+  const { sessionId: _id, sessionExpiresAt: _expiry, loginPageId: _page, readyAt: _ready, ...rest } = secret;
+  return { ...rest, ...(recordedBrowserBackend(secret) === 'browserbase' ? { readyAt: new Date(Date.now() + 5000).toISOString() } : {}) };
 }
 async function connect(session: Session, connection: BrowserConnection, markPhase?:(phase:'playwright-import'|'cdp-connect')=>void): Promise<Browser> {
   if (!session.connectUrl) throw fail('Browser session is not ready. Try again shortly.');
@@ -200,9 +200,12 @@ export async function startBrowserLogin(account: VerifiedAccount, provider: Brow
     let session = await getSession(connection);
     if (!active(session)) {
       if (connection.secret.sessionId) {
+        if (targetBackend === 'gcp' && (!connection.secret.sessionExpiresAt || !(Date.parse(connection.secret.sessionExpiresAt) <= Date.now()))) {
+          throw fail('The private browser is temporarily unavailable. Retry shortly, or reconnect after its listed expiry. Saved course selections were retained.', 409, 'browser_session_lost');
+        }
         await releaseSession(connection); connection.secret = clearSession(connection.secret);
         await checkpointConnectionLease(account, connection.id, lease.leaseId, { secret: connection.secret });
-        throw fail('The previous sign-in session ended. Wait a few seconds, then reconnect.');
+        if (targetBackend === 'browserbase') throw fail('The previous sign-in session ended. Wait a few seconds, then reconnect.');
       }
       if (!connection.secret.contextId) {
         const backend = recordedBrowserBackend(connection.secret);
@@ -210,7 +213,7 @@ export async function startBrowserLogin(account: VerifiedAccount, provider: Brow
         connection = { ...connection, secret: { ...connection.secret, contextId: context.id } };
         if (!await checkpointConnectionLease(account, connection.id, lease.leaseId, { secret: connection.secret })) { await deleteContext(connection); throw fail('Source settings changed.'); }
       }
-      const created = await allocateSession(account, lease.leaseId, connection, 600); connection = created.connection; session = created.session;
+      const created = await allocateSession(account, lease.leaseId, connection, targetBackend === 'gcp' ? 1800 : 600); connection = created.connection; session = created.session;
     }
     const browser = await connect(session!, connection);
     let pageId: string;

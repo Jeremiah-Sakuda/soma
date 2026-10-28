@@ -224,6 +224,7 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
         {session && <section className="settings-status" aria-label={`${item.label} login window`}>
           <h3>Finish signing in</h3>
           <p>The private login window is available until {new Date(session.expiresAt).toLocaleTimeString()}. Complete the provider’s login and any MFA, then return here.</p>
+          {status.hosting === 'gcp' && <p className="meta">New sign-in sessions last up to 30 minutes. Open this link within 10 minutes. Reopening the same session keeps its original end time; the browser shows a countdown.</p>}
           <a className="primary-button" style={{ marginTop: 14, textDecoration: 'none' }} href={session.loginUrl} target="_blank" rel="noopener noreferrer">Open secure login window</a>
           <button className="secondary-button" style={fieldSpacing} disabled={!!busy} onClick={() => void action(item.provider, 'complete')}>I’ve finished signing in</button>
           <p className="meta">Saving the browser session does not prove source access. A successful read of your selected course page establishes that separately.</p>

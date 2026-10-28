@@ -26,6 +26,18 @@ export function createRunner({store,engine,controlKey,publicOrigin,projectId,pro
  const authenticate=request=>{if(!same(request.headers.authorization,'Bearer '+controlKey)||!ownerPattern.test(request.headers['x-soma-owner']??''))throw failure(401,'authorization');return request.headers['x-soma-owner'];};
  const fence=async session=>{if(!session||session.ending||session.expires<=now())throw failure(404,'session_ended');const meta=await store.inspect(session.contextId,session.owner);if(meta.active?.id!==session.id||meta.active.expiresAt<=now())throw failure(404,'session_ended');};
  const getSession=async(id,owner)=>{const session=sessions.get(id);if(!session||session.owner!==owner)throw failure(404,'session_missing');await fence(session);return session;};
+ const checkViewerGrant=({session,key,grant})=>{
+  if(session.ending||session.expires<=now()||session.cookies.get(key)!==grant||grant.expires<=now())throw failure(401,'viewer_cookie');
+ };
+ const viewerSession=async(id,request)=>{
+  const session=sessions.get(id);
+  const cookie=/(?:^|;\s*)__Secure-soma_view=([A-Za-z0-9_-]{43})(?:;|$)/.exec(request.headers.cookie??'')?.[1];
+  const key=cookie&&hash(cookie),grant=key&&session?.cookies.get(key);
+  if(!grant||grant.expires<=now())throw failure(401,'viewer_cookie');
+  await fence(session);if(session.mode!=='login')throw failure(403,'viewer_mode');
+  return {session,key,grant};
+ };
+ const viewerTiming=session=>({ready:true,expiresAt:new Date(session.expires).toISOString(),remainingMs:Math.max(0,session.expires-now())});
  const revoke=session=>{session.tokens.clear();session.cookies.clear();for(const socket of [...session.viewers,...session.controllers])socket.close(1000);};
  async function finish(session,persist=true){
   if(session.cleanup)return session.cleanup;
@@ -48,18 +60,24 @@ export function createRunner({store,engine,controlKey,publicOrigin,projectId,pro
    const url=new URL(request.url,origin),path=url.pathname;
    if(request.method==='GET'&&path==='/health'&&!url.search){send(response,200,{status:'ok'});return;}
    if(request.method==='GET'&&assets.has(path)&&!url.search){const [file,type]=assets.get(path);response.writeHead(200,{'Content-Type':type,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});response.end(await readFile(new URL(file,import.meta.url)));return;}
-   const viewer=/^\/viewer\/([a-f0-9-]+)(?:\/(bootstrap))?$/.exec(path);
+   const viewer=/^\/viewer\/([a-f0-9-]+)(?:\/(bootstrap|resume))?$/.exec(path);
    if(viewer){
     if(!uuid.test(viewer[1])||url.search)throw failure(404,'viewer_missing');
     if(request.method==='GET'&&!viewer[2]){response.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src data:; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"});response.end(await readFile(new URL('viewer.html',import.meta.url)));return;}
     if(request.method!=='POST'||!viewer[2]||request.headers.origin!==origin)throw failure(403,'viewer_origin');
+    if(viewer[2]==='resume'){
+     const access=await viewerSession(viewer[1],request),{session}=access,body=await jsonBody(request);
+     if(!body||Array.isArray(body)||typeof body!=='object'||Object.keys(body).length)throw failure(400,'resume_body');
+     // Cookie-only recovery never renews the allocation, cookie or entry capability.
+     await fence(session);checkViewerGrant(access);send(response,200,viewerTiming(session));return;
+    }
     const session=sessions.get(viewer[1]);await fence(session);if(session.mode!=='login')throw failure(403,'viewer_mode');
-    const body=await jsonBody(request);if(typeof body.token!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(body.token))throw failure(401,'viewer_token');
+    const body=await jsonBody(request);if(!body||typeof body.token!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(body.token))throw failure(401,'viewer_token');
     const grant=session.tokens.get(hash(body.token));if(!grant||grant.expires<=now())throw failure(401,'viewer_token');
     // Consume before asynchronous work; revoke every previously established viewer.
     session.tokens.clear();session.cookies.clear();for(const socket of session.viewers)socket.close(1000);
-    const cookie=randomBytes(32).toString('base64url');session.cookies.set(hash(cookie),{pageId:grant.pageId,expires:Math.min(session.expires,now()+600000)});
-    response.setHeader('Set-Cookie',`__Secure-soma_view=${cookie}; Path=/viewer/${session.id}; HttpOnly; Secure; SameSite=Strict; Max-Age=${Math.max(0,Math.floor((session.expires-now())/1000))}`);send(response,200,{ready:true});return;
+    const cookie=randomBytes(32).toString('base64url');session.cookies.set(hash(cookie),{pageId:grant.pageId,expires:session.expires});
+    response.setHeader('Set-Cookie',`__Secure-soma_view=${cookie}; Path=/viewer/${session.id}; HttpOnly; Secure; SameSite=Strict; Max-Age=${Math.max(0,Math.floor((session.expires-now())/1000))}`);send(response,200,viewerTiming(session));return;
    }
    if(request.method==='GET'&&path==='/v1/projects'&&!url.search){if(!same(request.headers.authorization,'Bearer '+controlKey))throw failure(401,'authorization');send(response,200,[{id:projectId}]);return;}
    const owner=authenticate(request);
@@ -78,7 +96,7 @@ export function createRunner({store,engine,controlKey,publicOrigin,projectId,pro
    }
    if(request.method==='POST'&&path==='/v1/sessions'){
     const body=await jsonBody(request),settings=body.browserSettings;
-    if(body.projectId!==projectId||body.userMetadata?.somaOwner!==owner||!uuid.test(settings?.context?.id??'')||settings.context.persist!==true||settings.recordSession!==false||settings.logSession!==false||settings.solveCaptchas!==false||!Number.isInteger(body.timeout)||body.timeout<30||body.timeout>600)throw failure(400,'session_configuration');
+    if(body.projectId!==projectId||body.userMetadata?.somaOwner!==owner||!uuid.test(settings?.context?.id??'')||settings.context.persist!==true||settings.recordSession!==false||settings.logSession!==false||settings.solveCaptchas!==false||!Number.isInteger(body.timeout)||body.timeout<30||body.timeout>1800)throw failure(400,'session_configuration');
     if(sessions.size+starting>=maximum)throw failure(429,'browser_capacity');starting++;
     try{
      const id=randomUUID(),expires=now()+body.timeout*1000;
@@ -123,10 +141,8 @@ export function createRunner({store,engine,controlKey,publicOrigin,projectId,pro
     });return;
    }
    if(view&&uuid.test(view[1])){
-    if(request.headers.origin!==origin)throw failure(403,'viewer_origin');const session=sessions.get(view[1]);await fence(session);
-    if(session.mode!=='login')throw failure(403,'viewer_mode');
-    const cookie=/(?:^|;\s*)__Secure-soma_view=([A-Za-z0-9_-]{43})(?:;|$)/.exec(request.headers.cookie??'')?.[1];
-    const grant=cookie&&session.cookies.get(hash(cookie));if(!grant||grant.expires<=now())throw failure(401,'viewer_cookie');
+    if(request.headers.origin!==origin)throw failure(403,'viewer_origin');const access=await viewerSession(view[1],request),{session,grant}=access;
+    checkViewerGrant(access);
     viewers.handleUpgrade(request,socket,head,client=>{session.viewers.add(client);client.once('close',()=>session.viewers.delete(client));client.on('error',()=>client.close());void session.browser.view(grant.pageId,client).catch(()=>client.close(1008));});return;
    }
    throw failure(404,'socket_missing');

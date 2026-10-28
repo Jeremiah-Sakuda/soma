@@ -58,7 +58,8 @@ async function fixture() {
     return link.hash.slice(1);
   }
   const bootstrap = (id: string, token: string, origin = ORIGIN) => fetch(`${base}/viewer/${id}/bootstrap`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin }, body: JSON.stringify({ token }) });
-  return { store, browser, engine, api, context, start, debug, bootstrap, base, advance: (ms: number) => { clock += ms; } };
+  const resume = (id: string, cookie?: string, origin = ORIGIN, body: unknown = {}) => fetch(`${base}/viewer/${id}/resume`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin, ...(cookie ? { Cookie: cookie } : {}) }, body: JSON.stringify(body) });
+  return { store, browser, engine, api, context, start, debug, bootstrap, resume, base, advance: (ms: number) => { clock += ms; } };
 }
 
 function socketAttempt(url: string, headers: Record<string, string>): Promise<{ status: number; socket?: any }> {
@@ -71,6 +72,52 @@ function socketAttempt(url: string, headers: Record<string, string>): Promise<{ 
 }
 
 describe('private GCP runner control and viewer boundaries', () => {
+  it('supports a fixed 30-minute login with cookie-only resume, without renewing expiry or cookie', async () => {
+    const f = await fixture(), id = await f.context();
+    expect((await f.start(id, 1801)).status).toBe(400);
+    const session = await (await f.start(id, 1800)).json();
+    const boot = await f.bootstrap(session.id, await f.debug(session.id));
+    const cookie = boot.headers.get('set-cookie')!.split(';')[0];
+    expect(await boot.json()).toMatchObject({ expiresAt: session.expiresAt, remainingMs: 1800000 });
+    f.advance(600001);
+    const resumed = await f.resume(session.id, cookie);
+    expect(resumed.status).toBe(200); expect(resumed.headers.get('set-cookie')).toBeNull();
+    expect(await resumed.json()).toEqual({ ready: true, expiresAt: session.expiresAt, remainingMs: 1199999 });
+    expect(f.engine.start).toHaveBeenCalledOnce();
+    expect((await f.resume(session.id)).status).toBe(401);
+    expect((await f.resume(session.id, cookie, 'https://attacker.example.invalid')).status).toBe(403);
+    expect((await f.resume(session.id, cookie, ORIGIN, { token: 't'.repeat(43) })).status).toBe(400);
+    expect((await fetch(`${f.base}/viewer/${session.id}/resume`, { headers: { Cookie: cookie, Origin: ORIGIN } })).status).toBe(403);
+    f.advance(1199999);
+    expect([401,404]).toContain((await f.resume(session.id, cookie)).status);
+    expect((await socketAttempt(f.base.replace('http:', 'ws:') + `/viewer/${session.id}/socket`, { Origin: ORIGIN, Cookie: cookie })).status).toBe(401);
+  });
+
+  it('expires an unopened entry capability after ten minutes even for a 30-minute session', async () => {
+    const f = await fixture(), session = await (await f.start(await f.context(), 1800)).json();
+    const token = await f.debug(session.id); f.advance(600001);
+    expect((await f.bootstrap(session.id, token)).status).toBe(401);
+  });
+
+  it.each(['upgrade', 'resume'] as const)('rechecks cookie revocation after asynchronous fencing during %s', async kind => {
+    const f = await fixture(), session = await (await f.start(await f.context(), 1800)).json();
+    const boot = await f.bootstrap(session.id, await f.debug(session.id)), cookie = boot.headers.get('set-cookie')!.split(';')[0];
+    let entered!: () => void, proceed!: () => void;
+    const waiting = new Promise<void>(resolve => { entered = resolve; }), gate = new Promise<void>(resolve => { proceed = resolve; });
+    const original = f.store.inspect.bind(f.store); let count = 0;
+    const spy = vi.spyOn(f.store, 'inspect').mockImplementation(async (...args: unknown[]) => {
+      const result = await original(...args); count++;
+      if (count === (kind === 'upgrade' ? 1 : 2)) { entered(); await gate; }
+      return result;
+    });
+    const pending = kind === 'upgrade' ? socketAttempt(f.base.replace('http:', 'ws:') + `/viewer/${session.id}/socket`, { Origin: ORIGIN, Cookie: cookie }) : f.resume(session.id, cookie);
+    await waiting;
+    const replacement = await f.bootstrap(session.id, await f.debug(session.id)); expect(replacement.status).toBe(200);
+    proceed(); expect((await pending).status).toBe(401); spy.mockRestore();
+    expect(f.browser.view).not.toHaveBeenCalled();
+    expect((await f.resume(session.id, cookie)).status).toBe(401);
+  });
+
   it('rejects foreign ownership, absent credentials, unexpected queries and unsupported HTTP methods without executing a browser', async () => {
     const f = await fixture(), id = await f.context();
     expect((await f.api(`/v1/contexts/${id}`, 'GET', undefined, FOREIGN)).status).toBe(404);

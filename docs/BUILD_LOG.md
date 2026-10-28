@@ -1218,3 +1218,14 @@ Top three outcomes:
 3. Existing course mappings, bounded sessions and source permissions retained. No implementation, inference, deployment, new material collection or permissions changes. Documentation-only verification; the prior executed application tests were not rerun. No credential or session material was archived.
 
 Deviations: none; routine sign-in renewal.
+
+## P064 — Diagnose repeated sign-in disconnection (October 28, 2026)
+
+Prompt: [canonical verbatim prompt](build-log/prompts.json), `P064`, including trailing space.
+
+Top three outcomes (in progress):
+1. Inspecting configured session/viewer bounds and actual sanitized cloud lifecycle facts to distinguish expiry from a dropped connection.
+2. Recovery and expiry usability changes under review; no timeout or protection change is established yet.
+3. Provider login and source-read success remain unverified; preserve saved selections and all concurrent work.
+
+Deviations: pending diagnosis; no model spending increase or source-permission expansion.

@@ -1269,3 +1269,14 @@ Top three outcomes:
 3. Preserved Blackboard and Gradescope authorization/scopes, the stale third Gradescope page, existing budget and concurrent implementation. No new collection, inference, permission change or application code was introduced; prior CI was not redundantly rerun. Local screenshot proof is ignored.
 
 Deviations: no scope change. Piazza collection awaits an explicit class target; its current UI uses exact-page selection rather than an implemented automatic class picker.
+
+## P067 — Select CS440 and EC463 on Piazza (October 28, 2026)
+
+Prompt: canonical verbatim clarification `P067`.
+
+Top three outcomes:
+1. Verified the actual Piazza catalog using the saved GCP authorization: CS440 and combined EC463–464 are Fall 2026, while the Spring class remains unselected. The first metadata probe failed its exact-code matching assumption on the combined label; a second metadata-only inspection verified its actual identity. Saved exactly those two requested class URLs through the production UI, mapped to existing owned CS440 and EC463 courses. No posts/feed text were read during catalog discovery.
+2. Both opt-in typed access probes passed: CS440 ten instructor-note previews in 11.01 seconds and EC463 eight in 9.09 seconds, no model calls or publication in those probes. Two normal production refreshes then committed one source each at 2:53:14 PM / 2:53:47 PM America/New_York. An independent private readback passed in 2.72 seconds: two current version-1 records, exact owned mappings, partial-preview labels and only permitted preview row fields. No source bodies, class IDs, secrets or session material entered public documentation/fixtures.
+3. Updated the Piazza support/migration records with actual proof and preserved the boundaries: no full posts, replies, private/section content, graded items or attachments. Production reported some preparation jobs could not queue; saved-source verification does not establish downstream lessons or model completion. Budgets, permissions and concurrent code remain unchanged. No application/deployment changes or redundant broad CI; private temporary probe scripts removed and screenshot proof stays ignored.
+
+Deviations: no product-scope expansion. The combined provider label is mapped to EC463 as requested. Initial discovery matching assumption was corrected using observed metadata. Downstream preparation queuing remains an open issue; the model cap was not raised.

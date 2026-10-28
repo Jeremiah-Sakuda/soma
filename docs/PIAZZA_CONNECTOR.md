@@ -1,6 +1,6 @@
 # Piazza read-only connector
 
-Status: October 27, 2026. Connector safety boundary deployed from `3efb1cf`; clean CI passed 911 tests, 37 browser journeys, production build and isolated browser-runtime import. These checks do not close the live gate. Saved-login access reached a real authenticated class shell and class picker. The new structured preview reader has synthetic coverage; its actual extraction and publication are **not yet verified**. No Piazza source material has been published by this implementation work.
+Status: October 28, 2026. GCP saved-session access, both explicitly selected Fall 2026 classes, structured preview extraction, normal hosted publication and independent owned readback are now verified. CS440 produced ten eligible instructor-note previews; the combined EC463–464 class produced eight, mapped to the existing EC463 Soma course. These are partial initial-feed previews, not full posts or complete class coverage. Source publication passed; the UI reported some preparation jobs could not queue, so downstream lesson generation is not established. Earlier Browserbase blockers below are historical.
 
 ## Supported boundary
 
@@ -14,7 +14,7 @@ Extraction reads titles and snippets of class-visible instructor notes from the 
 
 The resulting source is explicitly a partial preview observation. It cannot establish full coverage or the absence of an announcement. Refresh keeps the connection labeled connected rather than claiming complete feed freshness. Unchanged previews retain source versions. A class-specific structural failure stales that class and its dependent lessons while preserving other classes and original learner attempts. Authentication failure affects the provider scope. Publication rechecks connection authorization and workspace revision.
 
-## Remaining live gate
+## Historical live blockers (before the GCP checks below)
 
 A typed catalog attempt failed closed on a URL scope check. A narrow rendered-location normalizer now accepts empty history delimiters while configured/network URLs remain strict. This suspected cause has not been confirmed by another successful actual extraction.
 
@@ -30,3 +30,14 @@ When sessions are available:
 ## Verification
 
 Synthetic tests cover URL and request restrictions, script inventory, remaining-time bounds, semester/catalog conflicts, privacy filters, unsupported structures, stable versions, rotating selection, failed-class isolation and guarded publication. The opt-in actual-provider test is excluded from ordinary CI. The build log records exact executed counts and the unresolved live gate; synthetic success is not evidence of actual source coverage.
+
+
+## P067 — Actual GCP class selection and preview publication
+
+October 28, 2026. Jeremy selected CS440 and EC463. Saved-session catalog inspection verified three entries: the two requested Fall 2026 classes and a Spring 2026 class that remained unselected. Piazza labels EC463 as a combined EC463–464 Senior Design class; it is mapped to the existing owned EC463 course, not a new invented course. The first private discovery check incorrectly expected both code labels to match a single-course pattern and failed when only CS440 matched. A second metadata-only inspection preserved the actual combined label and verified the mapping. This was a probe assumption correction, not a relaxation of extraction/privacy rules. No posts or feed text were read by catalog discovery.
+
+Both existing opt-in typed access probes passed against restored GCP state: CS440 in 11.01 seconds with ten eligible previews, EC463 in 9.09 seconds with eight. They verified the explicit term/catalog and supported field contract, with zero model calls or material publication in the probes. The actual renderer emitted empty history delimiters accepted by the existing rendered-location normalizer; configured/network URLs remain strict.
+
+Saved exactly the two selected class targets through the production UI. Two successive normal refreshes exercised its one-class rotation and each committed one source version, at 2:53:14 PM and 2:53:47 PM America/New_York. Independent owned readback passed in 2.72 seconds: two current live source records, correct owned course mapping, version 1 each, explicit partial-preview labels and only previewId/title/snippet/optional postNumber row fields (ten/eight rows). No private source bodies or class identifiers were added to public documentation/fixtures.
+
+The connection intentionally stays connected rather than claiming complete freshness. Some preparation jobs could not queue; sources remain saved, and no downstream model decision/lesson success is inferred. Full posts, replies, private/section content, graded items, attachments, complete feed coverage, expiry/deletion and real-course teaching fit remain separate gates. No application code or deployment change was needed; the prior broad CI was not rerun. Private probe scripts are removed after execution and local evidence remains ignored.

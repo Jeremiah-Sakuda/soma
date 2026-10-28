@@ -7,6 +7,7 @@ import {readOrCreateAccountWorkspace,deleteAccountWorkspace} from '../../src/lib
 import {configureBrowser} from '../../src/lib/server/connectors/browser';
 import {acquireConnectionLease,releaseConnectionLease} from '../../src/lib/server/connectors/store';
 import {authorizeCredentialGrant,createCredentialAuthorization,revokeCredentialAuthorization,type CredentialGrant} from '../../src/lib/server/connectors/credential-grants';
+import {POST as credentialAction} from '../../src/app/api/connectors/credentials/route';
 
 // Disposable fictional Auth identities only. No mail, browser, course or model calls.
 describe.skipIf(process.env.SOMA_LIVE_FIRESTORE_TEST!=='true')('managed credential authorization fencing',()=>{
@@ -20,6 +21,8 @@ describe.skipIf(process.env.SOMA_LIVE_FIRESTORE_TEST!=='true')('managed credenti
    if(!response.ok)throw new Error('Original synthetic sign-in failed.');
    const {idToken}=await response.json() as {idToken:string},session=await exchangeAccountSession(idToken);
    account=await verifyAccountSession(new Request('https://soma.example',{headers:{cookie:`${ACCOUNT_SESSION_COOKIE}=${session.sessionCookie}`}}));if(!account)throw new Error('Original synthetic session failed.');
+   const rejectedSecret=await credentialAction(new Request('https://soma.example/api/connectors/credentials',{method:'POST',headers:{origin:'https://soma.example','content-type':'application/json',cookie:`${ACCOUNT_SESSION_COOKIE}=${session.sessionCookie}`},body:JSON.stringify({provider:'blackboard',action:'open',password})}));
+   expect(rejectedSecret.status).toBe(400);expect(await rejectedSecret.text()).not.toContain(password);
    const workspace=await readOrCreateAccountWorkspace(account);await configureBrowser(account,'blackboard',[]);
    const leased=await acquireConnectionLease(account,'browser-blackboard','credential-fixture');leaseId=leased.leaseId;
    const grant:CredentialGrant={authorizationId:randomUUID(),uid:user.uid,owner:createHash('sha256').update(`${workspace.id}:browser-blackboard`).digest('hex'),workspaceId:workspace.id,workspaceGeneration:workspace.id,provider:'blackboard',contextId:randomUUID(),connectionVersion:leased.connection.version,recentAuthAt:recentAccountAuthentication(account)};

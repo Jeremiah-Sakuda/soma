@@ -27,15 +27,16 @@ async function body(request){
 function send(response,status,data){response.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'});response.end(data===undefined?'':JSON.stringify(data));}
 /** No generic CDP route, model client, screenshots or arbitrary navigation API.
  * Control authenticates the broker only; human credentials stay on this origin. */
-export function createCredentialRunner({store,vault,grantStore,engine,authorize,controlKey,publicOrigin,proxyUrl,now=Date.now,maximum=1}){
- if(typeof controlKey!=='string'||controlKey.length<40||typeof authorize!=='function'||typeof grantStore?.consume!=='function')throw new Error('Credential runner configuration required.');
+export function createCredentialRunner({store,vault,grantStore,audit,engine,authorize,controlKey,publicOrigin,proxyUrl,now=Date.now,maximum=1}){
+ if(typeof controlKey!=='string'||controlKey.length<40||typeof authorize!=='function'||typeof grantStore?.consume!=='function'||typeof audit?.emit!=='function')throw new Error('Credential runner configuration required.');
  const origin=new URL(publicOrigin).origin;if(origin!==publicOrigin||new URL(origin).protocol!=='https:')throw new Error('Canonical HTTPS origin required.');
- const sessions=new Map();let starting=0;
+ const sessions=new Map(),maintenance=new Set();let starting=0;
+ const record=async(owner,event,outcome,sessionId=null,credentialVersion=null)=>{try{await audit.emit(owner,{event,outcome,provider:PROVIDER,sessionHash:sessionId?hash(sessionId):null,credentialVersion,at:now()});}catch{fail('credential_audit',503);}};
  const viewers=new WebSocketServer({noServer:true,maxPayload:8192,perMessageDeflate:false});
  const control=request=>{const owner=request.headers['x-soma-owner'];if(!same(request.headers.authorization,'Bearer '+controlKey)||!ownerPattern.test(owner??''))fail('authorization',401);return owner;};
  const binding=session=>({owner:session.owner,workspaceId:session.grant.workspaceId,workspaceGeneration:session.grant.workspaceGeneration,provider:PROVIDER,origin:LOGIN_ORIGIN});
  async function fence(session){
-  if(!session||session.ending||session.expires<=now())fail('session_ended',404);
+  if(!session||session.ending||session.expires<=now()||maintenance.has(session.owner))fail('session_ended',404);
   const meta=await store.inspect(session.contextId,session.owner);
   if(session.ending||session.expires<=now()||meta.active?.id!==session.id||meta.active.expiresAt<=now())fail('session_ended',404);
  }
@@ -62,9 +63,9 @@ export function createCredentialRunner({store,vault,grantStore,engine,authorize,
      if(current.active?.id!==session.id||current.active.expiresAt<=now())fail('session_ended');
      // Bounded HMAC substring checks cover raw/escaped/URL/base64 password canaries without retaining plaintext.
      if(snapshotHasSecret(state,session.secretFingerprints,session.secretHmacKey))fail('state_secret',503);
-     await store.finish(session.contextId,session.owner,session.id,state);session.stateReleased=true;
-    }else{await store.abandon(session.contextId,session.owner,session.id);session.stateReleased=true;}
-   }catch(error){failure=error;try{await store.abandon(session.contextId,session.owner,session.id);session.stateReleased=true;}catch{/* retain fence for explicit cleanup retry */}}
+     await record(session.owner,'session_saved','started',session.id);await store.finish(session.contextId,session.owner,session.id,state);session.stateReleased=true;await record(session.owner,'session_saved','succeeded',session.id);
+    }else{await store.abandon(session.contextId,session.owner,session.id);session.stateReleased=true;await record(session.owner,'session_revoked','succeeded',session.id);}
+   }catch(error){failure=error;await record(session.owner,persist?'session_saved':'session_revoked','failed',session.id).catch(()=>undefined);try{await store.abandon(session.contextId,session.owner,session.id);session.stateReleased=true;}catch{/* retain fence for explicit cleanup retry */}}
    if(session.browser)await session.browser.close();sessions.delete(session.id);if(failure)throw failure;
   })();try{return await session.cleanup;}finally{session.cleanup=null;}
  }
@@ -74,11 +75,12 @@ export function createCredentialRunner({store,vault,grantStore,engine,authorize,
   if(normalizeIdentifier(secret.identifier)!==normalizeIdentifier(identity.identifier))fail('identity_mismatch',403);
   // Keep only keyed transient canary digests; no credential or hash is audited.
   session.secretHmacKey=randomBytes(32);session.secretFingerprints=secretFingerprints(secret.password,session.secretHmacKey);
+  await record(session.owner,'fill_started','started',session.id,version);
   await session.browser.fill(secret,async()=>{
    await authorized(session);const latest=await vault.metadata(binding(session));if(latest.status!=='active'||latest.version!==version)fail('credential_changed');await authorized(session);
   });
   await authorized(session);const latest=await vault.metadata(binding(session));if(latest.status!=='active'||latest.version!==version)fail('credential_changed');
-  await session.browser.safeForViewer();session.phase='mfa';
+  await session.browser.safeForViewer();await record(session.owner,'fill_succeeded','succeeded',session.id,version);session.phase='mfa';
  }
  const server=http.createServer(async(request,response)=>{
   try{
@@ -96,7 +98,7 @@ export function createCredentialRunner({store,vault,grantStore,engine,authorize,
     if(login[2]==='bootstrap'){
      if(!fields(data,['token'])||typeof data.token!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(data.token))fail('entry_token',401);
      await authorized(session,'session');if(!session.tokenHash||session.entryExpires<=now()||!same(session.tokenHash,hash(data.token)))fail('entry_token',401);
-     session.tokenHash=null;revoke(session);const cookie=randomBytes(32).toString('base64url');session.cookieHash=hash(cookie);
+     session.tokenHash=null;revoke(session);await record(session.owner,'grant_used','succeeded',session.id);const cookie=randomBytes(32).toString('base64url');session.cookieHash=hash(cookie);
      response.setHeader('Set-Cookie',`__Secure-soma_credential=${cookie}; Path=/login/${session.id}; HttpOnly; Secure; SameSite=Strict; Max-Age=${Math.floor((session.expires-now())/1000)}`);
      send(response,200,{...safe(session),credential:await vault.metadata(binding(session))});return;
     }
@@ -108,7 +110,7 @@ export function createCredentialRunner({store,vault,grantStore,engine,authorize,
      if(!fields(data,['version'])||typeof data.version!=='string')fail('body_invalid',400);
      // Disable filling synchronously before the first vault operation.
      await authorized(session);session.used=true;session.phase='revoked';for(const socket of session.viewers)socket.close(1000);
-     await vault.forget(binding(session),data.version);await finish(session,false);send(response,200,{status:'forgotten'});return;
+     await vault.forget(binding(session),data.version);await record(session.owner,'credential_forgotten','succeeded',session.id);await finish(session,false);send(response,200,{status:'forgotten'});return;
     }
     if(!['fill','save-fill'].includes(login[2])||session.used||session.phase!=='ready')fail('fill_consumed');
     session.used=true;session.phase='filling'; // one-use before awaits and concurrent requests
@@ -119,13 +121,13 @@ export function createCredentialRunner({store,vault,grantStore,engine,authorize,
       if(!fields(data,['identifier','password','consent','version'])||data.consent!==true||!validIdentifier(data.identifier)||typeof data.password!=='string'||data.password.length<1||data.password.length>1024||(data.version!==null&&typeof data.version!=='string'))fail('body_invalid',400);
       if(normalizeIdentifier(data.identifier)!==normalizeIdentifier(identity.identifier))fail('identity_mismatch',403);
       secret={identifier:data.identifier,password:data.password};
-      await authorized(session);const saved=await vault.save(binding(session),secret,data.version);version=saved.version;
+      await authorized(session);await record(session.owner,'consent','succeeded',session.id);const saved=await vault.save(binding(session),secret,data.version);version=saved.version;await record(session.owner,'credential_saved','succeeded',session.id,version);
      }else{
       if(!fields(data,['version'])||typeof data.version!=='string')fail('body_invalid',400);
       version=data.version;await authorized(session);secret=await vault.decrypt(binding(session),version);
      }
      await performFill(session,version,secret,identity);send(response,200,safe(session));return;
-    }catch(error){session.phase='failed';await finish(session,false).catch(()=>undefined);throw error;}
+    }catch(error){session.phase='failed';await record(session.owner,'fill_failed','failed',session.id).catch(()=>undefined);await finish(session,false).catch(()=>undefined);throw error;}
     finally{if(secret){secret.identifier='';secret.password='';}if(data&&typeof data==='object'){delete data.password;delete data.identifier;}}
    }
    if(path.startsWith('/login/'))fail('route_missing',404);
@@ -133,18 +135,28 @@ export function createCredentialRunner({store,vault,grantStore,engine,authorize,
    if(request.method==='DELETE'&&path==='/v1/credentials'){
     const data=await body(request);
     if(!fields(data,['owner','workspaceId','workspaceGeneration','provider','origin'])||data.owner!==owner||data.provider!==PROVIDER||data.origin!==LOGIN_ORIGIN||typeof data.workspaceId!=='string'||typeof data.workspaceGeneration!=='string'||data.workspaceGeneration!==data.workspaceId)fail('binding_invalid',400);
+    if(maintenance.has(owner))fail('credential_maintenance');maintenance.add(owner);try{
     for(const session of [...sessions.values()])if(session.owner===owner&&session.grant.workspaceId===data.workspaceId&&session.grant.workspaceGeneration===data.workspaceGeneration)await finish(session,false);
     let forgotten=false;
     for(let attempt=0;attempt<3;attempt++){try{const meta=await vault.metadata(data);await vault.forget(data,meta.version);forgotten=true;break;}catch(error){if(error.code!=='CONFLICT')throw error;}}
-    if(!forgotten)fail('credential_changed');send(response,200,{status:'forgotten'});return;
+    if(!forgotten)fail('credential_changed');await record(owner,'credential_forgotten','succeeded');send(response,200,{status:'forgotten'});return;}catch(error){await record(owner,'credential_forgotten','failed').catch(()=>undefined);throw error;}finally{maintenance.delete(owner);}
+   }
+   if(request.method==='POST'&&path==='/v1/credentials/rotate'){
+    const data=await body(request);
+    if(!fields(data,['owner','workspaceId','workspaceGeneration','provider','origin'])||data.owner!==owner||data.provider!==PROVIDER||data.origin!==LOGIN_ORIGIN||typeof data.workspaceId!=='string'||typeof data.workspaceGeneration!=='string'||data.workspaceGeneration!==data.workspaceId)fail('binding_invalid',400);
+    if(maintenance.has(owner))fail('credential_maintenance');maintenance.add(owner);try{
+    for(const session of [...sessions.values()])if(session.owner===owner&&session.grant.workspaceId===data.workspaceId&&session.grant.workspaceGeneration===data.workspaceGeneration)await finish(session,false);
+    await record(owner,'credential_rotated','started');const meta=await vault.metadata(data);if(meta.status!=='active')fail('credential_missing',404);
+    const rotated=await vault.rotate(data,meta.version);await record(owner,'credential_rotated','succeeded',null,rotated.version);send(response,200,{status:'rotated',version:rotated.version});return;}catch(error){await record(owner,'credential_rotated','failed').catch(()=>undefined);throw error;}finally{maintenance.delete(owner);}
    }
    if(request.method==='POST'&&path==='/v1/grants'){
     const data=await body(request);
     if(!fields(data,['uid','workspaceId','workspaceGeneration','provider','contextId','connectionVersion','recentAuthAt','authorizationId'])||data.provider!==PROVIDER||!uuid.test(data.contextId??'')||!uuid.test(data.authorizationId??'')||typeof data.uid!=='string'||data.uid.length<1||data.uid.length>128||typeof data.workspaceId!=='string'||data.workspaceId.length<1||data.workspaceId.length>256||typeof data.workspaceGeneration!=='string'||data.workspaceGeneration!==data.workspaceId||!Number.isSafeInteger(data.connectionVersion)||data.connectionVersion<1||!Number.isSafeInteger(data.recentAuthAt)||data.recentAuthAt>Math.floor(now()/1000)+30||data.recentAuthAt<Math.floor(now()/1000)-5*60)fail('grant_invalid',400);
-    if(sessions.size+starting>=maximum)fail('login_capacity',429);starting++;
+    await record(owner,'grant_issued','started',data.authorizationId);
+    if(maintenance.has(owner)){await record(owner,'grant_denied','failed',data.authorizationId);fail('credential_maintenance');}if(sessions.size+starting>=maximum){await record(owner,'grant_denied','failed',data.authorizationId);fail('login_capacity',429);}starting++;
     let session;
     try{
-     const grant={...data,owner};const identity=await authorize(grant);if(!validIdentifier(identity?.identifier))fail('identity_unavailable',403);
+     const grant={...data,owner};const identity=await authorize(grant);if(maintenance.has(owner))fail('credential_maintenance');if(!validIdentifier(identity?.identifier))fail('identity_unavailable',403);
      const id=data.authorizationId,expires=now()+30*60_000;if(sessions.has(id))fail('grant_replayed');await grantStore.consume(id,owner);const claimed=await store.claim(data.contextId,owner,id,expires);
      let resolveStarted;const started=new Promise(resolve=>{resolveStarted=resolve;});
      session={id,owner,grant,contextId:data.contextId,expires,entryExpires:now()+10*60_000,tokenHash:null,cookieHash:null,browser:null,phase:'starting',used:false,ending:false,viewers:new Set(),started};sessions.set(id,session);
@@ -152,12 +164,12 @@ export function createCredentialRunner({store,vault,grantStore,engine,authorize,
      const token=randomBytes(32).toString('base64url');session.phase='ready';session.tokenHash=hash(token);const browser=session.browser;
      session.timer=setTimeout(()=>void finish(session,false).catch(()=>undefined),Math.max(1,expires-now()));session.timer.unref();
      await authorized(session);const inspected=await browser.inspect();if(!inspected.reviewed)fail('form_not_reviewed');
-     send(response,201,{sessionId:id,loginUrl:`${origin}/login/${id}#${token}`,expiresAt:new Date(expires).toISOString()});return;
-    }catch(error){if(session)await finish(session,false).catch(()=>undefined);throw error;}finally{starting--;}
+     await record(owner,'grant_issued','succeeded',id);send(response,201,{sessionId:id,loginUrl:`${origin}/login/${id}#${token}`,expiresAt:new Date(expires).toISOString()});return;
+    }catch(error){await record(owner,error?.code==='grant_replayed'?'grant_replayed':'grant_denied','failed',data.authorizationId).catch(()=>undefined);if(session)await finish(session,false).catch(()=>undefined);throw error;}finally{starting--;}
    }
    const operation=/^\/v1\/sessions\/([a-f0-9-]+)(?:\/(release))?$/.exec(path);
    if(operation&&uuid.test(operation[1])){
-    const session=sessions.get(operation[1]);if(!session){if(request.method==='DELETE'&&!operation[2]){const data=await body(request);if(!fields(data,['contextId'])||!uuid.test(data.contextId??''))fail('body_invalid',400);const meta=await store.inspect(data.contextId,owner);if(meta.active?.id===operation[1])await store.abandon(data.contextId,owner,operation[1]);send(response,204);return;}fail('session_missing',404);}if(session.owner!==owner)fail('session_missing',404);
+    const session=sessions.get(operation[1]);if(!session){if(request.method==='DELETE'&&!operation[2]){const data=await body(request);if(!fields(data,['contextId'])||!uuid.test(data.contextId??''))fail('body_invalid',400);const meta=await store.inspect(data.contextId,owner);if(meta.active?.id===operation[1])await store.abandon(data.contextId,owner,operation[1]);await record(owner,'session_revoked','succeeded',operation[1]);send(response,204);return;}fail('session_missing',404);}if(session.owner!==owner)fail('session_missing',404);
     if(request.method==='DELETE'&&!operation[2]){await finish(session,false);send(response,204);return;}
     await authorized(session,'session');
     if(request.method==='GET'&&!operation[2]){send(response,200,safe(session));return;}

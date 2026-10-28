@@ -7,20 +7,21 @@ const cleanup:Array<()=>Promise<void>>=[];
 afterEach(async()=>{for(const close of cleanup.splice(0))await close();});
 const owner='a'.repeat(64),other='b'.repeat(64),key='k'.repeat(48),origin='https://credential.example.com';
 function deferred(){let resolve!:(value?:unknown)=>void;const promise=new Promise(r=>resolve=r);return{promise,resolve};}
-async function harness(options:{holdDecrypt?:ReturnType<typeof deferred>,secretCookie?:string}={}){
+async function harness(options:{holdDecrypt?:ReturnType<typeof deferred>,secretCookie?:string,auditFailure?:string}={}){
  let active:any=null,authorized=true,clock=Date.now(),version='v1',closed=0,saved:any=null;
  const consumed=new Set<string>();
  const store={inspect:vi.fn(async()=>({active})),claim:vi.fn(async(_id:string,_owner:string,id:string,expiresAt:number)=>{if(active)throw Error('busy');active={id,expiresAt};return {storageState:null};}),abandon:vi.fn(async()=>{active=null;}),finish:vi.fn(async(_id:string,_owner:string,_session:string,state:any)=>{saved=state;active=null;})};
- const vault={metadata:vi.fn(async()=>({status:'active',version})),save:vi.fn(async()=>({status:'active',version})),decrypt:vi.fn(async()=>{await options.holdDecrypt?.promise;return {identifier:'student@bu.edu',password:'sensitive-canary'};}),forget:vi.fn(async()=>{version='forgotten';return {status:'forgotten',version};})};
+ const vault={metadata:vi.fn(async()=>({status:'active',version})),save:vi.fn(async()=>({status:'active',version})),decrypt:vi.fn(async()=>{await options.holdDecrypt?.promise;return {identifier:'student@bu.edu',password:'sensitive-canary'};}),rotate:vi.fn(async()=>{version='v2';return {status:'active',version};}),forget:vi.fn(async()=>{version='forgotten';return {status:'forgotten',version};})};
+ const auditEvents:any[]=[];const audit={emit:vi.fn(async(_owner:string,event:any)=>{if(event.event===options.auditFailure&&(event.event!=='session_saved'||event.outcome==='succeeded'))throw new Error('synthetic audit failure');auditEvents.push(event);})};
  const browser={inspect:vi.fn(async()=>({reviewed:true})),fill:vi.fn(async(_secret:any,recheck:()=>Promise<void>)=>{await recheck();}),safeForViewer:vi.fn(async()=>true),snapshot:vi.fn(async()=>({cookies:options.secretCookie?[{value:options.secretCookie}]:[],origins:[]})),close:vi.fn(async()=>{closed++;}),view:vi.fn(async()=>{})};
- const runner=createCredentialRunner({store,vault,grantStore:{consume:async(id:string)=>{if(consumed.has(id))throw Object.assign(Error('replay'),{code:'grant_replayed',status:409});consumed.add(id);}},engine:{start:async()=>browser},authorize:async()=>{if(!authorized)throw Object.assign(Error('revoked'),{code:'revoked',status:403});return {identifier:'student@bu.edu'};},controlKey:key,publicOrigin:origin,proxyUrl:'http://127.0.0.1:1',now:()=>clock});
+ const runner=createCredentialRunner({store,vault,audit,grantStore:{consume:async(id:string)=>{if(consumed.has(id))throw Object.assign(Error('replay'),{code:'grant_replayed',status:409});consumed.add(id);}},engine:{start:async()=>browser},authorize:async()=>{if(!authorized)throw Object.assign(Error('revoked'),{code:'revoked',status:403});return {identifier:'student@bu.edu'};},controlKey:key,publicOrigin:origin,proxyUrl:'http://127.0.0.1:1',now:()=>clock});
  await new Promise<void>((resolve,reject)=>{runner.server.once('error',reject);runner.server.listen(0,'127.0.0.1',resolve);});const port=(runner.server.address() as any).port;
  cleanup.push(()=>runner.close());
  const request=async(path:string,data?:any,{human=false,cookie='',ownerOverride=owner,method=data===undefined?'GET':'POST'}={})=>{const headers:any={'content-type':'application/json'};if(human){headers.origin=origin;if(cookie)headers.cookie=cookie;}else{headers.authorization='Bearer '+key;headers['x-soma-owner']=ownerOverride;}return fetch(`http://127.0.0.1:${port}${path}`,{method,headers,body:data===undefined?undefined:JSON.stringify(data)});};
  const grant={uid:'firebase-user',workspaceId:'workspace',workspaceGeneration:'workspace',provider:'blackboard',contextId:randomUUID(),connectionVersion:1,recentAuthAt:Math.floor(clock/1000),authorizationId:randomUUID()};
  const create=async()=>{const response=await request('/v1/grants',grant);expect(response.status).toBe(201);return response.json();};
  const bootstrap=async(session:any)=>{const response=await request(`/login/${session.sessionId}/bootstrap`,{token:new URL(session.loginUrl).hash.slice(1)},{human:true});expect(response.status).toBe(200);return response.headers.get('set-cookie')!.split(';')[0];};
- return{request,grant,create,bootstrap,browser,vault,store,get saved(){return saved;},get closed(){return closed;},revoke:()=>{authorized=false;},rotate:()=>{version='v2';},expire:()=>{clock+=31*60_000;}};
+ return{request,grant,create,bootstrap,browser,vault,store,audit,auditEvents,get saved(){return saved;},get closed(){return closed;},revoke:()=>{authorized=false;},rotate:()=>{version='v2';},expire:()=>{clock+=31*60_000;}};
 }
 describe('isolated credential login boundary',()=>{
  it('one-use fragment becomes scoped HttpOnly cookie, blocks replay and owner crossover',async()=>{
@@ -48,6 +49,43 @@ describe('isolated credential login boundary',()=>{
   h.browser.close.mockRejectedValueOnce(new Error('synthetic close failure'));
   expect((await h.request(`/v1/sessions/${session.sessionId}/release`,{})).status).toBe(503);expect(h.store.finish).toHaveBeenCalledTimes(1);
   expect((await h.request(`/v1/sessions/${session.sessionId}`,{}, {method:'DELETE'})).status).toBe(204);expect(h.store.finish).toHaveBeenCalledTimes(1);expect(h.browser.close).toHaveBeenCalledTimes(2);
+ });
+ it('fixed audit facts retain consent and actions without credentials or arbitrary errors',async()=>{
+  const h=await harness(),session=await h.create(),cookie=await h.bootstrap(session);
+  expect((await h.request(`/login/${session.sessionId}/save-fill`,{identifier:'student@bu.edu',password:'sensitive-canary',consent:true,version:'v1'},{human:true,cookie})).status).toBe(200);
+  expect(h.auditEvents.filter(event=>!event.event.startsWith('grant_')).map(event=>event.event)).toEqual(['consent','credential_saved','fill_started','fill_succeeded']);
+  const serialized=JSON.stringify(h.auditEvents);expect(serialized).not.toContain('sensitive-canary');expect(serialized).not.toContain('student@bu.edu');expect(serialized).not.toContain(session.sessionId);
+ });
+ it('audit failure prevents autofill and never reports a successful save',async()=>{
+  const h=await harness({auditFailure:'fill_started'}),session=await h.create(),cookie=await h.bootstrap(session);
+  const response=await h.request(`/login/${session.sessionId}/fill`,{version:'v1'},{human:true,cookie});expect(response.status).toBe(503);expect(h.browser.fill).not.toHaveBeenCalled();expect(h.store.finish).not.toHaveBeenCalled();
+ });
+ it('grant issuance denial and replay retain only fixed safe facts',async()=>{
+  const h=await harness(),session=await h.create();await h.bootstrap(session);await h.request(`/v1/sessions/${session.sessionId}`,{}, {method:'DELETE'});
+  expect((await h.request('/v1/grants',h.grant)).status).toBe(409);
+  expect(h.auditEvents.some(event=>event.event==='grant_issued'&&event.outcome==='succeeded')).toBe(true);expect(h.auditEvents.some(event=>event.event==='grant_used')).toBe(true);expect(h.auditEvents.some(event=>event.event==='grant_replayed')).toBe(true);
+  h.revoke();expect((await h.request('/v1/grants',{...h.grant,authorizationId:randomUUID()})).status).toBe(403);expect(h.auditEvents.some(event=>event.event==='grant_denied')).toBe(true);
+  const text=JSON.stringify(h.auditEvents);expect(text).not.toContain(h.grant.uid);expect(text).not.toContain(session.sessionId);expect(text).not.toContain('Error: revoked');
+ });
+ it('grant audit failure stops all browser and state allocation',async()=>{
+  const h=await harness({auditFailure:'grant_issued'});expect((await h.request('/v1/grants',h.grant)).status).toBe(503);expect(h.store.claim).not.toHaveBeenCalled();expect(h.browser.inspect).not.toHaveBeenCalled();
+ });
+ it('missing consent audit blocks credential storage',async()=>{
+  const h=await harness({auditFailure:'consent'}),session=await h.create(),cookie=await h.bootstrap(session);
+  expect((await h.request(`/login/${session.sessionId}/save-fill`,{identifier:'student@bu.edu',password:'sensitive-canary',consent:true,version:'v1'},{human:true,cookie})).status).toBe(503);expect(h.vault.save).not.toHaveBeenCalled();expect(h.browser.fill).not.toHaveBeenCalled();
+ });
+ it('publication audit failure retains a saved state but does not claim success',async()=>{
+  const h=await harness({auditFailure:'session_saved'}),session=await h.create(),cookie=await h.bootstrap(session);
+  expect((await h.request(`/login/${session.sessionId}/fill`,{version:'v1'},{human:true,cookie})).status).toBe(200);
+  const result=await h.request(`/v1/sessions/${session.sessionId}/release`,{});expect(result.status).toBe(503);expect(h.saved).toEqual({cookies:[],origins:[]});expect(h.auditEvents.some(event=>event.event==='session_saved'&&event.outcome==='started')).toBe(true);expect(h.auditEvents.some(event=>event.event==='session_saved'&&event.outcome==='succeeded')).toBe(false);
+ });
+ it('operator rotation fences a credential already waiting for decrypt',async()=>{
+  const hold=deferred(),h=await harness({holdDecrypt:hold}),session=await h.create(),cookie=await h.bootstrap(session);
+  const pending=h.request(`/login/${session.sessionId}/fill`,{version:'v1'},{human:true,cookie});await vi.waitFor(()=>expect(h.vault.decrypt).toHaveBeenCalled());
+  expect((await h.request('/v1/credentials/rotate',{owner,workspaceId:'workspace',workspaceGeneration:'workspace',provider:'blackboard',origin:'https://shib.bu.edu'})).status).toBe(200);hold.resolve();expect((await pending).status).toBe(409);expect(h.browser.fill).not.toHaveBeenCalled();
+ });
+ it('operator rotation revokes active fills, updates the version and returns no plaintext',async()=>{
+  const h=await harness();await h.create();const response=await h.request('/v1/credentials/rotate',{owner,workspaceId:'workspace',workspaceGeneration:'workspace',provider:'blackboard',origin:'https://shib.bu.edu'});expect(response.status).toBe(200);expect(h.closed).toBe(1);expect(h.vault.rotate).toHaveBeenCalledWith(expect.anything(),'v1');expect(await response.text()).not.toContain('sensitive-canary');expect(h.auditEvents.some(event=>event.event==='credential_rotated'&&event.outcome==='succeeded')).toBe(true);
  });
  it('revocation during KMS unwrap prevents any browser fill',async()=>{
   const hold=deferred(),h=await harness({holdDecrypt:hold}),session=await h.create(),cookie=await h.bootstrap(session);

@@ -12,6 +12,8 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: Install pinned isolated browser-runner dependencies
+        run: npm ci --prefix services/browser-runner --ignore-scripts
       - name: Verify Firebase loads under serverless module restrictions
         run: node --no-experimental-require-module -e "require('firebase-admin/auth')"
       - run: npm run typecheck

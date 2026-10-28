@@ -10,6 +10,7 @@ import { applyCollectedSources,staleCollectedSources, type CollectedSource } fro
 import { sourceAuthorityContextSchema, validateSourceContext, type SourceAuthorityContext } from '../../domain/source-context';
 import {isAllowedGradescopeRequest,parseGradescopeCourseUrl} from '../../domain/gradescope-navigation';
 import {isAllowedPiazzaRequest,parsePiazzaCourseUrl} from '../../domain/piazza-navigation';
+import { configuredBrowserBackend, recordedBrowserBackend, browserHostingSettings, browserControlRequest, browserCdpOptions, validateBrowserLoginUrl, type BrowserBackend } from './browser-hosting';
 
 export const BROWSER_PROVIDERS = {
   blackboard: { label: 'BU Blackboard', homeUrl: 'https://learn.bu.edu/', hosts: ['learn.bu.edu'] },
@@ -20,7 +21,7 @@ export type BrowserProvider = keyof typeof BROWSER_PROVIDERS;
 export type BrowserTarget = { courseId: string; url: string; context?: SourceAuthorityContext };
 export type BlackboardSelection = { id: string; courseId: string };
 export type Configuration = { targets: BrowserTarget[]; nextTargetIndex?:number; blackboard?: { mode?: 'courses'; selected: BlackboardSelection[]; catalogIds: string[]; catalogCheckedAt: string; catalogComplete: boolean; nextCourseIndex?: number; nextCatalogPath?: string; catalogQuery?: string; catalogSubjectId?: string; selectedSubjectId?: string; catalogEpoch?: string; traversals?: Record<string,{providerCourseId:string;pending:string[];seen:string[];materialIds:string[]}> } };
-type Secret = { contextId?: string; sessionId?: string; sessionExpiresAt?: string; loginPageId?: string; readyAt?: string; day?: string; starts?: number };
+type Secret = { backend?: BrowserBackend; version?: 1; contextId?: string; sessionId?: string; sessionExpiresAt?: string; loginPageId?: string; readyAt?: string; day?: string; starts?: number };
 type BrowserConnection = Connection<Secret, Configuration>;
 const ID = (provider: BrowserProvider) => `browser-${provider}`;
 const fail = (message: string, status = 409, code = 'browser_connection') => new WorkspaceStoreError(message, status, code);
@@ -31,25 +32,24 @@ export const browserActionSchema = z.object({
   action: z.enum(['start', 'complete', 'configure', 'refresh', 'disconnect']),
   targets: z.array(z.object({ courseId: z.string().min(1).max(128), url: z.string().max(2048), context: sourceAuthorityContextSchema.optional() }).strict()).max(1000).optional(),
 }).strict();
-export function browserConfigured(): boolean { return Boolean(process.env.BROWSERBASE_API_KEY && process.env.SOMA_CONNECTOR_ENCRYPTION_KEY); }
-function settings() {
-  if (!browserConfigured()) throw fail('Browser connections are not configured yet.', 503, 'browser_configuration');
-  return { key: process.env.BROWSERBASE_API_KEY!, projectId: process.env.BROWSERBASE_PROJECT_ID };
+export function browserConfigured(): boolean {
+  try { if (!process.env.SOMA_CONNECTOR_ENCRYPTION_KEY) return false; browserHostingSettings(configuredBrowserBackend()); return true; } catch { return false; }
 }
-let discoveredProject: { keyHash: string; expires: number; value: Promise<string> } | undefined;
-/** Resolve the single project granted to the key; ambiguous accounts require an explicit deployment selection. */
-export async function resolveBrowserProjectId(): Promise<string> {
-  const config = settings();
+const discoveredProjects = new Map<string, { expires: number; value: Promise<string> }>();
+/** Resolve per backend, so a deployment cutover cannot route legacy cleanup to the new service. */
+export async function resolveBrowserProjectId(backend: BrowserBackend = configuredBrowserBackend()): Promise<string> {
+  const config = browserHostingSettings(backend);
   if (config.projectId) return config.projectId;
-  const keyHash = createHash('sha256').update(config.key).digest('hex');
-  if (discoveredProject?.keyHash === keyHash && discoveredProject.expires > Date.now()) return discoveredProject.value;
+  const keyHash = createHash('sha256').update(`${backend}:${config.origin}:${config.key}`).digest('hex');
+  const previous = discoveredProjects.get(keyHash);
+  if (previous && previous.expires > Date.now()) return previous.value;
   const value = (async () => {
-    const projects = z.array(z.object({ id: z.string().min(1) })).max(100).parse(await api('/projects'));
+    const projects = z.array(z.object({ id: z.string().min(1) })).max(100).parse(await browserControlRequest(backend, undefined, '/projects'));
     if (projects.length !== 1) throw fail('The browser key must identify one project. Set a deployment project selection before connecting.', 503, 'browser_project');
     return projects[0].id;
   })();
-  const entry = { keyHash, expires: Date.now() + 300_000, value }; discoveredProject = entry;
-  try { return await value; } catch (error) { if (discoveredProject === entry) discoveredProject = undefined; throw error; }
+  const entry = { expires: Date.now() + 300_000, value }; discoveredProjects.set(keyHash, entry);
+  try { return await value; } catch (error) { if (discoveredProjects.get(keyHash) === entry) discoveredProjects.delete(keyHash); throw error; }
 }
 function safeProviderUrl(provider: BrowserProvider, raw: string): URL {
   let url: URL; try { url = new URL(raw); } catch { throw fail('Enter a valid course URL.', 400); }
@@ -86,62 +86,71 @@ export function validatesCourseSnapshot(provider: BrowserProvider, target: Brows
       && !/sign in to (?:your|access)|log in to (?:your|access)|session (?:has )?expired|access denied|single sign.on/i.test(text);
   } catch { return false; }
 }
-async function api<T>(path: string, method = 'GET', body?: unknown, missingOk = false): Promise<T> {
-  const config = settings();
-  const response = await fetch(`https://api.browserbase.com/v1${path}`, { method, headers: { 'X-BB-API-Key': config.key, 'Content-Type': 'application/json' }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(15_000), cache: 'no-store', redirect: 'error' });
-  if (missingOk && response.status === 404) return undefined as T;
-  if (!response.ok) throw Object.assign(fail('The browser service is unavailable. Saved authorization has been retained; try again.', 503, 'browser_provider'),{providerStatus:response.status});
-  return response.status === 204 ? undefined as T : response.json() as Promise<T>;
+async function api<T>(connection: BrowserConnection, path: string, method = 'GET', body?: unknown, missingOk = false): Promise<T> {
+  return browserControlRequest(recordedBrowserBackend(connection.secret), ownerTag(connection), path, method, body, missingOk);
+}
+function assertCurrentHosting(connection: BrowserConnection): void {
+  if (recordedBrowserBackend(connection.secret) !== configuredBrowserBackend()) throw fail('Browser hosting changed. Reconnect this provider before reading courses.', 409, 'browser_login_required');
 }
 const sessionSchema = z.object({ id: z.string().min(1), projectId: z.string(), contextId: z.string().optional(), status: z.string(), expiresAt: z.string(), connectUrl: z.string().optional(), userMetadata: z.record(z.string(), z.unknown()).optional() });
 type Session = z.infer<typeof sessionSchema>;
 function ownerTag(connection: BrowserConnection): string { return createHash('sha256').update(`${connection.workspaceId}:${connection.id}`).digest('hex'); }
 export function validateSessionOwnership(session: Session, connection: Pick<BrowserConnection, 'workspaceId'|'id'|'secret'>, projectId: string): boolean {
   const tag = createHash('sha256').update(`${connection.workspaceId}:${connection.id}`).digest('hex');
-  return session.projectId === projectId && session.userMetadata?.somaOwner === tag && (!session.contextId || session.contextId === connection.secret.contextId) && session.id === connection.secret.sessionId;
+  let backend: BrowserBackend; try { backend = recordedBrowserBackend(connection.secret); } catch { return false; }
+  const contextMatches = backend === 'gcp' ? !!connection.secret.contextId && session.contextId === connection.secret.contextId : !session.contextId || session.contextId === connection.secret.contextId;
+  return session.projectId === projectId && session.userMetadata?.somaOwner === tag && contextMatches && session.id === connection.secret.sessionId;
 }
 async function getSession(connection: BrowserConnection): Promise<Session | null> {
   if (!connection.secret.sessionId) return null;
-  const raw = await api<unknown>(`/sessions/${encodeURIComponent(connection.secret.sessionId)}`, 'GET', undefined, true);
+  const raw = await api<unknown>(connection, `/sessions/${encodeURIComponent(connection.secret.sessionId)}`, 'GET', undefined, true);
   if (!raw) return null;
   const session = sessionSchema.parse(raw);
-  if (!validateSessionOwnership(session, connection, await resolveBrowserProjectId())) throw fail('Browser session ownership could not be verified.', 403, 'browser_owner');
+  if (!validateSessionOwnership(session, connection, await resolveBrowserProjectId(recordedBrowserBackend(connection.secret)))) throw fail('Browser session ownership could not be verified.', 403, 'browser_owner');
   return session;
 }
 const active = (session: Session | null) => Boolean(session && ['RUNNING', 'PENDING'].includes(session.status) && Date.parse(session.expiresAt) > Date.now());
 async function releaseSession(connection: BrowserConnection) {
   const session = await getSession(connection);
-  if (session && ['RUNNING', 'PENDING'].includes(session.status)) await api(`/sessions/${encodeURIComponent(session.id)}`, 'POST', { status: 'REQUEST_RELEASE' });
+  if (session && ['RUNNING', 'PENDING'].includes(session.status)) await api(connection, `/sessions/${encodeURIComponent(session.id)}`, 'POST', { status: 'REQUEST_RELEASE' });
+}
+async function deleteContext(connection: BrowserConnection): Promise<void> {
+  if (!connection.secret.contextId) return;
+  const path = `/contexts/${encodeURIComponent(connection.secret.contextId)}`;
+  await api(connection, path, 'DELETE', undefined, true);
+  if (recordedBrowserBackend(connection.secret) === 'gcp' && await api(connection, path, 'GET', undefined, true) !== undefined) {
+    throw fail('Saved browser cleanup is still pending. Authorization references were retained.', 503, 'browser_cleanup_pending');
+  }
 }
 function clearSession(secret: Secret): Secret {
   const { sessionId: _id, sessionExpiresAt: _expiry, loginPageId: _page, ...rest } = secret;
   return { ...rest, readyAt: new Date(Date.now() + 5000).toISOString() };
 }
-async function connect(session: Session, markPhase?:(phase:'playwright-import'|'cdp-connect')=>void): Promise<Browser> {
+async function connect(session: Session, connection: BrowserConnection, markPhase?:(phase:'playwright-import'|'cdp-connect')=>void): Promise<Browser> {
   if (!session.connectUrl) throw fail('Browser session is not ready. Try again shortly.');
-  const address = new URL(session.connectUrl);
-  if (address.protocol !== 'wss:' || !(address.hostname === 'connect.browserbase.com' || /^connect\.[a-z0-9-]+\.browserbase\.com$/.test(address.hostname))) throw fail('Browser service returned an invalid connection.', 503);
+  const options = browserCdpOptions(recordedBrowserBackend(connection.secret), session.connectUrl, session.id, ownerTag(connection));
   markPhase?.('playwright-import');
   const { chromium } = await import('playwright-core');
   markPhase?.('cdp-connect');
-  return chromium.connectOverCDP(session.connectUrl, { timeout: 15_000 });
+  return chromium.connectOverCDP(session.connectUrl, options);
 }
 async function allocateSession(account: VerifiedAccount, leaseId: string, connection: BrowserConnection, seconds: number): Promise<{ connection: BrowserConnection; session: Session }> {
+  assertCurrentHosting(connection);
   const now = new Date();
   if (connection.secret.readyAt && Date.parse(connection.secret.readyAt) > now.getTime()) throw fail('The saved browser is syncing. Try again in a few seconds.');
   const day = now.toISOString().slice(0, 10), starts = connection.secret.day === day ? connection.secret.starts || 0 : 0;
   if (starts >= 24) throw fail('This provider has reached today’s browser session limit.', 429);
   connection.secret = { ...connection.secret, day, starts: starts + 1 };
   if (!await checkpointConnectionLease(account, connection.id, leaseId, { secret: connection.secret })) throw fail('Source settings changed. Reopen the connection.');
-  const raw = await api<unknown>('/sessions', 'POST', { projectId: await resolveBrowserProjectId(), timeout: seconds, keepAlive: true, browserSettings: { context: { id: connection.secret.contextId, persist: true }, recordSession: false, logSession: false, solveCaptchas: false }, userMetadata: { somaOwner: ownerTag(connection) } });
+  const raw = await api<unknown>(connection, '/sessions', 'POST', { projectId: await resolveBrowserProjectId(recordedBrowserBackend(connection.secret)), timeout: seconds, keepAlive: true, browserSettings: { context: { id: connection.secret.contextId, persist: true }, recordSession: false, logSession: false, solveCaptchas: false }, userMetadata: { somaOwner: ownerTag(connection) } });
   const session = sessionSchema.parse(raw);
   connection.secret = { ...connection.secret, sessionId: session.id, sessionExpiresAt: session.expiresAt };
   const next = connection;
   if (!await checkpointConnectionLease(account, connection.id, leaseId, { secret: connection.secret })) {
-    await api(`/sessions/${encodeURIComponent(session.id)}`, 'POST', { status: 'REQUEST_RELEASE' });
+    await api(connection, `/sessions/${encodeURIComponent(session.id)}`, 'POST', { status: 'REQUEST_RELEASE' });
     throw fail('Source settings changed. Reopen the connection.');
   }
-  if (!validateSessionOwnership(session, next, await resolveBrowserProjectId())) throw fail('Browser session ownership could not be verified.', 503);
+  if (!validateSessionOwnership(session, next, await resolveBrowserProjectId(recordedBrowserBackend(connection.secret)))) throw fail('Browser session ownership could not be verified.', 503);
   return { connection: next, session };
 }
 async function persistLease(account: VerifiedAccount, connection: BrowserConnection, leaseId: string, patch: Parameters<typeof releaseConnectionLease<Secret, Configuration>>[3]) {
@@ -172,13 +181,22 @@ export async function configureBrowser(account: VerifiedAccount, provider: Brows
   return { notice: 'Selected pages saved. Only these pages will be collected.' };
 }
 export async function startBrowserLogin(account: VerifiedAccount, provider: BrowserProvider) {
-  settings();
+  if (!browserConfigured()) throw fail('Browser connections are not configured yet.', 503, 'browser_configuration');
   const existing = await readConnection<Secret, Configuration>(account, ID(provider));
   if (!existing || existing.status === 'disconnected') await configureBrowser(account, provider, []);
   const lease = await acquireConnectionLease<Secret, Configuration>(account, ID(provider), 'login', 120_000);
   let connection = lease.connection;
   try {
     await validateTargets(account, provider, connection.configuration.targets);
+    const targetBackend = configuredBrowserBackend(), previousBackend = recordedBrowserBackend(connection.secret);
+    if (previousBackend !== targetBackend) {
+      // Retain the old encrypted references until their own provider confirms cleanup.
+      if (connection.secret.sessionId) await releaseSession(connection);
+      await deleteContext(connection);
+      const secret: Secret = { backend: targetBackend, version: 1 };
+      if (!await checkpointConnectionLease(account, connection.id, lease.leaseId, { secret })) throw fail('Source settings changed. Reconnect to retry hosting migration.');
+      connection = { ...connection, secret };
+    } else connection.secret = { ...connection.secret, backend: targetBackend, version: 1 };
     let session = await getSession(connection);
     if (!active(session)) {
       if (connection.secret.sessionId) {
@@ -187,13 +205,14 @@ export async function startBrowserLogin(account: VerifiedAccount, provider: Brow
         throw fail('The previous sign-in session ended. Wait a few seconds, then reconnect.');
       }
       if (!connection.secret.contextId) {
-        const context = z.object({ id: z.string().min(1) }).parse(await api('/contexts', 'POST', { projectId: await resolveBrowserProjectId() }));
+        const backend = recordedBrowserBackend(connection.secret);
+        const context = z.object({ id: z.string().regex(/^[A-Za-z0-9_-]{1,160}$/) }).parse(await api(connection, '/contexts', 'POST', { projectId: await resolveBrowserProjectId(backend), ...(backend === 'gcp' ? { userMetadata: { somaOwner: ownerTag(connection) } } : {}) }));
         connection = { ...connection, secret: { ...connection.secret, contextId: context.id } };
-        if (!await checkpointConnectionLease(account, connection.id, lease.leaseId, { secret: connection.secret })) { await api(`/contexts/${encodeURIComponent(context.id)}`, 'DELETE'); throw fail('Source settings changed.'); }
+        if (!await checkpointConnectionLease(account, connection.id, lease.leaseId, { secret: connection.secret })) { await deleteContext(connection); throw fail('Source settings changed.'); }
       }
       const created = await allocateSession(account, lease.leaseId, connection, 600); connection = created.connection; session = created.session;
     }
-    const browser = await connect(session!);
+    const browser = await connect(session!, connection);
     let pageId: string;
     try {
       const context = browser.contexts()[0]; if (!context) throw fail('Browser is not ready.');
@@ -220,19 +239,14 @@ export async function startBrowserLogin(account: VerifiedAccount, provider: Brow
       connection.secret = { ...connection.secret, loginPageId: pageId };
       if (!await checkpointConnectionLease(account, connection.id, lease.leaseId, { secret: connection.secret })) throw fail('Source settings changed. Reopen the connection.');
     } finally { await browser.close(); }
-    const debug = z.object({ pages: z.array(z.object({ id: z.string(), debuggerFullscreenUrl: z.string().url() })).max(100) }).parse(await api(`/sessions/${encodeURIComponent(session!.id)}/debug?expiresIn=600`));
+    const debug = z.object({ pages: z.array(z.object({ id: z.string(), debuggerFullscreenUrl: z.string().url() })).max(100) }).parse(await api(connection, `/sessions/${encodeURIComponent(session!.id)}/debug?expiresIn=600`));
     const matches = debug.pages.filter(page => page.id === pageId);
     if (matches.length !== 1) throw fail('The sign-in page is not available yet. Reconnect to retry.', 503, 'browser_login_target');
-    const login = new URL(matches[0].debuggerFullscreenUrl);
-    const rawSocket = login.searchParams.get('wss');
-    let socket: URL; try { socket = new URL(rawSocket?.startsWith('wss://') ? rawSocket : `wss://${rawSocket ?? ''}`); } catch { throw fail('Browser service returned an invalid sign-in link.', 503, 'browser_login_target'); }
-    if (login.protocol !== 'https:' || login.username || login.password || (login.port && login.port !== '443') || !(login.hostname === 'browserbase.com' || login.hostname.endsWith('.browserbase.com'))
-      || socket.protocol !== 'wss:' || socket.username || socket.password || (socket.port && socket.port !== '443') || !(socket.hostname === 'connect.browserbase.com' || /^connect\.[a-z0-9-]+\.browserbase\.com$/.test(socket.hostname))
-      || socket.pathname !== `/debug/${session!.id}/devtools/page/${pageId}`) throw fail('Browser service returned an invalid sign-in link.', 503, 'browser_login_target');
+    const login = validateBrowserLoginUrl(recordedBrowserBackend(connection.secret), matches[0].debuggerFullscreenUrl, session!.id, pageId);
     const previousCatalog=connection.configuration.blackboard;
     const configuration=provider==='blackboard'?{...connection.configuration,blackboard:{...(previousCatalog?.mode?{mode:previousCatalog.mode}:{}),selected:previousCatalog?.selected??[],catalogIds:[],catalogCheckedAt:'',catalogComplete:false,catalogEpoch:randomUUID()}}:connection.configuration;
     await persistLease(account, connection, lease.leaseId, { configuration, secret: connection.secret, status: 'connecting', notice: 'Finish sign-in in the private browser. Course access is not verified yet.' });
-    return { loginUrl: login.href, expiresAt: session!.expiresAt, notice: 'Enter credentials and MFA only in the provider page. Finish sign-in, then select Refresh to verify course access.' };
+    return { loginUrl: login, expiresAt: session!.expiresAt, notice: 'Enter credentials and MFA only in the provider page. Finish sign-in, then select Refresh to verify course access.' };
   } catch (error) {
     await releaseConnectionLease(account, connection.id, lease.leaseId, { secret: connection.secret, status: 'error', notice: 'Sign-in did not finish. Reconnect or disconnect to clean up the saved browser.' }); throw error;
   }
@@ -258,13 +272,14 @@ export async function withBrowserRead<T>(account: VerifiedAccount, provider: Bro
   let phase:BrowserReadPhase='workspace-read';
   const timer=setTimeout(()=>{void browser?.close().catch(()=>undefined);},Math.max(1,deadline-Date.now()));timer.unref();
   try {
+    assertCurrentHosting(connection);
     const workspace=await readAccountWorkspace(account);if(!workspace)throw fail('Private workspace is unavailable.',404);
     if(!connection.secret.contextId)throw fail('Sign in to this provider first.',409,'browser_login_required');
     phase='session-read';
     if(active(await getSession(connection)))throw fail('Finish the sign-in session before reading courses.');
     if(connection.secret.sessionId){await releaseSession(connection);connection.secret=clearSession(connection.secret);await checkpointConnectionLease(account,connection.id,lease.leaseId,{secret:connection.secret});throw fail('The previous session ended. Wait a few seconds, then retry.');}
     phase='session-allocation';
-    const created=await allocateSession(account,lease.leaseId,connection,180);connection=created.connection;allocated=true;phase='cdp-connect';browser=await connect(created.session,value=>{phase=value;});
+    const created=await allocateSession(account,lease.leaseId,connection,180);connection=created.connection;allocated=true;phase='cdp-connect';browser=await connect(created.session,connection,value=>{phase=value;});
     const context=browser.contexts()[0];if(!context)throw fail('Browser is not ready.');
     phase='policy-install';
     const blockedOrigins=new Set<string>();
@@ -340,6 +355,7 @@ export async function refreshBrowser(account: VerifiedAccount, provider: Browser
   const deadlineTimer = setTimeout(() => { void browser?.close().catch(() => undefined); }, Math.max(1, deadline - Date.now()));
   deadlineTimer.unref();
   try {
+    assertCurrentHosting(connection);
     const selected = await validateTargets(account, provider, connection.configuration.targets);
     if (!selected.targets.length) throw fail('Select at least one course page first.', 400);
     batch=browserReadBatch(selected.targets,connection.configuration.nextTargetIndex,provider==='piazza'?1:4);
@@ -351,7 +367,7 @@ export async function refreshBrowser(account: VerifiedAccount, provider: Browser
       throw fail('The previous session ended. Wait a few seconds, then refresh.');
     }
     const allocated = await allocateSession(account, lease.leaseId, connection, 180); connection = allocated.connection; allocatedHere = true;
-    browser = await connect(allocated.session);
+    browser = await connect(allocated.session,connection);
     const context = browser.contexts()[0]; if (!context) throw fail('Browser is not ready.');
     const piazzaScripts=new Set<string>();
     await context.route('**/*', async route => {
@@ -413,8 +429,7 @@ export async function disconnectBrowser(account: VerifiedAccount, provider: Brow
   const { connection, leaseId } = await acquireConnectionLease<Secret, Configuration>(account, ID(provider), 'disconnect');
   try {
     if (connection.secret.sessionId) await releaseSession(connection);
-    // Browserbase documents DELETE /v1/contexts/{id}; do not erase our only cleanup reference on failure.
-    if (connection.secret.contextId) await api(`/contexts/${encodeURIComponent(connection.secret.contextId)}`, 'DELETE', undefined, true);
+    await deleteContext(connection);
     await updateAccountWorkspace(account, state => staleCollectedSources(state,source=>!!source.provenance?.sourceKey.startsWith(`${provider}:${connection.id}:`)), undefined, connectionPublicationGuard(account, connection.id, leaseId));
     await deleteConnection(account, connection.id);
     return { notice: 'Disconnected and deleted the saved provider browser context.' };
@@ -429,6 +444,6 @@ export async function cleanupBrowsersForDeletion(account: VerifiedAccount, works
   for (const saved of await connectionsForDeletion(account, workspaceId)) {
     const connection = saved as BrowserConnection;
     if (connection.secret.sessionId) await releaseSession(connection);
-    if (connection.secret.contextId) await api(`/contexts/${encodeURIComponent(connection.secret.contextId)}`, 'DELETE', undefined, true);
+    await deleteContext(connection);
   }
 }

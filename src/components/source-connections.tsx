@@ -160,7 +160,7 @@ function GoogleConnections({ data, reload }: { data: WorkspaceResponse; reload: 
 type BrowserProvider = 'blackboard' | 'gradescope' | 'piazza';
 type BrowserTarget = { courseId: string; url: string; context?: SourceAuthorityContext };
 type BrowserConnection = Omit<Connection, 'configuration'> & { configuration?: { targets?: BrowserTarget[] } };
-type BrowserStatus = { configured: boolean; providers: {
+type BrowserStatus = { configured: boolean; hosting?: 'browserbase' | 'gcp'; providers: {
   provider: BrowserProvider; label: string; homeUrl: string; connection?: BrowserConnection;
 }[] };
 type LoginWindow = { loginUrl: string; expiresAt: string };
@@ -202,8 +202,8 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
   }
   return <div style={fieldSpacing}>
     <h3>Course sites</h3>
-    <p className="meta">Sign in through a browser hosted by Browserbase, separate from your everyday browser. Enter passwords and MFA only on the provider’s actual login page; do not save passwords in the hosted browser.</p>
-    <p className="meta">Browserbase retains sensitive browser state, including cookies and site storage. Soma’s authorized server can use that session. Page selection limits Soma’s collection; the underlying login can have broader account access. Disconnect deletes the saved context; failed cleanup is retained for retry. Sessions can expire and require MFA again.</p>
+    <p className="meta">Sign in through a browser hosted {status?.hosting === 'gcp' ? 'on Soma’s Google Cloud worker' : 'by Browserbase'}, separate from your everyday browser. Enter passwords and MFA only on the provider’s actual login page; do not save passwords in the hosted browser.</p>
+    <p className="meta">{status?.hosting === 'gcp' ? 'Soma’s Google Cloud worker' : 'Browserbase'} retains sensitive browser state, including cookies and site storage. Soma’s authorized server can use that session. Page selection limits Soma’s collection; the underlying login can have broader account access. Disconnect deletes the saved context; failed cleanup is retained for retry. Sessions can expire and require MFA again.</p>
     {!status && !error && <p className="meta" role="status">Checking browser connection availability…</p>}
     {status && !status.configured && <p className="inline-caution">Persistent browser access is not configured on this deployment. New login sessions are unavailable until configuration is restored.</p>}
     {status?.providers.map(item => {
@@ -223,7 +223,7 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
         </div>
         {session && <section className="settings-status" aria-label={`${item.label} login window`}>
           <h3>Finish signing in</h3>
-          <p>The Browserbase login window is available until {new Date(session.expiresAt).toLocaleTimeString()}. Complete the provider’s login and any MFA, then return here.</p>
+          <p>The private login window is available until {new Date(session.expiresAt).toLocaleTimeString()}. Complete the provider’s login and any MFA, then return here.</p>
           <a className="primary-button" style={{ marginTop: 14, textDecoration: 'none' }} href={session.loginUrl} target="_blank" rel="noopener noreferrer">Open secure login window</a>
           <button className="secondary-button" style={fieldSpacing} disabled={!!busy} onClick={() => void action(item.provider, 'complete')}>I’ve finished signing in</button>
           <p className="meta">Saving the browser session does not prove source access. A successful read of your selected course page establishes that separately.</p>

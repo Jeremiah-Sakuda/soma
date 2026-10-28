@@ -496,6 +496,21 @@
       "kind": "prompt",
       "prompt": "Can you use the cli to check the credits or no",
       "timestamp_note": "Exact received timestamp unavailable; injected Page/browser context and session-bearing URLs excluded."
+    },
+    {
+      "id": "P059",
+      "received_at": null,
+      "kind": "prompt",
+      "prompt": "Okay yeah lets link it to deployment billing and switch to gcp. I thinj the billing may have the max number of projects though so list out the projects and we'll remove one ",
+      "timestamp_note": "Exact received timestamp unavailable; trailing space preserved; injected browser/session context excluded."
+    },
+    {
+      "id": "P060",
+      "received_at": null,
+      "kind": "clarification",
+      "prompt": "hodi-2026",
+      "question_context": "Which project should I unlink from Deployment Billing to free a slot for Soma? Unlinking keeps the project but disables its paid services. I need your selection because the quota blocked Soma’s link and I can’t determine which project is expendable from its name.",
+      "timestamp_note": "Exact received timestamp unavailable; platform context excluded."
     }
   ]
 }

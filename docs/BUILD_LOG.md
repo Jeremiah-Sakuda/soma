@@ -1135,3 +1135,27 @@ Top three outcomes:
 Sources: [gcloud billing accounts](https://docs.cloud.google.com/sdk/gcloud/reference/billing/accounts), [Cloud Billing account resource](https://docs.cloud.google.com/billing/docs/reference/rest/v1/billingAccounts), [official credit balance/scope view](https://docs.cloud.google.com/billing/docs/how-to/resolve-issues#view_promotional_credits_applied_to_your_account). Canonical archive and scoped documentation checks only; no application tests are warranted for the read-only inspection.
 
 Deviations: supported CLI commands cannot complete the requested promotional-balance lookup, so the balance was read from the console and distinguished from CLI results. Credit availability is not a service-eligibility or successful-browser-migration claim.
+
+## P059 — Authorize GCP browser migration and inspect billing project quota (October 27, 2026)
+
+Prompt: [canonical verbatim prompt](build-log/prompts.json), `P059`, including its trailing space.
+
+Top three outcomes:
+1. User authorized linking Soma to Deployment Billing and migrating browser hosting to GCP. Executed the requested link attempt for the existing Soma project. Google rejected it with `FAILED_PRECONDITION` / `google.rpc.QuotaFailure` (“Cloud billing quota exceeded”). No billing association changed and no project was detached or deleted.
+2. Read the actual linked-project list and project metadata: Falsify Transcend 2026 (`falsify-transcend-2026`), Hodi (`hodi-2026`), Dira Prod (`dira-prod`), Asili XPRIZE (`asili-xprize-2026`), Sema Cinema (`sema-cinema-2026`). All five are active and billing-enabled; lifecycle status is not usage/inactivity evidence. Presented this inventory and requested the exact project to unlink, explaining that it preserves the project but disables paid services. Selection is pending. No private billing account identifier is archived here.
+3. Began an independent architecture review for the GCP browser runner while awaiting the required project choice. Preserve Vercel hosting, selected source mappings, read-only provider policies, account ownership, exclusive leases, encrypted saved authorization, direct user login/MFA and recoverable deletion. The migration must provide fresh GCP sign-ins without assuming Browserbase context portability. Deployment, actual provider access, credit applicability and the cutover remain unverified.
+
+Executed checks: linked-project list and five project name/lifecycle metadata reads succeeded; one authorized billing-link mutation was rejected by quota. No application code changes, deployment, paid worker creation, inference or browser session allocation. Architecture review produced [GCP Browser Migration](GCP_BROWSER_MIGRATION.md), including backend-versioned cleanup, trusted interactive access, encrypted fenced storage and explicit cloud-credential/network isolation. P060 subsequently resolved the billing prerequisite.
+
+Deviations: GCP migration is now explicitly selected, superseding P057’s advisory-only state. Provider-credit eligibility remains unknown. The billing quota blocks hosted rollout until the user identifies a project to unlink or obtains increased quota. No destructive project deletion is authorized by an unqualified “remove one.”
+
+## P060 — Select Hodi for billing unlink (October 27, 2026)
+
+Prompt: [canonical verbatim clarification](build-log/prompts.json), `P060`.
+
+Top three outcomes:
+1. Verified Hodi’s association immediately before the user-authorized unlink. Hodi now has billing disabled and no billing account; the project was not deleted.
+2. Linked Soma to Deployment Billing successfully. Independent linked-project readback confirms Soma replaced Hodi while the other four project associations remain.
+3. Implemented backend-versioned browser transport/cutover and an isolated GCP worker with owner-scoped control/CDP, one-use human viewer capabilities, encrypted cookies/localStorage/IndexedDB snapshots, generation fencing/tombstones and a DNS-pinning egress proxy. Initial focused verification passed 89 tests plus typecheck. Enabled required cloud APIs; created separate runtime/build identities, private credential-state bucket and Secret Manager entries. Readback confirmed public access prevention, uniform bucket access and zero soft-delete retention. Hosted runner, provider logins, credit applicability and production cutover remain unverified at this checkpoint.
+
+Deviations: none from the exact selected unlink. No inference-cap increase or project deletion. Final migration results follow at checkpoints.

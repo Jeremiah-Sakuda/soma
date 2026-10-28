@@ -5,6 +5,7 @@ import { verifyAccountSession } from '@/lib/server/account';
 import { apiError, requireSameOrigin, readJsonBody } from '@/lib/server/http';
 import { listConnections } from '@/lib/server/connectors/store';
 import { queueCollectedPreparation } from '@/lib/server/connectors/preparation';
+import { configuredBrowserBackend } from '@/lib/server/connectors/browser-hosting';
 import { BROWSER_PROVIDERS, browserActionSchema, browserConfigured, completeBrowserLogin, configureBrowser, disconnectBrowser, refreshBrowser, startBrowserLogin } from '@/lib/server/connectors/browser';
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -20,7 +21,7 @@ async function account(request: Request) {
   return value;
 }
 export async function GET(request: Request) {
-  try { const connections = await listConnections(await account(request)); return response({ configured: browserConfigured(), providers: Object.entries(BROWSER_PROVIDERS).map(([provider, { label, homeUrl }]) => ({ provider, label, homeUrl, connection: connections.find(item => item.id === `browser-${provider}`) })) }); }
+  try { const connections = await listConnections(await account(request)); return response({ configured: browserConfigured(), hosting: configuredBrowserBackend(), providers: Object.entries(BROWSER_PROVIDERS).map(([provider, { label, homeUrl }]) => ({ provider, label, homeUrl, connection: connections.find(item => item.id === `browser-${provider}`) })) }); }
   catch (error) { return browserError(error); }
 }
 export async function POST(request: Request) {

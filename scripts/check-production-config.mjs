@@ -20,7 +20,12 @@ let credentialKeysValid=false;
 try { new CredentialCipher(env); credentialKeysValid=true; } catch { /* Never report configuration values. */ }
 check('connector encryption key set and write format', credentialKeysValid);
 check('Google OAuth client configured', Boolean(env.GOOGLE_OAUTH_CLIENT_ID && env.GOOGLE_OAUTH_CLIENT_SECRET));
-check('Browserbase API key configured', Boolean(env.BROWSERBASE_API_KEY));
+const browserBackend = env.SOMA_BROWSER_BACKEND ?? 'browserbase';
+let browserHostValid = browserBackend === 'browserbase' && Boolean(env.BROWSERBASE_API_KEY);
+if (browserBackend === 'gcp') {
+  try { const url = new URL(env.SOMA_GCP_BROWSER_URL); browserHostValid = url.protocol === 'https:' && /^(?:[a-z0-9-]+\.)+run\.app$/.test(url.hostname) && url.origin === env.SOMA_GCP_BROWSER_URL && Boolean(env.SOMA_GCP_BROWSER_PROJECT_ID) && /^[A-Za-z0-9_-]{40,256}$/.test(env.SOMA_GCP_BROWSER_CONTROL_KEY ?? ''); } catch { /* Report no values. */ }
+}
+check('browser hosting configured', browserHostValid);
 check('Meta endpoint and model pinned', env.META_API_BASE_URL === 'https://api.meta.ai/v1' && env.META_MODEL_ID === 'muse-spark-1.3');
 const allocation = Number(env.META_ALLOCATION_USD), cap = Number(env.META_APP_SPEND_CAP_USD);
 check('Meta allocation and 20 percent reserve', allocation > 0 && Number.isFinite(allocation) && cap > 0 && Number.isFinite(cap) && cap <= allocation * 0.8);

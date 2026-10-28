@@ -1122,3 +1122,16 @@ Estimate: 24 checks/day at one to two billed minutes/check for 30 days equals 12
 Sources checked: [Browserbase plans](https://docs.browserbase.com/account/billing/plans), [contexts](https://docs.browserbase.com/platform/browser/core-features/contexts), [Google Cloud browser automation](https://docs.cloud.google.com/run/docs/browser-automation), [Cloud Run pricing](https://cloud.google.com/run/pricing), [credit scope](https://docs.cloud.google.com/billing/docs/how-to/resolve-issues#view_promotional_credits_applied_to_your_account). Documentation/archive validation only; no application tests or additional browser session allocation needed for this comparison.
 
 Deviations: none selected. A Google Cloud migration is an option, not an authorized or completed scope change. Existing live Piazza extraction/publication remains unverified.
+
+## P058 — Check Google Cloud credits with CLI (October 27, 2026)
+
+Prompt: [canonical verbatim prompt](build-log/prompts.json), `P058`.
+
+Top three outcomes:
+1. Inspected installed Google Cloud SDK 571.0.0 and supported stable/beta billing command help. Read the authenticated account and two accessible open billing accounts. Explicitly inspected Soma’s project billing: `billingEnabled: false`, with no linked billing account. The unrelated default CLI project was preserved. Initial sandbox logging/credential-cache permissions required the normal approved read-command escalation; no authentication, IAM or billing link was changed. An unavailable alpha help path attempted component discovery and failed without installation; it was not needed or retried.
+2. Verified the documented Cloud Billing account API exposes metadata rather than remaining promotional balances. Used the official Credits console as a read-only fallback in the existing authenticated browser. The Deployment Billing account visibly lists three available grants and one expired grant. Reported available amounts/expiration information privately to the user; billing identifiers, credit identifiers and financial balances were not copied into the repository. The other billing account’s credit balance was not inspected.
+3. Every available grant’s visible scope is “Certain usage; see the terms of the promotion for details.” Expanded the largest grant’s row but found no service-specific eligibility confirmation. Cloud Run/Compute Engine eligibility remains unverified pending promotion terms. Kept the Credits page available to the user. No billing activation, account linking, infrastructure creation, payment, model call, Browserbase allocation or application changes.
+
+Sources: [gcloud billing accounts](https://docs.cloud.google.com/sdk/gcloud/reference/billing/accounts), [Cloud Billing account resource](https://docs.cloud.google.com/billing/docs/reference/rest/v1/billingAccounts), [official credit balance/scope view](https://docs.cloud.google.com/billing/docs/how-to/resolve-issues#view_promotional_credits_applied_to_your_account). Canonical archive and scoped documentation checks only; no application tests are warranted for the read-only inspection.
+
+Deviations: supported CLI commands cannot complete the requested promotional-balance lookup, so the balance was read from the console and distinguished from CLI results. Credit availability is not a service-eligibility or successful-browser-migration claim.

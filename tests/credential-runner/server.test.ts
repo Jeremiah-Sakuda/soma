@@ -7,12 +7,12 @@ const cleanup:Array<()=>Promise<void>>=[];
 afterEach(async()=>{for(const close of cleanup.splice(0))await close();});
 const owner='a'.repeat(64),other='b'.repeat(64),key='k'.repeat(48),origin='https://credential.example.com';
 function deferred(){let resolve!:(value?:unknown)=>void;const promise=new Promise(r=>resolve=r);return{promise,resolve};}
-async function harness(options:{holdDecrypt?:ReturnType<typeof deferred>,secretCookie?:string,auditFailure?:string}={}){
+async function harness(options:{holdDecrypt?:ReturnType<typeof deferred>,secretCookie?:string,auditFailure?:string,holdPublication?:ReturnType<typeof deferred>,holdConsent?:ReturnType<typeof deferred>}={}){
  let active:any=null,authorized=true,clock=Date.now(),version='v1',closed=0,saved:any=null;
  const consumed=new Set<string>();
  const store={inspect:vi.fn(async()=>({active})),claim:vi.fn(async(_id:string,_owner:string,id:string,expiresAt:number)=>{if(active)throw Error('busy');active={id,expiresAt};return {storageState:null};}),abandon:vi.fn(async()=>{active=null;}),finish:vi.fn(async(_id:string,_owner:string,_session:string,state:any)=>{saved=state;active=null;})};
  const vault={metadata:vi.fn(async()=>({status:'active',version})),save:vi.fn(async()=>({status:'active',version})),decrypt:vi.fn(async()=>{await options.holdDecrypt?.promise;return {identifier:'student@bu.edu',password:'sensitive-canary'};}),rotate:vi.fn(async()=>{version='v2';return {status:'active',version};}),forget:vi.fn(async()=>{version='forgotten';return {status:'forgotten',version};})};
- const auditEvents:any[]=[];const audit={emit:vi.fn(async(_owner:string,event:any)=>{if(event.event===options.auditFailure&&(event.event!=='session_saved'||event.outcome==='succeeded'))throw new Error('synthetic audit failure');auditEvents.push(event);})};
+ const auditEvents:any[]=[];const audit={emit:vi.fn(async(_owner:string,event:any)=>{if(event.event==='session_saved'&&event.outcome==='started')await options.holdPublication?.promise;if(event.event==='consent')await options.holdConsent?.promise;if(event.event===options.auditFailure&&(event.event!=='session_saved'||event.outcome==='succeeded'))throw new Error('synthetic audit failure');auditEvents.push(event);})};
  const browser={inspect:vi.fn(async()=>({reviewed:true})),fill:vi.fn(async(_secret:any,recheck:()=>Promise<void>)=>{await recheck();}),safeForViewer:vi.fn(async()=>true),snapshot:vi.fn(async()=>({cookies:options.secretCookie?[{value:options.secretCookie}]:[],origins:[]})),close:vi.fn(async()=>{closed++;}),view:vi.fn(async()=>{})};
  const runner=createCredentialRunner({store,vault,audit,grantStore:{consume:async(id:string)=>{if(consumed.has(id))throw Object.assign(Error('replay'),{code:'grant_replayed',status:409});consumed.add(id);}},engine:{start:async()=>browser},authorize:async()=>{if(!authorized)throw Object.assign(Error('revoked'),{code:'revoked',status:403});return {identifier:'student@bu.edu'};},controlKey:key,publicOrigin:origin,proxyUrl:'http://127.0.0.1:1',now:()=>clock});
  await new Promise<void>((resolve,reject)=>{runner.server.once('error',reject);runner.server.listen(0,'127.0.0.1',resolve);});const port=(runner.server.address() as any).port;
@@ -70,6 +70,11 @@ describe('isolated credential login boundary',()=>{
  it('grant audit failure stops all browser and state allocation',async()=>{
   const h=await harness({auditFailure:'grant_issued'});expect((await h.request('/v1/grants',h.grant)).status).toBe(503);expect(h.store.claim).not.toHaveBeenCalled();expect(h.browser.inspect).not.toHaveBeenCalled();
  });
+ it('revocation during the consent audit prevents any credential save',async()=>{
+  const hold=deferred(),h=await harness({holdConsent:hold}),session=await h.create(),cookie=await h.bootstrap(session);
+  const pending=h.request(`/login/${session.sessionId}/save-fill`,{identifier:'student@bu.edu',password:'sensitive-canary',consent:true,version:'v1'},{human:true,cookie});
+  await vi.waitFor(()=>expect(h.audit.emit.mock.calls.some(([,event])=>event.event==='consent')).toBe(true));h.revoke();hold.resolve();expect((await pending).status).toBe(403);expect(h.vault.save).not.toHaveBeenCalled();expect(h.browser.fill).not.toHaveBeenCalled();
+ });
  it('missing consent audit blocks credential storage',async()=>{
   const h=await harness({auditFailure:'consent'}),session=await h.create(),cookie=await h.bootstrap(session);
   expect((await h.request(`/login/${session.sessionId}/save-fill`,{identifier:'student@bu.edu',password:'sensitive-canary',consent:true,version:'v1'},{human:true,cookie})).status).toBe(503);expect(h.vault.save).not.toHaveBeenCalled();expect(h.browser.fill).not.toHaveBeenCalled();
@@ -78,6 +83,11 @@ describe('isolated credential login boundary',()=>{
   const h=await harness({auditFailure:'session_saved'}),session=await h.create(),cookie=await h.bootstrap(session);
   expect((await h.request(`/login/${session.sessionId}/fill`,{version:'v1'},{human:true,cookie})).status).toBe(200);
   const result=await h.request(`/v1/sessions/${session.sessionId}/release`,{});expect(result.status).toBe(503);expect(h.saved).toEqual({cookies:[],origins:[]});expect(h.auditEvents.some(event=>event.event==='session_saved'&&event.outcome==='started')).toBe(true);expect(h.auditEvents.some(event=>event.event==='session_saved'&&event.outcome==='succeeded')).toBe(false);
+ });
+ it('revocation while publication intent is being audited prevents the state commit',async()=>{
+  const hold=deferred(),h=await harness({holdPublication:hold}),session=await h.create(),cookie=await h.bootstrap(session);
+  expect((await h.request(`/login/${session.sessionId}/fill`,{version:'v1'},{human:true,cookie})).status).toBe(200);
+  const pending=h.request(`/v1/sessions/${session.sessionId}/release`,{});await vi.waitFor(()=>expect(h.audit.emit.mock.calls.some(([,event])=>event.event==='session_saved'&&event.outcome==='started')).toBe(true));h.revoke();hold.resolve();expect((await pending).status).toBe(403);expect(h.store.finish).not.toHaveBeenCalled();expect(h.saved).toBeNull();
  });
  it('operator rotation fences a credential already waiting for decrypt',async()=>{
   const hold=deferred(),h=await harness({holdDecrypt:hold}),session=await h.create(),cookie=await h.bootstrap(session);

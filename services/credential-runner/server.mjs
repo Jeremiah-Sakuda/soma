@@ -63,7 +63,10 @@ export function createCredentialRunner({store,vault,grantStore,audit,engine,auth
      if(current.active?.id!==session.id||current.active.expiresAt<=now())fail('session_ended');
      // Bounded HMAC substring checks cover raw/escaped/URL/base64 password canaries without retaining plaintext.
      if(snapshotHasSecret(state,session.secretFingerprints,session.secretHmacKey))fail('state_secret',503);
-     await record(session.owner,'session_saved','started',session.id);await store.finish(session.contextId,session.owner,session.id,state);session.stateReleased=true;await record(session.owner,'session_saved','succeeded',session.id);
+     await record(session.owner,'session_saved','started',session.id);
+     await authorize(session.grant,{purpose:'session'});const latest=await store.inspect(session.contextId,session.owner);
+     if(maintenance.has(session.owner)||session.expires<=now()||latest.active?.id!==session.id||latest.active.expiresAt<=now())fail('session_ended');
+     await store.finish(session.contextId,session.owner,session.id,state);session.stateReleased=true;await record(session.owner,'session_saved','succeeded',session.id);
     }else{await store.abandon(session.contextId,session.owner,session.id);session.stateReleased=true;await record(session.owner,'session_revoked','succeeded',session.id);}
    }catch(error){failure=error;await record(session.owner,persist?'session_saved':'session_revoked','failed',session.id).catch(()=>undefined);try{await store.abandon(session.contextId,session.owner,session.id);session.stateReleased=true;}catch{/* retain fence for explicit cleanup retry */}}
    if(session.browser)await session.browser.close();sessions.delete(session.id);if(failure)throw failure;
@@ -121,7 +124,7 @@ export function createCredentialRunner({store,vault,grantStore,audit,engine,auth
       if(!fields(data,['identifier','password','consent','version'])||data.consent!==true||!validIdentifier(data.identifier)||typeof data.password!=='string'||data.password.length<1||data.password.length>1024||(data.version!==null&&typeof data.version!=='string'))fail('body_invalid',400);
       if(normalizeIdentifier(data.identifier)!==normalizeIdentifier(identity.identifier))fail('identity_mismatch',403);
       secret={identifier:data.identifier,password:data.password};
-      await authorized(session);await record(session.owner,'consent','succeeded',session.id);const saved=await vault.save(binding(session),secret,data.version);version=saved.version;await record(session.owner,'credential_saved','succeeded',session.id,version);
+      await authorized(session);await record(session.owner,'consent','succeeded',session.id);await authorized(session);const saved=await vault.save(binding(session),secret,data.version);version=saved.version;await record(session.owner,'credential_saved','succeeded',session.id,version);
      }else{
       if(!fields(data,['version'])||typeof data.version!=='string')fail('body_invalid',400);
       version=data.version;await authorized(session);secret=await vault.decrypt(binding(session),version);

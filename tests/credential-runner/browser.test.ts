@@ -31,8 +31,8 @@ describe.runIf(process.env.SOMA_CREDENTIAL_BROWSER_TESTS === 'true')('credential
     <input name="csrf_token" type="hidden" value="original-synthetic-csrf">
     <button name="_eventId_proceed" ${extra}>Continue</button></form><script>${script}</script>`;
 
-  async function fixture(html: string, redirectStatus = 303, redirectTarget = 'https://learn.bu.edu/synthetic-auth', responseBody = '', authenticatedHtml = '<!doctype html><h1>Original synthetic MFA step</h1>') {
-    let context: BrowserContext;
+  async function fixture(html: string, redirectStatus = 303, redirectTarget = 'https://learn.bu.edu/synthetic-auth', responseBody = '', authenticatedHtml = '<!doctype html><h1>Original synthetic MFA step</h1>', inputState: any = null) {
+    let context: BrowserContext;let importedState:any='not-started';
     const transmitted: { url: string; method: string; body: string; dom?: unknown }[] = [];
     const sockets = new Set<any>();
     const domEvents: unknown[] = [];
@@ -65,7 +65,8 @@ describe.runIf(process.env.SOMA_CREDENTIAL_BROWSER_TESTS === 'true')('credential
     proxy.on('connection', (socket) => { sockets.add(socket); socket.once('close', () => sockets.delete(socket)); });
     await new Promise<void>((resolve) => proxy.listen(0, '127.0.0.1', resolve));
     const proxyUrl = 'http://127.0.0.1:' + (proxy.address() as any).port;
-    const upstream = { async start() {
+    const upstream = { async start(options:any) {
+      importedState=options.state;
       context = await browser.newContext({ serviceWorkers: 'block', proxy: { server: proxyUrl }, ignoreHTTPSErrors: true });
       await context.exposeBinding('syntheticObserve', (_source, value) => { domEvents.push(value); });
       await context.addInitScript(() => {
@@ -82,8 +83,8 @@ describe.runIf(process.env.SOMA_CREDENTIAL_BROWSER_TESTS === 'true')('credential
     } };
     const engine = createLoginEngine(upstream);
     try {
-      const session = await engine.start({ state: null, proxyUrl });
-      return { session, domEvents, get context() { return context; }, transmitted, async close() {
+      const session = await engine.start({ state: inputState, proxyUrl });
+      return { session, domEvents, get importedState(){return importedState;}, get context() { return context; }, transmitted, async close() {
         await session.close(); for (const socket of sockets) socket.destroy();
         await Promise.all([new Promise<void>((resolve) => tls.close(() => resolve())), new Promise<void>((resolve) => proxy.close(() => resolve()))]);
       } };
@@ -91,6 +92,12 @@ describe.runIf(process.env.SOMA_CREDENTIAL_BROWSER_TESTS === 'true')('credential
       for (const socket of sockets) socket.destroy(); tls.close(); proxy.close(); throw error;
     }
   }
+
+  it('starts credential enrollment without importing previously saved private authorization',async()=>{
+    const privateState={cookies:[{name:'synthetic_saved_auth',value:'original-private-state-canary',domain:'learn.bu.edu',secure:true,httpOnly:true}],origins:[{origin:'https://learn.bu.edu',localStorage:[{name:'private',value:'original-private-state-canary'}]}]};
+    const test=await fixture(form(),303,'https://learn.bu.edu/synthetic-auth','','<!doctype html><h1>Original synthetic MFA step</h1>',privateState);
+    try{expect(test.importedState).toBeNull();expect(await test.session.inspect()).toEqual({reviewed:true});expect(privateState.cookies[0].value).toBe('original-private-state-canary');}finally{await test.close();}
+  });
 
   it('sends one checked POST through the proxy without inserting secrets or invoking hostile submit handlers', async () => {
     const test = await fixture(form('', `window.submits=0;document.forms[0].addEventListener('submit',()=>{window.submits++;document.forms[0].action='https://learn.bu.edu/exfil';});`));

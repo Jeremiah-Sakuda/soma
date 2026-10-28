@@ -10,8 +10,9 @@ function defaultEngine(){return createChromiumEngine({async launchPersistentCont
 }});}
 export function createLoginEngine(engine=defaultEngine()) {
  return { async start(options) {
-  const imported=options.state?{cookies:options.state.cookies.filter(cookie=>cookie.secure&&['learn.bu.edu','shib.bu.edu'].includes(cookie.domain.replace(/^\./,''))),origins:[]}:null;
-  const browser=await engine.start({...options,state:imported}),context=browser.context;
+  // Credential enrollment starts a fresh SSO request. Existing authorization
+  // remains encrypted in its claimed GCS context and is preserved on cancellation.
+  const browser=await engine.start({...options,state:null}),context=browser.context;
   let invalid=false,submission=null;
   const guard=page=>{
    page.on('popup',()=>{invalid=true;});

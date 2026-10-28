@@ -1,6 +1,6 @@
 # GCP browser hosting migration
 
-October 27, 2026 — P059. The user selected GCP hosting for the browser worker and authorized linking the existing Soma project to Deployment Billing. The lifecycle/transport and isolated worker are implemented and deployed. The actual IAM-private worker passed the synthetic runtime gate, including sandboxed Chromium, encrypted state restoration, viewer input/revocation and deletion. The production app contains the adapter but still selects Browserbase. Public human-viewer entry, fresh course logins and production cutover remain pending; the original design and gates below remain requirements.
+October 27, 2026 — P059. The user selected GCP hosting for the browser worker and authorized linking the existing Soma project to Deployment Billing. The lifecycle/transport and isolated worker are implemented and deployed. P061 explicitly approved public invocation of the protected login service; the actual hosted synthetic gate passed using application authentication without Google identity headers. Production now selects GCP. The final app produced a protected viewer showing BU’s real sign-in page after confirmed legacy-context cleanup. Fresh human login/MFA, actual GCP selected-source readback and the other provider reconnects remain pending. Earlier IAM-private checkpoints below are historical; the preservation and verification gates still apply.
 
 ## Observed prerequisite
 
@@ -45,7 +45,7 @@ The isolated runner needs:
 - [Cloud Storage soft delete](https://docs.cloud.google.com/storage/docs/soft-delete)
 - [Project quota requests](https://support.google.com/cloud/answer/6330231)
 
-## Executed checkpoint and remaining activation gate
+## P060 executed checkpoint and then-pending activation gate
 
 - Billing: Hodi unlinked without project deletion; Soma linked; the other four billing associations preserved by independent readback. Promotional-credit eligibility is still unverified.
 - Infrastructure: Cloud Run `soma-browser` in `us-east1`, one service-wide maximum instance, zero minimum instances, one active browser per process, CPU 1 / RAM 2 GiB, 900-second request ceiling and bounded 180/600-second collection/login sessions. Runtime and build identities are separate. Only the runtime has bucket object access and access to its two secrets. The state bucket prevents public access, uses uniform access and disables soft-delete retention; versioning is not enabled. Secret values stay in Secret Manager and ignored protected local files.
@@ -57,7 +57,7 @@ The isolated runner needs:
 
 Final deployed private revision `soma-browser-00003-7w8` passed the complete opt-in hosted gate (11.47 seconds), authenticated `/health` returned 200 and IAM policy readback contained no anonymous-invoker binding. Commit `c7d3445` is pushed to main. Its final CI [40629457007](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40629457007) passed 1,004 tests (54 opt-in skips), 38 browser journeys, typecheck, production build and isolated artifact verification. Explicit public-entry approval has been requested and remains pending.
 
-Next: obtain the explicit public-entry approval, activate the reviewed backend in a clean Vercel deployment, then reconnect Blackboard/Gradescope/Piazza through their human login/MFA flow. Reconnection must first confirm legacy Browserbase context cleanup through its recorded backend and preserve course mappings. Actual GCP course reads, Piazza extraction/publication, instance-termination recovery and a complete pixel-stream accessibility assessment remain open gates. Do not describe them as passed by these synthetic checks.
+At P060 the next steps were public-entry approval, clean Vercel activation and fresh Blackboard/Gradescope/Piazza login/MFA. P061 below resolves the approval and deployment gates; human sign-in remains the next step. Reconnection must first confirm legacy Browserbase context cleanup through its recorded backend and preserve course mappings. Actual GCP course reads, Piazza extraction/publication, instance-termination recovery and a complete pixel-stream accessibility assessment remain open gates. Do not describe them as passed by these synthetic checks.
 
 
 ## P061 — Approved public entry, October 28, 2026
@@ -68,3 +68,10 @@ Production backend activation is underway; do not infer provider login success. 
 
 
 P061 production checkpoint: GCP is selected in production and a fresh app load showed the Google Cloud hosting disclosure. Deployment `dpl_587LbsLR4XQCKak8f8Jf4RXinXg7` used clean committed `fb25fac` and preserved the production alias and saved course selections. A real reconnect exposed a legacy HTTP 400: body-less context deletion advertised JSON. Transport now omits Content-Type when it sends no body; strict upstream regression cases, 90 focused browser tests and typecheck pass. A real owner/lease-protected retry then prepared the new GCP Blackboard login successfully. The repair must still be deployed cleanly; human MFA and selected-source readback remain open. Existing legacy references are never discarded before confirmed cleanup.
+
+
+P061 final deployed handoff: committed/pushed `185ea57` and deployed it from a clean archive as `dpl_HRwpQ7sbdfpq7gT2hqjrSAStz2Qi`, retaining `https://soma-woad-beta.vercel.app`. The final production UI successfully resumed the new Blackboard session and produced its one-use GCP viewer link. The actual browser displayed the connected viewer at BU’s `shib.bu.edu` login page, with no credential entered by the agent. The link fragment was consumed/removed, and the sign-in tab was retained for human handoff. Course targets/selections were preserved; a new catalog check is still required after login. Legacy Gradescope/Piazza cleanup will occur on each provider’s reconnect; the Browserbase key stays available for that cleanup.
+
+CI on the public-entry checkpoint `fb25fac` completed successfully. The final header-repair CI [40633292550](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40633292550) passed **1,006 tests / 54 opt-in skips**, **38 browser journeys**, typecheck, production build and isolated browser-artifact verification. No private script, context/session ID, viewer token, course document, credential or learner record is committed. Temporary diagnostic scripts were removed; the handoff image stays ignored locally.
+
+**Remaining human actions:** finish BU login/MFA in the protected viewer, return to Soma and choose “I’ve finished signing in”; then verify the saved Fall 2026 selection with a fresh discovery/read. Reconnect Gradescope and Piazza sequentially through the same flow (the worker permits one active browser). Google Gmail/Calendar OAuth and explicit query/calendar selection remain separate. This handoff proves the real login page opens, not a successful course read or model preparation from GCP.

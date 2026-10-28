@@ -601,6 +601,14 @@
       "kind": "prompt",
       "prompt": "The current browser runner needs additional isolation before this is safe. I documented and independently reviewed the [proposed design](</Users/jerem/2026 Hackathon Ideation/Meta AI Dev/docs/CREDENTIAL_AUTOFILL_PROPOSAL.md>); **password storage is not implemented yet**. Implement this ",
       "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York. Platform browser context excluded."
+    },
+    {
+      "id": "P073",
+      "received_at": null,
+      "kind": "clarification_answer",
+      "prompt": "Approve isolated GCP rollout",
+      "question": "May I execute docs/CREDENTIAL_AUTOFILL_DEPLOYMENT.md in Soma’s existing GCP project: enable Cloud KMS, create the dedicated rotating key, private vault bucket, restricted login-service identity and secrets, and deploy the separate protected sign-in service with internet access for its one-use login page? This can incur GCP charges. I’ll verify isolation with synthetic data before enabling opt-in Blackboard autofill; you will enter your password and complete MFA yourself.",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York. Clarification answer preserved verbatim; platform wrapper excluded."
     }
   ]
 }

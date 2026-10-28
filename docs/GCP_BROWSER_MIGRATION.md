@@ -58,3 +58,10 @@ The isolated runner needs:
 Final deployed private revision `soma-browser-00003-7w8` passed the complete opt-in hosted gate (11.47 seconds), authenticated `/health` returned 200 and IAM policy readback contained no anonymous-invoker binding. Commit `c7d3445` is pushed to main. Its final CI [40629457007](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40629457007) passed 1,004 tests (54 opt-in skips), 38 browser journeys, typecheck, production build and isolated artifact verification. Explicit public-entry approval has been requested and remains pending.
 
 Next: obtain the explicit public-entry approval, activate the reviewed backend in a clean Vercel deployment, then reconnect Blackboard/Gradescope/Piazza through their human login/MFA flow. Reconnection must first confirm legacy Browserbase context cleanup through its recorded backend and preserve course mappings. Actual GCP course reads, Piazza extraction/publication, instance-termination recovery and a complete pixel-stream accessibility assessment remain open gates. Do not describe them as passed by these synthetic checks.
+
+
+## P061 — Approved public entry, October 28, 2026
+
+The user explicitly approved the protected sign-in window. Added `allUsers` / `roles/run.invoker` on the `soma-browser` service only; policy readback confirmed it. The prior approval block is resolved. The complete actual hosted synthetic gate passed in 13.39 seconds **without Google identity headers**, exercising the same private-key/owner authentication used by Vercel. Missing/wrong control credentials and unauthenticated CDP were rejected, while the capability/cookie viewer streamed and forwarded synthetic input. Storage restore, encryption, metadata denial, revocation and deletion passed again. Typecheck passed after a test-only header type correction. No actual source account or model call.
+
+Production backend activation is underway; do not infer provider login success. Historical IAM-private checkpoints above describe the earlier boundary. The final configured service intentionally permits internet invocation while retaining all application authentication and private storage.

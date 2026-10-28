@@ -12,12 +12,19 @@ describe.skipIf(process.env.SOMA_GCP_RUNNER_LIVE_TEST!=='true')('GCP deployed br
   const origin=process.env.SOMA_GCP_BROWSER_URL,projectId=process.env.SOMA_GCP_BROWSER_PROJECT_ID;
   if(!origin||!projectId)throw new Error('Explicit deployed runner scope required.');
   const control=readFileSync('.local/gcp-browser-secrets/control','utf8');
-  const identity=execFileSync('gcloud',['auth','print-identity-token','--quiet'],{encoding:'utf8'}).trim();
+  const publicEntry=process.env.SOMA_GCP_RUNNER_PUBLIC_ENTRY==='true';
+  const identity=publicEntry?undefined:execFileSync('gcloud',['auth','print-identity-token','--quiet'],{encoding:'utf8'}).trim();
+  const iamHeaders:Record<string,string>=identity?{'X-Serverless-Authorization':'Bearer '+identity}:{};
   const owner=createHash('sha256').update('synthetic-gcp:'+randomUUID()).digest('hex');
-  const headers={Authorization:'Bearer '+control,'X-Serverless-Authorization':'Bearer '+identity,'X-Soma-Owner':owner,'Content-Type':'application/json'};
+  const headers={Authorization:'Bearer '+control,...iamHeaders,'X-Soma-Owner':owner,'Content-Type':'application/json'};
   const call=async(path:string,method='GET',body?:unknown)=>fetch(origin+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(65000),redirect:'error'});
   const anonymous=await fetch(origin+'/v1/projects',{signal:AbortSignal.timeout(15000)});expect([401,403]).toContain(anonymous.status);
   expect((await call('/v1/projects')).status).toBe(200);
+  if(publicEntry){
+   expect((await fetch(origin+'/health',{signal:AbortSignal.timeout(15000)})).status).toBe(200);
+   expect((await fetch(origin+'/v1/projects',{headers:{Authorization:'Bearer original-synthetic-invalid-key'},signal:AbortSignal.timeout(15000)})).status).toBe(401);
+   expect((await fetch(origin+'/v1/contexts',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(15000)})).status).toBe(401);
+  }
   const contextResponse=await call('/v1/contexts','POST',{projectId,userMetadata:{somaOwner:owner}});expect(contextResponse.status).toBe(201);
   const context=await contextResponse.json() as {id:string};let sessionId:string|undefined,browser:Awaited<ReturnType<typeof chromium.connectOverCDP>>|undefined;
   const start=async(timeout=180)=>{
@@ -29,6 +36,10 @@ describe.skipIf(process.env.SOMA_GCP_RUNNER_LIVE_TEST!=='true')('GCP deployed br
   const release=async()=>{if(browser){await browser.close();browser=undefined;}if(sessionId){const response=await call('/v1/sessions/'+sessionId,'POST',{status:'REQUEST_RELEASE'});expect(response.status).toBe(200);sessionId=undefined;}};
   try{
    let contextBrowser=await start(),page=await contextBrowser.newPage();
+   if(publicEntry){
+    const unauthenticated=new WebSocket(origin.replace(/^http/,'ws')+'/cdp/'+sessionId);
+    await new Promise<void>((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Synthetic unauthorized CDP check timed out.')),10000);unauthenticated.on('open',()=>{clearTimeout(timer);unauthenticated.close();reject(new Error('Unauthenticated CDP unexpectedly opened.'));});unauthenticated.on('unexpected-response',(_request:unknown,response:{statusCode:number;resume:()=>void})=>{clearTimeout(timer);response.resume();unauthenticated.terminate();if(response.statusCode!==401)reject(new Error('Unauthenticated CDP was not rejected.'));else resolve();});unauthenticated.on('error',()=>undefined);});
+   }
    await page.goto('https://example.com/',{waitUntil:'domcontentloaded',timeout:25000});
    await contextBrowser.addCookies([{name:'soma_synthetic',value:'original-synthetic-state',domain:'example.com',path:'/',secure:true,httpOnly:true,sameSite:'Lax'}]);
    await page.evaluate(async()=>{localStorage.setItem('soma-synthetic','retained');await new Promise<void>((resolve,reject)=>{const request=indexedDB.open('soma-synthetic',1);request.onupgradeneeded=()=>request.result.createObjectStore('values');request.onerror=()=>reject(new Error('Synthetic database unavailable.'));request.onsuccess=()=>{const db=request.result,transaction=db.transaction('values','readwrite');transaction.objectStore('values').put('retained','key');transaction.oncomplete=()=>{db.close();resolve();};transaction.onerror=()=>reject(new Error('Synthetic write failed.'));};});});
@@ -45,9 +56,9 @@ describe.skipIf(process.env.SOMA_GCP_RUNNER_LIVE_TEST!=='true')('GCP deployed br
    const debugResponse=await call('/v1/sessions/'+sessionId+'/debug?expiresIn=600');expect(debugResponse.status).toBe(200);
    const debug=await debugResponse.json() as {pages:{id:string;debuggerFullscreenUrl:string}[]};const login=new URL(debug.pages.at(-1)!.debuggerFullscreenUrl);
    const bootstrap=await call(login.pathname+'/bootstrap','POST',{token:login.hash.slice(1)});expect(bootstrap.status).toBe(403);
-   const boot=await fetch(origin+login.pathname+'/bootstrap',{method:'POST',headers:{'X-Serverless-Authorization':'Bearer '+identity,Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({token:login.hash.slice(1)}),signal:AbortSignal.timeout(15000)});expect(boot.status).toBe(200);
+   const boot=await fetch(origin+login.pathname+'/bootstrap',{method:'POST',headers:{...iamHeaders,Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({token:login.hash.slice(1)}),signal:AbortSignal.timeout(15000)});expect(boot.status).toBe(200);
    const cookie=boot.headers.get('set-cookie')!.split(';')[0];
-   const socket=new WebSocket(origin.replace(/^http/,'ws')+login.pathname+'/socket',{headers:{'X-Serverless-Authorization':'Bearer '+identity,Origin:origin,Cookie:cookie}});
+   const socket=new WebSocket(origin.replace(/^http/,'ws')+login.pathname+'/socket',{headers:{...iamHeaders,Origin:origin,Cookie:cookie}});
    try{
     await new Promise<void>((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Synthetic viewer frame timed out.')),10000);socket.on('error',()=>{clearTimeout(timer);reject(new Error('Synthetic viewer unavailable.'));});socket.on('message',(bytes:Buffer)=>{const value=JSON.parse(bytes.toString());if(value.type==='frame'&&typeof value.data==='string'&&value.data.startsWith('/9j/')){clearTimeout(timer);resolve();}});});
     const field=page.getByLabel('Synthetic field'),box=await field.boundingBox();expect(box).not.toBeNull();
@@ -58,7 +69,7 @@ describe.skipIf(process.env.SOMA_GCP_RUNNER_LIVE_TEST!=='true')('GCP deployed br
    }finally{socket.close();}
    expect((await call('/v1/contexts/'+context.id,'DELETE')).status).toBe(204);expect((await call('/v1/contexts/'+context.id)).status).toBe(404);
    const erased=JSON.parse(execFileSync('gcloud',['storage','cat',objectUrl,'--quiet'],{encoding:'utf8'}));expect(erased.deleted).toBe(true);expect(erased.state).toBeNull();expect(erased.active).toBeNull();
-   process.stdout.write(JSON.stringify({syntheticGcpRuntime:true,anonymousDenied:true,stateRestored:['cookies','localStorage','IndexedDB'],encryptedAtRest:true,metadataDenied:true,viewerFrame:true,viewerInput:true,viewerRevoked:true,contextDeleted:true,modelCalls:0})+'\n');
+   process.stdout.write(JSON.stringify({syntheticGcpRuntime:true,publicEntry,anonymousControlDenied:true,stateRestored:['cookies','localStorage','IndexedDB'],encryptedAtRest:true,metadataDenied:true,viewerFrame:true,viewerInput:true,viewerRevoked:true,contextDeleted:true,modelCalls:0})+'\n');
   }finally{if(browser)await browser.close().catch(()=>undefined);if(sessionId)await call('/v1/sessions/'+sessionId,'POST',{status:'REQUEST_RELEASE'}).catch(()=>undefined);await call('/v1/contexts/'+context.id,'DELETE').catch(()=>undefined);}
  },150000);
 });

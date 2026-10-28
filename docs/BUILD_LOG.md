@@ -1171,3 +1171,14 @@ Deviations: none from the exact selected unlink. No inference-cap increase or pr
 P060 final private artifact: pushed `c7d3445`. Cloud Run revision `soma-browser-00003-7w8` serves all traffic with anonymous invocation disabled. The complete actual synthetic gate passed again against that final revision in 11.47 seconds, including real viewer input and independent encrypted storage/deletion readback; authenticated `/health` returned 200 and IAM readback had no anonymous binding. Public-entry approval has been requested explicitly. Until answered, backend activation and fresh provider login remain pending. New CI [40629457007](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40629457007) passed typecheck, default tests, production build and isolated artifact verification; browser-journey step was still pending at this checkpoint. No new private-source processing or inference.
 
 P060 final CI readback: [40629457007](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40629457007) completed successfully on `c7d3445`: **1,004 tests passed / 54 opt-in skips**, **38 browser journeys passed**, typecheck, production build and isolated browser-artifact check passed. This supersedes the pending browser step above. The local authenticated proxy was stopped. The Cloud Run service remains IAM-private, production backend remains Browserbase, and the explicit public-entry approval remains pending; no real course login/collection or additional model call occurred.
+
+## P061 — Authorize protected GCP sign-in entry (October 28, 2026)
+
+Prompt: [canonical verbatim clarification](build-log/prompts.json), `P061`.
+
+Top three outcomes (activation in progress):
+1. User explicitly approved internet invocation of the single `soma-browser` Cloud Run service, resolving the prior automatic approval boundary. Applied `allUsers` / `roles/run.invoker` only to that service; policy readback confirmed the exact binding. Application private-key/owner control and one-use viewer authentication remain required.
+2. Extended the opt-in actual hosted gate to omit Google identity headers entirely, matching the app and human-browser path. The gate passed in 13.39 seconds: public health works, missing/wrong control credentials and unauthenticated CDP are denied, private CDP/viewer input works, saved cookies/localStorage/IndexedDB restore, metadata is blocked and encrypted state/deletion readback passes. No course accounts or Meta calls. An initial test-only header union needed an explicit string-record annotation; corrected and typecheck passed.
+3. Clean production backend activation and fresh human provider logins remain pending. Preserve all concurrent unrelated lesson changes.
+
+Deviations: public entry is now explicitly authorized; no other IAM relaxation, model budget increase or course-scope change.

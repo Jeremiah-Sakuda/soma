@@ -511,6 +511,14 @@
       "prompt": "hodi-2026",
       "question_context": "Which project should I unlink from Deployment Billing to free a slot for Soma? Unlinking keeps the project but disables its paid services. I need your selection because the quota blocked Soma’s link and I can’t determine which project is expendable from its name.",
       "timestamp_note": "Exact received timestamp unavailable; platform context excluded."
+    },
+    {
+      "id": "P061",
+      "received_at": null,
+      "kind": "clarification",
+      "prompt": "Allow the protected sign-in window",
+      "question_context": "May I allow internet access to the GCP `soma-browser` service so you can open its sign-in window? This removes Google’s IAM entry gate for this one service. Browser control still requires Soma’s private key and ownership check; the login viewer requires a one-use link and secure session cookie.",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York; platform context excluded."
     }
   ]
 }

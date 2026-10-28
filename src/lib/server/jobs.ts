@@ -40,7 +40,18 @@ export function jobSourcesCurrent(workspace: WorkspaceState, job: Pick<Preparati
 }
 
 export function mayClaimJob(job: PreparationJob, now = Date.now()): boolean {
-  return job.attempts < MAX_ATTEMPTS && (job.nextAttemptAt ?? 0) <= now && (job.status === 'queued' || ((job.status === 'generating' || job.status === 'checking') && (job.leaseUntil ?? 0) <= now));
+  return job.attempts < MAX_ATTEMPTS && (job.nextAttemptAt ?? 0) <= now && ((job.status === 'queued' && (job.leaseUntil ?? 0) <= now) || ((job.status === 'generating' || job.status === 'checking') && (job.leaseUntil ?? 0) <= now));
+}
+
+/** Only obsolete queued work without an active lease can release an admission slot. */
+export function staleQueuedPreparation(workspace: WorkspaceState, job: PreparationJob, ownerId: string, now = Date.now()): boolean {
+  return job.ownerId === ownerId && job.workspaceId === workspace.id && job.status === 'queued' && (job.leaseUntil ?? 0) <= now && !jobSourcesCurrent(workspace, { workspaceId: job.workspaceId, courseId: job.courseId, sourceRefs: job.sourceRefs });
+}
+
+/** Retire stale sources even while valid older work is paused by the model allowance. */
+export function nextPreparationCandidate(workspace: WorkspaceState, jobs: PreparationJob[], ownerId: string, now = Date.now()): PreparationJob | undefined {
+  return jobs.filter(job => job.ownerId === ownerId && job.workspaceId === workspace.id && (staleQueuedPreparation(workspace, job, ownerId, now) || mayClaimJob(job, now) || ((job.status === 'generating' || job.status === 'checking') && (job.leaseUntil ?? 0) <= now)))
+    .sort((a, b) => Number(staleQueuedPreparation(workspace, b, ownerId, now)) - Number(staleQueuedPreparation(workspace, a, ownerId, now)) || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))[0];
 }
 
 export async function enqueuePreparation(account: VerifiedAccount, workspace: WorkspaceState, courseId: string, sourceRefs: SourceRef[], topic: string, contextRevision = workspace.revision, intent: PreparationIntent = 'prepare-lesson'): Promise<PreparationJob> {
@@ -51,15 +62,19 @@ export async function enqueuePreparation(account: VerifiedAccount, workspace: Wo
   const id = preparationJobId(workspace, courseId, sourceRefs, topic, contextRevision, intent);
   return root.firestore.runTransaction(async transaction => {
     const metadata = await transaction.get(root);
-    if (!metadata.exists || metadata.get('ownerId') !== account.uid || metadata.get('workspaceId') !== workspace.id || metadata.get('deleted')) throw new WorkspaceConflictError();
+    if (!metadata.exists || metadata.get('ownerId') !== account.uid || metadata.get('workspaceId') !== workspace.id || metadata.get('revision') !== workspace.revision || metadata.get('deleted')) throw new WorkspaceConflictError();
     const previous = await transaction.get(root.collection('jobs').doc(id));
     if (previous.exists) {
       if (previous.get('ownerId') !== account.uid || previous.get('workspaceId') !== workspace.id) throw new WorkspaceStoreError('Preparation ownership could not be verified.', 403, 'job_owner_mismatch');
       return previous.data() as PreparationJob;
     }
-    const active = await transaction.get(root.collection('jobs').where('status', 'in', ['queued', 'generating', 'checking']).limit(5));
-    if (active.size >= 5) throw new WorkspaceStoreError('Five preparations are already waiting. Finish one before adding another.', 429, 'job_capacity');
-    const now = new Date().toISOString();
+    // Read the complete active set: limiting to five before retiring stale work can hide retained jobs.
+    const active = await transaction.get(root.collection('jobs').where('status', 'in', ['queued', 'generating', 'checking']));
+    const nowMs = Date.now();
+    const retired = active.docs.filter(document => staleQueuedPreparation(workspace, document.data() as PreparationJob, account.uid, nowMs));
+    if (active.size - retired.length >= 5) throw new WorkspaceStoreError('Five preparations are already waiting. Finish one before adding another.', 429, 'job_capacity');
+    const now = new Date(nowMs).toISOString();
+    for (const document of retired) transaction.update(document.ref, { status: 'stale', leaseId: '', leaseUntil: 0, updatedAt: now, notice: 'Supporting sources changed. Import the current material to prepare a new version.' });
     const job: PreparationJob = { id, intent, engineVersion: intent === 'investigate-change' ? ENGINE_VERSION : SPARK_ENGINE_VERSION, runtimeModel: META_MODEL, ownerId: account.uid, workspaceId: workspace.id, courseId, topic, sourceRefs, status: 'queued', createdAt: now, updatedAt: now, attempts: 0, contextRevision };
     transaction.create(root.collection('jobs').doc(id), job);
     return job;
@@ -80,14 +95,12 @@ export async function listPreparationJobs(account: VerifiedAccount): Promise<Omi
 
 /** Scheduler selection covers the active queue, including interrupted leases. */
 export async function listNextPreparationJob(account: VerifiedAccount): Promise<{ id: string } | null> {
-  const root = refs(account), metadata = await root.get();
-  if (!metadata.exists || metadata.get('ownerId') !== account.uid || metadata.get('deleted')) return null;
-  assertAccountWorkspaceGeneration(account, metadata.get('workspaceId'));
+  const root = refs(account), workspace = await readAccountWorkspace(account);
+  if (!workspace) return null;
+  assertAccountWorkspaceGeneration(account, workspace.id);
   const snapshot = await root.collection('jobs').where('status', 'in', ['queued', 'generating', 'checking']).get();
-  const candidates = snapshot.docs.map(document => document.data() as PreparationJob)
-    .filter(job => job.ownerId === account.uid && job.workspaceId === metadata.get('workspaceId') && (mayClaimJob(job) || ((job.status === 'generating' || job.status === 'checking') && (job.leaseUntil ?? 0) <= Date.now())))
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
-  return candidates[0] ? { id: candidates[0].id } : null;
+  const next = nextPreparationCandidate(workspace, snapshot.docs.map(document => document.data() as PreparationJob), account.uid);
+  return next ? { id: next.id } : null;
 }
 
 export function automaticPreparationSources(workspace: WorkspaceState) {
@@ -128,12 +141,13 @@ export async function claimPreparationJob(account: VerifiedAccount, workspace: W
   return root.firestore.runTransaction(async transaction => {
     const metadata = await transaction.get(root);
     const document = await transaction.get(root.collection('jobs').doc(id));
-    if (!metadata.exists || metadata.get('deleted') || metadata.get('ownerId') !== account.uid || metadata.get('workspaceId') !== workspace.id) throw new WorkspaceConflictError();
+    if (!metadata.exists || metadata.get('deleted') || metadata.get('ownerId') !== account.uid || metadata.get('workspaceId') !== workspace.id || metadata.get('revision') !== workspace.revision) throw new WorkspaceConflictError();
     if (!document.exists) throw new WorkspaceStoreError('Preparation could not be found.', 404, 'job_missing');
     const job = document.data() as PreparationJob;
     if (job.ownerId !== account.uid || job.workspaceId !== workspace.id) throw new WorkspaceStoreError('Preparation does not belong to this workspace.', 403, 'job_owner_mismatch');
+    if ((job.status === 'queued' || job.status === 'generating' || job.status === 'checking') && (job.leaseUntil ?? 0) > Date.now()) return null;
     if (!jobSourcesCurrent(workspace, job)) {
-      transaction.update(document.ref, { status: 'stale', updatedAt: new Date().toISOString(), notice: 'Supporting sources changed. Import the current material to prepare a new version.' });
+      transaction.update(document.ref, { status: 'stale', leaseId: '', leaseUntil: 0, updatedAt: new Date().toISOString(), notice: 'Supporting sources changed. Import the current material to prepare a new version.' });
       return null;
     }
     if (!mayClaimJob(job)) {

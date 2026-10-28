@@ -1280,3 +1280,24 @@ Top three outcomes:
 3. Updated the Piazza support/migration records with actual proof and preserved the boundaries: no full posts, replies, private/section content, graded items or attachments. Production reported some preparation jobs could not queue; saved-source verification does not establish downstream lessons or model completion. Budgets, permissions and concurrent code remain unchanged. No application/deployment changes or redundant broad CI; private temporary probe scripts removed and screenshot proof stays ignored.
 
 Deviations: no product-scope expansion. The combined provider label is mapped to EC463 as requested. Initial discovery matching assumption was corrected using observed metadata. Downstream preparation queuing remains an open issue; the model cap was not raised.
+
+## P068 — Verify course-material reading through useful preparation (October 28, 2026)
+
+Prompt: canonical verbatim entry `P068`, trailing space preserved.
+
+Top three outcomes (in progress):
+1. Inspect actual owned selected sources, failed reads, job state and enforced budget without exposing course content or credentials in public logs.
+2. Verify and repair the read-to-preparation path on actual selected coursework, preserving source-fit, read-only collection, privacy and the existing model cap.
+3. Independently audit changes and execute appropriate tests; distinguish reading, grounded model use, durable publication and student-facing usefulness. Preserve concurrent orchestration work.
+
+Deviations: pending diagnosis; no expanded permissions or budget.
+
+### P068 source/queue diagnosis checkpoint
+
+Owner-scoped, read-only preflight passed in 4.08 seconds. Actual retained data: 36 current Blackboard text observations, two current and one stale Gradescope assignment overviews, two current Piazza preview records, one earlier manually imported teaching note, one earlier private practice and one saved keep-current investigation. These are different kinds of evidence: announcements and assignment dates do not establish lecture/slides/returned-work reading. The earlier ready investigation made six actual source-tool calls and saved a decision, but did not produce a lesson.
+
+Five jobs are queued, one with obsolete source references. The exact production handoff warning is explained by the five-slot admission cap; the oldest current job is paused by the existing application allowance and can delay retiring later stale work. Read-only budget facts: application cap $2, consumed $1.85152875, remaining $0.14847125, below the $0.20 lesson and $0.35 investigation reservations. No new inference was attempted or cap/ledger reset. A fresh Blackboard text refresh then failed authorization; the deployed protected BU login window was opened for human MFA while independent work continues.
+
+Two implementation fixes are under review: transactional stale-job cleanup/selection with source revision and lease fencing, and typed sanitized source-to-preparation handoff facts that distinguish queued work, completed decisions, capacity and changed sources. Original synthetic managed-Firestore queue cases preserve the five-job cap and confirm no model budget or source content mutation. A separate bounded initial ordinary-practice tool is being added to prevent a missing learning activity from being concealed by a saved keep-current decision; actual model use is a later gate.
+
+P068 queue milestone audit: independent review confirmed ownership/generation checks, atomic stale retirement and five-slot admission. It identified an expired-token resurrection risk, fixed by clearing leaseId/leaseUntil in both stale paths. The managed original-synthetic Firestore test passed in 9.19 seconds, including stale-first dispatch, rollback, old-snapshot rejection, active lease retention, unchanged source/budget and disposable cleanup. A first sandbox attempt failed DNS before creating a fixture; the network-authorized run passed. The final clean staged artifact excludes all pre-existing orchestration changes and passed typecheck plus 34 focused queue/handoff/worker/job tests. No real-account writes, source collection or model calls were made by these tests.

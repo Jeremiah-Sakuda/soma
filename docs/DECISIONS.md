@@ -262,3 +262,7 @@ Resume authenticates the existing scoped HttpOnly cookie under exact Origin and 
 
 
 P064 executed checkpoint: worker revision `soma-browser-00004-k8g` (2,100-second request ceiling) and clean app deployment `dpl_4fw2RTf8A1iRC2Vd84bzn9CpQPVU` are live from `67b0281`. CI passed 1,012 tests / 54 skips and 42 journeys. An actual synthetic 1,800-second allocation and cookie-only resume/135-second held-stream/cleanup gate passed. The new Gradescope viewer showed approximately 29 minutes and was handed off at the empty login form. Authentication save, source read, full thirty-minute endurance and worker-loss recovery are separate remaining gates.
+
+## October 28 — P068 distinguish reading, decisions and usable learning
+
+Treat source collection, investigation decisions, prepared activities and demonstrated learning as separate gates. Metadata/announcements can support planning but do not prove lecture/slides or returned-work access. A completed keep-current investigation is not a newly prepared lesson. Fix stale queued work using same-transaction workspace revision/ownership checks and clear expired lease tokens; never remove active leases, increase the five-job admission cap or reset the model ledger to make verification pass. Preserve typed safe enqueue failure facts instead of a generic handoff warning. The existing $2 cap remains; actual remaining headroom is below a new reservation, so paid source-use checks require available budget rather than a synthetic success claim. Blackboard requested fresh human authentication during the new check.

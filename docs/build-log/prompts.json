@@ -587,6 +587,13 @@
       "prompt": "Approve $1 more (total $3)",
       "question": "The existing $2 model-testing cap has $0.148 left, below a new run’s required reservation. May I raise the total cap to $3 for the concrete course-source test: one grounded activity, citation/correctness review, saved reuse and a bounded follow-up? The test plan is in docs/COURSE_SOURCE_VALIDATION.md; the $150 allocation’s 20% reserve stays intact.",
       "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York. Clarification answer preserved verbatim; platform wrapper excluded."
+    },
+    {
+      "id": "P071",
+      "received_at": null,
+      "kind": "prompt",
+      "prompt": "The request was stale can we fill it in again, also can we think of a secure way of storing credentials that the app can autofill? ",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York. Trailing space preserved; platform browser and open-Page context excluded."
     }
   ]
 }

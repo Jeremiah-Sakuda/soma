@@ -9,7 +9,7 @@ Status: October 28, 2026, P068. A connection or completed investigation is not e
 | Blackboard | Earlier private catalog and 36 text observations across the three selected Fall courses | New GCP material read requested fresh BU sign-in. Files, PDFs, images and external tools are excluded by the current collector. Teaching-content coverage is not established. |
 | Gradescope | Two selected assignment overviews read using restored GCP authorization | One selected overview remains stale. Current reader excludes answers, scores and returned-work files. Assignment names/dates support planning rather than concept teaching. |
 | Piazza | Both selected Fall classes published and independently read back: ten CS440 and eight EC463 instructor-note previews | Initial visible-feed snippets only; no full posts/replies/attachments. Some preparation handoffs could not queue. |
-| Earlier private course-note import | One source-grounded ordinary-practice preview with a supporting exact quote exists | Explicit manual import, not live LMS material collection. It cannot prove new connected-source preparation. |
+| Earlier private course-note import | A new actual Spark investigation prepared and privately published an original CS440 practice question; independent source/algebra review and saved reuse passed | Explicit manual import, not live LMS material collection. It cannot prove new connected-source preparation, an interactive lab or improved learning. |
 
 ## Queue and preparation diagnosis
 
@@ -29,7 +29,7 @@ An initial-source ordinary-practice option is implemented and synthetically veri
 
 ## Budget gate
 
-The authorized application cap remains $2, separate from the $150 allocation and its twenty-percent reserve. The inspected consumed amount is $1.85152875: $0.14847125 remains, below a new $0.20 lesson or $0.35 investigation reservation. No ledger reset, reduced safety reservation or cap increase is authorized by this report. A proposed additional $1 (cap $3) would bound the next actual-course preparation/follow-up check; P070 explicitly approved that additional $1 on October 28. The ignored local verification configuration now selects cap $3; production activation and actual paid-check evidence are still separate pending steps. The historical $2 preflight figures above are preserved. Unchanged/cached readback and synthetic checks remain possible meanwhile.
+The initial preflight used the $2 application cap, separate from the $150 allocation and its twenty-percent reserve. Consumption was $1.85152875, leaving $0.14847125, below a new $0.20 lesson or $0.35 investigation reservation. P070 then explicitly approved an additional $1, total cap $3, for bounded course-source verification. The ignored local verification configuration selects $3; production retains $2, and no ledger, daily limit or reservation was reset. The two new actual Spark attempts cost $0.0848745 combined. Production cap activation is a separate pending action; the approval is not an unlimited spending allowance.
 
 ## Acceptance interpretation
 
@@ -38,6 +38,19 @@ Reading, a saved decision, a published activity, reviewed instructional correctn
 
 ## Implemented verification checkpoint
 
-Queue recovery and typed handoff fixes are committed in `3121cf7`. Initial ordinary practice passes thirteen new provider-scripted cases and independent security review; the clean combined artifact passes typecheck and 1,036 tests / 55 opt-in skips. This is synthetic execution and contract evidence, not a successful new live Spark decision. The actual $3 bounded test awaits fresh instructional source selection and execution.
+Queue recovery and typed handoff fixes are committed in `3121cf7`; the initial ordinary-practice branch is committed in `d686d96`. Thirteen new provider-scripted cases and independent security review passed. The clean combined artifact passed typecheck, 1,036 tests / 55 opt-in skips, production build, isolated browser-runtime verification and 42 browser journeys. [CI](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40755876352) independently passed on that commit. A clean source deployment was promoted to the existing production alias; concurrent optional author/challenger changes were excluded.
+
+### Actual Spark source-use result
+
+The fallback used the existing private, manually imported CS440 instructor note on iterative recurrence substitution, not a new Blackboard document. Both attempts used normal source disclosure, exact-quote validation, per-run call/time/reservation limits and audited publication. No real learner response was fabricated.
+
+| Attempt | Observed result | Calls / actual cost / model time |
+| --- | --- | --- |
+| First | Initial exact-quote rejection was repaired; final decision validation then failed after the single repair was used. Protected failure audit retained, cost settled, no new lesson published. The local harness did not retain the second validation detail, so no more specific cause is asserted. | 4 / $0.041556 / 18.510 seconds |
+| Second | One exact-quote repair, valid final decision, independent instructional review, private publication and audit completion. Reopening the same request reused the prepared activity without further inference; original attempt records stayed unchanged. | 4 / $0.0433185 / 17.576 seconds |
+
+Independent review checked the cited disclosed passage, fresh extra-substitution objective, answer and distractors, course/version references, and absence of invented diagnosis/exam claims before publication. Total second-check wall time was 64.78 seconds, including a deliberate human review gate; it is not the model's latency. Private candidate/source/audit identifiers and text remain in ignored local artifacts and the owner's workspace, not public fixtures.
+
+This establishes one useful grounded text-practice artifact and cache reuse, including a real failed attempt. It does not establish a generated interactive lab, a response-adaptive follow-up, measured learning benefit, full course ingestion or new live-LMS teaching access. The latter still requires fresh BU authentication and an actual supported instructional page. P071 replaced the stale sign-in attempt with a new protected allocation and visibly connected BU identity-provider page; human login/MFA and subsequent source verification remain pending. File/PDF/slide and returned-work readers remain unimplemented boundaries.
 
 For the future file reader, Anthology documents [content attachment discovery and download](https://docs.blackboard.com/docs/blackboard/rest-apis/demo-code/curl-attach-demo). Documentation alone does not establish access through this student account or implement PDF extraction. The current collector still excludes files; no download restriction was bypassed.

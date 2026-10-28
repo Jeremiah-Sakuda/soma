@@ -13,6 +13,8 @@ Originally October 27, 2026 — P039; updated October 28 for GCP hosting and sig
 
 Google remains a separate OAuth flow for selected read-only Gmail and Calendar access. Browser login is not a reason to replace that route with stored Google passwords.
 
+P071 asks about optional credential autofill. [The credential-vault proposal](CREDENTIAL_AUTOFILL_PROPOSAL.md) specifies a separate opt-in, login-only design and its unpassed security gates. It is not implemented and does not change the current no-password-storage flow above. A fresh provider login request is still required when an SSO form becomes stale; viewer reconnect alone preserves the existing provider page.
+
 ## What is actually trusted
 
 The hosted browser processes the student's login and holds authenticated cookies. Its configured host (currently Soma’s GCP worker; Browserbase for legacy contexts) is a trusted processor, not a credential-blind relay. Soma's authorized server runtime can control that browser; application code, deployed operators, server secrets and provider administration are part of the trust model. “The model does not receive passwords” must not be presented as “the platform cannot access the authenticated account.”

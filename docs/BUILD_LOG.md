@@ -1285,12 +1285,12 @@ Deviations: no product-scope expansion. The combined provider label is mapped to
 
 Prompt: canonical verbatim entry `P068`, trailing space preserved.
 
-Top three outcomes (in progress):
-1. Inspect actual owned selected sources, failed reads, job state and enforced budget without exposing course content or credentials in public logs.
-2. Verify and repair the read-to-preparation path on actual selected coursework, preserving source-fit, read-only collection, privacy and the existing model cap.
-3. Independently audit changes and execute appropriate tests; distinguish reading, grounded model use, durable publication and student-facing usefulness. Preserve concurrent orchestration work.
+Top three outcomes:
+1. Diagnosed owned source status and stale queue capacity; repaired transactional stale-job recovery and typed source-to-preparation handoffs in `3121cf7`, preserving ownership, source revision, lease fencing and the five-job cap.
+2. Added bounded initial ordinary practice in `d686d96`. Actual Spark use of an existing private manual CS440 note import produced one independently reviewed, privately published practice question and reuse without another inference call. A failed attempt is retained; this is not fresh LMS teaching access or a generated interactive lab.
+3. Independent review and clean local/CI verification passed: 1,036 tests / 55 opt-in skips, typecheck, build, isolated browser runtime and 42 journeys. Clean `d686d96` was promoted to production. New Blackboard collection still needs human reauthentication; unsupported files/slides and one stale Gradescope overview remain open.
 
-Deviations: pending diagnosis; no expanded permissions or budget.
+Deviations: actual instructional-source verification used the explicitly labeled existing manual import while BU authentication remained blocked. P070 authorized a bounded increase to $3 for local testing; production retains $2. No source permission expansion or fabricated learner response.
 
 ### P068 source/queue diagnosis checkpoint
 
@@ -1319,13 +1319,33 @@ Prompt: canonical verbatim clarification `P070`.
 
 Top three outcomes:
 1. Jeremy explicitly approved an additional $1 for the concrete course-source activity/reuse/follow-up test, raising the total application cap from $2 to $3.
-2. Updated the ignored local testing configuration to $3 while preserving the global ledger, per-job limits and twenty-percent reserve of the $150 allocation. Production cap activation and actual paid checks are separate pending actions.
-3. Continue source access and correctness verification; no model call or successful lesson is implied by this approval.
+2. Updated the ignored local testing configuration to $3 while preserving the global ledger, per-job/daily limits and twenty-percent reserve of the $150 allocation. Production remains at $2; activation is a separate pending action.
+3. Executed two bounded actual Spark investigations on the existing private manual course-note import: $0.041556 failed and $0.0433185 passed, combined $0.0848745. Independent review, private audited publication and reuse passed; no learner response or adaptive follow-up was fabricated.
 
 Deviations: approved testing-cap increase, replacing P068’s previous $2 gate; no change to the Meta allocation or unbounded inference authority.
+
 
 ### P068 initial ordinary-practice milestone
 
 Implemented a source-grounded ordinary-practice branch for initial investigations, replacing the inapplicable response-revision tool slot so the eight-tool bound stays intact. It reuses the existing text-practice validator, only actually disclosed offset-zero segments, fresh-question checks and normal final-decision/publication fencing. It never invents learner hypotheses or writes understanding evidence. Optional reviewer work remains excluded from this change/deployment; the shared working copy retains that separate in-progress integration. Engine v9 invalidates old cached decisions for the new tool contract.
 
-Thirteen new scripted-provider cases passed, including read-to-practice-to-finish publication, unread/later-page/forged/foreign quotes, stale source rejection, unoffered tool calls, protected rejected candidates and administrative keep-current. Independent review found no blocking P0/P1 issue. The isolated clean artifact passed typecheck and the full suite: 1,036 tests, 55 opt-in skips. Initial harness runs failed due to missing separate browser-runner dependencies and sandboxed loopback access; one dependency-link correction was needed, with no application changes. The successful rerun used the pinned installed dependency directory and permitted original-synthetic loopback tests; no live models/providers were enabled. A clean production build initially rejected an external node_modules symlink; rerun with a real pinned dependency directory is in progress. Actual new-model usefulness and fresh Blackboard teaching-content access are still separate pending gates.
+Thirteen new scripted-provider cases passed, including read-to-practice-to-finish publication, unread/later-page/forged/foreign quotes, stale source rejection, unoffered tool calls, protected rejected candidates and administrative keep-current. Independent review found no blocking P0/P1 issue. The isolated clean artifact passed typecheck and the full suite: 1,036 tests, 55 opt-in skips. Initial harness runs failed due to missing separate browser-runner dependencies and sandboxed loopback access; one dependency-link correction was needed, with no application changes. The successful rerun used the pinned installed dependency directory and permitted original-synthetic loopback tests; no live models/providers were enabled. A clean production build initially rejected an external node_modules symlink; rerun with a real pinned dependency directory passed, followed by isolated runtime verification and 42 browser journeys. Actual source-use results and the separate fresh-Blackboard boundary are recorded below.
+
+### P068 actual source-use and production checkpoint
+
+Commits `3121cf7` and `d686d96` are pushed to main. [CI run 40755876352](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40755876352) passed on `d686d96`; clean production source deployment `dpl_AT1bCuyocd67SXL2YCCES8CoKXah` was promoted to the existing Soma alias. Optional concurrent author/challenger work was excluded from the commit, build and deployment. No production budget increase was applied.
+
+Two actual Spark attempts used the existing private manually imported CS440 teaching note, never relabeled as a fresh Blackboard read. Attempt one made four calls in 18.510 seconds at $0.041556: one exact-quote repair succeeded, but final decision validation failed after the repair allowance was spent. It published no lesson and retained the protected failure/cost record. The local failure harness did not retain the second validation detail, so no specific second cause is invented. Attempt two made four calls in 17.576 seconds at $0.0433185, repaired one exact quote, and produced a valid fresh ordinary-practice candidate. Independent source/algebra/citation review approved it before normal audited private publication. Full second-check wall time was 64.78 seconds including deliberate review; model latency was 17.576 seconds. Reopen reused the saved activity without inference, and original learner attempts stayed unchanged. Combined new cost: $0.0848745.
+
+This demonstrates a reviewed source-grounded text question, not a generated interactive lab or measured learning benefit. No real learner response was invented to exercise adaptation. The new Blackboard material read still failed authorization; affected observations are withheld/stale. P071 opened a fresh human login attempt. Gradescope's remaining stale overview, full Piazza posts, teaching files/PDFs/slides and returned-work reading remain explicit gaps. See [Course source validation](COURSE_SOURCE_VALIDATION.md).
+
+## P071 — Renew stale BU request and assess credential autofill (October 28, 2026)
+
+Prompt: canonical verbatim entry `P071`, including trailing space.
+
+Top three outcomes:
+1. Ended the stale interactive attempt through the normal owned lifecycle, requested a fresh allocation, and visibly verified a connected BU identity-provider page with approximately 26 minutes remaining. Captured viewer-header-only proof and handed the window back for human password/MFA entry. Neither successful sign-in nor the precise stale-request cause is asserted.
+2. Wrote `docs/CREDENTIAL_AUTOFILL_PROPOSAL.md`: explicit opt-in, separately privileged encrypted vault/login service, one-use owner/session/destination grants, human MFA and tested deletion/rotation. Independent review identified current general CDP control and broad HTTPS egress as blockers to the proposed isolation guarantees. No vault, institutional password, KMS key or IAM change was created.
+3. Completed and documented P068's actual model source-use test, protected failure audit, correctness review, private publication and inference-free reuse. Full fresh LMS teaching-content reading and response-adaptive real-course follow-up remain pending rather than being inferred from the fallback success.
+
+Deviations: credential autofill remains a proposed design, not a deployed feature or authority to store an unprovided password. Fresh login replaces the stale request; ordinary viewer reconnect alone cannot renew a stale SSO form.

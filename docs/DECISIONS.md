@@ -270,3 +270,9 @@ Treat source collection, investigation decisions, prepared activities and demons
 ### P070 — Authorized bounded verification allowance
 
 Jeremy explicitly approved $1 additional model testing, total cap $3, for a course-grounded activity, citation/correctness check, saved reuse and bounded follow-up. Preserve the existing global ledger, unknown-usage reservations, daily limits and twenty-percent reserve of the $150 allocation. Local verification now selects cap $3; production activation and actual run evidence must be recorded separately. This supersedes the P068 $2 blocking threshold, not the source/privacy or release gates.
+
+## October 28 — P071 proposed opt-in credential vault, current session flow retained
+
+The user asked to renew a stale institutional request and consider secure credential autofill. A fresh protected BU login allocation is opened through the existing owned lifecycle; human credentials/MFA and actual readback remain required. Routine viewer resume preserves the provider page and deadline, so it does not itself repair a stale SSO request.
+
+[Credential Autofill Proposal](CREDENTIAL_AUTOFILL_PROPOSAL.md) is a design-only response: opt-in owner consent, a separately privileged KMS-backed encrypted vault/login service, exact reviewed destinations and one-use fenced fill grants, no model/general browser-control access during secret entry, human MFA, and tested revoke/delete/rotation. Independent review confirms the current runner's general CDP login control and broad HTTPS egress do not satisfy that new isolation boundary. No password form, stored institutional password, vault key, new IAM authority or autofill implementation is established. Existing saved-authorization flow and Google OAuth remain unchanged; no automatic password retries or source-write permission is introduced.

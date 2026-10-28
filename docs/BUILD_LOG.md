@@ -1349,3 +1349,18 @@ Top three outcomes:
 3. Completed and documented P068's actual model source-use test, protected failure audit, correctness review, private publication and inference-free reuse. Full fresh LMS teaching-content reading and response-adaptive real-course follow-up remain pending rather than being inferred from the fallback success.
 
 Deviations: credential autofill remains a proposed design, not a deployed feature or authority to store an unprovided password. Fresh login replaces the stale request; ordinary viewer reconnect alone cannot renew a stale SSO form.
+
+## P072 — Implement isolated optional credential autofill (October 28, 2026)
+
+Prompt: canonical verbatim entry `P072`.
+
+Top three outcomes (in progress):
+1. Implement a separately privileged encrypted vault with owner/provider/origin/version binding and fenced lifecycle.
+2. Implement isolated deterministic login-only autofill and explicit opt-in controls, preserving human MFA and read-only collection.
+3. Audit and exercise crypto, cross-account/destination/replay/revocation/secret-leakage boundaries; deploy only after the required configuration and isolation checks pass. Preserve unrelated orchestration work.
+
+Deviations: first reviewed provider is BU Blackboard; unknown providers/forms fail closed. Real password entry remains the user's action after the tested opt-in flow is enabled.
+
+### P072 V1 encrypted-vault checkpoint
+
+Implemented separate AES-256-GCM per-version data keys with KMS wrapping, authenticated owner/workspace-generation/provider/origin/version bindings and generation-pinned GCS CAS. Private identifier/password payloads are ciphertext only; safe metadata and tombstones preserve update/deletion/rotation fences. No env-key fallback. Thirty-four synthetic vault/adapter cases passed; combined vault, broker boundary, existing account and hosting regression checks passed 59 tests, with typecheck passing. Independent worker-agent review found no blocking crypto issue and confirmed owner tags change with the workspace generation. No cloud resource, institutional password or real autofill was used. Login-worker and deployment review remain open.

@@ -594,6 +594,13 @@
       "kind": "prompt",
       "prompt": "The request was stale can we fill it in again, also can we think of a secure way of storing credentials that the app can autofill? ",
       "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York. Trailing space preserved; platform browser and open-Page context excluded."
+    },
+    {
+      "id": "P072",
+      "received_at": null,
+      "kind": "prompt",
+      "prompt": "The current browser runner needs additional isolation before this is safe. I documented and independently reviewed the [proposed design](</Users/jerem/2026 Hackathon Ideation/Meta AI Dev/docs/CREDENTIAL_AUTOFILL_PROPOSAL.md>); **password storage is not implemented yet**. Implement this ",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York. Platform browser context excluded."
     }
   ]
 }

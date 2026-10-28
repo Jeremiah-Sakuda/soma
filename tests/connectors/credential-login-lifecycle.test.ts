@@ -91,7 +91,7 @@ beforeEach(() => {
       if (fixture.reply === 'unavailable') return Response.json({ error: 'synthetic provider error' }, { status: 503 });
       return Response.json({ sessionId: fixture.reply === 'foreign-id' ? otherId : body.authorizationId,
         loginUrl: `${fixture.reply === 'foreign-url' ? 'https://foreign.example' : loginOrigin}/login/${body.authorizationId}#${'t'.repeat(43)}`,
-        expiresAt: fixture.connection.secret.credentialLogin.expiresAt });
+        expiresAt: new Date(Date.parse(fixture.connection.secret.credentialLogin.expiresAt) + (fixture.reply === 'callback-delay' ? 2500 : fixture.reply === 'excessive-deadline' ? 61000 : 0)).toISOString() });
     }
     if (url.origin === loginOrigin && url.pathname.endsWith('/release')) return new Response(null, { status: fixture.releaseFails ? 503 : 204 });
     if (url.origin === loginOrigin && method === 'DELETE') return new Response(null, { status: fixture.deleteFails ? 503 : 204 });
@@ -122,6 +122,21 @@ describe('isolated credential-login broker lifecycle with synthetic services', (
     expect(ref.sessionId).toBe(ref.authorizationId); expect(fixture.marker).toBe(ref.authorizationId);
     expect(fixture.connection.secret.credentialVault).toBe(true);
     expect(fixture.connection.configuration).toEqual(configuration);
+    expect(fixture.events.some(event => event.kind === 'clear-reference')).toBe(false);
+  });
+
+  it('accepts a bounded callback-roundtrip deadline difference but rejects an excessive extension without losing cleanup references', async () => {
+    fixture.reply = 'callback-delay';
+    const result = await openCredentialLogin(account, 'blackboard', Math.floor(Date.now() / 1000));
+    const originalExpiry = fixture.events.find(event => event.kind === 'checkpoint')!.value.secret.credentialLogin.expiresAt;
+    expect(Date.parse(result.expiresAt) - Date.parse(originalExpiry)).toBe(2500);
+    expect(fixture.connection.secret.credentialLogin.expiresAt).toBe(result.expiresAt);
+    await finishCredentialLogin(account, 'blackboard', true);
+    fixture.reply = 'excessive-deadline'; fixture.events = [];
+    await expect(openCredentialLogin(account, 'blackboard', Math.floor(Date.now() / 1000))).rejects.toMatchObject({ code: 'credential_service' });
+    const ref = fixture.connection.secret.credentialLogin;
+    expect(fixture.marker).toBe(ref.authorizationId); expect(ref.sessionId).toBe(ref.authorizationId);
+    expect(fixture.connection.secret.credentialVault).toBe(true);
     expect(fixture.events.some(event => event.kind === 'clear-reference')).toBe(false);
   });
 

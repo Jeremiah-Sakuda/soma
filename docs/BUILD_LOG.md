@@ -1207,3 +1207,14 @@ Top three outcomes:
 Deviations: none. This is a routine sign-in refresh under the deployed GCP adapter.
 
 P062 verification: observed the expired-session recovery, actual protected viewer connection, authenticated Blackboard shell, Soma’s saved/connected status and fresh course-list checked timestamp. Source selection stayed at three saved courses. Opened Gradescope’s real Log In modal and retained the viewer/Soma tabs for human handoff. An ignored local screenshot records the empty Gradescope form; no credential, session ID, viewer token, course document or learner record is archived. No application tests or deployment were rerun for routine reconnect/documentation-only work; the deployed `185ea57` CI gates remain the prior executed baseline. Asked the user to complete Gradescope login/MFA and confirm in Soma. No external messages, submissions, new inference or spending-limit changes.
+
+## P063 — Renew the Gradescope sign-in window (October 28, 2026)
+
+Prompt: [canonical verbatim clarification](build-log/prompts.json), `P063`.
+
+Top three outcomes:
+1. Resumed the existing active Gradescope session through the deployed, owned reconnect flow; the provider page was preserved and the original session expiry was not extended.
+2. Regenerated its one-use viewer capability and fully reinitialized the same viewer document. Actual UI verification showed Connected and the Gradescope origin; retained both tabs for human sign-in. Captured only Soma’s connection status, avoiding a screenshot of possible login inputs. Authentication and source access remain unverified.
+3. Existing course mappings, bounded sessions and source permissions retained. No implementation, inference, deployment, new material collection or permissions changes. Documentation-only verification; the prior executed application tests were not rerun. No credential or session material was archived.
+
+Deviations: none; routine sign-in renewal.

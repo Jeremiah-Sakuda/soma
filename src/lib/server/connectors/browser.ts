@@ -21,7 +21,7 @@ export type BrowserProvider = keyof typeof BROWSER_PROVIDERS;
 export type BrowserTarget = { courseId: string; url: string; context?: SourceAuthorityContext };
 export type BlackboardSelection = { id: string; courseId: string };
 export type Configuration = { targets: BrowserTarget[]; nextTargetIndex?:number; blackboard?: { mode?: 'courses'; selected: BlackboardSelection[]; catalogIds: string[]; catalogCheckedAt: string; catalogComplete: boolean; nextCourseIndex?: number; nextCatalogPath?: string; catalogQuery?: string; catalogSubjectId?: string; selectedSubjectId?: string; catalogEpoch?: string; traversals?: Record<string,{providerCourseId:string;pending:string[];seen:string[];materialIds:string[]}> } };
-type Secret = { backend?: BrowserBackend; version?: 1; contextId?: string; sessionId?: string; sessionExpiresAt?: string; loginPageId?: string; readyAt?: string; day?: string; starts?: number };
+type Secret = { backend?: BrowserBackend; version?: 1; contextId?: string; sessionId?: string; sessionExpiresAt?: string; loginPageId?: string; readyAt?: string; day?: string; starts?: number; credentialVault?:true; credentialLogin?:{authorizationId:string;sessionId:string;expiresAt:string} };
 type BrowserConnection = Connection<Secret, Configuration>;
 const ID = (provider: BrowserProvider) => `browser-${provider}`;
 const fail = (message: string, status = 409, code = 'browser_connection') => new WorkspaceStoreError(message, status, code);
@@ -102,6 +102,7 @@ export function validateSessionOwnership(session: Session, connection: Pick<Brow
   return session.projectId === projectId && session.userMetadata?.somaOwner === tag && contextMatches && session.id === connection.secret.sessionId;
 }
 async function getSession(connection: BrowserConnection): Promise<Session | null> {
+  if(connection.secret.credentialLogin)throw fail('Finish or cancel secure sign-in in Soma before using the normal browser.',409,'credential_login_active');
   if (!connection.secret.sessionId) return null;
   const raw = await api<unknown>(connection, `/sessions/${encodeURIComponent(connection.secret.sessionId)}`, 'GET', undefined, true);
   if (!raw) return null;
@@ -187,6 +188,7 @@ export async function startBrowserLogin(account: VerifiedAccount, provider: Brow
   const lease = await acquireConnectionLease<Secret, Configuration>(account, ID(provider), 'login', 120_000);
   let connection = lease.connection;
   try {
+    if(connection.secret.credentialLogin)throw fail('Finish or cancel secure sign-in in Soma before opening manual sign-in.',409,'credential_login_active');
     await validateTargets(account, provider, connection.configuration.targets);
     const targetBackend = configuredBrowserBackend(), previousBackend = recordedBrowserBackend(connection.secret);
     if (previousBackend !== targetBackend) {
@@ -257,6 +259,7 @@ export async function startBrowserLogin(account: VerifiedAccount, provider: Brow
 export async function completeBrowserLogin(account: VerifiedAccount, provider: BrowserProvider) {
   const { connection, leaseId } = await acquireConnectionLease<Secret, Configuration>(account, ID(provider), 'complete');
   try {
+    if(connection.secret.credentialLogin)throw fail('Use Save sign-in session in the secure autofill section.',409,'credential_login_active');
     if (!connection.secret.contextId) throw fail('Start sign-in first.', 409, 'browser_login_required');
     await releaseSession(connection);
     await persistLease(account, connection, leaseId, { secret: clearSession(connection.secret), status: 'connected', notice: 'Browser saved. Course access remains unverified until a selected page is read.' });
@@ -431,11 +434,12 @@ export async function disconnectBrowser(account: VerifiedAccount, provider: Brow
   if (!existing || existing.status === 'disconnected') return { notice: 'Disconnected.' };
   const { connection, leaseId } = await acquireConnectionLease<Secret, Configuration>(account, ID(provider), 'disconnect');
   try {
+    if(connection.secret.credentialVault||connection.secret.credentialLogin)await (await import('./credential-login')).forgetCredentialVault(account,connection);
     if (connection.secret.sessionId) await releaseSession(connection);
     await deleteContext(connection);
     await updateAccountWorkspace(account, state => staleCollectedSources(state,source=>!!source.provenance?.sourceKey.startsWith(`${provider}:${connection.id}:`)), undefined, connectionPublicationGuard(account, connection.id, leaseId));
     await deleteConnection(account, connection.id);
-    return { notice: 'Disconnected and deleted the saved provider browser context.' };
+    return { notice: 'Disconnected and deleted the saved provider browser context and any optional stored sign-in.' };
   } catch (error) { await releaseConnectionLease(account, connection.id, leaseId, { status: 'error', notice: 'Browser cleanup failed. Authorization references were retained so cleanup can be retried.' }); throw error; }
 }
 export async function disconnectAllBrowserConnections(account: VerifiedAccount) {
@@ -446,6 +450,7 @@ export async function disconnectAllBrowserConnections(account: VerifiedAccount) 
 export async function cleanupBrowsersForDeletion(account: VerifiedAccount, workspaceId: string): Promise<void> {
   for (const saved of await connectionsForDeletion(account, workspaceId)) {
     const connection = saved as BrowserConnection;
+    if(connection.secret.credentialVault||connection.secret.credentialLogin)await (await import('./credential-login')).forgetCredentialVault(account,connection);
     if (connection.secret.sessionId) await releaseSession(connection);
     await deleteContext(connection);
   }

@@ -82,11 +82,12 @@ function timeout(operation, milliseconds) {
 /** Resolve every request once, reject mixed answers, then hand transport the
  * selected numeric address. The transport never performs a second DNS lookup.
  * @param {{host:string,port:number}} destination
- * @param {{blockedHosts?:string[],lookup?:EgressLookup}} options
+ * @param {{blockedHosts?:string[],lookup?:EgressLookup,allowedHosts?:string[]}} options
  */
-export async function resolveEgressTarget({ host, port }, { blockedHosts = [], lookup = dnsLookup } = {}) {
+export async function resolveEgressTarget({ host, port }, { blockedHosts = [], lookup = dnsLookup, allowedHosts } = {}) {
   if (![80, 443].includes(port)) denied();
   host = canonicalHost(host);
+  if (allowedHosts !== undefined && (!Array.isArray(allowedHosts) || !allowedHosts.includes(host) || port !== 443)) denied();
   if (blocked(host, blockedSet(blockedHosts))) denied();
   let addresses;
   if (isIP(host)) addresses = [{ address: host, family: isIP(host) }];
@@ -124,14 +125,14 @@ function denySocket(socket, status = 403) { if (!socket.destroyed) socket.end(`H
 
 /** Loopback-only explicit proxy. Chromium must disable implicit localhost
  * bypass/QUIC/non-proxied WebRTC; no destination, credentials or body is logged.
- * @param {{blockedHosts?:string[],lookup?:EgressLookup}} options
+ * @param {{blockedHosts?:string[],lookup?:EgressLookup,allowedHosts?:string[]}} options
  */
-export async function startEgressProxy({ blockedHosts = [], lookup = dnsLookup } = {}) {
+export async function startEgressProxy({ blockedHosts = [], lookup = dnsLookup, allowedHosts } = {}) {
   const hosts = [...blockedSet(blockedHosts)], sockets = new Set();
   const track = socket => { sockets.add(socket); socket.once('close', () => sockets.delete(socket)); return socket; };
   const server = createServer(async (request, response) => {
     let target;
-    try { const destination = forwardTarget(request); target = { ...destination, ...await resolveEgressTarget(destination, { blockedHosts: hosts, lookup }) }; }
+    try { const destination = forwardTarget(request); target = { ...destination, ...await resolveEgressTarget(destination, { blockedHosts: hosts, lookup, allowedHosts }) }; }
     catch { request.resume(); denyResponse(response); return; }
     if (request.destroyed) return;
     const headers = { ...cleanHeaders(request.headers), host: target.hostHeader, connection: 'close' };
@@ -153,7 +154,7 @@ export async function startEgressProxy({ blockedHosts = [], lookup = dnsLookup }
   server.on('upgrade', (_request, socket) => denySocket(socket));
   server.on('connect', async (request, client, head) => {
     let target;
-    try { target = await resolveEgressTarget(tunnelTarget(request), { blockedHosts: hosts, lookup }); }
+    try { target = await resolveEgressTarget(tunnelTarget(request), { blockedHosts: hosts, lookup, allowedHosts }); }
     catch { denySocket(client); return; }
     if (client.destroyed) return;
     const upstream = track(connect({ host: target.address, family: target.family, port: target.port }));

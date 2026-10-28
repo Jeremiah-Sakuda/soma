@@ -16,3 +16,5 @@ coverage
 .agents
 
 services/browser-runner
+
+services/credential-runner

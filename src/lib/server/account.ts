@@ -7,6 +7,7 @@ import { assertTrustedWorker, type TrustedWorker } from './worker-auth';
 declare const accountBrand: unique symbol;
 export type VerifiedAccount = Readonly<{ uid: string; [accountBrand]: true }>;
 const verifiedAccounts = new WeakSet<object>();
+const authenticationTimes = new WeakMap<object, number>();
 const workerAccounts = new WeakMap<object, { rootId: string; workspaceId: string; expiresAt: number }>();
 
 export function assertVerifiedAccount(account: VerifiedAccount): void {
@@ -121,6 +122,14 @@ export function requireRecentAuthentication(authTime: number, nowSeconds = Date.
   }
 }
 
+/** Sensitive opt-in grants use the verifier's auth_time, never a request field. */
+export function recentAccountAuthentication(account: VerifiedAccount): number {
+  assertVerifiedAccount(account);
+  const timestamp = authenticationTimes.get(account);
+  requireRecentAuthentication(timestamp ?? NaN);
+  return timestamp!;
+}
+
 // Firebase's supported server session flow:
 // https://firebase.google.com/docs/auth/admin/manage-cookies
 export async function exchangeAccountSession(idToken: string): Promise<{ uid: string; sessionCookie: string }> {
@@ -149,6 +158,7 @@ export async function verifyAccountSession(request: Request): Promise<VerifiedAc
     const decoded = await provider.verifySessionCookie(cookie, true);
     const account = Object.freeze({ uid: decoded.uid }) as VerifiedAccount;
     verifiedAccounts.add(account);
+    authenticationTimes.set(account, decoded.auth_time);
     return account;
   } catch { return null; }
 }

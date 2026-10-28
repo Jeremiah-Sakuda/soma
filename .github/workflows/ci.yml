@@ -14,6 +14,8 @@ jobs:
       - run: npm ci
       - name: Install pinned isolated browser-runner dependencies
         run: npm ci --prefix services/browser-runner --ignore-scripts
+      - name: Install pinned isolated credential-runner dependencies
+        run: npm ci --prefix services/credential-runner --ignore-scripts
       - name: Verify Firebase loads under serverless module restrictions
         run: node --no-experimental-require-module -e "require('firebase-admin/auth')"
       - run: npm run typecheck
@@ -22,6 +24,8 @@ jobs:
       - name: Verify browser runtime in an isolated production trace
         run: npm run check:browser-artifact
       - run: npx playwright install --with-deps chromium
+      - name: Verify isolated credential browser with adversarial synthetic pages
+        run: SOMA_CREDENTIAL_BROWSER_TESTS=true npx vitest run tests/credential-runner/browser.test.ts
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()

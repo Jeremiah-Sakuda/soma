@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { BlackboardCoursePicker } from './blackboard-course-picker';
 import { SourceContextFields } from './source-context-fields';
+import { CredentialAutofill } from './credential-autofill';
 import type { SourceAuthorityContext } from '@/lib/domain/source-context';
 import type { WorkspaceResponse } from '@/lib/domain/types';
 
@@ -169,6 +170,7 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
   const [status, setStatus] = useState<BrowserStatus>();
   const [targets, setTargets] = useState<Partial<Record<BrowserProvider, BrowserTarget[]>>>({});
   const [login, setLogin] = useState<Partial<Record<BrowserProvider, LoginWindow>>>({});
+  const [secureSignInActive, setSecureSignInActive] = useState(false);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -202,8 +204,8 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
   }
   return <div style={fieldSpacing}>
     <h3>Course sites</h3>
-    <p className="meta">Sign in through a browser hosted {status?.hosting === 'gcp' ? 'on Soma’s Google Cloud worker' : 'by Browserbase'}, separate from your everyday browser. Enter passwords and MFA only on the provider’s actual login page; do not save passwords in the hosted browser.</p>
-    <p className="meta">{status?.hosting === 'gcp' ? 'Soma’s Google Cloud worker' : 'Browserbase'} retains sensitive browser state, including cookies and site storage. Soma’s authorized server can use that session. Page selection limits Soma’s collection; the underlying login can have broader account access. Disconnect deletes the saved context; failed cleanup is retained for retry. Sessions can expire and require MFA again.</p>
+    <p className="meta">Sign in through a browser hosted {status?.hosting === 'gcp' ? 'on Soma’s Google Cloud worker' : 'by Browserbase'}, separate from your everyday browser. For manual sign-in, enter passwords and MFA only on the provider’s actual login page; do not save passwords in the hosted browser. Optional secure autofill uses the separate vault described below.</p>
+    <p className="meta">{status?.hosting === 'gcp' ? 'Soma’s Google Cloud worker' : 'Browserbase'} retains sensitive browser state, including cookies and site storage. Soma’s authorized server can use that session. Page selection limits Soma’s collection; the underlying login can have broader account access. Disconnect deletes the saved context and, for Blackboard, any optional stored sign-in; failed cleanup is retained for retry. Sessions can expire and require MFA again.</p>
     {!status && !error && <p className="meta" role="status">Checking browser connection availability…</p>}
     {status && !status.configured && <p className="inline-caution">Persistent browser access is not configured on this deployment. New login sessions are unavailable until configuration is restored.</p>}
     {status?.providers.map(item => {
@@ -218,8 +220,8 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
         <p className="meta" style={{ overflowWrap: 'anywhere' }}>{item.homeUrl}</p>
         <ReadStatus lastReadAt={connection?.lastSuccessAt} notice={connection?.notice} />
         <div className="action-row" style={fieldSpacing}>
-          <button className="secondary-button" disabled={!!busy || !status.configured} onClick={() => void action(item.provider, 'start')}>{connection && connection.status !== 'disconnected' ? 'Reconnect' : 'Connect'} {item.label}</button>
-          {connection && connection.status !== 'disconnected' && <button className="text-button" disabled={!!busy} onClick={() => void action(item.provider, 'disconnect')}>Disconnect</button>}
+          <button className="secondary-button" disabled={!!busy || secureSignInActive || !status.configured} onClick={() => void action(item.provider, 'start')}>{connection && connection.status !== 'disconnected' ? 'Reconnect' : 'Connect'} {item.label}</button>
+          {connection && connection.status !== 'disconnected' && <button className="text-button" disabled={!!busy || secureSignInActive} onClick={() => void action(item.provider, 'disconnect')}>Disconnect</button>}
         </div>
         {session && <section className="settings-status" aria-label={`${item.label} login window`}>
           <h3>Finish signing in</h3>
@@ -229,6 +231,7 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
           <button className="secondary-button" style={fieldSpacing} disabled={!!busy} onClick={() => void action(item.provider, 'complete')}>I’ve finished signing in</button>
           <p className="meta">Saving the browser session does not prove source access. A successful read of your selected course page establishes that separately.</p>
         </section>}
+        {item.provider === 'blackboard' && <CredentialAutofill disabled={!!busy || !!session} onActiveChange={setSecureSignInActive} onComplete={async () => { await read(); await reload(); }} />}
         {connected && item.provider === 'blackboard' && <BlackboardCoursePicker data={data} disabled={!!busy} reload={async () => { await read(); await reload(); }} />}
         {connected && item.provider !== 'blackboard' && <form onSubmit={event => { event.preventDefault(); void action(item.provider, 'configure'); }}>
           <p className="meta" style={fieldSpacing}>Choose exact, read-only course page URLs. Collection stays within the pages you select; it does not submit work or post messages.</p>

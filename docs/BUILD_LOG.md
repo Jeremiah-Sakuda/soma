@@ -1437,3 +1437,15 @@ Top three outcomes:
 3. Preserved the remaining human/provider gate: first actual BU password/MFA, safe-state handoff and selected-course readback. No new credential access or scope expansion occurred.
 
 Deviations: none; duplicate approval does not renew or recreate removed verification privileges.
+
+
+## P077 — Open Soma for owner sign-in (October 28, 2026)
+
+Prompt: canonical verbatim entry `P077`.
+
+Top three outcomes:
+1. Opened the production Soma page visibly in the in-app browser and retained it as the user-facing deliverable; the initial app-panel open request only queued, so browser navigation was verified separately.
+2. Opened and visibly verified the Welcome back / Sign in form for the user to enter their own credentials. No password, MFA response or account session was read or submitted by the agent.
+3. Handed control back for fresh Soma sign-in before optional Blackboard setup. Actual institutional login, safe-state export and course readback remain pending.
+
+Deviations: none; navigation and form opening create no new cloud permission or stored institutional credential.

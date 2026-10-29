@@ -1,7 +1,9 @@
-import {createHash,randomBytes} from 'node:crypto';
+import {createHash,randomBytes,randomUUID} from 'node:crypto';
 import {getAuth} from 'firebase-admin/auth';
 import {describe,it} from 'vitest';
 import {getServerApp,getServerFirestore} from '../../src/lib/server/firebase-config';
+import {verifyAccountSession} from '../../src/lib/server/account';
+import {acquireConnectionLease,readConnection,releaseConnectionLease} from '../../src/lib/server/connectors/store';
 
 // Opt-in real hosted lifecycle with one deliberately fictional Firebase identity.
 // This NEVER submits a password to BU or stores an institutional credential.
@@ -47,6 +49,22 @@ describe.skipIf(!enabled)('hosted credential lifecycle — disposable original s
    const revoked=await request(sessionPath+'/status',{method:'POST',body:{},cookie:humanCookie,service:true});ensure([401,403,404].includes(revoked.status),'Revoked Firebase identity retained hosted login access.');checks.push('firebase-revocation-denies-live-session');
    await signIn();const cancelled=await action('cancel');ensure(cancelled.ok,'Normal hosted cancellation did not confirm cleanup.');checks.push('normal-public-api-cancel-recovery');
    const after=await request('/api/connectors/credentials');ensure(after.ok,'Hosted status after cancellation failed.');const afterBody=await decode(after);ensure(!afterBody.providers?.[0]?.active,'Hosted cleanup left a pending credential session.');
+   // Original synthetic regression for an established account: its context was
+   // created by the public flow above, but an old manual reference survived a
+   // page reload. Seed only this fictional account under its real store lease.
+   const fixtureAccount=await verifyAccountSession(new Request(appOrigin,{headers:{cookie:appCookie}}));if(!fixtureAccount)throw new Error('Synthetic fixture account could not be verified for its lease.');
+   const leased=await acquireConnectionLease(fixtureAccount,'browser-blackboard','synthetic-expired-manual-fixture');
+   const originalContext=leased.connection.secret.contextId,originalConfiguration=JSON.stringify(leased.connection.configuration),expiredId=randomUUID();
+   ensure(leased.connection.secret.backend==='gcp'&&typeof originalContext==='string'&&!leased.connection.secret.credentialLogin&&!leased.connection.secret.sessionId,'Synthetic established context is not ready for its isolated regression.');
+   const seeded={...leased.connection.secret,sessionId:expiredId,sessionExpiresAt:new Date(Date.now()-60000).toISOString()};
+   ensure(await releaseConnectionLease(fixtureAccount,'browser-blackboard',leased.leaseId,{secret:seeded,status:'connecting',notice:'Original synthetic expired manual-session recovery fixture.'}),'Synthetic manual reference could not be checkpointed.');
+   const beforeRecovery=await readConnection(fixtureAccount,'browser-blackboard');if(!beforeRecovery)throw new Error('Synthetic seeded connection disappeared.');ensure(beforeRecovery.secret.contextId===originalContext&&JSON.stringify(beforeRecovery.configuration)===originalConfiguration,'Synthetic seed changed its context or course selections.');
+   const reopened=await action('open');ensure(reopened.ok,'Established-account expired manual-session recovery failed.');const recoveryData=await decode(reopened);let recoveredEntry:URL;try{recoveredEntry=new URL(recoveryData.loginUrl);}catch{throw new Error('Recovered hosted capability is invalid.');}
+   ensure(recoveredEntry.origin===loginOrigin&&/^\/login\/[a-f0-9-]{36}$/.test(recoveredEntry.pathname)&&/^#[A-Za-z0-9_-]{43}$/.test(recoveredEntry.hash)&&!recoveredEntry.search,'Recovered hosted capability failed its binding.');
+   const recovered=await readConnection(fixtureAccount,'browser-blackboard');if(!recovered)throw new Error('Synthetic recovered connection disappeared.');ensure(recovered.secret.contextId===originalContext&&JSON.stringify(recovered.configuration)===originalConfiguration&&!recovered.secret.sessionId&&!recovered.secret.sessionExpiresAt&&!!recovered.secret.credentialLogin,'Expired manual recovery lost configuration, changed context or retained the obsolete session.');
+   const recoveryBootstrap=await request(recoveredEntry.pathname+'/bootstrap',{method:'POST',body:{token:recoveredEntry.hash.slice(1)},cookie:'',service:true});ensure(recoveryBootstrap.ok&&(await decode(recoveryBootstrap)).phase==='ready','Recovered session did not pass its real hosted callback and one-use entry.');
+   const recoveryCancel=await action('cancel');ensure(recoveryCancel.ok,'Recovered hosted session cleanup failed.');checks.push('original-synthetic-expired-manual-reference-recovered-through-public-api');
+
   }finally{
    if(created){
     // Never destroy encrypted cleanup references before the public cleanup path

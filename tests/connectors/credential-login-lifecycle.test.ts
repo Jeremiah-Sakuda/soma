@@ -6,7 +6,7 @@ import type { VerifiedAccount } from '../../src/lib/server/account';
 // verification. Those boundaries have separate managed-storage checks.
 const fixture = vi.hoisted(() => ({
   connection: null as any, marker: '', authorizationActive: false,
-  events: [] as { kind: string; value?: any }[], reply: 'valid', deleteFails: false, releaseFails: false,
+  events: [] as { kind: string; value?: any }[], manualReply:'missing', reply: 'valid', deleteFails: false, releaseFails: false,
 }));
 vi.mock('../../src/lib/server/account', async importOriginal => ({
   ...await importOriginal<typeof import('../../src/lib/server/account')>(),
@@ -48,6 +48,7 @@ vi.mock('../../src/lib/server/connectors/credential-grants', () => ({
 vi.mock('playwright-core', () => ({ chromium: { connectOverCDP: vi.fn() } }));
 
 import { chromium } from 'playwright-core';
+import {checkpointConnectionLease} from '../../src/lib/server/connectors/store';
 import { cleanupBrowsersForDeletion, startBrowserLogin, withBrowserRead } from '../../src/lib/server/connectors/browser';
 import { credentialLoginStatus, finishCredentialLogin, forgetStoredCredential, openCredentialLogin } from '../../src/lib/server/connectors/credential-login';
 
@@ -69,7 +70,7 @@ function remoteEvents() { return fixture.events.filter(event => event.kind === '
 beforeEach(() => {
   vi.stubEnv('SOMA_CREDENTIAL_AUTOFILL_ALLOWED_UIDS',undefined);
   fixture.connection = { id: 'browser-blackboard', workspaceId: 'synthetic-credential-workspace', provider: 'blackboard', version: 7, status: 'connected', secret: { backend: 'gcp', version: 1, contextId }, configuration: structuredClone(configuration) };
-  fixture.marker = ''; fixture.authorizationActive = false; fixture.events = []; fixture.reply = 'valid'; fixture.deleteFails = false; fixture.releaseFails = false;
+  fixture.marker = ''; fixture.authorizationActive = false; fixture.events = []; fixture.reply = 'valid'; fixture.manualReply='missing'; fixture.deleteFails = false; fixture.releaseFails = false;
   vi.stubEnv('SOMA_BROWSER_BACKEND', 'gcp'); vi.stubEnv('SOMA_GCP_BROWSER_URL', browserOrigin);
   vi.stubEnv('SOMA_GCP_BROWSER_PROJECT_ID', 'synthetic-project'); vi.stubEnv('SOMA_GCP_BROWSER_CONTROL_KEY', 'b'.repeat(48));
   vi.stubEnv('SOMA_CONNECTOR_ENCRYPTION_KEY', 'ab'.repeat(32));
@@ -80,6 +81,12 @@ beforeEach(() => {
     const method = init?.method ?? 'GET', body = init?.body ? JSON.parse(String(init.body)) : undefined;
     fixture.events.push({ kind: 'remote', value: { origin: url.origin, path: url.pathname, method, body, headers: init?.headers } });
     if (url.origin === browserOrigin) {
+      if(method==='GET'&&url.pathname==='/v1/sessions/synthetic-manual-session'&&fixture.manualReply!=='missing'){
+        if(fixture.manualReply==='unavailable')return new Response(null,{status:503});
+        if(fixture.manualReply==='no-content')return new Response(null,{status:204});
+        if(['null','false','zero','empty-string'].includes(fixture.manualReply))return Response.json(({null:null,false:false,zero:0,'empty-string':''} as Record<string,unknown>)[fixture.manualReply]);
+        return Response.json({id:'synthetic-manual-session',contextId,projectId:'synthetic-project',status:fixture.manualReply==='unknown'?'UNREVIEWED_STATUS':'RUNNING',expiresAt:new Date(Date.now()+(fixture.manualReply==='unknown'?-60000:60000)).toISOString(),userMetadata:{somaOwner:fixture.manualReply==='foreign'?'f'.repeat(64):owner}});
+      }
       if (method === 'POST' && url.pathname === '/v1/contexts') return Response.json({ id: contextId });
       if (method === 'DELETE') return new Response(null, { status: 204 });
       if (method === 'GET') return new Response(null, { status: 404 });
@@ -160,6 +167,31 @@ describe('isolated credential-login broker lifecycle with synthetic services', (
     expect(fixture.connection.secret).toEqual(before); expect(fetch).not.toHaveBeenCalled(); expect(fixture.marker).toBe('');
   });
 
+  it('recovers a known expired absent GCP manual reference before checkpointing an isolated grant',async()=>{
+    fixture.connection.secret={...fixture.connection.secret,sessionId:'synthetic-manual-session',sessionExpiresAt:new Date(Date.now()-60000).toISOString(),loginPageId:'synthetic-old-page',readyAt:new Date(Date.now()+60000).toISOString()};
+    const configuration=structuredClone(fixture.connection.configuration);await openCredentialLogin(account,'blackboard',Math.floor(Date.now()/1000));
+    const first=fixture.events[0];expect(first).toMatchObject({kind:'remote',value:{origin:browserOrigin,path:'/v1/sessions/synthetic-manual-session',method:'GET'}});
+    const cleared=fixture.events.find(event=>event.kind==='checkpoint')!.value.secret;expect(cleared).toMatchObject({backend:'gcp',version:1,contextId});expect(cleared).not.toHaveProperty('sessionId');expect(cleared).not.toHaveProperty('sessionExpiresAt');expect(cleared).not.toHaveProperty('loginPageId');expect(cleared).not.toHaveProperty('credentialLogin');
+    expect(fixture.events.indexOf(fixture.events.find(event=>event.kind==='checkpoint')!)).toBeLessThan(fixture.events.indexOf(fixture.events.find(event=>event.kind==='authorize')!));
+    expect(fixture.connection.configuration).toEqual(configuration);expect(fixture.connection.secret.contextId).toBe(contextId);expect(fixture.connection.secret.credentialLogin).toBeDefined();
+    expect(remoteEvents().some(event=>event.value.method==='DELETE'||event.value.path==='/v1/contexts')).toBe(false);expect(chromium.connectOverCDP).not.toHaveBeenCalled();
+  });
+  it.each([undefined,'not-a-date','0',new Date(Date.now()+60000).toISOString()])('preserves an uncertain or active local manual deadline %s without consulting or mutating the runner',async expires=>{
+    fixture.connection.secret.sessionId='synthetic-manual-session';fixture.connection.secret.sessionExpiresAt=expires;const before=structuredClone(fixture.connection.secret);
+    await expect(openCredentialLogin(account,'blackboard',Math.floor(Date.now()/1000))).rejects.toMatchObject({status:409});expect(fixture.connection.secret).toEqual(before);expect(fetch).not.toHaveBeenCalled();expect(fixture.marker).toBe('');
+  });
+  it.each([['active',409,'credential_manual_active'],['unknown',409,'credential_manual_unknown'],['unavailable',503,'browser_provider'],['foreign',403,'browser_owner']])('preserves an expired manual reference when the runner reports %s',async(reply,status,code)=>{
+    fixture.manualReply=reply as string;fixture.connection.secret.sessionId='synthetic-manual-session';fixture.connection.secret.sessionExpiresAt=new Date(Date.now()-60000).toISOString();const before=structuredClone(fixture.connection);
+    await expect(openCredentialLogin(account,'blackboard',Math.floor(Date.now()/1000))).rejects.toMatchObject({status,code});expect(fixture.connection.secret).toEqual(before.secret);expect(fixture.connection.configuration).toEqual(before.configuration);expect(fixture.marker).toBe('');expect(remoteEvents()).toHaveLength(1);
+  });
+  it.each(['null','false','zero','empty-string','no-content'])('never treats a malformed successful response %s as a confirmed missing session',async reply=>{
+    fixture.manualReply=reply;fixture.connection.secret.sessionId='synthetic-manual-session';fixture.connection.secret.sessionExpiresAt=new Date(Date.now()-60000).toISOString();const before=structuredClone(fixture.connection.secret);
+    await expect(openCredentialLogin(account,'blackboard',Math.floor(Date.now()/1000))).rejects.toBeDefined();expect(fixture.connection.secret).toEqual(before);expect(fixture.marker).toBe('');expect(remoteEvents()).toHaveLength(1);expect(fixture.events.some(event=>event.kind==='checkpoint')).toBe(false);
+  });
+  it('retains the expired reference when its cleanup checkpoint loses the connection lease',async()=>{
+    fixture.connection.secret.sessionId='synthetic-manual-session';fixture.connection.secret.sessionExpiresAt=new Date(Date.now()-60000).toISOString();const before=structuredClone(fixture.connection.secret);
+    vi.mocked(checkpointConnectionLease).mockResolvedValueOnce(false);await expect(openCredentialLogin(account,'blackboard',Math.floor(Date.now()/1000))).rejects.toMatchObject({status:409,code:'connection_changed'});expect(fixture.connection.secret).toEqual(before);expect(fixture.marker).toBe('');expect(remoteEvents()).toHaveLength(1);
+  });
   it('does not replace an already pending secure login or allocate a second window', async () => {
     const id = pending();
     await expect(openCredentialLogin(account, 'blackboard', Math.floor(Date.now() / 1000))).rejects.toMatchObject({ status: 409 });

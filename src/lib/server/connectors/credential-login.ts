@@ -4,7 +4,7 @@ import {createHash,randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {assertVerifiedAccount,type VerifiedAccount} from '../account';
 import {WorkspaceStoreError} from '../store';
-import {configureBrowser,resolveBrowserProjectId,type BrowserProvider,type Configuration} from './browser';
+import {configureBrowser,resolveBrowserProjectId,recoverExpiredManualBrowserSession,type BrowserProvider,type Configuration} from './browser';
 import {browserControlRequest,recordedBrowserBackend} from './browser-hosting';
 import {acquireConnectionLease,checkpointConnectionLease,readConnection,releaseConnectionLease,type Connection} from './store';
 import {clearCredentialAuthorizationReference,createCredentialAuthorization,revokeCredentialAuthorization,type CredentialGrant} from './credential-grants';
@@ -50,8 +50,9 @@ export async function openCredentialLogin(account:VerifiedAccount,provider:Brows
       if(connection.secret.contextId||connection.secret.sessionId)throw fail('Reconnect this provider with the Google Cloud browser before setting up secure autofill.',409);
       connection.secret={...connection.secret,backend:'gcp',version:1};
     }
-    // Never steal a manual login or a possibly active missing session.
-    if(connection.secret.sessionId)throw fail('Finish the manual sign-in window in Soma before setting up secure autofill.',409);
+    // Reconcile only expired references confirmed absent by their own runner.
+    // Active, early-missing, foreign and uncertain sessions remain untouched.
+    if(connection.secret.sessionId)await recoverExpiredManualBrowserSession(account,connection,leaseId);
     if(!connection.secret.contextId){
       const data=z.object({id:z.string().uuid()}).parse(await browserControlRequest('gcp',owner(connection),'/contexts','POST',{projectId:await resolveBrowserProjectId('gcp'),userMetadata:{somaOwner:owner(connection)}}));
       connection.secret={...connection.secret,contextId:data.id};

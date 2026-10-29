@@ -105,7 +105,7 @@ async function getSession(connection: BrowserConnection): Promise<Session | null
   if(connection.secret.credentialLogin)throw fail('Finish or cancel secure sign-in in Soma before using the normal browser.',409,'credential_login_active');
   if (!connection.secret.sessionId) return null;
   const raw = await api<unknown>(connection, `/sessions/${encodeURIComponent(connection.secret.sessionId)}`, 'GET', undefined, true);
-  if (!raw) return null;
+  if (raw === undefined) return null;
   const session = sessionSchema.parse(raw);
   if (!validateSessionOwnership(session, connection, await resolveBrowserProjectId(recordedBrowserBackend(connection.secret)))) throw fail('Browser session ownership could not be verified.', 403, 'browser_owner');
   return session;
@@ -126,6 +126,28 @@ async function deleteContext(connection: BrowserConnection): Promise<void> {
 function clearSession(secret: Secret): Secret {
   const { sessionId: _id, sessionExpiresAt: _expiry, loginPageId: _page, readyAt: _ready, ...rest } = secret;
   return { ...rest, ...(recordedBrowserBackend(secret) === 'browserbase' ? { readyAt: new Date(Date.now() + 5000).toISOString() } : {}) };
+}
+/** A secure-login transition may discard only a definitely expired GCP
+ * manual reference whose own runner confirms it no longer exists. An extant
+ * session (even with contradictory timestamps) remains a manual recovery task.
+ * Caller must hold this connection's ordinary ownership-checked lease. */
+export async function recoverExpiredManualBrowserSession(account:VerifiedAccount,connection:BrowserConnection,leaseId:string):Promise<void>{
+  if(!connection.secret.sessionId)return;
+  const pending='Finish the manual sign-in window in Soma before setting up secure autofill.';
+  const unknown='The previous manual sign-in could not be confirmed ended. Reconnect or finish it before setting up secure autofill.';
+  if(recordedBrowserBackend(connection.secret)!=='gcp'||configuredBrowserBackend()!=='gcp')throw fail(unknown,409,'credential_manual_unknown');
+  const deadline=z.string().datetime().safeParse(connection.secret.sessionExpiresAt);
+  if(!deadline.success)throw fail(unknown,409,'credential_manual_unknown');
+  const expires=Date.parse(deadline.data);
+  if(!Number.isFinite(expires))throw fail(unknown,409,'credential_manual_unknown');
+  if(expires>Date.now())throw fail(pending,409,'credential_manual_active');
+  // Uses the existing owner/context/project/session validator. Provider errors
+  // and foreign metadata cannot become proof that a session ended.
+  const session=await getSession(connection);
+  if(session)throw fail(active(session)?pending:unknown,409,active(session)?'credential_manual_active':'credential_manual_unknown');
+  const secret=clearSession(connection.secret);
+  if(!await checkpointConnectionLease(account,connection.id,leaseId,{secret}))throw fail('Source authorization changed. Reconnect to retry.',409,'connection_changed');
+  connection.secret=secret;
 }
 async function connect(session: Session, connection: BrowserConnection, markPhase?:(phase:'playwright-import'|'cdp-connect')=>void): Promise<Browser> {
   if (!session.connectUrl) throw fail('Browser session is not ready. Try again shortly.');

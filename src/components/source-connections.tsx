@@ -218,6 +218,7 @@ function BrowserConnections({ data, reload }: { data: WorkspaceResponse; reload:
       return <section className="card" style={fieldSpacing} key={item.provider} aria-label={`${item.label} connection`}>
         <div className="section-heading"><h3>{item.label}</h3><span className="status-chip">{connection?.status ?? 'Not connected'}</span></div>
         <p className="meta" style={{ overflowWrap: 'anywhere' }}>{item.homeUrl}</p>
+        {item.provider === 'blackboard' && <p className="meta">Reads supported text pages and announcements from selected courses. PDFs, slide files, images, attachments, external tools and returned work are not imported by this reader.</p>}
         <ReadStatus lastReadAt={connection?.lastSuccessAt} notice={connection?.notice} />
         <div className="action-row" style={fieldSpacing}>
           <button className="secondary-button" disabled={!!busy || secureSignInActive || !status.configured} onClick={() => void action(item.provider, 'start')}>{connection && connection.status !== 'disconnected' ? 'Reconnect' : 'Connect'} {item.label}</button>

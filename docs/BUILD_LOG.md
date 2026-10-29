@@ -1425,3 +1425,15 @@ Top three outcomes:
 3. Recorded a proposed pitch, comparison, three-minute sequence and minimum integrated proof in `docs/DEMO_AND_EVALUATION.md`. Distinguished synthetic Spark adaptation, persistent evidence and one imported real-course practice artifact rather than splicing them into a claimed end-to-end real-course lab. No learning-gain or eligibility guarantee, new model family, UI rebrand or product-scope change was made.
 
 Deviations: this is a framing recommendation and evidence requirement, not acceptance of an expanded implementation plan or a claim that wording resolves unfinished capability.
+
+
+## P076 — Duplicate verification approval (October 28, 2026)
+
+Prompt: canonical verbatim clarification `P076`, duplicate of `P074` for the same approval question.
+
+Top three outcomes:
+1. Recognized the repeated approval as confirmation of the completed P074 scope, rather than a request to repeat temporary privilege grants or verification resources.
+2. Cross-referenced P074's recorded 27 actual cloud checks, hosted disposable-account test, cleanup and owner-only deployment; no new infrastructure action or test result is asserted.
+3. Preserved the remaining human/provider gate: first actual BU password/MFA, safe-state handoff and selected-course readback. No new credential access or scope expansion occurred.
+
+Deviations: none; duplicate approval does not renew or recreate removed verification privileges.

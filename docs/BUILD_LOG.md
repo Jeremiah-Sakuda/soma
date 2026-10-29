@@ -1497,3 +1497,27 @@ Top three outcomes:
 3. Deployed `soma-credential-login-00004-7z9` with the same identity, environment, resources and timeout. The actual fictional-account lifecycle passed in 50.51 seconds, including 25-second idle entry, protected cookie/empty-vault metadata, replay/revocation, cancellation, expired-manual-reference recovery and normal cleanup. Independently confirmed fictional Auth/root absence, removed its temporary UID and redeployed clean app source `13200fa` with owner-only setup. Requested fresh human authentication again after the five-minute window elapsed; real credential use/MFA and source/PDF readback remain pending. No new inference occurred.
 
 Deviations: the first lifecycle CI exposed one outdated test expectation; corrected it rather than changing the new uncertainty contract. Automatic approval review rejected a proposed command that would persist raw request URLs; the command did not execute, and diagnosis proceeded with URL-free status/timing/instance metadata. The application callback can still collapse some internal service failures into 403; universal outage recovery is not claimed.
+
+
+## P082 — Interrupted end-to-end completion request (October 29, 2026)
+
+Prompt: canonical verbatim entry `P082`; superseded by `P083`.
+
+Top three outcomes:
+1. Began reviewing the current handoff, build plan, working tree and previous verification status. No implementation, model call, source collection or deployment began before the interruption.
+2. The user then explicitly put this work on the back burner in P083. The broad completion request is deferred, not completed; prior authentication, source and release gaps retain their recorded status.
+3. Preserved existing application, infrastructure and concurrent work. No new subagent was dispatched and no application behavior or spending allowance changed.
+
+Deviations: work was interrupted and reprioritized by the user before implementation.
+
+
+## P083 — Read the local v2 direction (October 29, 2026)
+
+Prompt: canonical verbatim entry `P083`.
+
+Top three outcomes:
+1. Read all twenty sections of the local planning document and verified that it remains Git-ignored and untracked. Its private contents were not copied into the public repository.
+2. Familiarized with its proposed journey, computational/visual boundaries, reusable foundations, proof gate and unresolved decisions; summarized understanding in chat. No proposal is represented as an implemented feature or adopted acceptance criterion.
+3. Honored the pause on the previous integration push and recorded the priority decision. No product code, PRD/UI acceptance, external service, credential, inference budget or deployment changed.
+
+Deviations: none; this is familiarization only, not authorization to implement the proposal. Checks were limited to file review, ignore/tracking status, JSON serialization and documentation whitespace.

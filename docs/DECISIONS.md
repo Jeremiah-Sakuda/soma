@@ -302,3 +302,7 @@ Keep `SOMA_CREDENTIAL_AUTOFILL_ALLOWED_UIDS` set to the existing owner only for 
 ## October 28 — P075 proposed anti-project framing
 
 Recommend “Your next study session, prepared before you ask” as product positioning and a checked experiment that causes Soma to revise its interpretation and next activity as the demo's central proof. This is a presentation recommendation, not new scope or a completed generated-lab claim. The evidence review and three-minute proposal are in `docs/DEMO_AND_EVALUATION.md`. Current synthetic adaptation, persistence and imported real-course practice are separate evidence; integrated source-to-activity operation, course fit and meaningful model-authored composition remain explicit proof gates. Education itself is not excluded by the supplied guide; a simple education chatbot/basic RAG remains a substantial category risk if the actual demo stays at that level.
+
+## October 29 — P083 defers the integration push for direction review
+
+The user explicitly put P082's broad end-to-end integration completion request on the back burner and requested familiarization with the local, Git-ignored v2 proposal. Preserve the existing application and unfinished verification status. Reading this proposal does not adopt it as PRD/UI acceptance or authorize its implementation, spending or deployment. Keep the local planning file untracked; summarize understanding in chat without copying it into the public repository.

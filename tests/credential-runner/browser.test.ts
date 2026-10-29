@@ -26,24 +26,35 @@ describe.runIf(process.env.SOMA_CREDENTIAL_BROWSER_TESTS === 'true')('credential
   const login = 'https://shib.bu.edu/idp/profile/SAML2/Redirect/SSO?execution=synthetic';
   const action = 'https://shib.bu.edu/idp/profile/SAML2/Redirect/SSO?execution=synthetic-submit';
   const credential = { identifier: 'synthetic', password: 'original-synthetic-canary-8s' };
+  async function safeFailure(operation:Promise<unknown>,code:string) {
+    const error=await operation.catch(error=>error);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toMatchObject({code,status:409,message:'Secure sign-in stopped at a reviewed safety check.'});
+    const failure=error as Error&{code:string;status:number};
+    const details=JSON.stringify({name:failure.name,message:failure.message,code:failure.code,status:failure.status,stack:failure.stack});
+    expect(details).not.toContain(credential.password);
+    expect(details).not.toContain(credential.identifier);
+    expect(details).not.toContain(login);
+    expect(details).not.toContain(action);
+  }
   const form = (extra = '', script = '') => `<!doctype html><form method="post" action="${action}">
     <input name="j_username" type="text"><input name="j_password" type="password">
     <input name="csrf_token" type="hidden" value="original-synthetic-csrf">
     <button name="_eventId_proceed" ${extra}>Continue</button></form><script>${script}</script>`;
 
-  async function fixture(html: string, redirectStatus = 303, redirectTarget = 'https://learn.bu.edu/synthetic-auth', responseBody = '', authenticatedHtml = '<!doctype html><h1>Original synthetic MFA step</h1>', inputState: any = null,transitionDelay = 0) {
+  async function fixture(html: string, redirectStatus = 303, redirectTarget = 'https://learn.bu.edu/synthetic-auth', responseBody = '', authenticatedHtml = '<!doctype html><h1>Original synthetic MFA step</h1>', inputState: any = null,transitionDelay = 0, requireNativeHeaders = false) {
     let context: BrowserContext;let importedState:any='not-started';
-    const transmitted: { url: string; method: string; body: string; dom?: unknown }[] = [];
+    const transmitted: { url: string; method: string; body: string; headers: Record<string, string | string[] | undefined>; dom?: unknown }[] = [];
     const sockets = new Set<any>();
     const domEvents: unknown[] = [];
     const tls = createHttpsServer({ key, cert }, async (request, response) => {
       const chunks: Buffer[] = []; for await (const chunk of request) chunks.push(chunk);
       const url = 'https://' + request.headers.host + request.url;
       const body = Buffer.concat(chunks).toString('utf8');
-      transmitted.push({ url, method: request.method!, body });
+      transmitted.push({ url, method: request.method!, body, headers: request.headers });
       if (url === 'https://learn.bu.edu/') { if(transitionDelay){response.writeHead(200,{'content-type':'text/html'});response.end(`<!doctype html><p>Original synthetic identity transition</p><script>setTimeout(()=>location.replace(${JSON.stringify(login)}),${transitionDelay})</script>`);}else{response.writeHead(302, { location: login });response.end();}return; }
-      if (url.startsWith(login) && request.method === 'GET') { response.writeHead(200, { 'content-type': 'text/html' }); response.end(html); return; }
-      if (url === action && request.method === 'POST') { response.writeHead(redirectStatus, { location: redirectTarget, 'content-type': 'text/html' }); response.end(responseBody); return; }
+      if (url.startsWith(login) && request.method === 'GET') { response.writeHead(200, { 'content-type': 'text/html', ...(requireNativeHeaders ? {'set-cookie':'JSESSIONID=original-synthetic-csrf-session; Path=/; Secure; HttpOnly; SameSite=Lax'} : {}) }); response.end(html); return; }
+      if (url === action && request.method === 'POST') { if(requireNativeHeaders && (request.headers.origin !== 'https://shib.bu.edu' || request.headers.referer !== login || !request.headers.cookie?.includes('JSESSIONID=original-synthetic-csrf-session'))){response.writeHead(403,{'content-type':'text/html'});response.end('<h1>Original synthetic CSRF rejection</h1>');return;} response.writeHead(redirectStatus, { location: redirectTarget, 'content-type': 'text/html' }); response.end(responseBody); return; }
       if (url === 'https://learn.bu.edu/learn/api/v1/users/me') { response.writeHead(200, { 'content-type': 'application/json' }); response.end('{"id":"synthetic_student_1"}'); return; }
       if (url === 'https://learn.bu.edu/synthetic-auth') { response.writeHead(200, { 'content-type': 'text/html' }); response.end(authenticatedHtml); return; }
       response.writeHead(404); response.end();
@@ -120,13 +131,50 @@ describe.runIf(process.env.SOMA_CREDENTIAL_BROWSER_TESTS === 'true')('credential
     } finally { await test.close(); }
   });
 
+  it('preserves the reviewed native-form origin, referrer and secure session cookie for CSRF validation', async () => {
+    const test=await fixture(form(),303,'https://learn.bu.edu/synthetic-auth','','<!doctype html><h1>Original synthetic MFA step</h1>',null,0,true);
+    try {
+      await test.session.fill(credential,async()=>{});
+      const posts=test.transmitted.filter(request=>request.method==='POST');
+      expect(posts).toHaveLength(1);
+      expect(posts[0].headers.origin).toBe('https://shib.bu.edu');
+      expect(posts[0].headers.referer).toBe(login);
+      expect(posts[0].headers.cookie).toContain('JSESSIONID=original-synthetic-csrf-session');
+      expect(test.domEvents).toEqual([]);
+    } finally {await test.close();}
+  });
+
   it.each(['formmethod="get"', 'formtarget="_blank"', 'formenctype="text/plain"', 'formaction="https://learn.bu.edu/exfil"'])('rejects submitter override %s before any secret request', async (override) => {
     const test = await fixture(form(override));
     try {
       expect(await test.session.inspect()).toEqual({ reviewed: false });
-      await expect(test.session.fill(credential, async () => {})).rejects.toThrow();
+      await safeFailure(test.session.fill(credential, async () => {}),'credential_form_fields');
       expect(test.transmitted.filter((request) => request.method === 'POST')).toHaveLength(0);
     } finally { await test.close(); }
+  });
+
+  it('reports a fixed response stage when the provider rejects the checked POST',async()=>{
+    const test=await fixture(form(),403);
+    try {
+      await safeFailure(test.session.fill(credential,async()=>{}),'credential_submit_status');
+      expect(test.transmitted.filter(request=>request.method==='POST')).toHaveLength(1);
+    }finally{await test.close();}
+  });
+
+  it.each([1,2])('reports a fixed authorization stage when recheck %s denies without leaking its error',async(deniedCheck)=>{
+    const test=await fixture(form());let checks=0;
+    try {
+      await safeFailure(test.session.fill(credential,async()=>{if(++checks===deniedCheck)throw new Error(credential.password+' '+action); }),'credential_submit_authorization');
+      expect(test.transmitted.filter(request=>request.method==='POST')).toHaveLength(0);
+    }finally{await test.close();}
+  });
+
+  it('rejects unreviewed hidden fields with a fixed field stage',async()=>{
+    const test=await fixture(form().replace('</form>','<input type="hidden" name="unreviewed" value="original-synthetic-hidden"></form>'));
+    try {
+      await safeFailure(test.session.fill(credential,async()=>{}),'credential_form_fields');
+      expect(test.transmitted.filter(request=>request.method==='POST')).toHaveLength(0);
+    }finally{await test.close();}
   });
 
   it('cannot send to a form action swapped while authorization is pending', async () => {
@@ -143,7 +191,7 @@ describe.runIf(process.env.SOMA_CREDENTIAL_BROWSER_TESTS === 'true')('credential
   it('fails closed when authorization navigates to a new document before filling', async () => {
     const test = await fixture(form());
     try {
-      await expect(test.session.fill(credential, async () => { await test.context.pages()[0].goto(login + '&changed=true'); })).rejects.toThrow();
+      await safeFailure(test.session.fill(credential, async () => { await test.context.pages()[0].goto(login + '&changed=true'); }),'credential_page_guard');
       expect(test.transmitted.filter((request) => request.method === 'POST')).toHaveLength(0);
     } finally { await test.close(); }
   });
@@ -152,7 +200,7 @@ describe.runIf(process.env.SOMA_CREDENTIAL_BROWSER_TESTS === 'true')('credential
     const test = await fixture(form() + '<iframe src="about:blank"></iframe>');
     try {
       expect(await test.session.inspect()).toEqual({ reviewed: false });
-      await expect(test.session.fill(credential, async () => {})).rejects.toThrow();
+      await safeFailure(test.session.fill(credential, async () => {}),'credential_frame_guard');
       expect(test.transmitted.filter((request) => request.method === 'POST')).toHaveLength(0);
     } finally { await test.close(); }
   });
@@ -160,7 +208,7 @@ describe.runIf(process.env.SOMA_CREDENTIAL_BROWSER_TESTS === 'true')('credential
   it.each([301, 307, 308])('rejects HTTP %s without reposting a credential body', async (status) => {
     const test = await fixture(form(), status, 'https://learn.bu.edu/exfil');
     try {
-      await expect(test.session.fill(credential, async () => {})).rejects.toThrow();
+      await safeFailure(test.session.fill(credential, async () => {}),'credential_submit_redirect');
       expect(test.transmitted.filter((request) => request.method === 'POST')).toHaveLength(1);
       expect(test.transmitted.some((request) => request.url.includes('/exfil'))).toBe(false);
     } finally { await test.close(); }
@@ -171,7 +219,7 @@ describe.runIf(process.env.SOMA_CREDENTIAL_BROWSER_TESTS === 'true')('credential
     const target = 'https://learn.bu.edu/synthetic-auth?' + new URLSearchParams({ marker: privateInput.password });
     const test = await fixture(form(), 303, target);
     try {
-      await expect(test.session.fill(privateInput, async () => {})).rejects.toThrow();
+      await safeFailure(test.session.fill(privateInput, async () => {}),'credential_submit_reflection');
       expect(test.transmitted.some((request) => request.url === target)).toBe(false);
     } finally { await test.close(); }
   });
@@ -180,8 +228,43 @@ describe.runIf(process.env.SOMA_CREDENTIAL_BROWSER_TESTS === 'true')('credential
     const privateInput = { ...credential, password: 'synthetic space&☃"canary' };
     const reflected = encoding === 'raw' ? privateInput.password : encoding === 'encoded' ? encodeURIComponent(privateInput.password) : Buffer.from(privateInput.password).toString('base64');
     const test = await fixture(form(), 200, 'https://learn.bu.edu/synthetic-auth', `<h1>prefix${reflected}suffix</h1>`);
-    try { await expect(test.session.fill(privateInput, async () => {})).rejects.toThrow(); }
+    try { await safeFailure(test.session.fill(privateInput, async () => {}),'credential_submit_reflection'); }
     finally { await test.close(); }
+  });
+
+  it('blocks unreviewed passive assets without treating their denial as a credential navigation failure',async()=>{
+    const html='<!doctype html><h1>Original synthetic MFA step</h1><img src="https://unreviewed.invalid/denied-image">';
+    const test=await fixture(form(),303,'https://learn.bu.edu/synthetic-auth','',html);
+    try {
+      await test.session.fill(credential,async()=>{});
+      expect(await test.session.safeForViewer()).toBe(true);
+      expect(test.transmitted.some(request=>request.url.includes('unreviewed.invalid'))).toBe(false);
+      expect(test.transmitted.filter(request=>request.method==='POST')).toHaveLength(1);
+    }finally{await test.close();}
+  });
+
+  it('reports the frame boundary after a checked POST reaches an unreviewed MFA frame',async()=>{
+    const test=await fixture(form(),303,'https://learn.bu.edu/synthetic-auth','','<!doctype html><iframe src="about:blank"></iframe>');
+    try {
+      await safeFailure(test.session.fill(credential,async()=>{}),'credential_frame_guard');
+      expect(test.transmitted.filter(request=>request.method==='POST')).toHaveLength(1);
+    }finally{await test.close();}
+  });
+
+  it('reports a remaining password page without making a second credential request',async()=>{
+    const test=await fixture(form(),303,'https://learn.bu.edu/synthetic-auth','','<!doctype html><input type="password">');
+    try {
+      await safeFailure(test.session.fill(credential,async()=>{}),'credential_post_password');
+      expect(test.transmitted.filter(request=>request.method==='POST')).toHaveLength(1);
+    }finally{await test.close();}
+  });
+
+  it('reports the display guard if the next reviewed page reflects a credential',async()=>{
+    const test=await fixture(form(),303,'https://learn.bu.edu/synthetic-auth','',`<!doctype html><h1>${credential.password}</h1>`);
+    try {
+      await safeFailure(test.session.fill(credential,async()=>{}),'credential_display_guard');
+      expect(test.transmitted.filter(request=>request.method==='POST')).toHaveLength(1);
+    }finally{await test.close();}
   });
 
   it('does not pass secret canaries into the provider JavaScript realm during reflection checks', async () => {

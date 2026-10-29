@@ -3,6 +3,7 @@ import {randomBytes,createHash,createHmac,timingSafeEqual} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {WebSocketServer} from 'ws';
 import {PROVIDER,LOGIN_ORIGIN,validIdentifier} from './policy.mjs';
+import {credentialFailureFacts} from './diagnostics.mjs';
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
 const ownerPattern=/^[a-f0-9]{64}$/;
 const hash=value=>createHash('sha256').update(value).digest('hex');
@@ -27,7 +28,7 @@ async function body(request){
 function send(response,status,data){response.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'});response.end(data===undefined?'':JSON.stringify(data));}
 /** No generic CDP route, model client, screenshots or arbitrary navigation API.
  * Control authenticates the broker only; human credentials stay on this origin. */
-export function createCredentialRunner({store,vault,grantStore,audit,engine,authorize,controlKey,publicOrigin,proxyUrl,now=Date.now,maximum=1}){
+export function createCredentialRunner({store,vault,grantStore,audit,engine,authorize,controlKey,publicOrigin,proxyUrl,now=Date.now,maximum=1,reportFailure=facts=>console.warn(JSON.stringify(facts))}){
  if(typeof controlKey!=='string'||controlKey.length<40||typeof authorize!=='function'||typeof grantStore?.consume!=='function'||typeof audit?.emit!=='function')throw new Error('Credential runner configuration required.');
  const origin=new URL(publicOrigin).origin;if(origin!==publicOrigin||new URL(origin).protocol!=='https:')throw new Error('Canonical HTTPS origin required.');
  const sessions=new Map(),maintenance=new Set();let starting=0;
@@ -86,6 +87,7 @@ export function createCredentialRunner({store,vault,grantStore,audit,engine,auth
   await session.browser.safeForViewer();await record(session.owner,'fill_succeeded','succeeded',session.id,version);session.phase='mfa';
  }
  const server=http.createServer(async(request,response)=>{
+  let diagnosticOperation='unknown';
   try{
    if(!request.url||!request.url.startsWith('/')||request.url.startsWith('//')||request.url.length>2048||request.url.includes('%')||request.url.includes('\\'))fail('request_path',400);
    const url=new URL(request.url,origin),path=url.pathname;if(url.search)fail('request_query',400);
@@ -95,6 +97,7 @@ export function createCredentialRunner({store,vault,grantStore,audit,engine,auth
    }
    const login=/^\/login\/([a-f0-9-]+)(?:\/(bootstrap|status|save-fill|fill|forget))?$/.exec(path);
    if(login&&uuid.test(login[1])){
+    diagnosticOperation=login[2]??'unknown';
     if(request.method==='GET'&&!login[2]){response.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src data:; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"});response.end(await readFile(new URL('login.html',import.meta.url)));return;}
     if(request.method!=='POST'||request.headers.origin!==origin||!login[2])fail('human_origin',403);
     const data=await body(request),session=sessions.get(login[1]);
@@ -135,6 +138,9 @@ export function createCredentialRunner({store,vault,grantStore,audit,engine,auth
    }
    if(path.startsWith('/login/'))fail('route_missing',404);
    const owner=control(request);
+   if(path==='/v1/grants')diagnosticOperation='allocate';
+   else if(path==='/v1/credentials/rotate')diagnosticOperation='rotate';
+   else if(path==='/v1/credentials')diagnosticOperation='forget';
    if(request.method==='DELETE'&&path==='/v1/credentials'){
     const data=await body(request);
     if(!fields(data,['owner','workspaceId','workspaceGeneration','provider','origin'])||data.owner!==owner||data.provider!==PROVIDER||data.origin!==LOGIN_ORIGIN||typeof data.workspaceId!=='string'||typeof data.workspaceGeneration!=='string'||data.workspaceGeneration!==data.workspaceId)fail('binding_invalid',400);
@@ -172,6 +178,7 @@ export function createCredentialRunner({store,vault,grantStore,audit,engine,auth
    }
    const operation=/^\/v1\/sessions\/([a-f0-9-]+)(?:\/(release))?$/.exec(path);
    if(operation&&uuid.test(operation[1])){
+    diagnosticOperation=operation[2]==='release'?'release':request.method==='DELETE'?'cancel':'status';
     const session=sessions.get(operation[1]);if(!session){if(request.method==='DELETE'&&!operation[2]){const data=await body(request);if(!fields(data,['contextId'])||!uuid.test(data.contextId??''))fail('body_invalid',400);const meta=await store.inspect(data.contextId,owner);if(meta.active?.id===operation[1])await store.abandon(data.contextId,owner,operation[1]);await record(owner,'session_revoked','succeeded',operation[1]);send(response,204);return;}fail('session_missing',404);}if(session.owner!==owner)fail('session_missing',404);
     if(request.method==='DELETE'&&!operation[2]){await finish(session,false);send(response,204);return;}
     await authorized(session,'session');
@@ -181,7 +188,11 @@ export function createCredentialRunner({store,vault,grantStore,audit,engine,auth
     }
    }
    fail('route_missing',404);
-  }catch(error){send(response,Number.isInteger(error?.status)?error.status:503,{error:'Credential operation unavailable. Start a fresh login or use manual sign-in.',code:typeof error?.code==='string'&&/^[a-z_]{1,60}$/.test(error.code)?error.code:'credential_unavailable'});}
+  }catch(error){
+   const facts=credentialFailureFacts(error,diagnosticOperation);
+   try{void Promise.resolve(reportFailure(facts)).catch(()=>undefined);}catch{/* diagnostic delivery never changes cleanup or the rejection */}
+   send(response,facts.status,{error:'Credential operation unavailable. Start a fresh login or use manual sign-in.',code:facts.code});
+  }
  });
  server.on('upgrade',async(request,socket,head)=>{
   try{

@@ -7,8 +7,8 @@ test('new visitors see the product before explicitly opening the synthetic demo'
   page.on('request', request => { if (new URL(request.url()).pathname === '/api/workspace') workspaceRequests++; });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Study what matters next.', exact: true })).toBeVisible();
-  await expect(page.getByText('The quick demo uses original synthetic courses. No sign-in or connected accounts needed.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'See it. Ask. Explore.', exact: true })).toBeVisible();
+  await expect(page.getByText('Explore without an account. The course-workspace demo remains available with original synthetic courses.', { exact: true })).toBeVisible();
   expect(workspaceRequests).toBe(0);
   expect((await context.cookies()).filter(cookie => cookie.name.includes('soma'))).toHaveLength(0);
   await page.screenshot({ path: '.local/screenshots/entrance-desktop.png', fullPage: true });
@@ -17,10 +17,10 @@ test('new visitors see the product before explicitly opening the synthetic demo'
   await expect(page.locator('.mode-chip')).toHaveText('Synthetic demo');
   expect(workspaceRequests).toBeGreaterThan(0);
   await page.goBack();
-  await expect(page.getByRole('heading', { name: 'Study what matters next.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'See it. Ask. Explore.', exact: true })).toBeVisible();
   const countAfterDemo = workspaceRequests;
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Study what matters next.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'See it. Ask. Explore.', exact: true })).toBeVisible();
   expect(workspaceRequests).toBe(countAfterDemo);
 });
 
@@ -66,11 +66,11 @@ test('an authenticated visitor opens their account directly and logout returns t
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Open lesson', exact: true })).toBeVisible();
   await expect(page.locator('.mode-chip')).toHaveText('Your account');
-  await expect(page.getByRole('heading', { name: 'Study what matters next.', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'See it. Ask. Explore.', exact: true })).toHaveCount(0);
   expect(workspaceRequests).toBe(1);
   await page.getByRole('button', { name: 'Workspace menu' }).click();
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Study what matters next.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'See it. Ask. Explore.', exact: true })).toBeVisible();
   expect(workspaceRequests).toBe(1);
 });
 
@@ -82,7 +82,7 @@ test('a failed account check cannot silently create a demo workspace', async ({ 
   await expect(page.getByText('Could not check your account session. Please retry.', { exact: true })).toBeVisible();
   expect(workspaceRequests).toBe(0);
   await page.getByRole('button', { name: 'Retry account check', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Study what matters next.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'See it. Ask. Explore.', exact: true })).toBeVisible();
   expect(checks).toBe(2);
   expect(workspaceRequests).toBe(0);
 });
@@ -112,7 +112,7 @@ test('deleting workspace data returns to the entrance without fetching a synthet
   await page.locator('summary').filter({ hasText: 'Delete workspace data' }).click();
   await page.getByLabel('Delete my current workspace records', { exact: true }).check();
   await page.getByRole('button', { name: 'Delete workspace data', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Study what matters next.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'See it. Ask. Explore.', exact: true })).toBeVisible();
   expect(deleted).toBe(true); expect(reads).toBe(1);
   await expect(page).toHaveURL(/\/$/);
 });
@@ -153,7 +153,7 @@ test('signing into another account discards delayed investigation output and que
   await page.getByRole('button', { name: 'Import selected source', exact: true }).click();
   await expect.poll(() => importStarted).toBe(true);
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Study what matters next.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'See it. Ask. Explore.', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.getByLabel('Email', { exact: true }).fill('synthetic-b@example.test');
   await page.getByLabel('Password', { exact: true }).fill('synthetic-fixture-password');

@@ -6,8 +6,8 @@ const geist = Geist({ subsets: ['latin'], display: 'swap', variable: '--font-gei
 const geistMono = Geist_Mono({ subsets: ['latin'], display: 'swap', variable: '--font-geist-mono' });
 
 export const metadata: Metadata = {
-  title: 'Soma — your next study session, ready',
-  description: 'Useful learning activities that stay connected to your coursework and commitments.',
+  title: 'Soma — an explanation you can explore',
+  description: 'Turn selected screenshots and questions into visual explanations you can explore, change and revisit.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

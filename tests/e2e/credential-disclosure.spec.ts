@@ -42,6 +42,6 @@ test('hosted browser trust is explained before credential entry and login links 
   expect(reads).toBe(2);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:'.local/screenshots/credential-deletion-recovery-390.png',fullPage:true});
   await page.getByRole('button',{name:'Retry cleanup and deletion'}).click();
-  await expect(page.getByRole('heading',{name:'Study what matters next.',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'See it. Ask. Explore.',exact:true})).toBeVisible();
   expect(reads).toBe(2);expect(deletions).toBe(2);
  });

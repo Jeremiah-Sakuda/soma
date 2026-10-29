@@ -19,23 +19,23 @@ export function SomaEntrance({ openDemo, accountReady, onUpdate, error, retry, o
       {error && <div className="alert error" role="alert"><span>{error}</span><button className="text-button" onClick={retry}>Retry account check</button></div>}
       <section className={styles.hero} aria-labelledby="entrance-title">
         <div className={styles.copy}>
-          <p className={styles.eyebrow}>Your coursework, in context</p>
-          <h1 className={styles.title} id="entrance-title">Study what matters next.</h1>
-          <p className={styles.lede}>Soma brings your course material, deadlines, available time, and learning progress together to prepare interactive lessons and practice.</p>
-          <p className={styles.note}>As your classes and circumstances change, your preparation keeps up. Explore a concept, request a lesson, or pick up where you left off.</p>
-          <div className={styles.actions}><button className="primary-button" onClick={() => setAuthMode('signup')}>Create account <ArrowRight size={17} aria-hidden="true"/></button><button className="secondary-button" onClick={openDemo}>Try quick demo</button></div>
-          <p className={styles.note}>The quick demo uses original synthetic courses. No sign-in or connected accounts needed.</p>
+          <p className={styles.eyebrow}>A question becomes something you can explore</p>
+          <h1 className={styles.title} id="entrance-title">See it. Ask. Explore.</h1>
+          <p className={styles.lede}>Share a screenshot, ask what you want to understand, and let Soma build a visual explanation you can change and explore.</p>
+          <p className={styles.note}>Move through a graph, change a starting point, and ask about the object you selected. Computed search results and generated explanations stay clearly labeled.</p>
+          <div className={styles.actions}><a className="primary-button" href="/explore">Start exploring <ArrowRight size={17} aria-hidden="true"/></a><button className="secondary-button" onClick={() => setAuthMode('signup')}>Create account</button><button className="text-button" onClick={openDemo}>Try quick demo</button></div>
+          <p className={styles.note}>Explore without an account. The course-workspace demo remains available with original synthetic courses.</p>
         </div>
         <section className={styles.flow} aria-labelledby="entrance-flow-title">
-          <h2 id="entrance-flow-title">From course context to your next useful step.</h2>
-          <div className={styles.step}><span className={styles.icon}><Layers3 size={22} aria-hidden="true"/></span><div><h3>Start with your material</h3><p>Choose the course sources and commitments Soma can use. Keep the evidence behind each next step in view.</p></div></div>
-          <div className={styles.step}><span className={styles.icon}><BookOpen size={22} aria-hidden="true"/></span><div><h3>Have practice ready</h3><p>Open a prepared lesson, or ask for practice from a passage. See why it fits your course and your study window.</p></div></div>
-          <div className={styles.step}><span className={styles.icon}><SlidersHorizontal size={22} aria-hidden="true"/></span><div><h3>Explore, then shape what follows</h3><p>Try interactive controls and optional questions. Saved responses and any help inform what Soma prepares next.</p></div></div>
+          <h2 id="entrance-flow-title">From a screenshot to an interactive explanation.</h2>
+          <div className={styles.step}><span className={styles.icon}><Layers3 size={22} aria-hidden="true"/></span><div><h3>Choose what Soma sees</h3><p>Upload an image or select a window. Only frames you explicitly send become context for your question.</p></div></div>
+          <div className={styles.step}><span className={styles.icon}><BookOpen size={22} aria-hidden="true"/></span><div><h3>Watch the idea take shape</h3><p>Muse Spark reads the image and composes a visual scene. Supported graph-search results are independently calculated.</p></div></div>
+          <div className={styles.step}><span className={styles.icon}><SlidersHorizontal size={22} aria-hidden="true"/></span><div><h3>Change it and follow your curiosity</h3><p>Select an object, change the experiment, or ask a follow-up. Save a version and return to the same controls later.</p></div></div>
         </section>
       </section>
       <section className={styles.context} aria-label="How Soma works">
-        <div><h2>Course content meets real-life context.</h2><p>Materials show what you are learning. Deadlines, selected commitments, and your available time help decide what deserves attention now.</p></div>
-        <div><h2>Powered by Meta’s Muse Spark.</h2><p>Spark investigates course updates and prepares source-grounded activities. Each result identifies its sources and preparation mode. Generated lessons remain labeled as previews until reviewed.</p></div>
+        <div><h2>Your material, your starting point.</h2><p>No course connections are required to explore. Your existing Soma workspace, course sources and saved learning activities remain available when you sign in.</p></div>
+        <div><h2>Powered by Meta’s Muse Spark.</h2><p>Spark interprets the selected context, uses a checked search tool, and designs the visual explanation. You can inspect its assumptions, source and actual tool activity. Generated prose can still be mistaken.</p></div>
       </section>
       <p className={styles.footer}>Hackathon beta · Sources are read only · Your private account and the synthetic demo are separate.</p>
     </main>

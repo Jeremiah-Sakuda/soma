@@ -1473,3 +1473,27 @@ Top three outcomes:
 3. Proposed a resumable inventory → validated scoped download → private object storage → page-aware text/OCR extraction → versioned source-disclosure pipeline, with per-file status, bounded retries, deduplication and changed-file checks. Recommend proving one instructional PDF before crawling the selected semester. Extraction, image interpretation and useful cited activity remain separate checks; complete collection is not claimed.
 
 Deviations: none. This turn answers the collection-design question; no collector, cloud service, inference, full-semester read or new privacy permission is asserted as implemented.
+
+
+## P080 — Verify actual secure Blackboard sign-in (October 28, 2026)
+
+Prompt: canonical verbatim entry `P080`.
+
+Top three outcomes:
+1. Read only the isolated page's fixed status: sign-in stopped. Request metadata recorded save-fill HTTP 409 in 4.76 seconds. That does not establish password rejection or vault state; enrollment can save before the fill fails. Cancelled the failed reference through normal Soma controls without Forget, credential retry, password/input inspection or browser-state export.
+2. Fixed a separately proven internal POST defect: the secure cookie was retained but native Origin/Referer headers were missing. `3e9fe8e` adds only the reviewed origin/captured form referrer, finite diagnostic facts and static accessible recovery copy. Independent review, 28 actual Chromium synthetic cases, 34 diagnostic/server cases and twelve isolated-page journeys passed. [First-fix CI](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40813299882) passed typecheck, 1,158 ordinary tests / 85 opt-in skips, four diagnostic contracts, build/runtime trace, 28 Chromium cases and 63 browser journeys.
+3. Built only clean committed service files and deployed the first fix as `soma-credential-login-00003-96t`, preserving identity/environment/resources/timeouts and passing eleven hosted negative checks. A fresh owner attempt then exposed a distinct idle-session lifecycle failure, addressed and tested under P081. Actual BU MFA, safe-state handoff, instructional PDF access and preparation remain pending; no Meta call, real password retry or course-file download was performed.
+
+Deviations: credential entry did not establish successful sign-in, and the header defect is not asserted as the cause of the original 409. The planned PDF check remained gated by authentication; P081 carries the additional lifecycle repair.
+
+
+## P081 — Fresh Soma authentication for recovery (October 28, 2026)
+
+Prompt: canonical verbatim clarification `P081`.
+
+Top three outcomes:
+1. The owner confirmed fresh Soma authentication. Normal setup allocated a window, but bootstrap 25 seconds later returned session_ended before vault metadata. Status/timing metadata established the same service instance and surrounding callback HTTP 200 responses, not an explicit real-account denial. Cancelled the rejected reference normally and closed only the agent-created failed tab. Password storage remains unconfirmed.
+2. `f17e852` separates uncertain callback failure (503) from explicit denial, prevents overlapping background checks, closes viewers on uncertainty and preserves only the original bounded setup. Sensitive actions still require fresh checks; explicit denial and expiry still terminate access. Independent review corrected misleading 503 copy before deployment. Fifty-three focused cases and typecheck passed; 65 combined boundary/authorization/server checks passed after `13200fa` updated an old malformed-200 expectation. [Final CI](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40814814845) passed typecheck, 1,177 ordinary tests / 85 opt-in skips, four script contracts, production build/runtime trace, 28 actual Chromium cases and 63 browser journeys.
+3. Deployed `soma-credential-login-00004-7z9` with the same identity, environment, resources and timeout. The actual fictional-account lifecycle passed in 50.51 seconds, including 25-second idle entry, protected cookie/empty-vault metadata, replay/revocation, cancellation, expired-manual-reference recovery and normal cleanup. Independently confirmed fictional Auth/root absence, removed its temporary UID and redeployed clean app source `13200fa` with owner-only setup. Requested fresh human authentication again after the five-minute window elapsed; real credential use/MFA and source/PDF readback remain pending. No new inference occurred.
+
+Deviations: the first lifecycle CI exposed one outdated test expectation; corrected it rather than changing the new uncertainty contract. Automatic approval review rejected a proposed command that would persist raw request URLs; the command did not execute, and diagnosis proceeded with URL-free status/timing/instance metadata. The application callback can still collapse some internal service failures into 403; universal outage recovery is not claimed.

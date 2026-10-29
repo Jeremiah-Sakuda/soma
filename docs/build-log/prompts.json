@@ -654,6 +654,21 @@
       "kind": "prompt",
       "prompt": "Soma does **not** have all your course content yet. The authenticated browser connection already exists, but collection is partial: supported Blackboard text, Piazza instructor-note previews, and Gradescope assignment names/dates. PDFs, slides, attachments and returned work are still missing. Spark reads selected saved passages for a task rather than receiving the whole semester. how can we collect all the pdfs? ",
       "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York using client date. Platform browser context excluded."
+    },
+    {
+      "id": "P080",
+      "received_at": null,
+      "kind": "prompt",
+      "prompt": "Ok I entered my blackboard credentials'",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York using client date. Platform browser context excluded; no credential value was included in the prompt."
+    },
+    {
+      "id": "P081",
+      "received_at": null,
+      "kind": "answer",
+      "prompt": "Signed in again",
+      "question_context": "Please sign out of Soma and sign back in, then reply “Signed in again.” Secure autofill requires recent Soma authentication. Leave Blackboard setup closed while I finish updating its service; I’ll open the fresh window next.",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York using client date."
     }
   ]
 }

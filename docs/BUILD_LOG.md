@@ -1461,3 +1461,15 @@ Top three outcomes:
 3. Pushed the fix to main and deployed the clean committed source. The actual hosted fictional-account regression passed in 27.50 seconds, including expired-reference recovery through the public API, unchanged context/configuration, callback/one-use entry, revocation and normal cancellation/deletion. Independently confirmed fictional Auth and workspace-root absence, removed its rollout UID and redeployed owner-only. [Exact-commit CI](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40810884200) passed typecheck, 1,147 tests / 76 opt-in skips, four diagnostic contracts, production build/runtime trace, 19 adversarial Chromium cases and 51 browser journeys. Visibly reloaded production and verified the new Blackboard coverage text and setup controls. Actual BU entry/MFA, safe-state export and a fresh instructional-page read remain pending.
 
 Deviations: an initial deployment was accidentally started from the working checkout; removed that deployment and replaced it with the clean committed release, excluding concurrent optional edits and private environment files. Final production uses `2999f8b` with the prior owner-only rollout restored. No scope expansion or full-course/model-use success is inferred from saved browser access.
+
+
+## P079 — Plan automatic selected-course PDF collection (October 28, 2026)
+
+Prompt: canonical verbatim entry `P079`.
+
+Top three outcomes:
+1. Inspected the current bounded Blackboard content traversal and exact JSON read allowlist. File handlers are explicitly skipped; attachment metadata/download endpoints, binary storage and page extraction are not implemented. No code, authorization state or provider data was changed.
+2. Verified Anthology's attachment-discovery documentation: recursive folder/document discovery, Ultra embedded attachment links, Original attachment listing and download redirects. The documentation's app-token example does not prove these routes work through this BU student session; an actual owned attachment download is the first gate. Source: https://docs.blackboard.com/docs/blackboard/rest-apis/demo-code/curl-attach-demo.
+3. Proposed a resumable inventory → validated scoped download → private object storage → page-aware text/OCR extraction → versioned source-disclosure pipeline, with per-file status, bounded retries, deduplication and changed-file checks. Recommend proving one instructional PDF before crawling the selected semester. Extraction, image interpretation and useful cited activity remain separate checks; complete collection is not claimed.
+
+Deviations: none. This turn answers the collection-design question; no collector, cloud service, inference, full-semester read or new privacy permission is asserted as implemented.

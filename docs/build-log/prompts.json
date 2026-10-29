@@ -647,6 +647,13 @@
       "kind": "prompt",
       "prompt": "I got secure autofill unavailable when I tried to do it for blackboard. Also, does Muse have all my course contgent now, or do we still need to set up a way to fetch them from the chromium instance",
       "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York using client date. Platform Page/browser context excluded."
+    },
+    {
+      "id": "P079",
+      "received_at": null,
+      "kind": "prompt",
+      "prompt": "Soma does **not** have all your course content yet. The authenticated browser connection already exists, but collection is partial: supported Blackboard text, Piazza instructor-note previews, and Gradescope assignment names/dates. PDFs, slides, attachments and returned work are still missing. Spark reads selected saved passages for a task rather than receiving the whole semester. how can we collect all the pdfs? ",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 28, 2026 America/New_York using client date. Platform browser context excluded."
     }
   ]
 }

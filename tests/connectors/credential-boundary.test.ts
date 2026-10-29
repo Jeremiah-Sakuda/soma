@@ -1,5 +1,7 @@
 import {createHash,randomUUID} from 'node:crypto';
 import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
+import * as credentialGrants from '../../src/lib/server/connectors/credential-grants';
+import {credentialAutofillUidAllowed} from '../../src/lib/server/connectors/credential-settings';
 import {validCredentialAuthorization,credentialGrantSchema} from '../../src/lib/server/connectors/credential-grants';
 import {credentialAutofillConfigured,credentialServiceSettings,validateCredentialLoginUrl} from '../../src/lib/server/connectors/credential-login';
 import {recentAccountAuthentication,type VerifiedAccount} from '../../src/lib/server/account';
@@ -10,11 +12,12 @@ const hash=(value:string)=>createHash('sha256').update(value).digest('hex');
 const now=Date.now(),workspaceId=randomUUID();
 const grant={authorizationId:randomUUID(),uid:'original-synthetic-credential-user',workspaceId,workspaceGeneration:workspaceId,owner:hash(`${workspaceId}:browser-blackboard`),provider:'blackboard' as const,contextId:randomUUID(),connectionVersion:1,recentAuthAt:Math.floor(now/1000)-10};
 function configured(){
+ vi.stubEnv('SOMA_CREDENTIAL_AUTOFILL_ALLOWED_UIDS',undefined);
  vi.stubEnv('SOMA_BROWSER_BACKEND','gcp');vi.stubEnv('SOMA_CONNECTOR_ENCRYPTION_KEY','a'.repeat(64));
  vi.stubEnv('SOMA_GCP_BROWSER_URL','https://synthetic-browser-123.us-east1.run.app');vi.stubEnv('SOMA_GCP_BROWSER_PROJECT_ID','synthetic');vi.stubEnv('SOMA_GCP_BROWSER_CONTROL_KEY','b'.repeat(48));
  vi.stubEnv('SOMA_CREDENTIAL_AUTOFILL_ENABLED','true');vi.stubEnv('SOMA_CREDENTIAL_RUNNER_URL','https://synthetic-login-123.us-east1.run.app');vi.stubEnv('SOMA_CREDENTIAL_RUNNER_CONTROL_KEY','c'.repeat(48));vi.stubEnv('SOMA_CREDENTIAL_AUTHORIZATION_KEY','d'.repeat(48));
 }
-afterEach(()=>{vi.unstubAllEnvs();vi.unstubAllGlobals();});
+afterEach(()=>{vi.unstubAllEnvs();vi.unstubAllGlobals();vi.restoreAllMocks();});
 describe('isolated credential broker security boundary',()=>{
  beforeEach(configured);
  it('requires separate configured identities/origins and an explicit enable gate',()=>{
@@ -22,6 +25,24 @@ describe('isolated credential broker security boundary',()=>{
   for(const [name,value] of [['SOMA_CREDENTIAL_AUTOFILL_ENABLED','false'],['SOMA_CREDENTIAL_RUNNER_URL','https://synthetic-browser-123.us-east1.run.app'],['SOMA_CREDENTIAL_RUNNER_URL','https://evil.example'],['SOMA_CREDENTIAL_RUNNER_CONTROL_KEY','b'.repeat(48)],['SOMA_CREDENTIAL_AUTHORIZATION_KEY','c'.repeat(48)]]){
    configured();vi.stubEnv(name,value);expect(credentialAutofillConfigured()).toBe(false);
   }
+ });
+ it('limits availability to exact server-side rollout UIDs while preserving unset multi-account behavior',()=>{
+  expect(credentialAutofillUidAllowed('another-normal-account')).toBe(true);expect(credentialAutofillConfigured('another-normal-account')).toBe(true);
+  vi.stubEnv('SOMA_CREDENTIAL_AUTOFILL_ALLOWED_UIDS',` ${grant.uid},another-synthetic-user `);
+  expect(credentialAutofillUidAllowed(grant.uid)).toBe(true);expect(credentialAutofillConfigured(grant.uid)).toBe(true);expect(credentialAutofillUidAllowed('another-synthetic-user')).toBe(true);
+  expect(credentialAutofillConfigured('excluded-user')).toBe(false);expect(credentialAutofillUidAllowed('excluded-user')).toBe(false);expect(credentialAutofillConfigured()).toBe(false);
+ });
+ it('fails closed on malformed rollout lists without disabling cleanup configuration',()=>{
+  for(const value of ['', ' ', '*', 'uid,,other','uid,uid','uid with spaces','["uid"]', 'x'.repeat(129)]){
+   vi.stubEnv('SOMA_CREDENTIAL_AUTOFILL_ALLOWED_UIDS',value);expect(credentialAutofillUidAllowed('uid')).toBe(false);expect(credentialAutofillConfigured('uid')).toBe(false);expect(()=>credentialServiceSettings()).toThrow();expect(credentialServiceSettings(false).origin).toContain('synthetic-login');
+  }
+ });
+ it('gates actual service callback principals before any authorization storage access',async()=>{
+  vi.stubEnv('SOMA_CREDENTIAL_AUTOFILL_ALLOWED_UIDS',grant.uid);const check=vi.spyOn(credentialGrants,'authorizeCredentialGrant').mockResolvedValue({identifier:'original-synthetic@bu.edu'});
+  const request=(uid:string)=>new Request('https://soma.example/api/connectors/credentials/authorize',{method:'POST',headers:{authorization:`Bearer ${'d'.repeat(48)}`,'content-type':'application/json'},body:JSON.stringify({...grant,uid,purpose:'session'})});
+  expect((await authorize(request('excluded-user'))).status).toBe(403);expect(check).not.toHaveBeenCalled();
+  expect((await authorize(request(grant.uid))).status).toBe(200);expect(check).toHaveBeenCalledWith(grant,'session');check.mockClear();
+  vi.stubEnv('SOMA_CREDENTIAL_AUTOFILL_ALLOWED_UIDS','*');expect((await authorize(request(grant.uid))).status).toBe(403);expect(check).not.toHaveBeenCalled();
  });
  it('leaves credential cleanup configuration accessible when new setup is disabled',()=>{
   vi.stubEnv('SOMA_CREDENTIAL_AUTOFILL_ENABLED','false');expect(()=>credentialServiceSettings()).toThrow();expect(credentialServiceSettings(false).origin).toContain('synthetic-login');

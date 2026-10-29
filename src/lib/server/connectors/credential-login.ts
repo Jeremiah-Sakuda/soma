@@ -1,5 +1,5 @@
-import {credentialServiceSettings,credentialAutofillConfigured,validateCredentialLoginUrl} from './credential-settings';
-export {credentialServiceSettings,credentialAutofillConfigured,validateCredentialLoginUrl} from './credential-settings';
+import {credentialServiceSettings,credentialAutofillConfigured,credentialAutofillUidAllowed,validateCredentialLoginUrl} from './credential-settings';
+export {credentialServiceSettings,credentialAutofillConfigured,credentialAutofillUidAllowed,validateCredentialLoginUrl} from './credential-settings';
 import {createHash,randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {assertVerifiedAccount,type VerifiedAccount} from '../account';
@@ -25,7 +25,7 @@ async function control(connection:Pick<Saved,'id'|'workspaceId'>,path:string,met
   }catch{throw fail('The secure sign-in service did not confirm the operation. Saved cleanup references were retained; retry or cancel.');}
 }
 export async function credentialLoginStatus(account:VerifiedAccount){
-  assertVerifiedAccount(account);const configured=credentialAutofillConfigured();
+  assertVerifiedAccount(account);const configured=credentialAutofillConfigured(account.uid);
   const saved=await readConnection<CredentialBrowserSecret,Configuration>(account,'browser-blackboard');
   return {configured,...(configured?{origin:credentialServiceSettings().origin}:{}),providers:[{provider:'blackboard' as const,available:configured,stored:!!saved?.secret.credentialVault,...(saved?.secret.credentialLogin?{active:{expiresAt:saved.secret.credentialLogin.expiresAt}}:{})}]};
 }
@@ -39,7 +39,7 @@ export async function cancelCredentialSession(account:VerifiedAccount,connection
   connection.secret=withoutCredentialSession(connection.secret);
 }
 export async function openCredentialLogin(account:VerifiedAccount,provider:BrowserProvider,recentAuthAt:number){
-  credentialServiceSettings();if(provider!=='blackboard')throw fail('Secure autofill is currently available only for BU Blackboard.',400);
+  assertVerifiedAccount(account);credentialServiceSettings();if(!credentialAutofillUidAllowed(account.uid))throw fail('Secure autofill is not available for this account. You can still use manual sign-in.',403);if(provider!=='blackboard')throw fail('Secure autofill is currently available only for BU Blackboard.',400);
   const id=`browser-${provider}`;
   const existing=await readConnection(account,id);
   if(!existing||existing.status==='disconnected')await configureBrowser(account,provider,[]);

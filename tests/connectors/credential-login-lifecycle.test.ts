@@ -67,6 +67,7 @@ function pending() {
 function remoteEvents() { return fixture.events.filter(event => event.kind === 'remote'); }
 
 beforeEach(() => {
+  vi.stubEnv('SOMA_CREDENTIAL_AUTOFILL_ALLOWED_UIDS',undefined);
   fixture.connection = { id: 'browser-blackboard', workspaceId: 'synthetic-credential-workspace', provider: 'blackboard', version: 7, status: 'connected', secret: { backend: 'gcp', version: 1, contextId }, configuration: structuredClone(configuration) };
   fixture.marker = ''; fixture.authorizationActive = false; fixture.events = []; fixture.reply = 'valid'; fixture.deleteFails = false; fixture.releaseFails = false;
   vi.stubEnv('SOMA_BROWSER_BACKEND', 'gcp'); vi.stubEnv('SOMA_GCP_BROWSER_URL', browserOrigin);
@@ -101,6 +102,18 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.clearAllMocks(); });
 
 describe('isolated credential-login broker lifecycle with synthetic services', () => {
+  it('blocks an excluded owner before any allocation while retaining private status and cleanup',async()=>{
+    vi.stubEnv('SOMA_CREDENTIAL_AUTOFILL_ALLOWED_UIDS','different-synthetic-owner');
+    await expect(openCredentialLogin(account,'blackboard',Math.floor(Date.now()/1000))).rejects.toMatchObject({status:403,code:'credential_service'});expect(fixture.events).toEqual([]);
+    pending();const status=await credentialLoginStatus(account);expect(status.configured).toBe(false);expect(status.providers[0]).toMatchObject({available:false,stored:true,active:{expiresAt:expect.any(String)}});
+    expect(await finishCredentialLogin(account,'blackboard',true)).toHaveProperty('notice');expect(fixture.connection.secret.credentialLogin).toBeUndefined();
+    fixture.connection.secret.credentialVault=true;await forgetStoredCredential(account);expect(fixture.connection.secret.credentialVault).toBeUndefined();
+  });
+  it('does not let malformed rollout configuration strand cancellation or forgetting',async()=>{
+    vi.stubEnv('SOMA_CREDENTIAL_AUTOFILL_ALLOWED_UIDS','*');pending();
+    await finishCredentialLogin(account,'blackboard',true);fixture.connection.secret.credentialVault=true;await forgetStoredCredential(account);
+    expect(fixture.connection.secret.credentialLogin).toBeUndefined();expect(fixture.connection.secret.credentialVault).toBeUndefined();expect(remoteEvents().some(event=>event.value.path==='/v1/credentials'&&event.value.method==='DELETE')).toBe(true);
+  });
   it('checkpoints context and session references and authorizes before remote allocation, without sending credential values or a body owner', async () => {
     fixture.connection.secret = { backend: 'gcp', version: 1 };
     const result = await openCredentialLogin(account, 'blackboard', Math.floor(Date.now() / 1000));

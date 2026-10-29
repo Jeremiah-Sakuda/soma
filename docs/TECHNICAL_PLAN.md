@@ -1,5 +1,9 @@
 # Soma technical plan
 
+## Current architecture extension — P084
+
+[SOMA_V2_IMPLEMENTATION.md](SOMA_V2_IMPLEMENTATION.md) owns the adopted visual-exploration architecture. Extend the same app with a bounded Spark vision/tool loop, approved scene contract, deterministic BFS engine, versioned artifact persistence, isolated guest capability, and optional Muse transcription. Reuse account ownership/deletion and the global budget ledger. Screenshots and audio are transient by default; no generated code execution or new agent framework is introduced.
+
 **Implementation baseline, October 26, 2026; Firestore substitution authorized by Jeremy. Release results are recorded separately.** The [PRD](PRD.md) owns scope; this document makes its boundaries concrete. Verify provider APIs, availability, permissions, prices, and compatible package versions during setup. Do not infer API paths or capabilities from product names.
 
 ## Stack and deployment boundaries

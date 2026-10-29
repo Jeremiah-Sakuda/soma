@@ -1521,3 +1521,18 @@ Top three outcomes:
 3. Honored the pause on the previous integration push and recorded the priority decision. No product code, PRD/UI acceptance, external service, credential, inference budget or deployment changed.
 
 Deviations: none; this is familiarization only, not authorization to implement the proposal. Checks were limited to file review, ignore/tracking status, JSON serialization and documentation whitespace.
+
+## P084 — Adopt and implement the visual-exploration pivot (October 29, 2026)
+
+Prompt: canonical verbatim entry `P084`. Supersedes P083's familiarization-only implementation gate.
+
+Top three outcomes (in progress):
+1. Adopt the selected-context → generated visual → checked interaction → contextual revision → save/resume release slice, preserving v1 routes/data and the October 31 freeze. Milestones and honest acceptance status are in docs/SOMA_V2_IMPLEMENTATION.md.
+2. Delegate domain engine/scene contracts, server/Muse/persistence and UI/browser journeys as independent chunks; root owns integration, image/voice profiles, budget, release audit and live verification. Independent review follows meaningful checkpoints.
+3. Use actual Spark image/tool decisions and bounded real tests, raising the retained testing allowance to at most $5 only if exhausted. Preserve existing consumption, reservations and the allocation reserve. Remaining human/provider gates and v1 reuse opportunities will be reported after executed checks.
+
+Deviations: none established; actual course fit is unverified, so first checked search examples are original synthetic material. The local proposal remains ignored; adopted public implementation requirements are summarized separately.
+
+### P084 M1 review checkpoint — October 29, 2026
+
+The checked BFS model and generated scene contract passed 44 focused domain tests, including independent reference paths, cycles, ties, disconnected goals, start=goal, invalid layouts and unsupported model claims. Root reviewed the traversal and reference validation. Adoption is recorded in authoritative product, sequence, UI and technical documents. M2–M5 remain in progress; no live v2 model outcome is established yet.

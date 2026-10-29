@@ -1,5 +1,9 @@
 # Soma UI/UX guide
 
+## Current entry direction — P084
+
+The adopted primary entry is `/explore`: selected window/screenshot plus a question, followed by a generated visual card, controls, object-aware follow-ups and saved revisions. See [SOMA_V2_IMPLEMENTATION.md](SOMA_V2_IMPLEMENTATION.md). Preserve the warm visual tokens, accessibility and evidence rules below, and retain existing Today/Map/Activity deep links. Institutional connection must not block trying the new experience.
+
 **Adopted October 27, 2026 (PM024). Read this before any UI or UX work.** This guide owns Soma's interface: who it's for, navigation, screen layouts, visual language, interaction and accessibility rules. It supersedes the visual language and navigation in [UI Direction](UI_DIRECTION.md) (Ready Card). That document's behavioral rules still apply where this guide doesn't replace them: prediction states, evidence recording, label rules and copy rules. The [PRD](PRD.md) and [Learning Graph Scope](LEARNING_GRAPH_SCOPE.md) still own scope and acceptance; a conflict is resolved in their favor and recorded in [Decisions](DECISIONS.md).
 
 **References**

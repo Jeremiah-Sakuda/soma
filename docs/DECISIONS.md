@@ -306,3 +306,9 @@ Recommend “Your next study session, prepared before you ask” as product posi
 ## October 29 — P083 defers the integration push for direction review
 
 The user explicitly put P082's broad end-to-end integration completion request on the back burner and requested familiarization with the local, Git-ignored v2 proposal. Preserve the existing application and unfinished verification status. Reading this proposal does not adopt it as PRD/UI acceptance or authorize its implementation, spending or deployment. Keep the local planning file untracked; summarize understanding in chat without copying it into the public repository.
+
+## October 29, 2026 — Adopt visual exploration (P084)
+
+The user authorized implementation of the Soma v2 direction. The release priority becomes selected visible context → substantial Muse-generated visual composition → checked manipulation → contextual revision → saved exploration. Original synthetic BFS inputs establish the first checked family; actual course fit remains unverified. Preserve v1 routes/data; defer full-semester integration completion. Public acceptance and milestone status live in `docs/SOMA_V2_IMPLEMENTATION.md`; the local detailed proposal stays ignored.
+
+P084 authorizes increasing the total testing cap to $5 if the current cap is exhausted. Preserve consumed reservations and the 20-percent reserve on the actual $150 Meta allocation; this does not reset spending or authorize unlimited calls. Use bounded actual-provider tests and report successes, failures, latency and cost honestly.

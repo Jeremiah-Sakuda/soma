@@ -1,5 +1,9 @@
 # Soma product requirements
 
+## Adopted release direction — October 29, 2026 (P084)
+
+The current release acceptance is the visual-exploration journey in [SOMA_V2_IMPLEMENTATION.md](SOMA_V2_IMPLEMENTATION.md): selected screenshot/window and question, substantial Spark image interpretation and scene composition, independently checked BFS interactions, contextual follow-ups, saved revisions, and a usable guest entry. Source connection is optional. This supersedes v1 launch sequencing below while preserving its read-only access, evidence, ownership and budget invariants. The detailed v1 requirements remain a record of existing capabilities and possible bridges, not additional prerequisites for this release.
+
 **Implementation handoff, October 26, 2026. Soma is the working name.** **Later implementation decision:** Jeremy authorized Firestore/Firebase in place of Supabase and supplied the organizer’s October 26 hacking-start announcement; see [Decisions](DECISIONS.md). This local PRD incorporates the latest product decisions and supplied participant guide. It specifies intended behavior; no product implementation, integration, pilot outcome, or release check is established by this document. The guide lists an October 26 kickoff and an October 27–November 4 building period. Use the schedule in [Hackathon Requirements](HACKATHON_REQUIREMENTS.md), record any organizer clarification, and retain honest dates for preparation and implementation.
 
 **Product documents:** [Product Brief](PRODUCT_BRIEF.md), [Personas and User Stories](USER_STORIES.md), [Technical Plan](TECHNICAL_PLAN.md), [Build Plan](BUILD_PLAN.md), and [Demo and Evaluation](DEMO_AND_EVALUATION.md). This PRD owns product scope and release gates. [Hackathon Requirements](HACKATHON_REQUIREMENTS.md) records the supplied event constraints. [Decisions](DECISIONS.md) separates settled choices from unverified dependencies. The older PDF and online companion plans may lag this handoff.

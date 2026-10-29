@@ -683,6 +683,13 @@
       "kind": "prompt",
       "prompt": "We have a new direction to explore. We shall put this on the back burner for now. Look at somav2.md and familiarize yourself with it",
       "timestamp_note": "Exact received timestamp unavailable; recorded October 29, 2026 using latest environment context. Platform browser/environment context excluded."
+    },
+    {
+      "id": "P084",
+      "received_at": null,
+      "kind": "prompt",
+      "prompt": "Okay. I want you to implement this direction, and update the documentation when you’re done. Then test it. You’re authorized to increase the testing budget to $5 if the current one is exhausted. Split the work into chunks, commit frequently and merge when done. You are a PM carrying out this pivot. Your main task is to have a working version of the project that we can iterate on. Again, keep in mind the hackathon judging rubric and substantial muse integration necessary. At the end, explore ways we could integrate the work we did with v1 into the new direction.",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 29, 2026 using latest environment context. Platform context excluded."
     }
   ]
 }

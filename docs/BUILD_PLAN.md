@@ -1,5 +1,9 @@
 # Soma build plan
 
+## Current sequence — P084 visual-exploration pivot
+
+Follow M1–M5 in [SOMA_V2_IMPLEMENTATION.md](SOMA_V2_IMPLEMENTATION.md): checked model/contract; actual vision-to-scene pipeline; follow-ups and persistence; capture and optional voice; integrated release verification. Review each milestone and commit focused increments. Retain October 31 feature freeze and November 4, 9 PM America/New_York deadline. Earlier course-ingestion completion work is parked.
+
 **Updated October 26: implementation is authorized from today by the organizer’s “Hacking has officially started!” announcement, supplied by Jeremy.** The existing dated milestones remain targets; use the extra start day for the first slice. The participant guide lists that building period and an October 26 kickoff. Record any organizer clarification; do not silently turn the earlier ten-day draft into an eligibility claim. Target complete submission assets on November 3 and submission before **November 4, 9 PM America/New_York**.
 
 No milestone is marked complete by this handoff. One builder is assumed available; a second is not confirmed. The two workstreams below organize dependencies rather than authorize delegation.

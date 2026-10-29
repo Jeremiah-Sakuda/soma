@@ -1,5 +1,7 @@
 # Soma: start here
 
+Current release priority (P084, October 29): implement the visual-exploration pivot in [docs/SOMA_V2_IMPLEMENTATION.md](docs/SOMA_V2_IMPLEMENTATION.md). The selected-context → generated visual → manipulation → follow-up → saved artifact journey is primary. Existing v1 routes and sources remain available; full-semester collection is deferred. See that record for milestone status and executed checks.
+
 **Handoff date: October 26, 2026.** **Later decisions:** Jeremy supplied the organizer’s start announcement and authorized October 26 implementation; Firestore/Firebase replaces Supabase due to project quota. See docs/DECISIONS.md; original handoff details below are retained as context. Jeremy has been accepted to the Meta Global AI Developer Hackathon. The target is a competitive Indie Developer entry under Build for Your World. This is an implementation brief, not evidence that the product already exists.
 
 ## The product to build

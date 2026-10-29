@@ -1449,3 +1449,15 @@ Top three outcomes:
 3. Handed control back for fresh Soma sign-in before optional Blackboard setup. Actual institutional login, safe-state export and course readback remain pending.
 
 Deviations: none; navigation and form opening create no new cloud permission or stored institutional credential.
+
+
+## P078 — Fix Blackboard secure setup and verify collection coverage (October 28, 2026)
+
+Prompt: canonical verbatim entry `P078`.
+
+Top three outcomes:
+1. Traced the actual owner failure to an expired manual Blackboard reference whose owned runner returned 404. Implemented lease-checkpointed recovery in `2999f8b`, preserving context and course selections. Active, foreign, uncertain and malformed-response cases retain references. Independent review caught and resolved a falsy-200/404 ambiguity. Added fixed, actionable client errors, retained-session cleanup controls, keyboard focus and honest Blackboard collection limits using UI UX Pro Max error-recovery guidance.
+2. Inspected account-scoped collection metadata without exposing private bodies or session material: 36 Blackboard text observations (16 stale), three Piazza preview observations (one stale), three Gradescope overview observations (one stale), plus the existing manual import. Documented the already implemented Chromium-to-Firestore bridge, bounded Spark disclosure and remaining file/full-post/returned-work readers in `docs/COURSE_SOURCE_VALIDATION.md`. Gmail/Calendar have no saved account connections; some preparation remains budget-blocked. No new Meta call or institutional-password operation occurred.
+3. Pushed the fix to main and deployed the clean committed source. The actual hosted fictional-account regression passed in 27.50 seconds, including expired-reference recovery through the public API, unchanged context/configuration, callback/one-use entry, revocation and normal cancellation/deletion. Independently confirmed fictional Auth and workspace-root absence, removed its rollout UID and redeployed owner-only. [Exact-commit CI](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40810884200) passed typecheck, 1,147 tests / 76 opt-in skips, four diagnostic contracts, production build/runtime trace, 19 adversarial Chromium cases and 51 browser journeys. Visibly reloaded production and verified the new Blackboard coverage text and setup controls. Actual BU entry/MFA, safe-state export and a fresh instructional-page read remain pending.
+
+Deviations: an initial deployment was accidentally started from the working checkout; removed that deployment and replaced it with the clean committed release, excluding concurrent optional edits and private environment files. Final production uses `2999f8b` with the prior owner-only rollout restored. No scope expansion or full-course/model-use success is inferred from saved browser access.

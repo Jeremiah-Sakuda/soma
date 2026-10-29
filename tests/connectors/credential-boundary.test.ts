@@ -86,7 +86,7 @@ describe('isolated credential broker security boundary',()=>{
   const checker=createAppAuthorizer({url:'https://synthetic-app.vercel.app/api/connectors/credentials/authorize',key:'d'.repeat(48),fetchImpl});
   expect(await checker({...grant,password:'original-synthetic-canary'},{purpose:'session'})).toEqual({identifier:'original-synthetic@bu.edu'});
   const args=fetchImpl.mock.calls[0] as unknown as [string,RequestInit];expect(args[0]).toBe('https://synthetic-app.vercel.app/api/connectors/credentials/authorize');expect(args[1].redirect).toBe('error');expect(args[1].body).not.toContain('canary');
-  fetchImpl.mockImplementation(async()=>Response.json({identifier:'other@example.invalid'}));await expect(checker(grant)).rejects.toMatchObject({code:'credential_authorization'});
+  fetchImpl.mockImplementation(async()=>Response.json({identifier:'other@example.invalid'}));await expect(checker(grant)).rejects.toMatchObject({code:'credential_authorization_unavailable',status:503});
   for(const url of ['http://synthetic-app.vercel.app/api/connectors/credentials/authorize','https://evil.example/api/connectors/credentials/authorize','https://synthetic-app.vercel.app/api/connectors/credentials/authorize?redirect=evil','https://synthetic-app.vercel.app/api/connectors/credentials'])expect(()=>createAppAuthorizer({url,key:'d'.repeat(48)})).toThrow();
  });
 });

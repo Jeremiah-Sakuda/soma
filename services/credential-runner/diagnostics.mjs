@@ -2,7 +2,7 @@
 // Error, request, account/session identifier, URL or provider observation.
 const CODES = new Set([
  'authorization','binding_invalid','body_invalid','body_json','body_size','browser_startup',
- 'content_type','credential_audit','credential_authorization','credential_changed',
+ 'content_type','credential_audit','credential_authorization','credential_authorization_unavailable','credential_changed',
  'credential_maintenance','credential_missing','credential_unavailable','entry_token',
  'fill_consumed','form_not_reviewed','grant_invalid','grant_replayed','grant_revoked',
  'grant_storage','human_origin','human_session','identity_mismatch','identity_unavailable',
@@ -14,7 +14,7 @@ const CODES = new Set([
  'credential_display_guard','credential_viewer_guard','credential_snapshot_guard',
  'credential_submit_authorization','credential_browser_start',
 ]);
-const OPERATIONS = new Set(['bootstrap','status','save-fill','fill','forget','allocate','rotate','release','cancel','unknown']);
+const OPERATIONS = new Set(['bootstrap','status','save-fill','fill','forget','allocate','rotate','release','cancel','sweep','unknown']);
 const STATUSES = new Set([400,401,403,404,409,413,415,429,503]);
 export function credentialFailureFacts(error, operation = 'unknown') {
  return Object.freeze({event:'credential_operation_failed',

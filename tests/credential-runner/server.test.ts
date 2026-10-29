@@ -1,5 +1,7 @@
 import {createServer} from 'node:http';
 import {randomUUID} from 'node:crypto';
+import {createRequire} from 'node:module';
+const {WebSocket}=createRequire(new URL('../../services/credential-runner/package.json',import.meta.url))('ws');
 import {afterEach,describe,it,expect,vi} from 'vitest';
 import {createCredentialRunner} from '../../services/credential-runner/server.mjs';
 import {checkFormFacts,allowedOrigin,allowedUrl} from '../../services/credential-runner/policy.mjs';
@@ -8,23 +10,71 @@ afterEach(async()=>{for(const close of cleanup.splice(0))await close();});
 const owner='a'.repeat(64),other='b'.repeat(64),key='k'.repeat(48),origin='https://credential.example.com';
 function deferred(){let resolve!:(value?:unknown)=>void;const promise=new Promise(r=>resolve=r);return{promise,resolve};}
 async function harness(options:{holdDecrypt?:ReturnType<typeof deferred>,secretCookie?:string,auditFailure?:string,holdPublication?:ReturnType<typeof deferred>,holdConsent?:ReturnType<typeof deferred>,diagnosticFailure?:'sync'|'async'}={}){
- let active:any=null,authorized=true,clock=Date.now(),version='v1',closed=0,saved:any=null;
+ let active:any=null,authorized=true,authorizationUnavailable=false,clock=Date.now(),version='v1',closed=0,saved:any=null;
  const consumed=new Set<string>();
  const store={inspect:vi.fn(async()=>({active})),claim:vi.fn(async(_id:string,_owner:string,id:string,expiresAt:number)=>{if(active)throw Error('busy');active={id,expiresAt};return {storageState:null};}),abandon:vi.fn(async()=>{active=null;}),finish:vi.fn(async(_id:string,_owner:string,_session:string,state:any)=>{saved=state;active=null;})};
  const vault={metadata:vi.fn(async()=>({status:'active',version})),save:vi.fn(async()=>({status:'active',version})),decrypt:vi.fn(async()=>{await options.holdDecrypt?.promise;return {identifier:'student@bu.edu',password:'sensitive-canary'};}),rotate:vi.fn(async()=>{version='v2';return {status:'active',version};}),forget:vi.fn(async()=>{version='forgotten';return {status:'forgotten',version};})};
  const auditEvents:any[]=[];const audit={emit:vi.fn(async(_owner:string,event:any)=>{if(event.event==='session_saved'&&event.outcome==='started')await options.holdPublication?.promise;if(event.event==='consent')await options.holdConsent?.promise;if(event.event===options.auditFailure&&(event.event!=='session_saved'||event.outcome==='succeeded'))throw new Error('synthetic audit failure');auditEvents.push(event);})};
  const browser={inspect:vi.fn(async()=>({reviewed:true})),fill:vi.fn(async(_secret:any,recheck:()=>Promise<void>)=>{await recheck();}),safeForViewer:vi.fn(async()=>true),snapshot:vi.fn(async()=>({cookies:options.secretCookie?[{value:options.secretCookie}]:[],origins:[]})),close:vi.fn(async()=>{closed++;}),view:vi.fn(async()=>{})};
+ const authorize=vi.fn(async()=>{if(authorizationUnavailable)throw Object.assign(Error('synthetic unavailable'),{code:'credential_authorization_unavailable',status:503});if(!authorized)throw Object.assign(Error('revoked'),{code:'credential_authorization',status:403});return {identifier:'student@bu.edu'};});
  const failures:any[]=[];
- const runner=createCredentialRunner({reportFailure:(facts:any)=>{failures.push(facts);if(options.diagnosticFailure==='sync')throw Error('synthetic diagnostic sink failure');if(options.diagnosticFailure==='async')return Promise.reject(Error('synthetic async diagnostic sink failure'));},store,vault,audit,grantStore:{consume:async(id:string)=>{if(consumed.has(id))throw Object.assign(Error('replay'),{code:'grant_replayed',status:409});consumed.add(id);}},engine:{start:async()=>browser},authorize:async()=>{if(!authorized)throw Object.assign(Error('revoked'),{code:'revoked',status:403});return {identifier:'student@bu.edu'};},controlKey:key,publicOrigin:origin,proxyUrl:'http://127.0.0.1:1',now:()=>clock});
+ const runner=createCredentialRunner({reportFailure:(facts:any)=>{failures.push(facts);if(options.diagnosticFailure==='sync')throw Error('synthetic diagnostic sink failure');if(options.diagnosticFailure==='async')return Promise.reject(Error('synthetic async diagnostic sink failure'));},store,vault,audit,grantStore:{consume:async(id:string)=>{if(consumed.has(id))throw Object.assign(Error('replay'),{code:'grant_replayed',status:409});consumed.add(id);}},engine:{start:async()=>browser},authorize,controlKey:key,publicOrigin:origin,proxyUrl:'http://127.0.0.1:1',now:()=>clock});
  await new Promise<void>((resolve,reject)=>{runner.server.once('error',reject);runner.server.listen(0,'127.0.0.1',resolve);});const port=(runner.server.address() as any).port;
  cleanup.push(()=>runner.close());
  const request=async(path:string,data?:any,{human=false,cookie='',ownerOverride=owner,method=data===undefined?'GET':'POST'}={})=>{const headers:any={'content-type':'application/json'};if(human){headers.origin=origin;if(cookie)headers.cookie=cookie;}else{headers.authorization='Bearer '+key;headers['x-soma-owner']=ownerOverride;}return fetch(`http://127.0.0.1:${port}${path}`,{method,headers,body:data===undefined?undefined:JSON.stringify(data)});};
  const grant={uid:'firebase-user',workspaceId:'workspace',workspaceGeneration:'workspace',provider:'blackboard',contextId:randomUUID(),connectionVersion:1,recentAuthAt:Math.floor(clock/1000),authorizationId:randomUUID()};
  const create=async()=>{const response=await request('/v1/grants',grant);expect(response.status).toBe(201);return response.json();};
  const bootstrap=async(session:any)=>{const response=await request(`/login/${session.sessionId}/bootstrap`,{token:new URL(session.loginUrl).hash.slice(1)},{human:true});expect(response.status).toBe(200);return response.headers.get('set-cookie')!.split(';')[0];};
- return{request,grant,create,bootstrap,browser,vault,store,audit,auditEvents,failures,get saved(){return saved;},get closed(){return closed;},revoke:()=>{authorized=false;},rotate:()=>{version='v2';},expire:()=>{clock+=31*60_000;}};
+ return{request,grant,create,bootstrap,websocketOrigin:`ws://127.0.0.1:${port}`,browser,vault,store,audit,auditEvents,failures,authorize,advance:(ms:number)=>{clock+=ms;},unavailable:(value=true)=>{authorizationUnavailable=value;},get saved(){return saved;},get closed(){return closed;},revoke:()=>{authorized=false;},rotate:()=>{version='v2';},expire:()=>{clock+=31*60_000;}};
 }
 describe('isolated credential login boundary',()=>{
+ it('retains an idle setup across uncertain authorization, rejects actions, then recovers with the same one-use entry',async()=>{
+  const h=await harness(),session=await h.create();h.advance(25_000);h.unavailable();
+  await vi.waitFor(()=>expect(h.failures.some(facts=>facts.code==='credential_authorization_unavailable')).toBe(true),{timeout:2500});
+  expect(h.closed).toBe(0);expect(h.store.abandon).not.toHaveBeenCalled();
+  const unavailable=await h.request(`/login/${session.sessionId}/bootstrap`,{token:new URL(session.loginUrl).hash.slice(1)},{human:true});
+  expect(unavailable.status).toBe(503);expect(h.vault.metadata).not.toHaveBeenCalled();expect(h.browser.fill).not.toHaveBeenCalled();
+  h.unavailable(false);const cookie=await h.bootstrap(session);
+  expect((await h.request(`/login/${session.sessionId}/status`,{},{human:true,cookie})).status).toBe(200);
+  expect(h.closed).toBe(0);expect(h.store.abandon).not.toHaveBeenCalled();
+ });
+ it('closes an existing MFA viewer during uncertain authorization while retaining bounded recovery',async()=>{
+  const h=await harness(),session=await h.create(),cookie=await h.bootstrap(session);
+  expect((await h.request(`/login/${session.sessionId}/fill`,{version:'v1'},{human:true,cookie})).status).toBe(200);
+  const viewer=new WebSocket(`${h.websocketOrigin}/login/${session.sessionId}/socket`,{headers:{origin,cookie}});
+  await new Promise<void>((resolve,reject)=>{viewer.once('open',resolve);viewer.once('error',reject);});
+  const closed=new Promise<number>(resolve=>viewer.once('close',(code:number)=>resolve(code)));h.unavailable();
+  expect(await closed).toBe(1008);expect(h.closed).toBe(0);expect(h.store.finish).not.toHaveBeenCalled();
+  expect((await h.request(`/login/${session.sessionId}/status`,{},{human:true,cookie})).status).toBe(503);
+  h.unavailable(false);expect((await h.request(`/login/${session.sessionId}/status`,{},{human:true,cookie})).status).toBe(200);
+  expect(h.browser.fill).toHaveBeenCalledTimes(1);expect(h.closed).toBe(0);
+ });
+ it('serializes background authorization checks even when one callback takes multiple sweep intervals',async()=>{
+  const h=await harness(),session=await h.create(),hold=deferred();let inFlight=0,maximum=0;
+  h.authorize.mockImplementation(async()=>{inFlight++;maximum=Math.max(maximum,inFlight);await hold.promise;inFlight--;return {identifier:'student@bu.edu'};});
+  await vi.waitFor(()=>expect(inFlight).toBe(1),{timeout:2000});
+  await new Promise(resolve=>setTimeout(resolve,1200));
+  expect(maximum).toBe(1);expect(inFlight).toBe(1);expect(h.closed).toBe(0);
+  hold.resolve();h.authorize.mockImplementation(async()=>({identifier:'student@bu.edu'}));
+  await h.bootstrap(session);expect(h.closed).toBe(0);
+ });
+ it('an explicit authorization denial closes the setup and rejects any later viewer or entry use',async()=>{
+  const h=await harness(),session=await h.create();h.revoke();
+  await vi.waitFor(()=>expect(h.closed).toBe(1),{timeout:2500});
+  expect(h.store.abandon).toHaveBeenCalledTimes(1);
+  expect((await h.request(`/login/${session.sessionId}/bootstrap`,{token:new URL(session.loginUrl).hash.slice(1)},{human:true})).status).toBe(404);
+  expect((await h.request(`/login/${session.sessionId}/status`,{},{human:true})).status).toBe(401);
+  const viewer=new WebSocket(`${h.websocketOrigin}/login/${session.sessionId}/socket`,{headers:{origin}});
+  const denied=await new Promise<number>((resolve,reject)=>{viewer.once('open',()=>{viewer.terminate();reject(Error('Revoked synthetic viewer was accepted'));});viewer.once('unexpected-response',(_request:unknown,response:any)=>{response.resume();resolve(response.statusCode);viewer.terminate();});viewer.once('error',()=>{});});
+  expect(denied).toBe(401);
+ });
+ it('an uncertain callback cannot extend the original setup deadline',async()=>{
+  const h=await harness(),session=await h.create();h.unavailable();
+  await vi.waitFor(()=>expect(h.failures.length).toBeGreaterThan(0),{timeout:2500});h.expire();
+  await vi.waitFor(()=>expect(h.closed).toBe(1),{timeout:2500});
+  expect(h.store.abandon).toHaveBeenCalledTimes(1);
+  expect((await h.request(`/login/${session.sessionId}/bootstrap`,{token:new URL(session.loginUrl).hash.slice(1)},{human:true})).status).toBe(404);
+ });
  it('one-use fragment becomes scoped HttpOnly cookie, blocks replay and owner crossover',async()=>{
   const h=await harness(),session=await h.create();expect(session.sessionId).toBe(h.grant.authorizationId);expect(session).not.toHaveProperty('connectUrl');
   const cookie=await h.bootstrap(session);expect(cookie).toContain('__Secure-soma_credential=');

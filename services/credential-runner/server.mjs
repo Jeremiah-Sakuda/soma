@@ -202,6 +202,21 @@ export function createCredentialRunner({store,vault,grantStore,audit,engine,auth
   }catch{socket.end('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n');}
  });
  server.headersTimeout=15_000;server.requestTimeout=45_000;server.keepAliveTimeout=1000;
- const sweep=setInterval(()=>{for(const session of sessions.values())void authorized(session,'session').catch(()=>finish(session,false)).catch(()=>undefined);},1000);sweep.unref();
+ // Cloud Run may suspend background CPU while no HTTP request is active.
+ // One delayed callback must not create overlapping checks or turn a transient
+ // authorization outage into destructive cancellation. All human/control/viewer
+ // operations still perform fresh authorization at their own sensitive boundary.
+ const sweep=setInterval(()=>{for(const session of sessions.values()){
+  if(session.checking||session.ending)continue;session.checking=true;
+  void authorized(session,'session').catch(async error=>{
+   const facts=credentialFailureFacts(error,'sweep');
+   try{void Promise.resolve(reportFailure(facts)).catch(()=>undefined);}catch{/* diagnostics cannot affect the safety boundary */}
+   if(error?.status===503){
+    // Uncertainty grants no continued stream or new operation. Retain only the
+    // original bounded setup so a later fresh successful check can recover.
+    for(const socket of session.viewers)socket.close(1008);session.viewers.clear();
+   }else await finish(session,false);
+  }).catch(()=>undefined).finally(()=>{session.checking=false;});
+ }},1000);sweep.unref();
  return {server,async close(){clearInterval(sweep);for(const session of [...sessions.values()])await finish(session,false);viewers.close();await new Promise(resolve=>server.close(resolve));}};
 }

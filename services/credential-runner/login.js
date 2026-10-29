@@ -22,6 +22,7 @@ const failures=Object.freeze({
  identity_mismatch:'This BU username does not match the BU identity on your Soma account. Review the account email before starting again.',
  identity_unavailable:'Soma could not verify the BU identity for this account. Review your Soma account email or use manual sign-in.',
  credential_authorization:'Soma could not confirm permission for this sign-in. Sign in to Soma again before opening a fresh secure window.',
+ credential_authorization_unavailable:'Soma could not reach its permission check. This page cannot confirm that sign-in completed; return to Soma to check the pending window.',
  entry_token:'This secure link expired or was already used. Return to Soma to cancel the pending attempt and open a fresh window.',
  session_ended:'This secure window has ended. Return to Soma to cancel the pending attempt and open a fresh window.',
  credential_changed:'Stored sign-in changed during this attempt. Soma stopped to protect the updated version.',

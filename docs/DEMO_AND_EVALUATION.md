@@ -148,3 +148,53 @@ No report is filled out yet. Before release, create a dated record containing:
 
 The result can support a competitive submission. It cannot establish a predicted ranking or a guaranteed prize.
 
+
+
+## P075 anti-project positioning review
+
+October 28, 2026. Proposed framing after independent positioning, skeptical-judge and demo reviews; no product-scope or PRD acceptance change. The supplied guide lists basic RAG and simple “AI for Education” chatbots as anti-project examples. Education alone is not the excluded category. The actual behavior and demonstrated value must carry the distinction; a new product label cannot establish eligibility or novelty.
+
+### Recommended category, promise and proof
+
+**Category:** a study-preparation agent.
+
+**Product promise:** “Your next study session, prepared before you ask.”
+
+**One-liner:** Soma follows changes in coursework and recorded attempts, prepares a source-linked next activity, and revises that activity when the evidence changes.
+
+**Demo opening:** “This answer could have two different explanations. Soma prepared an experiment to help tell them apart.”
+
+The preparation promise explains the recurring student job. The experiment demonstrates a consequential model decision: choose an informative interaction, validate its scientific behavior, observe a response, and revise the provisional interpretation and next activity. Exploration/help remains optional and useful, with assistance recorded. The product's useful output is a persistent activity and its evidence, rather than a conversation transcript.
+
+### Evaluation of independent proposals
+
+| Frame | Best role | Separation from a simple chatbot | Current limit |
+| --- | --- | --- | --- |
+| Next study session prepared before you ask | Product category and impact story | Ongoing responsibility for change → saved useful activity, without a conversational instruction | Requires an observed integrated no-prompt run; a dashboard of summaries and recommendations remains weak |
+| Investigate one mistake with competing explanations | Main three-minute proof scene | A checked experiment can challenge Soma's own interpretation and materially change the next activity | Current successful Spark adaptation cases are synthetic development evidence; one answer does not establish diagnosis, mastery or learning benefit |
+| Course material becomes a model-composed interactive lab | Conditional visual headline | The model authors meaningful explanatory sequence and interactions, beyond an answer or parameter selection | Current parameterized renderer is insufficient; composition and actual-course family fit remain open |
+
+Adopt the first frame for positioning and the second for the visible proof. Hold the third headline until actual Spark-authored compositions differ meaningfully in explanation sequence plus visual focus/interaction. Optional extra models, browser-navigation footage, a graph canvas or large test counts do not substitute for the product consequence.
+
+### Proposed three-minute sequence
+
+1. **0:00–0:15:** Open the prepared interaction immediately. Show its actual origin/status, including original synthetic/prepared labels where applicable. One useful control and clear relationship establish the activity before any chat prompt.
+2. **0:15–0:40:** Open “Why this?” Show the triggering observation/source version and two provisional explanations. Use “typed observation” or “authored transcription” when those are the actual inputs; an adjacent diagram does not prove image reading.
+3. **0:40–1:30:** Let the student predict/explore the discriminating interaction. Show the checked result and the proposal's distinct predictions at the appropriate point. Preserve prediction/reveal order and record assistance; exposed predictions or an explored result cannot be relabeled independent evidence.
+4. **1:30–2:20:** Supply a response that challenges the initial interpretation. Keep the original response visible while Soma weakens or revises the interpretation and prepares a different question or meaningful configuration. A changed badge, prose or “personalized” label is insufficient.
+5. **2:20–2:45:** Open the fresh application and reopen the saved sequence. Show the original observation, help/exposure conditions and persisted next activity. Do not infer broad mastery or causal improvement.
+6. **2:45–3:00:** Close on the value: an activity was prepared, its reason is inspectable, and new evidence changed what came next. Keep actual model/prepared/recorded status visible. Put unchanged/ambiguous cases, extended audit and recovery evidence on the judge route.
+
+Keep credential setup, integration tours, calendar navigation and architecture narration outside the main video. They support execution; they are not the central learning payoff. Use actual runtime evidence rather than an animated “thinking” sequence. A prepared artifact can be useful and honestly labeled; do not splice separate runs into an apparent single observed end-to-end journey.
+
+### Claims the current evidence can support
+
+The committed graph work supports deterministic diagnostic validation, retained original responses/help/corrections and actual Spark change/keep-current development cases on original synthetic material. Separately, an imported CS440 instructor note produced one reviewed ordinary-practice artifact with inference-free reuse; a preceding attempt failed. Managed persistence and browser journeys are additional engineering evidence. These records are different proofs, not a demonstrated fresh-course-to-generated-lab loop.
+
+The strongest current truthful description is: **Soma prepares source-linked practice and keeps the next activity accountable to what changed and what the learner actually did. Its interactive diagnostic prototype demonstrates adaptation on labeled synthetic coursework.**
+
+Before the stronger submission pitch, observe one coherent source/event → prepared activity → recorded response → changed next activity run with actual Spark decisions and persisted reuse. Confirm the lesson family fits its claimed course. Demonstrate meaningful generated composition before claiming model-authored labs. Demonstrate actual checked image/PDF extraction before claiming returned-work reading; otherwise use typed observations. Retain independent scientific/instructional and held-out checks, plus an ambiguous/no-change branch outside the main video. No observed learning gain or recurring time saving is established merely by an attractive demo; those require workflow/learner evidence.
+
+Reject “autonomous tutor that understands all coursework,” “reads graded homework,” “discovers prerequisite gaps,” or “improves learning” as current blanket claims. Avoid a first screen dominated by chat, file upload and generated summaries. The defensible distinction is the observed preparation-and-revision loop, not removing the word chatbot from marketing.
+
+Evidence: [supplied hackathon requirements](HACKATHON_REQUIREMENTS.md), [graph implementation audit](LEARNING_GRAPH_AUDIT.md), [course-source validation](COURSE_SOURCE_VALIDATION.md), [current handoff](../CODEX_HANDOFF.md). The current working R11 expansion remains a proposed acceptance boundary until its code and proof are delivered.

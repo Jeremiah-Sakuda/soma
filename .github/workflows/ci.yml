@@ -1,0 +1,39 @@
+name: Verify Soma
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Install pinned isolated browser-runner dependencies
+        run: npm ci --prefix services/browser-runner --ignore-scripts
+      - name: Install pinned isolated credential-runner dependencies
+        run: npm ci --prefix services/credential-runner --ignore-scripts
+      - name: Verify Firebase loads under serverless module restrictions
+        run: node --no-experimental-require-module -e "require('firebase-admin/auth')"
+      - name: Verify published runtime source identity
+        run: node scripts/verify-release.mjs
+      - run: npm run typecheck
+      - run: npm test
+      - name: Verify bounded credential-service diagnostic contracts
+        run: node --test scripts/check-credential-service.test.mjs
+      - run: npm run build
+      - name: Verify browser runtime in an isolated production trace
+        run: npm run check:browser-artifact
+      - run: npx playwright install --with-deps chromium
+      - name: Verify isolated credential browser with adversarial synthetic pages
+        run: SOMA_CREDENTIAL_BROWSER_TESTS=true npx vitest run tests/credential-runner/browser.test.ts
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-results
+          path: test-results/
+          retention-days: 7

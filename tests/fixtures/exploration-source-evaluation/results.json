@@ -1,0 +1,181 @@
+[
+  {
+    "id": "directed-detour",
+    "status": "published",
+    "mode": "checked-dijkstra",
+    "passed": true,
+    "sourceMatches": true,
+    "costMatches": true,
+    "elapsedMs": 16399,
+    "calls": 3,
+    "costUsd": 0.03898425,
+    "repairs": 0
+  },
+  {
+    "id": "undirected-reverse",
+    "status": "published",
+    "mode": "checked-dijkstra",
+    "passed": true,
+    "sourceMatches": true,
+    "costMatches": true,
+    "elapsedMs": 8804,
+    "calls": 3,
+    "costUsd": 0.03936075,
+    "repairs": 0
+  },
+  {
+    "id": "zero-cost",
+    "status": "published",
+    "mode": "checked-dijkstra",
+    "passed": true,
+    "sourceMatches": true,
+    "costMatches": true,
+    "elapsedMs": 12716,
+    "calls": 3,
+    "costUsd": 0.03854125,
+    "repairs": 0
+  },
+  {
+    "id": "fractional",
+    "status": "published",
+    "mode": "checked-dijkstra",
+    "passed": true,
+    "sourceMatches": true,
+    "costMatches": true,
+    "elapsedMs": 11531,
+    "calls": 3,
+    "costUsd": 0.03911775,
+    "repairs": 0
+  },
+  {
+    "id": "disconnected",
+    "status": "published",
+    "mode": "checked-dijkstra",
+    "passed": true,
+    "sourceMatches": true,
+    "costMatches": true,
+    "elapsedMs": 21156,
+    "calls": 3,
+    "costUsd": 0.03957625,
+    "repairs": 0
+  },
+  {
+    "id": "bfs-cycle",
+    "status": "published",
+    "mode": "checked-bfs",
+    "passed": true,
+    "sourceMatches": true,
+    "costMatches": true,
+    "elapsedMs": 9073,
+    "calls": 2,
+    "costUsd": 0.029413500000000002,
+    "repairs": 0
+  },
+  {
+    "id": "bfs-undirected",
+    "status": "published",
+    "mode": "checked-bfs",
+    "passed": true,
+    "sourceMatches": true,
+    "costMatches": true,
+    "elapsedMs": 7751,
+    "calls": 2,
+    "costUsd": 0.028143500000000002,
+    "repairs": 0
+  },
+  {
+    "id": "tie",
+    "status": "published",
+    "mode": "checked-dijkstra",
+    "passed": true,
+    "sourceMatches": true,
+    "costMatches": true,
+    "elapsedMs": 9431,
+    "calls": 3,
+    "costUsd": 0.03955625,
+    "repairs": 0
+  },
+  {
+    "id": "gradient-descent",
+    "status": "published",
+    "mode": "explanation",
+    "passed": true,
+    "sourceMatches": null,
+    "costMatches": null,
+    "elapsedMs": 8283,
+    "calls": 2,
+    "costUsd": 0.0257405,
+    "repairs": 0
+  },
+  {
+    "id": "cpu-pipeline",
+    "status": "published",
+    "mode": "explanation",
+    "passed": true,
+    "sourceMatches": null,
+    "costMatches": null,
+    "elapsedMs": 11156,
+    "calls": 3,
+    "costUsd": 0.04795775000000001,
+    "repairs": 1
+  },
+  {
+    "id": "empty-source",
+    "status": "published",
+    "mode": "clarify",
+    "passed": true,
+    "sourceMatches": null,
+    "costMatches": null,
+    "elapsedMs": 6327,
+    "calls": 3,
+    "costUsd": 0.039494,
+    "repairs": 1
+  },
+  {
+    "id": "missing-cost",
+    "status": "rejected",
+    "passed": false,
+    "code": "generation_invalid",
+    "elapsedMs": 9938,
+    "run": {
+      "requestId": "9d43a45b-5632-4b64-a65b-1a6c1e7b62bd",
+      "status": "failed",
+      "startedAt": "2026-10-29T22:24:19.164Z",
+      "deadline": "2026-10-29T22:25:49.164Z",
+      "artifactId": "9a6e16c2-4d2c-4417-89e4-1c706e5379c3",
+      "version": 1,
+      "code": "generation_invalid",
+      "failure": {
+        "stage": "validation",
+        "issues": [
+          {
+            "code": "artifact_binding",
+            "path": [
+              "spec"
+            ]
+          }
+        ]
+      },
+      "calls": 3,
+      "costUsd": 0.042501,
+      "usageCertain": true,
+      "reservedUsd": 0.35,
+      "usage": {
+        "input_tokens": 27398,
+        "output_tokens": 1942
+      }
+    }
+  },
+  {
+    "id": "negative-cost",
+    "status": "published",
+    "mode": "explanation",
+    "passed": true,
+    "sourceMatches": null,
+    "costMatches": null,
+    "elapsedMs": 11718,
+    "calls": 3,
+    "costUsd": 0.047627249999999996,
+    "repairs": 1
+  }
+]

@@ -1,0 +1,26 @@
+.DS_Store
+node_modules/
+.env
+.env.*
+!.env.example
+.next/
+.vercel/
+.trigger/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+# Local browser authentication and private source material
+playwright/.auth/
+.local/
+*service-account*.json
+*firebase-adminsdk*.json
+firebase-debug*.log
+.vercel
+.env*
+
+# Local product direction proposal
+/somav2.md
+
+# Keep the credential-free setup template available in clean checkouts.
+!.env.example

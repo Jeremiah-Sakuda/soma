@@ -1,5 +1,11 @@
 # Production readiness and operations
 
+## Current visual-exploration release — October 29, 2026 (P084)
+
+The primary `/explore` experience is deployed from commit `e1d3fc0` using a clean archive. Its default hosted compiler passed. Actual hosted synthetic verification passed image→Spark→checked scene, exact Firestore state resume, contextual comparison, earlier-version recovery, cross-guest/cross-origin denial, cancellation-before-registration and owned deletion. See [SOMA_V2_VALIDATION.md](SOMA_V2_VALIDATION.md) for current checks and limitations.
+
+The total test cap is $5 under P084, with the shared consumption/reservation ledger and $30 reserve unchanged. The existing v1 recurring GitHub worker is parked (`SOMA_WORKER_ENABLED=false` repository variable) under the back-burner direction; its connected source selections and stored credentials remain preserved. The authenticated worker endpoint still exists but is not invoked by this v2 verification. Re-enable recurring v1 processing only as a deliberate follow-up with its consent/budget boundary reviewed. Guest exploration TTL is ACTIVE; deletion is asynchronous. The earlier v1 beta record below is historical and does not establish complete course collection for v2.
+
 October 26, 2026 — bounded private beta. This is an implementation and verification record, not a claim that every PRD release gate has passed. Deployment evidence is recorded below. P032 explicitly authorized selected-source production processing. A direct authenticated worker check passed; the recurring GitHub fallback is enabled and its verification result is recorded below.
 
 ## Runtime boundaries

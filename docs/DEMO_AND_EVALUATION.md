@@ -1,5 +1,9 @@
 # Soma demo and evaluation
 
+## Current demonstration — P084 visual exploration
+
+The adopted demo is screenshot + question → actual Spark interpretation → deterministic BFS feedback → generated visual → a changed experiment → object-aware follow-up with a visibly different comparison → exact save/resume. Show one concise source-specific decision and its observable consequence. Prepared examples must be labeled; inspect actual calls, assumptions and model cost. Use [SOMA_V2_VALIDATION.md](SOMA_V2_VALIDATION.md) for executed results and limits. A new user should try the example immediately, without connecting sources. The v1 returned-work hero below is retained as a future bridge, not this release’s mandatory narrative. No chatbot-classification or judging outcome is guaranteed.
+
 **October 26, 2026. Planned checks, not executed results.** The [PRD](PRD.md) defines release acceptance. This kit turns it into a demo and evidence collection plan. The required submission video is three minutes.
 
 ## The story to prove

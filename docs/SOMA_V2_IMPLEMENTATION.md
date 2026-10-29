@@ -12,13 +12,13 @@ One checked family is breadth-first search on small unweighted graphs. Original 
 
 | Milestone | Scope | Required proof | Status |
 | --- | --- | --- | --- |
-| M1 | Checked search engine and bounded generated scene contract | Independent reference traces, cycles/ties/disconnected/start=goal, invalid scene/ID/layout rejection | In review |
-| M2 | Screenshot + actual Spark → computed feedback → generated scene; `/explore` | Two distinct source-specific compositions; trace bindings and actual tool/cost/latency facts | Implementing |
-| M3 | Object-aware follow-ups, user controls, immutable revisions, save/resume | Meaningful unscripted change; ownership/generation/cancel/stale-response tests | Implementing |
-| M4 | Capture/upload/example entry, keyboard/reduced motion, captions and optional voice | Explicit frame sending, stopped capture, permission failure, audio cancellation, judge cookie isolation | Implementing |
-| M5 | Integrated tests, real held-out inputs, deploy and documentation | Executed release checks, bounded live evidence, clean browser journey, remaining human gates and v1 reuse assessment | Pending |
+| M1 | Checked search engine and bounded generated scene contract | Independent reference traces, cycles/ties/disconnected/start=goal, invalid scene/ID/layout rejection | Implemented; 44 domain checks passed |
+| M2 | Screenshot + actual Spark → computed feedback → generated scene; `/explore` | Two distinct source-specific compositions; trace bindings and actual tool/cost/latency facts | Implemented; focused and integrated checks passed |
+| M3 | Object-aware follow-ups, user controls, immutable revisions, save/resume | Meaningful unscripted change; ownership/generation/cancel/stale-response tests | Implemented; focused and integrated checks passed |
+| M4 | Capture/upload/example entry, keyboard/reduced motion, captions and optional voice | Explicit frame sending, stopped capture, permission failure, audio cancellation, judge cookie isolation | Implemented; focused and integrated checks passed |
+| M5 | Integrated tests, real held-out inputs, deploy and documentation | Executed release checks, bounded live evidence, clean browser journey, remaining human gates and v1 reuse assessment | Release verification in progress |
 
-Each milestone gets a review checkpoint and focused commits. Tests use original synthetic material; prepared examples, scripted provider tests, live generation and actual user sources must remain distinguishable. Ten held-out supported inputs are fixed outside generation prompts, with the 8/10 target reported honestly and failed/fallback cases retained. No synthetic learner event may be inserted into the owner's evidence as a real attempt.
+Each milestone gets a review checkpoint and focused commits. Tests use original synthetic material; prepared examples, scripted provider tests, live generation and actual user sources must remain distinguishable. Ten original supported inputs have expected facts outside generation prompts; the first two also served compatibility debugging. The final run passed 10/10; see the verification record for the limits of these clean synthetic inputs and retained failures. No synthetic learner event may be inserted into the owner's evidence as a real attempt.
 
 ## Architecture and invariants
 
@@ -40,3 +40,11 @@ Selected-window sharing uses browser-mediated permissions with screenshot upload
 The demonstration must show actual image interpretation, generated visual structure, checked consequences of an intervention, and a context-preserving model revision. Preserve source/assumption inspection and an immediately usable judge path. Scores, market uniqueness and learning improvements are not asserted.
 
 After the slice works, assess which v1 capabilities improve this journey: selected course passages as context, provenance/freshness, revisitable artifacts, separate exploration/independent-attempt evidence, persistent hypotheses, and change-triggered preparation. Do not reintroduce semester setup as an entry requirement. Record adopted bridges and deferred opportunities with their verification status.
+
+## Executed evidence and operational bounds
+
+See [SOMA_V2_VALIDATION.md](SOMA_V2_VALIDATION.md) for actual provider results, release checks, cost and limitations; [SOMA_V2_V1_BRIDGES.md](SOMA_V2_V1_BRIDGES.md) ranks proposed reuse grounded in existing code. These are the current public records.
+
+The owned session retains at most 24 artifact versions and 40 recent request facts. Deleting an exploration deletes all its versions. Terminal request facts are compacted into bounded audit totals only after the original deadline plus 90 seconds; generating work and its provider lease are never pruned by that compaction. Request-ID replay protection covers this retained window. Immutable scene versions and the global reservation ledger remain independent of compaction.
+
+Guest access expires after 24 hours. The managed Firestore TTL policy for `somaExploreGuests.expiresAt` was enabled and verified ACTIVE on October 29; physical deletion is asynchronous. Signed-in exploration records remain in their account generation until explicit deletion. Guest history does not automatically transfer into an account. Global admission is four concurrent leases, 200 turns and 200 guest creations per UTC day, shared with transcription; each principal has twelve exploration reservations and twelve voice reservations per day. These availability limits supplement the shared $5 testing cap, not replace it.

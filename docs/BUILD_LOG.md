@@ -1526,13 +1526,17 @@ Deviations: none; this is familiarization only, not authorization to implement t
 
 Prompt: canonical verbatim entry `P084`. Supersedes P083's familiarization-only implementation gate.
 
-Top three outcomes (in progress):
-1. Adopt the selected-context → generated visual → checked interaction → contextual revision → save/resume release slice, preserving v1 routes/data and the October 31 freeze. Milestones and honest acceptance status are in docs/SOMA_V2_IMPLEMENTATION.md.
-2. Delegate domain engine/scene contracts, server/Muse/persistence and UI/browser journeys as independent chunks; root owns integration, image/voice profiles, budget, release audit and live verification. Independent review follows meaningful checkpoints.
-3. Use actual Spark image/tool decisions and bounded real tests, raising the retained testing allowance to at most $5 only if exhausted. Preserve existing consumption, reservations and the allocation reserve. Remaining human/provider gates and v1 reuse opportunities will be reported after executed checks.
+Top three outcomes (release verification in progress):
+1. Implemented the `/explore` source-to-visual loop, deterministic BFS, generated scene composition, controls, contextual revisions, owned save/resume/history and optional captioned voice. Retained existing v1 routes and data. Core milestones were reviewed and committed in `8019986`, `2c5e63a`, `c25e977`, `d5fd65c`, `1cfd5a5` and `b2fc1fd`.
+2. Actual Spark tests passed ten original screenshot source/path cases and a stronger start-only comparison; additional live process explanation and missing-context clarification passed. The current complete working-tree suite passed 1,324 tests (90 skipped), 84 browser journeys, typecheck, webpack build and isolated browser artifact tracing. Hosted/default-compiler checks remain pending.
+3. Applied the authorized $5 total test cap when $2.6518575 consumed could not admit another $0.35 reservation under $3; retained usage and reserve. Documented current evidence/limits and three ranked v1 bridges. Guest Firestore TTL was enabled and verified ACTIVE. Real OS capture, microphone/word accuracy, audible playback and actual-course fit still require user checks.
 
-Deviations: none established; actual course fit is unverified, so first checked search examples are original synthetic material. The local proposal remains ignored; adopted public implementation requirements are summarized separately.
+Deviations: the default local compiler twice failed on a sandbox subprocess-port restriction; the supported webpack compiler passed. Initial synthetic geometry and provider-schema/null compatibility failures were retained and corrected. Request replay protection is explicitly bounded to the original deadline plus 90 seconds with terminal audit aggregation. Other scope deviations: none established; actual course fit is unverified, so first checked search examples are original synthetic material. The local proposal remains ignored; adopted public implementation requirements are summarized separately.
 
 ### P084 M1 review checkpoint — October 29, 2026
 
 The checked BFS model and generated scene contract passed 44 focused domain tests, including independent reference paths, cycles, ties, disconnected goals, start=goal, invalid layouts and unsupported model claims. Root reviewed the traversal and reference validation. Adoption is recorded in authoritative product, sequence, UI and technical documents. M2–M5 remain in progress; no live v2 model outcome is established yet.
+
+### P084 M2–M4 independent review checkpoint — October 29, 2026
+
+Root and cross-agent reviews found and repaired pre-registration cancellation, late state overwrites, old-version access, comparison bounds and parameter visibility, source uncertainty, initial guest-cookie setup, media cleanup, terminal-history capacity and billing-fact loss. Browser/native audio tests distinguish actual deterministic/browser behavior, provider doubles and actual Meta calls. The first two synthetic worksheets also served compatibility debugging, so the final ten-case result is not presented as an untouched field benchmark. See `docs/SOMA_V2_VALIDATION.md` and `docs/SOMA_V2_V1_BRIDGES.md`. No private course media, credentials or raw model reasoning is committed.

@@ -2,6 +2,10 @@
 
 This folder contains the Soma hackathon handoff. Follow the current user request and higher-priority instructions first. For implementation work, start with CODEX_HANDOFF.md and docs/PRD.md. For documentation-only requests, do not scaffold or implement the product.
 
+## Current release priority — visual exploration (P084)
+
+The user adopted the v2 pivot on October 29. Start with `docs/SOMA_V2_IMPLEMENTATION.md` and its verification record as well as the handoff/PRD. The primary journey is selected visible context → generated visual → checked manipulation → contextual follow-up → saved revision. Full-semester collection is parked; course setup must not block exploration. Preserve the existing v1 routes, data, read-only source boundaries and evidence rules. `docs/SOMA_V2_V1_BRIDGES.md` is proposed follow-up, not implemented scope. The ignored local `somav2.md` proposal must remain private.
+
 ## Authority and status
 
 - docs/PRD.md owns product scope and release acceptance. docs/HACKATHON_REQUIREMENTS.md records the supplied event requirements. docs/BUILD_PLAN.md owns the current dated sequence. Record later decisions in docs/DECISIONS.md.

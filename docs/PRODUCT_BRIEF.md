@@ -1,5 +1,9 @@
 # Soma product brief
 
+## Current positioning — October 29, 2026 (P084)
+
+Soma turns selected visible context into something you can explore. Bring a screenshot/window and a question; Muse interprets it, receives checked computation and composes a visual scene. Change the experiment, ask about an object, and save the result. The first checked family is small unweighted BFS; broader explanations are explicitly unverified computation. See [SOMA_V2_IMPLEMENTATION.md](SOMA_V2_IMPLEMENTATION.md). The earlier course-preparation story below remains background and potential reuse, not the primary entry.
+
 **Working name: Soma. Implementation handoff, October 26, 2026.**
 
 **Before you can study, you have to figure out what to study.**

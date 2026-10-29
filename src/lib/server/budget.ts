@@ -13,6 +13,7 @@ export const INVESTIGATION_RESERVATION_USD = 0.35;
 export const MAX_INVESTIGATION_CALLS = 8;
 export const MAX_OUTPUT_TOKENS = 2048;
 export const MAX_REQUEST_BYTES = 24000;
+export const EXPLORATION_RESERVATION_USD = 0.35;
 
 /** A denied reservation is preflight-only: no provider request has been authorized. */
 export class InferenceBudgetError extends Error {
@@ -48,12 +49,12 @@ function database() {
   return db;
 }
 
-export async function reserveInference(workspaceId: string, profile: 'lesson' | 'investigation' = 'lesson'): Promise<string> {
+export async function reserveInference(workspaceId: string, profile: 'lesson' | 'investigation' | 'exploration' | 'voice' = 'lesson'): Promise<string> {
   if (!inferenceEnabled()) throw new InferenceBudgetError('configured');
   const limit = budgetLimit(Number(process.env.META_ALLOCATION_USD), Number(process.env.META_APP_SPEND_CAP_USD || '1'));
-  const now = new Date(); const day = now.toISOString().slice(0, 10) + (profile === 'investigation' ? '-investigation' : ''); const id = randomUUID();
-  const reservationUsd = profile === 'investigation' ? INVESTIGATION_RESERVATION_USD : JOB_RESERVATION_USD;
-  const dailyLimit = profile === 'investigation' ? 3 : 1;
+  const now = new Date(); const day = now.toISOString().slice(0, 10) + (profile === 'lesson' ? '' : `-${profile}`); const id = randomUUID();
+  const reservationUsd = profile === 'investigation' ? INVESTIGATION_RESERVATION_USD : profile === 'exploration' ? EXPLORATION_RESERVATION_USD : profile === 'voice' ? 0.01 : JOB_RESERVATION_USD;
+  const dailyLimit = profile === 'investigation' ? 3 : profile === 'exploration' || profile === 'voice' ? 12 : 1;
   if (process.env.SOMA_PERSISTENCE === 'firestore') {
     const db = getServerFirestore();
     const global = db.doc('somaBudget/global'); const daily = db.doc(`somaBudgetDays/${workspaceId}-${day}`);

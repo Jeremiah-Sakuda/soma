@@ -29,12 +29,13 @@ const inputSchema = z.array(z.union([
 const usageSchema = z.object({ input_tokens: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER), output_tokens: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER) });
 const statusSchema = z.enum(['completed', 'incomplete', 'failed', 'cancelled', 'in_progress', 'queued']);
 const functionOutput = callInput.extend({ id: z.string().max(256).optional(), status: z.literal('completed').optional() });
+const visualFunctionOutput = functionOutput.extend({arguments:z.string().max(24_576)});
 
 function plainObject(value: unknown): value is Record<string, unknown> { return typeof value === 'object' && value !== null && !Array.isArray(value); }
-function argumentsObject(raw: string): Record<string, unknown> {
+function argumentsObject(raw: string, maxNodes = 500): Record<string, unknown> {
   const parsed: unknown = JSON.parse(raw); let nodes = 0;
   function check(value: unknown, depth: number) {
-    if (++nodes > 500 || depth > 16) throw new Error();
+    if (++nodes > maxNodes || depth > 16) throw new Error();
     if (Array.isArray(value)) for (const item of value) check(item, depth + 1);
     else if (plainObject(value)) for (const [key, item] of Object.entries(value)) { if (['__proto__', 'prototype', 'constructor'].includes(key)) throw new Error(); check(item, depth + 1); }
   }
@@ -42,7 +43,7 @@ function argumentsObject(raw: string): Record<string, unknown> {
 }
 
 /** Extract billing before validating completion/output; never retain provider text or reasoning. */
-export function parseMetaResponse(raw: unknown, allowedTools: readonly string[], httpOk = true): MetaResult {
+export function parseMetaResponse(raw: unknown, allowedTools: readonly string[], httpOk = true, profile: 'text' | 'vision' = 'text'): MetaResult {
   const usageResult = usageSchema.safeParse(plainObject(raw) ? raw.usage : undefined);
   const usage = usageResult.success ? usageResult.data : null;
   if (!httpOk) throw new MetaClientError('http', usage, true);
@@ -57,11 +58,11 @@ export function parseMetaResponse(raw: unknown, allowedTools: readonly string[],
     if (!plainObject(item) || typeof item.type !== 'string') throw new MetaClientError('response_invalid', usage, true);
     if (item.type === 'reasoning' || item.type === 'message') continue;
     if (item.type !== 'function_call') throw new MetaClientError('tool_invalid', usage, true);
-    const parsed = functionOutput.safeParse(item);
+    const parsed = (profile === 'vision' ? visualFunctionOutput : functionOutput).safeParse(item);
     if (!parsed.success || !allowedTools.includes(parsed.data.name) || seen.has(parsed.data.call_id) || tools.length >= 1) throw new MetaClientError('tool_invalid', usage, true);
     try {
       const { name, arguments: args, call_id } = parsed.data;
-      tools.push({ type: 'function_call', name, arguments: args, call_id, parsedArguments: argumentsObject(args) }); seen.add(call_id);
+      tools.push({ type: 'function_call', name, arguments: args, call_id, parsedArguments: argumentsObject(args,profile === 'vision' ? 2000 : 500) }); seen.add(call_id);
     } catch { throw new MetaClientError('tool_invalid', usage, true); }
   }
   return { status: status.data, tools, usage };

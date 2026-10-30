@@ -63,7 +63,7 @@ Guest access expires after 24 hours. The managed Firestore TTL policy for `somaE
 
 ## Release handoff — October 29, 2026
 
-Working release: https://soma-woad-beta.vercel.app/explore. Code commit `e1d3fc0` was pushed to main and deployed from its clean archive; [independent CI](https://github.com/Jeremiah-Sakuda/soma-hackathon/actions/runs/40821210973) passed, including the default build and all browser journeys. Exact committed-source tests passed 1,309/1,398 (89 intentionally skipped). Hosted API and native browser checks passed; see the verification record. All five implementation milestones are complete for this bounded first version, with the human checks below explicitly open.
+Working release: https://soma-woad-beta.vercel.app/explore. Code commit `e1d3fc0` was pushed to main and deployed from its clean archive; [independent CI](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40821210973) passed, including the default build and all browser journeys. Exact committed-source tests passed 1,309/1,398 (89 intentionally skipped). Hosted API and native browser checks passed; see the verification record. All five implementation milestones are complete for this bounded first version, with the human checks below explicitly open.
 
 The owner should try a real selected window or screenshot from their coursework, verify interpretation/controls, and optionally check microphone recognition and device voice. These checks establish actual input/browser suitability; they are not required credentials or integrations for the original example. The first suggested v1 follow-up is an owned “Explore this selected course passage” adapter; it remains proposed.
 

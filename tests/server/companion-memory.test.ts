@@ -91,6 +91,18 @@ describe('companion memory facts and interpretations', () => {
     const s=session();applyCompanionMemoryProposal(s,proposal(),{revision:0});const context=companionMemoryContext(s,{query:'shortest connections',limit:1});
     expect(context.concepts.map(c=>c.id)).toEqual(['paths']);expect(context.relationships).toEqual([]);expect(JSON.stringify(context).length).toBeLessThan(14001);
   });
+  it('bounds escaped user text without malformed output or dangling relationships',()=>{
+    const s=session();for(let i=0;i<12;i++)applyCompanionMemoryCommand(s,{action:'upsert-goal',revision:i,kind:'goal',text:'x'+String.fromCharCode(0).repeat(499)});
+    applyCompanionMemoryProposal(s,proposal(),{revision:12});const context=companionMemoryContext(s);
+    expect(JSON.stringify(context).length).toBeLessThanOrEqual(14000);expect(context.goals.length).toBeLessThan(12);
+    expect(context.relationships.every(r=>context.concepts.some(c=>c.id===r.from)&&context.concepts.some(c=>c.id===r.to))).toBe(true);
+  });
+  it('does not resurrect old relationship text when the latest citation disappears',()=>{
+    const s=session();applyCompanionMemoryProposal(s,proposal(),{revision:0});s.artifacts.push(artifact('source_b'));
+    const p=proposal();p.relationships[0].refs=[{artifactId:'source_b',version:1}];applyCompanionMemoryProposal(s,p,{revision:1});
+    s.artifacts=s.artifacts.filter(a=>a.id!=='source_b');expect(projectCompanionMemory(s).relationships).toEqual([]);
+    pruneCompanionMemory(s);expect(projectCompanionMemory(s).relationships).toEqual([]);
+  });
   it('bounds goals and rejects invalid commands',()=>{
     const s=session();for(let i=0;i<12;i++)applyCompanionMemoryCommand(s,{action:'upsert-goal',revision:i,kind:'goal',text:`Goal ${i}`});
     expect(()=>applyCompanionMemoryCommand(s,{action:'upsert-goal',revision:12,kind:'goal',text:'Overflow'})).toThrow();expect(projectCompanionMemory(s).goals).toHaveLength(12);

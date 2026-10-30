@@ -65,7 +65,8 @@ function prune(session: ExplorationSession, memory: CompanionMemory) {
   const invalidConcepts = new Set(latest(memory.concepts).filter(c => !validRefs(session, c.refs)).map(c => c.id));
   memory.concepts = memory.concepts.filter(c => !invalidConcepts.has(c.id) && validRefs(session, c.refs));
   const ids = new Set(latest(memory.concepts).map(c => c.id));
-  memory.relationships = memory.relationships.filter(r => ids.has(r.from) && ids.has(r.to) && validRefs(session, r.refs));
+  const invalidRelationships = new Set(latest(memory.relationships).filter(r => !validRefs(session, r.refs)).map(r => r.id));
+  memory.relationships = memory.relationships.filter(r => !invalidRelationships.has(r.id) && ids.has(r.from) && ids.has(r.to) && validRefs(session, r.refs));
   if (memory.nextActivity && (!validRefs(session, memory.nextActivity.refs) || !memory.nextActivity.conceptIds.every(id => ids.has(id)))) delete memory.nextActivity;
 }
 /** Persist source deletion pruning in the same ownership transaction. */
@@ -183,6 +184,8 @@ export function companionMemoryContext(session: ExplorationSession, options: { q
   while (JSON.stringify(context).length > 14_000 && context.evidence.length) context.evidence.pop();
   while (JSON.stringify(context).length > 14_000 && context.relationships.length) context.relationships.pop();
   while (JSON.stringify(context).length > 14_000 && context.concepts.length) context.concepts.pop();
+  while (JSON.stringify(context).length > 14_000 && context.goals.length) context.goals.pop();
+  if (JSON.stringify(context).length > 14_000) context.nextActivity = undefined;
   const retainedIds = new Set(context.concepts.map(c => c.id));
   context.relationships = context.relationships.filter(r => retainedIds.has(r.from) && retainedIds.has(r.to));
   if (context.nextActivity && !context.nextActivity.conceptIds.every(id => retainedIds.has(id))) context.nextActivity = undefined;

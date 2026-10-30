@@ -13,6 +13,7 @@ const {
 } = require('electron');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const { createComputerControl } = require('./computer-control.cjs');
 const { createPointAsk } = require('./point-ask.cjs');
 const {
   appOrigin,
@@ -29,7 +30,8 @@ let win,
   capturing = false,
   revision = 0,
   shortcutOK = false,
-  pointAsk;
+  pointAsk,
+  computerControl;
 const locked = {
   nodeIntegration: false,
   contextIsolation: true,
@@ -87,6 +89,7 @@ async function snapshotDisplay(display) {
   };
 }
 async function capture() {
+  computerControl?.stop('Computer task ended.');
   if (capturing) return;
   if (!trustedPage(view.webContents.getURL(), origin)) {
     status('Open the Soma exploration page before capturing.');
@@ -233,6 +236,9 @@ else {
       captureImage: snapshotDisplay,
       enabledChange: (value) => win.webContents.send('desktop:point-enabled', value),
     });
+    computerControl = createComputerControl({BrowserWindow,ipcMain,globalShortcut,session:ses,origin,
+      helperPath: app.isPackaged ? path.join(process.resourcesPath,'computer-control') : path.join(__dirname,'node_modules/.cache/soma/computer-control'),
+      stopPoint:()=>pointAsk.disable(),status,accessibility:()=>process.platform==='darwin'&&systemPreferences.isTrustedAccessibilityClient(true)});
     ipcMain.on('desktop:source-highlight', (event, payload) => {
       if (trusted(event)) void pointAsk.highlight(payload);
     });
@@ -261,6 +267,7 @@ else {
     });
     ipcMain.handle('desktop:action', async (event, action) => {
       if (!trusted(event, true)) throw new Error('Untrusted desktop control.');
+      if (['point','capture','hide','reload'].includes(action)) computerControl?.stop('Computer task ended.');
       if (action === 'point') {
         if (!pointAsk.enabled && process.platform === 'darwin') {
           if (systemPreferences.getMediaAccessStatus('screen') === 'denied')
@@ -314,6 +321,7 @@ else {
                 view.webContents.setAudioMuted(false);
               },
             },
+            { label: 'Apply to selected app (⌘⇧A)', click: () => void computerControl.start() },
             { label: 'Capture current display', click: () => void capture() },
             {
               label: 'Screen recording permission…',
@@ -348,6 +356,7 @@ else {
   app.on('before-quit', () => {
     quitting = true;
     revision++;
+    computerControl?.dispose();
     pointAsk?.dispose();
   });
   app.on('will-quit', () => globalShortcut.unregisterAll());

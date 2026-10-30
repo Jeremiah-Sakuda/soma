@@ -12,9 +12,9 @@ async function release(){
  if(!notarizeOnly){
   const helper=require('./build-native.cjs').buildNative();
   const {packager}=await import('@electron/packager');
-  await packager({dir:__dirname,name:'Soma',platform:'darwin',arch:'arm64',out:output,overwrite:true,asar:true,appBundleId:'app.soma.desktop',extendInfo:path.join(__dirname,'Info.plist'),extraResource:[helper],ignore:[/^\/test(?:\/|$)/,/^\/README\.md$/,/^\/node_modules\/\.cache(?:\/|$)/]});
+  await packager({dir:__dirname,name:'Soma',platform:'darwin',arch:'arm64',out:output,overwrite:true,asar:true,appBundleId:'app.soma.desktop',extendInfo:path.join(__dirname,'Info.plist'),extraResource:[helper,path.join(path.dirname(helper),'computer-control')],ignore:[/^\/test(?:\/|$)/,/^\/README\.md$/,/^\/node_modules\/\.cache(?:\/|$)/]});
   const {sign}=await import('@electron/osx-sign');
-  await sign({app:bundle,identity,platform:'darwin',binaries:[path.join(bundle,'Contents/Resources/hold-shortcut')],optionsForFile:()=>({hardenedRuntime:true,entitlements:path.join(__dirname,'entitlements.plist')})});
+  await sign({app:bundle,identity,platform:'darwin',binaries:[path.join(bundle,'Contents/Resources/hold-shortcut'),path.join(bundle,'Contents/Resources/computer-control')],optionsForFile:()=>({hardenedRuntime:true,entitlements:path.join(__dirname,'entitlements.plist')})});
  }
  run('codesign',['--verify','--deep','--strict','--verbose=2',bundle]);
  if(signOnly){console.log(`Developer ID signed, NOT notarized: ${bundle}`);return;}

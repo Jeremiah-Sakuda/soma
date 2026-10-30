@@ -145,3 +145,8 @@ npm test --prefix desktop
 ```
 
 Default tests are offline and use original synthetic material. Tests that call real providers are opt-in.
+
+
+## Personal continuity and optional actions
+
+Soma can now remember explicit goals, connect saved explorations into an evidence-linked understanding map, and use that context in later visual explanations. Concepts remain revisable interpretations, with source/version links and assistance visible. [Use and verification](docs/PERSONAL_COMPANION.md). The new native source also includes separately approved, bounded app controls; [native setup and remaining device checks](docs/COMPUTER_ACTIONS.md). These source changes require the corresponding web deployment and new native build; the existing 0.3.0 download does not include computer actions.

@@ -1288,5 +1288,20 @@
       "prompt": "Yeah lets work on latency. How do we make it feel close to live? ",
       "timestamp_note": "Exact received timestamp unavailable; recorded October 30, 2026 America/New_York. Ambient context excluded."
     }
+  ,
+{
+  "id": "DEMO-TEST-20261030-01",
+  "timestamp": null,
+  "text": "Okay I want you to test on the demo material",
+  "outcomes": [
+    "Tested original synthetic DSA, speaker and music screenshots through actual Muse and retained outputs; documented successful initial generation and all repeat/follow-up failures in docs/DEMO_MATERIAL_VALIDATION.md.",
+    "Fixed the 8,081-character follow-up instruction overflow without raising the 8,000-character limit; 56 affected offline tests passed; live speaker revision passed using bounded synthetic persistence with unchanged real shared budget.",
+    "Rendered original generated outputs at 1280/620/375px: nine initial-artifact cases passed; six speaker initial/revision repeat cases passed. DSA extraction/comparison-contract reliability and speaker/music presentation gaps remain."
+  ],
+  "deviations": [
+    "Used an isolated codex/demo-material-tests worktree to preserve concurrent spatial/UI work. Default-store repeat hit the 200-guest daily quota; later tests used explicitly labeled bounded synthetic storage while keeping actual Firestore spend enforcement. No quota reset, budget increase, production deployment or merge.",
+    "Per user instruction, did not consult build-log content or prior judge scores; this prompt entry is append-only. Exact prompt timestamp was unavailable."
+  ]
+}
   ]
 }

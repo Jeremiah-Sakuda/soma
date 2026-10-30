@@ -2634,3 +2634,14 @@ Deviations: evaluation only; no product, deployment, permission, spending or rel
 3. Prioritized a working demo, concrete user problem and credible benefit explanation; brief informal feedback can help if time permits. No new tests, implementation or submission action.
 
 Deviation: clarification of assessment emphasis only; no product-scope change. Prior build-log content and other assessments were not consulted.
+
+
+## DEMO-TEST-20261030-01 — demo material testing (October 30, 2026; exact prompt time unavailable)
+
+Prompt archived verbatim: “Okay I want you to test on the demo material”.
+
+1. Ran actual Muse generation on three original synthetic sources, retaining successful and failed results.
+2. Fixed instruction-length overflow (cdd0003); 56 affected tests passed and live speaker revision passed. DSA extraction and comparison-contract failures remain.
+3. Rendered actual outputs at three widths (9 initial renders and 6 speaker repeat renders passed); documented limits and demo-readiness findings in docs/DEMO_MATERIAL_VALIDATION.md.
+
+Deviations: isolated worktree preserves concurrent work; production guest quota blocked the default-store repeat, so explicitly labeled synthetic storage retained the real shared Firestore budget. No quota/budget increase, production deployment or merge. No earlier log content or judging scores consulted.

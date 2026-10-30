@@ -66,3 +66,15 @@ The final local-input receipt appeared in399ms in a Chromium production-build ob
 Final local checks:1539offlinepassed/93opt-in-skipped,137Chromium,21desktop-policy and3synthetic-relay; typecheck, optimized webpack build and isolated trace1339files/0links/0privateconfigurationmappings. Source identity: `soma-pm099-2026-10-30`,247files, SHA-256 `0cc02ce97fd03e355260fe01566fd6191107dc6650fb92eae6cd05b82d79daf3`. Runtime output replays and clean CI/hosted evidence are recorded below after completion.
 
 Final aggregate read2026-10-30T21:50:12.313Z:205guests/180turns/0active; consumed$13.9676615 of the unchanged$15lifetime cap. All actually created test guests were deleted. The admission-limited attempts created none and made no model call. Private evidence stays in `.local/pm097/latency-*` and `render-latency-*`; all original failures and earlier profiles are retained.
+
+## Hosted acceptance
+
+Implementation `b5147d7` deployed through the original private repository's existing [Vercel integration](https://vercel.com/jeremiah-sakudas-projects/soma/ETSUGPBaaTSiZcjqhX3DMZjAZ8Gi). Production's247-file manifest matches the SHA above. Actual hosted prepared-state persistence/rate controls and620/375render passed without inference. A separate real hosted edited-graph continuation completed in9.296s/two calls, passed Wonder, preserved scene/source/effective inputs, and saved/reopened exactly. Its single primary step2 correctly explained the cost2 tie betweenC andGoal using declared order; source still records the original cost10. All resulting test guests were deleted.
+
+The hosted local-input receipt appeared in391ms with generation blocked before the backend; no model/speech charge. Cancel/draft/620-and375-width rendering passed without page errors or overflow. Six retained final outputs (ordinary continuations, edited graph, clarification and new diagram) passed local production renderer replays; the actual hosted graph result also passed a labeled response replay through the deployed renderer. These are render checks, not extra live generation. Physical Mac/cursor/microphone and audible-quality claims remain separate.
+
+Final ledger snapshot2026-10-30T21:55:01.125Z:$13.99902475/$15,208created/181turns/0active; no reset/raise. Owned local servers stopped. CleanCI41134296347 is recorded after completion below.
+
+## Clean verification completed
+
+[CleanCI41134296347](https://github.com/Jeremiah-Sakuda/soma/actions/runs/41134296347) succeeded on `b5147d7`:1539offlinepassed/93opt-in-skipped,137Chromium,28isolated adversarial-browser,21desktop,4credential diagnostics and3relay. Default Next production build and isolated trace1224files/twolinks/0privateconfigurationmappings passed. The local webpack trace1339/0links is a distinct build result. This supersedes earlier pending-CI notes. Runtime source and hosted acceptance above remain unchanged; no further model calls were made for this closeout.

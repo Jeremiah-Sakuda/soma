@@ -57,10 +57,12 @@ test('capture preview stays local and quick/app transitions preserve controls an
   expect(calls.filter(c => c.action === 'generate')).toHaveLength(1);
   expect(calls[0].source.dataUrl).toMatch(/^data:image\/jpeg;base64,/);
   await page.getByRole('button', { name: 'Next step', exact: true }).click();
-  const frontier = page.getByRole('list', { name: 'First in, first out queue' });
+  const frontier = page.locator('.exploration-caption');
   const before = await frontier.textContent();
   await page.locator('#exploration-question').fill('Keep this unsent question.');
+  await expect(page.locator('.exploration-prediction')).toBeHidden();
   await page.getByRole('button', { name: 'Explore in app', exact: true }).click();
+  await expect(page.locator('.exploration-prediction')).toBeVisible();
   await expect(page.locator('.capture-shell')).toHaveAttribute('data-surface', 'workspace');
   await expect(page.locator('#exploration-question')).toHaveValue('Keep this unsent question.');
   expect(await frontier.textContent()).toBe(before);
@@ -73,11 +75,23 @@ test('capture preview stays local and quick/app transitions preserve controls an
 
 test('accessible size presets and phone reduced motion retain reachable quick controls', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 }); await setup(page);
-  const frame = page.locator('.capture-result-frame'); const small = (await frame.boundingBox())!.width;
+  const frame = page.locator('.capture-result-frame'); const smallBox = (await frame.boundingBox())!; const small = smallBox.width;
+  await page.mouse.move(smallBox.x + smallBox.width - 3, smallBox.y + smallBox.height - 3);
+  await page.mouse.down(); await page.mouse.move(smallBox.x + smallBox.width + 77, smallBox.y + smallBox.height - 3, { steps: 5 }); await page.mouse.up();
+  expect((await frame.boundingBox())!.width).toBeGreaterThan(small);
   const size = page.getByRole('combobox', { name: 'Explanation window size' });
   await size.focus(); await expect(size).toBeFocused(); await size.selectOption('large');
   await expect(size).toHaveValue('large');
   expect((await frame.boundingBox())!.width).toBeGreaterThan(small);
+  await size.selectOption('small');
+  expect((await frame.boundingBox())!.width).toBe(small);
+  const resized = (await frame.boundingBox())!;
+  await page.mouse.move(resized.x + resized.width - 3, resized.y + resized.height - 3);
+  await page.mouse.down(); await page.mouse.move(resized.x + resized.width + 77, resized.y + resized.height - 3, {steps: 5}); await page.mouse.up();
+  await page.getByRole('button', {name: 'Explore in app', exact: true}).click();
+  expect((await frame.boundingBox())!.width).toBeGreaterThan(900);
+  await page.getByRole('button', {name: 'Quick view', exact: true}).click();
+  expect((await frame.boundingBox())!.width).toBe(small);
   await page.setViewportSize({ width: 375, height: 704 }); await page.emulateMedia({ reducedMotion: 'reduce' });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('button', { name: 'Next step', exact: true }).focus(); await page.keyboard.press('Enter');

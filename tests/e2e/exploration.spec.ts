@@ -44,12 +44,14 @@ async function setup(page: Page, options: { live?: boolean; delay?: boolean; fai
     return route.fulfill({ json: { artifact } });
   });
   await page.goto('/explore');
-  await expect(page.getByRole('heading', { name: 'Make the idea visible.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Understand what’s on your screen.' })).toBeVisible();
+  await page.getByText('Or try an example', { exact: true }).click();
   return { requests,completeInitialization:async()=>{await expect.poll(()=>initialRequests.length).toBeGreaterThan(0);await Promise.all(initialRequests.splice(0).map(item=>item.route.fulfill({json:item.response})));}, completeResume:async()=>{if(pendingResume)await pendingResume.route.fulfill({json:pendingResume.response});},completeDelayed: async () => { if (pending) await pending.fulfill({ json: { artifact: fixture({ comparison: true, version: 2 }) } }).catch(() => undefined); } };
 }
 async function example(page: Page) {
   await page.getByRole('button', { name: 'Try the original example', exact: true }).first().click();
   await expect(page.getByRole('heading', { name: 'Why does A come before B?', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Explore in app', exact: true }).click();
 }
 async function syntheticPng(page: Page) {
   const base64 = await page.evaluate(() => {
@@ -81,7 +83,7 @@ test('original example runs actual BFS controls, saves exact state and resumes w
   const saved = requests.find(item => item.action === 'save')!;
   expect(saved.state).toMatchObject({ step: 1, reversed: true, disabledEdgeIds: ['sa'], selectedObjectId: 'b' });
   expect(requests.some(item => item.action === 'generate')).toBe(false);
-  await page.reload(); await page.getByRole('button', { name: 'Why does A come before B? Version 1 · Saved' }).click();
+  await page.reload(); await page.getByRole('button', { name: 'Library', exact: true }).click(); await page.getByRole('button', { name: 'Why does A come before B? Version 1 · Saved' }).click(); await page.getByRole('button',{name:'Explore in app',exact:true}).click();
   await expect(page.getByRole('button', { name: 'Reverse neighbor order' })).toHaveAttribute('aria-pressed', 'true');
   await expect(frontier.locator('li')).toHaveText(['NextB']);
   await expect(page.getByText('Asking about: B')).toBeVisible();
@@ -123,12 +125,12 @@ test('source change cancels an older request and preserves the last valid artifa
   await page.getByRole('button', { name: 'Ask Soma', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Cancel request' })).toBeVisible();
   await page.getByLabel('Upload a PNG or JPEG screenshot').setInputFiles(await syntheticPng(page));
-  await expect(page.getByText('Previous context', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Explore new context', exact: true })).toBeEnabled();
   await completeDelayed();
+  await page.getByRole('button',{name:'Return to explanation',exact:true}).click();
   await expect(page.getByRole('heading', { name: 'Why does A come before B?', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Same shortest distance, different tie order', exact: true })).toHaveCount(0);
   await expect.poll(() => requests.filter(item => item.action === 'cancel').length).toBe(1);
-  await expect(page.getByRole('button', { name: 'Explore new context', exact: true })).toBeEnabled();
 });
 
 test('an invalid generation keeps the last valid card and has a keyboard reachable recovery path', async ({ page }) => {
@@ -161,19 +163,26 @@ test('selected-window sharing sends only an explicit snapshot and Stop sharing r
       const canvas = document.createElement('canvas'); canvas.width = 640; canvas.height = 400;
       const context = canvas.getContext('2d')!; context.fillStyle = '#fff'; context.fillRect(0, 0, 640, 400);
       context.fillStyle = '#17171c'; context.font = '28px sans-serif'; context.fillText('Original synthetic shared graph S → A', 20, 100);
-      const stream = canvas.captureStream(3); (window as unknown as { syntheticShare: MediaStream }).syntheticShare = stream;
+      const stream = canvas.captureStream(30); (window as unknown as { syntheticShare: MediaStream }).syntheticShare = stream;
+      (window as any).syntheticCanvas = canvas;
       return stream;
     } });
   });
   const { requests } = await setup(page);
-  await page.getByRole('button', { name: 'Share a window', exact: true }).click();
+  await page.getByRole('button', { name: 'Capture a window', exact: true }).click();
   await expect(page.getByText('Sharing selected window', { exact: true })).toBeVisible();
   expect(requests).toEqual([]);
+  const reviewed = await page.getByAltText('Your selected screenshot; captured only when requested').getAttribute('src');
+  await page.evaluate(() => { const canvas = (window as any).syntheticCanvas as HTMLCanvasElement; const context = canvas.getContext('2d')!; context.fillStyle = '#f00'; context.fillRect(0,0,canvas.width,canvas.height); });
+  // Allow the 30fps source to deliver changed pixels; the reviewed still must remain authoritative.
+  await page.waitForTimeout(150);
+  await expect(page.getByAltText('Your selected screenshot; captured only when requested')).toHaveAttribute('src', reviewed!);
   await page.getByLabel('What would you like to understand?').fill('Show the frontier.');
   await page.getByRole('button', { name: 'Ask Soma', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Same shortest distance, different tie order', exact: true })).toBeVisible();
   expect(requests.filter(item => item.action === 'generate')).toHaveLength(1);
   expect(requests.find(item => item.action === 'generate')!.source.label).toMatch(/^Selected-window capture:/);
+  expect(requests.find(item => item.action === 'generate')!.source.dataUrl).toBe(reviewed);
   expect(requests.find(item => item.action === 'generate')!.source.dataUrl).toMatch(/^data:image\/jpeg;base64,/);
   await page.getByRole('button', { name: 'Stop sharing', exact: true }).click();
   await expect(page.getByText('Sharing selected window', { exact: true })).toHaveCount(0);
@@ -184,7 +193,7 @@ test('selected-window sharing sends only an explicit snapshot and Stop sharing r
 test('window-sharing denial keeps the typed upload path available without sending a screenshot', async ({ page }) => {
   await page.addInitScript(() => { Object.defineProperty(navigator.mediaDevices, 'getDisplayMedia', { value: async () => { throw new DOMException('Synthetic permission denial', 'NotAllowedError'); } }); });
   const { requests } = await setup(page);
-  await page.getByRole('button', { name: 'Share a window', exact: true }).click();
+  await page.getByRole('button', { name: 'Capture a window', exact: true }).click();
   await expect(page.getByRole('main').getByRole('alert')).toContainText('upload a screenshot instead');
   await expect(page.getByRole('button', { name: 'Upload screenshot', exact: true })).toBeEnabled();
   expect(requests).toEqual([]);
@@ -205,6 +214,7 @@ test('saved older versions remain resumable without silently replacing their exa
   await page.getByLabel('Upload a PNG or JPEG screenshot').setInputFiles(await syntheticPng(page));
   await page.getByLabel('What would you like to understand?').fill('Start a separate exploration from this screenshot.');
   await expect(page.getByRole('button',{name:'Explore new context',exact:true})).toBeEnabled();
+  await page.getByRole('button',{name:'Return to explanation',exact:true}).click();
   await page.getByRole('button',{name:'Open the latest version',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Same shortest distance, different tie order',exact:true})).toBeVisible();
 });
@@ -233,7 +243,7 @@ test('late window permission is released if an earlier sharing session is stoppe
     }});
   });
   const {requests}=await setup(page);
-  await page.getByRole('button',{name:'Share a window',exact:true}).click();
+  await page.getByRole('button',{name:'Capture a window',exact:true}).click();
   await expect(page.getByText('Sharing selected window',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Choose another window',exact:true}).click();
   await page.getByRole('button',{name:'Stop sharing',exact:true}).click();
@@ -253,12 +263,12 @@ test('exploration deletion requires explicit confirmation and clears its version
   await page.getByRole('button',{name:'Delete all versions',exact:true}).focus();await page.keyboard.press('Enter');
   await expect(page.getByRole('status').filter({hasText:'Deleted this exploration'})).toBeVisible();
   await expect(page.getByRole('article',{name:'Visual exploration card'})).toHaveCount(0);
-  await expect(page.getByRole('heading',{name:'A question can become an experiment.',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Understand what’s on your screen.',exact:true})).toBeVisible();
   expect(requests.some(item=>item.action==='generate')).toBe(false);
 });
 
 test('a delayed resume cannot overwrite experiment controls changed while it was loading',async({page})=>{
-  const {completeResume}=await setup(page,{delayResume:true});await example(page);
+  const {completeResume}=await setup(page,{delayResume:true});await example(page);await page.getByRole('button',{name:'Library',exact:true}).click();
   await page.getByRole('button',{name:'Why does A come before B? Version 1',exact:true}).click();
   await page.getByRole('button',{name:'Next step',exact:true}).click();
   await completeResume();
@@ -294,8 +304,9 @@ test('server actions wait for guest-session initialization while local screensho
 
 test('diagram and question share the desktop viewport and automatic follow-ups retain the selected object',async({page})=>{
  await page.setViewportSize({width:1280,height:720});const h=await setup(page);await example(page);await page.evaluate(()=>window.scrollTo(0,0));
- const graph=await page.locator('.exploration-graph').first().boundingBox(),composer=await page.locator('.exploration-ask-card').boundingBox();expect(graph!.y).toBeLessThan(600);expect(composer!.y).toBeLessThan(250);expect(composer!.x).toBeLessThan(graph!.x);
- await page.getByRole('button',{name:'Node A',exact:true}).click();await expect(page.getByRole('combobox',{name:'Follow-up action'})).toHaveCount(0);
+ await page.getByRole('button',{name:'Quick view',exact:true}).click();
+ const graph=await page.locator('.exploration-graph').first().boundingBox(),composer=await page.locator('.exploration-ask-card').boundingBox();expect(graph!.y).toBeLessThan(600);expect(composer!.y).toBeLessThan(720);expect(graph!.y).toBeLessThan(composer!.y);
+ await page.getByText('Select a node & inspect graph',{exact:true}).click();await page.getByRole('button',{name:'Node A',exact:true}).click();await expect(page.getByRole('combobox',{name:'Follow-up action'})).toHaveCount(0);
  await page.locator('#exploration-question').fill('Why is this next?');await page.getByRole('button',{name:'Ask Soma',exact:true}).click();await expect.poll(()=>h.requests.filter(item=>item.action==='generate').length).toBe(1);expect(h.requests.find(item=>item.action==='generate')!.intent).toBe('auto');expect(h.requests.find(item=>item.action==='generate')!.selectedObjectId).toBe('a');
 });
 

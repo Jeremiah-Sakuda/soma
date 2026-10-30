@@ -72,6 +72,7 @@ async function setup(page: Page) {
     return r.fulfill({ json: { artifact: a } });
   });
   await page.goto('/explore');
+  await page.getByText('Or try an example', { exact: true }).click();
   await page
     .getByRole('button', { name: 'Try the original example', exact: true })
     .first()

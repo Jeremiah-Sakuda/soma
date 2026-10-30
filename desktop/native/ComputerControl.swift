@@ -8,6 +8,7 @@ func attr(_ element: AXUIElement, _ name: String) -> CFTypeRef? { var value: CFT
 func string(_ element: AXUIElement, _ name: String) -> String { (attr(element, name) as? String) ?? "" }
 let input = FileHandle.standardInput.readDataToEndOfFile()
 guard input.count < 32768, let request = try? JSONSerialization.jsonObject(with: input) as? [String: Any] else { fail("invalid_request") }
+if request["command"] as? String == "permission" { print("{\"trusted\":\(AXIsProcessTrusted() ? "true" : "false")}"); exit(0) }
 guard AXIsProcessTrusted() else { fail("accessibility_permission_required") }
 if let pid = request["activate"] as? Int {
     guard let target = NSRunningApplication(processIdentifier: pid_t(pid)) else { fail("app_closed") }

@@ -16,12 +16,14 @@ if let pid = request["activate"] as? Int {
 }
 guard let app = NSWorkspace.shared.frontmostApplication, app.bundleIdentifier != "app.soma.desktop", app.bundleIdentifier != "com.github.Electron" else { fail("select_another_app") }
 if let expected = request["pid"] as? Int, expected != Int(app.processIdentifier) { fail("focus_changed") }
+let appIdentity = (app.localizedName ?? "") + " " + (app.bundleIdentifier ?? "")
+guard appIdentity.range(of: "terminal|iterm|warp|script.?editor|automator|xcode|visual studio code|code runner", options: [.regularExpression,.caseInsensitive]) == nil else { fail("command_apps_unsupported") }
 let root = AXUIElementCreateApplication(app.processIdentifier)
 AXUIElementSetMessagingTimeout(root, 1)
 guard let rawWindow = attr(root, kAXFocusedWindowAttribute), CFGetTypeID(rawWindow) == AXUIElementGetTypeID() else { fail("no_focused_window") }
 let window = unsafeBitCast(rawWindow, to: AXUIElement.self)
 var nodes: [[String: Any]] = [], elements: [AXUIElement] = [], visited = 0
-let forbidden = "password|passcode|secret|token|credit.?card|card.?number|security.?code|verification.?code|one.?time|otp|ssn|social.?security"
+let forbidden = "password|passcode|secret|token|credit.?card|card.?number|security.?code|verification.?code|one.?time|otp|ssn|social.?security|terminal|console|command|script|code|execute|compile|debug|(?:^|\\s)run(?:$|\\s)"
 func sensitive(_ s: String) -> Bool { s.range(of: forbidden, options: [.regularExpression, .caseInsensitive]) != nil }
 func walk(_ e: AXUIElement, _ depth: Int) {
     if depth > 16 || visited >= 600 || nodes.count >= 80 { return }; visited += 1
@@ -37,23 +39,28 @@ func walk(_ e: AXUIElement, _ depth: Int) {
 }
 walk(window, 0)
 let title = string(window, kAXTitleAttribute)
+func stateValue(_ element: AXUIElement) -> String {
+    let value = attr(element,kAXValueAttribute)
+    return (value as? String) ?? (value as? NSNumber)?.stringValue ?? ""
+}
 var geometry: [[String: Any]] = []
 for element in elements {
     var point = CGPoint.zero, size = CGSize.zero
     if let raw = attr(element, kAXPositionAttribute), CFGetTypeID(raw) == AXValueGetTypeID() { _ = AXValueGetValue(unsafeBitCast(raw, to: AXValue.self), .cgPoint, &point) }
     if let raw = attr(element, kAXSizeAttribute), CFGetTypeID(raw) == AXValueGetTypeID() { _ = AXValueGetValue(unsafeBitCast(raw, to: AXValue.self), .cgSize, &size) }
-    geometry.append(["x":point.x,"y":point.y,"width":size.width,"height":size.height,"valueDigest":SHA256.hash(data:Data(string(element,kAXValueAttribute).utf8)).map { String(format:"%02x",$0) }.joined()])
+    geometry.append(["x":point.x,"y":point.y,"width":size.width,"height":size.height,"valueDigest":SHA256.hash(data:Data(stateValue(element).utf8)).map { String(format:"%02x",$0) }.joined()])
 }
-let canonical = try! JSONSerialization.data(withJSONObject: ["pid": Int(app.processIdentifier), "window": title, "controls": nodes, "geometry": geometry], options: [.sortedKeys])
+let canonical = try! JSONSerialization.data(withJSONObject: ["pid": Int(app.processIdentifier), "window": title, "bundle": app.bundleIdentifier ?? "", "launched": app.launchDate?.timeIntervalSince1970 ?? 0, "controls": nodes, "geometry": geometry], options: [.sortedKeys])
 let fingerprint = SHA256.hash(data: canonical).map { String(format: "%02x", $0) }.joined()
 let command = request["command"] as? String ?? "observe"
 if command == "execute" {
     guard request["fingerprint"] as? String == fingerprint else { fail("screen_changed") }
     guard let id = request["target"] as? Int, id >= 0, id < elements.count, let kind = request["kind"] as? String else { fail("invalid_action") }
+    guard nodes.filter({ ($0["role"] as? String) == (nodes[id]["role"] as? String) && ($0["label"] as? String) == (nodes[id]["label"] as? String) }).count == 1 else { fail("ambiguous_target") }
     let e = elements[id]
     guard NSWorkspace.shared.frontmostApplication?.processIdentifier == app.processIdentifier else { fail("focus_changed") }
     if kind == "type" {
-        guard nodes[id]["role"] as? String == "AXTextField", let text = request["text"] as? String, text.count > 0, text.count <= 500, !text.contains("\n"), !text.contains("\r"), !text.contains("\t") else { fail("invalid_text") }
+        guard nodes[id]["role"] as? String == "AXTextField", let text = request["text"] as? String, text.count > 0, text.count <= 500, !text.contains("\n"), !text.contains("\r"), !text.contains("\t"), text.unicodeScalars.allSatisfy({ $0.value >= 32 && $0.value != 127 }), text.range(of: "(?:javascript|vbscript|data|file):",options:[.regularExpression,.caseInsensitive]) == nil else { fail("invalid_text") }
         var settable = DarwinBoolean(false)
         guard AXUIElementIsAttributeSettable(e, kAXValueAttribute as CFString, &settable) == .success, settable.boolValue else { fail("field_not_editable") }
         guard AXUIElementSetAttributeValue(e, kAXValueAttribute as CFString, text as CFString) == .success else { fail("action_failed") }

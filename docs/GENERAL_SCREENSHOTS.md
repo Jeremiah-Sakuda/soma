@@ -92,3 +92,54 @@ Runtime source: [be62bdca061251851346ec6d9468901bd5e47df5](https://github.com/Je
 Production https://soma-woad-beta.vercel.app/explore is deployment `dpl_6qeBzywPSDaKKChCA1UC1hUgCYvW`. The exact committed/public/production runtime manifest matches: `soma-pm078-2026-10-30`, 228 files, SHA-256 `0d0cf1d45b7ca39077e9ded9f4c039b4936a7bcb64bc05a1f95a0f778f978f7c`. Hosted guest creation, prepared weighted experiment, exact save/reopen, companion/phone rendering, explicit reopen after reload and microphone policy passed without inference; own test records were removed. The first smoke harness expected a false capability field instead of its intentionally absent disabled form; the second omitted the explicit saved-card reopen action after reload. Both harness failures are retained; the stage-aware corrected run passed with zero page exceptions.
 
 No relay provisioned: streaming capability is absent in production, so recorded input remains the normal path. Local signed 0.3.0 passed normal macOS deep/strict signature verification in both original and copied bundles (all file bytes matched); a restricted-environment verification gave an inconsistent invalid-signature result, retained separately. Notarization/physical native capture and audible-device checks remain outstanding. Total measured shared testing ledger is $8.440255/$15.
+
+
+## PM080 — Generation reliability and truthful waiting (October 30)
+
+The released design uses strict JSON scene configuration, with exact source/artifact/model bindings and the existing independent publication checks. Composition does not re-offer the completed source-inspection tool. New non-graph authoring uses only explanation-compatible panels; saved scenes remain compatible. Invalid optional location bounds are omitted without clamping. A malformed source interpretation may be re-read once from the same frozen pixels. A review with no usable typed result may receive one bounded format repair of the same unchanged candidate, preserving its prior response. Material criticism still requires author repair and re-review; unknown-billing transport failures are not retried. Original six-call, 90-second and $0.35 per-turn bounds remain.
+
+Meta supports automatic tool choice only ([official tool-calling documentation](https://dev.meta.ai/docs/tool-calling)). Scene configuration now uses [structured output](https://dev.meta.ai/docs/structured-output); the critic accepts an actual review function result or explicitly requested JSON data, independently validating the verdict/findings. No function call is fabricated for a text response. Legacy provider callers retain their default behavior. Critic approval remains advisory; it is not verification of arbitrary subject matter.
+
+The generation HTTP response optionally streams only actual application phases, then the complete validated artifact or a bounded error. No partial model explanation is published. The current diagram and draft remain available. Cancel now prevents the button's default form action, fixing a reproduced automatic-resubmission bug. Interrupted responses show a recovery message without exposing protocol/schema details.
+
+### Ten-source development repeat
+
+The eight PM078 captures were reused, with two additional official pages frozen before evaluation: [Python list comprehensions](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions) and [NASA orbital laws](https://science.nasa.gov/solar-system/orbits-and-keplers-laws/). Reference facts stayed out of model requests. A private harness initially called native fetch's numeric status as a method after requests started; those interrupted attempts and conservative charges are retained. The new pages therefore count as development repeats, not clean held-out or first-request successes.
+
+The final broad batch published **8/10**; each successful artifact rendered at 620/375 pixels and saved/reopened with exact metadata. Physics failed its interpretation contract; astronomy failed its review contract. Both subsequently published under the bounded-repair candidate (30.080s and 19.945s), with real checks/save/reopen. These two repeats do not replace the initial failures or make the original batch 10/10. Their source/review format-repair guards were not needed in those particular repeats; physics did need ordinary author repair after a material critic finding. The guards themselves were verified with deliberately malformed outputs in service tests.
+
+| Source | Broad batch | HTTP wait |
+| --- | --- | --- |
+| programming | Published | 21.236s |
+| calculus | Published | 22.108s |
+| biology | Published | 18.991s |
+| chemistry | Published | 20.802s |
+| economics | Published | 20.514s |
+| statistics | Published | 18.890s |
+| history | Published | 21.938s |
+| physics | generation_invalid | 6.536s |
+| list-comprehension | Published | 19.479s |
+| astronomy | review_unavailable | 22.975s |
+
+Published broad cases had a 20.658s median HTTP wait. First phase feedback ranged from 0.354–1.530s, median 0.513s, measured from the generation request rather than from the start of a native speech gesture. Among the seven matched previously successful cases, the prior/current medians were 22.588s/20.802s in one repeat. These are uncontrolled development observations, not a speed guarantee or a statistical reliability rate. Generation, review repair, speech transcription and narration can add noticeable waiting.
+
+### Checked computation and critic limits
+
+A fresh original P/Q/R weighted screenshot passed real Dijkstra extraction/composition/review: P→Q→R costs 5 versus direct P→R cost 9. Actual cost investigation and an authorized direct-cost change to 1 passed subsequent real generation, exact original preservation and save/reopen (21.148s, 11.293s and 25.984s). An earlier private harness tried changing a control before the generated scene exposed it; the API rejected that request. The corrected harness first used the actual investigation action, which exposes weight editing. No prepared artifact substituted for live generation.
+
+Wonder caught an actual queued-versus-settled narration error, then approved the repaired candidate. A later review demanded original source cost 9 while the user was exploring a hypothetical cost 1; the application kept the authorized current input and the repaired explanation clarified it before approval. Source facts and hypothetical changes remain distinct.
+
+Critic experiments exposed false negatives: one constrained-output configuration missed a known contradiction, and a nested conditional review schema approved all three seeded errors. Those review configurations were rejected and are not released. The final short fact-focused tool-or-JSON critic rejected all three known contradictions in a subsequent check. Repeating this small development set does not establish critic precision/recall or universal factual correctness. All rejected/failed runs remain in private evidence. General subjects are explanation-only; only supported graph calculations receive checked-computation assurance.
+
+### Executed verification
+
+Final local typecheck/build/isolated browser trace passed; complete offline suite 1,428 passes/89 opt-in skips; all 129 browser journeys, 14 desktop and three relay tests passed. Source re-reading, incomplete/invalid review recovery, immutable candidates, terminal error/cancel handling, original state, ownership and hard bounds are covered. Final clean CI and production identity are appended after confirmation. Raw public-page screenshots, model responses and speech remain private test artifacts. No student outcome, arbitrary simulation, always-on video or training result is claimed.
+
+
+### PM080 confirmed release — October 30
+
+Runtime source [24ec4b5](https://github.com/Jeremiah-Sakuda/soma-hackathon/commit/24ec4b5a40cbad11281fe3dbb3de5b4b7cca874f) passed [clean CI 41105115334](https://github.com/Jeremiah-Sakuda/soma-hackathon/actions/runs/41105115334), including all 129 browser journeys and 28 isolated credential-browser cases. The runtime manifest is `soma-pm080-2026-10-30`, 230 files, SHA-256 `a114e800f3843d500d45012175c21563a11c10f0abbd7110625d356c2d3d3716`. Production https://soma-woad-beta.vercel.app/explore serves deployment `dpl_7vRxLFctVqbS9LC3WgkJPQZjG561` from that exact committed runtime. Later documentation commits do not alter the runtime fingerprint.
+
+An actual hosted upload using a frozen public Python page showed its first application phase at 1.702s and completed in 18.644s: three real Spark/Wonder calls, $0.0337535. Reading, composition, validation, review and saving were observed through the real response stream. Exact save/reload/reopen, 375px layout and zero page exceptions passed; synthetic guest records were removed. A first hosted harness could not retrieve the consumed stream through DevTools; its interrupted observation and cleanup are retained separately. The corrected observer cloned the real response without replacing or stubbing inference. These are individual development observations, not guaranteed latency or reliability.
+
+[Soma 0.3.0 for Apple Silicon](https://github.com/Jeremiah-Sakuda/soma-hackathon/releases/download/v0.3.0/Soma-macOS-arm64.zip) is Developer ID signed, Apple-notarized, stapled and Gatekeeper-accepted. Published archive SHA-256 `cfdfffa47c0594ef433467011ce9a96595d295739a274f25f772193bbb1f3e87`, 121,155,342 bytes. This supersedes earlier pending-notarization statements. Native source remains be62bdc; the shell loads the current hosted engine. Physical shortcut/capture/audio and clean-Mac installation remain untested. Cloud streaming relay activation is still separate and pending; recorded input remains available. Last-read shared lifetime ledger: $12.09191425 of $15 at 2026-10-30T18:26:31.411Z, including retained earlier use/reservations; no reset or training spend.

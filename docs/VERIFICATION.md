@@ -108,4 +108,6 @@ The opt-in synthetic live test passed actual Muse memory selection → source-li
 
 Earlier full browser checks exposed a true layout regression (fixed by placing memory in the source area), a hard-coded test port (fixed to use the baseURL fixture), and missing synthetic Firebase build configuration (supplied for the isolated browser build). The final 133-case rerun passed. The local isolated browser-artifact check rejected the externally symlinked dependency directory used to avoid touching the parallel checkout; its guard remains intact. Clean-install CI must independently verify the production trace. No production deployment, new signed/notarized native distribution or physical Accessibility execution is claimed by this source merge.
 
-Runtime manifest: `soma-pm086-2026-10-30`, 245 files, SHA-256 `13ad66a468d758c0b161a5b6fecedd1c8c9aa052cfc77275366b669022bf5a3d`. Final remote branch/CI evidence follows separately.
+Runtime manifest: `soma-pm086-2026-10-30`, 245 files, SHA-256 `c5d27a62fa5f41a7f961564ea95e5f6505a286e068978d2f75b5266be02a52d7`. Final remote branch/CI evidence follows separately.
+
+The later parallel `24ec4b5` source/review format-recovery change was also integrated; only the generated manifest conflicted and was regenerated. All 82 affected source/review/memory tests and TypeScript passed afterward. The full clean-install CI gate is run on the combined main revision.

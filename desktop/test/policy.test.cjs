@@ -16,6 +16,6 @@ test('external links reject local protocols and embedded credentials',()=>{
 });
 test('multi-display capture never substitutes the wrong screen',()=>{
  const sources=[{display_id:'12'},{display_id:'34'}]; assert.equal(captureSource(sources,34),sources[1]);assert.equal(captureSource(sources,56),undefined);
- assert.deepEqual(panelBounds({x:-1920,y:24,width:1920,height:1056}),{x:-620,y:24,width:620,height:900});
- assert.deepEqual(panelBounds({x:0,y:0,width:500,height:700}),{x:0,y:0,width:500,height:700});
+ assert.deepEqual(panelBounds({x:-1920,y:24,width:1920,height:1056}),{x:-540,y:24,width:540,height:650});
+ assert.deepEqual(panelBounds({x:0,y:0,width:500,height:650}),{x:0,y:0,width:500,height:650});
 });

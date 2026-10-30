@@ -115,3 +115,22 @@ ipcRenderer.on('desktop:source-highlight-result', (_event, d) => {
       }),
     );
 });
+
+// Layout-only bridge. The main process rechecks origin, top frame and sender.
+// It cannot capture, navigate, run code or create another privileged window.
+function publishSurface(state) {
+  if (isExploration() && ['companion', 'workspace'].includes(state?.surface))
+    window.dispatchEvent(new CustomEvent('soma:surface', { detail: { surface: state.surface } }));
+}
+ipcRenderer.on('desktop:surface', (_event, state) => publishSurface(state));
+function syncSurface() {
+  if (isExploration()) ipcRenderer.invoke('desktop:surface').then(publishSurface).catch(() => {});
+}
+window.addEventListener('DOMContentLoaded', syncSurface);
+// React installs its listener after DOMContentLoaded; request current state on mount.
+window.addEventListener('soma:surface-ready', syncSurface);
+window.addEventListener('soma:surface-request', (event) => {
+  const next = event.detail?.surface;
+  if (isExploration() && ['companion', 'workspace'].includes(next))
+    ipcRenderer.invoke('desktop:surface', next).then(publishSurface).catch(() => {});
+});

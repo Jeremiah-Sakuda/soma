@@ -72,8 +72,8 @@ function selectFocus(samples, bounds) {
   };
 }
 function pointPanelBounds(area, focus) {
-  const width = Math.min(620, area.width),
-    height = Math.min(900, area.height);
+  const width = Math.min(540, area.width),
+    height = Math.min(650, area.height);
   return {
     x: focus.region.x + focus.region.width / 2 > 0.5 ? area.x : area.x + area.width - width,
     y: area.y,

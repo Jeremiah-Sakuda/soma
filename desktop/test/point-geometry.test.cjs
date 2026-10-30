@@ -12,4 +12,4 @@ test('a cursor move, tiny shake or nearly closed line stays a point instead of a
 });
 test('a lead-in movement does not prevent recognizing the final intentional loop',()=>{const f=selectFocus([{x:20,y:20},...circle(500,350,80,50)],{x:0,y:0,width:1200,height:800});assert.equal(f.kind,'circle');assert(f.region.width<.2);});
 test('empty, malformed and cross-display pointing is rejected rather than silently retargeted',()=>{const bounds={x:-1000,y:0,width:1000,height:700};for(const p of [[],[{x:Infinity,y:1}],[{x:-500,y:100},{x:100,y:200}]])assert.throws(()=>selectFocus(p,bounds));});
-test('the panel uses the opposite display edge from the selected region',()=>{const area={x:-1920,y:24,width:1920,height:1056};assert.equal(pointPanelBounds(area,{region:{x:.8,width:.1}}).x,-1920);assert.equal(pointPanelBounds(area,{region:{x:.1,width:.1}}).x,-620);});
+test('the panel uses the opposite display edge from the selected region',()=>{const area={x:-1920,y:24,width:1920,height:1056};assert.equal(pointPanelBounds(area,{region:{x:.8,width:.1}}).x,-1920);assert.equal(pointPanelBounds(area,{region:{x:.1,width:.1}}).x,-540);});

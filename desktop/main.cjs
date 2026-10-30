@@ -22,6 +22,7 @@ const {
   panelBounds,
   captureSource,
 } = require('./policy.cjs');
+const { createSurfaceController, validSurface } = require('./surface.cjs');
 const origin = appOrigin(process.env.SOMA_DESKTOP_URL, app.isPackaged);
 const toolbarURL = pathToFileURL(path.join(__dirname, 'toolbar.html')).href;
 let win,
@@ -31,7 +32,8 @@ let win,
   revision = 0,
   shortcutOK = false,
   pointAsk,
-  computerControl;
+  computerControl,
+  surfaces;
 const locked = {
   nodeIntegration: false,
   contextIsolation: true,
@@ -116,6 +118,7 @@ async function capture() {
     if (ticket !== revision) return;
     if (!trustedPage(view.webContents.getURL(), origin))
       throw new Error('Soma navigated away; snapshot discarded.');
+    surfaces.set('companion');
     win.setBounds(panelBounds(display.workArea));
     show();
     view.webContents.setAudioMuted(false);
@@ -138,14 +141,23 @@ else {
   app.whenReady().then(() => {
     win = new BrowserWindow({
       ...panelBounds(screen.getPrimaryDisplay().workArea),
-      minWidth: 420,
-      minHeight: 500,
+      minWidth: 380,
+      minHeight: 460,
+      frame: false,
+      resizable: true,
       title: 'Soma',
-      backgroundColor: '#f5f0e5',
+      backgroundColor: '#faf9f6',
       alwaysOnTop: true,
       show: false,
       webPreferences: { ...locked, preload: path.join(__dirname, 'toolbar-preload.cjs') },
     });
+    surfaces = createSurfaceController(win,
+      () => screen.getDisplayMatching(win.getBounds()).workArea,
+      (state) => {
+        win.webContents.send('desktop:surface', state);
+        if (trustedPage(view?.webContents.getURL() || '', origin))
+          view.webContents.send('desktop:surface', { surface: state.surface });
+      });
     win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     view = new WebContentsView({
       webPreferences: {
@@ -157,7 +169,7 @@ else {
     win.contentView.addChildView(view);
     const layout = () => {
       const [width, height] = win.getContentSize();
-      view.setBounds({ x: 0, y: 96, width, height: Math.max(0, height - 96) });
+      view.setBounds({ x: 0, y: 80, width, height: Math.max(0, height - 80) });
     };
     win.on('resize', layout);
     layout();
@@ -226,6 +238,7 @@ else {
         win.hide();
       },
       showPanel: (bounds) => {
+        surfaces.set('companion');
         if (bounds) win.setBounds(bounds);
         win.showInactive();
         view.webContents.setAudioMuted(false);
@@ -265,6 +278,13 @@ else {
             : {}),
         });
     });
+    ipcMain.handle('desktop:surface', (event, next) => {
+      if (!trusted(event)) throw new Error('Untrusted Soma surface request.');
+      if (next === undefined) return { surface: surfaces.state().surface };
+      if (!validSurface(next)) throw new Error('Unknown Soma surface.');
+      surfaces.set(next);
+      return { surface: surfaces.state().surface };
+    });
     ipcMain.handle('desktop:action', async (event, action) => {
       if (!trusted(event, true)) throw new Error('Untrusted desktop control.');
       if (['point','capture','hide','reload'].includes(action)) computerControl?.stop('Computer task ended.');
@@ -294,10 +314,17 @@ else {
         await shell.openExternal(
           'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture',
         );
-      else if (action === 'pin') {
-        win.setAlwaysOnTop(!win.isAlwaysOnTop());
-        return win.isAlwaysOnTop();
-      } else if (action === 'ready') return { shortcutOK, platform: process.platform };
+      else if (action === 'pin') return surfaces.togglePin().pinned;
+      else if (action === 'surface') return surfaces.set(surfaces.state().surface === 'companion' ? 'workspace' : 'companion');
+      else if (action === 'menu') {
+        Menu.buildFromTemplate([
+          { label: 'Keep on top', type: 'checkbox', checked: win.isAlwaysOnTop(), click: () => surfaces.togglePin() },
+          { label: 'Point & ask', type: 'checkbox', checked: pointAsk.enabled, click: () => win.webContents.send('desktop:menu-action', 'point') },
+          { type: 'separator' },
+          { label: 'Reload Soma', click: () => win.webContents.send('desktop:menu-action', 'reload') },
+          { label: 'Screen permission…', click: () => win.webContents.send('desktop:menu-action', 'settings') },
+        ]).popup({ window: win });
+      } else if (action === 'ready') return { shortcutOK, platform: process.platform, ...surfaces.state() };
       else throw new Error('Unknown desktop control.');
     });
     ipcMain.on('desktop:received', (event, ok) => {
@@ -346,7 +373,7 @@ else {
       ]),
     );
     win.loadURL(toolbarURL);
-    view.webContents.loadURL(`${origin}/explore`);
+    view.webContents.loadURL(`${origin}/explore?surface=companion`);
     win.once('ready-to-show', show);
     app.on('activate', () => {
       show();

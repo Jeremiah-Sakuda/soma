@@ -12,7 +12,7 @@ function safeExternal(url) {
   try { const u = new URL(url); return u.protocol === 'https:' && !u.username && !u.password; } catch { return false; }
 }
 function panelBounds(area) {
-  const width = Math.min(620, area.width), height = Math.min(900, area.height);
+  const width = Math.min(540, area.width), height = Math.min(650, area.height);
   return {x: area.x + area.width - width, y: area.y, width, height};
 }
 function captureSource(sources, displayId) {

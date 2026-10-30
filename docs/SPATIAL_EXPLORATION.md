@@ -51,3 +51,76 @@ For actual generation, supply a visible diagram and request a **3D schematic**. 
 ## Remaining limits
 
 Generic 3D is a bounded explanatory schematic, not an accurate reconstructed digital twin or a new checked physics family. Hardware coverage is Chromium with software WebGL plus deliberate GPU failure, not every physical GPU/native device. Live evidence covers one original synthetic mechanism and its continuation, not broad-subject reliability or user learning outcomes. The branch is not merged, deployed, pushed or published by this task.
+
+
+## PM098 — Fresh pre-merge verification, October 30
+
+The spatial branch incorporates canonical main `dc11105` through merge commit
+`afa5675`; main itself was not changed. This acceptance run supersedes the earlier
+partial full-browser result. All final acceptance checks below passed.
+
+Defects reproduced and corrected:
+
+- A large tentative Dijkstra distance could project far outside the scene after
+  its final distance improved. Projection now normalizes against the entire
+  checked trace; separation preserves the distance-encoding height.
+- Separated object positions depended on array order/count. Stable object IDs now
+  determine offsets, preserving existing positions through reordered revisions.
+- Text-only diagrams offered an empty 3D view. They now remain 2D; mixed diagrams
+  retain their text annotations when shown spatially.
+- Renamed explanation steps could rewind the inspected spatial pose. The current
+  pose is preserved before factual review. Converting a 2D node to the same named
+  spatial object now preserves semantic identity without weakening mode checks.
+- Sub-threshold pointer movement visibly changed the camera without saving it.
+  Click selection now restores the saved camera before picking.
+- Main's panel reflow needed explicit full-width spatial placement. Added a
+  context-panel-plus-spatial regression, preserving content and source references.
+- Camera buttons and range controls now meet the guide's 44×44 touch targets.
+- Combined author instructions exceeded the existing 8,000-character provider
+  limit on follow-ups. Removed duplicated wording while retaining source,
+  computation, continuity and view-action constraints. Spatial service tests now
+  exercise the real request encoder/budget estimator instead of stubbing it.
+
+Executed evidence:
+
+- Full offline suite: **1,568 passed / 94 opt-in skipped**, 128 passing test files.
+  The first combined run had three failing follow-up cases; all were reproduced
+  with the real request encoder and pass after the instruction-length correction.
+- Complete production Chromium suite: **146 passed**, including both recorded
+  fresh Muse outputs, actual WebGL picking/orbit/save/reopen, solver parity,
+  initial GPU denial/context loss/recovery, six mount/unmount cycles with context
+  disposal, cross-session HTTP isolation, hostile origins, injected state,
+  click-sized pointer wobble, keyboard/reduced motion and 1440/620/375 widths.
+  All visible spatial buttons/range controls meet 44×44 targets. Screenshots of
+  both actual outputs and companion/phone views were visually inspected. Small
+  viewports use scrolling around the existing fixed question dock; this does not
+  establish that the entire workspace fits on one screen. Replay establishes
+  rendering only; the separate live test establishes inference/persistence.
+- Desktop plus diagnostic contracts: **25 passed**; authenticated voice relay:
+  **3 passed**; adversarial credential-browser pages: **28 passed**.
+- Typecheck, optimized production build, Firebase module-restriction import and
+  isolated browser trace passed: 1,224 traced files, two links, zero private
+  configuration mappings. Root and credential-free build snapshot agree on 251
+  runtime files, SHA-256
+  `16356bdbb4da58db0241977a6b16cd36fd31e7259c64e54fea877464952a7093`,
+  release `soma-pm098-spatial-2026-10-30`.
+- Fresh actual Muse + Firestore test passed against the combined implementation:
+  initial scene **18,751 ms / 3 calls / $0.03515275**; contextual revision
+  **9,513 ms / 2 calls / $0.02404725**. Selected processor, source, part geometry,
+  separation and cutaway persisted; requested side camera applied; saved revision
+  reopened exactly and the original remained unchanged. Synthetic development
+  source only; explanatory assurance, no new scientific computation.
+- An earlier combined live attempt published its scene after factual repair but
+  failed its follow-up before a provider request because of the instruction limit.
+  Both failure and success receipts remain private. A successful pre-integration
+  live run is retained separately, not substituted for combined-branch evidence.
+- Latest successful run's shared ledger snapshot: **$13.671588 / $15**. Other
+  authorized work also used this ledger concurrently; the delta is not this
+  test's cost. This successful test cost $0.0592. No budget reset or increase.
+
+Private receipts and logs are under `.local/pm098/`; the final live artifacts are
+in `live-1793395866881`. Browser verification uses an isolated, credential-free
+source copy on port 41898. No other chat's development server was stopped.
+The latest remote-main check still resolved to `dc11105`. Subsequent main changes
+will require an integration check before merge. No feature merge, deployment,
+push, publication, clean hosted CI claim or physical GPU acceptance is implied.

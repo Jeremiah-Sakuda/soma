@@ -1,6 +1,6 @@
 {
   "releaseId": "soma-pm098-spatial-2026-10-30",
-  "sourceTreeSha256": "25d8fd898717b97f3ee46d3acc4977a86a2da62cf3b87c41fcd2da4d17bc295d",
+  "sourceTreeSha256": "16356bdbb4da58db0241977a6b16cd36fd31e7259c64e54fea877464952a7093",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
     "desktop/Info.plist": "a7566833b9abda71d595bb76ba892daf8c33cccb10413e3a510a1a502c0db050",
@@ -129,7 +129,7 @@
     "src/components/exploration-voice.tsx": "87e4e2a5d3094836ceb0c53fd9a21798aa9b89c4523f81cd74c3ecd3851b4c2d",
     "src/components/exploration-weighted-stage.tsx": "f760705989cc478d89d28db8e432783d020d4180d54b64281485bb38bc45b224",
     "src/components/exploration-workspace.tsx": "85b4eb7e48d1450d2b09d04dee42de3e8559a1c02610540930b6bd318d03568e",
-    "src/components/exploration.css": "132bbbaf08268f86ed6efb3487a7af51e99049ea5de26e7c63663057973e1d42",
+    "src/components/exploration.css": "f4d41b3c51a7472f6bb4283cddf5918c0fab67deab625c7907a4af8d4760200c",
     "src/components/investigation-panel.tsx": "451be06ce455d37eb296af6a3b8be78d46220334c50d44f2733ff0982b75c2a7",
     "src/components/learning-inspection.tsx": "24548c3e1c79953da4a4a0034d93887052b83c3e9c320f8b559d119ef49113f9",
     "src/components/lesson-stage.tsx": "d0ac3cb2fd03868a48ae464f9d329eb8733e96c75183f2adc2036b6d1e4a1d51",
@@ -225,7 +225,7 @@
     "src/lib/server/exploration-review.ts": "f8855549797f917c80548ff0a8437ba160f451231e642068826caf7b0699fee9",
     "src/lib/server/exploration-store.ts": "f47b55d933713e550bb569b8235927486d77d1d4c77a20196c7855581cc3be1e",
     "src/lib/server/exploration-types.ts": "3c12c5cb44bd2243926ef8b384438d0aba83cd9eebc075ef803b2df75e02be47",
-    "src/lib/server/exploration.ts": "15f03915f12262745449c2c9162ed5d2004671f158bae69ea93e934174c1020c",
+    "src/lib/server/exploration.ts": "4c1444f76d56826b5fa8b2f492ccb0aa88565de353699aa9964fb113fa76f292",
     "src/lib/server/firebase-config.ts": "5d4d84f5572044eb8dae9d99bbf7fd44ec18e5dd7ecde68bf418ae50990f755a",
     "src/lib/server/firestore.ts": "7ed2699066c5eefbe06215014045be369911a1cf89c709be0bde57a4a2c7425c",
     "src/lib/server/gemini-speech.ts": "05cde5cb02de833291065d0e5095aba80865a9f57ea35a043f595bd849f19c26",

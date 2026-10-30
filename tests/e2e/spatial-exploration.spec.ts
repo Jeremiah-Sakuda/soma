@@ -110,6 +110,11 @@ test('keyboard and reduced-motion controls work at desktop, companion and phone 
     await page.setViewportSize({ width, height: width === 620 ? 704 : 900 });
     await expect(page.getByRole('region', { name: 'Spatial workspace' })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    for (const control of await page.locator('.spatial-workspace button, .spatial-workspace input').all()) {
+      if (!(await control.isVisible())) continue;
+      const target = (await control.boundingBox())!;
+      expect(target.height).toBeGreaterThanOrEqual(44); expect(target.width).toBeGreaterThanOrEqual(44);
+    }
     await page.locator('.spatial-workspace').screenshot({ path: `.local/pm096/spatial-${width}.png` });
   }
   await page.getByRole('button', { name: 'Save exploration', exact: true }).click();

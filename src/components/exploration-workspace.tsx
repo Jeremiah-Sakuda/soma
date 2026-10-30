@@ -43,6 +43,7 @@ import type { PointFocus } from '@/lib/domain/point-context';
 import { ExplorationVoice } from './exploration-voice';
 import { useExplorationCapture, type ExplorationCapture } from './exploration-capture';
 import './exploration.css';
+import './exploration-journal.css';
 
 type Artifact = {
   recording?: { id: string; generatedAt: string; sourceImage: string };

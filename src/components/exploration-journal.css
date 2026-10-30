@@ -1,0 +1,119 @@
+/* Dot journal — the exploration surface's visual language.
+ * Printed type is what Soma checked; handwriting is Muse's explanation.
+ * See docs/UI_DOT_JOURNAL.md. Scoped to .exploration-app so course routes keep
+ * their own tokens. */
+
+.exploration-app {
+  --desk: #e3d9c6;
+  --paper: #f7f2e8;
+  --paper-dot: #cbbfa8;
+  --gutter: #e6dcc9;
+  --bg: var(--desk);
+  --sidebar: #eadfcb;
+  --surface: var(--paper);
+  --surface-muted: #f1e9da;
+  --border: #d6c9b1;
+  --divider: #e2d7c2;
+  --control-border: #b7a98f;
+  --ink: #26221d;
+  --ink-2: #4a4339;
+  --muted: #5e5649;
+  --accent: #1d6b66;
+  --accent-hover: #155550;
+  --accent-soft: #dcebe5;
+  --highlight: #e8b23a;
+  --highlight-soft: #f6dfa4;
+  --muse-ink: #1d6b66;
+  --current: var(--highlight);
+  --success-bg: #e4ead2;
+  --success-fg: #3d571b;
+  --caution-bg: #f6e3b4;
+  --caution-fg: #6b4a06;
+  --shadow: 0 3px 0 #c9bb9f;
+  --paper-grid: radial-gradient(var(--paper-dot) 1.1px, transparent 1.5px);
+  /* Existing rules read the Geist variables; inside the journal they resolve to its faces. */
+  --font-geist: var(--font-journal-sans), 'Work Sans', system-ui, sans-serif;
+  --font-geist-mono: var(--font-journal-mono), 'Fragment Mono', ui-monospace, monospace;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-geist);
+}
+
+.exploration-app h1,
+.exploration-app h2,
+.exploration-app h3 {
+  font-family: var(--font-journal-serif), 'Young Serif', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Paper: every surface a student reads from is a dot-grid page. */
+.exploration-app .exploration-artifact,
+.exploration-app .exploration-ask-card,
+.exploration-app .exploration-source-card,
+.exploration-app .exploration-empty-stage,
+.exploration-app .exploration-library,
+.exploration-app .companion-memory {
+  background-color: var(--paper);
+  background-image: var(--paper-grid);
+  background-size: 20px 20px;
+  background-position: 10px 10px;
+  border-color: var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* Muse's ink. Authored narration and explanation are handwriting; checked
+ * values, labels and computed captions stay printed. */
+.exploration-app .exploration-authored-caption,
+.exploration-app .exploration-active-explanation {
+  font-family: var(--font-journal-hand), 'Kalam', cursive;
+  color: var(--muse-ink);
+}
+
+/* Buttons: flat paper controls with a pressed edge; the primary action is Muse-ink teal. */
+.exploration-app .primary-button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: 0 3px 0 #0f4440;
+}
+.exploration-app .primary-button:hover {
+  background: var(--accent-hover);
+}
+.exploration-app .primary-button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #0f4440;
+}
+.exploration-app .secondary-button {
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.exploration-app .secondary-button:hover {
+  background: var(--surface-muted);
+}
+.exploration-app .text-button {
+  color: var(--accent);
+}
+.exploration-app .status-chip {
+  background: transparent;
+  border: 1.5px solid var(--ink-2);
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.exploration-app .status-chip.ready {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.exploration-app .overline {
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exploration-app .primary-button:active:not(:disabled) {
+    transform: none;
+  }
+}

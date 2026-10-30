@@ -74,7 +74,9 @@ export async function POST(request: Request) {
     const { principal } = await resolveExplorationPrincipal(request);
     const body = await readJsonBody(request, 730_000);
     const action = z
-      .object({ action: z.enum(['generate', 'cancel', 'example', 'recording', 'prediction']) })
+      .object({
+        action: z.enum(['generate', 'cancel', 'example', 'recording', 'prediction', 'application']),
+      })
       .safeParse(body);
     if (!action.success) throw new ExplorationError('invalid_request');
     if (action.data.action === 'recording') {
@@ -82,12 +84,17 @@ export async function POST(request: Request) {
         throw new ExplorationError('invalid_request');
       return response(await explorationService.recording(principal));
     }
+    if (action.data.action === 'application')
+      return response(await explorationService.application(principal, body));
     if (action.data.action === 'prediction')
       return response(await explorationService.prediction(principal, body));
     if (action.data.action === 'example') {
       if (
         !z
-          .strictObject({ action: z.literal('example'), weighted: z.boolean().optional() })
+          .strictObject({
+            action: z.literal('example'),
+            weighted: z.boolean().optional(),
+          })
           .safeParse(body).success
       )
         throw new ExplorationError('invalid_request');

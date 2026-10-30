@@ -58,3 +58,9 @@ No fine-tuned model, open-weight runtime or 3D renderer is claimed.
 ## Earlier event work in this snapshot
 
 Earlier in the event, Soma began as a semester course workspace with read-only course connectors. Those routes and isolated services remain so that the browser application and its existing deep links reproduce. Unattended course preparation is not part of the primary companion journey.
+
+## Fresh application from saved explorations
+
+`exploration-application.ts` creates bounded original BFS/Dijkstra variations and derives their results with the checked solver. `POST /api/explore` application actions persist the exact saved parent/source/model/version, reference availability, immutable answer/reason, hints, reveals and actual timestamps in the owned session. Expected values and routes are omitted from unanswered public records. This is optional reference-available practice, not independent-assessment or mastery evidence.
+
+After answer/reveal, an explicit action creates a separate solver-built visual with parent lineage and no provider request. An optional answer-informed Spark composition uses the saved observation through the ordinary budget, input-binding, advisory review, repair, cancellation and publication path. It cannot silently change the checked graph. Original deletion removes derived work; deleting only the child retains the attempt. Guest practice shares the existing 24-hour retention boundary. No v1 source scheduler, graph projection, notification system or new model family is introduced.

@@ -1,3 +1,4 @@
+import type { ExplorationApplication } from '../domain/exploration-application';
 import type { CostProbe } from '../domain/cost-probe';
 import type { ExplorationPrediction } from '../domain/exploration-prediction';
 import type { CheckedExploration } from '../domain/exploration';
@@ -55,13 +56,23 @@ export type ExplorationArtifact = CheckedExploration & {
     audit: ExplorationAudit[];
   };
   experiment?: CostProbe;
-  recording?: { id: string; generatedAt: string; sourceImage: '/synthetic/recorded-detour.png' };
+  recording?: {
+    id: string;
+    generatedAt: string;
+    sourceImage: '/synthetic/recorded-detour.png';
+  };
+  practiceOrigin?: {
+    applicationId: string;
+    artifactId: string;
+    version: number;
+  };
   learningContext?: {
-    predictionId: string;
+    predictionId?: string;
+    applicationId?: string;
     choice: string;
     expected: string;
     reason: string;
-    exposure: 'diagram-visible-practice';
+    exposure: 'diagram-visible-practice' | 'fresh-problem-reference-available';
   };
   state: ExplorationViewState;
   saved: boolean;
@@ -97,6 +108,7 @@ export type ExplorationSession = {
   runs: ExplorationRun[];
   activeRequestId: string | null;
   predictions?: ExplorationPrediction[];
+  applications?: ExplorationApplication[];
   retiredRuns?: {
     published: number;
     failed: number;

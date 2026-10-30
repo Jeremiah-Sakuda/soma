@@ -25,6 +25,8 @@ import {
 import type { ExplorationPrediction } from '@/lib/domain/exploration-prediction';
 import { ExplorationCostProbe } from './exploration-cost-probe';
 import type { CostProbe } from '@/lib/domain/cost-probe';
+import type { PublicExplorationApplication } from '@/lib/domain/exploration-application';
+import { ExplorationApplicationCard } from './exploration-application';
 import { ExplorationPredictionCard } from './exploration-prediction';
 import { ExplorationPlayback } from './exploration-playback';
 import { ExplorationPipeline } from './exploration-pipeline';
@@ -35,8 +37,14 @@ import './exploration.css';
 type Artifact = {
   recording?: { id: string; generatedAt: string; sourceImage: string };
   experiment?: CostProbe;
+  practiceOrigin?: {
+    applicationId: string;
+    artifactId: string;
+    version: number;
+  };
   learningContext?: {
-    predictionId: string;
+    predictionId?: string;
+    applicationId?: string;
     choice: string;
     expected: string;
     reason: string;
@@ -82,6 +90,7 @@ type VersionSummary = {
 };
 type ApiResponse = {
   predictions?: ExplorationPrediction[];
+  applications?: PublicExplorationApplication[];
   artifact?: Artifact;
   artifacts?: Artifact[];
   active?: Artifact | null;
@@ -100,7 +109,10 @@ async function api(
     signal,
     ...(body === undefined
       ? {}
-      : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+      : {
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        }),
   });
   if (!response.ok) {
     const payload: unknown = await response.json().catch(() => null);
@@ -174,6 +186,7 @@ export function ExplorationWorkspace() {
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
+  const [applicationHistory, setApplicationHistory] = useState<PublicExplorationApplication[]>([]);
   const [predictionHistory, setPredictionHistory] = useState<ExplorationPrediction[]>([]);
   const capture = useExplorationCapture(),
     uploadRef = useRef<HTMLInputElement>(null);
@@ -201,7 +214,11 @@ export function ExplorationWorkspace() {
     [notice, setNotice] = useState(''),
     [dirty, setDirty] = useState(false),
     [liveEnabled, setLiveEnabled] = useState<boolean | null>(null);
-  const request = useRef<{ id: string; controller: AbortController; epoch: number } | null>(null),
+  const request = useRef<{
+      id: string;
+      controller: AbortController;
+      epoch: number;
+    } | null>(null),
     epoch = useRef(0),
     loadSequence = useRef(0);
   const initializationRequest = useRef<Promise<ApiResponse> | null>(null);
@@ -218,6 +235,7 @@ export function ExplorationWorkspace() {
       .then((result) => {
         if (active) {
           setPredictionHistory(result.predictions ?? []);
+          setApplicationHistory(result.applications ?? []);
           setArtifacts((current) => [
             ...current,
             ...(result.artifacts ?? []).filter(
@@ -366,13 +384,20 @@ export function ExplorationWorkspace() {
       if (sequence === loadSequence.current) setSourceBusy(false);
     }
   }
-  async function ask(spoken?: string, predictionId?: string, investigate = false) {
+  async function ask(
+    spoken?: string,
+    predictionId?: string,
+    investigate = false,
+    practice?: { artifact: Artifact; applicationId: string },
+  ) {
+    const base = practice?.artifact ?? artifact;
+    const baseState = practice?.artifact.state ?? state;
     const draft = spoken ?? question;
     if (!initialized || !draft.trim() || busy) return;
     if (
       !newContext &&
-      artifact &&
-      versions.some((item) => item.id === artifact.id && item.version > artifact.version)
+      base &&
+      versions.some((item) => item.id === base.id && item.version > base.version)
     ) {
       setError(
         'Open the latest version before asking a follow-up, or choose a new source to start a separate exploration.',
@@ -384,7 +409,7 @@ export function ExplorationWorkspace() {
     setNotice('');
     let selected = source;
     try {
-      if (capture.sharing && (newContext || !artifact)) {
+      if (capture.sharing && (newContext || !base)) {
         selected = capture.capture();
         setSource(selected);
       }
@@ -394,7 +419,7 @@ export function ExplorationWorkspace() {
       );
       return;
     }
-    if ((!artifact || newContext) && !selected) {
+    if ((!base || newContext) && !selected) {
       setError('Select a window or screenshot first, or try the original example.');
       return;
     }
@@ -403,20 +428,23 @@ export function ExplorationWorkspace() {
       turnEpoch = epoch.current;
     request.current = { id, controller, epoch: turnEpoch };
     setBusy(true);
-    const followup = artifact && !newContext;
+    const followup = base && !newContext;
     const submittedDraft = draft;
     const payload = {
       action: 'generate',
       ...(predictionId ? { predictionId } : {}),
+      ...(practice ? { applicationId: practice.applicationId } : {}),
       requestId: id,
       question: draft.trim(),
       intent: investigate ? 'investigate' : 'auto',
       ...(followup
         ? {
-            artifactId: artifact.id,
-            baseVersion: artifact.version,
-            state,
-            ...(state?.selectedObjectId ? { selectedObjectId: state.selectedObjectId } : {}),
+            artifactId: base.id,
+            baseVersion: base.version,
+            state: baseState,
+            ...(baseState?.selectedObjectId
+              ? { selectedObjectId: baseState.selectedObjectId }
+              : {}),
           }
         : {
             source: {
@@ -463,7 +491,12 @@ export function ExplorationWorkspace() {
       before = epoch.current,
       beforeView = viewSequence.current;
     try {
-      const result = await api('PATCH', { action: 'save', artifactId: id, version, state });
+      const result = await api('PATCH', {
+        action: 'save',
+        artifactId: id,
+        version,
+        state,
+      });
       if (epoch.current !== before) return;
       if (viewSequence.current !== beforeView) {
         setNotice('Saved the earlier state. Your newer changes are still here and remain unsaved.');
@@ -508,6 +541,7 @@ export function ExplorationWorkspace() {
       setSource(null);
       setNewContext(false);
       setPredictionHistory(result.predictions ?? []);
+      setApplicationHistory(result.applications ?? []);
       apply(next, result.versions);
       setNotice(
         next.recording
@@ -1017,7 +1051,9 @@ export function ExplorationWorkspace() {
                       {artifact.recording
                         ? 'Recorded Muse Spark run'
                         : artifact.generation.mode === 'prepared-example'
-                          ? 'Prepared original example'
+                          ? artifact.practiceOrigin
+                            ? 'Fresh practice variation'
+                            : 'Prepared original example'
                           : 'Muse Spark generated'}
                     </span>
                     <span className="status-chip">
@@ -1034,21 +1070,43 @@ export function ExplorationWorkspace() {
                   <span className="meta">Version {artifact.version}</span>
                 </div>
                 <h2>{artifact.spec.title}</h2>
+                {artifact.practiceOrigin && (
+                  <p className="meta">
+                    Fresh practice variation · linked to your original saved exploration.{' '}
+                    <button
+                      type="button"
+                      className="text-button"
+                      disabled={busy || sourceBusy}
+                      onClick={() =>
+                        void resume(
+                          artifact.practiceOrigin!.artifactId,
+                          artifact.practiceOrigin!.version,
+                        )
+                      }
+                    >
+                      Back to original exploration
+                    </button>
+                  </p>
+                )}
                 {artifact.learningContext && (
                   <details className="exploration-prediction-lineage">
                     <summary>
-                      Prepared from your prediction: {artifact.learningContext.choice}
+                      Prepared from your{' '}
+                      {artifact.learningContext.applicationId ? 'answer' : 'prediction'}:{' '}
+                      {artifact.learningContext.choice}
                     </summary>
                     <p>
-                      You chose {artifact.learningContext.choice}; the checked next node was{' '}
+                      You chose {artifact.learningContext.choice}; the checked result was{' '}
                       {artifact.learningContext.expected}.
                     </p>
                     {artifact.learningContext.reason && (
                       <p>Your explanation: {artifact.learningContext.reason}</p>
                     )}
                     <p className="meta">
-                      Practice with the diagram visible. Original response retained with its source,
-                      experiment and model versions.
+                      {artifact.learningContext.applicationId
+                        ? 'Fresh practice with the reference available.'
+                        : 'Practice with the diagram visible.'}{' '}
+                      Original response retained with its source, experiment and model versions.
                     </p>
                   </details>
                 )}
@@ -1212,6 +1270,64 @@ export function ExplorationWorkspace() {
                     }
                   />
                 )}
+                {!newContext &&
+                  artifact.saved &&
+                  !dirty &&
+                  !artifact.practiceOrigin &&
+                  (artifact.spec.mode === 'checked-bfs' ||
+                    artifact.spec.mode === 'checked-dijkstra') && (
+                    <ExplorationApplicationCard
+                      key={artifact.id + '-' + artifact.version}
+                      artifactId={artifact.id}
+                      version={artifact.version}
+                      history={applicationHistory.filter(
+                        (item) =>
+                          item.artifactId === artifact.id && item.version === artifact.version,
+                      )}
+                      disabled={busy || sourceBusy || playing}
+                      canAdapt={liveEnabled !== false}
+                      onPause={() => setPlaying(false)}
+                      onOpen={async (applicationId, explain) => {
+                        const sequence = ++loadSequence.current,
+                          beforeView = viewSequence.current;
+                        setSourceBusy(true);
+                        try {
+                          const result = await api('POST', {
+                            action: 'application',
+                            id: applicationId,
+                            artifactId: artifact.id,
+                            version: artifact.version,
+                            operation: 'explore',
+                          });
+                          if (
+                            sequence !== loadSequence.current ||
+                            beforeView !== viewSequence.current
+                          )
+                            return;
+                          if (!result.artifact)
+                            throw new Error('Could not open the fresh example.');
+                          apply(result.artifact);
+                          setNewContext(false);
+                          setSource(null);
+                          setApplicationHistory([]);
+                          setSourceBusy(false);
+                          if (explain)
+                            await ask(
+                              'Use my recorded fresh-problem answer and explanation to choose a useful visual contrast. Explain the checked result on this practice graph, preserve its inputs, and distinguish this hypothetical variation from the original source. Do not diagnose mastery or a confirmed misconception.',
+                              undefined,
+                              false,
+                              { artifact: result.artifact, applicationId },
+                            );
+                          else
+                            setNotice(
+                              'Fresh practice graph opened. Soma computed this starting visual without a new model call.',
+                            );
+                        } finally {
+                          if (sequence === loadSequence.current) setSourceBusy(false);
+                        }
+                      }}
+                    />
+                  )}
                 {artifact.spec.mode !== 'clarify' && artifact.spec.followups.length > 0 && (
                   <div className="exploration-followups" aria-label="Suggested follow-ups">
                     {artifact.spec.followups.map((item) => (
@@ -1311,7 +1427,9 @@ export function ExplorationWorkspace() {
                         {artifact.recording
                           ? 'Replay of a recorded live generation'
                           : artifact.generation.mode === 'prepared-example'
-                            ? 'Prepared original example'
+                            ? artifact.practiceOrigin
+                              ? 'Fresh practice variation'
+                              : 'Prepared original example'
                             : 'Recorded live generation'}
                       </dd>
                     </div>

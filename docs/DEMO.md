@@ -28,3 +28,7 @@ The source must drive the behavior. Prefer a real permitted lecture slide; an or
 ## Current evaluation and remaining evidence
 
 Use [GENERAL_SCREENSHOTS.md](GENERAL_SCREENSHOTS.md) for executed general-source tests and retained failures. The latest experience checks are recorded in [VERIFICATION.md](VERIFICATION.md). Use [STUDENT_TRIAL.md](STUDENT_TRIAL.md) for a small observational trial. No pilot, learning gain, fresh-course outcome, complete new video or final native audio test is established by this script.
+
+## Optional continuity ending
+
+After saving a checked exploration, choose **Try a fresh example**. Predict its cost or connection count before checking; the new problem's solution is not displayed first. Show the preserved answer/hint status, then open **Explore this example** or explicitly request **Explain my answer with Muse**. The first action is application-generated and solver-checked; only the explanation request uses live models. Do not describe a same-session attempt as delayed learning or reference-available practice as independent understanding. Keep this within the existing ending rather than adding a dashboard tour.

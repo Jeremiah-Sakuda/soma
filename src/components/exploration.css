@@ -2032,3 +2032,74 @@
     padding: 2px 8px;
   }
 }
+
+/* Optional practice stays inside the saved exploration. */
+.exploration-application {
+  margin-block: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+.exploration-application h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.exploration-application p {
+  overflow-wrap: anywhere;
+}
+.exploration-application form {
+  display: grid;
+  gap: 10px;
+}
+.exploration-application input,
+.exploration-application textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  border: 1px solid var(--control-border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+.exploration-application label {
+  font-weight: 600;
+}
+.exploration-application .action-row {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.exploration-application button {
+  min-height: 44px;
+}
+.exploration-application :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.fresh-problem-graph {
+  width: 100%;
+  height: auto;
+}
+.fresh-problem-graph text {
+  font-size: 14px;
+  fill: var(--ink);
+}
+.fresh-connections summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.fresh-hint {
+  background: var(--accent-soft);
+  padding: 12px;
+  border-radius: 10px;
+}
+/* A practice problem must stay readable; the main card's compact animation
+   height cap does not apply to its static problem graph. */
+.has-exploration .exploration-application .fresh-problem-graph {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+}

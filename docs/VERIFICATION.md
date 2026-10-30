@@ -4,7 +4,7 @@ Headline results from executed checks on clean checkouts and on production. Thes
 
 - **Source reading:** 8 of 8 fresh original graph images (3–4 nodes) were read exactly, and the results matched an independent Floyd–Warshall reference. The full frozen set produced 12 of 13 intended outcomes.
 - **Varied screenshots:** of nine screenshots (three real public pages and six original test images), 8 produced a source-specific explanation or a clarifying question on the first request ([details](GENERAL_SCREENSHOTS.md)).
-- **Engineering:** the latest complete offline suite passed 1,374 tests. Browser journeys cover the weighted comparison, cost experiment, companion layout, replay and label geometry.
+- **Engineering:** the latest local complete offline suite passed 1,383 tests; a subsequently added HTTP regression also passed. Browser journeys cover the weighted comparison, cost experiment, companion layout, replay and label geometry.
 - **Release identity:** `node scripts/verify-release.mjs` matches a committed source tree to the deployed app.
 
 The sections below give the method, every failure and the limits.
@@ -56,3 +56,9 @@ No student trial, new video, word-aligned speech, arbitrary-topic checked simula
 The isolated production browser trace imported successfully with 1,224 files, two links and zero private configuration mappings. Four desktop policy checks passed. The signed native shell is unchanged; clean-Mac permissions and audible narration remain separate human checks.
 
 Hosted PM069 verification passed real model-selected experiments and explanatory follow-ups after either disabling the probed edge or clearing the goal, including changed costs, paired inputs, original source lineage and save/reopen. The recorded run opened/saved/reopened without generation. One new weighted screenshot rejected on its first request; a controlled repeat read all five edges/costs correctly and produced L → M → N (7 versus direct 13). The first rejection cause is unknown; this is not a first-request reliability improvement. The final narrow revision moves version history below the visual, preserving the version badge and earlier-version warning.
+
+## Fresh practice verification — October 30
+
+The saved-exploration flow adds optional original graph variations with server-side solution hiding, immutable answers, recorded hints/reveals and separate actual timestamps. Independent all-pairs relaxation checks 300 weighted/unweighted directed/undirected variations. Focused service/HTTP checks verify ownership, no inference on creation/grading, idempotent retries, reveal-before-answer protection, source/model/version lineage, answer-informed composition and failure preservation, plus deletion/recreation of derived visuals.
+
+The local complete offline suite passed 1,383 tests (89 opt-in skipped) before the last HTTP case was added; all 15 affected service/HTTP cases then passed. All 110 browser journeys passed. The final compact-graph override then passed all four affected fresh-practice journeys, including an actual rendered node-label height assertion at 375 and 620 pixels, keyboard/reduced-motion, reload and failed-save recovery. Typecheck, production build, four desktop policy checks and the isolated browser artifact check passed. Production/live-provider checks and clean CI are recorded after publication, not inferred from these local tests. These are engineering checks, not evidence of improved learning or real student use.

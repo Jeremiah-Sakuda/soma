@@ -7,6 +7,9 @@ Soma is a macOS study companion that turns what is on your screen into an experi
 **[Try it in your browser](https://soma-woad-beta.vercel.app/explore)** (no account needed) · **[Download for macOS](https://github.com/Jeremiah-Sakuda/soma-hackathon/releases/tag/v0.1.0)** (Apple Silicon, signed and notarized)
 
 In the browser, **Watch a recorded Muse run** opens a real completed Spark and Wonder run on an original synthetic screenshot. Its original timing, cost and model actions are shown, and opening it needs no inference. The prepared examples load instantly too. New questions use live generation.
+
+**Take it beyond the example.** Save a checked exploration and choose **Try a fresh example**. Soma creates a different problem in the same algorithm family, keeps its solution hidden until you answer or reveal it, and retains your original answer and any hints. Open the checked practice visual or ask Muse to explain your answer. Practice stays inside the exploration; it is not a mastery score.
+
 <!-- Add the three-minute demo video link to the line above before submission. -->
 
 ## Why Soma exists

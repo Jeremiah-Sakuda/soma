@@ -16,8 +16,8 @@ const crossing = (a: Point, b: Point, c: Point, d: Point) => {
 };
 
 /** Geometry only. Never changes the graph, costs, trace or saved coordinates.
- * Labels get their own measured space; a bounded crowded case uses a keyed
- * cost legend rather than hiding a weight or placing it on another connection.
+ * Each cost is placed on (or touching) its own connection; a crowded case uses
+ * a keyed cost legend rather than hiding a weight or placing it near another one.
  */
 export function weightedGraphLayout(panel: GraphPanel, input: BfsInput, width: number) {
   const xs = panel.positions.map((p) => p.x),
@@ -155,13 +155,15 @@ export function weightedGraphLayout(panel: GraphPanel, input: BfsInput, width: n
     const text = String(edge.weight ?? 1),
       boxWidth = Math.max(24, text.length * 8 + 12);
     let chosen: (Box & { anchor: Point }) | undefined;
-    for (const t of [0.5, 0.35, 0.65, 0.2, 0.8]) {
+    // A cost sits on its own connection (its box masks the line beneath it), or
+    // touches it; a label far from its edge reads as belonging to another one.
+    for (const t of [0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74]) {
       const anchor = edge.point(t),
         next = edge.point(Math.min(0.999, t + 0.001));
       const dx = next.x - anchor.x,
         dy = next.y - anchor.y,
         length = Math.hypot(dx, dy) || 1;
-      for (const distance of [16, -16, 30, -30, 46, -46, 65, -65, 90, -90, 120, -120]) {
+      for (const distance of [0, 12, -12, 20, -20]) {
         const box = {
           x: anchor.x - (dy / length) * distance,
           y: anchor.y + (dx / length) * distance,
@@ -178,10 +180,12 @@ export function weightedGraphLayout(panel: GraphPanel, input: BfsInput, width: n
         if (nodes.some((n) => overlaps(n, box, 8)) || labels.some((l) => overlaps(l, box, 5)))
           continue;
         if (
-          edges.some((other) =>
-            Array.from({ length: 61 }, (_, i) => other.point(i / 60)).some((p) =>
-              inside(p, box, 3),
-            ),
+          edges.some(
+            (other) =>
+              other.id !== edge.id &&
+              Array.from({ length: 61 }, (_, i) => other.point(i / 60)).some((p) =>
+                inside(p, box, 3),
+              ),
           )
         )
           continue;

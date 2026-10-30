@@ -515,3 +515,96 @@
 .exploration-app .journal-right .exploration-playback > .action-row > .meta {
   display: none;
 }
+
+/* ── Diagram: one node language for both searches ────────────────────── */
+.exploration-app .journal-right .exploration-search-stage .exploration-node .exploration-node-shape {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+.exploration-app .journal-right .exploration-search-stage .exploration-node > text {
+  fill: var(--ink);
+  font-family: var(--font-journal-serif), 'Young Serif', Georgia, serif;
+}
+.exploration-app .journal-right .exploration-search-stage .exploration-node.is-visited .exploration-node-shape {
+  fill: var(--ink);
+}
+.exploration-app .journal-right .exploration-search-stage .exploration-node.is-visited > text {
+  fill: var(--paper);
+}
+.exploration-app .journal-right .exploration-search-stage .exploration-node.is-current .exploration-node-shape {
+  fill: var(--highlight);
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+.exploration-app .journal-right .exploration-search-stage .exploration-node.is-selected .exploration-node-shape {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.exploration-app .journal-right .exploration-search-stage .exploration-focus-ring {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 4;
+}
+.exploration-app .journal-right .exploration-node .exploration-node-state {
+  fill: var(--ink-2);
+  font-size: 12px;
+}
+.exploration-app .journal-right [data-weighted-node] rect {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 1.75;
+}
+.exploration-app .journal-right [data-weighted-node].is-settled rect {
+  fill: var(--ink);
+}
+.exploration-app .journal-right [data-weighted-node].is-settled .exploration-weighted-node-label {
+  color: var(--paper);
+}
+.exploration-app .journal-right [data-weighted-node].is-current rect {
+  fill: var(--highlight);
+  stroke-width: 2.5;
+}
+.exploration-app .journal-right [data-weighted-node].is-unreached rect {
+  stroke: var(--control-border);
+  stroke-dasharray: 5 4;
+}
+.exploration-app .journal-right [data-weighted-node].is-selected rect {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.exploration-app .journal-right .exploration-weighted-node-label strong {
+  font-family: var(--font-journal-serif), 'Young Serif', Georgia, serif;
+  font-weight: 400;
+}
+.exploration-app .journal-right [data-cost-label] rect {
+  fill: var(--paper);
+  stroke: var(--ink-2);
+  stroke-width: 1.25;
+}
+.exploration-app .journal-right [data-cost-label] text {
+  fill: var(--ink);
+  font-family: var(--font-geist-mono);
+  font-size: 13px;
+}
+.exploration-app .journal-right [data-weighted-node].is-settled .exploration-weighted-node-label span {
+  color: #e6dcc9;
+}
+.exploration-app .journal-right .exploration-queue-track {
+  fill: var(--surface-muted);
+  stroke: var(--control-border);
+  stroke-dasharray: 5 4;
+}
+.exploration-app .journal-right .exploration-queue-label {
+  fill: var(--muted);
+}
+.exploration-app .journal-right .exploration-moving-token rect {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.exploration-app .journal-right .exploration-moving-token text {
+  fill: var(--ink);
+  font-family: var(--font-geist-mono);
+}

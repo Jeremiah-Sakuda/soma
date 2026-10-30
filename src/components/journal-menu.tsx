@@ -8,6 +8,7 @@ export function JournalMenu({
   summary,
   align = 'end',
   className = '',
+  closeOn,
   children,
 }: {
   /** Accessible name for an icon-only summary; visible text names it otherwise. */
@@ -15,6 +16,8 @@ export function JournalMenu({
   summary: ReactNode;
   align?: 'start' | 'end';
   className?: string;
+  /** Items that finish the menu's job (opening an exploration, say) close it. */
+  closeOn?: string;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
@@ -40,7 +43,15 @@ export function JournalMenu({
   return (
     <details ref={ref} className={`journal-menu ${className}`}>
       <summary aria-label={label}>{summary}</summary>
-      <div className={`journal-menu-panel align-${align}`}>{children}</div>
+      <div
+        className={`journal-menu-panel align-${align}`}
+        onClick={(event) => {
+          if (closeOn && (event.target as Element).closest(closeOn) && ref.current)
+            ref.current.open = false;
+        }}
+      >
+        {children}
+      </div>
     </details>
   );
 }

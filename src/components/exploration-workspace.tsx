@@ -1165,6 +1165,7 @@ export function ExplorationWorkspace() {
           )}
           <JournalMenu
             className="journal-explorations-menu"
+            closeOn=".exploration-library button, .journal-examples button"
             summary={
               <>
                 Explorations <ChevronDown size={15} aria-hidden="true" />

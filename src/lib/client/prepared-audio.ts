@@ -9,19 +9,22 @@ export class PreparedAudio {
     const existing = this.pending.get(key);
     if (existing) return existing.result;
     const controller = new AbortController();
-    const result = load(controller.signal).then(blob => {
+    const result = load(controller.signal).then((blob) => {
       if (controller.signal.aborted) throw new DOMException('Cancelled', 'AbortError');
       if (this.completed.size >= 12) this.completed.delete(this.completed.keys().next().value!);
       this.completed.set(key, blob);
       this.pending.delete(key);
       return blob;
     });
-    this.pending.set(key, {controller, result});
+    this.pending.set(key, { controller, result });
     return result;
   }
   cancel() {
     for (const entry of this.pending.values()) entry.controller.abort();
     this.pending.clear();
   }
-  clear() { this.cancel(); this.completed.clear(); }
+  clear() {
+    this.cancel();
+    this.completed.clear();
+  }
 }

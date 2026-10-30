@@ -6,13 +6,17 @@ Soma is a floating macOS visual learning companion. Capture a display, review th
 
 [Try the browser experience](https://soma-woad-beta.vercel.app/explore). Prepared original examples need no account or model call. Other captures and questions use live generation when enabled. The desktop shell uses the same hosted engine.
 
+A completed real Spark/Wonder run on an original synthetic screenshot is available through **Watch a recorded Muse run**, with no inference required to open it. Its original timing, cost and model actions remain visible; new follow-ups use live generation. See the [current demo story](docs/DEMO.md).
+
 General screenshot evidence: [cross-domain production tests](docs/GENERAL_SCREENSHOTS.md), including real documentation pages, changed code values, worksheets and circuits.
 
 ## What is implemented
 
 - Explicit display capture, preview, global shortcut, floating/pinned panel, hide/reopen, restricted native IPC.
 - Spark image interpretation, typed visual composition, contextual revisions and solver-backed edge-cost experiments.
+- Weighted settlement/relaxation animation driven by checked snapshots and narration progress; full node labels and separated cost badges.
 - Independently computed BFS and nonnegative Dijkstra, including directed/undirected, zero and fractional costs; at most 12 nodes and 24 edges.
+- Visible recorded Spark → deterministic computation → advisory review facts, including when review did not run.
 - Targeted Muse Wonder review of weighted and answer-informed generated candidates. This is advisory, separate from deterministic checks.
 - Optional prediction/check/reveal with assistance and source/version lineage; exploration is never recorded as independent mastery.
 - Muse transcription for recorded questions; Gemini narration and explicit browser-voice fallback. Gemini is a supporting non-Meta service.

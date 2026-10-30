@@ -18,3 +18,9 @@ Requests reserve an application-enforced budget before model activity, with at m
 Muse Spark 1.3: vision, composition, tool decisions. Muse Wonder 1.0: optional targeted advisory review. Muse transcription: optional recorded input. Gemini: supporting narration. No fine-tuned model, open-weight runtime or 3D renderer is claimed.
 
 The retained semester workspace and connectors represent earlier event work. Unattended course preparation is not shipped in the primary companion journey. The current source snapshot includes those modules so the browser application and its existing deep links remain reproducible.
+
+## Experience iteration
+
+Weighted transitions replay checked settlement/relaxation snapshots, including improvements to already-queued nodes. The audio clock supplies step progress; there are no word timestamps. Geometry may move cards/labels without changing the saved graph or evidence. Unavailable saved cost probes do not prevent explaining a graph whose edge/goal was removed.
+
+The recorded-run action opens a genuine completed synthetic-source generation in a new owned artifact. Original model time/cost/audit remain labeled as historical, and opening makes no provider call or spend reservation. Live follow-ups use the ordinary bounded pipeline. SOMA_EXPLORATION_MAX_ACTIVE supports 1–16 concurrent leases (default 4); the lifetime spending allowance is independent and unchanged.

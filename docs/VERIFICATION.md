@@ -37,3 +37,11 @@ Clean-Mac installation, native screen/microphone consent, actual multi-display/f
 ## Reproducibility
 
 `node scripts/verify-release.mjs` compares 196 runtime files against `public/release.json`. The same manifest ships with the hosted app so a source checkout can be matched to production. Private prompts, source documents, credentials, captures, learner records and local build history are excluded from this repository. The source privacy scan checked configured server-secret values and excluded-file patterns; that is a targeted check, not a comprehensive security certification.
+
+## PM069 experience verification
+
+Focused offline tests cover removed-probe-edge/cleared-goal follow-ups, source/version preservation, save/reopen, replay ownership/no inference, weighted tentative-cost improvement and final-state equality, cost-label geometry and configured concurrency. The final complete offline suite passed 1,374 tests (89 opt-in skipped). Typecheck and the production build passed. Five browser journeys passed for weighted comparison, keyboard cost experiment, 620×704 companion layout, replay/save/resume and label geometry at desktop/companion/phone sizes. The complete browser batch passed 104/105; the remaining failure identified duplicate audit text, which was consolidated. All 20 affected exploration/replay browser journeys then passed, including the previously failing case. The added weighted narration test passed in the full batch. GitHub CI and final hosted checks are recorded separately when completed. Earlier failed sandbox HTTP-server starts and first layout/harness failures are not counted as passes.
+
+No student trial, new video, word-aligned speech, arbitrary-topic checked simulation, native audible-quality test or new training result is claimed. [Student observation kit](STUDENT_TRIAL.md) and [current demo script](DEMO.md) separate planned evidence from completed checks.
+
+The isolated production browser trace imported successfully with 1,224 files, two links and zero private configuration mappings. Four desktop policy checks passed. The signed native shell is unchanged; clean-Mac permissions and audible narration remain separate human checks.

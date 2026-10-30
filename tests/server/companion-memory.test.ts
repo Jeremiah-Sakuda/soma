@@ -44,6 +44,14 @@ describe('companion memory facts and interpretations', () => {
     if(which==='duplicates')p.concepts[1].id='frontier';
     expect(()=>applyCompanionMemoryProposal(s,p,{revision:0})).toThrow();expect(s.memory).toBeUndefined();
   });
+  it.each(['foreign-source','missing-concept','action-payload','empty-question'])('rejects a forged next recommendation: %s',which=>{
+    const s=session(),p=proposal();
+    if(which==='foreign-source')p.nextActivity.refs=[{artifactId:'foreign',version:1}];
+    if(which==='missing-concept')p.nextActivity.conceptIds=['unknown'];
+    if(which==='action-payload')Object.assign(p.nextActivity,{execute:{kind:'click',target:1}});
+    if(which==='empty-question')p.nextActivity.question='';
+    expect(()=>applyCompanionMemoryProposal(s,p,{revision:0})).toThrow();expect(s.memory).toBeUndefined();
+  });
   it('retains prior interpretations while projecting only latest, and protects human corrections',()=>{
     const s=session();applyCompanionMemoryProposal(s,proposal(),{revision:0});
     const p=proposal();p.concepts[0].summary='Changed interpretation';applyCompanionMemoryProposal(s,p,{revision:1});

@@ -1,3 +1,19 @@
+# Current remaining work — October 30, PM094
+
+This snapshot supersedes the historical v1 onboarding checklist below. It is a status assessment and recommended order, not authorization for new features, provider expenditure, publication or outreach.
+
+1. **Production acceptance for the integrated experience.** Current hosted fingerprint matches consolidated main; this deployment is already done through the existing Vercel integration. Verify real owned/guest goals → saved explorations → Muse concept links/next question → memory-informed next visual → exact save/reopen, including corrections, forgetting and ordinary failures. Current read-only endpoint probes are not that complete journey.
+2. **Native 0.4 distribution and physical testing.** Source and an isolated unsigned package exist. Test capture/hold-circle/microphone/voice interruption and Accessibility-gated benign field/button actions on the actual Mac; cover Escape, changed target, fullscreen and multiple displays. Then build/sign/notarize/staple/publish the new version from original soma. Existing 0.3.0 is already signed/notarized and remains available; it does not include computer actions.
+3. **Real-source reliability and experience polish.** Repeat fresh cross-subject cases with independent source review, honest first-request failures and actual waits. Latest broad development batch was 8/10 plus two later successful repeats. Evaluate incorrect memory links and source/user-hypothesis separation. Polish native layout, source focus, diagram legibility, narration/animation pacing and interruptions. Generated visuals are not arbitrary checked simulations.
+4. **Evidence and final demo.** Obtain real, voluntary observations on users' own permitted material; the trial kit is prepared but no student results are established. Update/rehearse/record the three-minute screen → visual → intervention → informed follow-up/continuity story using actual behavior. Distinguish prepared/replayed/live activity and assisted/independent answers. Do not add every implemented surface to the video.
+5. **Submission operations.** Review source/history/public assets before end-of-hackathon publication of original soma; align current README/docs; verify new downloads and no-account judge access, capacity and an explicitly approved judging allowance. Preserve the existing $15 test cap and prior usage. Keep the October 31 freeze and November 4, 9 PM America/New_York deadline.
+
+Cloud streaming transcription is implemented and tested locally but unprovisioned; recorded input works. Its isolated account/secrets/IAM activation still needs the previously requested specific approval. Fine-tuning,3D graphics, new checked domains and the belief-debugger moonshot remain proposals. They are not hidden completion requirements for the current release.
+
+---
+
+## Historical v1 checklist — October 27
+
 # Remaining work for Jeremy
 
 October 27, 2026. This separates inputs that require you from engineering and release verification that remain ours. The audit interface and completed architecture refactors do not waive the existing release gates.

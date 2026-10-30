@@ -23,7 +23,7 @@ The source must drive the behavior. Prefer a real permitted lecture slide; an or
 
 ## Judge access and honest fallbacks
 
-- Submit only the public `soma-hackathon` source link and the current hosted `/explore` URL, plus the signed Mac release.
+- At submission, use only the original `soma` repository after its end-of-hackathon publication, the current hosted `/explore` URL, and its signed Mac release. The separate repository is deleted. Keep soma private during the build.
 - The original examples are authored material and make no model call. “Watch a recorded Muse run” is a genuine completed Spark/Wonder run on an original synthetic screenshot. Its cost/time/audit are from the original generation; opening the replay uses no inference. New follow-ups and narration may use their respective live services.
 - A replay must remain labeled throughout recording, playback, saving and resume. It does not prove fresh generation is available. Test one fresh upload separately before submission.
 - Verify production budget remaining, reserve and concurrency before judging; do not reset the lifetime ledger or raise the $15 test allowance. Keep saved/recorded material usable at capacity.

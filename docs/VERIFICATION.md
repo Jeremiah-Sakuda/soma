@@ -111,3 +111,9 @@ Earlier full browser checks exposed a true layout regression (fixed by placing m
 Runtime manifest: `soma-pm086-2026-10-30`, 245 files, SHA-256 `c5d27a62fa5f41a7f961564ea95e5f6505a286e068978d2f75b5266be02a52d7`. Final remote branch/CI evidence follows separately.
 
 The later parallel `24ec4b5` source/review format-recovery change was also integrated; only the generated manifest conflicted and was regenerated. All 82 affected source/review/memory tests and TypeScript passed afterward. The full clean-install CI gate is run on the combined main revision.
+
+### PM086 final main verification
+
+Main merge [`04639b3`](https://github.com/Jeremiah-Sakuda/soma-hackathon/commit/04639b3f79cfe82f6d15ac7015e2539fd8cd92f9) passed [clean CI 41105423022](https://github.com/Jeremiah-Sakuda/soma-hackathon/actions/runs/41105423022): **1,497 offline tests / 90 opt-in skipped**, **133 browser journeys**, **21 desktop checks**, **28 isolated credential-browser checks**, TypeScript, production build and manifest verification. The isolated production trace imported 1,224 files and two internal links with zero private configuration mappings. The feature branch also passed CI 41105422019. The final documentation-only commit does not change the verified runtime.
+
+The public default/release branch remains `codex/submission-release`; select `main` to inspect this combined implementation. No production deployment or replacement of the signed 0.3.0 download was performed by PM086. The remaining coordinated rollout and physical native gates above still apply.

@@ -1,10 +1,13 @@
 import { it, expect } from 'vitest';
 import { randomBytes, randomUUID } from 'node:crypto';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import sharp from 'sharp';
 import { demoSources } from '../fixtures/demo-material/sources';
 import { createDemoMaterialStore } from '../fixtures/demo-material/isolated-store';
-import { createExplorationService } from '../../src/lib/server/exploration';
+import { createExplorationService, validateExplorationViewState } from '../../src/lib/server/exploration';
+import { checkExploration } from '../../src/lib/domain/exploration';
+import { explorationStore } from '../../src/lib/server/exploration-store';
 import { explorationExecution } from '../../src/lib/domain/exploration-view';
 import { defaultSpatialView } from '../../src/lib/domain/spatial-schema';
 import { getServerFirestore } from '../../src/lib/server/firebase-config';
@@ -22,9 +25,17 @@ it.skipIf(process.env.SOMA_DEMO_MATERIAL_LIVE !== 'true')('rehearses three origi
  const ledger=async()=>Number((await getServerFirestore().doc('somaBudget/global').get()).data()?.consumed??0);
  const capture=(r:any)=>{writeFileSync(`${root}/${current}-call-${++call}.json`,JSON.stringify({status:r.status,structured:r.structured,tools:r.tools.map((t:any)=>({name:t.name,value:t.parsedArguments})),usage:r.usage},null,2));return r;};
  const isolated=process.env.SOMA_DEMO_ISOLATED_STORE==='true';
- if(isolated) expect(process.env.SOMA_DEMO_CASES?.split(',').sort()).toEqual(['dsa','speaker']);
+ const reuseInitial=process.env.SOMA_DEMO_REUSE_INITIAL;
+ if(reuseInitial&&!isolated) throw Error('Retained synthetic artifacts require the isolated test store.');
+ if(isolated){
+  const selected=process.env.SOMA_DEMO_CASES?.split(',')??[];
+  expect(selected.length).toBeGreaterThan(0);expect(selected.length).toBeLessThanOrEqual(2);
+  expect(new Set(selected).size).toBe(selected.length);
+  expect(selected.every(id=>['dsa','speaker'].includes(id))).toBe(true);
+ }
  const storageMode=isolated?'isolated-synthetic-memory-with-real-shared-firestore-budget':'production-firestore';
- const service=createExplorationService({...(isolated?{store:createDemoMaterialStore()}:{}),reviewEnabled:()=>true,request:async args=>capture(await requestMetaVisionResponse(args)),review:async args=>capture(await requestMetaResponse(args))});
+ const testStore=isolated?createDemoMaterialStore():explorationStore;
+ const service=createExplorationService({...(isolated?{store:testStore}:{}),reviewEnabled:()=>true,request:async args=>capture(await requestMetaVisionResponse(args)),review:async args=>capture(await requestMetaResponse(args))});
  records.push({phase:'preflight',storageMode,consumed:await ledger(),cap:Number(process.env.META_APP_SPEND_CAP_USD)});write();
  const summary=(phase:string,a:ExplorationArtifact)=>{records.push({case:current,phase,storageMode,mode:a.spec.mode,calls:a.generation.calls,elapsedMs:a.generation.elapsedMs,costUsd:a.generation.costUsd,assurance:a.validation.assurance,audit:a.generation.audit});writeFileSync(`${root}/${current}-${phase}.json`,JSON.stringify(a,null,2));write();};
  for(const c of demoSources){
@@ -34,8 +45,23 @@ it.skipIf(process.env.SOMA_DEMO_MATERIAL_LIVE !== 'true')('rehearses three origi
   try{
    const png=await sharp(Buffer.from(c.svg)).png().toBuffer();writeFileSync(`${root}/${c.id}-source.png`,png);
    await service.initialize(principal);
-   const {artifact:first}=await service.generate(principal,{action:'generate',requestId:randomUUID(),question:c.question,source:{kind:'screenshot',label:c.label,capturedAt:new Date().toISOString(),dataUrl:`data:image/png;base64,${png.toString('base64')}`}});
-   summary('first',first);
+   let first:ExplorationArtifact;
+   if(reuseInitial){
+    first=JSON.parse(readFileSync(join(reuseInitial,`${c.id}-first.json`),'utf8')) as ExplorationArtifact;
+    // Only the original synthetic case may be resumed. Validate its scene/state;
+    // retain its original source/version lineage and never claim a fresh extraction.
+    expect(first.source.label).toBe(c.label);expect(first.source.kind).toBe('screenshot');
+    expect(first.version).toBe(1);expect(first.spec.version).toBe(first.version);
+    expect(first.spec.id).toBe(`explore_${first.id.replaceAll('-','')}`);
+    expect(first.spec.sources.every(ref=>ref.observationId===first.source.observationId&&ref.version===first.source.version)).toBe(true);
+    checkExploration(first.spec);validateExplorationViewState(first.spec,first.state);
+    await testStore.mutate(principal,session=>{session.artifacts.push(structuredClone(first));});
+    records.push({case:current,phase:'reused-initial',storageMode,originalArtifactId:first.id,version:first.version,calls:0,costUsd:0,meaning:'Previously generated original synthetic artifact; historical generation/cost fields are retained in the artifact but not charged or counted as fresh evidence.'});
+    writeFileSync(`${root}/${current}-first.json`,JSON.stringify(first,null,2));write();
+   }else{
+    first=(await service.generate(principal,{action:'generate',requestId:randomUUID(),question:c.question,source:{kind:'screenshot',label:c.label,capturedAt:new Date().toISOString(),dataUrl:`data:image/png;base64,${png.toString('base64')}`}})).artifact;
+    summary('first',first);
+   }
    expect(first.spec.mode).not.toBe('clarify');
    await service.save(principal,first.id,first.version,first.state);
    expect((await service.read(principal,first.id,first.version)).active!.spec).toEqual(first.spec);
@@ -72,7 +98,11 @@ it.skipIf(process.env.SOMA_DEMO_MATERIAL_LIVE !== 'true')('rehearses three origi
    }
    expect((await service.read(principal,first.id,first.version)).active!.spec).toEqual(first.spec);
    records.push({case:c.id,phase:'verified',exactReopen:true});write();
-  }catch(error){records.push({case:c.id,phase:'failed',code:(error as any).code??'assertion-or-transport',message:String((error as Error).message).slice(0,700)});write();}
+  }catch(error){
+   const failedSession=await testStore.read(principal).catch(()=>null);
+   const run=failedSession?.runs.at(-1);
+   records.push({case:c.id,phase:'failed',storageMode,code:(error as any).code??'assertion-or-transport',message:String((error as Error).message).slice(0,700),run:run?{status:run.status,code:run.code,failure:run.failure,calls:run.calls,costUsd:run.costUsd,usageCertain:run.usageCertain}:null});write();
+  }
   finally{await service.remove(principal).catch(()=>{});records.push({case:c.id,phase:'settled',consumed:await ledger()});write();}
  }
  console.log(JSON.stringify({root,records:records.filter(r=>!r.audit)}));

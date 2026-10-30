@@ -117,3 +117,288 @@
     transform: none;
   }
 }
+
+/* ── Top bar ─────────────────────────────────────────────────────────── */
+.exploration-app .journal-topbar {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 12px 32px;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 0;
+  background: transparent;
+}
+.exploration-app .journal-wordmark {
+  font-family: var(--font-journal-serif), 'Young Serif', Georgia, serif;
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--ink);
+  text-decoration: none;
+}
+.exploration-app .journal-topbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.exploration-app .journal-sharing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px 0 14px;
+  border: 1.5px dashed var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 14px;
+}
+
+/* ── Menus ───────────────────────────────────────────────────────────── */
+.exploration-app .journal-menu {
+  position: relative;
+}
+.exploration-app .journal-menu > summary {
+  list-style: none;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.exploration-app .journal-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.exploration-app .journal-menu[open] > summary {
+  background: var(--ink);
+  color: var(--paper);
+}
+.exploration-app .journal-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  z-index: 40;
+  width: min(400px, calc(100vw - 32px));
+  max-height: min(72vh, 680px);
+  overflow: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background-color: var(--paper);
+  background-image: var(--paper-grid);
+  background-size: 20px 20px;
+  border: 1.5px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 0 6px 0 rgb(38 34 29 / 0.14);
+}
+.exploration-app .journal-menu-panel.align-end {
+  right: 0;
+}
+.exploration-app .journal-menu-panel.align-start {
+  left: 0;
+}
+.exploration-app .journal-menu-panel .exploration-source-card,
+.exploration-app .journal-menu-panel .exploration-library,
+.exploration-app .journal-menu-panel .companion-memory {
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.exploration-app .journal-menu-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--accent);
+  font-weight: 500;
+}
+.exploration-app .journal-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Desk and spread ─────────────────────────────────────────────────── */
+.exploration-app .journal-desk,
+.exploration-app.has-exploration .journal-desk {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 4px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.exploration-app .journal-page {
+  min-width: 0;
+  background-color: var(--paper);
+  background-image: var(--paper-grid);
+  background-size: 20px 20px;
+  background-position: 10px 10px;
+  box-shadow: var(--shadow);
+}
+.exploration-app .exploration-artifact.journal-spread,
+.exploration-app.has-exploration .exploration-artifact.journal-spread {
+  display: grid;
+  grid-template-columns: minmax(320px, 5fr) 14px minmax(0, 8fr);
+  grid-template-rows: auto 1fr;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.exploration-app .journal-left-head {
+  grid-column: 1;
+  grid-row: 1;
+  padding: 32px 32px 12px 40px;
+  border-radius: 12px 0 0 0;
+  box-shadow: none;
+}
+.exploration-app .journal-left-body {
+  grid-column: 1;
+  grid-row: 2;
+  padding: 8px 32px 32px 40px;
+  border-radius: 0 0 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.exploration-app .journal-gutter {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  background: var(--gutter);
+  border-left: 1px solid var(--paper-dot);
+  box-shadow: var(--shadow);
+}
+.exploration-app .journal-right {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  position: relative;
+  padding: 28px 44px 32px 32px;
+  border-radius: 0 12px 12px 0;
+}
+.exploration-app .journal-right::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 14px;
+  width: 8px;
+  background: #2e2a24;
+  pointer-events: none;
+}
+.exploration-app .journal-left-head h2 {
+  font-size: 34px;
+  line-height: 1.12;
+  margin: 10px 0 8px;
+}
+.exploration-app .journal-left-head .exploration-objective {
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+/* ── Cover (nothing open yet) ────────────────────────────────────────── */
+.exploration-app .journal-cover {
+  width: min(760px, 100%);
+  margin: 24px auto 0;
+  padding: 44px 48px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.exploration-app .journal-cover h1 {
+  font-size: 40px;
+  line-height: 1.1;
+}
+.exploration-app .journal-cover-lede {
+  color: var(--ink-2);
+  font-size: 17px;
+  max-width: 56ch;
+}
+.exploration-app .journal-cover-subhead {
+  font-size: 18px;
+  margin-top: 6px;
+}
+.exploration-app .journal-cover .exploration-source-card {
+  background: transparent;
+  box-shadow: none;
+  border: 1.5px dashed var(--control-border);
+  border-radius: 12px;
+}
+
+/* ── Composer: one quiet line under the spread ───────────────────────── */
+.exploration-app .exploration-ask-card.journal-composer,
+.exploration-app.has-exploration .exploration-ask-card.journal-composer {
+  position: static;
+  max-height: none;
+  margin: 0;
+  padding: 12px 14px 10px 24px;
+  border: 0;
+  border-radius: 16px;
+  background-color: var(--paper);
+  background-image: none;
+  box-shadow: var(--shadow);
+}
+.exploration-app .journal-composer form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.exploration-app .journal-composer form > label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.exploration-app .journal-composer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.exploration-app .journal-composer textarea,
+.exploration-app.has-exploration .journal-composer textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  height: 44px;
+  max-height: 140px;
+  padding: 8px 0;
+  font-size: 17px;
+  resize: none;
+  border: 0;
+  border-bottom: 1.5px dotted var(--control-border);
+  border-radius: 0;
+  background: transparent;
+}
+.exploration-app .journal-composer .exploration-voice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.exploration-app .journal-composer .exploration-voice .exploration-ask-actions {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+/* The recording disclosure moves into the composer hint, which stays visible. */
+.exploration-app .journal-composer .exploration-voice > p.meta:not([role='status']),
+.exploration-app .journal-composer .exploration-voice > p.meta[role='status']:empty {
+  display: none;
+}
+.exploration-app .journal-composer-hint {
+  font-size: 12px;
+}

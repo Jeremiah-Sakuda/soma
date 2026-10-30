@@ -167,9 +167,10 @@ export default function SpatialCanvas(props: Props) {
     function up(event: PointerEvent) {
       if (!drag) return;
       const clicked = Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 5;
+      const nextView = { ...drag.view, azimuth: wrap(drag.view.azimuth - (event.clientX - drag.x) * 0.4), elevation: Math.max(-85, Math.min(85, drag.view.elevation + (event.clientY - drag.y) * 0.3)) };
       drag = null;
       if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
-      if (!clicked) { latest.current.onView(current.view); return; }
+      if (!clicked) { latest.current.onView(nextView); return; }
       const rect = canvas.getBoundingClientRect();
       const ray = new THREE.Raycaster();
       ray.setFromCamera(new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1), camera);
@@ -183,7 +184,7 @@ export default function SpatialCanvas(props: Props) {
     canvas.addEventListener('pointerdown', down); canvas.addEventListener('pointermove', move); canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', cancel);
     canvas.addEventListener('webglcontextlost', contextLost);
     const instance: Engine = {
-      update(next) { current = next; if (currentScene !== next.scene || currentSelection !== next.selected) rebuild(); draw(); },
+      update(next) { current = drag ? { ...next, view: current.view } : next; if (currentScene !== next.scene || currentSelection !== next.selected) rebuild(); draw(); },
       dispose() {
         disposed = true; observer.disconnect();
         canvas.removeEventListener('pointerdown', down); canvas.removeEventListener('pointermove', move); canvas.removeEventListener('pointerup', up); canvas.removeEventListener('pointercancel', cancel); canvas.removeEventListener('webglcontextlost', contextLost);

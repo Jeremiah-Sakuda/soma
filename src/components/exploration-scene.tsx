@@ -307,6 +307,10 @@ export function ExplorationScene({
 }) {
   const [compact, setCompact] = useState(false),
     [activeGraph, setActiveGraph] = useState<'primary' | 'comparison'>('primary');
+  const sceneElement = useRef<HTMLDivElement>(null), revealScene = useRef(false);
+  useEffect(() => {
+    if (revealScene.current) { revealScene.current = false; sceneElement.current?.scrollIntoView({ block: 'start', behavior: 'instant' }); }
+  }, [state.spatial?.mode]);
   useEffect(() => {
     const media = matchMedia('(max-width:760px)');
     const update = () => setCompact(media.matches);
@@ -314,7 +318,7 @@ export function ExplorationScene({
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
-  const { selectedObjectId: _selected, ...motionState } = state;
+  const { selectedObjectId: _selected, spatial: _presentation, ...motionState } = state;
   const motionKey = JSON.stringify([spec.id, spec.version, motionState]);
   const progress = useExplorationMotion(motionKey, playing, spokenProgress);
   if (spec.mode === 'clarify')
@@ -620,6 +624,7 @@ export function ExplorationScene({
         </div>
       )}
       <div
+        ref={sceneElement}
         className={`exploration-scene exploration-layout-${spec.scene.layout}`}
         aria-label="Generated visual composition"
       >
@@ -675,8 +680,8 @@ export function ExplorationScene({
         )}
       </div>
       {supportsSpatial(spec) && <div className="spatial-mode-switch" role="group" aria-label="Visual representation">
-        <button type="button" aria-pressed={spatialMode === '2d'} onClick={() => onChange({ ...state, spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '2d' } })}>2D view</button>
-        <button type="button" aria-pressed={spatialMode === '3d'} onClick={() => onChange({ ...state, spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '3d' } })}>3D workspace</button>
+        <button type="button" aria-pressed={spatialMode === '2d'} onClick={() => { revealScene.current = spatialMode !== '2d'; onChange({ ...state, spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '2d' } }); }}>2D view</button>
+        <button type="button" aria-pressed={spatialMode === '3d'} onClick={() => { revealScene.current = spatialMode !== '3d'; onChange({ ...state, spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '3d' } }); }}>3D workspace</button>
       </div>}
       {execution && (
         <div className="exploration-caption" aria-live="polite">

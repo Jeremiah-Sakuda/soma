@@ -11,11 +11,12 @@ for (const version of ['first', 'next']) test(`renders recorded Muse ${version} 
   const directory = process.env.SOMA_SPATIAL_REPLAY!;
   const artifact = JSON.parse(readFileSync(join(directory, `${version}-artifact.json`), 'utf8')) as ExplorationArtifact;
   const errors: string[] = []; page.on('pageerror', (error) => errors.push(error.message));
-  await page.route('**/api/explore', async (route) => {
+  await page.route(/\/api\/explore(?:\?.*)?$/, async (route) => {
     if (route.request().method() === 'GET') return route.fulfill({ json: { active: artifact, artifacts: [artifact], versions: [], liveEnabled: false } });
     return route.fallback();
   });
   await page.goto('/explore');
+  await page.locator('.exploration-library button').first().click();
   await expect(page.locator('.spatial-canvas canvas')).toHaveAttribute('data-rendered', 'true');
   await expect(page.getByRole('button', { name: 'Processor', exact: true })).toBeVisible();
   if (version === 'next') {

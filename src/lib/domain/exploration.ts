@@ -1,3 +1,4 @@
+import { spatialPanelSchema, validateSpatialPanel } from './spatial-schema';
 import { z } from 'zod';
 import {
   bfsInputSchema,
@@ -94,6 +95,7 @@ export const explorationPanelSchema = z.discriminatedUnion('kind', [
     kind: z.literal('diagram'),
     objects: z.array(diagramObjectSchema).min(1).max(30),
   }),
+  spatialPanelSchema,
 ]);
 const scene = z.strictObject({
   layout: z.enum(['diagram-sidebar', 'comparison', 'stack']),
@@ -233,8 +235,16 @@ export function validateExplorationSpec(raw: unknown): ExplorationSpec {
           ...(spec.comparison ? { comparison: runBfs(spec.comparison.input) } : {}),
         }
       : null;
+  if (spec.scene.panels.filter((panel) => panel.kind === 'spatial').length > 1)
+    reject('Only one spatial workspace is supported.');
   for (const panel of spec.scene.panels) {
     addId(panel.id);
+    if (panel.kind === 'spatial') {
+      if (spec.mode !== 'explanation') reject('Spatial schematics require explanation-only mode.');
+      validateSpatialPanel(panel, spec.steps);
+      for (const object of panel.objects) addId(object.id);
+      for (const connection of panel.connections) addId(connection.id);
+    }
     const { column, row, columnSpan } = panel.placement;
     if (column + columnSpan > 3) reject('Panel placement exceeds the approved grid.');
     if (spec.scene.layout === 'stack' && (column !== 1 || columnSpan !== 2))

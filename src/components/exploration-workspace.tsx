@@ -438,7 +438,7 @@ export function ExplorationWorkspace() {
       if (uploadRef.current) uploadRef.current.value = '';
     }
   }
-  async function example(weighted = false) {
+  async function example(weighted = false, spatial = false) {
     if (!initialized) return;
     cancel('');
     capture.stop();
@@ -451,6 +451,7 @@ export function ExplorationWorkspace() {
       const result = await api('POST', {
         action: 'example',
         ...(weighted ? { weighted: true } : {}),
+        ...(spatial ? { spatial: true } : {}),
       });
       if (sequence !== loadSequence.current) return;
       if (!result.artifact) throw new Error('The original example could not be loaded.');
@@ -755,6 +756,9 @@ export function ExplorationWorkspace() {
     (artifact?.spec.mode === 'checked-bfs' || artifact?.spec.mode === 'checked-dijkstra')
       ? (artifact.spec.input.nodes.find((node) => node.id === state.selectedObjectId)?.label ??
         state.selectedObjectId)
+      : artifact?.spec.mode === 'explanation' ? artifact.spec.scene.panels.flatMap((panel) =>
+          panel.kind === 'spatial' ? panel.objects.map((o) => ({ id: o.id, label: o.label })) : []
+        ).find((o) => o.id === state?.selectedObjectId)?.label ?? state?.selectedObjectId
       : state?.selectedObjectId;
   const earlierVersion =
     artifact &&
@@ -1056,17 +1060,17 @@ export function ExplorationWorkspace() {
                   <div className="exploration-example-source">
                     <span className="overline">Original example</span>
                     <h3>
-                      {artifact.spec.mode === 'checked-dijkstra'
+                      {artifact.spec.mode === 'explanation' ? artifact.spec.title : artifact.spec.mode === 'checked-dijkstra'
                         ? 'Fewest edges or lowest cost?'
                         : 'A small search problem'}
                     </h3>
                     <p>
-                      {artifact.spec.mode === 'checked-dijkstra'
+                      {artifact.spec.mode === 'explanation' ? artifact.source.summary : artifact.spec.mode === 'checked-dijkstra'
                         ? 'Compare two routes through the same weighted graph.'
                         : 'Find a route through a graph. Watch the queue decide which node comes next.'}
                     </p>
                     <span>
-                      {artifact.spec.mode === 'checked-dijkstra'
+                      {artifact.spec.mode === 'explanation' ? 'Original schematic · explanation only' : artifact.spec.mode === 'checked-dijkstra'
                         ? 'Weighted · Dijkstra and BFS'
                         : 'Unweighted · breadth-first search'}
                     </span>
@@ -1156,6 +1160,7 @@ export function ExplorationWorkspace() {
                 >
                   Compare weighted paths
                 </button>
+                <button type="button" className="exploration-example-button" disabled={sourceBusy || !initialized} onClick={() => void example(false, true)}>Open the 3D example</button>
                 <button
                   type="button"
                   className="exploration-example-button"

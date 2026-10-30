@@ -1,3 +1,4 @@
+import type { SpatialView } from './spatial-schema';
 import { runBfs, type BfsInput, type BfsExecution, type ExplorationSpec } from './exploration';
 
 export type ExplorationViewState = {
@@ -9,6 +10,7 @@ export type ExplorationViewState = {
   reversed: boolean;
   selectedObjectId: string | null;
   edgeWeights?: Record<string, number>;
+  spatial?: SpatialView;
 };
 export function initialExplorationState(spec: ExplorationSpec): ExplorationViewState {
   return {

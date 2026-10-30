@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import SpatialWorkspace from './spatial-workspace';
+import { supportsSpatial } from '@/lib/domain/spatial-exploration';
+import { defaultSpatialView } from '@/lib/domain/spatial-schema';
 import { ExplorationSearchStage } from './exploration-search-stage';
 import { useExplorationMotion } from './exploration-motion';
 import { diagramRoutes, pointOnDiagramRoute } from '@/lib/domain/diagram-routing';
@@ -344,7 +347,10 @@ export function ExplorationScene({
   const heroDiagram =
     spec.mode === 'explanation' ? panels.find((panel) => panel.kind === 'diagram') : undefined;
   const graphs = panels.filter((panel) => panel.kind === 'graph');
-  const singleSearch = compact || spec.mode === 'checked-dijkstra';
+  const spatialPanel = panels.find((panel) => panel.kind === 'spatial');
+  const spatialMode = state.spatial?.mode ?? (spatialPanel ? '3d' : '2d');
+  const showSpatial = Boolean(spatialPanel) || spatialMode === '3d';
+  const singleSearch = showSpatial || compact || spec.mode === 'checked-dijkstra';
   const graphSummary = (which: 'primary' | 'comparison', computed: BfsExecution) => {
     const current = computed.steps[Math.min(state.step, computed.steps.length - 1)];
     return (
@@ -533,6 +539,7 @@ export function ExplorationScene({
   };
   return (
     <>
+
       {spec.mode === 'explanation' && (
         <div className="exploration-explanation-navigation">
           <div className="exploration-step-bar">
@@ -616,7 +623,16 @@ export function ExplorationScene({
         className={`exploration-scene exploration-layout-${spec.scene.layout}`}
         aria-label="Generated visual composition"
       >
-        {heroDiagram ? (
+        {showSpatial ? (
+          <>
+            <SpatialWorkspace spec={spec} state={state} onChange={onChange} which={comparison ? activeGraph : 'primary'} />
+            {experiment && !experimentInline && <div className="exploration-experiment-slot">{experiment}</div>}
+            {panels.some((p) => !['graph', 'frontier', 'diagram', 'spatial'].includes(p.kind)) && <details className="exploration-supporting-panels">
+              <summary>Steps, numbers & context</summary>
+              <div className="exploration-scene">{panels.filter((p) => !['graph', 'frontier', 'diagram', 'spatial'].includes(p.kind)).map(renderPanel)}</div>
+            </details>}
+          </>
+        ) : heroDiagram ? (
           <>
             {renderPanel(heroDiagram)}
             <details className="exploration-supporting-panels">
@@ -658,6 +674,10 @@ export function ExplorationScene({
           panels.map(renderPanel)
         )}
       </div>
+      {supportsSpatial(spec) && <div className="spatial-mode-switch" role="group" aria-label="Visual representation">
+        <button type="button" aria-pressed={spatialMode === '2d'} onClick={() => onChange({ ...state, spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '2d' } })}>2D view</button>
+        <button type="button" aria-pressed={spatialMode === '3d'} onClick={() => onChange({ ...state, spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '3d' } })}>3D workspace</button>
+      </div>}
       {execution && (
         <div className="exploration-caption" aria-live="polite">
           <span className="overline">

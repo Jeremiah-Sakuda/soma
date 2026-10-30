@@ -2203,3 +2203,35 @@
 .exploration-grounding{margin:8px 0;font-size:14px}.exploration-grounding summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600}.exploration-grounding-image{position:relative;line-height:0;border-radius:12px;overflow:hidden}.exploration-grounding-image img{width:100%;height:auto;display:block}.exploration-grounding-region{position:absolute;border:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent);pointer-events:none}.exploration-grounding-region>span{position:absolute;left:0;top:0;min-width:22px;height:22px;border-radius:0 0 6px 0;background:var(--surface);color:var(--ink);font-size:12px;font-weight:700;line-height:22px;text-align:center;padding:0 3px}.exploration-source-change{padding:8px 12px;background:var(--accent-soft);border-radius:10px;line-height:1.45}.exploration-source-change small{display:block;margin-top:4px}.exploration-compare-source{display:flex;align-items:center;gap:8px;min-height:44px;font-size:13px}
 
 .exploration-capture-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.exploration-capture-pair figure{margin:0;min-width:0}.exploration-capture-pair figcaption{font-size:13px;font-weight:600;margin-bottom:6px}.exploration-capture-pair img{display:block;width:100%;height:auto;border:1px solid var(--border);border-radius:10px}@media(max-width:560px){.exploration-capture-pair{grid-template-columns:minmax(0,1fr)}}
+
+/* Spatial explanations share source, captions and controls with the existing card. */
+.spatial-mode-switch { display: flex; gap: 6px; margin: 12px 0; }
+.spatial-mode-switch button, .spatial-toolbar button, .spatial-object-buttons button, .spatial-description button, .spatial-fallback button { min-height: 44px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 8px 12px; cursor: pointer; font: inherit; }
+.spatial-mode-switch [aria-pressed=true], .spatial-object-buttons [aria-pressed=true], .spatial-toolbar [aria-pressed=true] { background: var(--accent-soft, #f0dfd1); border-color: var(--accent); }
+.spatial-workspace { grid-column: 1 / -1; min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
+.spatial-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.spatial-heading h3 { margin: 4px 0 8px; }
+.spatial-state-label { font-size: 12px; border: 1px solid var(--border); padding: 5px 9px; border-radius: 20px; }
+.spatial-assurance { max-width: 70ch; margin: 2px 0 12px; }
+.spatial-stage { position: relative; overflow: hidden; height: clamp(270px, 37vw, 420px); background: #f1f0e9; border-radius: 12px; border: 1px solid #dedfd4; }
+.spatial-canvas { position: absolute; inset: 0; overflow: hidden; }
+.spatial-canvas canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.spatial-canvas canvas:active { cursor: grabbing; }
+.spatial-canvas-label { position: absolute; left: 0; top: 0; pointer-events: none; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid #d1d5c9; border-radius: 5px; background: #fffffff0; color: #29382d; padding: 3px 6px; font-size: 11px; line-height: 16px; }
+.spatial-stage-note { position: absolute; bottom: 10px; left: 12px; color: #536152; font-size: 11px; pointer-events: none; }
+.spatial-flat { width: 100%; height: 100%; }
+.spatial-loading { padding: 28px; }
+.spatial-toolbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 12px 0; }
+.spatial-camera-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+.spatial-toolbar label { display: flex; flex-direction: column; gap: 3px; min-width: 100px; flex: 1 1 115px; font-size: 12px; }
+.spatial-toolbar input[type=range] { width: 100%; min-height: 32px; accent-color: var(--accent); }
+.spatial-object-buttons { display: flex; flex-wrap: wrap; gap: 6px; border-top: 1px solid var(--border); padding-top: 12px; }
+.spatial-object-buttons button { display: inline-flex; align-items: center; gap: 7px; text-align: left; overflow-wrap: anywhere; }
+.spatial-object-buttons button span { width: 9px; height: 9px; flex-shrink: 0; border-radius: 50%; }
+.spatial-inspector { margin-top: 12px; padding: 12px; border-left: 3px solid var(--accent); background: var(--accent-soft, #f3e9df); border-radius: 0 10px 10px 0; }
+.spatial-inspector p { margin: 6px 0; }
+.spatial-description { margin-top: 12px; font-size: 13px; }
+.spatial-description summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.spatial-description li { margin-bottom: 8px; overflow-wrap: anywhere; }
+.spatial-fallback { padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-top: 10px; }
+@media(max-width: 620px) { .spatial-workspace { padding: 10px; } .spatial-stage { height: 290px; } .spatial-toolbar button { padding: 8px 10px; font-size: 12px; } .spatial-stage-note { font-size: 10px; } }

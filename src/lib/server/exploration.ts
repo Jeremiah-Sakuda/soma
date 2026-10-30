@@ -1,3 +1,6 @@
+import { spatialViewSchema, spatialPanelSchema, defaultSpatialView } from '../domain/spatial-schema';
+import { supportsSpatial, applySpatialViewAction } from '../domain/spatial-exploration';
+import { createSpatialExample, SPATIAL_EXAMPLE_SOURCE } from '../domain/spatial-example';
 import { companionMemoryContext, pruneCompanionMemory } from './companion-memory';
 import type { ExplorationProgress } from '../domain/exploration-progress';
 import {
@@ -89,6 +92,7 @@ export const explorationViewStateSchema = z.strictObject({
   reversed: z.boolean().default(false),
   selectedObjectId: z.string().max(48).nullable().default(null),
   edgeWeights: z.record(z.string().max(48), z.number().finite().min(0).max(1000000)).optional(),
+  spatial: spatialViewSchema.optional(),
 });
 export const generateExplorationSchema = z
   .strictObject({
@@ -146,6 +150,7 @@ export const explanationAuthorSceneSchema = explorationSpecSchema.options[1].sha
           explorationPanelSchema.options[2],
           explorationPanelSchema.options[7],
           explorationPanelSchema.options[8],
+          explorationPanelSchema.options[9],
         ]),
       )
       .min(1)
@@ -157,7 +162,7 @@ export function needsExplorationReview(spec: ExplorationSpec, learnerObservation
     spec.mode === 'checked-dijkstra' ||
     learnerObservation ||
     (spec.mode === 'explanation' &&
-      spec.scene.panels.some((panel) => ['diagram', 'matrix', 'sequence'].includes(panel.kind)))
+      spec.scene.panels.some((panel) => ['diagram', 'matrix', 'sequence', 'spatial'].includes(panel.kind)))
   );
 }
 
@@ -204,7 +209,8 @@ function ids(spec: ExplorationSpec) {
   if (spec.mode === 'clarify') return result;
   for (const panel of spec.scene.panels) {
     result.add(panel.id);
-    if (panel.kind === 'diagram') for (const object of panel.objects) result.add(object.id);
+    if (panel.kind === 'diagram' || panel.kind === 'spatial') for (const object of panel.objects) result.add(object.id);
+    if (panel.kind === 'spatial') for (const connection of panel.connections) result.add(connection.id);
     if (panel.kind === 'sequence') for (const item of panel.items) result.add(item.id);
   }
   for (const step of spec.steps) result.add(step.id);
@@ -231,13 +237,18 @@ function objectMeanings(spec: ExplorationSpec) {
       for (const node of input.nodes) result.set(node.id, JSON.stringify(['node', node.label]));
       for (const item of input.edges) edge(item.id, item.from, item.to, input.directed);
     }
-  for (const panel of spec.scene.panels)
+  for (const panel of spec.scene.panels) {
+    if (panel.kind === 'spatial') {
+      for (const object of panel.objects) result.set(object.id, JSON.stringify(['spatial', object.label]));
+      for (const item of panel.connections) edge(item.id, item.from, item.to, item.directed);
+    }
     if (panel.kind === 'diagram')
       for (const object of panel.objects) {
         if (object.kind === 'node' || object.kind === 'block')
           result.set(object.id, JSON.stringify(['node', object.label]));
         if (object.kind === 'edge') edge(object.id, object.from, object.to, object.directed);
       }
+  }
   return result;
 }
 class SceneBindingError extends Error {
@@ -323,6 +334,7 @@ export function validateExplorationViewState(
   const parsed = explorationViewStateSchema.safeParse(raw);
   if (!parsed.success) throw new ExplorationError('invalid_request');
   const state = parsed.data;
+  if (state.spatial && !supportsSpatial(spec)) throw new ExplorationError('invalid_request');
   if (
     Object.keys(state.edgeWeights ?? {}).length &&
     (spec.mode !== 'checked-dijkstra' ||
@@ -625,7 +637,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
     });
     return { deleted: true };
   }
-  async function example(principal: ExplorationPrincipal, weighted = false) {
+  async function example(principal: ExplorationPrincipal, weighted = false, spatial = false) {
     const id = randomUUID(),
       createdAt = new Date().toISOString(),
       source: ExplorationSource = {
@@ -637,7 +649,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         summary: CONTEXT_SOURCE,
         uncertainty: [],
       };
-    const spec = (weighted ? createWeightedExample : createExampleExploration)({
+    const spec = (spatial ? createSpatialExample : weighted ? createWeightedExample : createExampleExploration)({
       observationId: source.observationId,
       version: 1,
       region: null,
@@ -648,6 +660,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         'Original synthetic weighted directed graph. Dijkstra primary, BFS deliberately ignores weights in comparison. ' +
         JSON.stringify(spec.mode === 'checked-dijkstra' ? spec.input : {});
     }
+    if (spatial) { source.label = 'Original 3D signal relay'; source.summary = SPATIAL_EXAMPLE_SOURCE; }
     spec.id = `explore_${id.replaceAll('-', '')}`;
     const artifact: ExplorationArtifact = {
       ...checkExploration(spec),
@@ -655,7 +668,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
       version: 1,
       createdAt,
       updatedAt: createdAt,
-      question: 'Why does BFS visit this node next?',
+      question: spatial ? 'Open this relay in 3D and follow the signal.' : 'Why does BFS visit this node next?',
       source,
       generation: {
         mode: 'prepared-example',
@@ -665,10 +678,10 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         usage: { input_tokens: 0, output_tokens: 0 },
         costUsd: 0,
         elapsedMs: 0,
-        checks: ['original-synthetic-source', 'schema', 'deterministic-trace'],
+        checks: spatial ? ['original-synthetic-source', 'schema', 'references'] : ['original-synthetic-source', 'schema', 'deterministic-trace'],
         audit: [],
       },
-      state: defaultState(spec),
+      state: { ...defaultState(spec), ...(spatial ? { spatial: defaultSpatialView() } : {}) },
       saved: false,
     };
     await deps.store.mutate(principal, (session) => {
@@ -1511,7 +1524,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           call: calls,
           detail: `Checked ${computed.modelId} trace with ${computed.steps.length} snapshots.`,
         });
-      const sceneInstructions = `${experiment ? 'A checked cost experiment is supplied. Keep checked-dijkstra and include set-weight in controls. Preserve the supplied current primary and comparison graph inputs; the application exposes hypothetical interventions separately. Existing edgeWeights are hypothetical overrides, not new source facts. Explain the verified cases and distinguish an exact direct-route tie from a bounded sample.' : ''} ${genericInstructions} Compose a source-specific scene using compose_exploration. Use block objects for processing stages, sequence panels for ordered tokens, matrix panels for small rectangular data, and callout panels for one key idea when they improve this explanation. These explanatory primitives do not establish checked computation. For source-specific explanations, prefer one dominant mechanism with a small set of clearly labeled parts, 3-4 meaningful steps and explicit highlighted node/edge IDs for the causal transition in each step. Do not substitute generic decorative boxes for the mechanism. Keep captions and narration concise (one short sentence each). Prefer 1-2 panels, at most three; include only the parts needed for this question. If the capture shows only one part of a broader question, explain the visible part and label the unseen part as contextual explanation; never invent unseen diagrams or values. Every arrow is a claim: its label and destination must agree with the stated intermediate numerical state; do not skip from a partial update to a limiting/final state. Use the application-bound diagram-sidebar layout; panels must occupy distinct grid cells, column 1 or 2, spans within two columns, rows 1-4. For explanation mode every step MUST set both execution and executionStep to JSON null; there is no checked trace. Never use an integer index or primary execution for explanation mode. Supply concise narration linked to each visible step. ${reuse ? 'This is a context-preserving follow-up, including auto: preserve the computational mode and the supplied current checked primary and comparison inputs; If the question requests a different primary experiment, explain how to apply the visible controls or return a clarification; a question alone cannot silently apply parameter edits. Keep the current trace step and unchanged object positions. Focus on the selected object when supplied.' : ''} Set schemaVersion="exploration-v1". Required spec id=${`explore_${artifactId.replaceAll('-', '')}`} and version=${version}; every source reference must match observationId=${source.observationId}, version=${source.version}. If a checked graph was supplied, primary input MUST exactly match that graph. Comparison input may be an explicitly described experiment and is independently checked. Preserve every input the user did not ask to change: goal, direction, nodes, edges, neighbor order and start. Changing only the start never changes the goal or graph. Explicitly describe every intended parameter change in assumptions; do not quietly invent a second variable to make an experiment more interesting. Bind explanatory steps to the supplied execution snapshots; A checked scene MUST include a primary graph and at least one frontier or state-table panel. A comparison requires its own graph panel. Use these exact kind values; choose a valid bounded layout for this question. Clarify essential source uncertainty. Do not claim source prose is computationally verified. ${previous ? 'Preserve existing object IDs for unchanged meaning and explain the requested change, using the supplied current controls and checked trace as the experiment context.' : ''}`;
+      const sceneInstructions = `${experiment ? 'A checked cost experiment is supplied. Keep checked-dijkstra and include set-weight in controls. Preserve the supplied current primary and comparison graph inputs; the application exposes hypothetical interventions separately. Existing edgeWeights are hypothetical overrides, not new source facts. Explain the verified cases and distinguish an exact direct-route tie from a bounded sample.' : ''} ${genericInstructions} Compose a source-specific scene using compose_exploration. For an explicit 3D/spatial/open-it-up request or an existing spatial scene, use one spatial panel in explanation mode. Compose 3-8 meaningful objects from sphere/box/cylinder/torus primitives, bounded positions/sizes, named connections and optional per-step poses. Positions and sizes are schematic world coordinates, not recovered measurements. All positions are absolute; parentId indicates containment, never a relative coordinate. Make containment, depth or movement useful to the question. Poses reference actual step IDs and preserve object identity. Explain inferred geometry/hidden parts as assumptions; no physical simulation, scientific numerical assurance or hidden-source claim. Preserve the existing spatial panel, objects, labels, geometry and poses on ordinary follow-ups; only change an object representation or pose when requested. The spatial view supports camera, slice, spread and isolation locally. Set viewAction to null for ordinary explanation follow-ups. Only when the user explicitly asks for a viewpoint, separation, cutaway or isolation, propose those bounded viewAction fields; set every unchanged field to null. focusObjectId must identify an existing spatial object. Never copy a previous viewAction into a new response unless requested again. Do not invent UI controls or change source facts to accomplish a view change. Checked graph scenes keep their graph panels: the application provides their 3D view automatically. Use block objects for processing stages, sequence panels for ordered tokens, matrix panels for small rectangular data, and callout panels for one key idea when they improve this explanation. These explanatory primitives do not establish checked computation. For source-specific explanations, prefer one dominant mechanism with a small set of clearly labeled parts, 3-4 meaningful steps and explicit highlighted node/edge IDs for the causal transition in each step. Do not substitute generic decorative boxes for the mechanism. Keep captions and narration concise (one short sentence each). Prefer 1-2 panels, at most three; include only the parts needed for this question. If the capture shows only one part of a broader question, explain the visible part and label the unseen part as contextual explanation; never invent unseen diagrams or values. Every arrow is a claim: its label and destination must agree with the stated intermediate numerical state; do not skip from a partial update to a limiting/final state. Use the application-bound diagram-sidebar layout; panels must occupy distinct grid cells, column 1 or 2, spans within two columns, rows 1-4. For explanation mode every step MUST set both execution and executionStep to JSON null; there is no checked trace. Never use an integer index or primary execution for explanation mode. Supply concise narration linked to each visible step. ${reuse ? 'This is a context-preserving follow-up, including auto: preserve the computational mode and the supplied current checked primary and comparison inputs; If the question requests a different primary experiment, explain how to apply the visible controls or return a clarification; a question alone cannot silently apply parameter edits. Keep the current trace step and unchanged object positions. Focus on the selected object when supplied.' : ''} Set schemaVersion="exploration-v1". Required spec id=${`explore_${artifactId.replaceAll('-', '')}`} and version=${version}; every source reference must match observationId=${source.observationId}, version=${source.version}. If a checked graph was supplied, primary input MUST exactly match that graph. Comparison input may be an explicitly described experiment and is independently checked. Preserve every input the user did not ask to change: goal, direction, nodes, edges, neighbor order and start. Changing only the start never changes the goal or graph. Explicitly describe every intended parameter change in assumptions; do not quietly invent a second variable to make an experiment more interesting. Bind explanatory steps to the supplied execution snapshots; A checked scene MUST include a primary graph and at least one frontier or state-table panel. A comparison requires its own graph panel. Use these exact kind values; choose a valid bounded layout for this question. Clarify essential source uncertainty. Do not claim source prose is computationally verified. ${previous ? 'Preserve existing object IDs for unchanged meaning and explain the requested change, using the supplied current controls and checked trace as the experiment context.' : ''}`;
       let history: unknown[] = [
         {
           role: 'user',
@@ -1568,6 +1581,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           .length(1),
       };
       const clarifySchema = explorationSpecSchema.options[2].extend(turnBinding);
+      const previousSpatial = reuse && previous?.spec.mode === 'explanation'
+        ? previous.spec.scene.panels.find((panel) => panel.kind === 'spatial') : undefined;
       const turnSpecSchema = computed
         ? z.discriminatedUnion('mode', [
             explorationSpecSchema.options[0].extend({
@@ -1585,7 +1600,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         : z.discriminatedUnion('mode', [
             explorationSpecSchema.options[1].extend({
               ...turnBinding,
-              scene: explanationAuthorSceneSchema,
+              scene: previousSpatial ? explanationAuthorSceneSchema.extend({ panels: z.array(spatialPanelSchema).length(1) }) : explanationAuthorSceneSchema,
             }),
             clarifySchema,
           ]);
@@ -1690,6 +1705,35 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           progress('checking-visual');
           const checked = checkExploration(proposalSpec(proposal));
           const spec = checked.spec;
+          if (previousSpatial?.kind === 'spatial' && spec.mode === 'explanation') {
+            const retained = spec.scene.panels.find((panel) => panel.id === previousSpatial.id && panel.kind === 'spatial');
+            if (retained?.kind !== 'spatial' || previousSpatial.objects.some((object) => !retained.objects.some((next) => next.id === object.id)) || previousSpatial.connections.some((edge) => !retained.connections.some((next) => next.id === edge.id)))
+              throw new SceneBindingError('stable_object');
+          }
+          if (reuse && previous?.spec.mode === 'explanation' && spec.mode === 'explanation') {
+            // Preserve the spatial world before review, so the critic sees the exact published geometry.
+            for (const panel of spec.scene.panels) {
+              if (panel.kind !== 'spatial') continue;
+              const old = previous.spec.scene.panels.find((p) => p.id === panel.id);
+              if (old?.kind !== 'spatial') continue;
+              for (const object of panel.objects) {
+                const before = old.objects.find((o) => o.id === object.id);
+                if (!before) continue;
+                object.position = { ...before.position };
+                object.size = { ...before.size };
+                object.shape = before.shape;
+                object.color = before.color;
+                object.parentId = before.parentId && panel.objects.some((o) => o.id === before.parentId) ? before.parentId : null;
+              }
+              for (const pose of old.poses) {
+                if (!spec.steps.some((step) => step.id === pose.stepId) || !panel.objects.some((o) => o.id === pose.objectId)) continue;
+                const index = panel.poses.findIndex((p) => p.stepId === pose.stepId && p.objectId === pose.objectId);
+                if (index >= 0) panel.poses[index] = structuredClone(pose);
+                else panel.poses.push(structuredClone(pose));
+              }
+            }
+            checkExploration(spec);
+          }
           if (
             spec.mode !== 'clarify' &&
             spec.steps.some((step) =>
@@ -1757,6 +1801,11 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                 sourceAnchors: source.anchors ?? [],
                 sourceUncertainty: source.uncertainty,
                 sourceChange: source.change ?? null,
+                spatialPresentation: currentState?.spatial ? {
+                  kind: 'validated-user-presentation-state',
+                  view: currentState.spatial,
+                  selectedObjectId: request.selectedObjectId ?? currentState.selectedObjectId,
+                } : null,
               },
               Math.min(25000, deadline - Date.now()),
               signal,
@@ -1879,6 +1928,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             }
           }
           let nextState = defaultState(spec);
+          if (spec.mode === 'explanation' && spec.scene.panels.some((p) => p.kind === 'spatial')) nextState.spatial = defaultSpatialView();
           if (
             previous &&
             currentState &&
@@ -1907,6 +1957,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                 ? currentState.selectedObjectId
                 : null;
             nextState.selectedObjectId = selected;
+            if (currentState.spatial && supportsSpatial(spec))
+              nextState.spatial = { ...currentState.spatial, isolate: Boolean(selected) && currentState.spatial.isolate };
             if (
               (spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') &&
               previousExecution &&
@@ -1931,6 +1983,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             checkExploration(spec);
             nextState = validateExplorationViewState(spec, nextState);
           }
+          nextState = validateExplorationViewState(spec, applySpatialViewAction(spec, nextState));
           audit.push({
             event: 'scene-validated',
             call: calls,

@@ -101,6 +101,7 @@ export async function POST(request: Request) {
           .strictObject({
             action: z.literal('example'),
             weighted: z.boolean().optional(),
+            spatial: z.boolean().optional(),
           })
           .safeParse(body).success
       )
@@ -109,6 +110,7 @@ export async function POST(request: Request) {
         await explorationService.example(
           principal,
           (body as { weighted?: boolean }).weighted === true,
+          (body as { spatial?: boolean }).spatial === true,
         ),
       );
     }

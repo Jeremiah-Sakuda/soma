@@ -3,6 +3,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import sharp from 'sharp';
 import { demoSources } from '../fixtures/demo-material/sources';
+import { createDemoMaterialStore } from '../fixtures/demo-material/isolated-store';
 import { createExplorationService } from '../../src/lib/server/exploration';
 import { explorationExecution } from '../../src/lib/domain/exploration-view';
 import { defaultSpatialView } from '../../src/lib/domain/spatial-schema';
@@ -20,9 +21,12 @@ it.skipIf(process.env.SOMA_DEMO_MATERIAL_LIVE !== 'true')('rehearses three origi
  const write=()=>writeFileSync(`${root}/results.json`,JSON.stringify(records,null,2));
  const ledger=async()=>Number((await getServerFirestore().doc('somaBudget/global').get()).data()?.consumed??0);
  const capture=(r:any)=>{writeFileSync(`${root}/${current}-call-${++call}.json`,JSON.stringify({status:r.status,structured:r.structured,tools:r.tools.map((t:any)=>({name:t.name,value:t.parsedArguments})),usage:r.usage},null,2));return r;};
- const service=createExplorationService({reviewEnabled:()=>true,request:async args=>capture(await requestMetaVisionResponse(args)),review:async args=>capture(await requestMetaResponse(args))});
- records.push({phase:'preflight',consumed:await ledger(),cap:Number(process.env.META_APP_SPEND_CAP_USD)});write();
- const summary=(phase:string,a:ExplorationArtifact)=>{records.push({case:current,phase,mode:a.spec.mode,calls:a.generation.calls,elapsedMs:a.generation.elapsedMs,costUsd:a.generation.costUsd,assurance:a.validation.assurance,audit:a.generation.audit});writeFileSync(`${root}/${current}-${phase}.json`,JSON.stringify(a,null,2));write();};
+ const isolated=process.env.SOMA_DEMO_ISOLATED_STORE==='true';
+ if(isolated) expect(process.env.SOMA_DEMO_CASES?.split(',').sort()).toEqual(['dsa','speaker']);
+ const storageMode=isolated?'isolated-synthetic-memory-with-real-shared-firestore-budget':'production-firestore';
+ const service=createExplorationService({...(isolated?{store:createDemoMaterialStore()}:{}),reviewEnabled:()=>true,request:async args=>capture(await requestMetaVisionResponse(args)),review:async args=>capture(await requestMetaResponse(args))});
+ records.push({phase:'preflight',storageMode,consumed:await ledger(),cap:Number(process.env.META_APP_SPEND_CAP_USD)});write();
+ const summary=(phase:string,a:ExplorationArtifact)=>{records.push({case:current,phase,storageMode,mode:a.spec.mode,calls:a.generation.calls,elapsedMs:a.generation.elapsedMs,costUsd:a.generation.costUsd,assurance:a.validation.assurance,audit:a.generation.audit});writeFileSync(`${root}/${current}-${phase}.json`,JSON.stringify(a,null,2));write();};
  for(const c of demoSources){
   if(process.env.SOMA_DEMO_CASES&&!process.env.SOMA_DEMO_CASES.split(',').includes(c.id))continue;
   current=c.id; const id=randomBytes(32).toString('hex');

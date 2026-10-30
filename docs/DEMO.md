@@ -1,10 +1,8 @@
 # Soma demo and evaluation
 
-## Current submission story — PM069
+## Current demo story
 
-Full voiceover, recording checklist, submission copy and judge Q&A: [STORY_AND_DEMO.md](STORY_AND_DEMO.md) (PM070).
-
-This section owns the current `/explore` video. Older storyboards below are historical context, not simultaneous requirements. Soma is a desktop visual companion: capture what you are working on, get a source-specific explanation, change a meaningful assumption, and revisit the same experiment. Do not claim autonomous course monitoring in this journey.
+This is the plan for the three-minute `/explore` video. Soma is a desktop visual companion: capture what you are working on, get a source-specific explanation, change a meaningful assumption, and revisit the same experiment. Do not claim autonomous course monitoring in this journey.
 
 | Time | Show | Evidence |
 | --- | --- | --- |
@@ -29,4 +27,4 @@ The source must drive the behavior. Prefer a real permitted lecture slide; an or
 
 ## Current evaluation and remaining evidence
 
-Use [GENERAL_SCREENSHOTS.md](GENERAL_SCREENSHOTS.md) for executed general-source tests and retained failures. PM069 checks are recorded in [VERIFICATION.md](VERIFICATION.md). Use [STUDENT_TRIAL.md](STUDENT_TRIAL.md) for a small observational trial. No pilot, learning gain, fresh-course outcome, complete new video or final native audio test is established by this script.
+Use [GENERAL_SCREENSHOTS.md](GENERAL_SCREENSHOTS.md) for executed general-source tests and retained failures. The latest experience checks are recorded in [VERIFICATION.md](VERIFICATION.md). Use [STUDENT_TRIAL.md](STUDENT_TRIAL.md) for a small observational trial. No pilot, learning gain, fresh-course outcome, complete new video or final native audio test is established by this script.

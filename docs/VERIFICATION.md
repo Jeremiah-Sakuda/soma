@@ -1,8 +1,17 @@
 # Verification record — October 29, 2026
 
-This record describes executed synthetic and clean-checkout checks. It does not establish learning improvement, actual-course fidelity, live-model reliability across arbitrary subjects, or reference-video quality parity.
+Headline results from executed checks on clean checkouts and on production. These are small development samples, not reliability rates:
 
-## Audit fixes
+- **Source reading:** 8 of 8 fresh original graph images (3–4 nodes) were read exactly, and the results matched an independent Floyd–Warshall reference. The full frozen set produced 12 of 13 intended outcomes.
+- **Varied screenshots:** of nine screenshots (three real public pages and six original test images), 8 produced a source-specific explanation or a clarifying question on the first request ([details](GENERAL_SCREENSHOTS.md)).
+- **Engineering:** the latest complete offline suite passed 1,374 tests. Browser journeys cover the weighted comparison, cost experiment, companion layout, replay and label geometry.
+- **Release identity:** `node scripts/verify-release.mjs` matches a committed source tree to the deployed app.
+
+The sections below give the method, every failure and the limits.
+
+## Fixes from internal review
+
+Before release, AI-assisted internal reviews scored the product against the judging criteria. We fixed the six ranked issues they found, then iterated on the experience (see the last section). Other limits are listed under "What these checks do not establish".
 
 - Ordinary auto follow-ups reuse the effective current graph. Application validation rejects restoration of source defaults, changed goals, re-enabled connections, changed costs or an unexpected comparison. Two service regressions exercise attempted BFS/weighted resets; a successful changed-input response is persisted and reopened. Original versions remain immutable.
 - Weighted undirected edges have no arrowheads. Path highlighting matches either stored orientation. Directed edges retain direction, and weighted self-loops have visible curves.
@@ -30,15 +39,15 @@ Before provider calls, 13 new original synthetic cases were frozen with SHA-256 
 
 Thus 12/13 requests published the intended artifact/refusal category; 10/10 fully legible supported sources published. This small development evaluation is not a general success-rate estimate. The cases are now disclosed development evidence, not future held-out tests. Recorded provider cost for the 13 requests was $0.496014, including the failure. All spending and retained reservations remain in the shared $15 total allowance.
 
-## Remaining human gates
+## What these checks do not establish
 
-Clean-Mac installation, native screen/microphone consent, actual multi-display/fullscreen capture, audible narration quality and real coursework remain user checks. The existing arm64 shell passed notarization/stapling/Gatekeeper; this source snapshot does not contain a signing key. A fresh unsigned package is not the notarized distribution artifact.
+They do not establish learning improvement, fidelity on real coursework, or live-model reliability across arbitrary subjects. Clean-Mac installation, native screen and microphone consent, multi-display and fullscreen capture, and audible narration quality are being checked by hand. The existing arm64 shell passed notarization/stapling/Gatekeeper; this source snapshot does not contain a signing key. A fresh unsigned package is not the notarized distribution artifact.
 
 ## Reproducibility
 
-`node scripts/verify-release.mjs` compares 196 runtime files against `public/release.json`. The same manifest ships with the hosted app so a source checkout can be matched to production. Private prompts, source documents, credentials, captures, learner records and local build history are excluded from this repository. The source privacy scan checked configured server-secret values and excluded-file patterns; that is a targeted check, not a comprehensive security certification.
+`node scripts/verify-release.mjs` compares 202 runtime files against `public/release.json`. The same manifest ships with the hosted app so a source checkout can be matched to production. Private prompts, source documents, credentials, captures, learner records and local build history are excluded from this repository. The source privacy scan checked configured server-secret values and excluded-file patterns; that is a targeted check, not a comprehensive security certification.
 
-## PM069 experience verification
+## Experience update, October 29 evening
 
 Focused offline tests cover removed-probe-edge/cleared-goal follow-ups, source/version preservation, save/reopen, replay ownership/no inference, weighted tentative-cost improvement and final-state equality, cost-label geometry and configured concurrency. The final complete offline suite passed 1,374 tests (89 opt-in skipped). Typecheck and the production build passed. Five browser journeys passed for weighted comparison, keyboard cost experiment, 620×704 companion layout, replay/save/resume and label geometry at desktop/companion/phone sizes. The complete browser batch passed 104/105; the remaining failure identified duplicate audit text, which was consolidated. All 20 affected exploration/replay browser journeys then passed, including the previously failing case. The added weighted narration test passed in the full batch. GitHub CI and final hosted checks are recorded separately when completed. Earlier failed sandbox HTTP-server starts and first layout/harness failures are not counted as passes.
 

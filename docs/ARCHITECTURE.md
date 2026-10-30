@@ -1,26 +1,60 @@
-# Architecture and scope
+# Architecture
 
-The primary experience is selected context → generated visual → manipulation → contextual follow-up → saved version. The Next.js application and its bounded service share TypeScript contracts. Electron supplies explicit capture and a restricted companion window; it never exposes Node or arbitrary IPC to remote content.
+Soma's design rule is simple: **the model proposes; the code proves.** Muse models read, decide and explain. Application code computes, validates and publishes. On supported graphs, no path, cost or search state comes from model text. Model-written explanations sit beside that computation, and Spark's reading of the source is shown for inspection.
 
-1. Spark interprets one transient image into a source observation and an optional graph. Source text and learner text are untrusted data. Raw pixels are not stored with the artifact.
-2. The application computes BFS or nonnegative Dijkstra from validated graph facts. Correct computation does not establish correct extraction or prose.
-3. Spark composes approved typed components. Explanation-only steps cannot claim a checked trace. Generated content cannot execute arbitrary code, access secrets or alter validators.
-4. Weighted and answer-informed revisions can receive bounded Wonder review. One repair/re-review is permitted within the shared call, time and spend limits.
-5. The service validates source identity, graph bindings, stable object identity, ownership and latest version before publication. Failed or cancelled work retains the preceding usable artifact and actual billing facts.
-6. Follow-ups from the current UI preserve the effective experiment by default. Explicit graph controls apply primary parameter edits. The preserved experiment can become the baseline of a new version; the original source and earlier versions remain available. A question alone cannot silently restore source defaults. Programmatic modify/compare intents are distinct from explanatory auto turns.
+The primary journey is selected context → generated visual → manipulation → contextual follow-up → saved version. The Next.js application and its bounded exploration service share TypeScript contracts. The Electron companion supplies explicit capture and a restricted floating window. It never exposes Node or arbitrary IPC to remote content.
 
-Checked graph limits: 12 nodes, 24 edges, nonnegative finite costs, explicit neighbor order and deterministic tie handling. Unit-cost BFS uses queue choreography regardless of optional algorithm metadata. Dijkstra uses checked priority states, not FIFO animation. Native-size comparisons show one selectable graph and two clearly labeled full-route costs. Illustrative panels do not recompute as scientific models.
+## One turn, end to end
 
-Source access is read-only. Screenshots, voice and private course documents are not public fixtures. Observations remain separate from interpretations. Attempts preserve assistance, time and version lineage. A correct supported answer, a completed explanation or a self-rating cannot establish independent mastery.
+1. **Interpret.** Muse Spark 1.3 reads one transient image through the `inspect_source` tool. It returns a source summary, its uncertainty and, when the material supports it, a typed graph. Source text and learner text are treated as untrusted data. Raw pixels are not stored with the artifact.
+2. **Compute.** The application runs BFS or nonnegative Dijkstra on the validated graph. Every path, frontier state and route cost shown to the learner comes from this computation. Correct computation does not by itself establish correct extraction or prose. Wonder reviews explanations against the computation in step 5. Spark's reading of the source is shown under **Source & assumptions** but is not independently re-checked.
+3. **Experiment (on request, weighted graphs).** With `choose_cost_probe`, Spark selects one existing edge whose cost is worth investigating. The application computes a bounded set of interventions and returns those cases to Spark, which writes the explanation onto the preserved graph with `compose_cost_experiment`. When the chosen edge runs directly from start to goal, the cases include the exact cost at which both routes tie. Moving the slider afterward re-runs both searches in the browser at any value, without another model call.
+4. **Compose.** Spark authors the scene from approved typed components: positions, highlights, steps, narration and follow-up questions. Explanation-only steps cannot claim a checked trace. Generated content cannot execute code, access secrets or alter validators.
+5. **Review.** Weighted and prediction-informed candidates that pass the application's checks go to Muse Wonder 1.0, an advisory reviewer. Wonder sees the merged card, Spark's source summary and the checked results, but not the original image. It approves or requests a revision. One repair and re-review fit within the shared call, time and spend limits.
+6. **Publish.** The service validates source identity, graph bindings, stable object identity, ownership and the latest version before publication. Failed or cancelled work keeps the previous usable artifact and records actual billing facts.
 
-Requests reserve an application-enforced budget before model activity, with at most five provider calls when review is enabled, a 90-second deadline and a $0.35 exploration reservation. Actual usage settles the reservation; unknown usage retains it. The actual allocation keeps a 20% reserve. These defaults do not authorize spending on another developer's credentials.
+## Follow-ups keep your experiment
 
-Muse Spark 1.3: vision, composition, tool decisions. Muse Wonder 1.0: optional targeted advisory review. Muse transcription: optional recorded input. Gemini: supporting narration. No fine-tuned model, open-weight runtime or 3D renderer is claimed.
+Follow-ups from the UI preserve the learner's effective experiment by default: disabled connections, a moved start or goal, reversed neighbor order and tested costs all carry forward. A question alone cannot silently restore source defaults. Explicit graph controls apply parameter edits. The preserved experiment can become the baseline of a new version, while the original source and earlier versions remain available. Programmatic modify and compare intents are distinct from explanatory turns. If the learner removes the edge under test or clears the goal, Soma still explains the graph, and the saved cost experiment is shown as unavailable.
 
-The retained semester workspace and connectors represent earlier event work. Unattended course preparation is not shipped in the primary companion journey. The current source snapshot includes those modules so the browser application and its existing deep links remain reproducible.
+## Checked computation
 
-## Experience iteration
+- Graphs have at most 12 nodes and 24 edges, with nonnegative finite costs, explicit neighbor order and deterministic tie handling.
+- Unit-cost BFS uses queue choreography regardless of optional algorithm metadata.
+- Dijkstra uses checked priority states, not FIFO animation. Weighted transitions replay the solver's settlement and relaxation snapshots, including improvements to nodes already in the queue.
+- Narration audio supplies step progress; there are no word-level timestamps. Layout may move cards and labels for legibility without changing the saved graph or evidence.
+- Companion-width comparisons show one selectable graph and two clearly labeled full-route costs.
+- Illustrative panels for other subjects do not recompute as scientific models, and the app labels them as explanatory visuals.
 
-Weighted transitions replay checked settlement/relaxation snapshots, including improvements to already-queued nodes. The audio clock supplies step progress; there are no word timestamps. Geometry may move cards/labels without changing the saved graph or evidence. Unavailable saved cost probes do not prevent explaining a graph whose edge/goal was removed.
+## Learning records
 
-The recorded-run action opens a genuine completed synthetic-source generation in a new owned artifact. Original model time/cost/audit remain labeled as historical, and opening makes no provider call or spend reservation. Live follow-ups use the ordinary bounded pipeline. SOMA_EXPLORATION_MAX_ACTIVE supports 1–16 concurrent leases (default 4); the lifetime spending allowance is independent and unchanged.
+Source access is read-only. Observations stay separate from interpretations. Attempts preserve assistance, time and version lineage. A prediction is checked by the server, and the original response is retained. A correct supported answer, a completed explanation or a self-rating cannot establish independent mastery.
+
+## Budgets and limits
+
+Every request reserves an application-enforced budget before any model activity. Each request is limited to:
+
+- three provider calls, or five when Wonder review is enabled
+- a 90-second deadline
+- a $0.35 exploration reservation
+
+Concurrent generations are limited by `SOMA_EXPLORATION_MAX_ACTIVE` (1–16, default 4). Actual usage settles the reservation; unknown usage keeps it. The application keeps a 20% reserve on the actual model allocation. These defaults do not authorize spending on another developer's credentials.
+
+## Recorded run
+
+**Watch a recorded Muse run** opens a genuine completed Spark and Wonder generation on an original synthetic screenshot as a new artifact the viewer owns. Its original time, cost and audit stay labeled as historical. Opening it makes no provider call and reserves no budget, and live follow-ups from it use the ordinary bounded pipeline.
+
+## Models and services
+
+| Component | Role |
+| --- | --- |
+| Muse Spark 1.3 | Vision interpretation, experiment selection and scene composition through four strict tools: `inspect_source`, `choose_cost_probe`, `compose_exploration` and `compose_cost_experiment` |
+| Muse Wonder 1.0 | Advisory review of weighted and prediction-informed cards against checked results |
+| Muse Voice Transcribe 1.0 | Optional spoken questions |
+| Gemini 2.5 Flash TTS | Optional narration audio; browser voice and captions are alternatives |
+
+No fine-tuned model, open-weight runtime or 3D renderer is claimed.
+
+## Earlier event work in this snapshot
+
+Earlier in the event, Soma began as a semester course workspace with read-only course connectors. Those routes and isolated services remain so that the browser application and its existing deep links reproduce. Unattended course preparation is not part of the primary companion journey.

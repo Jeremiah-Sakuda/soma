@@ -1,3 +1,5 @@
+> **October 30 — PM080 current distribution:** [Soma 0.3.0](https://github.com/Jeremiah-Sakuda/soma-hackathon/releases/tag/v0.3.0) is now signed, Apple-notarized, stapled and Gatekeeper-accepted. The published asset SHA-256 matches the local archive: `cfdfffa47c0594ef433467011ce9a96595d295739a274f25f772193bbb1f3e87`. Local stapled copy: `.local/pm080/Soma.app`. Earlier pending-notarization statements below are historical. Streaming relay activation remains pending; this notarization does not enable it.
+
 # Point & ask — explicit native context
 
 Soma can take a spoken question and a pointer selection from the same interaction. Enable **Point & ask** in the macOS toolbar, hold **Control–Option–Space**, circle or point at the relevant content while speaking, then release. A local cursor trail makes the selection visible immediately. Soma captures the display under that gesture on release, transcribes the question, and submits the image and normalized selection together to the existing visual engine. The panel opens on the opposite side of the selected area when space permits. Existing snapshot, upload, typed question, follow-up and save paths remain available.

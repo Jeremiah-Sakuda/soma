@@ -66,3 +66,130 @@ describe('exploration HTTP ownership and complete route pipeline',()=>{
     expect(provider.request).not.toHaveBeenCalled();
   });
 });
+
+it('streams an actual stage before provider completion, then only the validated owned result', async () => {
+  const original = provider.request.getMockImplementation()!;
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  provider.request.mockImplementationOnce(async (args) => {
+    await gate;
+    return original(args);
+  });
+  const req = request('POST', {
+    action: 'generate',
+    requestId: randomUUID(),
+    question: 'Explain the graph.',
+    source: {
+      kind: 'example',
+      label: 'Original synthetic example',
+      capturedAt: new Date().toISOString(),
+    },
+  });
+  req.headers.set('Accept', 'application/x-ndjson');
+  const response = await POST(req);
+  expect(response.headers.get('content-type')).toContain('application/x-ndjson');
+  expect(response.headers.get('cache-control')).toBe('private, no-store');
+  const reader = response.body!.getReader();
+  const first = new TextDecoder().decode((await reader.read()).value);
+  expect(JSON.parse(first)).toMatchObject({
+    type: 'progress',
+    progress: { phase: 'reading-source' },
+  });
+  await vi.waitFor(() => expect(provider.request).toHaveBeenCalledTimes(1));
+  release();
+  let rest = '';
+  for (;;) {
+    const next = await reader.read();
+    if (next.done) break;
+    rest += new TextDecoder().decode(next.value);
+  }
+  const events = rest
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line));
+  expect(events.filter((e) => e.type === 'progress').map((e) => e.progress.phase)).toEqual([
+    'building-visual',
+    'checking-visual',
+    'saving-visual',
+  ]);
+  expect(events.at(-1)).toMatchObject({
+    type: 'result',
+    result: { artifact: { validation: { assurance: 'checked-bfs' } } },
+  });
+  const artifact = events.at(-1).result.artifact;
+  expect(
+    (
+      await (
+        await GET(
+          request('GET', undefined, {
+            url: `http://localhost:3000/api/explore?artifactId=${artifact.id}`,
+          }),
+        )
+      ).json()
+    ).active.spec,
+  ).toEqual(artifact.spec);
+  expect(artifact.generation.timings).toHaveLength(2);
+});
+
+it('stream negotiation cannot bypass origin checks and preserves generation failure codes', async () => {
+  const foreign = request(
+    'POST',
+    { action: 'generate', requestId: randomUUID(), question: 'Explain.' },
+    { origin: 'https://foreign.invalid' },
+  );
+  foreign.headers.set('Accept', 'application/x-ndjson');
+  expect((await POST(foreign)).status).toBe(403);
+  expect(provider.request).not.toHaveBeenCalled();
+  const bad = request('POST', { action: 'generate', requestId: randomUUID() });
+  bad.headers.set('Accept', 'application/x-ndjson');
+  const res = await POST(bad);
+  const events = (await res.text())
+    .trim()
+    .split('\n')
+    .map((v) => JSON.parse(v));
+  expect(events).toEqual([{ type: 'error', status: 400, code: 'invalid_request' }]);
+  expect(provider.request).not.toHaveBeenCalled();
+});
+
+it('closing a streamed request cancels the active lease and cannot publish a late provider result', async () => {
+  const original = provider.request.getMockImplementation()!;
+  let release!: () => void;
+  let observedSignal: AbortSignal | undefined;
+  const gate = new Promise<void>((r) => {
+    release = r;
+  });
+  provider.request.mockImplementationOnce(async (args) => {
+    observedSignal = args.signal;
+    await gate;
+    return original(args);
+  });
+  const req = request('POST', {
+    action: 'generate',
+    requestId: randomUUID(),
+    question: 'Explain the graph.',
+    source: {
+      kind: 'example',
+      label: 'Original synthetic example',
+      capturedAt: new Date().toISOString(),
+    },
+  });
+  req.headers.set('Accept', 'application/x-ndjson');
+  const res = await POST(req),
+    reader = res.body!.getReader();
+  await reader.read();
+  await vi.waitFor(() => expect(observedSignal).toBeDefined());
+  await reader.cancel();
+  expect(observedSignal?.aborted).toBe(true);
+  release();
+  const { resolveExplorationPrincipal, explorationStore } =
+    await import('../../src/lib/server/exploration-store');
+  const { principal } = await resolveExplorationPrincipal(request('GET'));
+  await vi.waitFor(async () => {
+    const session = await explorationStore.read(principal);
+    expect(session?.activeRequestId).toBe(null);
+    expect(session?.runs.at(-1)?.status).toBe('cancelled');
+    expect(session?.artifacts).toHaveLength(0);
+  });
+});

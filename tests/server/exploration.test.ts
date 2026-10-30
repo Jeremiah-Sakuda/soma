@@ -424,7 +424,7 @@ describe('bounded exploration provider and persistence pipeline', () => {
     for (const invocation of request.mock.calls) {
       expect(JSON.stringify((invocation[0] as { tools?: unknown }).tools)).not.toContain('"oneOf"');
     }
-    expect(JSON.stringify((request.mock.calls[1][0] as { tools?: unknown }).tools)).toContain(
+    expect(JSON.stringify((request.mock.calls[1][0] as { structuredOutput?: unknown }).structuredOutput)).toContain(
       '"anyOf"',
     );
   });
@@ -595,10 +595,10 @@ describe('bounded exploration provider and persistence pipeline', () => {
         baseVersion: 1,
       }),
     ).rejects.toMatchObject({ code: 'generation_invalid' });
-    const feedback = request.mock.calls[2][0].input.findLast(
-      (item: { type?: string }) => item.type === 'function_call_output',
-    );
-    expect(JSON.parse(feedback.output).issues).toEqual([{ code: 'stable_object', path: ['spec'] }]);
+    const feedback = JSON.parse(request.mock.calls[2][0].input.findLast(
+      (item: { role?: string }) => item.role === 'user',
+    ).content).validation;
+    expect(feedback.issues).toEqual([{ code: 'stable_object', path: ['spec'] }]);
     expect((await explorationStore.read(principal()))!.artifacts).toEqual([original]);
   });
   it('returns finite layout validation facts without reflecting unknown model keys or values', async () => {
@@ -627,11 +627,11 @@ describe('bounded exploration provider and persistence pipeline', () => {
     const { service } = harness(request as never);
     await service.initialize(principal());
     await service.generate(principal(), generate());
-    const feedback = request.mock.calls[2][0].input.findLast(
-      (item: { type?: string }) => item.type === 'function_call_output',
-    );
-    expect(JSON.parse(feedback.output).issues).toEqual([{ code: 'panel_overlap', path: ['spec'] }]);
-    expect(JSON.parse(feedback.output)).not.toHaveProperty('error');
+    const feedback = JSON.parse(request.mock.calls[2][0].input.findLast(
+      (item: { role?: string }) => item.role === 'user',
+    ).content).validation;
+    expect(feedback.issues).toEqual([{ code: 'panel_overlap', path: ['spec'] }]);
+    expect(feedback).not.toHaveProperty('error');
   });
   it('keeps global concurrency across guest identities and does not release cancelled provider work early', async () => {
     let finish!: (value: MetaResult) => void;
@@ -1464,8 +1464,8 @@ describe('general screenshot contract without prepared-example fallback', () => 
       }
       expect(context.graph).toBeNull();
       expect(context.checkedExecution).toBeNull();
-      const compose = args.tools.find((t: any) => t.name === 'compose_exploration'),
-        branches = compose.parameters.properties.spec.anyOf;
+      const branches = args.structuredOutput.schema.properties.spec.anyOf;
+      expect(args.tools).toEqual([]);
       expect(branches.map((b: any) => b.properties.mode.const)).toEqual(['explanation', 'clarify']);
       const match = /Required spec id=([^ ]+) and version=(\d+)/.exec(args.instructions)!;
       for (const branch of branches) {
@@ -1547,8 +1547,8 @@ describe('general screenshot contract without prepared-example fallback', () => 
     const base = script();
     const request = vi.fn(async (args: any) => {
       if (args.instructions.includes('Required spec id=')) {
-        const compose = args.tools.find((t: any) => t.name === 'compose_exploration');
-        const branch = compose.parameters.properties.spec.anyOf[0];
+        const branch = args.structuredOutput.schema.properties.spec.anyOf[0];
+        expect(args.tools).toEqual([]);
         expect(branch.properties.mode.const).toBe('checked-bfs');
         expect(branch.properties.modelId.const).toBe('bfs-unweighted');
         expect(branch.properties.modelVersion.const).toBe('bfs-unweighted-v1');

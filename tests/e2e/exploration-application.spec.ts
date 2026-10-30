@@ -51,6 +51,10 @@ test('fresh weighted answer stays hidden, records hint and answer, resumes and o
     page.getByRole('heading', { name: 'Explore your fresh example', exact: true }),
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Next step', exact: true })).toBeEnabled();
+  await expect(
+    page.getByRole('heading', { name: 'Explore your fresh example', exact: true }),
+  ).toBeInViewport();
+  await expect(page.getByRole('article', { name: 'Visual exploration card' })).toBeFocused();
   await page.getByRole('button', { name: 'Save exploration', exact: true }).click();
   await page.reload();
   await page.locator('.exploration-library button').first().click();

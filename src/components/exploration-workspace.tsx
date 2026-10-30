@@ -1306,11 +1306,16 @@ export function ExplorationWorkspace() {
                             return;
                           if (!result.artifact)
                             throw new Error('Could not open the fresh example.');
-                          apply(result.artifact);
-                          setNewContext(false);
-                          setSource(null);
-                          setApplicationHistory([]);
-                          setSourceBusy(false);
+                          flushSync(() => {
+                            apply(result.artifact!);
+                            setNewContext(false);
+                            setSource(null);
+                            setApplicationHistory([]);
+                            setSourceBusy(false);
+                          });
+                          const card = document.getElementById('exploration-card');
+                          card?.focus({ preventScroll: true });
+                          card?.scrollIntoView({ block: 'start', behavior: 'instant' });
                           if (explain)
                             await ask(
                               'Use my recorded fresh-problem answer and explanation to choose a useful visual contrast. Explain the checked result on this practice graph, preserve its inputs, and distinguish this hypothetical variation from the original source. Do not diagnose mastery or a confirmed misconception.',

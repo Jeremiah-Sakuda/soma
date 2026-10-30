@@ -413,14 +413,19 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
     if (!session) throw new ExplorationError('session_expired');
     if (version !== undefined && (!id || !Number.isSafeInteger(version) || version < 1))
       throw new ExplorationError('invalid_request');
-    const artifacts = [...new Set(session.artifacts.map((item) => item.id))].map((key) =>
-      latest(session.artifacts, key)!,
-    );
+    const artifacts = [...new Set(session.artifacts.map((item) => item.id))]
+      .map((key) => latest(session.artifacts, key)!)
+      .sort(
+        (a, b) =>
+          Date.parse(b.updatedAt) - Date.parse(a.updatedAt) ||
+          Date.parse(b.createdAt) - Date.parse(a.createdAt) ||
+          session.artifacts.indexOf(b) - session.artifacts.indexOf(a),
+      );
     const active = id
       ? ((version === undefined
           ? latest(session.artifacts, id)
           : session.artifacts.find((item) => item.id === id && item.version === version)) ?? null)
-      : (artifacts.at(-1) ?? null);
+      : (artifacts[0] ?? null);
     if (id && !active) throw new ExplorationError('not_found');
     const versions = active
       ? session.artifacts

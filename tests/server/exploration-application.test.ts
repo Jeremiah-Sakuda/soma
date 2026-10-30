@@ -262,6 +262,9 @@ describe('saved exploration fresh practice persistence and ownership', () => {
     await service.remove(p, child.id);
     expect((await service.read(p, raw.artifactId)).applications[0].answer!.value).toBe(999);
     const reopened = (await service.application(p, { ...raw, operation: 'explore' })).artifact!;
+    await service.save(p, reopened.id, 1, reopened.state);
+    expect((await service.read(p)).artifacts[0].id).toBe(reopened.id);
+    expect((await service.read(p)).active!.id).toBe(reopened.id);
     expect(reopened.id).not.toBe(child.id);
     await service.remove(p, raw.artifactId);
     expect((await service.read(p)).artifacts).toEqual([]);

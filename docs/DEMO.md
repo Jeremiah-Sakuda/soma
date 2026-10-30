@@ -30,4 +30,3 @@ The source must drive the behavior. Prefer a real permitted lecture slide; an or
 ## Current evaluation and remaining evidence
 
 Use [GENERAL_SCREENSHOTS.md](GENERAL_SCREENSHOTS.md) for executed general-source tests and retained failures. PM069 checks are recorded in [VERIFICATION.md](VERIFICATION.md). Use [STUDENT_TRIAL.md](STUDENT_TRIAL.md) for a small observational trial. No pilot, learning gain, fresh-course outcome, complete new video or final native audio test is established by this script.
-

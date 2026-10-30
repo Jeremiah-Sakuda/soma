@@ -3,6 +3,7 @@
 .companion-memory button { cursor: pointer; border: 1px solid var(--control-border); border-radius: 12px; padding: 8px 12px; background: var(--surface); color: var(--ink-2); text-align: left; overflow-wrap: anywhere; transition: background 120ms; }
 .companion-memory button:hover:not(:disabled) { background: var(--surface-muted); }
 .companion-memory button:disabled { opacity: .55; cursor: not-allowed; }
+.companion-memory :is(button, input, select, textarea, summary) { scroll-margin-block: 24px 220px; }
 .companion-memory :is(button, input, select, textarea, summary):focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .companion-memory .companion-memory-toggle { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; padding: 14px 18px; border: 0; font-weight: 650; }
 .companion-memory-content { padding: 0 18px 18px; display: grid; gap: 12px; font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }

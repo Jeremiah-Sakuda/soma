@@ -18,7 +18,7 @@ async function fixture() {
   const service=createExplorationService(); await service.initialize(principal);
   const {artifact}=await service.example(principal); await service.save(principal,artifact.id,1,artifact.state);
   const input={artifactId:artifact.id,version:1,revision:0,requestId:randomUUID()};
-  const proposal={concepts:[{id:'frontier',label:'Frontier',summary:'FIFO layers',uncertainty:[],refs:[{artifactId:artifact.id,version:1}]}],relationships:[]};
+  const proposal={concepts:[{id:'frontier',label:'Frontier',summary:'FIFO layers',uncertainty:[],refs:[{artifactId:artifact.id,version:1}]}],relationships:[],nextActivity:null};
   let calls=0;
   const request=vi.fn(async()=>++calls===1?result('select_memories',{refs:[],reason:'Current'}):result('propose_memory',proposal));
   return {input,request,proposal};

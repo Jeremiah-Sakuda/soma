@@ -943,12 +943,13 @@ export function ExplorationWorkspace() {
             </span>
           </div>
         </div>
-        <CompanionMemory sessionReady={initialized} artifact={artifact ? {id: artifact.id, version: artifact.version, saved: artifact.saved} : null}
-          onOpen={(id, version) => { void resume(id, version); }}
-          onAsk={(next) => { setPlaying(false); setQuestion(next); requestAnimationFrame(() => questionRef.current?.focus()); }} />
         <div className="exploration-workbench">
           {artifact && <div className="exploration-composer-column">{composer}</div>}
           <aside className="exploration-source-column" aria-label="Selected context">
+        <CompanionMemory sessionReady={initialized} artifact={artifact ? {id: artifact.id, version: artifact.version, saved: artifact.saved} : null}
+          onOpen={(id, version) => { void resume(id, version); }}
+          onAsk={(next) => { setPlaying(false); setQuestion(next); requestAnimationFrame(() => questionRef.current?.focus()); }} />
+
             <details
               className="exploration-context-disclosure"
               open={!artifact || newContext || capture.sharing}

@@ -1,10 +1,11 @@
+import { z } from 'zod';
 import { afterEach,beforeEach,expect,it,vi } from 'vitest';
 import { mkdtempSync,rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createExampleExploration } from '../../src/lib/domain/exploration';
-import { createCompanionAnalysis } from '../../src/lib/server/companion-analysis';
+import { createCompanionAnalysis, memoryProposalToolSchema } from '../../src/lib/server/companion-analysis';
 import { createExplorationService } from '../../src/lib/server/exploration';
 import { explorationStore,closeExplorationStore } from '../../src/lib/server/exploration-store';
 import { applyCompanionMemoryCommand,projectCompanionMemory } from '../../src/lib/server/companion-memory';
@@ -56,3 +57,5 @@ it('forgetting goals while a new visual is preparing prevents stale personalized
  await expect(service.generate(principal(),{action:'generate',requestId:randomUUID(),question:'Explain my next idea',source:{kind:'example',label:'Original example',capturedAt:new Date().toISOString()}})).rejects.toMatchObject({code:'revision_conflict'});
  expect((await explorationStore.read(principal()))?.artifacts).toHaveLength(1);
 });
+
+it('provider schema requires every object field and represents absent recommendations with JSON null',()=>{const schema=z.toJSONSchema(memoryProposalToolSchema,{target:'draft-7'});expect(schema.required).toContain('nextActivity');expect(memoryProposalToolSchema.parse({concepts:[],relationships:[],nextActivity:null}).nextActivity).toBeNull();});

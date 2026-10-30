@@ -735,10 +735,10 @@ test('manual replay settles to the checked result and reduced motion skips all i
 
 test.describe('checked motion recording', () => {
   test('manual sequence reveals a terminal path and keeps the queue consistent', async ({
-    browser,
+    browser, baseURL,
   }) => {
     const context = await browser.newContext({
-        baseURL: 'http://127.0.0.1:3100',
+        baseURL,
         viewport: { width: 1280, height: 900 },
         recordVideo: { dir: '.local/pm047/video', size: { width: 1280, height: 900 } },
       }),

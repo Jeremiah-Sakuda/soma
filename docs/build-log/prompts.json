@@ -1287,6 +1287,27 @@
       "kind": "message",
       "prompt": "Yeah lets work on latency. How do we make it feel close to live? ",
       "timestamp_note": "Exact received timestamp unavailable; recorded October 30, 2026 America/New_York. Ambient context excluded."
+    },
+    {
+      "id": "PM101",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Okay can you use computer control to test it locally on my macbook?",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 30, 2026 America/New_York. Ambient context excluded."
+    },
+    {
+      "id": "PM102",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "I think the 3D models look pretty bad ",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 30, 2026 America/New_York. PM103 is the selected answer to the visual-direction question."
+    },
+    {
+      "id": "PM103",
+      "received_at": null,
+      "kind": "clarification",
+      "prompt": "Polished educational cutaways: recognizable parts, clear motion, strong visual hierarchy (Recommended)",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 30, 2026 America/New_York. PM103 is the selected answer to the visual-direction question."
     }
   ,
 {

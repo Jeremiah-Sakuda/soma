@@ -2,14 +2,15 @@
 
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { createSpatialPart, spatialColors } from './spatial-parts';
 import type { SpatialScene } from '@/lib/domain/spatial-exploration';
 import type { SpatialView } from '@/lib/domain/spatial-schema';
 
-const colors = { clay: 0xc36c47, sage: 0x638977, blue: 0x67869d, gold: 0xc99d44, violet: 0x8b79ac };
+const colors = spatialColors;
 type Props = { scene: SpatialScene; view: SpatialView; selected: string | null; onSelect: (id: string) => void; onView: (view: SpatialView) => void; onFailure: () => void };
 type Engine = { update: (props: Props) => void; dispose: () => void };
 
-/** No generated code, URLs or assets enter this renderer. GPU work occurs only on change. */
+/** No generated code, URLs or assets enter this renderer. GPU work occurs on change or a bounded step transition; no idle animation. */
 export default function SpatialCanvas(props: Props) {
   const host = useRef<HTMLDivElement>(null);
   const latest = useRef(props);
@@ -21,7 +22,11 @@ export default function SpatialCanvas(props: Props) {
     try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'low-power' }); }
     catch { latest.current.onFailure(); return; }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setClearColor(0xf1f0e9);
+    renderer.setClearColor(0xf7f6f2);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
     renderer.localClippingEnabled = true;
     const canvas = renderer.domElement;
     canvas.setAttribute('aria-label', 'Interactive 3D scene. Drag to orbit or use the labeled view controls.');
@@ -29,13 +34,23 @@ export default function SpatialCanvas(props: Props) {
     element.appendChild(canvas);
     const world = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 120);
-    world.add(new THREE.HemisphereLight(0xffffff, 0xa1aa98, 2.5));
+    world.add(new THREE.HemisphereLight(0xffffff, 0x919f9e, 2.4));
     const light = new THREE.DirectionalLight(0xfff3dd, 3);
-    light.position.set(4, 8, 6); world.add(light);
+    light.position.set(-3, 7, 5); light.castShadow = true;
+    light.shadow.mapSize.set(1024, 1024); light.shadow.normalBias = 0.03;
+    light.shadow.camera.left = -14; light.shadow.camera.right = 14;
+    light.shadow.camera.top = 14; light.shadow.camera.bottom = -14;
+    world.add(light);
     const fill = new THREE.DirectionalLight(0xbad9ec, 1.2);
     fill.position.set(-5, 3, -4); world.add(fill);
     const group = new THREE.Group(); world.add(group);
-    const labels: { element: HTMLSpanElement; position: THREE.Vector3; priority: number }[] = [];
+    const labelLayer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    labelLayer.classList.add('spatial-label-leaders'); labelLayer.setAttribute('aria-hidden', 'true'); element.appendChild(labelLayer);
+    const labels: { element: HTMLSpanElement; line: SVGPathElement; position: THREE.Vector3; priority: number; objectId?: string; offset?: number }[] = [];
+    const nodes = new Map<string, THREE.Group>();
+    const links: { from: string; to: string; line: THREE.Mesh; arrow?: THREE.Mesh }[] = [];
+    let animationFrame = 0;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     const resources: { dispose: () => void }[] = [];
     const selectable: THREE.Object3D[] = [];
     let current = latest.current, currentScene: SpatialScene | null = null, currentSelection: string | null = null;
@@ -44,58 +59,60 @@ export default function SpatialCanvas(props: Props) {
     const plane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
     let materialList: THREE.Material[] = [];
     function clear() {
-      for (const resource of resources) resource.dispose();
+      for (const resource of new Set(resources)) resource.dispose();
       resources.length = 0; selectable.length = 0; materialList = [];
       for (const label of labels) label.element.remove();
-      labels.length = 0; group.clear();
-    }
-    function geometry(shape: string) {
-      const value = shape === 'sphere' ? new THREE.SphereGeometry(0.5, 24, 16)
-        : shape === 'cylinder' ? new THREE.CylinderGeometry(0.5, 0.5, 1, 24)
-        : shape === 'torus' ? new THREE.TorusGeometry(0.35, 0.14, 12, 32)
-        : new THREE.BoxGeometry(1, 1, 1);
-      resources.push(value); return value;
+      labels.length = 0; labelLayer.replaceChildren(); nodes.clear(); links.length = 0; group.clear();
     }
     function material(color: number, opacity = 1, highlight = false) {
       const value = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.12, transparent: opacity < 1, opacity, depthWrite: opacity === 1, side: THREE.DoubleSide, emissive: highlight ? color : 0, emissiveIntensity: highlight ? 0.22 : 0 });
       resources.push(value); materialList.push(value); return value;
     }
-    function label(text: string, position: THREE.Vector3, priority: number) {
+    function label(text: string, position: THREE.Vector3, priority: number, objectId?: string, offset?: number) {
       const span = document.createElement('span'); span.textContent = text;
       span.className = 'spatial-canvas-label'; span.setAttribute('aria-hidden', 'true');
-      element.appendChild(span); labels.push({ element: span, position, priority });
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'path'); labelLayer.appendChild(line);
+      element.appendChild(span); labels.push({ element: span, line, position, priority, objectId, offset });
     }
     function rebuild() {
       clear();
       const visible = current.scene.objects.filter((object) => object.visible);
       const bounds = new THREE.Box3();
-      // Bounds include hidden objects so stepping/isolation never jerks the camera.
-      for (const object of current.scene.objects) {
+      // Stepping retains whole-scene framing; explicit isolation frames the selected assembly.
+      const framing = current.view.isolate && visible.length ? visible : current.scene.objects;
+      for (const object of framing) {
         const p = new THREE.Vector3(object.position.x, object.position.y, object.position.z);
         const s = new THREE.Vector3(object.size.x, object.size.y, object.size.z).multiplyScalar(0.5);
         bounds.expandByPoint(p.clone().sub(s)); bounds.expandByPoint(p.clone().add(s));
       }
       if (bounds.isEmpty()) bounds.set(new THREE.Vector3(-2, -2, -2), new THREE.Vector3(2, 2, 2));
-      center = bounds.getCenter(new THREE.Vector3()); radius = Math.max(2, bounds.getSize(new THREE.Vector3()).length() / 2);
+      center = bounds.getCenter(new THREE.Vector3()); radius = Math.max(current.view.isolate ? 0.65 : 2, bounds.getSize(new THREE.Vector3()).length() / 2);
       halfWidth = Math.max(0.1, (bounds.max.x - bounds.min.x) / 2); floorY = bounds.min.y - 0.22;
-      const grid = new THREE.GridHelper(Math.max(8, radius * 3), 16, 0xcbd0c5, 0xe0e2d8);
-      grid.position.set(center.x, floorY, center.z); group.add(grid);
-      resources.push(grid.geometry); if (Array.isArray(grid.material)) resources.push(...grid.material); else resources.push(grid.material);
+      if (current.scene.assurance === 'checked') {
+        const grid = new THREE.GridHelper(Math.max(8, radius * 3), 16, 0xd0d4cd, 0xe9ebe5);
+        grid.position.set(center.x, floorY, center.z); group.add(grid);
+        resources.push(grid.geometry); if (Array.isArray(grid.material)) resources.push(...grid.material); else resources.push(grid.material);
+      } else {
+        const floorGeometry = new THREE.PlaneGeometry(80, 80);
+        const floorMaterial = new THREE.ShadowMaterial({ color: 0x4c645d, opacity: 0.16 });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial); floor.rotation.x = -Math.PI / 2;
+        floor.position.set(center.x, floorY, center.z); floor.receiveShadow = true; group.add(floor);
+        resources.push(floorGeometry, floorMaterial);
+      }
       for (const object of visible) {
         const shell = current.scene.objects.some((o) => o.parentId === object.id);
         const selected = object.id === current.selected;
-        const mesh = new THREE.Mesh(geometry(object.shape), material(colors[object.color], shell ? 0.16 : 1, selected || object.highlighted));
-        mesh.position.set(object.position.x, object.position.y, object.position.z);
-        mesh.scale.set(object.size.x, object.size.y, object.size.z);
-        mesh.userData.objectId = object.id;
-        group.add(mesh); selectable.push(mesh);
-        if (selected || shell) {
-          const edges = new THREE.EdgesGeometry(mesh.geometry); resources.push(edges);
-          const lineMaterial = new THREE.LineBasicMaterial({ color: selected ? 0x833d25 : colors[object.color], transparent: true, opacity: selected ? 0.95 : 0.25 });
-          resources.push(lineMaterial); materialList.push(lineMaterial);
-          const outline = new THREE.LineSegments(edges, lineMaterial); outline.position.copy(mesh.position); outline.scale.copy(mesh.scale); group.add(outline);
-        }
-        label(object.label, mesh.position.clone().add(new THREE.Vector3(0, object.size.y / 2 + 0.18, 0)), selected ? 3 : object.highlighted ? 2 : shell ? 0 : 1);
+        const part = createSpatialPart(object, selected, shell);
+        part.traverse((item) => {
+          if (!(item instanceof THREE.Mesh)) return;
+          resources.push(item.geometry); selectable.push(item);
+          const materials = Array.isArray(item.material) ? item.material : [item.material];
+          resources.push(...materials); materialList.push(...materials);
+        });
+        group.add(part); nodes.set(object.id, part);
+        // Signal markers show motion, not another competing label on the mechanism.
+        if (object.renderStyle !== 'marker' || selected)
+          label(object.label, part.position.clone(), selected ? 3 : object.highlighted ? 2 : shell ? 0 : 1, object.id, object.size.y / 2 + 0.12);
       }
       const byId = new Map(visible.map((object) => [object.id, object]));
       for (const edge of current.scene.connections) {
@@ -106,17 +123,18 @@ export default function SpatialCanvas(props: Props) {
         if (length < 0.01) continue;
         const selected = current.selected === edge.id;
         const mat = material(edge.highlighted || selected ? 0x52775f : 0x969d91, edge.active ? 0.9 : 0.2, selected);
-        const geo = new THREE.CylinderGeometry(0.025, 0.025, length, 8); resources.push(geo);
+        const geo = new THREE.CylinderGeometry(0.025, 0.025, 1, 12); resources.push(geo);
         const line = new THREE.Mesh(geo, mat); line.position.copy(a).add(b).multiplyScalar(0.5);
         line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.clone().normalize());
-        line.userData.objectId = edge.id; group.add(line); selectable.push(line);
+        line.scale.y = length; line.userData.objectId = edge.id; group.add(line); selectable.push(line);
+        const binding: typeof links[number] = { from: edge.from, to: edge.to, line }; links.push(binding);
         if (edge.directed) {
           const coneGeo = new THREE.ConeGeometry(0.11, 0.25, 12); resources.push(coneGeo);
           const arrow = new THREE.Mesh(coneGeo, mat);
           arrow.position.copy(a).lerp(b, 0.7); arrow.quaternion.copy(line.quaternion); arrow.userData.objectId = edge.id;
-          group.add(arrow); selectable.push(arrow);
+          group.add(arrow); selectable.push(arrow); binding.arrow = arrow;
         }
-        if (edge.label) label(edge.label, a.clone().lerp(b, 0.5).add(new THREE.Vector3(0, 0.15, 0)), 0);
+        if (edge.label && selected) label(edge.label, a.clone().lerp(b, 0.5).add(new THREE.Vector3(0, 0.15, 0)), 0);
       }
       currentScene = current.scene; currentSelection = current.selected;
     }
@@ -128,22 +146,44 @@ export default function SpatialCanvas(props: Props) {
       const aspect = width / height;
       camera.aspect = aspect;
       const azimuth = THREE.MathUtils.degToRad(view.azimuth), elevation = THREE.MathUtils.degToRad(view.elevation);
-      const distance = radius * (aspect < 1 ? 3.8 / aspect : 3.8) * view.zoom;
+      const distance = radius * (aspect < 1 ? 3.15 / aspect : 3.15) * view.zoom;
       camera.far = Math.max(120, distance + radius * 4); camera.updateProjectionMatrix();
       camera.position.set(center.x + Math.sin(azimuth) * Math.cos(elevation) * distance, center.y + Math.sin(elevation) * distance, center.z + Math.cos(azimuth) * Math.cos(elevation) * distance);
       camera.lookAt(center);
       plane.constant = center.x + halfWidth - view.slice * halfWidth * 2;
       for (const mat of materialList) { mat.clippingPlanes = view.slice > 0 ? [plane] : null; }
+      for (const link of links) {
+        const a = nodes.get(link.from)?.position, b = nodes.get(link.to)?.position;
+        if (!a || !b) continue;
+        const direction = b.clone().sub(a), length = direction.length();
+        link.line.visible = length > 0.01;
+        if (length <= 0.01) continue;
+        link.line.position.copy(a).lerp(b, 0.5); link.line.scale.y = length;
+        link.line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+        if (link.arrow) { link.arrow.position.copy(a).lerp(b, 0.7); link.arrow.quaternion.copy(link.line.quaternion); }
+      }
       renderer.render(world, camera);
       const occupied: { x: number; y: number; width: number }[] = [];
+      labelLayer.setAttribute('viewBox', `0 0 ${width} ${height}`);
       for (const item of [...labels].sort((a, b) => b.priority - a.priority)) {
-        const projected = item.position.clone().project(camera);
-        const x = (projected.x + 1) * width / 2, y = (1 - projected.y) * height / 2;
-        const labelWidth = Math.min(160, item.element.textContent!.length * 6 + 16);
-        const overlap = occupied.some((p) => Math.abs(p.x - x) < (p.width + labelWidth) / 2 && Math.abs(p.y - y) < 25);
-        const shown = !overlap && (view.slice === 0 || plane.distanceToPoint(item.position) >= 0) && x > labelWidth / 2 && x < width - labelWidth / 2 && y > 12 && y < height - 12 && projected.z < 1;
-        item.element.style.display = shown ? 'block' : 'none';
-        if (shown) { item.element.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`; occupied.push({ x, y, width: labelWidth }); }
+        const node = item.objectId ? nodes.get(item.objectId) : undefined;
+        const anchor = node ? node.position.clone().add(new THREE.Vector3(0, item.offset ?? 0, 0)) : item.position;
+        const projected = anchor.clone().project(camera);
+        const px = (projected.x + 1) * width / 2, py = (1 - projected.y) * height / 2;
+        item.element.style.display = 'block';
+        const labelWidth = item.element.offsetWidth;
+        const x = Math.max(labelWidth / 2 + 12, Math.min(width - labelWidth / 2 - 12, px));
+        let y = Math.max(24, Math.min(height - 48, py - 36));
+        let tries = 0;
+        while (occupied.some((p) => Math.abs(p.x - x) < (p.width + labelWidth) / 2 + 8 && Math.abs(p.y - y) < 30) && tries++ < 8) y -= 31;
+        const shown = y > 12 && px > 0 && px < width && py > 0 && py < height && projected.z < 1 && (view.slice === 0 || plane.distanceToPoint(anchor) >= 0);
+        item.element.style.display = shown ? 'block' : 'none'; item.line.style.display = shown ? 'block' : 'none';
+        if (shown) {
+          item.element.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+          item.element.dataset.emphasis = item.priority > 1 ? 'true' : 'false';
+          item.line.setAttribute('d', `M${px},${py} L${px},${y + 16} L${x},${y + 16}`);
+          occupied.push({ x, y, width: labelWidth });
+        }
       }
       canvas.dataset.rendered = 'true';
     }
@@ -186,11 +226,34 @@ export default function SpatialCanvas(props: Props) {
     canvas.addEventListener('pointerdown', down); canvas.addEventListener('pointermove', move); canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', cancel);
     canvas.addEventListener('webglcontextlost', contextLost);
     const instance: Engine = {
-      update(next) { current = drag ? { ...next, view: current.view } : next; if (currentScene !== next.scene || currentSelection !== next.selected) rebuild(); draw(); },
+      update(next) {
+        current = drag ? { ...next, view: current.view } : next;
+        if (currentScene !== next.scene || currentSelection !== next.selected) {
+          const before = new Map([...nodes].map(([id, node]) => [id, node.position.clone()]));
+          cancelAnimationFrame(animationFrame); rebuild();
+          const transitions = [...nodes].flatMap(([id, node]) => {
+            const from = before.get(id), to = node.position.clone();
+            return from && from.distanceTo(to) > 0.001 ? [{ node, from, to }] : [];
+          });
+          if (transitions.length && !reduced.matches && !drag) {
+            const began = performance.now(); canvas.dataset.transitioning = 'true';
+            const animate = (now: number) => {
+              if (disposed || lost) return;
+              const progress = reduced.matches ? 1 : Math.min(1, (now - began) / 360), eased = 1 - Math.pow(1 - progress, 3);
+              for (const item of transitions) item.node.position.copy(item.from).lerp(item.to, eased);
+              draw();
+              if (progress < 1) animationFrame = requestAnimationFrame(animate);
+              else canvas.dataset.transitioning = 'false';
+            };
+            animate(began);
+          } else canvas.dataset.transitioning = 'false';
+        }
+        draw();
+      },
       dispose() {
-        disposed = true; observer.disconnect();
+        disposed = true; cancelAnimationFrame(animationFrame); observer.disconnect();
         canvas.removeEventListener('pointerdown', down); canvas.removeEventListener('pointermove', move); canvas.removeEventListener('pointerup', up); canvas.removeEventListener('pointercancel', cancel); canvas.removeEventListener('webglcontextlost', contextLost);
-        clear(); renderer.dispose(); if (!lost) renderer.forceContextLoss(); canvas.remove();
+        clear(); light.shadow.dispose(); renderer.dispose(); if (!lost) renderer.forceContextLoss(); canvas.remove(); labelLayer.remove();
       },
     };
     engine.current = instance;

@@ -156,3 +156,27 @@ describe('spatial projection and presentation', () => {
     }
   });
 });
+
+
+it('keeps the illustrated assembly aligned and the signal marker attached during separation', () => {
+  const spec = createSpatialExample();
+  const initial = initialExplorationState(spec);
+  for (const explanationStep of [0, 1, 2]) {
+    const state = { ...initial, explanationStep, spatial: { ...defaultSpatialView(), spread: 0.8 } };
+    const base = spatialScene(spec, state)!, presented = spatialPresentation(base, state);
+    const marker = presented.objects.find((o) => o.id === 'signal')!;
+    const part = presented.objects.find((o) => o.id === ['sensor', 'processor', 'indicator'][explanationStep])!;
+    expect(marker.position.x).toBe(part.position.x);
+    expect(marker.position.z).toBe(part.position.z);
+    expect(marker.position.y - part.position.y).toBeCloseTo(0.65);
+    expect(presented.objects.find((o) => o.id === 'enclosure')!.position).toEqual(base.objects[0].position);
+  }
+});
+
+it('rejects unapproved part assets while retaining legacy primitive scenes', () => {
+  const { spec, panel } = candidate();
+  Object.assign(panel.objects[0], { renderStyle: 'external-mesh' });
+  expect(() => checkExploration(spec)).toThrow();
+  delete panel.objects[0].renderStyle;
+  expect(() => checkExploration(spec)).not.toThrow();
+});

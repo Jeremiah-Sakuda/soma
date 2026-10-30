@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic.js';
+import { RotateCcw, RotateCw } from 'lucide-react';
 import { Component, useMemo, useState, type ReactNode } from 'react';
 import type { ExplorationSpec } from '@/lib/domain/exploration';
 import type { ExplorationViewState } from '@/lib/domain/exploration-view';
@@ -69,6 +70,7 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
       <span className="spatial-stage-note" aria-hidden="true">{spatial3d && !failed ? 'Drag to orbit · select a part' : 'Front projection · select a part below'}</span>
     </div>
     {failed && spatial3d && <div className="spatial-fallback" role="status">3D is unavailable on this device. Your scene and controls are preserved in the front projection. <button type="button" onClick={() => { setFailed(false); setAttempt(attempt + 1); }}>Retry 3D</button></div>}
+    {base.objects.some((object) => object.renderStyle) && <p className="spatial-detail-note">Illustrative component finishes · not an observed device design</p>}
     <div className="spatial-toolbar" aria-label="Spatial view controls">
       {spatial3d && <>
         <div className="spatial-camera-buttons" role="group" aria-label="Camera views">
@@ -76,8 +78,8 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
           <button type="button" onClick={() => update({ azimuth: 0, elevation: 0, zoom: 1 })}>Front</button>
           <button type="button" onClick={() => update({ azimuth: 0, elevation: 85, zoom: 1 })}>Above</button>
           <button type="button" onClick={() => update({ azimuth: 90, elevation: 0, zoom: 1 })}>Side</button>
-          <button type="button" aria-label="Rotate left" onClick={() => rotate(-20)}>↶</button>
-          <button type="button" aria-label="Rotate right" onClick={() => rotate(20)}>↷</button>
+          <button type="button" aria-label="Rotate left" onClick={() => rotate(-20)}><RotateCcw size={17} aria-hidden="true" /></button>
+          <button type="button" aria-label="Rotate right" onClick={() => rotate(20)}><RotateCw size={17} aria-hidden="true" /></button>
         </div>
         <label>Zoom<input aria-label="Spatial zoom" type="range" min="0.65" max="2" step="0.05" value={view.zoom} onChange={(event) => update({ zoom: Number(event.target.value) })} /></label>
       </>}
@@ -92,7 +94,7 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
       {base.objects.map((object) => <button key={object.id} type="button" aria-pressed={state.selectedObjectId === object.id} onClick={() => select(object.id)}><span style={{ background: palette[object.color] }} aria-hidden="true" />{object.label}</button>)}
     </div>
     {(selected || selectedEdge) && <div className="spatial-inspector" role="status">
-      <strong>{selected?.label ?? selectedEdge?.label}</strong>
+      <span className="overline">Inspecting</span><strong>{selected?.label ?? selectedEdge?.label}</strong>
       <p>{selected ? selected.description : `${base.objects.find((o) => o.id === selectedEdge!.from)?.label} ${selectedEdge!.directed ? '→' : '—'} ${base.objects.find((o) => o.id === selectedEdge!.to)?.label}`}</p>
       {selected && !selected.visible && <p>This part is hidden at the current step or by isolation.</p>}
       <span className="meta">Selected for your next question. Source facts remain unchanged.</span>

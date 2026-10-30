@@ -28,6 +28,7 @@ function harness(options: { foreignSource?: boolean; renamedObject?: boolean; in
     spec.id = binding[1]; spec.version = Number(binding[2]);
     if (spec.mode !== 'explanation' || spec.scene.panels[0].kind !== 'spatial') throw new Error('fixture');
     if (options.view) spec.scene.panels[0].viewAction = { camera: 'side', focusObjectId: 'processor', isolate: true, spread: 0.6, slice: null };
+    spec.scene.panels[0].objects[2].renderStyle = 'sensor'; // Existing part identity includes its bounded styling.
     spec.scene.panels[0].objects[2].position.x = 5; // The service must preserve an existing world's geometry.
     if (options.renamedObject) spec.scene.panels[0].objects[2].label = 'Different meaning';
     if (options.invalid) spec.scene.panels[0].poses[0].objectId = 'foreign';
@@ -77,6 +78,7 @@ it('preserves scene geometry, camera, selection and step across a real service r
   const reviewed = JSON.parse((review.mock.calls[0] as unknown as [{ input: { content: string }[] }])[0].input[0].content);
   expect(reviewed.checked.spatialPresentation.view).toEqual(state.spatial);
   expect(reviewed.spec.scene.panels[0].objects[2].position.x).toBe(0);
+  expect(reviewed.spec.scene.panels[0].objects[2].renderStyle).toBe('chip');
   expect(next.state).toEqual(state);
   expect(next.source).toEqual(artifact.source);
   expect(next.version).toBe(2);

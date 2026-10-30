@@ -2206,29 +2206,35 @@
 
 /* Spatial explanations share source, captions and controls with the existing card. */
 .spatial-mode-switch { display: flex; gap: 6px; margin: 12px 0; }
-.spatial-mode-switch button, .spatial-toolbar button, .spatial-object-buttons button, .spatial-description button, .spatial-fallback button { min-height: 44px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 8px 12px; cursor: pointer; font: inherit; }
+.spatial-mode-switch button, .spatial-toolbar button, .spatial-object-buttons button, .spatial-description button, .spatial-fallback button { min-width: 44px; min-height: 44px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 8px 12px; cursor: pointer; font: inherit; }
 .spatial-mode-switch [aria-pressed=true], .spatial-object-buttons [aria-pressed=true], .spatial-toolbar [aria-pressed=true] { background: var(--accent-soft, #f0dfd1); border-color: var(--accent); }
 .spatial-workspace { grid-column: 1 / -1; min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
 .spatial-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 .spatial-heading h3 { margin: 4px 0 8px; }
 .spatial-state-label { font-size: 12px; border: 1px solid var(--border); padding: 5px 9px; border-radius: 20px; }
 .spatial-assurance { max-width: 70ch; margin: 2px 0 12px; }
-.spatial-stage { position: relative; overflow: hidden; height: clamp(270px, 37vw, 420px); background: #f1f0e9; border-radius: 12px; border: 1px solid #dedfd4; }
+.spatial-stage { position: relative; overflow: hidden; height: clamp(270px, 37vw, 420px); background: #f7f6f2; border-radius: 14px; border: 1px solid var(--border); }
 .spatial-canvas { position: absolute; inset: 0; overflow: hidden; }
 .spatial-canvas canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
 .spatial-canvas canvas:active { cursor: grabbing; }
-.spatial-canvas-label { position: absolute; left: 0; top: 0; pointer-events: none; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid #d1d5c9; border-radius: 5px; background: #fffffff0; color: #29382d; padding: 3px 6px; font-size: 11px; line-height: 16px; }
+ .spatial-label-leaders { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+.spatial-label-leaders path { fill: none; stroke: #88958f; stroke-width: 1; }
+.spatial-canvas-label { position: absolute; left: 0; top: 0; pointer-events: none; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid var(--border); border-radius: 7px; background: #fffffff5; color: var(--ink); padding: 5px 9px; font-size: 12px; font-weight: 500; line-height: 17px; box-shadow: 0 2px 8px #24332b08; }
+.spatial-canvas-label[data-emphasis=true] { border-color: var(--accent); color: var(--accent-hover); }
+.spatial-detail-note { margin: 9px 0 0; font-size: 12px; color: var(--muted); }
+
 .spatial-stage-note { position: absolute; bottom: 10px; left: 12px; color: #536152; font-size: 11px; pointer-events: none; }
 .spatial-flat { width: 100%; height: 100%; }
 .spatial-loading { padding: 28px; }
 .spatial-toolbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 12px 0; }
 .spatial-camera-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
 .spatial-toolbar label { display: flex; flex-direction: column; gap: 3px; min-width: 100px; flex: 1 1 115px; font-size: 12px; }
-.spatial-toolbar input[type=range] { width: 100%; min-height: 32px; accent-color: var(--accent); }
+.spatial-toolbar input[type=range] { width: 100%; min-height: 44px; accent-color: var(--accent); }
 .spatial-object-buttons { display: flex; flex-wrap: wrap; gap: 6px; border-top: 1px solid var(--border); padding-top: 12px; }
 .spatial-object-buttons button { display: inline-flex; align-items: center; gap: 7px; text-align: left; overflow-wrap: anywhere; }
 .spatial-object-buttons button span { width: 9px; height: 9px; flex-shrink: 0; border-radius: 50%; }
-.spatial-inspector { margin-top: 12px; padding: 12px; border-left: 3px solid var(--accent); background: var(--accent-soft, #f3e9df); border-radius: 0 10px 10px 0; }
+.spatial-inspector { margin-top: 12px; padding: 14px; border: 1px solid var(--border); background: var(--surface-muted); border-radius: 12px; }
+.spatial-inspector strong { display: block; margin-top: 4px; }
 .spatial-inspector p { margin: 6px 0; }
 .spatial-description { margin-top: 12px; font-size: 13px; }
 .spatial-description summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }

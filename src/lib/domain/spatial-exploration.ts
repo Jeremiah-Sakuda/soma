@@ -114,10 +114,17 @@ export function spatialPresentation(scene: SpatialScene, state: ExplorationViewS
     for (const character of object.id) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619) >>> 0;
     const angle = (hash / 4294967296) * Math.PI * 2;
     const offset = view.spread * (object.parentId ? 2 : 0.8);
+    // Educational parts separate along an intentional assembly axis. A moving
+    // marker follows the nearest part's presentation offset, never a new fact.
+    const role = object.renderStyle === 'marker'
+      ? scene.objects.filter((o) => o.renderStyle && o.renderStyle !== 'marker' && o.renderStyle !== 'housing')
+        .sort((a, b) => Math.hypot(a.position.x - object.position.x, a.position.z - object.position.z) - Math.hypot(b.position.x - object.position.x, b.position.z - object.position.z))[0]?.renderStyle
+      : object.renderStyle;
+    const lift = role === 'housing' ? 0 : role === 'chip' ? 1.5 : role === 'sensor' || role === 'indicator' ? 0.65 : null;
     const position: SpatialVector = {
-      x: object.position.x + Math.cos(angle) * offset,
-      y: object.position.y + (scene.assurance === 'checked' ? 0 : view.spread * (hash >>> 16) / 65535 * 2.25),
-      z: object.position.z + Math.sin(angle) * offset,
+      x: object.position.x + (lift === null ? Math.cos(angle) * offset : 0),
+      y: object.position.y + (scene.assurance === 'checked' ? 0 : view.spread * (lift ?? (hash >>> 16) / 65535 * 2.25)),
+      z: object.position.z + (lift === null ? Math.sin(angle) * offset : 0),
     };
     return { ...object, position, visible: object.visible && (!view.isolate || !selected || related.has(object.id)) };
   });

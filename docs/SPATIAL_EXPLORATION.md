@@ -51,3 +51,146 @@ For actual generation, supply a visible diagram and request a **3D schematic**. 
 ## Remaining limits
 
 Generic 3D is a bounded explanatory schematic, not an accurate reconstructed digital twin or a new checked physics family. Hardware coverage is Chromium with software WebGL plus deliberate GPU failure, not every physical GPU/native device. Live evidence covers one original synthetic mechanism and its continuation, not broad-subject reliability or user learning outcomes. The branch is not merged, deployed, pushed or published by this task.
+
+
+## PM098 — Fresh pre-merge verification, October 30
+
+The spatial branch incorporates canonical main `dc11105` through merge commit
+`afa5675`; main itself was not changed. This acceptance run supersedes the earlier
+partial full-browser result. All final acceptance checks below passed.
+
+Defects reproduced and corrected:
+
+- A large tentative Dijkstra distance could project far outside the scene after
+  its final distance improved. Projection now normalizes against the entire
+  checked trace; separation preserves the distance-encoding height.
+- Separated object positions depended on array order/count. Stable object IDs now
+  determine offsets, preserving existing positions through reordered revisions.
+- Text-only diagrams offered an empty 3D view. They now remain 2D; mixed diagrams
+  retain their text annotations when shown spatially.
+- Renamed explanation steps could rewind the inspected spatial pose. The current
+  pose is preserved before factual review. Converting a 2D node to the same named
+  spatial object now preserves semantic identity without weakening mode checks.
+- Sub-threshold pointer movement visibly changed the camera without saving it.
+  Click selection now restores the saved camera before picking.
+- Main's panel reflow needed explicit full-width spatial placement. Added a
+  context-panel-plus-spatial regression, preserving content and source references.
+- Camera buttons and range controls now meet the guide's 44×44 touch targets.
+- Combined author instructions exceeded the existing 8,000-character provider
+  limit on follow-ups. Removed duplicated wording while retaining source,
+  computation, continuity and view-action constraints. Spatial service tests now
+  exercise the real request encoder/budget estimator instead of stubbing it.
+
+Executed evidence:
+
+- Full offline suite: **1,568 passed / 94 opt-in skipped**, 128 passing test files.
+  The first combined run had three failing follow-up cases; all were reproduced
+  with the real request encoder and pass after the instruction-length correction.
+- Complete production Chromium suite: **146 passed**, including both recorded
+  fresh Muse outputs, actual WebGL picking/orbit/save/reopen, solver parity,
+  initial GPU denial/context loss/recovery, six mount/unmount cycles with context
+  disposal, cross-session HTTP isolation, hostile origins, injected state,
+  click-sized pointer wobble, keyboard/reduced motion and 1440/620/375 widths.
+  All visible spatial buttons/range controls meet 44×44 targets. Screenshots of
+  both actual outputs and companion/phone views were visually inspected. Small
+  viewports use scrolling around the existing fixed question dock; this does not
+  establish that the entire workspace fits on one screen. Replay establishes
+  rendering only; the separate live test establishes inference/persistence.
+- Desktop plus diagnostic contracts: **25 passed**; authenticated voice relay:
+  **3 passed**; adversarial credential-browser pages: **28 passed**.
+- Typecheck, optimized production build, Firebase module-restriction import and
+  isolated browser trace passed: 1,224 traced files, two links, zero private
+  configuration mappings. Root and credential-free build snapshot agree on 251
+  runtime files, SHA-256
+  `16356bdbb4da58db0241977a6b16cd36fd31e7259c64e54fea877464952a7093`,
+  release `soma-pm098-spatial-2026-10-30`.
+- Fresh actual Muse + Firestore test passed against the combined implementation:
+  initial scene **18,751 ms / 3 calls / $0.03515275**; contextual revision
+  **9,513 ms / 2 calls / $0.02404725**. Selected processor, source, part geometry,
+  separation and cutaway persisted; requested side camera applied; saved revision
+  reopened exactly and the original remained unchanged. Synthetic development
+  source only; explanatory assurance, no new scientific computation.
+- An earlier combined live attempt published its scene after factual repair but
+  failed its follow-up before a provider request because of the instruction limit.
+  Both failure and success receipts remain private. A successful pre-integration
+  live run is retained separately, not substituted for combined-branch evidence.
+- Latest successful run's shared ledger snapshot: **$13.671588 / $15**. Other
+  authorized work also used this ledger concurrently; the delta is not this
+  test's cost. This successful test cost $0.0592. No budget reset or increase.
+
+Private receipts and logs are under `.local/pm098/`; the final live artifacts are
+in `live-1793395866881`. Browser verification uses an isolated, credential-free
+source copy on port 41898. No other chat's development server was stopped.
+The latest remote-main check still resolved to `dc11105`. Subsequent main changes
+will require an integration check before merge. No feature merge, deployment,
+push, publication, clean hosted CI claim or physical GPU acceptance is implied.
+
+
+## PM101–PM103 — Mac review and educational cutaway revision
+
+The user requested native Mac computer-control testing, rejected the initial
+primitive appearance, and selected polished educational cutaways. PM098's
+functional results did not establish visual acceptance. This revision remains
+on the spatial branch, awaiting the user's judgment of the revised appearance.
+
+Implemented:
+
+- Five optional, strict application-owned part styles: housing, chip, sensor,
+  indicator and signal marker. The existing primitives remain compatible.
+  Muse may select a style only where its meaning fits the source; component
+  finishes and geometry remain explicitly illustrative. No downloaded meshes,
+  generated code, texture service or new checked scientific model.
+- Beveled geometry, restrained materials, contact shadows, a quieter stage,
+  readable labels with leader lines, Lucide camera icons and a neutral inspector.
+  Whole-scene framing is closer; explicit isolation frames the selected assembly.
+- Styled parts separate along an assembly axis; the moving marker follows the
+  relevant part's offset. Pose transitions run for 360 ms and then stop. Reduced
+  motion applies the final pose immediately. Connections follow moving endpoints.
+  Animation, shadow maps, geometry and materials are disposed on unmount.
+- Contextual follow-ups preserve an existing part's render style before factual
+  review, just as they preserve its geometry. Legacy parts do not acquire a new
+  style silently. Added validation and continuity regressions.
+
+Native computer-control evidence (installed Chrome guest window on this Mac):
+
+- Opened the actual local production build and inspected the recognizable parts,
+  shadows, labels and isolated processor. Used pointer drag to orbit, side and
+  perspective presets, native selection and isolation controls.
+- Used keyboard arrow/Home controls to set separation to 0.55 and cutaway to 0.2;
+  advanced to explanation 2, switched 2D→3D, saved, navigated away and reopened.
+  The UI visibly restored processor selection, explanation 2, both slider values
+  and the 3D representation. Earlier isolation save/reopen also passed.
+- Native review exposed a tiny isolated component under whole-assembly framing;
+  corrected and visually verified the closer framing. Reset to the assembled
+  perspective for review afterward; that reset is intentionally unsaved, leaving
+  the tested saved state available in the library.
+- Firefox's automation surface returned stale screenshots, so no Firefox pass is
+  claimed. One Chrome tab became blank during a server restart; a fresh local
+  tab loaded correctly. No hardware-driver benchmark or universal browser claim.
+
+Final verification:
+
+- **1,570 offline tests passed / 94 opt-in skipped**; typecheck passed.
+- **147 production Chromium tests passed**, including legacy actual-Muse output
+  replay, WebGL failure/recovery/disposal, account isolation, pointer interaction,
+  persistence, keyboard, 1440/620/375 widths and motion. First browser run passed
+  the existing 146 cases but the new transition assertion missed its transient
+  state; recording attribute transitions before clicking fixed the observation,
+  and the complete suite passed on the final build. The failure receipt remains.
+- Optimized build and isolated browser trace passed: 1,224 files, two links,
+  zero private configuration mappings. Runtime manifest: 252 files,
+  `2c7eb5049a9b574e24e2b30ffcd1b8d23be7f7c2511e38db1a1275b0e70b1c94`,
+  release `soma-pm103-spatial-2026-10-30`.
+- A fresh live Muse/Firestore attempt was blocked at initialization by the daily
+  guest-session creation cap, **before any inference call or charge**. Ledger
+  stayed $13.848943/$15. No cap reset/raise or bypass. The new optional styles are
+  exercised through schema/service/native/rendering tests; fresh live authoring
+  of those styles is **not verified**. PM098 live receipts apply to the earlier
+  contract, and recorded replay is not new inference.
+
+Logs and screenshots are private under `.local/pm101/`. The local-only synthetic
+server is left at `http://localhost:41898/explore` for review, with live inference
+disabled. The native Chrome test tab is left open. No feature merge, push,
+deployment or publication. The broader UI and fixed mobile composer were not
+redesigned here; existing small-screen scrolling limitations remain. This small
+part library is not a universal realistic-asset generator.

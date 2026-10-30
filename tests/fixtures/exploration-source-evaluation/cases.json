@@ -1,0 +1,339 @@
+[
+  {
+    "id": "directed-detour",
+    "nodes": [
+      "P",
+      "Q",
+      "R"
+    ],
+    "edges": [
+      [
+        "P",
+        "Q",
+        2
+      ],
+      [
+        "Q",
+        "R",
+        3
+      ],
+      [
+        "P",
+        "R",
+        9
+      ]
+    ],
+    "directed": true,
+    "start": "P",
+    "goal": "R",
+    "question": "Show the search from the marked start to goal, preserving visible direction and costs. Let me inspect the steps."
+  },
+  {
+    "id": "undirected-reverse",
+    "nodes": [
+      "J",
+      "K",
+      "L",
+      "M"
+    ],
+    "edges": [
+      [
+        "J",
+        "K",
+        2
+      ],
+      [
+        "K",
+        "M",
+        1
+      ],
+      [
+        "J",
+        "L",
+        7
+      ],
+      [
+        "L",
+        "M",
+        2
+      ]
+    ],
+    "directed": false,
+    "start": "M",
+    "goal": "J",
+    "question": "Show the search from the marked start to goal, preserving visible direction and costs. Let me inspect the steps."
+  },
+  {
+    "id": "zero-cost",
+    "nodes": [
+      "U",
+      "V",
+      "W"
+    ],
+    "edges": [
+      [
+        "U",
+        "V",
+        0
+      ],
+      [
+        "V",
+        "W",
+        2
+      ],
+      [
+        "U",
+        "W",
+        6
+      ]
+    ],
+    "directed": true,
+    "start": "U",
+    "goal": "W",
+    "question": "Show the search from the marked start to goal, preserving visible direction and costs. Let me inspect the steps."
+  },
+  {
+    "id": "fractional",
+    "nodes": [
+      "H",
+      "I",
+      "J"
+    ],
+    "edges": [
+      [
+        "H",
+        "I",
+        0.25
+      ],
+      [
+        "I",
+        "J",
+        0.75
+      ],
+      [
+        "H",
+        "J",
+        2.5
+      ]
+    ],
+    "directed": false,
+    "start": "H",
+    "goal": "J",
+    "question": "Show the search from the marked start to goal, preserving visible direction and costs. Let me inspect the steps."
+  },
+  {
+    "id": "disconnected",
+    "nodes": [
+      "E",
+      "F",
+      "G",
+      "H"
+    ],
+    "edges": [
+      [
+        "E",
+        "F",
+        2
+      ],
+      [
+        "F",
+        "G",
+        3
+      ]
+    ],
+    "directed": true,
+    "start": "E",
+    "goal": "H",
+    "question": "Show the search from the marked start to goal, preserving visible direction and costs. Let me inspect the steps."
+  },
+  {
+    "id": "bfs-cycle",
+    "nodes": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "edges": [
+      [
+        "A",
+        "B"
+      ],
+      [
+        "B",
+        "C"
+      ],
+      [
+        "C",
+        "A"
+      ],
+      [
+        "C",
+        "D"
+      ]
+    ],
+    "directed": true,
+    "start": "A",
+    "goal": "D",
+    "unweighted": true,
+    "question": "Show the search from the marked start to goal, preserving visible direction and costs. Let me inspect the steps."
+  },
+  {
+    "id": "bfs-undirected",
+    "nodes": [
+      "L",
+      "M",
+      "N",
+      "O"
+    ],
+    "edges": [
+      [
+        "L",
+        "M"
+      ],
+      [
+        "M",
+        "N"
+      ],
+      [
+        "N",
+        "O"
+      ]
+    ],
+    "directed": false,
+    "start": "O",
+    "goal": "L",
+    "unweighted": true,
+    "question": "Show the search from the marked start to goal, preserving visible direction and costs. Let me inspect the steps."
+  },
+  {
+    "id": "tie",
+    "nodes": [
+      "S",
+      "T",
+      "U",
+      "V"
+    ],
+    "edges": [
+      [
+        "S",
+        "T",
+        1
+      ],
+      [
+        "T",
+        "V",
+        3
+      ],
+      [
+        "S",
+        "U",
+        2
+      ],
+      [
+        "U",
+        "V",
+        2
+      ]
+    ],
+    "directed": true,
+    "start": "S",
+    "goal": "V",
+    "question": "Show the search from the marked start to goal, preserving visible direction and costs. Let me inspect the steps."
+  },
+  {
+    "id": "gradient-descent",
+    "title": "Gradient descent",
+    "text": "A parameter w is updated by w_next = w \u2212 \u03b7 \u2202L/\u2202w. The gradient points uphill; subtracting it takes a local downhill step. The learning rate \u03b7 controls step size. Large steps can overshoot.",
+    "flow": [
+      "Current w",
+      "Compute loss gradient",
+      "Multiply by \u03b7",
+      "Subtract from w"
+    ],
+    "explanation": true,
+    "question": "Build a step-by-step visual explanation of the process shown here."
+  },
+  {
+    "id": "cpu-pipeline",
+    "title": "Instruction pipeline",
+    "text": "Fetch gets an instruction. Decode identifies the operation and operands. Execute performs it. Writeback stores the result. Overlapping instructions increases throughput; dependencies can require a stall.",
+    "flow": [
+      "Fetch",
+      "Decode",
+      "Execute",
+      "Writeback"
+    ],
+    "explanation": true,
+    "question": "Build a step-by-step visual explanation of the process shown here."
+  },
+  {
+    "id": "empty-source",
+    "title": "",
+    "text": "",
+    "clarify": true,
+    "question": "Help me understand this source. Ask for essential missing information before inventing facts."
+  },
+  {
+    "id": "missing-cost",
+    "nodes": [
+      "A",
+      "B",
+      "C"
+    ],
+    "edges": [
+      [
+        "A",
+        "B",
+        "?"
+      ],
+      [
+        "B",
+        "C",
+        2
+      ],
+      [
+        "A",
+        "C",
+        4
+      ]
+    ],
+    "directed": true,
+    "start": "A",
+    "goal": "C",
+    "clarify": true,
+    "description": "One required edge cost is unreadable (?). Do not assume it. Ask for the missing value before computing a cheapest route.",
+    "question": "Help me understand this source. Ask for essential missing information before inventing facts."
+  },
+  {
+    "id": "negative-cost",
+    "nodes": [
+      "D",
+      "E",
+      "F"
+    ],
+    "edges": [
+      [
+        "D",
+        "E",
+        -2
+      ],
+      [
+        "E",
+        "F",
+        3
+      ],
+      [
+        "D",
+        "F",
+        5
+      ]
+    ],
+    "directed": true,
+    "start": "D",
+    "goal": "F",
+    "unsupported": true,
+    "description": "An edge has negative cost. Explain whether the available checked nonnegative-cost solver is applicable; do not silently change the cost.",
+    "question": "Is the available checked solver appropriate here? Explain its limitation."
+  }
+]

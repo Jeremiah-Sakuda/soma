@@ -1,3 +1,9 @@
+## PM091 — Original soma is the only repository
+
+Canonical workspace: this folder; canonical GitHub repository https://github.com/Jeremiah-Sakuda/soma, branch main. It stays private until publication is authorized at the end of the hackathon. Both original and former separate-repository histories are retained with their original commit IDs. Do not work in archived submission clones or recreate another submission repository. PM091 migration backups are private under `.local/pm091`.
+
+The merged source includes personal continuity/optional action proposals and the generation reliability work, plus preserved v1 review changes and all original product docs. Current production remains PM080; merging source is not a deployment or signed 0.4.0 release. Signed/notarized 0.3.0 release assets are being moved to this repository; private GitHub downloads require authentication until publication. Existing installed apps continue using the hosted engine. Physical native action testing, cloud relay provisioning and end-of-event publication remain separate gates. No provider budget reset or new spending. Historical repository/deployment links below are retained as records, not current instructions.
+
 ## PM080 published release — October 30
 
 Current production https://soma-woad-beta.vercel.app/explore is runtime 24ec4b5 (clean CI 41105115334), deployment dpl_7vRxLFctVqbS9LC3WgkJPQZjG561. Manifest `soma-pm080-2026-10-30`: 230 files, SHA-256 `a114e800f3843d500d45012175c21563a11c10f0abbd7110625d356c2d3d3716`. Canonical release checkout `.local/pm069/submission`; exact committed upload `.local/pm080/deploy-final`. Public main also contains the independently developed PM086 integration; that newer integration is not established as deployed by PM080. Do not overwrite either with the other.

@@ -22,6 +22,8 @@ jobs:
         run: node --test services/voice-runner/test/*.test.mjs
       - name: Verify Firebase loads under serverless module restrictions
         run: node --no-experimental-require-module -e "require('firebase-admin/auth')"
+      - name: Verify published runtime source identity
+        run: node scripts/verify-release.mjs
       - run: npm run typecheck
       - run: npm test
       - name: Verify desktop policy and point-session lifecycle

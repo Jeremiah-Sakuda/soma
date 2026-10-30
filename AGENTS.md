@@ -1,3 +1,7 @@
+# Canonical repository — PM091
+
+Use only the original `Jeremiah-Sakuda/soma` repository and this working folder. It remains private until the user authorizes publication at the end of the hackathon. Both original and imported commit histories are preserved in main; do not create a separate submission repository or use archived `.local/pm*/submission` clones for new work. `.local/pm091` contains private migration backups, not a second product repository. Historical links may name the retired repository; active release/document links must use `soma`.
+
 # Soma implementation instructions
 
 This folder contains the Soma hackathon handoff. Follow the current user request and higher-priority instructions first. For implementation work, start with CODEX_HANDOFF.md and docs/PRD.md. For documentation-only requests, do not scaffold or implement the product.

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'"
+    />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Soma · Apply to selected app</title>
+    <link rel="stylesheet" href="computer-control.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Apply to your app</h1>
+        <button id="stop">Stop · Esc</button>
+      </header>
+      <p id="app"></p>
+      <p>
+        Optional computer control. Review every proposed action before Soma
+        moves the cursor, presses a control or replaces a field. Enter passwords
+        and payment details yourself.
+      </p>
+      <details>
+        <summary>Controls shared with Muse</summary>
+        <ul id="controls"></ul>
+      </details>
+      <label for="goal">What should Soma do in this app?</label
+      ><textarea
+        id="goal"
+        maxlength="1000"
+        rows="3"
+        placeholder="Set the font size to 18"
+      ></textarea>
+      <p>
+        Only this task, control labels and prior approved actions are sent. No
+        screenshot, existing field values or secure fields are sent.
+      </p>
+      <button id="plan">Ask Muse to propose one action</button>
+      <section aria-label="Proposed action">
+        <pre id="proposal"></pre>
+        <label id="approval"
+          ><input type="checkbox" id="consent" /> I approve this exact action,
+          including any send, submit, delete or purchase effect described
+          above.</label
+        ><button id="execute" disabled>Execute this action</button>
+      </section>
+      <p id="status" role="status" aria-live="polite"></p>
+      <p id="audit"></p>
+      <details>
+        <summary>Actions this task</summary>
+        <ol id="history"></ol>
+      </details>
+    </main>
+    <script src="computer-control.js"></script>
+  </body>
+</html>

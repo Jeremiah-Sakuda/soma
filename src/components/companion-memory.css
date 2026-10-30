@@ -1,0 +1,195 @@
+.companion-memory {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--ink);
+  margin: 12px 0 20px;
+  min-width: 0;
+}
+.companion-memory button,
+.companion-memory select,
+.companion-memory input,
+.companion-memory textarea {
+  font: inherit;
+  min-height: 44px;
+}
+.companion-memory button {
+  cursor: pointer;
+  border: 1px solid var(--control-border);
+  border-radius: 12px;
+  padding: 8px 12px;
+  background: var(--surface);
+  color: var(--ink-2);
+  text-align: left;
+  overflow-wrap: anywhere;
+  transition: background 120ms;
+}
+.companion-memory button:hover:not(:disabled) {
+  background: var(--surface-muted);
+}
+.companion-memory button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.companion-memory :is(button, input, select, textarea, summary) {
+  scroll-margin-block: 24px 220px;
+}
+.companion-memory :is(button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.companion-memory .companion-memory-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 18px;
+  border: 0;
+  font-weight: 650;
+}
+.companion-memory-content {
+  padding: 0 18px 18px;
+  display: grid;
+  gap: 12px;
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.companion-memory-content p,
+.companion-memory h3,
+.companion-memory h4 {
+  margin: 0;
+}
+.companion-memory h3 {
+  font-size: 17px;
+  margin-top: 8px;
+}
+.companion-memory h4 {
+  font-size: 16px;
+}
+.companion-memory-note {
+  color: var(--muted);
+  font-size: 13px;
+}
+.companion-memory [role="alert"] {
+  color: var(--ink);
+  padding: 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 12px;
+}
+.companion-memory form {
+  display: grid;
+  gap: 8px;
+}
+.companion-memory label {
+  font-weight: 550;
+}
+.companion-memory textarea,
+.companion-memory input,
+.companion-memory select {
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid var(--control-border);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 10px;
+  color: var(--ink);
+}
+.companion-memory textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+.companion-memory-actions,
+.companion-memory-refs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.companion-memory-goals,
+.companion-memory-concepts,
+.companion-memory-map > ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.companion-memory-goals > li,
+.companion-memory-concept,
+.companion-memory-map > ul > li,
+.companion-memory-next {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.companion-memory-tag {
+  color: var(--muted);
+  font-size: 13px;
+}
+.companion-memory-connect {
+  display: grid;
+  gap: 10px;
+}
+.companion-memory-connect > button {
+  color: var(--accent-hover);
+  border-color: var(--accent);
+  justify-self: start;
+}
+.companion-memory details summary {
+  cursor: pointer;
+  padding: 10px 0;
+  min-height: 44px;
+}
+.companion-memory details p {
+  margin-bottom: 8px;
+}
+.companion-memory details ul,
+.companion-memory-concept > ul {
+  padding-left: 20px;
+}
+.companion-memory-map-line {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.companion-memory-map-line strong {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+  padding: 5px 10px;
+  border-radius: 12px;
+}
+.companion-memory-map {
+  display: grid;
+  gap: 12px;
+}
+.companion-memory-reset {
+  border-top: 1px solid var(--divider);
+  padding-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .companion-memory-content {
+    padding: 0 12px 12px;
+    font-size: 16px;
+  }
+  .companion-memory .companion-memory-toggle {
+    padding: 12px;
+  }
+  .companion-memory-goals > li,
+  .companion-memory-concept,
+  .companion-memory-map > ul > li {
+    padding: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .companion-memory button {
+    transition: none;
+  }
+}

@@ -1,0 +1,104 @@
+[
+  {
+    "id": "public-closures",
+    "status": "published",
+    "mode": "explanation",
+    "assurance": "explanation-only",
+    "title": "Closure: returned function remembers",
+    "generation": {
+      "calls": 3,
+      "elapsedMs": 20902,
+      "costUsd": 0.049422
+    }
+  },
+  {
+    "id": "public-gradient",
+    "status": "published",
+    "mode": "explanation",
+    "assurance": "explanation-only",
+    "title": "Gradient descent: iterative loss reduction",
+    "generation": {
+      "calls": 2,
+      "elapsedMs": 14002,
+      "costUsd": 0.028111
+    }
+  },
+  {
+    "id": "public-biology",
+    "status": "rejected",
+    "http": 422,
+    "code": "generation_invalid"
+  },
+  {
+    "id": "code-one",
+    "status": "published",
+    "mode": "explanation",
+    "assurance": "explanation-only",
+    "title": "Why the counter remembers count",
+    "generation": {
+      "calls": 2,
+      "elapsedMs": 10061,
+      "costUsd": 0.02560225
+    }
+  },
+  {
+    "id": "code-two",
+    "status": "published",
+    "mode": "explanation",
+    "assurance": "explanation-only",
+    "title": "Why the counter remembers its count",
+    "generation": {
+      "calls": 2,
+      "elapsedMs": 11454,
+      "costUsd": 0.02636675
+    }
+  },
+  {
+    "id": "worksheet",
+    "status": "published",
+    "mode": "explanation",
+    "assurance": "explanation-only",
+    "title": "Where does the surplus come from?",
+    "generation": {
+      "calls": 3,
+      "elapsedMs": 16812,
+      "costUsd": 0.047204750000000004
+    }
+  },
+  {
+    "id": "circuit",
+    "status": "published",
+    "mode": "explanation",
+    "assurance": "explanation-only",
+    "title": "How battery drives series current",
+    "generation": {
+      "calls": 2,
+      "elapsedMs": 11294,
+      "costUsd": 0.026611749999999997
+    }
+  },
+  {
+    "id": "process",
+    "status": "published",
+    "mode": "explanation",
+    "assurance": "explanation-only",
+    "title": "Why cache speeds up repeated requests",
+    "generation": {
+      "calls": 2,
+      "elapsedMs": 11777,
+      "costUsd": 0.026672
+    }
+  },
+  {
+    "id": "cropped",
+    "status": "published",
+    "mode": "clarify",
+    "assurance": "needs-clarification",
+    "title": "Need readable source to explain",
+    "generation": {
+      "calls": 3,
+      "elapsedMs": 20039,
+      "costUsd": 0.0490835
+    }
+  }
+]

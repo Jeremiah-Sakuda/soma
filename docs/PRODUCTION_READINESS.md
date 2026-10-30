@@ -60,7 +60,7 @@ Independent scientific/instructional review, broader held-out reliability, genui
 
 ### P032 recurring processing activation
 
-The user's explicit approval supersedes the earlier activation hold. The direct authenticated check passed HTTP200/idle/scanned1. GitHub variable `SOMA_WORKER_ENABLED=true` is active; [workflow 40413385697](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40413385697) passed with idle/scanned0/cycleComplete true. Firestore aggregate confirms two completed ticks and idle outcome. No selected work was due; this establishes deployed invocation and scheduler authentication, not actual connector access. Application usage stayed $0.80650275/$2. The recurring workflow runs every 15 minutes, best-effort, under the existing selected-source and budget controls. Trigger.dev remains undeployed.
+The user's explicit approval supersedes the earlier activation hold. The direct authenticated check passed HTTP200/idle/scanned1. GitHub variable `SOMA_WORKER_ENABLED=true` is active; [workflow 40413385697](https://github.com/Jeremiah-Sakuda/soma-hackathon/actions/runs/40413385697) passed with idle/scanned0/cycleComplete true. Firestore aggregate confirms two completed ticks and idle outcome. No selected work was due; this establishes deployed invocation and scheduler authentication, not actual connector access. Application usage stayed $0.80650275/$2. The recurring workflow runs every 15 minutes, best-effort, under the existing selected-source and budget controls. Trigger.dev remains undeployed.
 
 ### P034 progressive AI auditability
 
@@ -74,7 +74,7 @@ Final managed worker/adaptation regression passed 2/2 in 67.47s against real Fir
 
 See [remaining user work](USER_REMAINING_WORK.md) for source selections, content review, optional Trigger setup and submission inputs. Existing independent-review, real-source and held-out/learner gates remain open.
 
-GitHub CI [40418506341](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40418506341) passed for `19f0af3` with the full default/build/browser checks. Later evidence-only documentation does not change the deployed runtime `00eb4b1`.
+GitHub CI [40418506341](https://github.com/Jeremiah-Sakuda/soma-hackathon/actions/runs/40418506341) passed for `19f0af3` with the full default/build/browser checks. Later evidence-only documentation does not change the deployed runtime `00eb4b1`.
 
 ### P037 architecture iteration and hero documentation
 
@@ -88,4 +88,4 @@ The hero storyboard is now the returned-work diagnostic sequence in [Demo and Ev
 
 Hosted confirmation passed once in 14.39s using two disposable synthetic demo sessions: one actual source-only Spark investigation, live protected audit progress, recorded stated purpose, confirmed publication/usage, matching owner export, cross-session denial, managed readback and zero-call reuse. Two calls settled $0.01670325; aggregate app usage $0.83999350/$2. Both sessions deleted. This verifies the deployed consolidated path, not vision, institutional access or learning benefit. No extra retry or budget increase was used.
 
-GitHub CI [40421572121](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40421572121) passed for deployed checkpoint `c0cf2fb`: clean install, module restrictions, typecheck, default suite, production build and complete browser suite. Subsequent evidence-only documentation does not modify the deployed runtime.
+GitHub CI [40421572121](https://github.com/Jeremiah-Sakuda/soma-hackathon/actions/runs/40421572121) passed for deployed checkpoint `c0cf2fb`: clean install, module restrictions, typecheck, default suite, production build and complete browser suite. Subsequent evidence-only documentation does not modify the deployed runtime.

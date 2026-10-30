@@ -22,6 +22,8 @@ jobs:
         run: node scripts/verify-release.mjs
       - run: npm run typecheck
       - run: npm test
+      - name: Verify desktop policy and point-session lifecycle
+        run: node --test desktop/test/*.test.cjs
       - name: Verify bounded credential-service diagnostic contracts
         run: node --test scripts/check-credential-service.test.mjs
       - run: npm run build

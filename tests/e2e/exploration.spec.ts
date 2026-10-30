@@ -333,3 +333,25 @@ test('crowded generated process labels reflow without hiding their full meaning'
   expect(await page.locator('.exploration-diagram-label').evaluateAll(els=>els.every(el=>el.scrollHeight<=el.clientHeight&&el.scrollWidth<=el.clientWidth))).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  }
 });
+
+test('generated diagram cards stay inside their canvas throughout native-width reflow', async ({page}) => {
+  await setup(page);
+  const a=fixture(), base=a.spec;
+  const spec:ExplorationSpec={schemaVersion:base.schemaVersion,id:base.id,version:1,title:'An original three-stage trace',objective:'Follow each update.',sources:base.sources,assumptions:[],uncertainty:[],unsupportedClaims:[],mode:'explanation',scene:{layout:'stack',panels:[{id:'trace',kind:'diagram',title:'Value trace',placement:{column:1,row:1,columnSpan:2},objects:[...['Start: value = 7','After first +2: value = 9','After second +2: value = 11'].map((label,i)=>({id:`state${i}`,kind:'block' as const,label,position:{x:.2+i*.3,y:.25+i*.25}})),{id:'first',kind:'edge',from:'state0',to:'state1',directed:true,label:'+2'},{id:'second',kind:'edge',from:'state1',to:'state2',directed:true,label:'+2'}]}]},steps:[{id:'inspect',caption:'Follow the updates.',narration:null,highlightIds:['state0'],execution:null,executionStep:null}],followups:[]};
+  const rich={...a,...checkExploration(spec),state:initialExplorationState(spec)};
+  await page.route('**/api/explore',async route=>{if(route.request().method()==='POST'&&route.request().postDataJSON().action==='example')return route.fulfill({json:{artifact:rich}});return route.fallback();});
+  await page.setViewportSize({width:375,height:772});
+  await page.getByRole('button',{name:'Try the original example',exact:true}).first().click();
+  await expect(page.getByRole('heading',{name:spec.title,exact:true})).toBeVisible();
+  for (const width of [620,375,620]) {
+    await page.setViewportSize({width,height:772});
+    const overflow=await page.locator('.exploration-diagram-container').evaluate(async container=>{
+      const invalid:string[]=[];const until=performance.now()+450;
+      do {const svg=container.querySelector('svg')!,canvas=svg.getBoundingClientRect();
+        for(const label of svg.querySelectorAll('foreignObject')){const b=label.getBoundingClientRect();if(b.bottom>canvas.bottom+1||b.top<canvas.top-1||b.left<canvas.left-1||b.right>canvas.right+1)invalid.push('card outside current canvas');}
+        await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+      } while(performance.now()<until);return invalid;
+    });
+    expect(overflow).toEqual([]);
+  }
+});

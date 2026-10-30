@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type { PointFocus } from '@/lib/domain/point-context';
+
 export type ExplorationCapture = {
+  focus?: PointFocus;
   kind: 'upload' | 'capture';
   label: string;
   capturedAt: string;

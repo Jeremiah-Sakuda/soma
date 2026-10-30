@@ -30,6 +30,8 @@ import { ExplorationApplicationCard } from './exploration-application';
 import { ExplorationPredictionCard } from './exploration-prediction';
 import { ExplorationPlayback } from './exploration-playback';
 import { ExplorationPipeline } from './exploration-pipeline';
+import { useExplorationPointAsk } from './exploration-point-ask';
+import type { PointFocus } from '@/lib/domain/point-context';
 import { ExplorationVoice } from './exploration-voice';
 import { useExplorationCapture, type ExplorationCapture } from './exploration-capture';
 import './exploration.css';
@@ -72,6 +74,7 @@ type Artifact = {
   source: {
     label: string;
     capturedAt: string;
+    focus?: PointFocus;
     kind: 'screenshot' | 'example';
     summary: string;
     uncertainty: string[];
@@ -116,7 +119,8 @@ async function api(
   });
   if (!response.ok) {
     const payload: unknown = await response.json().catch(() => null);
-    const code = payload && typeof payload === 'object' && 'code' in payload ? payload.code : null;
+    const code =
+      payload && typeof payload === 'object' && 'code' in payload ? payload.code : null;
     if (code === 'busy')
       throw new Error(
         'Another exploration is still running. Keep exploring this card and try again shortly.',
@@ -190,7 +194,9 @@ export function ExplorationWorkspace() {
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
-  const [applicationHistory, setApplicationHistory] = useState<PublicExplorationApplication[]>([]);
+  const [applicationHistory, setApplicationHistory] = useState<PublicExplorationApplication[]>(
+    [],
+  );
   const [predictionHistory, setPredictionHistory] = useState<ExplorationPrediction[]>([]);
   const capture = useExplorationCapture(),
     uploadRef = useRef<HTMLInputElement>(null);
@@ -229,6 +235,22 @@ export function ExplorationWorkspace() {
   const viewSequence = useRef(0);
   const questionRef = useRef<HTMLTextAreaElement>(null),
     errorRef = useRef<HTMLParagraphElement>(null);
+  const pointAsk = useExplorationPointAsk({
+    ready: initialized && liveEnabled !== false,
+    interrupt: () => {
+      cancel('');
+      setPlaying(false);
+    },
+    prepare: capture.upload,
+    source: (next) => {
+      capture.stop();
+      setSource(next);
+      setNewContext(true);
+      setError('');
+    },
+    submit: (text, next) => ask(text, undefined, false, undefined, next),
+    error: setError,
+  });
   useEffect(() => {
     let active = true;
     setInitializing(true);
@@ -304,6 +326,7 @@ export function ExplorationWorkspace() {
   function cancel(
     message = 'Stopped waiting. An older response will not replace the card you are exploring.',
   ) {
+    pointAsk.cancel('');
     setPlaying(false);
     const pending = request.current;
     request.current = null;
@@ -343,7 +366,9 @@ export function ExplorationWorkspace() {
       chooseSource(null);
       setNotice('Window selected. No frame is sent until you choose Ask Soma.');
     } catch {
-      setError('Window sharing was not started. You can try again or upload a screenshot instead.');
+      setError(
+        'Window sharing was not started. You can try again or upload a screenshot instead.',
+      );
     } finally {
       setSourceBusy(false);
     }
@@ -357,7 +382,9 @@ export function ExplorationWorkspace() {
       capture.stop();
       chooseSource(next);
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : 'This screenshot could not be read.');
+      setError(
+        failure instanceof Error ? failure.message : 'This screenshot could not be read.',
+      );
     } finally {
       setSourceBusy(false);
       if (uploadRef.current) uploadRef.current.value = '';
@@ -393,12 +420,14 @@ export function ExplorationWorkspace() {
     predictionId?: string,
     investigate = false,
     practice?: { artifact: Artifact; applicationId: string },
+    fresh?: ExplorationCapture,
   ) {
     const base = practice?.artifact ?? artifact;
     const baseState = practice?.artifact.state ?? state;
     const draft = spoken ?? question;
-    if (!initialized || !draft.trim() || busy) return;
+    if (!initialized || !draft.trim() || busy) return false;
     if (
+      !fresh &&
       !newContext &&
       base &&
       versions.some((item) => item.id === base.id && item.version > base.version)
@@ -406,33 +435,35 @@ export function ExplorationWorkspace() {
       setError(
         'Open the latest version before asking a follow-up, or choose a new source to start a separate exploration.',
       );
-      return;
+      return false;
     }
     setPlaying(false);
     setError('');
     setNotice('');
-    let selected = source;
+    let selected = fresh ?? source;
     try {
-      if (capture.sharing && (newContext || !base)) {
+      if (!fresh && capture.sharing && (newContext || !base)) {
         selected = capture.capture();
         setSource(selected);
       }
     } catch (failure) {
       setError(
-        failure instanceof Error ? failure.message : 'Capture failed. Upload a screenshot instead.',
+        failure instanceof Error
+          ? failure.message
+          : 'Capture failed. Upload a screenshot instead.',
       );
-      return;
+      return false;
     }
-    if ((!base || newContext) && !selected) {
+    if ((fresh || !base || newContext) && !selected) {
       setError('Select a window or screenshot first, or try the original example.');
-      return;
+      return false;
     }
     const id = crypto.randomUUID(),
       controller = new AbortController(),
       turnEpoch = epoch.current;
     request.current = { id, controller, epoch: turnEpoch };
     setBusy(true);
-    const followup = base && !newContext;
+    const followup = base && !newContext && !fresh;
     const submittedDraft = draft;
     const payload = {
       action: 'generate',
@@ -460,18 +491,20 @@ export function ExplorationWorkspace() {
                   120,
                 ),
               capturedAt: selected!.capturedAt,
+              ...(selected!.focus ? { focus: selected!.focus } : {}),
             },
           }),
     };
     try {
       const result = await api('POST', payload, controller.signal);
-      if (request.current?.id !== id || epoch.current !== turnEpoch) return;
+      if (request.current?.id !== id || epoch.current !== turnEpoch) return false;
       if (!result.artifact) throw new Error('No complete visual card was returned.');
       apply(result.artifact);
       setNewContext(false);
       setQuestion((current) => (current === submittedDraft ? '' : current));
       setNotice('New visual card ready. Explore it or ask a follow-up.');
-      if (spoken && conversational) setPlaying(true);
+      if (spoken && (conversational || fresh)) setPlaying(true);
+      return true;
     } catch (failure) {
       if (request.current?.id === id && !controller.signal.aborted)
         setError(
@@ -479,6 +512,7 @@ export function ExplorationWorkspace() {
             ? failure.message
             : 'Soma could not prepare a new card. Your last card was kept.',
         );
+      return false;
     } finally {
       if (request.current?.id === id) {
         request.current = null;
@@ -503,7 +537,9 @@ export function ExplorationWorkspace() {
       });
       if (epoch.current !== before) return;
       if (viewSequence.current !== beforeView) {
-        setNotice('Saved the earlier state. Your newer changes are still here and remain unsaved.');
+        setNotice(
+          'Saved the earlier state. Your newer changes are still here and remain unsaved.',
+        );
         return;
       }
       if (result.artifact) apply(result.artifact);
@@ -636,7 +672,8 @@ export function ExplorationWorkspace() {
         state.selectedObjectId)
       : state?.selectedObjectId;
   const earlierVersion =
-    artifact && versions.some((item) => item.id === artifact.id && item.version > artifact.version);
+    artifact &&
+    versions.some((item) => item.id === artifact.id && item.version > artifact.version);
   const versionHistory =
     artifact && versions.length > 1 ? (
       <div className="exploration-version-row">
@@ -753,27 +790,50 @@ export function ExplorationWorkspace() {
           </label>
         </details>
         <ExplorationVoice
-          turnKey={JSON.stringify([
-            artifact?.id,
-            artifact?.version,
-            state,
-            playing,
-            epoch.current,
-            question,
-            busy,
-            source?.capturedAt,
-            capture.sharing,
-          ])}
+          pointCommand={pointAsk.command}
+          onPointError={pointAsk.voiceError}
+          onPointPhase={pointAsk.voicePhase}
+          turnKey={
+            pointAsk.sessionId
+              ? `point:${pointAsk.sessionId}`
+              : JSON.stringify([
+                  artifact?.id,
+                  artifact?.version,
+                  state,
+                  playing,
+                  epoch.current,
+                  question,
+                  busy,
+                  source?.capturedAt,
+                  capture.sharing,
+                ])
+          }
           onInterrupt={() => {
             flushSync(() => setPlaying(false));
           }}
-          onTranscript={(text) => {
+          onTranscript={(text, pointId) => {
             setQuestion(text);
+            if (pointAsk.transcript(text, pointId)) return;
+            if (pointId) return;
             if (conversational && hasContext && !earlierVersion) void ask(text);
           }}
           disabled={!initialized || busy || sourceBusy || liveEnabled === false}
         />
       </details>
+      {pointAsk.status && (
+        <div className="exploration-point-status">
+          <p role="status">{pointAsk.status}</p>
+          {pointAsk.sessionId && !busy && (
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => cancel('Point & ask cancelled. Your previous visual is kept.')}
+            >
+              Cancel point &amp; ask
+            </button>
+          )}
+        </div>
+      )}
       {liveEnabled === false && (
         <p className="exploration-unavailable">
           Live generation is not enabled here. The original example remains available without a
@@ -809,7 +869,8 @@ export function ExplorationWorkspace() {
             <p className="overline">Follow your curiosity</p>
             <h1>Make the idea visible.</h1>
             <p>
-              Bring a question and the context in front of you. Explore the explanation together.
+              Bring a question and the context in front of you. Explore the explanation
+              together.
             </p>
           </div>
           <div>
@@ -848,6 +909,11 @@ export function ExplorationWorkspace() {
                   aria-label="Upload a PNG or JPEG screenshot"
                   onChange={(event) => void upload(event.target.files?.[0])}
                 />
+                {(source?.focus || (!newContext && artifact?.source.focus)) && (
+                  <p className="meta">
+                    Selected region · captured when you released the shortcut.
+                  </p>
+                )}
                 {artifact?.recording && !newContext && !source?.dataUrl ? (
                   <img
                     className="exploration-source-image"
@@ -855,11 +921,29 @@ export function ExplorationWorkspace() {
                     alt="Original synthetic screenshot used in the recorded Spark run"
                   />
                 ) : source?.dataUrl ? (
-                  <img
-                    className="exploration-source-image"
-                    src={source.dataUrl}
-                    alt="Your selected screenshot; captured only when requested"
-                  />
+                  <div
+                    className={
+                      source.focus ? 'exploration-point-preview' : 'exploration-upload-preview'
+                    }
+                  >
+                    <img
+                      className="exploration-source-image"
+                      src={source.dataUrl}
+                      alt="Your selected screenshot; captured only when requested"
+                    />
+                    {source.focus && (
+                      <span
+                        className="exploration-source-focus"
+                        aria-label={`Selected ${source.focus.kind} region`}
+                        style={{
+                          left: `${source.focus.region.x * 100}%`,
+                          top: `${source.focus.region.y * 100}%`,
+                          width: `${source.focus.region.width * 100}%`,
+                          height: `${source.focus.region.height * 100}%`,
+                        }}
+                      />
+                    )}
+                  </div>
                 ) : artifact?.source.kind === 'example' && !newContext ? (
                   <div className="exploration-example-source">
                     <span className="overline">Original example</span>
@@ -903,8 +987,8 @@ export function ExplorationWorkspace() {
                 )}
                 {capture.sharing && (
                   <p className="exploration-sharing-note">
-                    Your first Ask sends one frame. Refresh snapshot selects updated context; never
-                    continuous uploads.
+                    Your first Ask sends one frame. Refresh snapshot selects updated context;
+                    never continuous uploads.
                   </p>
                 )}
                 <div className="exploration-source-actions">
@@ -935,7 +1019,9 @@ export function ExplorationWorkspace() {
                         try {
                           chooseSource(capture.capture());
                         } catch {
-                          setError('The window could not be captured. Try uploading a screenshot.');
+                          setError(
+                            'The window could not be captured. Try uploading a screenshot.',
+                          );
                         }
                       }}
                     >
@@ -971,8 +1057,8 @@ export function ExplorationWorkspace() {
                   Open recorded run <ArrowUpRight size={16} aria-hidden="true" />
                 </button>
                 <p className="exploration-privacy-note">
-                  Screenshots go to Meta only when you ask. Raw image pixels are not saved with your
-                  exploration. Avoid sharing passwords or private messages.
+                  Screenshots go to Meta only when you ask. Raw image pixels are not saved with
+                  your exploration. Avoid sharing passwords or private messages.
                 </p>
               </section>
             </details>
@@ -1070,7 +1156,9 @@ export function ExplorationWorkspace() {
                             ? 'Needs clarification'
                             : 'Explanatory visual'}
                     </span>
-                    {newContext && <span className="status-chip caution">Previous context</span>}
+                    {newContext && (
+                      <span className="status-chip caution">Previous context</span>
+                    )}
                   </div>
                   <span className="meta">Version {artifact.version}</span>
                 </div>
@@ -1130,7 +1218,8 @@ export function ExplorationWorkspace() {
                 {artifact.recording && (
                   <p className="exploration-recording-note">
                     Recorded {capturedTime(artifact.recording.generatedAt)} · original synthetic
-                    source · no inference on replay. Follow-ups use live generation when available.
+                    source · no inference on replay. Follow-ups use live generation when
+                    available.
                   </p>
                 )}
                 {(!compact || earlierVersion) && versionHistory}
@@ -1176,7 +1265,8 @@ export function ExplorationWorkspace() {
                   experimentInline={!artifact.experiment}
                   playing={playing}
                   spokenProgress={
-                    spokenProgress?.key === JSON.stringify([artifact.id, artifact.version, state])
+                    spokenProgress?.key ===
+                    JSON.stringify([artifact.id, artifact.version, state])
                       ? spokenProgress.progress
                       : null
                   }
@@ -1231,7 +1321,9 @@ export function ExplorationWorkspace() {
                             type="button"
                             className="secondary-button"
                             title={
-                              !state.goal ? 'Choose a goal to investigate route costs.' : undefined
+                              !state.goal
+                                ? 'Choose a goal to investigate route costs.'
+                                : undefined
                             }
                             disabled={
                               busy ||
@@ -1472,17 +1564,21 @@ export function ExplorationWorkspace() {
                       ))}
                     </ol>
                   ) : (
-                    <p>Original authored material; no runtime model investigation was performed.</p>
+                    <p>
+                      Original authored material; no runtime model investigation was performed.
+                    </p>
                   )}
                   <p className="meta">
-                    These are recorded actions and validation facts, not private model reasoning.
+                    These are recorded actions and validation facts, not private model
+                    reasoning.
                   </p>
                 </details>
                 <div className="exploration-delete">
                   {deleteConfirmation ? (
                     <div role="group" aria-label="Confirm exploration deletion">
                       <p>
-                        Delete this exploration and all its saved versions? This cannot be undone.
+                        Delete this exploration and all its saved versions? This cannot be
+                        undone.
                       </p>
                       <div className="action-row">
                         <button
@@ -1553,8 +1649,8 @@ export function ExplorationWorkspace() {
           <span>
             Soma · an explanation you can explore
             <br />
-            Guest saves expire after 24 hours. Signed-in accounts use a separate history; guest work
-            does not transfer automatically.
+            Guest saves expire after 24 hours. Signed-in accounts use a separate history; guest
+            work does not transfer automatically.
           </span>
           <a href="/">
             Your study workspace <ArrowUpRight size={14} aria-hidden="true" />

@@ -1,21 +1,81 @@
-const {ipcRenderer} = require('electron');
-function isExploration() {return location.pathname === '/explore' || location.pathname.startsWith('/explore/');}
+const { ipcRenderer } = require('electron');
+function isExploration() {
+  return location.pathname === '/explore' || location.pathname.startsWith('/explore/');
+}
 ipcRenderer.on('desktop:pause', () => {
   if (!isExploration()) return;
   for (const button of document.querySelectorAll('button')) {
-    if (button.textContent.trim() === 'Pause explanation' || button.textContent.trim() === 'Cancel request' || button.textContent.trim() === 'Cancel voice') button.click();
+    if (
+      button.textContent.trim() === 'Pause explanation' ||
+      button.textContent.trim() === 'Cancel request' ||
+      button.textContent.trim() === 'Cancel voice'
+    )
+      button.click();
   }
 });
 ipcRenderer.on('desktop:snapshot', async (_event, snapshot) => {
   if (!isExploration()) return;
   try {
-    const input = document.querySelector('input[type="file"][aria-label="Upload a PNG or JPEG screenshot"]');
-    if (!input || input.disabled || typeof snapshot?.dataUrl !== 'string' || !/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(snapshot.dataUrl) || snapshot.dataUrl.length > 680000) throw new Error('Not ready');
+    const input = document.querySelector(
+      'input[type="file"][aria-label="Upload a PNG or JPEG screenshot"]',
+    );
+    if (
+      !input ||
+      input.disabled ||
+      typeof snapshot?.dataUrl !== 'string' ||
+      !/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(snapshot.dataUrl) ||
+      snapshot.dataUrl.length > 680000
+    )
+      throw new Error('Not ready');
     // Reuse the existing upload/change handler, including cancellation, preview and payload validation.
-    const bytes = Uint8Array.from(atob(snapshot.dataUrl.split(',')[1]), c => c.charCodeAt(0));
-    const transfer = new DataTransfer(); transfer.items.add(new File([bytes], 'Current display.jpg', {type:'image/jpeg'}));
-    input.files = transfer.files; input.dispatchEvent(new Event('change',{bubbles:true}));
+    const bytes = Uint8Array.from(atob(snapshot.dataUrl.split(',')[1]), (c) => c.charCodeAt(0));
+    const transfer = new DataTransfer();
+    transfer.items.add(new File([bytes], 'Current display.jpg', { type: 'image/jpeg' }));
+    input.files = transfer.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
     document.querySelector('#exploration-question')?.focus();
-    ipcRenderer.send('desktop:received',true);
-  } catch {ipcRenderer.send('desktop:received',false);}
+    ipcRenderer.send('desktop:received', true);
+  } catch {
+    ipcRenderer.send('desktop:received', false);
+  }
+});
+// One-way native context delivery; outbound acknowledgements are bound to the
+// current native interaction. No screen-capture API is exposed to remote code.
+let pointInteraction = null;
+ipcRenderer.on('desktop:point-ask', (_event, payload) => {
+  if (
+    !isExploration() ||
+    !payload ||
+    typeof payload.id !== 'string' ||
+    !/^[a-f0-9-]{36}$/.test(payload.id)
+  )
+    return;
+  if (payload.type === 'begin') pointInteraction = payload.id;
+  if (
+    payload.id !== pointInteraction ||
+    !['begin', 'end', 'source', 'cancel'].includes(payload.type)
+  )
+    return;
+  if (
+    payload.type === 'source' &&
+    (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(payload.dataUrl) ||
+      payload.dataUrl.length > 680000)
+  )
+    return;
+  window.dispatchEvent(new CustomEvent('soma:point-ask', { detail: payload }));
+  if (payload.type === 'cancel') pointInteraction = null;
+});
+window.addEventListener('soma:point-feedback', (event) => {
+  const payload = event.detail;
+  if (
+    !isExploration() ||
+    !payload ||
+    payload.id !== pointInteraction ||
+    !['recording', 'transcribing', 'generating', 'ready', 'error', 'cancelled'].includes(
+      payload.state,
+    )
+  )
+    return;
+  ipcRenderer.send('desktop:point-feedback', { id: pointInteraction, state: payload.state });
+  if (['ready', 'error', 'cancelled'].includes(payload.state)) pointInteraction = null;
 });

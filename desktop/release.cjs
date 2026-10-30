@@ -10,10 +10,11 @@ async function release(){
  const identity=process.env.SOMA_SIGNING_IDENTITY||(available.length===1?available[0]:null),profile=process.env.SOMA_NOTARY_PROFILE||'soma-notary';
  if(!identity||!available.includes(identity))throw new Error('Install a valid Developer ID Application certificate; set SOMA_SIGNING_IDENTITY if more than one is available.');
  if(!notarizeOnly){
+  const helper=require('./build-native.cjs').buildNative();
   const {packager}=await import('@electron/packager');
-  await packager({dir:__dirname,name:'Soma',platform:'darwin',arch:'arm64',out:output,overwrite:true,asar:true,appBundleId:'app.soma.desktop',extendInfo:path.join(__dirname,'Info.plist'),ignore:[/^\/test(?:\/|$)/,/^\/README\.md$/]});
+  await packager({dir:__dirname,name:'Soma',platform:'darwin',arch:'arm64',out:output,overwrite:true,asar:true,appBundleId:'app.soma.desktop',extendInfo:path.join(__dirname,'Info.plist'),extraResource:[helper],ignore:[/^\/test(?:\/|$)/,/^\/README\.md$/]});
   const {sign}=await import('@electron/osx-sign');
-  await sign({app:bundle,identity,platform:'darwin',optionsForFile:()=>({hardenedRuntime:true,entitlements:path.join(__dirname,'entitlements.plist')})});
+  await sign({app:bundle,identity,platform:'darwin',binaries:[path.join(bundle,'Contents/Resources/hold-shortcut')],optionsForFile:()=>({hardenedRuntime:true,entitlements:path.join(__dirname,'entitlements.plist')})});
  }
  run('codesign',['--verify','--deep','--strict','--verbose=2',bundle]);
  if(signOnly){console.log(`Developer ID signed, NOT notarized: ${bundle}`);return;}

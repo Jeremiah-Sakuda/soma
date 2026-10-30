@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Mic, Square } from 'lucide-react';
+import type { PointVoiceCommand } from './exploration-point-ask';
 import { encodeVoiceWav, MAX_VOICE_SECONDS, VOICE_SAMPLE_RATE } from '@/lib/domain/voice-audio';
 
 type Phase = 'idle' | 'permission' | 'recording' | 'converting' | 'transcribing';
@@ -9,15 +10,26 @@ export function ExplorationVoice({
   onTranscript,
   disabled = false,
   onInterrupt,
+  pointCommand,
+  onPointError,
+  onPointPhase,
 }: {
   turnKey: string;
-  onTranscript: (text: string) => void;
+  onTranscript: (text: string, pointId?: string) => void;
+  pointCommand?: PointVoiceCommand | null;
+  onPointError?: (pointId?: string) => void;
+  onPointPhase?: (phase: string, pointId?: string) => void;
   disabled?: boolean;
   onInterrupt?: () => void;
 }) {
   const [phase, setPhase] = useState<Phase>('idle'),
     [notice, setNotice] = useState(''),
     [microphone, setMicrophone] = useState(false);
+  const pointId = useRef<string | undefined>(undefined);
+  const pointError = useRef(onPointError),
+    pointPhase = useRef(onPointPhase);
+  pointError.current = onPointError;
+  pointPhase.current = onPointPhase;
   const sequence = useRef(0),
     stream = useRef<MediaStream | null>(null),
     recorder = useRef<MediaRecorder | null>(null),
@@ -51,9 +63,9 @@ export function ExplorationVoice({
     setMicrophone(
       Boolean(
         typeof navigator.mediaDevices?.getUserMedia === 'function' &&
-        typeof MediaRecorder !== 'undefined' &&
-        typeof window.AudioContext === 'function' &&
-        typeof window.OfflineAudioContext === 'function',
+          typeof MediaRecorder !== 'undefined' &&
+          typeof window.AudioContext === 'function' &&
+          typeof window.OfflineAudioContext === 'function',
       ),
     );
   }, []);
@@ -71,8 +83,9 @@ export function ExplorationVoice({
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
   };
-  async function startRecording() {
-    onInterrupt?.();
+  async function startRecording(nativeId?: string) {
+    pointId.current = nativeId;
+    if (!nativeId) onInterrupt?.();
     cancel();
     const generation = sequence.current;
     setNotice('');
@@ -105,6 +118,7 @@ export function ExplorationVoice({
           cancel();
           setPhase('idle');
           setNotice('The recording was too large. Try a shorter question or type it.');
+          pointError.current?.(nativeId);
           return;
         }
         chunks.push(event.data);
@@ -114,6 +128,7 @@ export function ExplorationVoice({
         cancel();
         setPhase('idle');
         setNotice('Recording stopped. You can type your question instead.');
+        pointError.current?.(nativeId);
       };
       recording.onstop = () => {
         if (!current()) return;
@@ -177,12 +192,13 @@ export function ExplorationVoice({
             pending.current = null;
             setPhase('idle');
             setNotice('Question transcribed. Review it, then press Ask Soma.');
-            transcriptCallback.current(result.transcript.trim());
+            transcriptCallback.current(result.transcript.trim(), nativeId);
           } catch {
             if (current()) {
               cancel();
               setPhase('idle');
               setNotice('Voice transcription is unavailable. Please type your question.');
+              pointError.current?.(nativeId);
             }
           }
         })();
@@ -196,9 +212,29 @@ export function ExplorationVoice({
         cancel();
         setPhase('idle');
         setNotice('Microphone access is unavailable. You can type your question instead.');
+        pointError.current?.(nativeId);
       }
     }
   }
+  const external = useRef({ start: startRecording, stop, cancel, phase });
+  external.current = { start: startRecording, stop, cancel, phase };
+  useEffect(() => {
+    if (!pointCommand) return;
+    if (pointCommand.action === 'start') void external.current.start(pointCommand.id);
+    else if (pointCommand.action === 'cancel') {
+      external.current.cancel();
+      setPhase('idle');
+    } else if (recorder.current?.state === 'recording') external.current.stop();
+    else if (['permission', 'idle'].includes(external.current.phase)) {
+      external.current.cancel();
+      setPhase('idle');
+      setNotice('Hold until the listening indicator appears, then speak.');
+      pointError.current?.(pointCommand.id);
+    }
+  }, [pointCommand?.sequence]);
+  useEffect(() => {
+    pointPhase.current?.(phase, pointId.current);
+  }, [phase]);
   const busy = ['permission', 'converting', 'transcribing'].includes(phase),
     active = phase !== 'idle';
   return (

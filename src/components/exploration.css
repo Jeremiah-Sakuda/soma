@@ -2108,6 +2108,11 @@
   width: 100%;
   min-width: 0;
 }
+/* Reflow changes the canvas and card positions together. Interpolating only the
+   card transforms briefly moves labels beyond the new canvas into its legend. */
+.exploration-diagram-container .exploration-node {
+  transition: none;
+}
 .exploration-diagram-container > svg {
   display: block;
   width: 100%;
@@ -2191,3 +2196,5 @@
   max-height: none;
   min-height: 0;
 }
+
+.exploration-point-preview{position:relative;line-height:0;overflow:hidden;border-radius:12px}.exploration-point-preview .exploration-source-image{display:block;margin:0;width:100%;max-height:none;height:auto}.exploration-source-focus{position:absolute;border:3px solid var(--accent);border-radius:10px;background:#6755ed14;pointer-events:none}.exploration-point-status{font-size:13px;line-height:1.45;padding:8px 12px;background:var(--accent-soft);border-radius:10px}

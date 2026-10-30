@@ -1,5 +1,9 @@
 # Soma demo and evaluation
 
+## New native opening
+
+Use Point & ask over permitted Intro AI material: enable mode, hold Control–Option–Space, circle the relevant connection while asking a question, then release. Show the actual selection and resulting source focus. Compress any generation wait only with a visible disclosure; immediate cursor motion is local feedback, not instantaneous model generation. Continue with the existing manipulation/follow-up/save story below. New physical-input and OS-permission footage remains to be recorded. [Interaction and test boundaries](POINT_AND_ASK.md).
+
 ## Current demo story
 
 This is the plan for the three-minute `/explore` video. Soma is a desktop visual companion: capture what you are working on, get a source-specific explanation, change a meaningful assumption, and revisit the same experiment. Do not claim autonomous course monitoring in this journey.

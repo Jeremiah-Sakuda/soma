@@ -1,3 +1,4 @@
+import type { PointFocus } from '../domain/point-context';
 import type { ExplorationApplication } from '../domain/exploration-application';
 import type { CostProbe } from '../domain/cost-probe';
 import type { ExplorationPrediction } from '../domain/exploration-prediction';
@@ -18,6 +19,7 @@ export type ExplorationSource = {
   kind: 'screenshot' | 'example';
   label: string;
   capturedAt: string;
+  focus?: PointFocus;
   summary: string;
   uncertainty: string[];
 };

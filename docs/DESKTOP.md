@@ -1,5 +1,11 @@
 # Desktop companion
 
+## Point & ask — 0.2.0
+
+Enable **Point & ask**, hold **Control–Option–Space**, circle or point while speaking, then release. Soma joins a fresh display snapshot, normalized focus and transcript into the existing visual engine. Escape cancels; the old visual remains until a valid replacement arrives. [Behavior, privacy, checks and distribution status](POINT_AND_ASK.md). The existing **⌘⇧Space** path still captures a snapshot for review before asking.
+
+The following distribution note refers to 0.1.0; 0.2.0 is signed but awaits its own notarization.
+
 Use macOS Apple Silicon for the packaged companion. From this checkout, install with `npm ci --prefix desktop`, then `npm start --prefix desktop`. `npm run package --prefix desktop` creates an unsigned local package. Read `desktop/main.cjs` and `desktop/policy.cjs` for the actual menu labels and registered shortcut.
 
 The menu-bar icon reopens a hidden panel. Close hides; Quit exits. Capture selects the display under the cursor, hides the panel first, then presents one snapshot for review. No inference begins until the user asks. If permissions were just enabled, relaunch the app when macOS requests it. Permission failures are recoverable; no alternate display is silently substituted.

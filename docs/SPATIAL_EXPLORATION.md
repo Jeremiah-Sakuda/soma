@@ -194,3 +194,80 @@ disabled. The native Chrome test tab is left open. No feature merge, push,
 deployment or publication. The broader UI and fixed mobile composer were not
 redesigned here; existing small-screen scrolling limitations remain. This small
 part library is not a universal realistic-asset generator.
+
+## PM106 — Broader component vocabulary and additional polish
+
+User-authorized continuation of the experimental branch, not a new checked
+scientific family. Muse's strict scene schema now offers **17** optional styles
+(previously five), alongside the four existing fallback primitives:
+
+| Use | Application-owned illustrations |
+| --- | --- |
+| Electronics | housing, chip, sensor, indicator, battery, coil |
+| Mechanisms | gear, piston, turbine |
+| Fluids and optics | pipe, vessel, lens |
+| Cell / molecular explanation | membrane, nucleus, helix |
+| Sound and causal motion | speaker, marker |
+
+These are fixed illustrative meshes. Muse chooses semantically appropriate
+parts, positions, dimensions, connections and step poses; it does not generate
+arbitrary mesh code. A membrane is a cell illustration, a helix is a schematic
+DNA-style ladder, and a coil is a winding. Counts of gear teeth, blades and rungs,
+fluid fill level, construction and finishes are never source measurements or
+scientific simulations. The author instructions require source fit, use of null
+for unrelated concepts, and explicit assumptions for inferred geometry.
+Existing bounded object/pose limits, review, ownership and source rules remain.
+No new dependency, external mesh/texture service, or generated executable code.
+
+Polish passes:
+
+1. Distinct part silhouettes with purposeful detail: open pipe bore, exposed
+   piston/rod, windings, gear hub, turbine blades, optical lens, speaker cone,
+   translucent vessel and membrane, nucleus cutaway and paired helix strands.
+2. Camera distance fits assembly bounds in camera space at the current aspect
+   ratio, including explicit isolation. Labels wrap instead of truncating;
+   callout placement considers both sides/rows and measured label height, with
+   collision-free priority for the selected/highlighted object. Dense scenes
+   retain the full accessible object list when not every callout fits.
+3. Camera presets visibly announce their active state. Wording covers all
+   component domains. Zero-length animated connections hide their arrows as
+   well as their line. Existing bounded motion/reduced-motion behavior remains.
+
+New geometry, framing and label-layout tests passed;
+full offline suite: 1,591 passed / 94 opt-in skipped. An initial full run's 48
+HTTP tests failed because sandbox policy denied localhost socket binding; the
+same suite passed with local socket access. The first expanded author prompt
+exceeded the real provider instruction limit; condensed spatial guidance retains
+the invariants and leaves tested follow-up instructions below 7,800 characters.
+Three service revisions exercise every new style through review, save/reopen and
+immutable-original checks with a scripted author and the real request encoder.
+This is contract evidence, not fresh Muse inference. PM103's daily guest cap
+blocked the last live attempt; no limit bypass, reset or new provider call here.
+Further visual inspection added solid-part silhouette avoidance to the label
+layout, aligned callout leaders with actual mesh surfaces, tightened shadow
+framing, turned cell cutaways toward the initial camera, and gave the helix
+contrasting strands. The 20 geometry/layout cases passed again after asset fixes.
+
+Native Chrome on the user's Mac restored the prior saved experiment (processor,
+step 2, spread 0.55, slice 0.2). Above/perspective presets visibly updated their
+pressed state; keyboard separation and isolation worked. Final close-up and
+assembled views verified clear part silhouettes and the corrected leader anchor.
+One macOS capture interruption recovered via a fresh accessibility read. The app
+is left assembled at `http://localhost:41900/explore`; the unsaved reset preserves
+the previous saved test state. The server has live inference disabled.
+
+The final exact-build production browser run passed **148/148** cases. Tests include all 17 styles in synthetic rendering studies at
+1440/620/375 widths, wrapped labels, isolation, old recorded Muse outputs, real
+local persistence, WebGL recovery/disposal, keyboard and reduced motion. These
+component studies are hand-authored test fixtures, not new model output. The
+first run passed 145 cases but three account-switch checks correctly refused
+sign-in because the isolated build lacked the synthetic public auth key. Rebuilt
+with that test key and reran; no production credential or auth behavior changed.
+The first sandboxed Next build stalled; stopped only its verified local process
+and rebuilt with local worker permissions. Original failure logs are retained.
+
+Production build/TypeScript and isolated browser trace passed: 1,224 files,
+two links, zero private-configuration mappings. Root and isolated source match
+253-file manifest `24d1a1c0e6f8e4d0655d84473e0c25d127cf9efaccf6472fb5915d35b28a7839`,
+release `soma-pm106-spatial-2026-10-30`. Private receipts are in `.local/pm106/`.
+No merge to main, push, deployment, publication or fresh live-Muse claim.

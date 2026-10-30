@@ -7,6 +7,11 @@ export const spatialVectorSchema = z.strictObject({
   z: z.number().finite().min(-6).max(6),
 });
 const size = z.number().finite().min(0.1).max(4);
+export const spatialRenderStyles = [
+  'housing', 'chip', 'sensor', 'indicator', 'marker',
+  'battery', 'coil', 'gear', 'piston', 'turbine', 'pipe', 'vessel',
+  'lens', 'membrane', 'nucleus', 'helix', 'speaker',
+] as const;
 export const spatialPanelSchema = z.strictObject({
   id: sceneIdSchema,
   kind: z.literal('spatial'),
@@ -18,7 +23,7 @@ export const spatialPanelSchema = z.strictObject({
     description: z.string().trim().min(1).max(240),
     shape: z.enum(['sphere', 'box', 'cylinder', 'torus']),
     // Application-owned illustrative meshes; never external assets or measured geometry.
-    renderStyle: z.enum(['housing', 'chip', 'sensor', 'indicator', 'marker']).nullable().optional(),
+    renderStyle: z.enum(spatialRenderStyles).nullable().optional(),
     color: z.enum(['clay', 'sage', 'blue', 'gold', 'violet']),
     position: spatialVectorSchema,
     size: z.strictObject({ x: size, y: size, z: size }),

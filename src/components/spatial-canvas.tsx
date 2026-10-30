@@ -2,11 +2,11 @@
 
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { createSpatialPart, spatialColors } from './spatial-parts';
+import { createSpatialPart } from './spatial-parts';
+import { placeSpatialLabel, spatialCameraDistance, type LabelRect } from './spatial-layout';
 import type { SpatialScene } from '@/lib/domain/spatial-exploration';
 import type { SpatialView } from '@/lib/domain/spatial-schema';
 
-const colors = spatialColors;
 type Props = { scene: SpatialScene; view: SpatialView; selected: string | null; onSelect: (id: string) => void; onView: (view: SpatialView) => void; onFailure: () => void };
 type Engine = { update: (props: Props) => void; dispose: () => void };
 
@@ -40,7 +40,7 @@ export default function SpatialCanvas(props: Props) {
     light.shadow.mapSize.set(1024, 1024); light.shadow.normalBias = 0.03;
     light.shadow.camera.left = -14; light.shadow.camera.right = 14;
     light.shadow.camera.top = 14; light.shadow.camera.bottom = -14;
-    world.add(light);
+    world.add(light, light.target);
     const fill = new THREE.DirectionalLight(0xbad9ec, 1.2);
     fill.position.set(-5, 3, -4); world.add(fill);
     const group = new THREE.Group(); world.add(group);
@@ -55,6 +55,7 @@ export default function SpatialCanvas(props: Props) {
     const selectable: THREE.Object3D[] = [];
     let current = latest.current, currentScene: SpatialScene | null = null, currentSelection: string | null = null;
     let center = new THREE.Vector3(), radius = 4, halfWidth = 4, floorY = -1;
+    let framingBounds = new THREE.Box3();
     let disposed = false, lost = false;
     const plane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
     let materialList: THREE.Material[] = [];
@@ -86,7 +87,13 @@ export default function SpatialCanvas(props: Props) {
         bounds.expandByPoint(p.clone().sub(s)); bounds.expandByPoint(p.clone().add(s));
       }
       if (bounds.isEmpty()) bounds.set(new THREE.Vector3(-2, -2, -2), new THREE.Vector3(2, 2, 2));
+      framingBounds = bounds;
       center = bounds.getCenter(new THREE.Vector3()); radius = Math.max(current.view.isolate ? 0.65 : 2, bounds.getSize(new THREE.Vector3()).length() / 2);
+      const shadowExtent = Math.max(2, radius * 1.4);
+      light.position.copy(center).add(new THREE.Vector3(-3, 7, 5).multiplyScalar(Math.max(1, radius / 4)));
+      light.target.position.copy(center);
+      Object.assign(light.shadow.camera, { left: -shadowExtent, right: shadowExtent, top: shadowExtent, bottom: -shadowExtent });
+      light.shadow.camera.updateProjectionMatrix();
       halfWidth = Math.max(0.1, (bounds.max.x - bounds.min.x) / 2); floorY = bounds.min.y - 0.22;
       if (current.scene.assurance === 'checked') {
         const grid = new THREE.GridHelper(Math.max(8, radius * 3), 16, 0xd0d4cd, 0xe9ebe5);
@@ -112,7 +119,7 @@ export default function SpatialCanvas(props: Props) {
         group.add(part); nodes.set(object.id, part);
         // Signal markers show motion, not another competing label on the mechanism.
         if (object.renderStyle !== 'marker' || selected)
-          label(object.label, part.position.clone(), selected ? 3 : object.highlighted ? 2 : shell ? 0 : 1, object.id, object.size.y / 2 + 0.12);
+          label(object.label, part.position.clone(), selected ? 3 : object.highlighted ? 2 : shell ? 0 : 1, object.id, new THREE.Box3().setFromObject(part).max.y - part.position.y);
       }
       const byId = new Map(visible.map((object) => [object.id, object]));
       for (const edge of current.scene.connections) {
@@ -146,7 +153,7 @@ export default function SpatialCanvas(props: Props) {
       const aspect = width / height;
       camera.aspect = aspect;
       const azimuth = THREE.MathUtils.degToRad(view.azimuth), elevation = THREE.MathUtils.degToRad(view.elevation);
-      const distance = radius * (aspect < 1 ? 3.15 / aspect : 3.15) * view.zoom;
+      const distance = spatialCameraDistance(framingBounds, azimuth, elevation, aspect, camera.fov, height) * view.zoom;
       camera.far = Math.max(120, distance + radius * 4); camera.updateProjectionMatrix();
       camera.position.set(center.x + Math.sin(azimuth) * Math.cos(elevation) * distance, center.y + Math.sin(elevation) * distance, center.z + Math.cos(azimuth) * Math.cos(elevation) * distance);
       camera.lookAt(center);
@@ -157,13 +164,29 @@ export default function SpatialCanvas(props: Props) {
         if (!a || !b) continue;
         const direction = b.clone().sub(a), length = direction.length();
         link.line.visible = length > 0.01;
+        if (link.arrow) link.arrow.visible = length > 0.01;
         if (length <= 0.01) continue;
         link.line.position.copy(a).lerp(b, 0.5); link.line.scale.y = length;
         link.line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
         if (link.arrow) { link.arrow.position.copy(a).lerp(b, 0.7); link.arrow.quaternion.copy(link.line.quaternion); }
       }
       renderer.render(world, camera);
-      const occupied: { x: number; y: number; width: number }[] = [];
+      const occupied: LabelRect[] = [];
+      // Callouts should reveal the mechanism, not cover it. Reserve projected
+      // solid-part silhouettes; enclosing shells deliberately remain permeable.
+      for (const object of current.scene.objects) {
+        const node = nodes.get(object.id);
+        if (!node || object.renderStyle === 'marker' || current.scene.objects.some((o) => o.parentId === object.id)) continue;
+        const bounds = new THREE.Box3().setFromObject(node);
+        const points: THREE.Vector3[] = [];
+        for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) points.push(new THREE.Vector3(x, y, z).project(camera));
+        if (points.some((p) => p.z <= -1 || p.z >= 1)) continue;
+        const left = Math.max(0, Math.min(...points.map((p) => (p.x + 1) * width / 2)));
+        const right = Math.min(width, Math.max(...points.map((p) => (p.x + 1) * width / 2)));
+        const top = Math.max(0, Math.min(...points.map((p) => (1 - p.y) * height / 2)));
+        const bottom = Math.min(height, Math.max(...points.map((p) => (1 - p.y) * height / 2)));
+        if (right > left && bottom > top) occupied.push({ x: (left + right) / 2, y: (top + bottom) / 2, width: right - left, height: bottom - top });
+      }
       labelLayer.setAttribute('viewBox', `0 0 ${width} ${height}`);
       for (const item of [...labels].sort((a, b) => b.priority - a.priority)) {
         const node = item.objectId ? nodes.get(item.objectId) : undefined;
@@ -171,18 +194,17 @@ export default function SpatialCanvas(props: Props) {
         const projected = anchor.clone().project(camera);
         const px = (projected.x + 1) * width / 2, py = (1 - projected.y) * height / 2;
         item.element.style.display = 'block';
-        const labelWidth = item.element.offsetWidth;
-        const x = Math.max(labelWidth / 2 + 12, Math.min(width - labelWidth / 2 - 12, px));
-        let y = Math.max(24, Math.min(height - 48, py - 36));
-        let tries = 0;
-        while (occupied.some((p) => Math.abs(p.x - x) < (p.width + labelWidth) / 2 + 8 && Math.abs(p.y - y) < 30) && tries++ < 8) y -= 31;
-        const shown = y > 12 && px > 0 && px < width && py > 0 && py < height && projected.z < 1 && (view.slice === 0 || plane.distanceToPoint(anchor) >= 0);
+        item.element.dataset.emphasis = item.priority > 1 ? 'true' : 'false';
+        const placement = placeSpatialLabel({ x: px, y: py }, { width: item.element.offsetWidth, height: item.element.offsetHeight }, { width, height }, occupied);
+        const shown = placement && px > 0 && px < width && py > 0 && py < height && projected.z > -1 && projected.z < 1 && (view.slice === 0 || plane.distanceToPoint(anchor) >= 0);
         item.element.style.display = shown ? 'block' : 'none'; item.line.style.display = shown ? 'block' : 'none';
-        if (shown) {
+        if (shown && placement) {
+          const { x, y, height: labelHeight } = placement;
           item.element.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
           item.element.dataset.emphasis = item.priority > 1 ? 'true' : 'false';
-          item.line.setAttribute('d', `M${px},${py} L${px},${y + 16} L${x},${y + 16}`);
-          occupied.push({ x, y, width: labelWidth });
+          const edgeY = y + (py > y ? 1 : -1) * labelHeight / 2;
+          item.line.setAttribute('d', `M${px},${py} L${px},${edgeY} L${x},${edgeY}`);
+          occupied.push(placement);
         }
       }
       canvas.dataset.rendered = 'true';

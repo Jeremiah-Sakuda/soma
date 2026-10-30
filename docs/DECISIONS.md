@@ -477,3 +477,14 @@ Keep personal interpretations out of source extraction, then retrieve owned memo
 ## October 30 — PM102 / PM103 spatial visual acceptance
 
 Passing interaction/regression tests does not establish visual acceptance. The user rejected the initial primitive 3D look and chose polished educational cutaways. Extend the bounded renderer with application-owned reusable part styles, not generated executable code or measured geometry. Preserve legacy primitives and saved scene identities, distinguish schematic detail from observed facts, and verify the revised result with native Mac computer control before proposing merge. No publication or feature merge authorized here.
+
+### PM106 — Expand bounded illustrative components, retain Muse composition
+
+October 30: user requested further spatial polish and more elements available to
+Muse. Expand the optional render-style vocabulary from five to seventeen fixed
+application-owned meshes, covering electronics, mechanisms, optics/fluids,
+cell/DNA schematics and sound. Preserve the existing primitives, bounded scene
+limits, source-fit requirement, review and follow-up identity. Component detail
+is explicitly schematic, not recovered geometry or checked science. Muse still
+composes the typed scene and explanation. This is a continuation on
+`codex/spatial-exploration`; no release/main merge or provider limit increase.

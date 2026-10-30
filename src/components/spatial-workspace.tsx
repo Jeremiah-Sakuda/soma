@@ -70,14 +70,14 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
       <span className="spatial-stage-note" aria-hidden="true">{spatial3d && !failed ? 'Drag to orbit · select a part' : 'Front projection · select a part below'}</span>
     </div>
     {failed && spatial3d && <div className="spatial-fallback" role="status">3D is unavailable on this device. Your scene and controls are preserved in the front projection. <button type="button" onClick={() => { setFailed(false); setAttempt(attempt + 1); }}>Retry 3D</button></div>}
-    {base.objects.some((object) => object.renderStyle) && <p className="spatial-detail-note">Illustrative component finishes · not an observed device design</p>}
+    {base.objects.some((object) => object.renderStyle) && <p className="spatial-detail-note">Illustrative parts · geometry and detail are schematic</p>}
     <div className="spatial-toolbar" aria-label="Spatial view controls">
       {spatial3d && <>
         <div className="spatial-camera-buttons" role="group" aria-label="Camera views">
-          <button type="button" onClick={() => update({ azimuth: 35, elevation: 25, zoom: 1 })}>Perspective</button>
-          <button type="button" onClick={() => update({ azimuth: 0, elevation: 0, zoom: 1 })}>Front</button>
-          <button type="button" onClick={() => update({ azimuth: 0, elevation: 85, zoom: 1 })}>Above</button>
-          <button type="button" onClick={() => update({ azimuth: 90, elevation: 0, zoom: 1 })}>Side</button>
+          <button type="button" aria-pressed={view.azimuth === 35 && view.elevation === 25} onClick={() => update({ azimuth: 35, elevation: 25, zoom: 1 })}>Perspective</button>
+          <button type="button" aria-pressed={view.azimuth === 0 && view.elevation === 0} onClick={() => update({ azimuth: 0, elevation: 0, zoom: 1 })}>Front</button>
+          <button type="button" aria-pressed={view.azimuth === 0 && view.elevation === 85} onClick={() => update({ azimuth: 0, elevation: 85, zoom: 1 })}>Above</button>
+          <button type="button" aria-pressed={view.azimuth === 90 && view.elevation === 0} onClick={() => update({ azimuth: 90, elevation: 0, zoom: 1 })}>Side</button>
           <button type="button" aria-label="Rotate left" onClick={() => rotate(-20)}><RotateCcw size={17} aria-hidden="true" /></button>
           <button type="button" aria-label="Rotate right" onClick={() => rotate(20)}><RotateCw size={17} aria-hidden="true" /></button>
         </div>

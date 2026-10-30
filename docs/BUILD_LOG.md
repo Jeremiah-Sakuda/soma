@@ -2654,3 +2654,18 @@ Deviation: clarification of assessment emphasis only; no product-scope change. P
 3. Fresh live test was blocked before inference by the Firestore daily guest-creation cap; no cost, bypass or reset. Ledger unchanged$13.848943/$15. New-style live authoring remains unverified; earlier live-output replay is rendering evidence only. Final252-file manifest2c7eb5049a9b574e24e2b30ffcd1b8d23be7f7c2511e38db1a1275b0e70b1c94. Report:docs/SPATIAL_EXPLORATION.md; private receipts:.local/pm101.
 
 Status: implementation and local checks complete; user visual acceptance and any feature merge remain pending. Existing fixed-composer/small-screen scrolling and broad asset-generation limits remain. Concurrent PM100/PM104 documents are preserved outside this commit.
+
+
+## PM105 — Clarify Muse authoring versus rendering (October 30)
+
+1. Clarified that live Muse authors validated scene descriptions: parts, arrangement, connections and explanation steps.
+2. Detailed meshes are application-owned components; the open prepared example is handcrafted and labeled accordingly.
+3. Disclosed that fresh style selection remained unverified after the daily guest cap blocked the PM103 attempt before inference. No code, spending or scope change.
+
+## PM106 — Additional spatial polish and broader component vocabulary (October 30)
+
+1. Expanded Muse's optional strict render-style vocabulary from 5 to 17. Added battery, coil, gear, piston, turbine, pipe, vessel, lens, membrane, nucleus, helix and speaker meshes. Preserved bounded scenes, legacy primitives, source-fit requirements, explanation-only assurance and style identity across reviewed revisions. No external asset service, generated mesh code or new checked model.
+2. Iterative polish improved camera fitting, wrapped labels, collision/silhouette avoidance, mesh-anchored leader lines, shadow framing, cell cutaway orientation, helix contrast and selected-camera feedback. Native Chrome review on the user's Mac verified saved state restoration, presets, keyboard separation, isolation and the final leader/assembled presentation. Review server:localhost:41900/explore, live inference off.
+3. Full offline suite:1,591 passed/94 opt-in skipped; 20 geometry/layout cases reran after final mesh changes. Final exact-build production browser suite:148 passed. Build/TypeScript and 1,224-file isolated browser trace passed. Runtime:253 files, SHA24d1a1c0e6f8e4d0655d84473e0c25d127cf9efaccf6472fb5915d35b28a7839. Logs/screenshots:.local/pm106; detailed record:docs/SPATIAL_EXPLORATION.md.
+
+Retained failures: expanded instructions initially exceeded the real provider cap; condensed guidance passed with <7,800 tested follow-up characters. Sandbox denied sockets to 48 unit checks; local-access rerun passed. Initial browser build omitted its synthetic public auth key, causing three expected sign-in refusals; configured test build passed. Sandboxed build stalled and was restarted with local worker access. No limits bypassed, provider calls, spend, feature merge, push or publication. Fresh Muse selection of the expanded vocabulary remains unverified (last live attempt:PM103 daily guest cap). Broader UI redesign remains separate; concurrent PM100/PM104 records are preserved.

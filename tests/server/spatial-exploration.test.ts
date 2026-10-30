@@ -6,7 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { createExplorationService, needsExplorationReview, validateExplorationViewState } from '../../src/lib/server/exploration';
 import { closeExplorationStore, explorationStore } from '../../src/lib/server/exploration-store';
 import { checkExploration } from '../../src/lib/domain/exploration';
-import { defaultSpatialView } from '../../src/lib/domain/spatial-schema';
+import { defaultSpatialView, spatialRenderStyles } from '../../src/lib/domain/spatial-schema';
 import { createSpatialExample } from '../../src/lib/domain/spatial-example';
 import { spatialScene } from '../../src/lib/domain/spatial-exploration';
 import type { ExplorationPrincipal } from '../../src/lib/server/exploration-types';
@@ -148,4 +148,32 @@ it('applies a bounded Muse view request once and preserves subsequent manual cha
   const manual = { ...next.state, spatial: { ...next.state.spatial!, azimuth: -45, spread: 0.2 } };
   await service.save(owner, next.id, 2, manual); closeExplorationStore();
   expect((await service.read(owner, next.id, 2)).active!.state).toEqual(manual);
+});
+
+it('retains every new component style through review, revision, persistence and reopening', async () => {
+  const { service, request, review } = harness({ review: true }), owner = principal();
+  await service.initialize(owner);
+  const styles = spatialRenderStyles.slice(5);
+  for (let batch = 0; batch < styles.length; batch += 5) {
+    const { artifact } = await service.example(owner, false, true);
+    const spec = structuredClone(artifact.spec);
+    if (spec.mode !== 'explanation' || spec.scene.panels[0].kind !== 'spatial') throw new Error('fixture');
+    for (const [index, part] of spec.scene.panels[0].objects.entries()) part.renderStyle = styles[(batch + index) % styles.length];
+    await explorationStore.mutate(owner, (session) => {
+      Object.assign(session.artifacts.find((a) => a.id === artifact.id)!, checkExploration(spec));
+    });
+    const { artifact: next } = await service.generate(owner, { action: 'generate', requestId: randomUUID(), artifactId: artifact.id, baseVersion: 1, state: artifact.state, question: 'Keep each illustrative component and explain this selected world.' });
+    if (next.spec.mode !== 'explanation' || next.spec.scene.panels[0].kind !== 'spatial') throw new Error('fixture');
+    const expected = spec.scene.panels[0].objects.map((o) => o.renderStyle);
+    expect(next.spec.scene.panels[0].objects.map((o) => o.renderStyle)).toEqual(expected);
+    const reviewed = JSON.parse((review.mock.calls.at(-1) as unknown as [{ input: { content: string }[] }])[0].input[0].content);
+    expect(reviewed.spec.scene.panels[0].objects.map((o: { renderStyle: string }) => o.renderStyle)).toEqual(expected);
+    await service.save(owner, next.id, next.version, next.state); closeExplorationStore();
+    expect((await service.read(owner, next.id, next.version)).active!.spec).toEqual(next.spec);
+    expect((await service.read(owner, artifact.id, 1)).active!.spec).toEqual(spec);
+    // The real request encoder/estimator also runs in this harness before the
+    // scripted author. Leave headroom under its 8,000-character instructions cap.
+    expect(request.mock.calls.at(-1)![0].instructions.length).toBeLessThan(7800);
+    for (const style of styles) expect(request.mock.calls.at(-1)![0].instructions).toContain(style);
+  }
 });

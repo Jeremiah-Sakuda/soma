@@ -1,4 +1,9 @@
+**PM073 continuity update (October 30):** Fresh application is now implemented within saved checked explorations: original same-family problems, hidden-until-check/reveal solutions, immutable answers, recorded hints/reveals, actual timestamps, checked practice visuals and optional answer-informed Spark composition. Reference availability stays explicit; this is not independent-understanding validation, learner-graph projection or unattended preparation. Existing source-selection/background bridges remain proposed. See the current implementation and validation records for release evidence.
+
 # Three bridges from Soma v1 to visual exploration
+
+**PM055 update (October 29):** A narrow portion of bridge 2 is implemented in the exploration service: optional diagram-visible next-node predictions, immutable original answers, reveal facts, persisted source/model/state lineage and explicit answer-informed Spark visual requests. This is not a v1 learning-graph projection, validated misconception diagnosis or independent delayed assessment. Bridges 1 and 3 remain proposed. See [implementation](SOMA_V2_IMPLEMENTATION.md#pm055--optional-prediction-to-adaptive-visual) and [validation](SOMA_V2_VALIDATION.md) for actual release evidence.
+
 
 October 29, 2026. **Architecture assessment and proposed follow-up, not implemented integration.** This review inspected the code links below. It performed no source refresh, credential operation, model call or production change. Existing connector coverage and authentication gates retain their recorded status.
 

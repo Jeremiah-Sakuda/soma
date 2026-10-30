@@ -417,3 +417,46 @@ it('qualifies a correction-based interpretation as self-report without upgrading
  const published=publishInvestigation(corrected,result);
  expect(published.attempts.at(-1)).toEqual(observation);expect(observation).toMatchObject({correct:null,novel:false,responseKind:'correction'});
 });
+
+it('routes new background diagnostics through Wonder and preserves role records on publication', async () => {
+  vi.stubEnv('SOMA_LESSON_REVIEW_ENABLED','true');
+  const state=fixture(), plan=originalTextPlan(state);
+  const fetcher=script([readUpdate,{name:'prepare_diagnostic',args:textToolArgs(plan)},body=>{
+    const context=JSON.parse(body.input[0].content!);
+    expect(context.activity.diagnostic).toBe(true);
+    expect(context.activity.targetHypotheses.map((h:{claim:string})=>h.claim)).toEqual(plan.hypotheses.map(h=>h.claim));
+    expect(context.activity.gradingPolicy).toContain('Ungraded');
+    expect(context.sources.map((s:{sourceId:string})=>s.sourceId)).toEqual(['update']);
+    return {name:'review_lesson',args:{verdict:'approve',findings:[],reason:'The two predictions offer a supported optional distinction.'}};
+  },body=>({name:'finish_investigation',args:finishToolArgs({...decision(state,'keep-current',false),decision:'revise-session'},lastToolOutput(body).lessonId)})]);
+  const result=await investigateWithSpark(state,request);
+  expect(fetcher.mock.calls.map(call=>JSON.parse(String(call[1]?.body)).model)).toEqual(['muse-spark-1.3','muse-spark-1.3','muse-wonder-1.0','muse-spark-1.3']);
+  expect(result.record.usage?.calls).toBe(4);
+  expect(result.run.orchestration?.handoffs.map(h=>h.outcome)).toEqual(['proposed','approve']);
+  const published=publishInvestigation(state,result);
+  expect(published.lessons.find(l=>l.id===result.lesson?.id)).toBeDefined();
+});
+
+it('returns protected diagnostic feedback for one repair, requires re-review and keeps findings out of public run steps', async () => {
+  vi.stubEnv('SOMA_LESSON_REVIEW_ENABLED','true');
+  const state=fixture(), plan=originalTextPlan(state), privateFinding='The checked answer is 4 A; revise the wording before asking.';
+  const fetcher=script([readUpdate,{name:'prepare_diagnostic',args:textToolArgs(plan)},
+    {name:'review_lesson',args:{verdict:'revise',findings:[{code:'ambiguity',message:privateFinding}],reason:'The proposed question needs a clearer supported distinction.'}},
+    body=>{expect(lastToolOutput(body).detail).toContain(privateFinding);return {name:'prepare_diagnostic',args:textToolArgs({...plan,question:'When the source voltage doubles with resistance fixed, how does branch current change?'})};},
+    {name:'review_lesson',args:{verdict:'approve',findings:[],reason:'The revised question now clearly states what is held constant.'}},
+    body=>({name:'finish_investigation',args:finishToolArgs({...decision(state,'keep-current',false),decision:'revise-session'},lastToolOutput(body).lessonId)})]);
+  const result=await investigateWithSpark(state,request);
+  expect(fetcher).toHaveBeenCalledTimes(6);
+  expect(result.run.orchestration?.handoffs.map(h=>h.outcome)).toEqual(['proposed','revise','proposed','approve']);
+  expect(JSON.stringify(result.run)).not.toContain(privateFinding);
+  expect(result.record.usage?.calls).toBe(6);
+});
+
+it('stops the background job after unsupported review and cannot select its unreviewed diagnostic', async () => {
+  vi.stubEnv('SOMA_LESSON_REVIEW_ENABLED','true');
+  const state=fixture(), original=structuredClone(state), plan=originalTextPlan(state);
+  const fetcher=script([readUpdate,{name:'prepare_diagnostic',args:textToolArgs(plan)},
+    {name:'review_lesson',args:{verdict:'unsupported',findings:[{code:'source-fit',message:'The evidence does not support this proposed instructional inference.'}],reason:'More course evidence is required before preparing a useful activity.'}}]);
+  await expect(investigateWithSpark(state,request)).rejects.toMatchObject({failure:{kind:'validation',code:'declined'}});
+  expect(fetcher).toHaveBeenCalledTimes(3); expect(state).toEqual(original);
+});

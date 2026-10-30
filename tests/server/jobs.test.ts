@@ -142,3 +142,12 @@ describe('preparation ownership and restart contracts', () => {
     expect(mayClaimJob({ ...job, status: 'stale' }, 1000)).toBe(false);
   });
 });
+
+it('does not resume a preparation carrying an unknown review policy version',()=>{
+  const state=seedEmptyAccountWorkspace('review-owner','2026-10-27T12:00:00.000Z');
+  state.courses=[{id:'course',code:'C',title:'Course',instructor:'Fixture',color:'#000000',nextEvent:'None',deadline:''}];
+  state.sources=[{id:'source',courseId:'course',title:'Original synthetic source',body:'Original synthetic material.',version:1,kind:'synthetic',retrievedAt:state.createdAt,status:'current'}];
+  const job={workspaceId:state.id,courseId:'course',sourceRefs:[{sourceId:'source',version:1}]};
+  expect(jobSourcesCurrent(state,job)).toBe(true);
+  expect(jobSourcesCurrent(state,{...job,reviewVersion:'unknown-future-review'})).toBe(false);
+});

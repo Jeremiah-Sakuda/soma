@@ -145,11 +145,11 @@ test('desktop and phone preserve the diagram, text alternative, keyboard path an
   await expect(page.getByRole('img', { name: /An original unweighted graph/ })).toBeVisible();
   await page.screenshot({ path: '.local/screenshots/exploration-desktop-1440.png', fullPage: true });
   await page.setViewportSize({ width: 375, height: 812 }); await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.getByRole('link', { name: 'Jump to visual card' }).click();
+  await page.locator('#exploration-card').scrollIntoViewIfNeeded();await page.getByText('Select a node & inspect graph',{exact:true}).click();
   expect((await page.getByRole('button', { name: 'Next step', exact: true }).boundingBox())!.y).toBeLessThan(700);
   await page.getByRole('button', { name: 'Node B', exact: true }).focus(); await page.keyboard.press('Enter');
   await expect(page.getByText('Asking about: B')).toBeVisible();
-  await page.getByText('Search state in a table', { exact: true }).click();
+  await page.getByText('Change the experiment',{exact:true}).click();await page.getByText('Search state in a table', { exact: true }).click();
   await expect(page.getByRole('table')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: '.local/screenshots/exploration-phone-375.png', fullPage: true });
@@ -290,4 +290,68 @@ test('server actions wait for guest-session initialization while local screensho
   await exampleButton.click();
   await expect(page.getByRole('heading',{name:'Why does A come before B?',exact:true})).toBeVisible();
   expect(requests.map(item=>item.action)).toEqual(['example']);
+});
+
+test('diagram and question share the desktop viewport and automatic follow-ups retain the selected object',async({page})=>{
+ await page.setViewportSize({width:1280,height:720});const h=await setup(page);await example(page);await page.evaluate(()=>window.scrollTo(0,0));
+ const graph=await page.locator('.exploration-graph').first().boundingBox(),composer=await page.locator('.exploration-ask-card').boundingBox();expect(graph!.y).toBeLessThan(600);expect(composer!.y).toBeLessThan(250);expect(composer!.x).toBeLessThan(graph!.x);
+ await page.getByRole('button',{name:'Node A',exact:true}).click();await expect(page.getByRole('combobox',{name:'Follow-up action'})).toHaveCount(0);
+ await page.locator('#exploration-question').fill('Why is this next?');await page.getByRole('button',{name:'Ask Soma',exact:true}).click();await expect.poll(()=>h.requests.filter(item=>item.action==='generate').length).toBe(1);expect(h.requests.find(item=>item.action==='generate')!.intent).toBe('auto');expect(h.requests.find(item=>item.action==='generate')!.selectedObjectId).toBe('a');
+});
+
+test('bounded explanation panels render, highlight and remain usable by keyboard on desktop and phone',async({page})=>{
+ await setup(page);
+ const artifact=fixture(),base=artifact.spec;
+ const spec:ExplorationSpec={schemaVersion:base.schemaVersion,id:base.id,version:1,title:'From examples to predictions',objective:'An illustrative processing pipeline, not a numerical simulation.',sources:base.sources,assumptions:[],uncertainty:[],unsupportedClaims:['Example values are illustrative.'],mode:'explanation',scene:{layout:'diagram-sidebar',panels:[
+  {id:'pipeline',kind:'diagram',title:'Processing stages',placement:{column:1,row:1,columnSpan:2},objects:[{id:'examples',kind:'block',label:'Training examples',position:{x:0,y:.5}},{id:'predictions',kind:'block',label:'Predictions',position:{x:1,y:.5}},{id:'process',kind:'edge',from:'examples',to:'predictions',directed:true,label:'learn a relationship'}]},
+  {id:'tokens',kind:'sequence',title:'Input sequence',placement:{column:1,row:2,columnSpan:1},items:[{id:'token1',label:'The'},{id:'token2',label:'sky'}]},
+  {id:'matrix',kind:'matrix',title:'Example values',placement:{column:2,row:2,columnSpan:1},rows:[['1','2'],['3','4']]},
+  {id:'idea',kind:'callout',title:'What to notice',placement:{column:1,row:3,columnSpan:2},text:'The model learns patterns from examples.',tone:'idea'},
+ ]},steps:[{id:'first',caption:'Start with examples.',narration:'First inspect the training examples.',highlightIds:['examples'],execution:null,executionStep:null},{id:'second',caption:'Follow the relationship.',narration:'Next follow the relationship toward predictions.',highlightIds:['process','predictions','token2'],execution:null,executionStep:null}],followups:[]};
+ const rich={...artifact,...checkExploration(spec),state:initialExplorationState(spec)};
+ await page.route('**/api/explore',async route=>{if(route.request().method()==='POST'&&route.request().postDataJSON().action==='example')return route.fulfill({json:{artifact:rich}});return route.fallback();});
+ await page.setViewportSize({width:1280,height:720});await page.getByRole('button',{name:'Try the original example',exact:true}).first().click();
+ await expect(page.getByRole('heading',{name:spec.title,exact:true})).toBeVisible();await page.evaluate(()=>window.scrollTo(0,0));
+ await page.screenshot({path:'.local/pm040/richer-desktop.png',fullPage:true});
+ await page.getByRole('button',{name:'Next explanation',exact:true}).focus();await page.keyboard.press('Enter');
+ await expect(page.locator('.exploration-edge.is-highlighted')).toHaveCount(1);
+ await page.getByText('Steps, numbers & context',{exact:true}).click();await page.getByRole('button',{name:'sky',exact:true}).focus();await page.keyboard.press('Enter');await expect(page.getByText('Asking about: token2')).toBeVisible();
+ await page.setViewportSize({width:375,height:812});await page.emulateMedia({reducedMotion:'reduce'});await page.locator('#exploration-card').scrollIntoViewIfNeeded();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ expect(await page.locator('.exploration-node').first().evaluate(el=>getComputedStyle(el).transitionDuration)).toBe('0s');
+ await expect(page.getByRole('table',{name:'Example values'})).toBeVisible();
+ await page.screenshot({path:'.local/pm040/richer-phone.png',fullPage:true});
+});
+
+test('crowded generated process labels reflow without hiding their full meaning',async({page})=>{
+ await setup(page);const a=fixture(),base=a.spec;
+ const spec:ExplorationSpec={schemaVersion:base.schemaVersion,id:base.id,version:1,title:'A crowded original process',objective:'Read every processing stage.',sources:base.sources,assumptions:[],uncertainty:[],unsupportedClaims:[],mode:'explanation',scene:{layout:'stack',panels:[{id:'dense',kind:'diagram',title:'Six stages',placement:{column:1,row:1,columnSpan:2},objects:[...Array.from({length:6},(_,i)=>({id:`node${i}`,kind:'block' as const,label:`Stage ${i}: process the current value`,position:{x:.4+i*.01,y:.5}})),{id:'retry-edge',kind:'edge',from:'node0',to:'node0',directed:true,label:'retry'}]}]},steps:[{id:'inspect',caption:'Inspect the six stages.',narration:null,highlightIds:['node0'],execution:null,executionStep:null}],followups:[]};
+ const rich={...a,...checkExploration(spec),state:initialExplorationState(spec)};await page.route('**/api/explore',async route=>{if(route.request().method()==='POST'&&route.request().postDataJSON().action==='example')return route.fulfill({json:{artifact:rich}});return route.fallback();});
+ await page.setViewportSize({width:1280,height:900});await page.emulateMedia({reducedMotion:'reduce'});await page.getByRole('button',{name:'Try the original example',exact:true}).first().click();await expect(page.getByRole('heading',{name:'A crowded original process',exact:true})).toBeVisible();
+ for(const width of [1280,620,375]){await page.setViewportSize({width,height:900});await expect(page.locator('.exploration-diagram-label')).toHaveCount(6);await expect(page.locator('.exploration-panel-diagram .exploration-edge')).toHaveAttribute('d',/ C /);await expect(page.locator('.exploration-panel-diagram .exploration-edge')).not.toHaveAttribute('d',/NaN|Infinity/);
+  const boxes=await page.locator('.exploration-panel-diagram foreignObject').evaluateAll(elements=>elements.map(el=>el.getBoundingClientRect().toJSON()));for(const [i,a]of boxes.entries())for(const b of boxes.slice(i+1))expect(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top).toBe(true);
+  expect(await page.locator('.exploration-diagram-label').evaluateAll(els=>els.every(el=>el.scrollHeight<=el.clientHeight&&el.scrollWidth<=el.clientWidth))).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+});
+
+test('generated diagram cards stay inside their canvas throughout native-width reflow', async ({page}) => {
+  await setup(page);
+  const a=fixture(), base=a.spec;
+  const spec:ExplorationSpec={schemaVersion:base.schemaVersion,id:base.id,version:1,title:'An original three-stage trace',objective:'Follow each update.',sources:base.sources,assumptions:[],uncertainty:[],unsupportedClaims:[],mode:'explanation',scene:{layout:'stack',panels:[{id:'trace',kind:'diagram',title:'Value trace',placement:{column:1,row:1,columnSpan:2},objects:[...['Start: value = 7','After first +2: value = 9','After second +2: value = 11'].map((label,i)=>({id:`state${i}`,kind:'block' as const,label,position:{x:.2+i*.3,y:.25+i*.25}})),{id:'first',kind:'edge',from:'state0',to:'state1',directed:true,label:'+2'},{id:'second',kind:'edge',from:'state1',to:'state2',directed:true,label:'+2'}]}]},steps:[{id:'inspect',caption:'Follow the updates.',narration:null,highlightIds:['state0'],execution:null,executionStep:null}],followups:[]};
+  const rich={...a,...checkExploration(spec),state:initialExplorationState(spec)};
+  await page.route('**/api/explore',async route=>{if(route.request().method()==='POST'&&route.request().postDataJSON().action==='example')return route.fulfill({json:{artifact:rich}});return route.fallback();});
+  await page.setViewportSize({width:375,height:772});
+  await page.getByRole('button',{name:'Try the original example',exact:true}).first().click();
+  await expect(page.getByRole('heading',{name:spec.title,exact:true})).toBeVisible();
+  for (const width of [620,375,620]) {
+    await page.setViewportSize({width,height:772});
+    const overflow=await page.locator('.exploration-diagram-container').evaluate(async container=>{
+      const invalid:string[]=[];const until=performance.now()+450;
+      do {const svg=container.querySelector('svg')!,canvas=svg.getBoundingClientRect();
+        for(const label of svg.querySelectorAll('foreignObject')){const b=label.getBoundingClientRect();if(b.bottom>canvas.bottom+1||b.top<canvas.top-1||b.left<canvas.left-1||b.right>canvas.right+1)invalid.push('card outside current canvas');}
+        await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+      } while(performance.now()<until);return invalid;
+    });
+    expect(overflow).toEqual([]);
+  }
 });

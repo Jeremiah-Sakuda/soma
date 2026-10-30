@@ -1,0 +1,248 @@
+{
+  "spec": {
+    "schemaVersion": "exploration-v1",
+    "id": "explore_4a383bf7d8b645fb9f455f396150aafe",
+    "version": 1,
+    "title": "Dijkstra from P to R",
+    "objective": "Show Dijkstra search steps from P to R preserving direction and costs.",
+    "sources": [
+      {
+        "observationId": "capture_f5318a050b60414dab36b9484df149e4",
+        "version": 1,
+        "region": null
+      }
+    ],
+    "assumptions": [
+      "Graph preserves visible directed edges and costs: P->Q 2, P->R 9, Q->R 3.",
+      "Neighbor order P, Q, R; start P; goal R."
+    ],
+    "uncertainty": [],
+    "unsupportedClaims": [],
+    "mode": "checked-dijkstra",
+    "modelId": "dijkstra-nonnegative",
+    "modelVersion": "dijkstra-nonnegative-v1",
+    "input": {
+      "nodes": [
+        {
+          "id": "P",
+          "label": "P"
+        },
+        {
+          "id": "Q",
+          "label": "Q"
+        },
+        {
+          "id": "R",
+          "label": "R"
+        }
+      ],
+      "edges": [
+        {
+          "id": "ePQ",
+          "from": "P",
+          "to": "Q",
+          "weight": 2
+        },
+        {
+          "id": "ePR",
+          "from": "P",
+          "to": "R",
+          "weight": 9
+        },
+        {
+          "id": "eQR",
+          "from": "Q",
+          "to": "R",
+          "weight": 3
+        }
+      ],
+      "directed": true,
+      "start": "P",
+      "goal": "R",
+      "neighborOrder": [
+        "P",
+        "Q",
+        "R"
+      ],
+      "algorithm": "dijkstra"
+    },
+    "comparison": null,
+    "scene": {
+      "layout": "diagram-sidebar",
+      "panels": [
+        {
+          "id": "gMain",
+          "title": "Directed graph P to R",
+          "placement": {
+            "column": 1,
+            "row": 1,
+            "columnSpan": 1
+          },
+          "kind": "graph",
+          "execution": "primary",
+          "positions": [
+            {
+              "nodeId": "P",
+              "x": 0.15,
+              "y": 0.5
+            },
+            {
+              "nodeId": "Q",
+              "x": 0.5,
+              "y": 0.3
+            },
+            {
+              "nodeId": "R",
+              "x": 0.85,
+              "y": 0.5
+            }
+          ]
+        },
+        {
+          "id": "fMain",
+          "title": "Priority queue",
+          "placement": {
+            "column": 2,
+            "row": 1,
+            "columnSpan": 1
+          },
+          "kind": "frontier",
+          "execution": "primary"
+        },
+        {
+          "id": "tMain",
+          "title": "Distances and parents",
+          "placement": {
+            "column": 2,
+            "row": 2,
+            "columnSpan": 1
+          },
+          "kind": "state-table",
+          "execution": "primary"
+        },
+        {
+          "id": "sSteps",
+          "title": "Step list",
+          "placement": {
+            "column": 1,
+            "row": 3,
+            "columnSpan": 1
+          },
+          "kind": "steps"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "s0",
+        "caption": "Start at P, distance 0",
+        "narration": "Queue holds P with cost 0 before expansion.",
+        "highlightIds": [
+          "P"
+        ],
+        "execution": "primary",
+        "executionStep": 0
+      },
+      {
+        "id": "s1",
+        "caption": "Expand P: reach Q cost 2, R cost 9",
+        "narration": "From P, Q is 2 and direct R is 9; Q has smaller tentative cost.",
+        "highlightIds": [
+          "P",
+          "Q",
+          "R",
+          "ePQ",
+          "ePR"
+        ],
+        "execution": "primary",
+        "executionStep": 1
+      },
+      {
+        "id": "s2",
+        "caption": "Expand Q: improve R to 5 via Q",
+        "narration": "Via Q, R improves from 9 to 2+3=5, parent becomes Q.",
+        "highlightIds": [
+          "Q",
+          "R",
+          "eQR"
+        ],
+        "execution": "primary",
+        "executionStep": 2
+      },
+      {
+        "id": "s3",
+        "caption": "Reach goal R with cost 5 via P-Q-R",
+        "narration": "Dequeue R at cost 5; checked shortest path is P-Q-R.",
+        "highlightIds": [
+          "R",
+          "P",
+          "Q",
+          "ePQ",
+          "eQR"
+        ],
+        "execution": "primary",
+        "executionStep": 3
+      }
+    ],
+    "controls": [
+      "step",
+      "replay"
+    ],
+    "followups": [
+      "Compare what changes if edge P->R cost changes?",
+      "Try start Q to see remaining path to R?"
+    ]
+  },
+  "question": "Show the search from the marked start to goal, preserving visible direction and costs. Let me inspect the steps.",
+  "source": {
+    "observationId": "capture_f5318a050b60414dab36b9484df149e4",
+    "version": 1,
+    "kind": "screenshot",
+    "label": "Original synthetic evaluation source",
+    "capturedAt": "2026-10-29T22:22:13.718Z",
+    "summary": "Directed weighted graph with Start P, Goal R. Visible edges: P->Q cost 2, P->R cost 9, Q->R cost 3. Neighbor order P, Q, R. Request to show search steps preserving direction and costs.",
+    "uncertainty": []
+  },
+  "generation": {
+    "mode": "live",
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "calls": 3,
+    "usage": {
+      "input_tokens": 17710,
+      "output_tokens": 2212
+    },
+    "costUsd": 0.03898425,
+    "elapsedMs": 16399,
+    "checks": [
+      "schema",
+      "references",
+      "dijkstra-input",
+      "deterministic-trace"
+    ],
+    "audit": [
+      {
+        "event": "source-interpreted",
+        "call": 1,
+        "detail": "Source graph proposed; extraction remains fallible."
+      },
+      {
+        "event": "model-computed",
+        "call": 1,
+        "detail": "Checked dijkstra-nonnegative trace with 4 snapshots."
+      },
+      {
+        "event": "review-approved",
+        "call": 3,
+        "detail": "Muse Wonder advisory review: approve."
+      },
+      {
+        "event": "scene-validated",
+        "call": 3,
+        "detail": "Typed scene, source versions and checked model references validated."
+      }
+    ]
+  },
+  "createdAt": "2026-10-29T22:22:30.119Z",
+  "notice": "Actual completed Spark/Wonder run on an original synthetic screenshot, October 29. Opening this recording makes no model call. Generation time, cost and audit describe the original run."
+}

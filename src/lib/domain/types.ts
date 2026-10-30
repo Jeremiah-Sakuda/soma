@@ -25,7 +25,7 @@ export type Attempt = {
   responseKind?: 'correction'; correctionOf?: string; response: string; correct: boolean | null; assisted: boolean; assistance: string[];
   createdAt: string; revisionOf?: string; novel: boolean; feedback: string; sourceVersions?: Record<string, number>; exposure?: 'lab' | 'fresh-no-diagram'; predictionId?: string;
 };
-export type AgentRun = { id: string; trigger: string; mode: 'synthetic' | 'prepared' | 'live'; status: 'completed' | 'failed' | 'unchanged'; createdAt: string; steps: string[]; effect: string; sourceIds: string[]; };
+export type AgentRun = { orchestration?: { version: string; handoffs: { stage: 'author' | 'reviewer'; model: string; outcome: 'proposed' | 'approve' | 'revise' | 'unsupported' | 'failed'; calls: number; costUsd: number }[] }; id: string; trigger: string; mode: 'synthetic' | 'prepared' | 'live'; status: 'completed' | 'failed' | 'unchanged'; createdAt: string; steps: string[]; effect: string; sourceIds: string[]; };
 export type Interpretation = { id: string; courseId: string; claim: string; status: 'suspected' | 'revised' | 'supported'; evidenceIds: string[]; reason: string; updatedAt: string };
 export type SomaInvestigation = InvestigationRecord & { investigationKey?: string; runtimeModel?: string; engineVersion?: string; selectedLessonId?: string; diagnosticPlan?: ValidatedDiagnosticPlan; diagnosticLessonId?: string; hypothesisRevisions?: { hypothesisId: string; status: DiagnosticHypothesisStatus; reason?: string }[]; toolActivity?: { tool: string; outcome: string }[]; usage?: { calls: number; costUsd: number; elapsedMs: number } };
 export type WorkspaceState = {

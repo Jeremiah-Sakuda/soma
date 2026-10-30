@@ -230,6 +230,24 @@ October 27, 2026. Jeremy authorized implementing lightweight navigation and requ
 
 October 27, 2026. Fall 2026 scope is explicitly selected. Hosted collection failed at Playwright import despite a passing direct service check. An isolated Vercel package reproduced its missing browser registry JSON. Include that asset for browser, Blackboard and worker routes, and run the isolated trace import in CI. Keep fixed phase diagnostics without raw exception text. Reject prebuilt packages containing dotenv/service-account paths; local Vercel builds independently include root dotenv files, so prebuilt verification requires clean staging. Existing source uploads exclude `.env*`. No session/budget limit or provider permission is expanded by this repair.
 
+
+## October 27 — PM028 restore generated interactive labs as the flagship
+
+Jeremy reaffirmed the earlier Anatomy-inspired direction: prepare personalized interactive lessons in the background around a checked scientific model, with source/evidence-driven presentation and interaction. The implementation had narrowed authoring to parameters and diagnostics inside an authored renderer; completed graph milestones do not establish the original generated-lesson capability.
+
+PRD R11 now explicitly requires Spark-authored composition of scene emphasis, model-bound visuals, steps, controls and checkpoints using approved primitives. Two actual generated compositions must differ in explanatory sequence and at least one meaningful visual focus/comparison/interaction because of objective or evidence. Parameter-only variants, hardcoded whole lessons and text fallback do not pass this requirement. Browser checks and bounded repair complement rather than replace scientific/instructional review. This is an explicit strengthened acceptance boundary restoring the intended experience, and remains unimplemented until verified.
+
+Retain the approved quantitative family and existing graph/source/worker infrastructure. Runtime generated executable code remains excluded; generated presentation is a bounded declarative specification. Anatomy is a candidate requiring review, not an installed or adopted dependency. The quoted capacitor example does not authorize another scientific family. Keep Today · Map · Activity: the existing map is available for context, while the lab leads the product and demo. No fine-tuned checkpoint or second-model runtime is established or made a dependency by this correction. Preserve existing spend limits, October 31 freeze and November 4 deadline. No code or deployment was changed in this planning turn.
+
+
+## October 27 — PM029 bounded author/challenger implementation
+
+Jeremy authorized implementing agent orchestration and logging the work. Add the optional `SOMA_LESSON_REVIEW_ENABLED` route: Spark authors current typed activities, Wonder 1.0 challenges new candidates against the same disclosed source versions, and a rejected repair must be reviewed again before the existing publication service can accept it. New source/response diagnostics use the same reviewer gate; retaining an existing activity does not imply a new review. No model receives publication, credential, external-write or learner-evidence authority.
+
+Keep the existing four/eight-call, 90-second, one-repair and $0.20/$0.35 reservation limits. Direct reviewed preparation uses application-read source segments to preserve model-call capacity; caches/jobs include the policy version and preparation jobs capture it. Charge each model at its verified Standard rate; preserve unknown usage reservations and the $2 operating cap/$30 allocation reserve. Reviewer decisions/findings remain protected by existing evidence/help disclosure.
+
+Live verification found an exact-quotation failure, a reviewer completion failure at 512 output tokens, and an unsupported tool-choice option. Preserve those failures and estimated usage in BUILD_LOG. The corrected request uses 1,024 output tokens, minimal reasoning and Meta's documented auto-only tool selection, within the existing 2,048-token ceiling. The corrected live attempt was denied by the existing global budget and skipped before inference; no ledger/cap reset or increase was made. Defaults stay off and no deployed activation is claimed. The backend reviews current activity contracts; generated visual composition/browser verification remain open R11 work, not silently declared complete.
+
 ## October 27 — P055 bounded Piazza previews and explicit live gate
 
 Reuse the existing encrypted saved-browser context and deterministic selected-class navigation for Piazza. Do not call undocumented POST APIs or open posts merely to obtain content: initial class-visible instructor-note previews are the first supported reader. Require positive note/instructor markers and exclude private, section/group and graded items before reading their text. Block APIs, sockets, frames, unselected classes and scripts outside the initial first-party inventory. Preserve owned course mappings, exclusive leases, guarded publication, original learner attempts and source-dependent staleness. Rotate one class per session across the complete saved selection; partial observations must not imply full feed coverage. Full discussion ingestion remains an open access capability, not a satisfied requirement.
@@ -242,17 +260,20 @@ Jeremy authorized linking Soma’s existing GCP project to Deployment Billing an
 
 Prepare a backend-versioned migration with fresh human sign-ins, preserved selections, fenced encrypted browser profiles, authenticated human login/control channels and dispatch for legacy Browserbase cleanup. Cloud Run’s built-in TLS makes it the first hosting proof; instance affinity/max-instances alone cannot secure persistent ownership. A VM fallback needs a trusted authenticated front door. Review storage retention and metadata/browser-process isolation. [GCP Browser Migration](GCP_BROWSER_MIGRATION.md) records milestones and gates; no new runner, billing association or provider access has been established.
 
+
 ### P060 billing resolution and private deployed migration checkpoint
 
 The user selected `hodi-2026` for unlinking. Hodi billing was disabled without deleting the project; Soma linked to Deployment Billing, independently verified with the other four associations unchanged. Dedicated least-privilege worker/build identities, private encrypted state storage and a bounded Cloud Run worker are deployed. Actual synthetic browser/state/viewer checks passed; production Vercel contains the transport adapter but still selects Browserbase.
 
 Automatic approval review rejected anonymous Cloud Run invocation because the migration request did not expressly authorize that persistent public setting. Keep the service IAM-private until explicit approval for internet invocation; application private-key/owner control and one-use human-viewer authentication remain required even if that entry setting is approved. Do not bypass the rejection. Fresh user login/MFA and actual selected-source readback remain required after activation; no state portability, credit eligibility, instance-termination recovery or live-source success is inferred from the synthetic gate.
 
+
 ## October 28 — P061 activate approved protected GCP sign-in entry
 
 Jeremy explicitly approved internet invocation of the single `soma-browser` Cloud Run service. Applied only its `allUsers` / `roles/run.invoker` binding; application private-key/owner control, one-use viewer capability/cookie, private encrypted storage, network restrictions and bounded capacity remain. Actual hosted tests without Google identity headers passed unauthorized control/CDP rejection and the full synthetic state/viewer/cleanup gate.
 
 Production now selects GCP while the app remains on Vercel. A real legacy context DELETE exposed an empty-body JSON Content-Type incompatibility; fixed the transport and added strict upstream regression tests. Do not bypass confirmed old-provider cleanup. The final clean production deployment opened BU’s actual sign-in page through the protected viewer. Human login/MFA and actual selected-course readback are separate remaining gates; legacy Gradescope/Piazza references and their cleanup key remain until their reconnects complete. No change to source permissions, model cap or learning acceptance.
+
 
 ## October 28 — P064 fixed thirty-minute interactive sign-in and cookie-only recovery
 
@@ -271,11 +292,13 @@ Treat source collection, investigation decisions, prepared activities and demons
 
 Jeremy explicitly approved $1 additional model testing, total cap $3, for a course-grounded activity, citation/correctness check, saved reuse and bounded follow-up. Preserve the existing global ledger, unknown-usage reservations, daily limits and twenty-percent reserve of the $150 allocation. Local verification now selects cap $3; production activation and actual run evidence must be recorded separately. This supersedes the P068 $2 blocking threshold, not the source/privacy or release gates.
 
+
 ## October 28 — P071 proposed opt-in credential vault, current session flow retained
 
 The user asked to renew a stale institutional request and consider secure credential autofill. A fresh protected BU login allocation is opened through the existing owned lifecycle; human credentials/MFA and actual readback remain required. Routine viewer resume preserves the provider page and deadline, so it does not itself repair a stale SSO request.
 
 [Credential Autofill Proposal](CREDENTIAL_AUTOFILL_PROPOSAL.md) is a design-only response: opt-in owner consent, a separately privileged KMS-backed encrypted vault/login service, exact reviewed destinations and one-use fenced fill grants, no model/general browser-control access during secret entry, human MFA, and tested revoke/delete/rotation. Independent review confirms the current runner's general CDP login control and broad HTTPS egress do not satisfy that new isolation boundary. No password form, stored institutional password, vault key, new IAM authority or autofill implementation is established. Existing saved-authorization flow and Google OAuth remain unchanged; no automatic password retries or source-write permission is introduced.
+
 
 ## October 28 — P072 implement opt-in vault behind a separate login boundary
 
@@ -318,3 +341,116 @@ P084 authorizes increasing the total testing cap to $5 if the current cap is exh
 The bounded M1–M5 slice is implemented and deployed from clean code commit `e1d3fc0`; its independent CI and hosted image/model/persistence/browser checks passed. Evidence and limitations live in `docs/SOMA_V2_VALIDATION.md`. The $5 testing cap retains the existing global ledger; verified ledger usage is $3.27464925 including unknown/reserved usage, not exact provider billing. `somaExploreGuests.expiresAt` TTL is ACTIVE; access expires at 24 hours and managed deletion is asynchronous. Guest work does not migrate automatically into an account.
 
 The earlier v1 back-burner direction parks its existing recurring GitHub worker (`SOMA_WORKER_ENABLED=false` repository variable), preserving connected sources and credentials. This keeps unattended v1 preparation from restarting as a consequence of expanding the test allowance. The protected endpoint remains available but is not invoked by v2 tests. Selected course material, distinct learning evidence and change-triggered preparation are ranked proposed bridges; none is claimed implemented. Real window/microphone/device-voice/course-fit checks remain human input, not hidden release successes.
+
+
+## October 29 — PM040 visual-explanation refinement
+
+Jeremy authorized implementing the PM039 assessment. Adopted diagram-first presentation, narration-driven step playback, bounded explanatory primitives, owned-context reuse for explicit explain/focus, preserved scene state, and optional recorded-question auto-submission. Keep Spark as the generation model, Meta transcription as input and explicitly labeled browser TTS as output. No additional checked numerical family, continuous screen upload, arbitrary-code generation, continuous microphone listening or v1 graph bridge is adopted. One bounded repair and existing budgets remain enforced. Preserve concurrent work; this iteration is local, not a new hosted release. See SOMA_V2_VALIDATION.md and BUILD_LOG.md for executed evidence and failures.
+
+
+## October 29 — PM042 Gemini voice playback
+
+Jeremy selected Gemini voice and confirmed an existing Soma billing account. Adopt Gemini 2.5 Flash TTS/Kore for guided playback through that billed Google Cloud project, retaining Spark reasoning/visual composition and Meta speech transcription. The newer TTS request failed compatibility checks; the selected stable model generated actual usable PCM audio. Enable only the required prediction permission on the existing runtime and preserve the shared test cap. Browser voice is an explicit fallback, not silently represented as Gemini. No deployment or broader Google reasoning-model migration is implied by this iteration. See SOMA_V2_IMPLEMENTATION.md and SOMA_V2_VALIDATION.md.
+
+
+### PM044 — Cohesive visual interaction and one-step speech preparation (October 29)
+Adopt one desktop composer alongside the visual, automatic Muse interpretation using the existing pipeline, a single guided playback path and disclosed voice settings. Keep spoken submission opt-in. Prepare at most the next narration during active playback; join in-flight requests across advances, cancel on interruption, retain only bounded ephemeral completed audio, and never silently retry a failed prefetch. Preserve validation, provider attribution, budgets and the October 31 freeze. This improves orchestration UX without adding models or claiming realtime speech. See SOMA_V2_IMPLEMENTATION.md for first-audio limits and follow-up latency candidates.
+
+
+### PM047 — Semantic animation before expanding features (October 29)
+Adopt one graph/queue presentation stage for checked BFS, derived motion cues and real-audio progress within a step. Keep motion deterministic from checked snapshots, with proportional timing explicitly distinguished from word alignment. Preserve static browser-voice fallback, immediate reduced-motion state and accessible queue/table alternatives. Progressive generic diagrams remain explanation-only. Prioritize this renderer iteration over new models, 3D or numerical families; no budget change.
+
+
+## PM049–PM050 — Desktop visual learning companion (October 29)
+
+Jeremy authorized the native app and requested corresponding positioning updates. Adopt a macOS-first thin Electron companion around the current hosted exploration engine, with a floating panel, global shortcut and explicit current-display snapshots. Present Soma as understanding what is in front of the user without requiring a window-sharing workflow. Intro AI remains the initial demonstrable use case; checked BFS and explanation-only distinctions remain. Keep the web judge path. No continuous capture, automatic model submission, new domain family or parked v1 ingestion is adopted. Native permissions, multi-display/fullscreen behavior and signed distribution require their own evidence. Freeze/deadline and shared $5 cap unchanged.
+
+
+## PM055 — Build the experiment/prediction/adaptation loop (October 29)
+
+Jeremy authorized building toward the proposed direction. Deliver the optional BFS prediction-to-visual loop first, preserving diagram-visible exposure and source/model/input/version lineage. Server computes the expected next node and retains the original response; Spark receives the saved observation only through an owned matching artifact/state. No diagnosis or independent-understanding inference from one prediction. Next assess weighted shortest paths/Dijkstra as a purposeful comparison; it is not implemented or a supported family merely by adoption of this direction. Targeted Wonder review remains conditional on useful error detection and cost; open-weight deployment and unattended course preparation remain future decisions. Preserve October 31 freeze and $5 cap.
+
+
+## PM056 — Weighted comparison, targeted reviewer, distribution pipeline (October 29)
+
+Jeremy explicitly requested Dijkstra/weighted comparisons, conditional targeted Wonder review, and signing/notarization. Extend the graph-search family with nonnegative weights and checked Dijkstra; preserve unit-cost BFS and explicit costs-ignored comparison. This supersedes earlier deferral of weighted graph computation, without adding resistor or arbitrary simulation support. Use static weighted step states rather than incorrect FIFO choreography. Apply Wonder only to new live weighted and answer-informed visuals, with model-specific billing and no cap increase. Signing flow must require Developer ID Application plus secure notary profile; no development/ad-hoc fallback qualifies for distribution. Actual elevated keychain metadata shows Apple Development only. Owner input requested while independent implementation continues. Freeze/deadline unchanged.
+
+## PM061–PM062 — Model-directed experiments and $15 shared testing cap (October 29)
+
+Jeremy requested continued experience iteration using the reference quality bar, more purposeful Meta capabilities, fine-tuning research and 3D as a stretch goal. Implement a bounded cost-intervention tool: Spark selects an edge, application solvers compute cases, Spark composes from those results, and existing targeted Wonder review applies. Keep both algorithms on the same hypothetical costs; no arbitrary code or new numerical family. Preserve original sources, saved versions and assistance distinctions. Fine-tuning and optional 3D remain gated proposals in MODEL_AND_GRAPHICS_EXPERIMENTS.md, not P0 commitments or completed features.
+
+PM062 explicitly authorizes raising the existing shared application testing cap to $15 total. Keep the consumed ledger and unknown-usage reservations; do not reset them. Updated local and production configuration. GPU training requires its own concrete cost review and authorization; none is started. The October 31 freeze and November 4 deadline remain unchanged.
+
+PM061 follow-up: repeated actual scene failures justify a narrower experiment-copy tool. Preserve the established visual layout/checked inputs and let Spark author its objective and trace-linked explanation after solver results; apply Wonder to the complete merged artifact. Derive algorithm/frontier labels in application code, including legacy copied examples. Treat contradictory approvals with nonempty findings as revision requests. Full initial source composition remains available. This changes the experiment-turn contract for reliability, not its learning/evidence boundaries.
+
+## PM063 independent judging audit and improvement proposal October 29
+
+Jeremy explicitly requested a thorough audit using subagents and a plan. Three independent reviews covered Impact/differentiation, Meta tooling/engineering and Demo/UX. The parent verified the current release/repository, offline suite and three fresh synthetic source-to-visual cases. Findings and proposed acceptance gates are in HACKATHON_AUDIT_2026_10_29.md and IMPROVEMENT_PLAN_2026_10_29.md. The weighted reviewer midpoint is directional, not a placement prediction.
+
+The audit confirms an ordinary auto-follow-up preservation gap and incorrect undirected weighted rendering. It recommends correcting them and native presentation before optional model/3D expansion. This records a recommendation, not implemented fixes or a new feature commitment. No application code, deployment, repository visibility or GPU job changed. Refreshed the handoff's current status pointer while preserving historical checkpoints. Existing shared $15 total allowance covers the three bounded synthetic inference checks; final audit ledger $5.20537675. Preserve October 31 freeze and November 4 submission deadline.
+
+## PM064 — Adopt audit fixes and a reviewed submission export (October 29)
+
+The owner authorized all six audit work items. Auto/explain/focus/investigate follow-ups preserve the effective primary/comparison inputs at the application boundary. Primary parameter edits remain explicit controls; a natural-language question alone cannot silently apply new inputs. A published explanatory revision may materialize the current effective graph as its new baseline; the source and earlier immutable versions remain.
+
+Undirected weighted visuals and explicit-BFS dispatch are corrected. The narrow companion uses one inspected graph, paired full-route cost selectors, nearby experiment controls, and one fixed question composer; desktop keeps the composer alongside the scene. Advanced controls remain discoverable and keyboard accessible. Explanation-only trace bindings are schema-null, and failure records retain bounded diagnostic stages/codes.
+
+Submission source is prepared as a sanitized first-party snapshot with a runtime fingerprint, clean install/build/tests and notices. Keep original private history, prompt archive and unrelated v1 work private. Publication/deployment status is recorded separately after actual tool confirmation; preparation alone does not establish a public repository. No new quantitative family, paid training, 3D renderer or model-count expansion. Existing $15 shared test cap, October 31 freeze and November 4 deadline remain.
+
+## PM065 — General screenshots and presentation robustness (October 29)
+
+General screenshots continue through live interpretation/composition with no prepared-example fallback. Restrict the author tool to modes backed by the actual computation and bind known artifact/source metadata in its schema. Keep post-response validation independent. Reflow only crowded diagram presentation, retaining semantic IDs, labels, connections and persisted specs. General explanations remain separate from checked BFS/Dijkstra computation. The user-requested cross-domain tests and results are recorded in GENERAL_SCREENSHOT_VALIDATION.md, with first failures retained. No additional model, training job or arbitrary executable scene generation is adopted.
+# PM069 — Experience before model breadth
+
+User authorized iteration on the panel feedback. Priorities: recover unavailable-probe follow-ups, make weighted costs/names legible, replay checked weighted transitions, expose actual model actions and provide a clearly labeled real-run replay. Keep selective Wonder review, Gemini narration, existing solver families and the $15 total test allowance. Replays carry original generation metadata and a new owned artifact/source binding, with no new inference on opening. Live follow-ups use the normal bounded pipeline. Concurrency becomes configurable within 1–16 leases (default 4), independently of lifetime spending; deployment capacity is not increased merely by adding configuration. Real-student observation and video recording require real participants/footage; plans do not count as results. No fine-tuning, GPU spend, 3D or new Meta model in this iteration.
+
+## PM073 — Reuse learning continuity, not the v1 hub (October 30)
+
+Jeremy authorized one optional fresh application loop inside saved visual explorations. Keep the existing checked BFS/Dijkstra families and normal bounded Spark/Wonder path. New exercises are original deterministic variations; no new source extraction or live model call is claimed for creation/grading. Record the answer before solution exposure, persist assistance and actual timestamps, and do not infer mastery or an elapsed learning interval. A separate checked practice visual preserves the original, and optional answer-informed live composition carries explicit attempt lineage. No mandatory assessment, new navigation, reminders, LMS jobs, graph database or model expansion. The $15 allowance and October 31 freeze remain.
+
+
+## PM075 — Experience verification and structured-explanation review (October 30)
+
+Authorized by the user's rigorous usability/polish request. Keep one source-specific diagram prominent, with nearby manual explanation controls and optional supporting content; preserve source/object/version identity. Measured rendering may reflow crowded causal DAGs without changing their edges or scientific claims. Content stays visible while audio prepares; reduced motion and manual exploration remain equivalent access paths.
+
+An observed gradient diagram contradicted its own numerical table. Extend the existing conditional Wonder policy to structured explanatory diagrams/matrices/sequences, while retaining strict application validation, bounded repair, advisory assurance and the $15 shared cap. New non-graph authoring uses the ordinary bounded grid. Reviewer transport/parse failures preserve the current artifact without another paid author call; deliberate cancellation/other application errors remain distinct. This adds no quantitative family, arbitrary code execution, training, source monitoring or new product surface. First-request generation failures and successful repeats must remain separately reported.
+
+
+## October 30 — PM077: explicit Point & ask
+
+Adopted a user-enabled native hold-to-speak flow with local pointer feedback and fresh release-time capture. Use a reserved Control–Option–Space helper; keep Cmd–Shift–Space snapshot/review. Join transcript and source by interaction ID; cancel stale work and keep the old visual until ready. Keep only normalized selected region in source provenance, never raw trajectory. Source focus guides interpretation but does not establish facts or learning. No new model family, framework, continuous video stream or general input monitoring. Check physical input, OS permissions, full-screen/multi-display and clean-Mac operation separately from synthetic Electron tests. New 0.2.0 signing succeeded; missing local notary profile blocks its Apple distribution gate.
+
+
+## October 30 — PM078: Ground source interactions in the current capture
+
+Keep one visual engine. Spark may attach up to six bounded source regions, request at most one closer crop of the already supplied image, and compare a hash-bound earlier capture with a fresh capture. Preserve earlier source/artifact versions; saved metadata retains lineage while raw pixels remain transient. Ordinary follow-ups keep current experiment state. Native 0.3.0 can temporarily point back only when a local fresh-screen comparison matches the frozen capture; it never moves/clicks the cursor. Numbered source markers preserve phone legibility. Generic diagram routes avoid cards without altering graph semantics.
+
+Streaming Muse transcription is capability-gated behind single-use, owner-bound tickets, bounded PCM/duration, separate relay credentials, conservative budget charging and the existing recorded-input fallback. Local real-ASR verification succeeded; persistent cloud service/secret/IAM provisioning was rejected by automatic approval review for lack of specific credential-configuration authorization. A concrete approval question is pending; do not retry that provisioning without authorization. No cloud relay resources have been created. Keep $15 lifetime cap; last read $8.440255.
+
+Eight public sources across eight subjects produced 0/8 initial publications due to a confirmed absent-value sentinel; a narrow parser fix yielded 7/8 on the repeated set. Broad physics remains failed; its narrower junction recovery is separate. Retain all failures and do not claim arbitrary checked simulations, educational effectiveness, long-term memory results or general reliability. Full local gates pass; final publication/CI identity will be appended when confirmed. Signed native 0.3.0 still awaits notarization and physical-device checks.
+
+
+PM078 release evidence: runtime be62bdca061251851346ec6d9468901bd5e47df5, clean CI 41089794472, production dpl_6qeBzywPSDaKKChCA1UC1hUgCYvW; 228-file runtime fingerprint 0d0cf1d45b7ca39077e9ded9f4c039b4936a7bcb64bc05a1f95a0f778f978f7c matches. Signed local 0.3.0 passes normal macOS verification; cloud relay and notarization remain explicitly pending. Documentation-only final evidence may follow without another runtime deployment.
+
+
+## October 30 — PM083: coding is a demo angle, not the product boundary
+
+The user clarified that Soma should retain its broader screen-companion positioning. LeetCode/DSA preparation is one possible demonstration of the same contextual visual experience, not a narrowing to coding. This supersedes the assistant's PM082 recommendation to make DSA the first product focus. Future demo planning should show continuity across contexts while preserving the implemented boundary between checked computation and explanatory visuals. Cross-domain understanding-map integration and optional external computer actions remain proposals unless separately adopted.
+
+
+## October 30 — PM086: owned continuity and separately approved computer actions
+
+Adopt the broad personal companion direction, preserving PM083. Store explicit goals and versioned concept interpretations inside existing owned exploration sessions; project evidence from actual original answers/assistance. Spark selects bounded saved experiences and proposes relationships/next activities; deterministic validators, source ownership and revision checks govern publication. Deletion/reset invalidates pending work and dependent interpretations, including after budget settlement. Do not infer mastery from exploration.
+
+Native actions use a separate bundled local approval window and macOS Accessibility helper; hosted content receives no privileged execution bridge. Limit a task to two minutes/five separately approved actions, re-observe before each, verify field readback, and label button acceptance as distinct from remote completion. Preserve the existing shared $15 testing cap and 20% allocation reserve. No new scheduler, credential store, cloud service or source-write authority.
+
+Implementation uses isolated `codex/personal-companion` checkout and public main merge `04639b3`, preserving concurrent release work through `24ec4b5` and leaving its default branch/deployment unchanged. Public docs/PERSONAL_COMPANION.md and docs/COMPUTER_ACTIONS.md own this slice's support matrix. Actual physical action testing and signed distribution remain pending.
+
+
+## PM080 — Release, generation contracts and truthful waiting (October 30)
+
+Released strict JSON scene authoring with exact owned bindings and independent domain/source/numerical checks. Source inspection remains function-based. Optional invalid source-region bounds are omitted, never clamped. Permit one malformed-source re-reading and one unusable-review contract repair on the unchanged input/candidate within existing total bounds; material rejections require author repair and re-review. Unknown-billing transport failures are not retried.
+
+Use a concise factual critic with a real review function result or explicitly requested, independently validated JSON. Official API supports only automatic tool choice. Critic schema-grammar variants missed seeded contradictions (including all three in one variant) and were rejected; final factual critic caught three in a development repeat, which does not prove general correctness. Approval remains advisory. Optional NDJSON streams actual phases and the final validated result/error only. Keep the current visual/question and recover clearly from cancellation/disconnection.
+
+Apple accepted 0.3.0 (submission c1f04adf-fd55-4f4a-83ff-5e6ceaef2ad4); stapled archive and published GitHub digest match and Gatekeeper accepts it. Runtime 24ec4b5 passed clean CI 41105115334 and is deployed as soma-pm080-2026-10-30. Broad source repeat 8/10 plus two later successes remains separate from individual hosted/checked-graph successes. No checked-family expansion, framework, fine-tuning, allowance increase or cloud voice provisioning. Preserve the October 31 freeze and independently tracked PM086 integration.

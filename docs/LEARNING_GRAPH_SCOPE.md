@@ -1,6 +1,11 @@
+**PM073 continuity boundary (October 30):** V2 now reuses a narrow part of this thesis: actual fresh-practice answers, assistance and source/model/version lineage can inform a subsequent visual. This is stored exploration evidence, not a semester graph projection, inferred mastery or validated independent assessment. The current primary surface remains the visual companion; do not resume the earlier graph dashboard or background hub from the historical scope below.
+
 # Soma learning graph scope
 
 **Scoped October 27, 2026. Intended behavior, not implementation evidence.** This design refines PRD R5, R9, R10 and R11 and the selected returned-work hero story. The PRD owns release acceptance; the Build Plan owns dates. Existing account, source, hub, learning and evaluation requirements remain. This is a documentation handoff, not an instruction to restart the application.
+
+
+**October 27 generated-lesson correction (PM028):** The graph chooses and adapts the personalized interactive lab; the lab leads the student experience. PRD R11 now requires actual Spark-authored presentation/interaction compositions, not only parameterized comparisons in a fixed screen. Use approved scientific models and reviewed visual primitives while generating the explanatory sequence and meaningful visual emphasis/interaction. Existing graph milestones remain useful progress and do not establish that authoring capability. The selected Today · Map · Activity navigation remains in place.
 
 ## Product outcome
 

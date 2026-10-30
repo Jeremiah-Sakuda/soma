@@ -18,3 +18,12 @@ playwright/.auth/
 firebase-debug*.log
 .vercel
 .env*
+
+# Local product direction proposal
+/somav2.md
+
+# Keep the credential-free setup template available in clean checkouts.
+!.env.example
+
+# Local editor launch configuration
+/.claude/

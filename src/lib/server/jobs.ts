@@ -1,3 +1,4 @@
+import { lessonReviewEnabled, LESSON_REVIEW_VERSION } from './lesson-review';
 import { automaticModelContext } from './automatic-context';
 import { createHash, randomBytes } from 'node:crypto';
 import type { WorkspaceState, SourceRef, AgentRun } from '../domain/types';
@@ -15,6 +16,7 @@ import { retryableExecutionFailure, type ExecutionFailure } from './execution-fa
 
 export type PreparationIntent = 'prepare-lesson' | 'investigate-change';
 export type PreparationJob = {
+  reviewVersion?: string;
   intent?: PreparationIntent;
   engineVersion?: string; runtimeModel?: string;
   id: string; ownerId: string; workspaceId: string; courseId: string; topic: string; sourceRefs: SourceRef[];
@@ -32,11 +34,11 @@ function refs(account: VerifiedAccount) {
 }
 
 export function preparationJobId(workspace: WorkspaceState, courseId: string, sourceRefs: SourceRef[], topic: string, contextRevision = workspace.revision, intent: PreparationIntent = 'prepare-lesson'): string {
-  return digest(JSON.stringify({ workspaceId: workspace.id, courseId, sourceRefs: [...sourceRefs].sort((a, b) => a.sourceId.localeCompare(b.sourceId) || a.version - b.version), topic, contextRevision, modelVersion: MODEL_VERSION, engineVersion: intent === 'investigate-change' ? ENGINE_VERSION : SPARK_ENGINE_VERSION, ...(intent === 'investigate-change' ? { intent, runtimeModel: META_MODEL } : {}) }));
+  return digest(JSON.stringify({ workspaceId: workspace.id, ...(lessonReviewEnabled() ? { orchestration: LESSON_REVIEW_VERSION } : {}), courseId, sourceRefs: [...sourceRefs].sort((a, b) => a.sourceId.localeCompare(b.sourceId) || a.version - b.version), topic, contextRevision, modelVersion: MODEL_VERSION, engineVersion: intent === 'investigate-change' ? ENGINE_VERSION : SPARK_ENGINE_VERSION, ...(intent === 'investigate-change' ? { intent, runtimeModel: META_MODEL } : {}) }));
 }
 
-export function jobSourcesCurrent(workspace: WorkspaceState, job: Pick<PreparationJob, 'workspaceId' | 'courseId' | 'sourceRefs'>): boolean {
-  return workspace.id === job.workspaceId && workspace.courses.some(course => course.id === job.courseId) && job.sourceRefs.length > 0 && job.sourceRefs.every(ref => workspace.sources.some(source => source.id === ref.sourceId && source.version === ref.version && source.status === 'current' && source.courseId === job.courseId) && !workspace.sources.some(source => source.id === ref.sourceId && source.version > ref.version));
+export function jobSourcesCurrent(workspace: WorkspaceState, job: Pick<PreparationJob, 'workspaceId' | 'courseId' | 'sourceRefs' | 'reviewVersion'>): boolean {
+  return (!job.reviewVersion || job.reviewVersion === LESSON_REVIEW_VERSION) && workspace.id === job.workspaceId && workspace.courses.some(course => course.id === job.courseId) && job.sourceRefs.length > 0 && job.sourceRefs.every(ref => workspace.sources.some(source => source.id === ref.sourceId && source.version === ref.version && source.status === 'current' && source.courseId === job.courseId) && !workspace.sources.some(source => source.id === ref.sourceId && source.version > ref.version));
 }
 
 export function mayClaimJob(job: PreparationJob, now = Date.now()): boolean {
@@ -75,7 +77,7 @@ export async function enqueuePreparation(account: VerifiedAccount, workspace: Wo
     if (active.size - retired.length >= 5) throw new WorkspaceStoreError('Five preparations are already waiting. Finish one before adding another.', 429, 'job_capacity');
     const now = new Date(nowMs).toISOString();
     for (const document of retired) transaction.update(document.ref, { status: 'stale', leaseId: '', leaseUntil: 0, updatedAt: now, notice: 'Supporting sources changed. Import the current material to prepare a new version.' });
-    const job: PreparationJob = { id, intent, engineVersion: intent === 'investigate-change' ? ENGINE_VERSION : SPARK_ENGINE_VERSION, runtimeModel: META_MODEL, ownerId: account.uid, workspaceId: workspace.id, courseId, topic, sourceRefs, status: 'queued', createdAt: now, updatedAt: now, attempts: 0, contextRevision };
+    const job: PreparationJob = { id, intent, ...(lessonReviewEnabled() ? { reviewVersion: LESSON_REVIEW_VERSION } : {}), engineVersion: intent === 'investigate-change' ? ENGINE_VERSION : SPARK_ENGINE_VERSION, runtimeModel: META_MODEL, ownerId: account.uid, workspaceId: workspace.id, courseId, topic, sourceRefs, status: 'queued', createdAt: now, updatedAt: now, attempts: 0, contextRevision };
     transaction.create(root.collection('jobs').doc(id), job);
     return job;
   });
@@ -250,8 +252,8 @@ export async function runPreparationJob(account: VerifiedAccount, id: string): P
       const modelContext = automaticModelContext(workspace);
       if (!jobSourcesCurrent(modelContext, job)) throw new WorkspaceStoreError('Select these current source versions again before automatic preparation.', 422, 'automatic_source_consent');
       const outcome: PreparationOutcome = job.intent === 'investigate-change'
-        ? { intent: 'investigate-change', result: await investigateWithSpark(modelContext, { courseId: job.courseId, goal: job.topic, initialSourceIds: [...new Set(job.sourceRefs.map(ref => ref.sourceId))].slice(0, 8) }, { automatic: true, audit }) }
-        : { intent: 'prepare-lesson', result: await prepareWithSpark(modelContext, job.courseId, job.topic, { sourceRefs: job.sourceRefs, trigger: 'source-change', audit }) };
+        ? { intent: 'investigate-change', result: await investigateWithSpark(modelContext, { courseId: job.courseId, goal: job.topic, initialSourceIds: [...new Set(job.sourceRefs.map(ref => ref.sourceId))].slice(0, 8) }, { automatic: true, audit, review: job.reviewVersion === LESSON_REVIEW_VERSION }) }
+        : { intent: 'prepare-lesson', result: await prepareWithSpark(modelContext, job.courseId, job.topic, { sourceRefs: job.sourceRefs, trigger: 'source-change', audit, review: job.reviewVersion === LESSON_REVIEW_VERSION }) };
       return outcome.intent === 'prepare-lesson' ? { kind: 'lesson' as const, result: outcome.result } : { kind: 'investigation' as const, result: outcome.result };
     },
     publish: async prepared => {

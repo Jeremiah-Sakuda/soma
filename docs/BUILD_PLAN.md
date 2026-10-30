@@ -1,14 +1,48 @@
+## PM073 delivered continuity — October 30
+
+Fresh practice and stable saved-history order are deployed and hosted-verified. Current release/source/budget: CODEX_HANDOFF.md. Final release soma-pm073-2026-10-30-r3 is hosted-verified and clean CI 41004986055 passed; no further feature expansion is planned. Return to actual student/device testing and demo footage before the October 31 freeze. Keep the optional fresh-application beat inside the existing capture → manipulate → explain → save/revisit story.
+
+## PM073 authorized continuity slice — October 30
+
+Integrate one optional fresh application exercise from a saved checked exploration. Reuse original evidence/assistance patterns and the existing visual/composition service, rather than restarting the v1 learning graph or source jobs. Verify hidden solutions, immutable answers/hints/reveals, workspace isolation, source/version lineage, response-based Spark context, save/revisit, keyboard/reduced-motion and companion/phone presentation. Release only after checks; preserve the $15 allowance and October 31 freeze. Current implementation and release results are in BUILD_LOG; PM069 remains deployed until publication is explicitly recorded.
+
+## PM069 current release and next human evidence
+
+October 29: the scoped experience iteration is deployed at the canonical `/explore` URL, public source 58668137c15471a16a1702fad2b057de3d27b7b9, green CI 40996515692. Prioritize real-student observation and recording the current desktop/experiment/save story next, using STUDENT_TRIAL.md and DEMO_AND_EVALUATION.md. Keep October 31 freeze and November 4, 9 PM America/New_York submission. Do not add model families, GPU training or new product surfaces to improve model count. Shared test allowance remains $15 total, last read $6.753702. Source generation still has occasional safe rejection; do not present repeats as first-request successes. See CODEX_HANDOFF.md for current source/deployment and verification.
+
 # Soma build plan
+
+**PM064 completed October 29:** Audit fixes, compact native presentation, fresh source evaluation and a reviewed public source release are delivered. Production and public CI verification passed. See the latest PM064 validation record and CODEX_HANDOFF.md. Remaining work is actual-device/course testing, the documented missing-cost clarification limitation, and submission/demo preparation; do not reopen P0 for model count, training or 3D.
+
+**October 29 audit proposal (PM063):** [IMPROVEMENT_PLAN_2026_10_29.md](IMPROVEMENT_PLAN_2026_10_29.md) ranks verified follow-up preservation and weighted-rendering fixes, compact native UX, fresh source/evaluation gates and submission reproducibility ahead of optional model/3D expansion. [The audit](HACKATHON_AUDIT_2026_10_29.md) records three independent rubric reviews and executed checks. This is a proposed sequence, not completed fixes or automatic adoption of new scope. October 31 freeze and November 4, 9 PM America/New_York deadline remain fixed.
+
+
+**PM061–PM062 sequence, October 29:** Verify and release the bounded cost-intervention interaction within weighted search, including actual Spark selection/composition, application checks, targeted Wonder review and saved controls. Preserve unrelated checkout work through an isolated release. Then prioritize progressive visual presentation and target-Mac testing. Benchmark an untuned Glimmer specialist before proposing an adapter job; GPU training and optional 3D remain gated stretch experiments. Shared application testing cap is $15 total with prior consumption retained. No change to October 31 freeze or November 4 deadline.
+
+
+**PM056 current delivery:** Nonnegative Dijkstra and costs-ignored BFS comparison implemented and browser-verified; targeted bounded Wonder review added for weighted/prediction revisions. Actual local-provider review passed after a strict-schema correction; real-course interpretation and reviewer efficacy remain separate gates. macOS distribution pipeline is implemented but actual Developer ID signing/notarization awaits the owner's certificate and notary profile. Preserve October 31 freeze and November 4 submission deadline.
+
+
+**PM055 sequence:** Deliver optional supported prediction → checked feedback → owned observation → requested adapted visual first. Then assess weighted shortest-path/Dijkstra source fit and comparison design; do not count an algorithm-only prototype as a supported family. Keep reviewer expansion conditional on measurable error detection. Freeze/deadline unchanged.
+
+
+## PM049–PM050 desktop delivery — October 29
+
+Primary positioning: desktop visual learning companion invoked over the user's existing work. Finish the macOS Apple Silicon shell, capture-to-existing-preview integration, native control/security tests and reproducible package. Verify actual screen permission, multi-display selection and fullscreen placement separately from synthetic capture delivery. Retain the deployed web judge path. This does not reopen v1 background ingestion or add models/families. October 31 feature freeze and November 4, 9 PM America/New_York submission remain fixed. Current results and open gates: [Desktop companion](DESKTOP_COMPANION.md).
 
 ## Current sequence — P084 visual-exploration pivot
 
 Follow M1–M5 in [SOMA_V2_IMPLEMENTATION.md](SOMA_V2_IMPLEMENTATION.md): checked model/contract; actual vision-to-scene pipeline; follow-ups and persistence; capture and optional voice; integrated release verification. Review each milestone and commit focused increments. Retain October 31 feature freeze and November 4, 9 PM America/New_York deadline. Earlier course-ingestion completion work is parked.
+
+October 29 PM040 follows the released P084 slice with diagram-first presentation, synchronized playback and context-preserving explanation improvements. Verify the local refinement before any new release; retain the freeze and parked v1 work. Status: implementation complete, final verification recorded in BUILD_LOG.md and SOMA_V2_VALIDATION.md.
 
 **Updated October 26: implementation is authorized from today by the organizer’s “Hacking has officially started!” announcement, supplied by Jeremy.** The existing dated milestones remain targets; use the extra start day for the first slice. The participant guide lists that building period and an October 26 kickoff. Record any organizer clarification; do not silently turn the earlier ten-day draft into an eligibility claim. Target complete submission assets on November 3 and submission before **November 4, 9 PM America/New_York**.
 
 No milestone is marked complete by this handoff. One builder is assumed available; a second is not confirmed. The two workstreams below organize dependencies rather than authorize delegation.
 
 ## Current priority — P040, October 27
+
+**October 27 generated-lesson correction:** Retain M1–M5 implementation as reusable progress, but do not equate graph completion or parameterized lesson generation with the flagship's composed visual explanation. Within the existing October 28–30 work, first define the bounded presentation contract and show one actual Spark-authored composition; then demonstrate a second objective/evidence-driven composition and the browser/numerical/publication checks in PRD R11. Use the existing source, graph, worker and renderer infrastructure. Record missing capability honestly rather than reopening completed scaffold work. Existing Day 3 generation checks still apply, and the composition criterion is additional: a fixed template fallback does not satisfy it. Preserve October 31 freeze, existing one-family scope and spend caps; if incomplete, record a missed flagship gate rather than claim equivalent delivery.
 
 The user selected simulated-data polish before personal-course testing. Follow [Learning Graph Milestones](LEARNING_GRAPH_MILESTONES.md); it contains commit-sized tasks, dependencies, acceptance evidence and a scenario matrix. This sequence supersedes the original real-source-first targets and PM012/P037's actual-course-first dependency below. Preserve their product/release requirements and the fixed freeze/deadline.
 
@@ -136,3 +170,10 @@ Implementation and per-milestone audits for M1–M5 are recorded in [Learning Gr
 ## P050–P051 — Selected Blackboard validation and next sources
 
 Implement deterministic course discovery, an explicit course picker, resumable supported text collection and versioned publication before model-directed browser recovery. Reuse the signed-in context, keep discovery free of inference, preserve the existing Meta cap and review each milestone. Fresh-session discovery and one bounded actual-course text probe passed; complete selected-course ingestion and the teaching loop still need verification. Unsupported files/images/embedded tools remain labeled. Next validate Gradescope (primary assignments), then Piazza, with independent private sign-in and read-only source checks. This does not move the freeze, waive M6/held-out gates or add a lesson family.
+
+
+## October 30 — PM086 completed source milestones
+
+User-authorized broad companion implementation was split into owned memory/evidence, accessible goals/map UI, native action policy/controller, Muse selection/composition/personalized generation, and integrated verification/main merge. Those source milestones are committed on `codex/personal-companion` and merged to public `main` (`04639b3`), preserving the parallel release branch through `24ec4b5`. See public docs/PERSONAL_COMPANION.md for the accepted support boundary.
+
+Clean-install feature CI 41105422019 passed 1,497 offline tests, 133 browser journeys, 21 desktop checks, 28 isolated credential-browser tests, build and runtime tracing. Main CI is recorded separately after completion. Preserve the October 31 feature freeze: remaining release work is coordinated deployment, physical native Accessibility checks and signed/notarized 0.4.0 distribution, followed by real usability/demo evaluation. New moonshot research remains a proposal unless separately adopted. No widening to autonomous desktop work or new checked domains is implied.

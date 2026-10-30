@@ -1,3 +1,4 @@
+import { lessonReviewEnabled, LESSON_REVIEW_VERSION } from './lesson-review';
 import { createHash, randomUUID } from 'node:crypto';
 import { FieldPath, type DocumentReference, type Transaction } from 'firebase-admin/firestore';
 import type { AgentRun, WorkspaceAction, WorkspaceState } from '../domain/types';
@@ -23,7 +24,7 @@ export type AdaptationJob = {
 export type AdaptationSummary = Pick<AdaptationJob, 'id' | 'attemptId' | 'lessonId' | 'status' | 'createdAt' | 'updatedAt' | 'notice' | 'selectedLessonId'>;
 const hash = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const accountHash = (uid: string) => createHash('sha256').update(uid).digest('hex');
-const VERSION = () => `${ENGINE_VERSION}:${META_MODEL}:${MODEL_VERSION}`;
+const VERSION = () => `${ENGINE_VERSION}:${META_MODEL}:${MODEL_VERSION}${lessonReviewEnabled() ? `:${LESSON_REVIEW_VERSION}` : ''}`;
 const LEASE_MS = 120_000, MAX_ATTEMPTS = 3;
 function rootFor(account: VerifiedAccount) { assertVerifiedAccount(account); return getServerFirestore().collection('somaAccounts').doc(accountHash(account.uid)); }
 function sourcesFingerprint(state: WorkspaceState, courseId: string) {

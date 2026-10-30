@@ -1,4 +1,8 @@
+**PM073 — Return and apply:** As someone returning to a saved checked exploration, I can optionally try a different problem before seeing its solution, retain my original answer and help history, and open a visual explanation based on that answer. Acceptance: reference availability is explicit; hint/reveal cannot become an unassisted answer; fresh attempts remain separate; the original remains unchanged; history order is stable after reload. No new navigation or mandatory assessment.
+
 # Soma personas and user stories
+
+**Current release framing — PM049–PM050 (October 29):** Soma is a desktop visual learning companion: invoke it over your existing work, capture the current display, review the snapshot, and explore a Muse-generated visual explanation beside the source. Intro AI is the initial demonstration. The web app remains the instant judge entry. [Current PRD](PRD.md) and [Desktop companion](DESKTOP_COMPANION.md) supersede historical student-hub launch positioning below.
 
 **Implementation handoff, October 26, 2026.** The audience is students already using AI who still spend time finding current material, deciding what to study, and preparing practice. Soma connects course content with deadlines, available time, relevant commitments, and learning evidence so a useful session is ready and stays current. Interactive lessons remain worth exploring and revisiting in their own right. These personas are hypotheses grounded in Jeremy’s workflow and earlier secondary research; they are not completed customer interviews.
 

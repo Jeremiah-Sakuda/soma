@@ -19,3 +19,9 @@ it('retains interrupted visual reservation and denies concurrency across profile
  process.env.META_APP_SPEND_CAP_USD='5';const next=await reserveInference('two','exploration');await settleInference(next,.02,true);
  const db=new DatabaseSync(process.env.SOMA_BUDGET_DB_PATH!);expect(db.prepare('SELECT SUM(COALESCE(charged,reserved)) total FROM reservations').get()?.total).toBeCloseTo(.371);db.close();
 });
+it('Gemini playback uses the existing spend cap and preserves reservations without requiring a Meta key',async()=>{
+ setup('.055');process.env.SOMA_GEMINI_TTS='true';delete process.env.MODEL_API_KEY;
+ const id=await reserveInference('same','tts');await settleInference(id,.03,true);
+ await expect(reserveInference('another','tts')).rejects.toMatchObject({reason:'global'});
+ process.env.SOMA_GEMINI_TTS='false';await expect(reserveInference('same','tts')).rejects.toMatchObject({reason:'configured'});
+});

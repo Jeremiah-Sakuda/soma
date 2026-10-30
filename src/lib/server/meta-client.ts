@@ -4,13 +4,15 @@ import { z } from 'zod';
 // and https://dev.meta.ai/docs/tool-calling. Application tools execute elsewhere.
 export const META_ENDPOINT = 'https://api.meta.ai/v1/responses';
 export const META_MODEL = 'muse-spark-1.3';
+export const META_REVIEW_MODEL = 'muse-wonder-1.0';
+export type MetaModel = typeof META_MODEL | typeof META_REVIEW_MODEL;
 export const META_MAX_REQUEST_BYTES = 24_000;
 export const META_MAX_RESPONSE_BYTES = 131_072;
 export const META_MAX_OUTPUT_TOKENS = 2048;
 export type MetaUsage = { input_tokens: number; output_tokens: number };
 export type MetaToolCall = { type: 'function_call'; name: string; arguments: string; call_id: string; parsedArguments: Record<string, unknown> };
 export type MetaStatus = 'completed' | 'incomplete' | 'failed' | 'cancelled' | 'in_progress' | 'queued';
-export type MetaResult = { status: MetaStatus; tools: MetaToolCall[]; usage: MetaUsage };
+export type MetaResult = { status: MetaStatus; tools: MetaToolCall[]; usage: MetaUsage; structured?: Record<string, unknown> };
 export type MetaErrorCode = 'configuration' | 'request_invalid' | 'request_limit' | 'timeout' | 'network' | 'http' | 'response_limit' | 'response_invalid' | 'usage_unavailable' | 'tool_invalid';
 export class MetaClientError extends Error {
   constructor(public readonly code: MetaErrorCode, public readonly usage: MetaUsage | null = null, public readonly requestSent = false) {
@@ -68,7 +70,21 @@ export function parseMetaResponse(raw: unknown, allowedTools: readonly string[],
   return { status: status.data, tools, usage };
 }
 
-export type MetaRequest = { instructions: string; input: readonly unknown[]; tools: readonly unknown[]; deadlineMs: number; signal?: AbortSignal };
+export function parseMetaStructuredResult(raw: unknown, result: MetaResult, profile: 'text' | 'vision' = 'text'): MetaResult {
+  if (result.status !== 'completed' || result.tools.length) return result;
+  try {
+    const messages = (raw as { output: unknown[] }).output.filter((item): item is Record<string, unknown> => plainObject(item) && item.type === 'message');
+    if (messages.length !== 1 || messages[0].role !== 'assistant' ||
+      (messages[0].status !== undefined && messages[0].status !== 'completed') ||
+      !Array.isArray(messages[0].content) || messages[0].content.length !== 1) throw new Error();
+    const content = messages[0].content[0];
+    if (!plainObject(content) || content.type !== 'output_text' || typeof content.text !== 'string' ||
+      content.text.length > (profile === 'vision' ? 24576 : 8000)) throw new Error();
+    return { ...result, structured: argumentsObject(content.text, profile === 'vision' ? 2000 : 500) };
+  } catch { throw new MetaClientError('response_invalid', result.usage, true); }
+}
+
+export type MetaRequest = { instructions: string; input: readonly unknown[]; tools: readonly unknown[]; deadlineMs: number; signal?: AbortSignal; model?: MetaModel; maxOutputTokens?: number; reasoningEffort?: 'minimal' | 'low'; structuredOutput?: { name: string; schema: Record<string, unknown> }; jsonFallback?: boolean };
 
 async function readBody(response: Response, signal: AbortSignal): Promise<unknown> {
   const declared = Number(response.headers.get('content-length'));
@@ -96,10 +112,12 @@ async function readBody(response: Response, signal: AbortSignal): Promise<unknow
 export async function requestMetaResponse(request: MetaRequest): Promise<MetaResult> {
   const key = process.env.MODEL_API_KEY;
   if (!key || (process.env.META_API_BASE_URL || 'https://api.meta.ai/v1') !== 'https://api.meta.ai/v1' || (process.env.META_MODEL_ID || META_MODEL) !== META_MODEL) throw new MetaClientError('configuration');
+  const model = request.model ?? META_MODEL;
+  if (model !== META_MODEL && model !== META_REVIEW_MODEL) throw new MetaClientError('configuration');
   let body: string; let allowedTools: string[];
   try {
     const input = inputSchema.parse(request.input);
-    const tools = z.array(toolDefinition).min(1).max(8).parse(request.tools);
+    const tools = z.array(toolDefinition).min(request.structuredOutput ? 0 : 1).max(8).parse(request.tools);
     const instructions = z.string().min(1).max(8000).parse(request.instructions);
     if (!Number.isFinite(request.deadlineMs) || request.deadlineMs <= 0) throw new Error();
     allowedTools = tools.map(tool => tool.name);
@@ -110,7 +128,15 @@ export async function requestMetaResponse(request: MetaRequest): Promise<MetaRes
       if ('type' in item && item.type === 'function_call_output') { if (!pending.delete(item.call_id)) throw new Error(); completed.add(item.call_id); }
     }
     if (pending.size) throw new Error();
-    body = JSON.stringify({ model: META_MODEL, instructions, input, tools, store: false, stream: false, background: false, parallel_tool_calls: false, reasoning: { effort: 'low' }, max_output_tokens: META_MAX_OUTPUT_TOKENS });
+    const effort = z.enum(['minimal','low']).parse(request.reasoningEffort ?? 'low');
+    const maxOutputTokens = z.number().int().min(1).max(META_MAX_OUTPUT_TOKENS).parse(request.maxOutputTokens ?? META_MAX_OUTPUT_TOKENS);
+    const format = request.structuredOutput === undefined ? undefined : z.strictObject({
+      name: z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/),
+      schema: z.record(z.string(), z.unknown()).refine(value => value.type === 'object'),
+    }).parse(request.structuredOutput);
+    body = JSON.stringify({ model, instructions, input, tools, store: false, stream: false, background: false, parallel_tool_calls: false, reasoning: { effort }, max_output_tokens: maxOutputTokens,
+      ...(format ? { text: { format: { type: 'json_schema', name: format.name, schema: format.schema, strict: true } } } : {}),
+    });
   } catch { throw new MetaClientError('request_invalid'); }
   if (Buffer.byteLength(body) > META_MAX_REQUEST_BYTES) throw new MetaClientError('request_limit');
   if (request.signal?.aborted) throw new MetaClientError('timeout');
@@ -123,7 +149,10 @@ export async function requestMetaResponse(request: MetaRequest): Promise<MetaRes
     const operation = async () => {
       const response = await fetch(META_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body, signal: controller.signal, cache: 'no-store', redirect: 'error' });
       const raw = await readBody(response, controller.signal);
-      return parseMetaResponse(raw, allowedTools, response.ok);
+      const result = parseMetaResponse(raw, allowedTools, response.ok);
+      if ((!request.structuredOutput && !request.jsonFallback) || result.status !== 'completed' || result.tools.length)
+        return result;
+      return parseMetaStructuredResult(raw, result);
     };
     return await Promise.race([operation(), interrupted]);
   } catch (error) {

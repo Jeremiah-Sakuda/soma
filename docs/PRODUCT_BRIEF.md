@@ -1,5 +1,7 @@
 # Soma product brief
 
+**Current release framing — PM049–PM050 (October 29):** Soma is a desktop visual learning companion: invoke it over your existing work, capture the current display, review the snapshot, and explore a Muse-generated visual explanation beside the source. Intro AI is the initial demonstration. The web app remains the instant judge entry. [Current PRD](PRD.md) and [Desktop companion](DESKTOP_COMPANION.md) supersede historical student-hub launch positioning below.
+
 ## Current positioning — October 29, 2026 (P084)
 
 Soma turns selected visible context into something you can explore. Bring a screenshot/window and a question; Muse interprets it, receives checked computation and composes a visual scene. Change the experiment, ask about an object, and save the result. The first checked family is small unweighted BFS; broader explanations are explicitly unverified computation. See [SOMA_V2_IMPLEMENTATION.md](SOMA_V2_IMPLEMENTATION.md). The earlier course-preparation story below remains background and potential reuse, not the primary entry.

@@ -35,9 +35,11 @@ export function inferenceEnabled() {
   return process.env.SOMA_LIVE_INFERENCE === 'true' && Boolean(process.env.MODEL_API_KEY) &&
     budgetLimit(Number(process.env.META_ALLOCATION_USD), Number(process.env.META_APP_SPEND_CAP_USD || '1')) >= JOB_RESERVATION_USD;
 }
-export function usageCost(input: number, output: number) {
+export function usageCost(input: number, output: number, model: 'muse-spark-1.3' | 'muse-wonder-1.0' = 'muse-spark-1.3') {
   if (![input, output].every(n => Number.isSafeInteger(n) && n >= 0)) throw new Error('Invalid provider usage.');
-  return (input * INPUT_USD_PER_MILLION + output * OUTPUT_USD_PER_MILLION) / 1_000_000;
+  // Meta Standard pricing verified October 27, 2026: Wonder $4 input/$20 output per million.
+  if (model !== 'muse-spark-1.3' && model !== 'muse-wonder-1.0') throw new Error('Unsupported billing model.');
+  return (input * (model === 'muse-wonder-1.0' ? 4 : INPUT_USD_PER_MILLION) + output * (model === 'muse-wonder-1.0' ? 20 : OUTPUT_USD_PER_MILLION)) / 1_000_000;
 }
 
 function database() {
@@ -49,12 +51,12 @@ function database() {
   return db;
 }
 
-export async function reserveInference(workspaceId: string, profile: 'lesson' | 'investigation' | 'exploration' | 'voice' = 'lesson'): Promise<string> {
-  if (!inferenceEnabled()) throw new InferenceBudgetError('configured');
+export async function reserveInference(workspaceId: string, profile: 'lesson' | 'investigation' | 'exploration' | 'voice' | 'tts' = 'lesson'): Promise<string> {
+  if (profile === 'tts' ? process.env.SOMA_GEMINI_TTS !== 'true' : !inferenceEnabled()) throw new InferenceBudgetError('configured');
   const limit = budgetLimit(Number(process.env.META_ALLOCATION_USD), Number(process.env.META_APP_SPEND_CAP_USD || '1'));
   const now = new Date(); const day = now.toISOString().slice(0, 10) + (profile === 'lesson' ? '' : `-${profile}`); const id = randomUUID();
-  const reservationUsd = profile === 'investigation' ? INVESTIGATION_RESERVATION_USD : profile === 'exploration' ? EXPLORATION_RESERVATION_USD : profile === 'voice' ? 0.01 : JOB_RESERVATION_USD;
-  const dailyLimit = profile === 'investigation' ? 3 : profile === 'exploration' || profile === 'voice' ? 12 : 1;
+  const reservationUsd = profile === 'investigation' ? INVESTIGATION_RESERVATION_USD : profile === 'exploration' ? EXPLORATION_RESERVATION_USD : profile === 'tts' ? 0.03 : profile === 'voice' ? 0.01 : JOB_RESERVATION_USD;
+  const dailyLimit = profile === 'tts' ? 60 : profile === 'investigation' ? 3 : profile === 'exploration' || profile === 'voice' ? 12 : 1;
   if (process.env.SOMA_PERSISTENCE === 'firestore') {
     const db = getServerFirestore();
     const global = db.doc('somaBudget/global'); const daily = db.doc(`somaBudgetDays/${workspaceId}-${day}`);

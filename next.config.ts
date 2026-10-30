@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next';
 const config: NextConfig = {
   poweredByHeader: false,
+  // Keep clean source exports and nested checkouts scoped to their own files.
+  turbopack: { root: process.cwd() },
+  outputFileTracingRoot: process.cwd(),
   serverExternalPackages: ['firebase-admin', '@google-cloud/firestore'],
   // Playwright reads its browser registry during import, including CDP-only use.
   // Vercel's traced function omitted this JSON while local node_modules masked it.
@@ -12,7 +15,7 @@ const config: NextConfig = {
       { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
       { key: 'X-Frame-Options', value: 'DENY' },
       { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-    ] }];
+    ] },{source:'/explore/:path*',headers:[{key:'Permissions-Policy',value:'camera=(), microphone=(self), geolocation=()'}]}];
   },
 };
 export default config;

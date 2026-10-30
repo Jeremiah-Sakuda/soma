@@ -1,4 +1,12 @@
+**PM073 fresh-application record:** Extend the existing owned exploration session with bounded application records (maximum 40): saved parent/source/model/version and state, original variation, actual timestamps, immutable answer/reason and hint/reveal facts. Public unanswered records omit the solver result/path. A completed/revealed record can create one separate checked visual with explicit practice-parent lineage; deleting only that visual retains the attempt, deleting the parent cascades derived work. The existing bounded Spark path may use an actual answered observation and must preserve its current checked graph. Changed controls cannot reuse an old expected result as current. Updated-first history and default active selection are consistent across reload. No graph database, scheduler, reminders or new quantitative family.
+
 # Soma technical plan
+
+## Desktop delivery — PM049–PM050
+
+Use a thin macOS-first Electron 45.1.0 companion in `desktop/`, packaged independently with @electron/packager 20.3.0. A local control bar hosts a sandboxed WebContentsView of the fixed production `/explore` origin. Node integration is disabled, context isolation enabled, arbitrary windows/downloads blocked and narrow IPC restricted by sender/frame/route. The capture preload delivers a bounded JPEG as a File to the existing upload input; this deliberately shares preview, cancellation, validation and model submission. It is a DOM adapter with an integration regression gate, not a new inference backend.
+
+Capture the display under the cursor only on explicit shortcut/control action. Hide the companion before requesting the thumbnail, refuse a mismatched display and discard pixels after transfer to the transient preview. Do not add image files, credentials or service-account material to the desktop bundle. Normal server endpoints retain ownership and spend enforcement. Electron's persisted session is local browser session state; do not distribute it. Signed/notarized distribution and native permission/fullscreen checks remain release work until independently verified. See [Desktop companion](DESKTOP_COMPANION.md).
 
 ## Current architecture extension — P084
 
@@ -103,6 +111,14 @@ Application validation must enforce:
 Record the accepted action and a concise source-based reason. Actual tool activity is inspectable; private internal reasoning is not a UI artifact. Malicious commands in source documents are data, not instructions to the agent.
 
 ## Lesson specification and numerical model
+
+**PM029 backend checkpoint:** The optional author/challenger orchestration is implemented; see [Agent Orchestration](AGENT_ORCHESTRATION.md). It reviews the current typed activity/diagnostic output, not an implemented generated visual-composition contract. Its corrected live-provider check remains blocked by the existing global allowance; no activation, browser approval or broader model-quality claim follows.
+
+**October 27 authoring correction — target contract, not implemented status.** Separate the checked scientific model from a generated declarative presentation/interaction specification. Extend the existing app and lesson service with a bounded vocabulary of scene groups, labels, model-bound readouts/visual properties, focused inspection views, comparisons, controls and instructional steps. Spark chooses their composition, sequence and emphasis from the source-supported objective and learner evidence. Do not encode two whole lesson screens and describe parameter selection as composed authoring. Candidate Anatomy components or verification techniques require actual license/dependency/compatibility review before reuse; no adoption is established here.
+
+Bindings reference approved model outputs and transformations; animation and quantities must share checked state. Reject unsupported fields, bindings, transitions, ranges and references. Generated specifications cannot contain executable JavaScript, arbitrary HTML, unrestricted CSS or arbitrary network/assets. Visual freedom comes from reviewed primitives and bounded composition, not from allowing untrusted code in a student session. This restriction does not select a particular implementation library.
+
+Preparation uses durable existing jobs: objective → approved model → generated composition → numerical/specification checks → representative browser checks → ready version. Browser checks cover representative steps, controls, text bounds/visibility, focus, help/reveal order, reduced motion and saved resume; they cannot establish scientific or instructional correctness. Use existing reservation/repair limits and record time and fallback rates. Freeze the exact published version for an attempt; retain source/model/presentation versions. Parameterized artifacts remain labeled fallback and do not pass the generated-composition criterion.
 
 P0 generation returns structured data for approved components: objective, cited source passages and versions, selected model/version, assumptions, parameters with units and ranges, controls and what each reveals, labels, concise instructional steps, prediction/checkpoint, answer criteria, and fresh follow-up.
 

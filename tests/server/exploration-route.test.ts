@@ -12,7 +12,7 @@ import {GET,POST,PATCH,DELETE} from '../../src/app/api/explore/route';
 let directory:string,cookie:string;
 function request(method:string,body?:unknown,extra:{cookie?:string;origin?:string;url?:string}={}){return new Request(extra.url??'http://localhost:3000/api/explore',{method,headers:{'content-type':'application/json',origin:extra.origin??'http://localhost:3000',cookie:extra.cookie??cookie},...(body===undefined?{}:{body:JSON.stringify(body)})});}
 function completed(name:string,args:unknown){return{status:'completed',tools:[{type:'function_call',name,arguments:JSON.stringify(args),call_id:`call_${randomUUID()}`,parsedArguments:args}],usage:{input_tokens:100,output_tokens:200}};}
-beforeEach(async()=>{directory=mkdtempSync(join(tmpdir(),'soma-explore-route-'));vi.stubEnv('SOMA_PERSISTENCE','local-synthetic');vi.stubEnv('SOMA_EXPLORATION_DB_PATH',join(directory,'explore.sqlite'));vi.stubEnv('SOMA_BUDGET_DB_PATH',join(directory,'budget.sqlite'));vi.stubEnv('SOMA_LIVE_INFERENCE','true');vi.stubEnv('MODEL_API_KEY','synthetic-key-never-used-for-network');vi.stubEnv('META_ALLOCATION_USD','150');vi.stubEnv('META_APP_SPEND_CAP_USD','5');vi.stubEnv('VERCEL','');cookie='';provider.request.mockReset();provider.request.mockImplementation(async input=>{if(input.tools.length===1){const spec=createExampleExploration();if(spec.mode!=='checked-bfs')throw new Error();return completed('inspect_source',{summary:'Original synthetic BFS graph',uncertainty:[],graph:spec.input});}const context=JSON.parse(input.input[0].content);const match=/Required spec id=([^ ]+) and version=(\d+)/.exec(input.instructions)!;const spec=createExampleExploration({observationId:context.source.observationId,version:context.source.version,region:null});spec.id=match[1];spec.version=Number(match[2]);return completed('compose_exploration',{spec});});const initial=await GET(request('GET'));expect(initial.status).toBe(200);cookie=initial.headers.get('set-cookie')!.split(';')[0];});
+beforeEach(async()=>{directory=mkdtempSync(join(tmpdir(),'soma-explore-route-'));vi.stubEnv('SOMA_PERSISTENCE','local-synthetic');vi.stubEnv('SOMA_EXPLORATION_DB_PATH',join(directory,'explore.sqlite'));vi.stubEnv('SOMA_BUDGET_DB_PATH',join(directory,'budget.sqlite'));vi.stubEnv('SOMA_LIVE_INFERENCE','true');vi.stubEnv('MODEL_API_KEY','synthetic-key-never-used-for-network');vi.stubEnv('META_ALLOCATION_USD','150');vi.stubEnv('META_APP_SPEND_CAP_USD','5');vi.stubEnv('VERCEL','');cookie='';provider.request.mockReset();provider.request.mockImplementation(async input=>{if(!input.instructions.includes('Required spec id=')){const spec=createExampleExploration();if(spec.mode!=='checked-bfs')throw new Error();return completed('inspect_source',{summary:'Original synthetic BFS graph',uncertainty:[],graph:spec.input});}const context=JSON.parse(input.input[0].content);const match=/Required spec id=([^ ]+) and version=(\d+)/.exec(input.instructions)!;const spec=createExampleExploration({observationId:context.source.observationId,version:context.source.version,region:null});spec.id=match[1];spec.version=Number(match[2]);return completed('compose_exploration',{spec});});const initial=await GET(request('GET'));expect(initial.status).toBe(200);cookie=initial.headers.get('set-cookie')!.split(';')[0];});
 afterEach(()=>{closeExplorationStore();vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});});
 describe('exploration HTTP ownership and complete route pipeline',()=>{
  it('establishes a private cookie and creates a labeled original example without provider spend',async()=>{const initial=await GET(request('GET'));expect(initial.headers.get('cache-control')).toBe('private, no-store');expect(cookie).toMatch(/^soma_explore=[a-f0-9]{64}$/);const response=await POST(request('POST',{action:'example'}));const data=await response.json();expect(response.status).toBe(200);expect(data.artifact.generation.mode).toBe('prepared-example');expect(data.artifact.generation.costUsd).toBe(0);expect(provider.request).not.toHaveBeenCalled();});
@@ -23,4 +23,173 @@ describe('exploration HTTP ownership and complete route pipeline',()=>{
  it('rejects replay of a completed request ID without repeating model calls',async()=>{const body={action:'generate',requestId:randomUUID(),question:'Explain BFS',source:{kind:'example',label:'Original',capturedAt:new Date().toISOString()}};expect((await POST(request('POST',body))).status).toBe(200);expect((await POST(request('POST',body))).status).toBe(409);expect(provider.request).toHaveBeenCalledTimes(2);});
  it('rejects a delayed generation when cancellation arrived first through the HTTP route',async()=>{const requestId=randomUUID();expect((await POST(request('POST',{action:'cancel',requestId}))).status).toBe(200);const response=await POST(request('POST',{action:'generate',requestId,question:'Explain BFS',source:{kind:'example',label:'Original',capturedAt:new Date().toISOString()}}));expect(response.status).toBe(409);expect((await response.json()).code).toBe('cancelled');expect(provider.request).not.toHaveBeenCalled();});
  it('resumes saved version one after version two and rejects malformed version selectors',async()=>{const {artifact}=await(await POST(request('POST',{action:'example'}))).json();await PATCH(request('PATCH',{action:'save',artifactId:artifact.id,version:1,state:artifact.state}));expect((await POST(request('POST',{action:'generate',requestId:randomUUID(),artifactId:artifact.id,baseVersion:1,question:'Explain the frontier'}))).status).toBe(200);const resumed=await GET(request('GET',undefined,{url:`http://localhost:3000/api/explore?artifactId=${artifact.id}&version=1`}));const result=await resumed.json();expect(result.active.version).toBe(1);expect(result.active.saved).toBe(true);expect(result.versions.map((item:{version:number})=>item.version)).toEqual([2,1]);expect((await GET(request('GET',undefined,{url:'http://localhost:3000/api/explore?version=1'}))).status).toBe(400);expect((await GET(request('GET',undefined,{url:`http://localhost:3000/api/explore?artifactId=${artifact.id}&version=-1`}))).status).toBe(400);});
+  it('keeps fresh answers hidden through HTTP and enforces ownership and immutable answer/reveal semantics', async () => {
+    const { artifact } = await (
+      await POST(request('POST', { action: 'example', weighted: true }))
+    ).json();
+    await PATCH(
+      request('PATCH', {
+        action: 'save',
+        artifactId: artifact.id,
+        version: 1,
+        state: artifact.state,
+      }),
+    );
+    const fresh = {
+      action: 'application',
+      id: randomUUID(),
+      artifactId: artifact.id,
+      version: 1,
+      operation: 'start',
+    };
+    const started = await POST(request('POST', fresh));
+    expect(started.status).toBe(200);
+    const initial = (await started.json()).application;
+    expect(initial).not.toHaveProperty('solution');
+    expect(initial).not.toHaveProperty('expected');
+    const resumed = await (
+      await GET(
+        request('GET', undefined, {
+          url: 'http://localhost:3000/api/explore?artifactId=' + artifact.id,
+        }),
+      )
+    ).json();
+    expect(resumed.applications[0]).not.toHaveProperty('solution');
+    const other = await GET(request('GET', undefined, { cookie: '' }));
+    const otherCookie = other.headers.get('set-cookie')!.split(';')[0];
+    expect((await POST(request('POST', fresh, { cookie: otherCookie }))).status).toBe(404);
+    expect((await POST(request('POST', { ...fresh, expected: 3 }))).status).toBe(400);
+    expect((await POST(request('POST', { ...fresh, operation: 'reveal' }))).status).toBe(200);
+    expect((await POST(request('POST', { ...fresh, operation: 'answer', value: 3 }))).status).toBe(
+      409,
+    );
+    expect(provider.request).not.toHaveBeenCalled();
+  });
+});
+
+it('streams an actual stage before provider completion, then only the validated owned result', async () => {
+  const original = provider.request.getMockImplementation()!;
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  provider.request.mockImplementationOnce(async (args) => {
+    await gate;
+    return original(args);
+  });
+  const req = request('POST', {
+    action: 'generate',
+    requestId: randomUUID(),
+    question: 'Explain the graph.',
+    source: {
+      kind: 'example',
+      label: 'Original synthetic example',
+      capturedAt: new Date().toISOString(),
+    },
+  });
+  req.headers.set('Accept', 'application/x-ndjson');
+  const response = await POST(req);
+  expect(response.headers.get('content-type')).toContain('application/x-ndjson');
+  expect(response.headers.get('cache-control')).toBe('private, no-store');
+  const reader = response.body!.getReader();
+  const first = new TextDecoder().decode((await reader.read()).value);
+  expect(JSON.parse(first)).toMatchObject({
+    type: 'progress',
+    progress: { phase: 'reading-source' },
+  });
+  await vi.waitFor(() => expect(provider.request).toHaveBeenCalledTimes(1));
+  release();
+  let rest = '';
+  for (;;) {
+    const next = await reader.read();
+    if (next.done) break;
+    rest += new TextDecoder().decode(next.value);
+  }
+  const events = rest
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line));
+  expect(events.filter((e) => e.type === 'progress').map((e) => e.progress.phase)).toEqual([
+    'building-visual',
+    'checking-visual',
+    'saving-visual',
+  ]);
+  expect(events.at(-1)).toMatchObject({
+    type: 'result',
+    result: { artifact: { validation: { assurance: 'checked-bfs' } } },
+  });
+  const artifact = events.at(-1).result.artifact;
+  expect(
+    (
+      await (
+        await GET(
+          request('GET', undefined, {
+            url: `http://localhost:3000/api/explore?artifactId=${artifact.id}`,
+          }),
+        )
+      ).json()
+    ).active.spec,
+  ).toEqual(artifact.spec);
+  expect(artifact.generation.timings).toHaveLength(2);
+});
+
+it('stream negotiation cannot bypass origin checks and preserves generation failure codes', async () => {
+  const foreign = request(
+    'POST',
+    { action: 'generate', requestId: randomUUID(), question: 'Explain.' },
+    { origin: 'https://foreign.invalid' },
+  );
+  foreign.headers.set('Accept', 'application/x-ndjson');
+  expect((await POST(foreign)).status).toBe(403);
+  expect(provider.request).not.toHaveBeenCalled();
+  const bad = request('POST', { action: 'generate', requestId: randomUUID() });
+  bad.headers.set('Accept', 'application/x-ndjson');
+  const res = await POST(bad);
+  const events = (await res.text())
+    .trim()
+    .split('\n')
+    .map((v) => JSON.parse(v));
+  expect(events).toEqual([{ type: 'error', status: 400, code: 'invalid_request' }]);
+  expect(provider.request).not.toHaveBeenCalled();
+});
+
+it('closing a streamed request cancels the active lease and cannot publish a late provider result', async () => {
+  const original = provider.request.getMockImplementation()!;
+  let release!: () => void;
+  let observedSignal: AbortSignal | undefined;
+  const gate = new Promise<void>((r) => {
+    release = r;
+  });
+  provider.request.mockImplementationOnce(async (args) => {
+    observedSignal = args.signal;
+    await gate;
+    return original(args);
+  });
+  const req = request('POST', {
+    action: 'generate',
+    requestId: randomUUID(),
+    question: 'Explain the graph.',
+    source: {
+      kind: 'example',
+      label: 'Original synthetic example',
+      capturedAt: new Date().toISOString(),
+    },
+  });
+  req.headers.set('Accept', 'application/x-ndjson');
+  const res = await POST(req),
+    reader = res.body!.getReader();
+  await reader.read();
+  await vi.waitFor(() => expect(observedSignal).toBeDefined());
+  await reader.cancel();
+  expect(observedSignal?.aborted).toBe(true);
+  release();
+  const { resolveExplorationPrincipal, explorationStore } =
+    await import('../../src/lib/server/exploration-store');
+  const { principal } = await resolveExplorationPrincipal(request('GET'));
+  await vi.waitFor(async () => {
+    const session = await explorationStore.read(principal);
+    expect(session?.activeRequestId).toBe(null);
+    expect(session?.runs.at(-1)?.status).toBe('cancelled');
+    expect(session?.artifacts).toHaveLength(0);
+  });
 });

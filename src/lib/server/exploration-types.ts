@@ -1,3 +1,4 @@
+import type { CompanionMemory } from '../domain/companion-memory';
 import type { SourceAnchor, SourceChange, ImageRegion } from '../domain/source-grounding';
 import type { PointFocus } from '../domain/point-context';
 import type { ExplorationApplication } from '../domain/exploration-application';
@@ -116,6 +117,7 @@ export type ExplorationSession = {
   artifacts: ExplorationArtifact[];
   runs: ExplorationRun[];
   activeRequestId: string | null;
+  memory?: CompanionMemory;
   predictions?: ExplorationPrediction[];
   applications?: ExplorationApplication[];
   retiredRuns?: {

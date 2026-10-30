@@ -120,3 +120,31 @@ test('keyboard and reduced-motion controls work at desktop, companion and phone 
   await page.getByRole('button', { name: 'Save exploration', exact: true }).click();
   expect((await (await page.request.get('/api/explore')).json()).active.state.spatial.azimuth).toBe(55);
 });
+
+
+test('step transitions settle, handle interruption and honor reduced motion without idle animation', async ({ page }) => {
+  await openSpatial(page); await rendered(page);
+  const canvas = page.locator('.spatial-canvas canvas');
+  // Observe the whole transition; software WebGL may finish before the click
+  // round-trip returns, so sampling only its transient state is unreliable.
+  await canvas.evaluate((element) => {
+    const seen: string[] = [];
+    (window as unknown as { spatialTransitions: string[] }).spatialTransitions = seen;
+    new MutationObserver((records) => {
+      for (const record of records) if (record.attributeName === 'data-transitioning') seen.push(record.oldValue ?? '');
+      seen.push(element.getAttribute('data-transitioning') ?? '');
+    }).observe(element, { attributes: true, attributeOldValue: true, attributeFilter: ['data-transitioning'] });
+  });
+  await page.getByRole('button', { name: 'Next explanation', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { spatialTransitions: string[] }).spatialTransitions)).toContain('true');
+  await page.getByRole('button', { name: 'Next explanation', exact: true }).click();
+  await expect(canvas).toHaveAttribute('data-transitioning', 'false');
+  await expect(page.getByText('Explanation 3 of 3', { exact: true })).toBeVisible();
+  const settled = await canvas.screenshot();
+  expect(await canvas.screenshot()).toEqual(settled);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.getByRole('button', { name: 'Previous explanation', exact: true }).click();
+  await expect(canvas).toHaveAttribute('data-transitioning', 'false');
+  await page.getByRole('button', { name: '2D view', exact: true }).click();
+  await expect(page.locator('[data-spatial-object="signal"]')).toHaveAttribute('data-position', /"x":0,/);
+});

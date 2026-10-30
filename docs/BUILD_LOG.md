@@ -2638,3 +2638,19 @@ Deviations: evaluation only; no product, deployment, permission, spending or rel
 3. Prioritized a working demo, concrete user problem and credible benefit explanation; brief informal feedback can help if time permits. No new tests, implementation or submission action.
 
 Deviation: clarification of assessment emphasis only; no product-scope change. Prior build-log content and other assessments were not consulted.
+
+
+## PM101 — Native Mac computer-control acceptance
+
+1. Used native computer control in installed Chrome on the Mac, with a guest window and isolated local synthetic database. Firefox exposed stale screenshots, so no Firefox pass. Inspected revised rendering and exercised pointer orbit, perspective/side presets, part selection, isolation, keyboard sliders and 2D/3D switching.
+2. Saved explanation2, Processor selection, separation0.55, cutaway0.2 and the 3D view; navigated away/reopened and verified them visibly. An earlier isolated save/reopen also passed. Left an unsaved assembled-perspective reset visible for review, with tested state still saved in the library. Server localhost:41898 remains local, inference disabled.
+3. The user rejected the initial primitive appearance during this acceptance pass (PM102) and chose educational cutaways (PM103). Native review then caught tiny isolation framing; corrected and rechecked on the final production build. This is actual Mac UI evidence, not a claim about all physical GPUs/browsers. No merge/push/deployment/publication.
+
+
+## PM102 / PM103 — Spatial visual quality revision
+
+1. Replaced the primitive-only appearance with five optional application-owned educational part styles, beveled materials/shadows, annotation leaders, quieter stage, intentional assembly separation and closer isolated-part framing. Preserved legacy primitives, stable IDs, sources and existing assurance. Styling is illustrative, not recovered geometry. No external asset generation, executable model output or new checked family.
+2. Added bounded360ms pose transitions with moving connections, reduced-motion final states and resource cleanup. Added unapproved-style rejection, source-preserving style continuity and separation/marker alignment coverage. Full final checks:1570offlinepassed/94opt-in-skipped;147productionChromium;typecheck/build/isolatedtrace1224files/2links/0privateconfig passed. Initial new transition check missed the transient state; observing changes before the click corrected the harness, then all147passed. Native control verification in PM101; responsive screenshots visually inspected.
+3. Fresh live test was blocked before inference by the Firestore daily guest-creation cap; no cost, bypass or reset. Ledger unchanged$13.848943/$15. New-style live authoring remains unverified; earlier live-output replay is rendering evidence only. Final252-file manifest2c7eb5049a9b574e24e2b30ffcd1b8d23be7f7c2511e38db1a1275b0e70b1c94. Report:docs/SPATIAL_EXPLORATION.md; private receipts:.local/pm101.
+
+Status: implementation and local checks complete; user visual acceptance and any feature merge remain pending. Existing fixed-composer/small-screen scrolling and broad asset-generation limits remain. Concurrent PM100/PM104 documents are preserved outside this commit.

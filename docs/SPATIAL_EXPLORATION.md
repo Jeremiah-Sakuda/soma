@@ -124,3 +124,73 @@ source copy on port 41898. No other chat's development server was stopped.
 The latest remote-main check still resolved to `dc11105`. Subsequent main changes
 will require an integration check before merge. No feature merge, deployment,
 push, publication, clean hosted CI claim or physical GPU acceptance is implied.
+
+
+## PM101–PM103 — Mac review and educational cutaway revision
+
+The user requested native Mac computer-control testing, rejected the initial
+primitive appearance, and selected polished educational cutaways. PM098's
+functional results did not establish visual acceptance. This revision remains
+on the spatial branch, awaiting the user's judgment of the revised appearance.
+
+Implemented:
+
+- Five optional, strict application-owned part styles: housing, chip, sensor,
+  indicator and signal marker. The existing primitives remain compatible.
+  Muse may select a style only where its meaning fits the source; component
+  finishes and geometry remain explicitly illustrative. No downloaded meshes,
+  generated code, texture service or new checked scientific model.
+- Beveled geometry, restrained materials, contact shadows, a quieter stage,
+  readable labels with leader lines, Lucide camera icons and a neutral inspector.
+  Whole-scene framing is closer; explicit isolation frames the selected assembly.
+- Styled parts separate along an assembly axis; the moving marker follows the
+  relevant part's offset. Pose transitions run for 360 ms and then stop. Reduced
+  motion applies the final pose immediately. Connections follow moving endpoints.
+  Animation, shadow maps, geometry and materials are disposed on unmount.
+- Contextual follow-ups preserve an existing part's render style before factual
+  review, just as they preserve its geometry. Legacy parts do not acquire a new
+  style silently. Added validation and continuity regressions.
+
+Native computer-control evidence (installed Chrome guest window on this Mac):
+
+- Opened the actual local production build and inspected the recognizable parts,
+  shadows, labels and isolated processor. Used pointer drag to orbit, side and
+  perspective presets, native selection and isolation controls.
+- Used keyboard arrow/Home controls to set separation to 0.55 and cutaway to 0.2;
+  advanced to explanation 2, switched 2D→3D, saved, navigated away and reopened.
+  The UI visibly restored processor selection, explanation 2, both slider values
+  and the 3D representation. Earlier isolation save/reopen also passed.
+- Native review exposed a tiny isolated component under whole-assembly framing;
+  corrected and visually verified the closer framing. Reset to the assembled
+  perspective for review afterward; that reset is intentionally unsaved, leaving
+  the tested saved state available in the library.
+- Firefox's automation surface returned stale screenshots, so no Firefox pass is
+  claimed. One Chrome tab became blank during a server restart; a fresh local
+  tab loaded correctly. No hardware-driver benchmark or universal browser claim.
+
+Final verification:
+
+- **1,570 offline tests passed / 94 opt-in skipped**; typecheck passed.
+- **147 production Chromium tests passed**, including legacy actual-Muse output
+  replay, WebGL failure/recovery/disposal, account isolation, pointer interaction,
+  persistence, keyboard, 1440/620/375 widths and motion. First browser run passed
+  the existing 146 cases but the new transition assertion missed its transient
+  state; recording attribute transitions before clicking fixed the observation,
+  and the complete suite passed on the final build. The failure receipt remains.
+- Optimized build and isolated browser trace passed: 1,224 files, two links,
+  zero private configuration mappings. Runtime manifest: 252 files,
+  `2c7eb5049a9b574e24e2b30ffcd1b8d23be7f7c2511e38db1a1275b0e70b1c94`,
+  release `soma-pm103-spatial-2026-10-30`.
+- A fresh live Muse/Firestore attempt was blocked at initialization by the daily
+  guest-session creation cap, **before any inference call or charge**. Ledger
+  stayed $13.848943/$15. No cap reset/raise or bypass. The new optional styles are
+  exercised through schema/service/native/rendering tests; fresh live authoring
+  of those styles is **not verified**. PM098 live receipts apply to the earlier
+  contract, and recorded replay is not new inference.
+
+Logs and screenshots are private under `.local/pm101/`. The local-only synthetic
+server is left at `http://localhost:41898/explore` for review, with live inference
+disabled. The native Chrome test tab is left open. No feature merge, push,
+deployment or publication. The broader UI and fixed mobile composer were not
+redesigned here; existing small-screen scrolling limitations remain. This small
+part library is not a universal realistic-asset generator.

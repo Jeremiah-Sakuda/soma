@@ -17,6 +17,8 @@ export const spatialPanelSchema = z.strictObject({
     label: z.string().trim().min(1).max(100),
     description: z.string().trim().min(1).max(240),
     shape: z.enum(['sphere', 'box', 'cylinder', 'torus']),
+    // Application-owned illustrative meshes; never external assets or measured geometry.
+    renderStyle: z.enum(['housing', 'chip', 'sensor', 'indicator', 'marker']).nullable().optional(),
     color: z.enum(['clay', 'sage', 'blue', 'gold', 'violet']),
     position: spatialVectorSchema,
     size: z.strictObject({ x: size, y: size, z: size }),

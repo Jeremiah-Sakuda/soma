@@ -6,15 +6,15 @@ export function createSpatialExample(source: SourceObservationRef = { observatio
   return {
     schemaVersion: 'exploration-v1', id: 'spatial-example', version: 1, mode: 'explanation',
     title: 'Open up a signal relay', objective: 'Take the enclosure apart and follow one signal through three stages.',
-    sources: [source], assumptions: ['Original synthetic schematic. Geometry and signal movement are illustrative, not a physical simulation.'], uncertainty: [], unsupportedClaims: ['No electrical measurements or timing are modeled.'],
+    sources: [source], assumptions: ['Original synthetic schematic. Geometry, component styling and signal movement are illustrative, not a physical simulation or an observed device design.'], uncertainty: [], unsupportedClaims: ['No electrical measurements or timing are modeled.'],
     scene: { layout: 'diagram-sidebar', panels: [{
       id: 'relay-world', kind: 'spatial', title: 'Inside the relay', placement: { column: 1, row: 1, columnSpan: 2 },
       objects: [
-        { id: 'enclosure', label: 'Enclosure', description: 'A protective shell containing the three stages. Slice or separate it to inspect the interior.', shape: 'box', color: 'blue', position: { x: 0, y: 0, z: 0 }, size: { x: 4, y: 2.1, z: 2.4 }, parentId: null },
-        { id: 'sensor', label: 'Input sensor', description: 'The signal enters here.', shape: 'torus', color: 'sage', position: { x: -1.3, y: 0, z: 0 }, size: { x: 0.8, y: 0.8, z: 0.4 }, parentId: 'enclosure' },
-        { id: 'processor', label: 'Processor', description: 'The incoming signal is processed before reaching the indicator.', shape: 'box', color: 'clay', position: { x: 0, y: 0, z: 0 }, size: { x: 0.7, y: 0.7, z: 0.7 }, parentId: 'enclosure' },
-        { id: 'indicator', label: 'Output indicator', description: 'The indicator receives the processed signal.', shape: 'sphere', color: 'gold', position: { x: 1.3, y: 0, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, parentId: 'enclosure' },
-        { id: 'signal', label: 'Signal marker', description: 'This bead marks the explanation stage. It is not a physical particle or a measured wave.', shape: 'sphere', color: 'violet', position: { x: -1.3, y: 0.65, z: 0 }, size: { x: 0.22, y: 0.22, z: 0.22 }, parentId: 'enclosure' },
+        { id: 'enclosure', label: 'Enclosure', description: 'A protective shell containing the three stages. Slice or separate it to inspect the interior.', shape: 'box', renderStyle: 'housing', color: 'blue', position: { x: 0, y: 0, z: 0 }, size: { x: 4, y: 2.1, z: 2.4 }, parentId: null },
+        { id: 'sensor', label: 'Input sensor', description: 'The signal enters here.', shape: 'torus', renderStyle: 'sensor', color: 'sage', position: { x: -1.3, y: 0, z: 0 }, size: { x: 0.8, y: 0.8, z: 0.4 }, parentId: 'enclosure' },
+        { id: 'processor', label: 'Processor', description: 'The incoming signal is processed before reaching the indicator.', shape: 'box', renderStyle: 'chip', color: 'clay', position: { x: 0, y: 0, z: 0 }, size: { x: 0.7, y: 0.7, z: 0.7 }, parentId: 'enclosure' },
+        { id: 'indicator', label: 'Output indicator', description: 'The indicator receives the processed signal.', shape: 'sphere', renderStyle: 'indicator', color: 'gold', position: { x: 1.3, y: 0, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, parentId: 'enclosure' },
+        { id: 'signal', label: 'Signal marker', description: 'This bead marks the explanation stage. It is not a physical particle or a measured wave.', shape: 'sphere', renderStyle: 'marker', color: 'violet', position: { x: -1.3, y: 0.65, z: 0 }, size: { x: 0.22, y: 0.22, z: 0.22 }, parentId: 'enclosure' },
       ],
       connections: [
         { id: 'input-link', from: 'sensor', to: 'processor', label: 'Input signal', directed: true },

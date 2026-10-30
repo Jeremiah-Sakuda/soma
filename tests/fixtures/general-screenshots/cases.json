@@ -1,0 +1,108 @@
+[
+  {
+    "id": "public-closures",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Closures",
+    "anchor": "function makeFunc()",
+    "facts": [
+      "outer scope",
+      "inner function",
+      "closure"
+    ],
+    "expect": "explanation",
+    "imageSha256": "e2ab9ed937c3c780f8a28442db98f9da36c983731cdfc42aa5fc455a8524e0c0"
+  },
+  {
+    "id": "public-gradient",
+    "url": "https://developers.google.com/machine-learning/crash-course/linear-regression/gradient-descent",
+    "anchor": "Linear regression: Gradient descent",
+    "facts": [
+      "gradient descent",
+      "weights",
+      "loss"
+    ],
+    "expect": "explanation",
+    "imageSha256": "5edd9e5008e5b74ca229f08e13aa98466bc7a60da4d43ac102ae843162373507"
+  },
+  {
+    "id": "public-biology",
+    "url": "https://openstax.org/books/biology-2e/pages/8-2-the-light-dependent-reactions-of-photosynthesis",
+    "anchor": "What Is Light Energy?",
+    "facts": [
+      "wavelength",
+      "light energy",
+      "photosynthesis"
+    ],
+    "expect": "explanation",
+    "imageSha256": "29aea308daf9ae08179c655616a8cf4bbfef2d26afe8ddceda8fbefff1b648db"
+  },
+  {
+    "id": "code-one",
+    "facts": [
+      "7",
+      "2",
+      "9",
+      "11",
+      "closure"
+    ],
+    "expect": "explanation",
+    "imageSha256": "681a06a8e81c1e5ce9f2efb0cbd990f930e58c2fd6339b9a428fe106c600bbb3"
+  },
+  {
+    "id": "code-two",
+    "facts": [
+      "11",
+      "3",
+      "14",
+      "17",
+      "closure"
+    ],
+    "expect": "explanation",
+    "imageSha256": "a3a7f4b2b8ecd5e48619d83f0afaa6d3838e51194614daf5cca13359a175aefc"
+  },
+  {
+    "id": "worksheet",
+    "facts": [
+      "sensor kits",
+      "14",
+      "35",
+      "160",
+      "330",
+      "B2*C2-D2"
+    ],
+    "expect": "explanation",
+    "imageSha256": "aa6fb64da6c5196e7063f0c67c52ef73c5d8f6f5c2ddbd5ada2f66abe9820ac6"
+  },
+  {
+    "id": "circuit",
+    "facts": [
+      "12",
+      "4",
+      "8",
+      "series",
+      "resistance",
+      "current"
+    ],
+    "expect": "explanation",
+    "imageSha256": "4630ed92ff22c7217083d09eabf65e490a1b9c384dfdd5d41b4e616c3d7b8705"
+  },
+  {
+    "id": "process",
+    "facts": [
+      "request",
+      "cache",
+      "database",
+      "hit",
+      "miss"
+    ],
+    "expect": "explanation",
+    "imageSha256": "7d1cc24af1842a82b154e47e8133fedcd33787cfae2c2ac05d1280cdf9c17b93"
+  },
+  {
+    "id": "cropped",
+    "facts": [
+      "missing context"
+    ],
+    "expect": "clarify",
+    "imageSha256": "d5e7d634de5405fabdc4a6ce98c326de311c4ce7860b5b015c2411ea5f7e6093"
+  }
+]

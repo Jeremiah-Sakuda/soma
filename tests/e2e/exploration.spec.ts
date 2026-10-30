@@ -322,3 +322,14 @@ test('bounded explanation panels render, highlight and remain usable by keyboard
  await expect(page.getByRole('table',{name:'Example values'})).toBeVisible();
  await page.screenshot({path:'.local/pm040/richer-phone.png',fullPage:true});
 });
+
+test('crowded generated process labels reflow without hiding their full meaning',async({page})=>{
+ await setup(page);const a=fixture(),base=a.spec;
+ const spec:ExplorationSpec={schemaVersion:base.schemaVersion,id:base.id,version:1,title:'A crowded original process',objective:'Read every processing stage.',sources:base.sources,assumptions:[],uncertainty:[],unsupportedClaims:[],mode:'explanation',scene:{layout:'stack',panels:[{id:'dense',kind:'diagram',title:'Six stages',placement:{column:1,row:1,columnSpan:2},objects:[...Array.from({length:6},(_,i)=>({id:`node${i}`,kind:'block' as const,label:`Stage ${i}: process the current value`,position:{x:.4+i*.01,y:.5}})),{id:'retry-edge',kind:'edge',from:'node0',to:'node0',directed:true,label:'retry'}]}]},steps:[{id:'inspect',caption:'Inspect the six stages.',narration:null,highlightIds:['node0'],execution:null,executionStep:null}],followups:[]};
+ const rich={...a,...checkExploration(spec),state:initialExplorationState(spec)};await page.route('**/api/explore',async route=>{if(route.request().method()==='POST'&&route.request().postDataJSON().action==='example')return route.fulfill({json:{artifact:rich}});return route.fallback();});
+ await page.setViewportSize({width:1280,height:900});await page.emulateMedia({reducedMotion:'reduce'});await page.getByRole('button',{name:'Try the original example',exact:true}).first().click();await expect(page.getByRole('heading',{name:'A crowded original process',exact:true})).toBeVisible();
+ for(const width of [1280,620,375]){await page.setViewportSize({width,height:900});await expect(page.locator('.exploration-diagram-label')).toHaveCount(6);await expect(page.locator('.exploration-panel-diagram .exploration-edge')).toHaveAttribute('d',/ C /);await expect(page.locator('.exploration-panel-diagram .exploration-edge')).not.toHaveAttribute('d',/NaN|Infinity/);
+  const boxes=await page.locator('.exploration-panel-diagram foreignObject').evaluateAll(elements=>elements.map(el=>el.getBoundingClientRect().toJSON()));for(const [i,a]of boxes.entries())for(const b of boxes.slice(i+1))expect(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top).toBe(true);
+  expect(await page.locator('.exploration-diagram-label').evaluateAll(els=>els.every(el=>el.scrollHeight<=el.clientHeight&&el.scrollWidth<=el.clientWidth))).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+});

@@ -6,6 +6,8 @@ Soma is a floating macOS visual learning companion. Capture a display, review th
 
 [Try the browser experience](https://soma-woad-beta.vercel.app/explore). Prepared original examples need no account or model call. Other captures and questions use live generation when enabled. The desktop shell uses the same hosted engine.
 
+General screenshot evidence: [cross-domain production tests](docs/GENERAL_SCREENSHOTS.md), including real documentation pages, changed code values, worksheets and circuits.
+
 ## What is implemented
 
 - Explicit display capture, preview, global shortcut, floating/pinned panel, hide/reopen, restricted native IPC.

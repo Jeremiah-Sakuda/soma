@@ -332,3 +332,10 @@
  .has-exploration .exploration-objective{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%)}
 }
 @media(max-width:760px){html:has(.has-exploration){scroll-padding-bottom:180px}.has-exploration :is(button,input,select,textarea,summary){scroll-margin-bottom:180px}}
+/* General screenshots can produce dense prose diagrams. Keep card labels legible
+   and separate overlapping authored positions without changing their meaning. */
+.exploration-diagram-label{font-size:14px;line-height:1.2}
+.exploration-diagram-note{font-size:14px;line-height:20px;color:var(--ink-2);overflow-wrap:anywhere}
+.exploration-node ellipse{fill:var(--surface);stroke:var(--control-border);stroke-width:2;transition:fill 240ms ease,stroke 240ms ease}
+.exploration-node.is-selected ellipse{stroke:var(--accent);stroke-width:3}
+.has-exploration .exploration-panel-diagram>.exploration-graph{height:auto;max-height:none;min-height:0}

@@ -154,3 +154,27 @@ describe('automatic follow-up preservation regression',()=>{
   await setup.service.save(principal(),revised.id,revised.version,revised.state);closeExplorationStore();expect((await setup.service.read(principal(),revised.id)).active!.executions).toEqual(revised.executions);expect((await setup.service.read(principal(),original.id,1)).active).toEqual(original);
  });
 });
+
+describe('general screenshot contract without prepared-example fallback',()=>{
+ it('keeps screenshot interpretation independent of example facts and binds non-graph composition to the owned source',async()=>{
+  // Scripted extraction checks the application boundary, not vision quality.
+  // Actual cross-domain image interpretation is evaluated separately with Spark.
+  const request=vi.fn(async(args:any)=>{
+   const raw=args.input[0].content,context=JSON.parse(Array.isArray(raw)?raw[0].text:raw);
+   expect(context.sourceText).toBeNull();expect(context.previous).toBeNull();
+   if(!args.instructions.includes('Required spec id=')){expect(raw[1]).toEqual({type:'input_image',image_url:'data:image/png;base64,ORIGINAL_TEST_IMAGE'});return result('inspect_source',{summary:'Sensor batch 43 uses multiplication followed by subtraction.',uncertainty:[],graph:null},1);}
+   expect(context.graph).toBeNull();expect(context.checkedExecution).toBeNull();
+   const compose=args.tools.find((t:any)=>t.name==='compose_exploration'),branches=compose.parameters.properties.spec.anyOf;
+   expect(branches.map((b:any)=>b.properties.mode.const)).toEqual(['explanation','clarify']);
+   const match=/Required spec id=([^ ]+) and version=(\d+)/.exec(args.instructions)!;
+   for(const branch of branches){expect(branch.properties.id.const).toBe(match[1]);expect(branch.properties.version.const).toBe(1);expect(branch.properties.sources).toMatchObject({minItems:1,maxItems:1,items:{properties:{observationId:{const:context.source.observationId},version:{const:1}}}});}
+   const spec={schemaVersion:'exploration-v1',id:match[1],version:1,title:'Sensor batch 43',objective:'Explain the visible worksheet.',sources:[{observationId:context.source.observationId,version:1,region:null}],assumptions:[],uncertainty:[],unsupportedClaims:[],mode:'explanation',scene:{layout:'stack',panels:[{id:'worksheet-flow',kind:'text',title:'Calculation',text:context.source.summary,placement:{column:1,row:1,columnSpan:2}}]},steps:[{id:'read-batch',caption:'Read the batch-specific calculation.',narration:null,highlightIds:['worksheet-flow'],execution:null,executionStep:null}],followups:[]};
+   return result('compose_exploration',{spec},2);
+  });
+  const {service}=harness(request as never);await service.initialize(principal());const a=(await service.generate(principal(),generate({question:'Explain this screenshot.',source:{kind:'screenshot',dataUrl:'data:image/png;base64,ORIGINAL_TEST_IMAGE',label:'Screenshot',capturedAt:new Date().toISOString()}}))).artifact;
+  expect(a.source.kind).toBe('screenshot');expect(a.validation.assurance).toBe('explanation-only');expect(a.executions).toBeNull();expect(a.spec.title).toBe('Sensor batch 43');expect(a.generation.mode).toBe('live');expect(JSON.stringify(request.mock.calls)).not.toContain('sa:s->a');expect(JSON.stringify(request.mock.calls[1])).not.toContain('ORIGINAL_TEST_IMAGE');
+ });
+ it('constrains checked mode and model bindings to the actual computed family',async()=>{
+  const base=script();const request=vi.fn(async(args:any)=>{if(args.instructions.includes('Required spec id=')){const compose=args.tools.find((t:any)=>t.name==='compose_exploration');const branch=compose.parameters.properties.spec.anyOf[0];expect(branch.properties.mode.const).toBe('checked-bfs');expect(branch.properties.modelId.const).toBe('bfs-unweighted');expect(branch.properties.modelVersion.const).toBe('bfs-unweighted-v1');}return base(args);});const {service}=harness(request as never);await service.initialize(principal());expect((await service.generate(principal(),generate())).artifact.validation.assurance).toBe('checked-bfs');
+ });
+});

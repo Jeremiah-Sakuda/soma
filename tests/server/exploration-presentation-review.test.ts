@@ -237,3 +237,37 @@ it('does not publish or retry indefinitely when the critic stays incomplete', as
     { code: 'review_incomplete', path: ['review'] },
   ]);
 });
+
+it('repairs an unusable review format once without losing its criticism or changing the candidate', async () => {
+  const review = vi.fn(async (_request: any) =>
+    review.mock.calls.length === 1
+      ? {
+          status: 'completed' as const,
+          tools: [],
+          structured: {
+            verdict: 'revise',
+            findings: '["The endpoint must be w2=2.25, not the minimum."]',
+          },
+          usage: { input_tokens: 100, output_tokens: 100 },
+        }
+      : result(
+          'review_exploration',
+          review.mock.calls.length === 2
+            ? {
+                verdict: 'revise',
+                findings: ['The endpoint must be w2=2.25, not the minimum.'],
+              }
+            : { verdict: 'approve', findings: [] },
+        ),
+  );
+  const h = harness(review);
+  await h.service.initialize(owner);
+  const a = (await h.service.generate(owner, generate())).artifact;
+  expect(review).toHaveBeenCalledTimes(3);
+  expect(h.request).toHaveBeenCalledTimes(3);
+  expect(a.generation.calls).toBe(6);
+  expect(review.mock.calls[1][0].input[0]).toEqual(review.mock.calls[0][0].input[0]);
+  expect(JSON.stringify(review.mock.calls[1][0].input.at(-1))).toContain('endpoint');
+  expect(a.generation.audit.some((e) => e.event === 'review-format-retried')).toBe(true);
+  expect(a.generation.audit.some((e) => e.event === 'review-rejected')).toBe(true);
+});

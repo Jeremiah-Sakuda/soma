@@ -41,11 +41,13 @@ export type ExplorationAudit = {
     | 'review-approved'
     | 'review-rejected'
     | 'review-incomplete-retried'
+    | 'review-format-retried'
     | 'source-detail-requested'
     | 'source-locations-omitted'
     | 'source-compared'
     | 'source-reused'
     | 'source-interpreted'
+    | 'source-repair-requested'
     | 'model-computed'
     | 'scene-validated'
     | 'repair-requested';

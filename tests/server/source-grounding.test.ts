@@ -63,6 +63,7 @@ function service({
   badChange = false,
   invalidRegion = false,
   structured = false,
+  invalidFirstRead = false,
 } = {}) {
   let inspections = 0;
   const seen: any[] = [];
@@ -81,7 +82,10 @@ function service({
       const s = createExampleExploration();
       return answer('inspect_source', {
         summary: 'Original synthetic graph; application-boundary test only.',
-        uncertainty: [],
+        uncertainty:
+          invalidFirstRead && inspections === 1
+            ? Array.from({ length: 7 }, () => 'Uncertain optional detail')
+            : [],
         graph: s.mode === 'checked-bfs' ? s.input : null,
         anchors: [
           anchor,
@@ -266,4 +270,16 @@ it('validates and persists structured scene data through the same source and num
   expect(h.seen[1].structuredOutput.schema).toBeTruthy();
   await h.service.save(owner, a.id, a.version, a.state);
   expect((await h.service.read(owner, a.id)).active?.spec).toEqual(a.spec);
+});
+
+it('re-reads a malformed interpretation once from the same frozen pixels without changing authority', async () => {
+  const h = service({ invalidFirstRead: true });
+  await h.service.initialize(owner);
+  const pixels = await image('red');
+  const a = (await h.service.generate(owner, input(pixels))).artifact;
+  expect(h.request).toHaveBeenCalledTimes(3);
+  expect(JSON.stringify(h.seen[0].input)).toContain(pixels);
+  expect(JSON.stringify(h.seen[1].input)).toContain(pixels);
+  expect(a.generation.audit.some((e) => e.event === 'source-repair-requested')).toBe(true);
+  expect(a.validation.assurance).toBe('checked-bfs');
 });

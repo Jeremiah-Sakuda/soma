@@ -288,7 +288,7 @@ describe('bounded exploration provider and persistence pipeline', () => {
       await expect(service.generate(principal(), generate())).rejects.toMatchObject({
         code: 'generation_invalid',
       });
-      expect(request).toHaveBeenCalledTimes(1);
+      expect(request).toHaveBeenCalledTimes(2);
       expect((await explorationStore.read(principal()))!.artifacts).toEqual([]);
     },
   );

@@ -37,12 +37,12 @@ func walk(_ e: AXUIElement, _ depth: Int) {
 }
 walk(window, 0)
 let title = string(window, kAXTitleAttribute)
-var geometry: [[String: Double]] = []
+var geometry: [[String: Any]] = []
 for element in elements {
     var point = CGPoint.zero, size = CGSize.zero
     if let raw = attr(element, kAXPositionAttribute), CFGetTypeID(raw) == AXValueGetTypeID() { _ = AXValueGetValue(unsafeBitCast(raw, to: AXValue.self), .cgPoint, &point) }
     if let raw = attr(element, kAXSizeAttribute), CFGetTypeID(raw) == AXValueGetTypeID() { _ = AXValueGetValue(unsafeBitCast(raw, to: AXValue.self), .cgSize, &size) }
-    geometry.append(["x":point.x,"y":point.y,"width":size.width,"height":size.height])
+    geometry.append(["x":point.x,"y":point.y,"width":size.width,"height":size.height,"valueDigest":SHA256.hash(data:Data(string(element,kAXValueAttribute).utf8)).map { String(format:"%02x",$0) }.joined()])
 }
 let canonical = try! JSONSerialization.data(withJSONObject: ["pid": Int(app.processIdentifier), "window": title, "controls": nodes, "geometry": geometry], options: [.sortedKeys])
 let fingerprint = SHA256.hash(data: canonical).map { String(format: "%02x", $0) }.joined()

@@ -8,7 +8,7 @@
     "start": "electron .",
     "test": "node --test test/*.test.cjs",
     "test:smoke": "node test/smoke.cjs",
-    "package": "electron-packager . Soma --platform=darwin --arch=arm64 --out=../.local/desktop-dist --overwrite --asar --app-bundle-id=app.soma.desktop --extend-info=Info.plist --ignore=^/test --ignore=^/README.md --extra-resource=node_modules/.cache/soma/hold-shortcut --ignore=^/node_modules/\\.cache",
+    "package": "electron-packager . Soma --platform=darwin --arch=arm64 --out=../.local/desktop-dist --overwrite --asar --app-bundle-id=app.soma.desktop --extend-info=Info.plist --ignore=^/test --ignore=^/README.md --extra-resource=node_modules/.cache/soma/hold-shortcut --extra-resource=node_modules/.cache/soma/computer-control --ignore=^/node_modules/\\.cache",
     "test:hosted": "node test/hosted.cjs",
     "release": "node release.cjs",
     "build:native": "node build-native.cjs",

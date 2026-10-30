@@ -44,6 +44,7 @@ import type { PointFocus } from '@/lib/domain/point-context';
 import { ExplorationVoice } from './exploration-voice';
 import { useExplorationCapture, type ExplorationCapture } from './exploration-capture';
 import { JournalMenu } from './journal-menu';
+import { ExplorationJournalLog } from './exploration-journal-log';
 import './exploration.css';
 import './exploration-journal.css';
 
@@ -1512,6 +1513,17 @@ export function ExplorationWorkspace() {
               />
             </section>
             <section className="journal-page journal-left journal-left-body" aria-label="Notes">
+              <ExplorationJournalLog
+                spec={artifact.spec}
+                state={state}
+                provenance={
+                  artifact.recording
+                    ? 'recorded'
+                    : artifact.generation.mode === 'prepared-example'
+                      ? 'prepared'
+                      : 'muse'
+                }
+              />
               <ExplorationPipeline
                 generation={artifact.generation}
                 checked={artifact.validation.assurance.startsWith('checked-')}

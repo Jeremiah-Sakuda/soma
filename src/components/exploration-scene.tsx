@@ -344,7 +344,9 @@ export function ExplorationScene({
   const heroDiagram =
     spec.mode === 'explanation' ? panels.find((panel) => panel.kind === 'diagram') : undefined;
   const graphs = panels.filter((panel) => panel.kind === 'graph');
-  const singleSearch = compact || spec.mode === 'checked-dijkstra';
+  // One inspected search at a time; the journal's search log carries the queue and steps.
+  const singleSearch =
+    compact || spec.mode === 'checked-dijkstra' || spec.mode === 'checked-bfs';
   const graphSummary = (which: 'primary' | 'comparison', computed: BfsExecution) => {
     const current = computed.steps[Math.min(state.step, computed.steps.length - 1)];
     return (

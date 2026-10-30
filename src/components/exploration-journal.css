@@ -402,3 +402,116 @@
 .exploration-app .journal-composer-hint {
   font-size: 12px;
 }
+
+/* ── Left page: search log, explanation note, key ────────────────────── */
+.exploration-app .journal-log {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.exploration-app .journal-log-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 19px;
+  margin: 0 0 8px;
+}
+.exploration-app .journal-log-title .meta {
+  font-family: var(--font-geist);
+  font-size: 13px;
+}
+.exploration-app .journal-log-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-geist-mono);
+  font-size: 16px;
+}
+.exploration-app .journal-log-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 32px;
+  padding: 0 8px;
+  margin: 0 -8px;
+  border-radius: 4px;
+}
+.exploration-app .journal-log-row.is-now {
+  background: var(--highlight);
+}
+.exploration-app .journal-log-row.is-unreached {
+  color: var(--muted);
+}
+.exploration-app .journal-signifier {
+  width: 18px;
+  text-align: center;
+  font-weight: 700;
+}
+.exploration-app .journal-log-leader {
+  flex: 1;
+  border-bottom: 1.5px dotted var(--paper-dot);
+  transform: translateY(4px);
+}
+.exploration-app .journal-log-row.is-now .journal-log-leader {
+  border-bottom-color: var(--ink);
+}
+.exploration-app .journal-log-value s {
+  color: var(--muted);
+}
+.exploration-app .journal-note {
+  margin: 0;
+  font-family: var(--font-journal-hand), 'Kalam', cursive;
+  font-size: 25px;
+  line-height: 1.3;
+  color: var(--muse-ink);
+}
+.exploration-app .journal-note-printed {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.exploration-app .journal-key {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 8px 12px;
+  border: 1.5px dashed var(--control-border);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.exploration-app .journal-key b {
+  font-family: var(--font-geist-mono);
+}
+.exploration-app .journal-key-hand {
+  font-family: var(--font-journal-hand), 'Kalam', cursive;
+  color: var(--muse-ink);
+  font-size: 15px;
+}
+
+/* Say each thing once: the log and note carry the step, so the older captions
+ * stay only for assistive technology. */
+.exploration-app .journal-right .exploration-spoken-caption,
+.exploration-app .journal-right .exploration-caption,
+.exploration-app .journal-right .exploration-active-explanation {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.exploration-app .journal-right .exploration-weighted-caption,
+.exploration-app .journal-right .exploration-motion-caption,
+.exploration-app .journal-right .exploration-stage-heading,
+.exploration-app .journal-right .exploration-playback > .action-row > .meta {
+  display: none;
+}

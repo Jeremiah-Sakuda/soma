@@ -34,7 +34,15 @@ export function ExplorationPlayback({
   const [available, setAvailable] = useState(false),
     [error, setError] = useState(''),
     [preparing, setPreparing] = useState(false),
-    [provider, setProvider] = useState<'gemini' | 'browser'>('gemini');
+    [provider, setProvider] = useState<'gemini' | 'browser'>('gemini'),
+    [rate, setRate] = useState(1);
+  const activeAudio = useRef<HTMLAudioElement | null>(null);
+  const resume = useRef<{ key: string; seconds: number } | null>(null);
+  const rateRef = useRef(rate);
+  rateRef.current = rate;
+  useEffect(() => {
+    if (activeAudio.current) activeAudio.current.playbackRate = rate;
+  }, [rate]);
   const callbacks = useRef({ onPlaying, onAdvance, onProgress });
   callbacks.current = { onPlaying, onAdvance, onProgress };
   const generation = useRef(0),
@@ -42,10 +50,13 @@ export function ExplorationPlayback({
   const narration = explorationNarration(spec, state);
   const playbackKey = JSON.stringify([artifactId, version, state]);
   useEffect(() => {
-    setAvailable('speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined');
+    setAvailable(
+      'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined',
+    );
   }, []);
   useEffect(() => {
     buffer.current.clear();
+    resume.current = null;
     return () => buffer.current.clear();
   }, [artifactId, version]);
   // This lifetime survives automatic step advances, but never an interruption.
@@ -69,10 +80,15 @@ export function ExplorationPlayback({
     const token = ++generation.current;
     let audio: HTMLAudioElement | undefined,
       url: string | undefined,
-      frame = 0;
+      frame = 0,
+      ended = false;
+    if (resume.current?.key !== playbackKey) resume.current = null;
     const current = () => token === generation.current;
     const finish = () => {
       if (!current()) return;
+      ended = true;
+      resume.current = null;
+      callbacks.current.onProgress(1, playbackKey);
       const next = nextPlaybackState(spec, state);
       if (next) callbacks.current.onAdvance(next);
       else callbacks.current.onPlaying(false);
@@ -82,6 +98,7 @@ export function ExplorationPlayback({
     if (provider === 'browser') {
       setPreparing(false);
       const utterance = new SpeechSynthesisUtterance(narration);
+      utterance.rate = rateRef.current;
       window.speechSynthesis.cancel();
       utterance.onend = finish;
       // Browser voices do not reliably expose audio timing. Keep the checked
@@ -122,10 +139,16 @@ export function ExplorationPlayback({
           if (!current()) return;
           url = URL.createObjectURL(blob);
           audio = new Audio(url);
+          activeAudio.current = audio;
+          audio.playbackRate = rateRef.current;
+          const resumeAt = resume.current?.key === playbackKey ? resume.current.seconds : 0;
+          if (resumeAt > 0) audio.currentTime = resumeAt;
           audio.onended = finish;
           audio.onerror = () => {
             if (current()) {
-              setError('This audio could not play. Try browser voice or continue with captions.');
+              setError(
+                'This audio could not play. Try browser voice or continue with captions.',
+              );
               callbacks.current.onPlaying(false);
             }
           };
@@ -169,6 +192,15 @@ export function ExplorationPlayback({
       cancelAnimationFrame(frame);
       callbacks.current.onProgress(null, playbackKey);
       if (audio) {
+        if (
+          !ended &&
+          Number.isFinite(audio.currentTime) &&
+          audio.currentTime > 0 &&
+          (!Number.isFinite(audio.duration) || audio.currentTime < audio.duration - 0.05)
+        )
+          resume.current = { key: playbackKey, seconds: audio.currentTime };
+        else if (resume.current?.key === playbackKey) resume.current = null;
+        if (activeAudio.current === audio) activeAudio.current = null;
         audio.onended = null;
         audio.onerror = null;
         audio.pause();
@@ -185,10 +217,16 @@ export function ExplorationPlayback({
         <button
           type="button"
           className="primary-button"
-          disabled={disabled || spec.mode === 'clarify' || (provider === 'browser' && !available)}
+          disabled={
+            disabled || spec.mode === 'clarify' || (provider === 'browser' && !available)
+          }
           onClick={() => onPlaying(!playing)}
         >
-          {playing ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
+          {playing ? (
+            <Pause size={16} aria-hidden="true" />
+          ) : (
+            <Play size={16} aria-hidden="true" />
+          )}
           {playing ? 'Pause explanation' : 'Play explanation'}
         </button>
         <button
@@ -196,6 +234,9 @@ export function ExplorationPlayback({
           className="text-button"
           disabled={disabled || spec.mode === 'clarify'}
           onClick={() => {
+            resume.current = null;
+            // A replay resets even when already paused on the first step.
+            if (activeAudio.current) activeAudio.current.currentTime = 0;
             onPlaying(false);
             onAdvance({ ...state, step: 0, explanationStep: 0 });
           }}
@@ -217,6 +258,30 @@ export function ExplorationPlayback({
             : 'Your browser reads it aloud.'}{' '}
           Captions always stay available.
         </p>
+        <label className="exploration-playback-rate">
+          Narration speed
+          <select
+            value={rate}
+            disabled={disabled}
+            onChange={(event) => {
+              const nextRate = Number(event.target.value);
+              if (![0.8, 1, 1.2, 1.5].includes(nextRate)) return;
+              // WAV speed changes in place. Browser utterances cannot reliably do
+              // that, so pause them explicitly rather than silently desynchronise.
+              if (provider === 'browser') onPlaying(false);
+              setRate(nextRate);
+            }}
+          >
+            <option value={0.8}>0.8× · Slower</option>
+            <option value={1}>1× · Normal</option>
+            <option value={1.2}>1.2× · Faster</option>
+            <option value={1.5}>1.5× · Fastest</option>
+          </select>
+        </label>
+        <p className="meta">
+          Pause and resume Gemini narration from the same point. Animation follows the actual
+          audio position.
+        </p>
         <div className="action-row">
           <button
             type="button"
@@ -226,6 +291,7 @@ export function ExplorationPlayback({
               onPlaying(false);
               setPreparing(false);
               setError('');
+              resume.current = null;
               setProvider(provider === 'gemini' ? 'browser' : 'gemini');
             }}
           >
@@ -236,8 +302,8 @@ export function ExplorationPlayback({
       {playing && preparing && (
         <p role="status" className="meta">
           Preparing Gemini audio…{' '}
-          <span aria-hidden="true">{waitingSeconds > 0 ? `${waitingSeconds}s · ` : ''}</span>Read
-          the caption now, or keep exploring.{' '}
+          <span aria-hidden="true">{waitingSeconds > 0 ? `${waitingSeconds}s · ` : ''}</span>
+          Read the caption now, or keep exploring.{' '}
           {waitingSeconds >= 8 &&
             'Voice is taking longer; you can pause or choose browser voice in Playback settings.'}
         </p>

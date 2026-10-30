@@ -1,5 +1,11 @@
+import { readFileSync } from 'node:fs';
+import { checkExploration, createExampleExploration } from '../../src/lib/domain/exploration';
 import { it, expect } from 'vitest';
-import { diagramLayout, diagramEdgeLabels } from '../../src/lib/domain/exploration-layout';
+import {
+  diagramLayout,
+  diagramEdgeLabels,
+  arrangeExplanationPanels,
+} from '../../src/lib/domain/exploration-layout';
 import type { ExplorationPanel } from '../../src/lib/domain/exploration';
 const panel = (count: number): Extract<ExplorationPanel, { kind: 'diagram' }> => ({
   id: 'process',
@@ -135,3 +141,66 @@ it.each([280, 320, 375, 400, 620, 760])(
       }
   },
 );
+
+it('moves a connection label to the legend instead of covering another connection', () => {
+  const p = panel(2);
+  for (const [i, object] of p.objects.entries())
+    if (object.kind === 'block') object.position = { x: i, y: 0 };
+  p.objects.push({
+    id: 'a',
+    kind: 'edge',
+    from: 'stage0',
+    to: 'stage1',
+    directed: true,
+    label: 'flow',
+  });
+  const layout = diagramLayout(p, false, 600),
+    y = layout.positions[0].y;
+  const direct = {
+    id: 'a',
+    points: [
+      { x: 172, y },
+      { x: 428, y },
+    ],
+  };
+  expect(diagramEdgeLabels(p, layout, [direct])[0].legend).toBe(false);
+  const labels = diagramEdgeLabels(p, layout, [
+    direct,
+    {
+      id: 'crossing',
+      points: [
+        { x: 300, y: 0 },
+        { x: 300, y: layout.height },
+      ],
+    },
+  ]);
+  expect(labels[0].legend).toBe(true);
+  expect(labels[0].text).toBe('flow');
+});
+
+it('reflows overlapping explanatory panels without another model call or any content changes', () => {
+  const spec = structuredClone(
+    JSON.parse(readFileSync('tests/fixtures/visual-polish-scenes.json', 'utf8')).gradient,
+  );
+  spec.scene.panels[1].placement = { ...spec.scene.panels[0].placement };
+  const original = structuredClone(spec);
+  expect(() => checkExploration(spec)).toThrow('overlap');
+  const out = arrangeExplanationPanels(spec);
+  expect(out.changed).toBe(true);
+  expect(() => checkExploration(out.spec)).not.toThrow();
+  expect(out.spec.mode).toBe('explanation');
+  if (out.spec.mode !== 'explanation') throw Error('fixture');
+  expect(out.spec.scene.panels.map(({ placement, ...content }) => content)).toEqual(
+    original.scene.panels.map(({ placement, ...content }: any) => content),
+  );
+  expect({ ...out.spec, scene: original.scene }).toEqual(original);
+  expect(spec).toEqual(original);
+});
+it('leaves checked scenes and valid explanation layout unchanged', () => {
+  const checked = createExampleExploration();
+  expect(arrangeExplanationPanels(checked)).toEqual({ spec: checked, changed: false });
+  const spec = checkExploration(
+    JSON.parse(readFileSync('tests/fixtures/visual-polish-scenes.json', 'utf8')).gradient,
+  ).spec;
+  expect(arrangeExplanationPanels(spec)).toEqual({ spec, changed: false });
+});

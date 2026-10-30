@@ -1238,6 +1238,20 @@
       "kind": "message",
       "prompt": "Okay now what work remains for Soma? ",
       "timestamp_note": "Exact received timestamp unavailable; platform context excluded."
+    },
+    {
+      "id": "PM096",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Ok create a seperate branch for this and scope it out, build it and test it thoroughly ",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 30, 2026 America/New_York. Ambient context excluded."
+    },
+    {
+      "id": "PM097",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "**Improve reliability and polish.** The latest cross-subject batch succeeded initially on **8/10**, with successful explanations taking roughly **20 seconds**. Focus on source accuracy, useful memory connections, diagram quality, narration pacing an lets do this for now ",
+      "timestamp_note": "Exact received timestamp unavailable; ambient context excluded."
     }
   ]
 }

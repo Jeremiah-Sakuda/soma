@@ -2,10 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-  checkExploration,
-  createExampleExploration,
-} from "../../src/lib/domain/exploration";
+import { checkExploration, createExampleExploration } from "../../src/lib/domain/exploration";
 import {
   applyCompanionMemoryCommand,
   applyCompanionMemoryProposal,
@@ -187,45 +184,39 @@ describe("companion memory facts and interpretations", () => {
   ])("rejects %s proposals with no partial update", (which) => {
     const s = session();
     const p = proposal();
-    if (which === "foreign")
-      p.concepts[1].refs = [{ artifactId: "other_account", version: 1 }];
+    if (which === "foreign") p.concepts[1].refs = [{ artifactId: "other_account", version: 1 }];
     if (which === "stale-version")
       p.concepts[1].refs = [{ artifactId: "source_a", version: 2 }];
     if (which === "unsaved") s.artifacts[0].saved = false;
-    if (which === "invented-mastery")
-      Object.assign(p.concepts[1], { mastery: 1 });
+    if (which === "invented-mastery") Object.assign(p.concepts[1], { mastery: 1 });
     if (which === "foreign-concept") p.relationships[0].to = "other";
     if (which === "self-link") p.relationships[0].to = "frontier";
     if (which === "duplicates") p.concepts[1].id = "frontier";
     expect(() => applyCompanionMemoryProposal(s, p, { revision: 0 })).toThrow();
     expect(s.memory).toBeUndefined();
   });
-  it.each([
-    "foreign-source",
-    "missing-concept",
-    "action-payload",
-    "empty-question",
-  ])("rejects a forged next recommendation: %s", (which) => {
-    const s = session(),
-      p = proposal();
-    if (which === "foreign-source")
-      p.nextActivity.refs = [{ artifactId: "foreign", version: 1 }];
-    if (which === "missing-concept") p.nextActivity.conceptIds = ["unknown"];
-    if (which === "action-payload")
-      Object.assign(p.nextActivity, { execute: { kind: "click", target: 1 } });
-    if (which === "empty-question") p.nextActivity.question = "";
-    expect(() => applyCompanionMemoryProposal(s, p, { revision: 0 })).toThrow();
-    expect(s.memory).toBeUndefined();
-  });
+  it.each(["foreign-source", "missing-concept", "action-payload", "empty-question"])(
+    "rejects a forged next recommendation: %s",
+    (which) => {
+      const s = session(),
+        p = proposal();
+      if (which === "foreign-source")
+        p.nextActivity.refs = [{ artifactId: "foreign", version: 1 }];
+      if (which === "missing-concept") p.nextActivity.conceptIds = ["unknown"];
+      if (which === "action-payload")
+        Object.assign(p.nextActivity, { execute: { kind: "click", target: 1 } });
+      if (which === "empty-question") p.nextActivity.question = "";
+      expect(() => applyCompanionMemoryProposal(s, p, { revision: 0 })).toThrow();
+      expect(s.memory).toBeUndefined();
+    },
+  );
   it("retains prior interpretations while projecting only latest, and protects human corrections", () => {
     const s = session();
     applyCompanionMemoryProposal(s, proposal(), { revision: 0 });
     const p = proposal();
     p.concepts[0].summary = "Changed interpretation";
     applyCompanionMemoryProposal(s, p, { revision: 1 });
-    expect(s.memory!.concepts.filter((c) => c.id === "frontier")).toHaveLength(
-      2,
-    );
+    expect(s.memory!.concepts.filter((c) => c.id === "frontier")).toHaveLength(2);
     applyCompanionMemoryCommand(s, {
       action: "correct-concept",
       revision: 2,
@@ -233,9 +224,7 @@ describe("companion memory facts and interpretations", () => {
       label: "My correction",
       summary: "I meant a different concept",
     });
-    expect(projectCompanionMemory(s).concepts[0].provenance).toBe(
-      "user-correction",
-    );
+    expect(projectCompanionMemory(s).concepts[0].provenance).toBe("user-correction");
     expect(projectCompanionMemory(s).relationships).toEqual([]);
     expect(projectCompanionMemory(s).nextActivity).toBeUndefined();
     expect(() => applyCompanionMemoryProposal(s, p, { revision: 3 })).toThrow();
@@ -245,18 +234,11 @@ describe("companion memory facts and interpretations", () => {
     s.artifacts.push(artifact("source_b"));
     const p = proposal();
     p.concepts[0].summary = "Private deleted concept";
-    p.concepts[0].refs = [
-      ...p.concepts[0].refs,
-      { artifactId: "source_b", version: 1 },
-    ];
+    p.concepts[0].refs = [...p.concepts[0].refs, { artifactId: "source_b", version: 1 }];
     applyCompanionMemoryProposal(s, p, { revision: 0 });
     s.artifacts = s.artifacts.filter((a) => a.id !== "source_b");
-    expect(projectCompanionMemory(s).concepts.map((c) => c.id)).toEqual([
-      "paths",
-    ]);
-    expect(JSON.stringify(companionMemoryContext(s))).not.toContain(
-      "Private deleted",
-    );
+    expect(projectCompanionMemory(s).concepts.map((c) => c.id)).toEqual(["paths"]);
+    expect(JSON.stringify(companionMemoryContext(s))).not.toContain("Private deleted");
     expect(projectCompanionMemory(s).nextActivity).toBeUndefined();
     applyCompanionMemoryCommand(s, {
       action: "upsert-goal",
@@ -274,18 +256,14 @@ describe("companion memory facts and interpretations", () => {
     p.concepts[0].refs = [{ artifactId: "source_b", version: 1 }];
     applyCompanionMemoryProposal(s, p, { revision: 1 });
     s.artifacts = s.artifacts.filter((a) => a.id !== "source_b");
-    expect(projectCompanionMemory(s).concepts.map((c) => c.id)).toEqual([
-      "paths",
-    ]);
+    expect(projectCompanionMemory(s).concepts.map((c) => c.id)).toEqual(["paths"]);
     applyCompanionMemoryCommand(s, {
       action: "upsert-goal",
       revision: 2,
       kind: "goal",
       text: "New goal",
     });
-    expect(projectCompanionMemory(s).concepts.map((c) => c.id)).toEqual([
-      "paths",
-    ]);
+    expect(projectCompanionMemory(s).concepts.map((c) => c.id)).toEqual(["paths"]);
   });
   it("persistently prunes source-dependent data and fences pending analyses once", () => {
     const s = session();
@@ -357,9 +335,7 @@ describe("companion memory facts and interpretations", () => {
       relationships: [],
       evidence: [],
     });
-    expect(() =>
-      applyCompanionMemoryProposal(s, proposal(), { revision: 0 }),
-    ).toThrow();
+    expect(() => applyCompanionMemoryProposal(s, proposal(), { revision: 0 })).toThrow();
   });
   it("ranks relevant concepts and returns a bounded data context, not old goal revisions", () => {
     const s = session();
@@ -471,12 +447,11 @@ describe("owned durable memory transactions", () => {
     });
     closeExplorationStore();
     expect(
-      projectCompanionMemory((await explorationStore.read(principal("a")))!)
-        .goals[0].text,
+      projectCompanionMemory((await explorationStore.read(principal("a")))!).goals[0].text,
     ).toBe("Private goal");
-    expect(
-      JSON.stringify(await explorationStore.read(principal("b"))),
-    ).not.toContain("Private goal");
+    expect(JSON.stringify(await explorationStore.read(principal("b")))).not.toContain(
+      "Private goal",
+    );
     const results = await Promise.allSettled([
       mutateCompanionMemory(principal("a"), {
         action: "upsert-goal",
@@ -491,10 +466,7 @@ describe("owned durable memory transactions", () => {
         text: "second",
       }),
     ]);
-    expect(results.map((r) => r.status).sort()).toEqual([
-      "fulfilled",
-      "rejected",
-    ]);
+    expect(results.map((r) => r.status).sort()).toEqual(["fulfilled", "rejected"]);
   });
   it("does not recreate a missing session implicitly", async () => {
     await expect(
@@ -516,4 +488,34 @@ describe("owned durable memory transactions", () => {
       ),
     ).rejects.toThrow();
   });
+});
+
+it.each([
+  "Explain how enzyme activation energy affects reaction rates",
+  "Help me understand this screenshot and example",
+])("withholds unrelated concepts for an explicit query: %s", (query) => {
+  const s = session();
+  applyCompanionMemoryProposal(s, proposal(), { revision: 0 });
+  const before = structuredClone(s);
+  const context = companionMemoryContext(s, { query });
+  expect(context.concepts).toEqual([]);
+  expect(context.relationships).toEqual([]);
+  expect(context.evidence).toEqual([]);
+  expect(context.nextActivity).toBeUndefined();
+  expect(s).toEqual(before);
+  expect(companionMemoryContext(s).concepts).toHaveLength(2);
+});
+it("retrieves actual whole terms and ordinary plurals without substring associations", () => {
+  const s = session(),
+    p = proposal();
+  p.concepts[0].label = "Photographs";
+  p.concepts[0].summary = "Camera framing";
+  applyCompanionMemoryProposal(s, p, { revision: 0 });
+  expect(companionMemoryContext(s, { query: "graph" }).concepts).toEqual([]);
+  expect(
+    companionMemoryContext(s, { query: "shortest connection" }).concepts.map((c) => c.id),
+  ).toEqual(["paths"]);
+  expect(
+    companionMemoryContext(s, { query: "photograph framing" }).concepts.map((c) => c.id),
+  ).toEqual(["frontier"]);
 });

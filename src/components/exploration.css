@@ -2203,3 +2203,30 @@
 .exploration-grounding{margin:8px 0;font-size:14px}.exploration-grounding summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600}.exploration-grounding-image{position:relative;line-height:0;border-radius:12px;overflow:hidden}.exploration-grounding-image img{width:100%;height:auto;display:block}.exploration-grounding-region{position:absolute;border:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent);pointer-events:none}.exploration-grounding-region>span{position:absolute;left:0;top:0;min-width:22px;height:22px;border-radius:0 0 6px 0;background:var(--surface);color:var(--ink);font-size:12px;font-weight:700;line-height:22px;text-align:center;padding:0 3px}.exploration-source-change{padding:8px 12px;background:var(--accent-soft);border-radius:10px;line-height:1.45}.exploration-source-change small{display:block;margin-top:4px}.exploration-compare-source{display:flex;align-items:center;gap:8px;min-height:44px;font-size:13px}
 
 .exploration-capture-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.exploration-capture-pair figure{margin:0;min-width:0}.exploration-capture-pair figcaption{font-size:13px;font-weight:600;margin-bottom:6px}.exploration-capture-pair img{display:block;width:100%;height:auto;border:1px solid var(--border);border-radius:10px}@media(max-width:560px){.exploration-capture-pair{grid-template-columns:minmax(0,1fr)}}
+
+/* Keep explanation typography readable without changing a source label. */
+.exploration-diagram-label {
+  font-size: 15px;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+.exploration-diagram-container .exploration-node:not(.is-selected) :is(rect, ellipse) {
+  stroke: var(--border);
+}
+.exploration-playback-rate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  font-size: 14px;
+}
+.exploration-playback-rate select {
+  min-height: 44px;
+  padding: 8px 10px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--control-border);
+  border-radius: 10px;
+  font: inherit;
+}

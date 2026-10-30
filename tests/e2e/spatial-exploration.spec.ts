@@ -3,8 +3,9 @@ import { test, expect, type Page } from '@playwright/test';
 // Real local HTTP/storage and WebGL. No provider or source success is simulated here.
 test.use({ launchOptions: { args: ['--enable-unsafe-swiftshader'] } });
 async function openSpatial(page: Page) {
-  await page.goto('/explore');
+  await page.goto('/explore'); await page.getByText('Or try an example', {exact:true}).click();
   await page.getByRole('button', { name: 'Open the 3D example', exact: true }).click();
+  await page.getByRole('button', {name:'Explore in app',exact:true}).click();
   await expect(page.getByRole('region', { name: 'Spatial workspace' })).toBeVisible();
 }
 async function rendered(page: Page) {
@@ -29,7 +30,7 @@ test('actual WebGL scene supports reversible steps, cutaway, isolation, camera a
   const result = await (await page.request.get('/api/explore')).json();
   expect(result.active.state.spatial).toMatchObject({ mode: '3d', azimuth: 90, spread: 0.65, slice: 0.3, isolate: true });
   expect(result.active.state.selectedObjectId).toBe('processor'); expect(result.active.state.explanationStep).toBe(1);
-  await page.reload(); await page.locator('.exploration-library button').first().click(); await rendered(page);
+  await page.reload(); await page.getByRole('button', {name:'Library',exact:true}).click(); await page.locator('.exploration-library button').first().click(); await page.getByRole('button', {name:'Explore in app',exact:true}).click(); await rendered(page);
   await expect(page.getByRole('slider', { name: 'Separate parts', exact: true })).toHaveValue('0.65');
   await expect(page.getByRole('slider', { name: 'Cutaway', exact: true })).toHaveValue('0.3');
   await expect(page.getByRole('button', { name: 'Processor', exact: true })).toHaveAttribute('aria-pressed', 'true');
@@ -44,7 +45,7 @@ test('actual WebGL scene supports reversible steps, cutaway, isolation, camera a
 });
 
 test('checked spatial graphs use the actual solver and preserve the chosen representation after a graph change', async ({ page }) => {
-  await page.goto('/explore'); await page.getByRole('button', { name: 'Compare weighted paths', exact: true }).click();
+  await page.goto('/explore'); await page.getByText('Or try an example', {exact:true}).click(); await page.getByRole('button', { name: 'Compare weighted paths', exact: true }).click(); await page.getByRole('button', {name:'Explore in app',exact:true}).click();
   await page.getByRole('button', { name: '3D workspace', exact: true }).click(); await rendered(page);
   for (let i = 0; i < 8; i++) {
     const next = page.getByRole('button', { name: 'Next step', exact: true }); if (await next.isEnabled()) await next.click();

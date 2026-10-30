@@ -12,6 +12,10 @@ import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import {
   ArrowLeft,
+  Maximize2,
+  Minimize2,
+  History,
+  ScanLine,
   ArrowUpRight,
   Check,
   ChevronRight,
@@ -43,6 +47,7 @@ import type { PointFocus } from '@/lib/domain/point-context';
 import { ExplorationVoice } from './exploration-voice';
 import { useExplorationCapture, type ExplorationCapture } from './exploration-capture';
 import './exploration.css';
+import './capture-shell.css';
 
 type Artifact = {
   recording?: { id: string; generatedAt: string; sourceImage: string };
@@ -212,6 +217,33 @@ const capturedTime = (value: string) =>
   });
 
 export function ExplorationWorkspace() {
+  const [surface, setSurface] = useState<'quick' | 'workspace'>('quick');
+  const [nativeCompanion, setNativeCompanion] = useState(false);
+  const [resultOpen, setResultOpen] = useState(true);
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const resultFrameRef = useRef<HTMLDivElement>(null);
+  const [windowSize, setWindowSize] = useState<'small' | 'large'>('small');
+  useEffect(() => {
+    setNativeCompanion(new URLSearchParams(location.search).get('surface') === 'companion');
+    const receive = (event: Event) => {
+      const value = (event as CustomEvent).detail?.surface;
+      if (value === 'companion' || value === 'workspace') {
+        setSurface(value === 'companion' ? 'quick' : 'workspace');
+        setNativeCompanion(true);
+        setResultOpen(true);
+      }
+    };
+    window.addEventListener('soma:surface', receive);
+    window.dispatchEvent(new Event('soma:surface-ready'));
+    return () => window.removeEventListener('soma:surface', receive);
+  }, []);
+  function changeSurface(next: 'quick' | 'workspace') {
+    setSurface(next);
+    setResultOpen(true);
+    if (nativeCompanion) window.dispatchEvent(new CustomEvent('soma:surface-request', {
+      detail: { surface: next === 'quick' ? 'companion' : 'workspace' },
+    }));
+  }
   const [compact, setCompact] = useState(false);
   useEffect(() => {
     const media = matchMedia('(max-width:760px)');
@@ -342,6 +374,7 @@ export function ExplorationWorkspace() {
     const value = validated(next);
     viewSequence.current++;
     setArtifact(value);
+    setResultOpen(true);
     setState(value.state);
     setDirty(false);
     setDeleteConfirmation(false);
@@ -410,8 +443,8 @@ export function ExplorationWorkspace() {
     setError('');
     try {
       await capture.start();
-      chooseSource(null);
-      setNotice('Window selected. No frame is sent until you choose Ask Soma.');
+      chooseSource(capture.capture());
+      setNotice('Snapshot ready to review. Nothing is sent until you choose Ask Soma.');
     } catch {
       setError(
         'Window sharing was not started. You can try again or upload a screenshot instead.',
@@ -787,6 +820,8 @@ export function ExplorationWorkspace() {
         </select>
       </div>
     ) : null;
+  const resultActive = !!artifact && resultOpen && !newContext;
+  const quickView = resultActive && surface === 'quick';
   const composer = (
     <section className="exploration-ask-card" aria-label="Ask about your context">
       <form
@@ -870,7 +905,7 @@ export function ExplorationWorkspace() {
           )}
         </div>
       </form>
-      <details className="exploration-question-settings" open={!compact}>
+      <details className="exploration-question-settings" open={false}>
         <summary>Voice & question settings</summary>
         <details className="exploration-voice-settings">
           <summary>Question settings</summary>
@@ -943,57 +978,62 @@ export function ExplorationWorkspace() {
     </section>
   );
   return (
-    <div className={`exploration-app ${artifact ? 'has-exploration' : ''}`}>
-      <a className="skip-link" href="#exploration-main">
-        Skip to exploration
-      </a>
+    <div data-surface={surface} className={`exploration-app capture-shell ${artifact ? 'has-exploration' : ''} ${resultActive ? (quickView ? 'is-quick' : 'is-workspace') : 'is-capture'} ${nativeCompanion ? 'is-native' : ''} ${libraryOpen ? 'library-open' : ''}`}>
+      <a className="skip-link" href="#exploration-main">Skip to exploration</a>
       <header className="exploration-header">
-        <a className="wordmark" href="/">
-          Soma<span> / explore</span>
-        </a>
-        <div>
-          {artifact && (
-            <a href="#exploration-card" className="exploration-jump">
-              Jump to visual card <ChevronRight size={15} aria-hidden="true" />
-            </a>
-          )}
-          <span className="exploration-beta">Visual learning preview</span>
-          <a href="/" className="exploration-home">
-            <ArrowLeft size={15} aria-hidden="true" /> Study workspace
-          </a>
-        </div>
+        <a className="wordmark" href="/explore" aria-label="Soma capture home">soma<span className="capture-brand-dot" aria-hidden="true" /></a>
+        <nav aria-label="Exploration navigation">
+          {artifact && !resultActive && <button className="text-button" onClick={() => {setNewContext(false); setResultOpen(true);}}>Return to explanation</button>}
+          <button className="text-button" aria-expanded={libraryOpen} aria-controls="capture-library" onClick={() => setLibraryOpen(value => !value)}><History size={16} aria-hidden="true" /> Library</button>
+          <a href="/?view=today" className="exploration-home">Account & connections</a>
+        </nav>
       </header>
       <main id="exploration-main" className="exploration-main" tabIndex={-1}>
         <div className="exploration-heading">
-          <div>
-            <p className="overline">Follow your curiosity</p>
-            <h1>Make the idea visible.</h1>
-            <p>
-              Bring a question and the context in front of you. Explore the explanation
-              together.
-            </p>
-          </div>
-          <div>
-            <span className="exploration-private">
-              <Check size={15} aria-hidden="true" /> You choose what to share
-            </span>
-          </div>
+          <div><p className="overline">A little clarity, right where you are.</p>
+          <h1>Understand what’s on your screen.</h1>
+          <p>Capture something. Ask a question. See it differently.</p></div>
         </div>
         <div className="exploration-workbench">
-          {artifact && <div className="exploration-composer-column">{composer}</div>}
           <aside className="exploration-source-column" aria-label="Selected context">
+            <div id="capture-library" className="capture-library" hidden={!libraryOpen}><div className="section-heading"><h2>Your explorations</h2><button className="icon-button" aria-label="Close library" onClick={() => setLibraryOpen(false)}><X size={18} aria-hidden="true" /></button></div>
         <CompanionMemory sessionReady={initialized} artifact={artifact ? {id: artifact.id, version: artifact.version, saved: artifact.saved} : null}
           onOpen={(id, version) => { void resume(id, version); }}
           onAsk={(next) => { setPlaying(false); setQuestion(next); requestAnimationFrame(() => questionRef.current?.focus()); }} />
 
+            {artifacts.length > 0 && (
+              <section className="exploration-library">
+                <h2>Pick up a thread</h2>
+                {artifacts.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    aria-current={artifact?.id === item.id ? 'true' : undefined}
+                    disabled={sourceBusy || saving}
+                    onClick={() => void resume(item.id)}
+                  >
+                    <span>
+                      <strong>{item.spec.title}</strong>
+                      <small>
+                        Version {item.version}
+                        {item.saved ? ' · Saved' : ''}
+                      </small>
+                    </span>
+                    <ChevronRight size={16} aria-hidden="true" />
+                  </button>
+                ))}
+              </section>
+            )}
+            {artifacts.length === 0 && <p className="meta">Saved explanations will appear here. Guest history lasts 24 hours.</p>}
+            </div>
             <details
               className="exploration-context-disclosure"
-              open={!artifact || newContext || capture.sharing}
+              open={!resultActive || capture.sharing}
             >
               <summary>Source & sharing</summary>
               <section className="exploration-source-card">
                 <div className="section-heading">
-                  <h2>Your context</h2>
+                  <h2>Your capture</h2>
                   <span className={`status-chip ${capture.sharing ? 'ready' : ''}`}>
                     {capture.sharing
                       ? 'Sharing selected window'
@@ -1083,7 +1123,7 @@ export function ExplorationWorkspace() {
                     <p>
                       {capture.sharing
                         ? 'Window selected. Ask to capture one frame.'
-                        : 'A slide, a diagram, a question worth exploring.'}
+                        : 'Bring the part you want to understand.'}
                     </p>
                   </div>
                 )}
@@ -1101,19 +1141,20 @@ export function ExplorationWorkspace() {
                 )}
                 {capture.sharing && (
                   <p className="exploration-sharing-note">
-                    Your first Ask sends one frame. Refresh snapshot selects updated context;
-                    never continuous uploads.
+                    Ask sends the snapshot shown here. Refresh snapshot selects updated context; never continuous uploads.
                   </p>
                 )}
+                {nativeCompanion && !source && <p className="capture-native-hint">Use Capture above, or press ⌘⇧Space. Review the snapshot here before asking.</p>}
                 <div className="exploration-source-actions">
                   <button
                     type="button"
-                    className="secondary-button"
+                    className="primary-button capture-window-button"
+                    hidden={nativeCompanion}
                     disabled={sourceBusy}
                     onClick={() => void share()}
                   >
                     <MonitorUp size={17} aria-hidden="true" />{' '}
-                    {capture.sharing ? 'Choose another window' : 'Share a window'}
+                    {capture.sharing ? 'Choose another window' : 'Capture a window'}
                   </button>
                   <button
                     type="button"
@@ -1146,6 +1187,7 @@ export function ExplorationWorkspace() {
                     </button>
                   </div>
                 )}
+                <details className="capture-examples"><summary>Or try an example</summary>
                 <button
                   className="exploration-example-button"
                   type="button"
@@ -1171,37 +1213,27 @@ export function ExplorationWorkspace() {
                 >
                   Open recorded run <ArrowUpRight size={16} aria-hidden="true" />
                 </button>
+                </details>
                 <p className="exploration-privacy-note">
-                  Screenshots go to Meta only when you ask. Raw image pixels are not saved with
-                  your exploration. Avoid sharing passwords or private messages.
+                  Only the snapshot you send goes to Meta. Raw screenshots aren’t saved with your exploration.
                 </p>
               </section>
             </details>
 
-            {artifacts.length > 0 && (
-              <section className="exploration-library">
-                <h2>Pick up a thread</h2>
-                {artifacts.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    aria-current={artifact?.id === item.id ? 'true' : undefined}
-                    disabled={sourceBusy || saving}
-                    onClick={() => void resume(item.id)}
-                  >
-                    <span>
-                      <strong>{item.spec.title}</strong>
-                      <small>
-                        Version {item.version}
-                        {item.saved ? ' · Saved' : ''}
-                      </small>
-                    </span>
-                    <ChevronRight size={16} aria-hidden="true" />
-                  </button>
-                ))}
-              </section>
-            )}
           </aside>
+          <div ref={resultFrameRef} className="capture-result-frame" data-size={windowSize}>
+            {resultActive && capture.sharing && <div className="capture-sharing-bar"><span>Window access is on · snapshots only</span><button className="text-button" onClick={capture.stop}><Square size={14} aria-hidden="true" /> Stop sharing</button></div>}
+            {resultActive && <div className="capture-result-toolbar">
+              <span className="capture-result-label"><Sparkles size={15} aria-hidden="true" /> Soma explanation</span>
+              <div>
+                {!nativeCompanion && quickView && <select aria-label="Explanation window size" value={windowSize} onChange={e => { setWindowSize(e.target.value as 'small' | 'large'); resultFrameRef.current?.style.removeProperty('width'); resultFrameRef.current?.style.removeProperty('height'); }}><option value="small">Compact</option><option value="large">Roomy</option></select>}
+                <button className="text-button" onClick={() => changeSurface(quickView ? 'workspace' : 'quick')}>
+                  {quickView ? <Maximize2 size={15} aria-hidden="true" /> : <Minimize2 size={15} aria-hidden="true" />}
+                  {quickView ? 'Explore in app' : 'Quick view'}
+                </button>
+                <button className="icon-button" aria-label="Close explanation" onClick={() => {cancel(''); setResultOpen(false); setLibraryOpen(false);}}><X size={17} aria-hidden="true" /></button>
+              </div>
+            </div>}
           <div className="exploration-stage-column">
             {!initialized && (
               <p role="status" className="exploration-notice">
@@ -1401,6 +1433,7 @@ export function ExplorationWorkspace() {
                   }}
                 />
                 <ExplorationScene
+                  compactView={quickView || compact}
                   experimentInline={!artifact.experiment}
                   playing={playing}
                   spokenProgress={
@@ -1573,7 +1606,7 @@ export function ExplorationWorkspace() {
                     />
                   )}
                 {artifact.spec.mode !== 'clarify' && artifact.spec.followups.length > 0 && (
-                  <div className="exploration-followups" aria-label="Suggested follow-ups">
+                  <div className="exploration-followups capture-expanded-only" aria-label="Suggested follow-ups">
                     {artifact.spec.followups.map((item) => (
                       <button
                         type="button"
@@ -1715,7 +1748,7 @@ export function ExplorationWorkspace() {
                     reasoning.
                   </p>
                 </details>
-                <div className="exploration-delete">
+                <div className="exploration-delete capture-expanded-only">
                   {deleteConfirmation ? (
                     <div role="group" aria-label="Confirm exploration deletion">
                       <p>
@@ -1753,50 +1786,14 @@ export function ExplorationWorkspace() {
                   )}
                 </div>
               </article>
-            ) : (
-              <section className="exploration-empty-stage">
-                <div className="exploration-empty-symbol">
-                  <Sparkles size={34} strokeWidth={1.4} aria-hidden="true" />
-                </div>
-                <h2>A question can become an experiment.</h2>
-                <p>
-                  See the relationships. Change an assumption. Follow the part that makes you
-                  curious.
-                </p>
-                <button
-                  type="button"
-                  className="primary-button"
-                  disabled={sourceBusy || !initialized}
-                  onClick={() => void example()}
-                >
-                  Try the original example <ArrowUpRight size={17} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className="secondary-button"
-                  disabled={sourceBusy || !initialized}
-                  onClick={() => void openRecording()}
-                >
-                  Watch a recorded Muse run <ArrowUpRight size={17} aria-hidden="true" />
-                </button>
-                <span className="meta">
-                  Examples and recorded runs use original synthetic material. No account needed.
-                </span>
-              </section>
-            )}
-            {!artifact && composer}
+            ) : null}
+            {composer}
+          </div>
           </div>
         </div>
         <footer className="exploration-page-footer">
-          <span>
-            Soma · an explanation you can explore
-            <br />
-            Guest saves expire after 24 hours. Signed-in accounts use a separate history; guest
-            work does not transfer automatically.
-          </span>
-          <a href="/">
-            Your study workspace <ArrowUpRight size={14} aria-hidden="true" />
-          </a>
+          <span>Made for the thing in front of you.</span>
+          <span>Capture → explain → explore</span>
         </footer>
       </main>
     </div>

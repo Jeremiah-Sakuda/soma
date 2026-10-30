@@ -17,7 +17,9 @@ export function ExplorationSearchStage({
   onSelect,
   highlights,
   progress,
+  compactView,
 }: {
+  compactView?: boolean;
   panel: Extract<ExplorationPanel, { kind: 'graph' }>;
   execution: BfsExecution;
   index: number;
@@ -26,7 +28,7 @@ export function ExplorationSearchStage({
   highlights: string[];
   progress: number;
 }) {
-  const [compact, setCompact] = useState(false);
+  const [viewportCompact, setCompact] = useState(false);
   useEffect(() => {
     const query = matchMedia('(max-width: 760px)');
     const update = () => setCompact(query.matches);
@@ -34,6 +36,7 @@ export function ExplorationSearchStage({
     query.addEventListener('change', update);
     return () => query.removeEventListener('change', update);
   }, []);
+  const compact = compactView ?? viewportCompact;
   const width = compact ? 380 : 640,
     columns = compact ? 4 : 8;
   const marker = useId().replace(/[^a-z0-9]/gi, ''),

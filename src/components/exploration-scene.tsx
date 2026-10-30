@@ -296,7 +296,9 @@ export function ExplorationScene({
   spokenProgress = null,
   experiment,
   experimentInline = false,
+  compactView,
 }: {
+  compactView?: boolean;
   experiment?: ReactNode;
   experimentInline?: boolean;
   spec: ExplorationSpec;
@@ -305,8 +307,9 @@ export function ExplorationScene({
   playing?: boolean;
   spokenProgress?: number | null;
 }) {
-  const [compact, setCompact] = useState(false),
+  const [viewportCompact, setCompact] = useState(false),
     [activeGraph, setActiveGraph] = useState<'primary' | 'comparison'>('primary');
+  const compact = compactView ?? viewportCompact;
   const sceneElement = useRef<HTMLDivElement>(null), revealScene = useRef(false);
   useEffect(() => {
     if (revealScene.current) { revealScene.current = false; sceneElement.current?.scrollIntoView({ block: 'start', behavior: 'instant' }); }
@@ -463,6 +466,7 @@ export function ExplorationScene({
         )}
         {panel.kind === 'graph' && computation && (
           <ExplorationSearchStage
+            compactView={compact}
             progress={state.step >= computation.steps.length ? 1 : progress}
             panel={panel}
             execution={computation}

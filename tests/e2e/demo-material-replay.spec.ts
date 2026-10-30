@@ -14,6 +14,7 @@ for(const name of ['dsa-first','dsa-next','speaker-first','speaker-next','music-
  await page.route(/\/api\/explore(?:\?.*)?$/,route=>route.request().method()==='GET'?route.fulfill({json:{active:artifact,artifacts:[artifact],versions:[],liveEnabled:false}}):route.fallback());
  await page.goto('/explore');await page.locator('.exploration-library button').first().click();
  await expect(page.locator('#exploration-card')).toBeVisible();
+ if(name.startsWith('speaker'))await expect(page.locator('.spatial-canvas canvas')).toHaveAttribute('data-rendered','true');
  await page.locator('#exploration-card').screenshot({path:info.outputPath(`${name}-${width}-initial.png`)});
  if(name.startsWith('speaker')){
   await expect(page.locator('.spatial-canvas canvas')).toHaveAttribute('data-rendered','true');

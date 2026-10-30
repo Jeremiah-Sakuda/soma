@@ -12,6 +12,8 @@ October 29: the scoped experience iteration is deployed at the canonical `/explo
 
 # Soma build plan
 
+**PM108 authorized comparison, October 30:** Complete the Anatomy adapter on the existing spatial branch, compare original relay and retained Muse scenes with Three.js using identical state, then verify source/checked-model continuity, saved revisions, keyboard/reduced motion, native Mac review and responsive rendering before any merge proposal. The user raised the cumulative testing allowance to $20 with previous usage retained. This local prototype does not authorize a main merge, deployment, new checked subject or deadline change. Evidence: `ANATOMY_COMPARISON.md`.
+
 **PM064 completed October 29:** Audit fixes, compact native presentation, fresh source evaluation and a reviewed public source release are delivered. Production and public CI verification passed. See the latest PM064 validation record and CODEX_HANDOFF.md. Remaining work is actual-device/course testing, the documented missing-cost clarification limitation, and submission/demo preparation; do not reopen P0 for model count, training or 3D.
 
 **October 29 audit proposal (PM063):** [IMPROVEMENT_PLAN_2026_10_29.md](IMPROVEMENT_PLAN_2026_10_29.md) ranks verified follow-up preservation and weighted-rendering fixes, compact native UX, fresh source/evaluation gates and submission reproducibility ahead of optional model/3D expansion. [The audit](HACKATHON_AUDIT_2026_10_29.md) records three independent rubric reviews and executed checks. This is a proposed sequence, not completed fixes or automatic adoption of new scope. October 31 freeze and November 4, 9 PM America/New_York deadline remain fixed.

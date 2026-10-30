@@ -2240,6 +2240,36 @@
 .spatial-description summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
 .spatial-description li { margin-bottom: 8px; overflow-wrap: anywhere; }
 .spatial-fallback { padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-top: 10px; }
+.spatial-renderer-switch { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.spatial-renderer-switch button { min-width: 44px; min-height: 44px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; font-size: 13px; }
+.spatial-renderer-switch button[aria-pressed=true] { background: var(--accent-soft, #f0dfd1); border-color: var(--accent); }
+.spatial-comparison { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.spatial-comparison figure { margin: 0; min-width: 0; }
+.spatial-comparison figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; font-size: 13px; font-weight: 600; margin: 0 2px 8px; }
+.spatial-comparison figcaption span { font-size: 11px; color: var(--muted); font-weight: 400; }
+.anatomy-canvas { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 75%, #e0e6d84d, transparent 65%), #faf9f4; }
+.anatomy-canvas svg { display: block; width: 100%; height: 100%; touch-action: pan-y; cursor: grab; }
+.anatomy-canvas svg:active { cursor: grabbing; }
+.anatomy-plate-head { position: absolute; top: 15px; left: 16px; right: 16px; display: flex; justify-content: space-between; gap: 12px; color: #5b675e; pointer-events: none; font: 9px/1.4 var(--font-geist-mono, monospace); letter-spacing: .09em; }
+.anatomy-plate-divider { margin: 0 7px; opacity: .4; }
+.anatomy-fill { fill: var(--part-color); }
+.anatomy-shade { fill: #172b24; }
+.anatomy-top { fill: #fffbea; fill-opacity: .19; }
+.anatomy-outline, .anatomy-crease { fill: none; stroke: #253f35; stroke-width: .7; stroke-opacity: .6; stroke-linecap: round; stroke-linejoin: round; }
+.anatomy-crease { stroke-opacity: .28; stroke-width: .55; }
+.anatomy-outline[data-emphasis=true] { stroke: #7e472e; stroke-opacity: .9; stroke-width: 1.15; }
+.anatomy-wires path { fill: none; stroke: #7b8975; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.anatomy-wires [data-active=false] { stroke-dasharray: 5 5; opacity: .55; }
+.anatomy-wires [data-highlighted=true] { stroke: #a05a3b; stroke-width: 3; }
+.anatomy-details { pointer-events: none; }
+.anatomy-part-marker { pointer-events: none; }
+.anatomy-part-marker circle { fill: #fffdf6; stroke: #866d4b; stroke-width: 1; }
+.anatomy-part-marker text { fill: #534d3a; font: 10px system-ui, sans-serif; }
+.anatomy-selected-label { position: absolute; bottom: 30px; left: 12px; right: 12px; width: fit-content; max-width: calc(100% - 24px); display: flex; align-items: baseline; gap: 8px; padding: 6px 10px; border: 1px solid #c1b69d; border-radius: 8px; background: #fffdf6f5; color: #6c5236; font-size: 12px; pointer-events: none; }
+.anatomy-selected-label span { overflow-wrap: anywhere; color: var(--ink); }
+.anatomy-object-number { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 500; min-width: 12px; }
+.anatomy-empty { position: absolute; top: 35%; left: 20px; right: 20px; text-align: center; font-size: 13px; }
+@media(max-width: 900px) { .spatial-comparison { grid-template-columns: minmax(0, 1fr); } }
 @media(max-width: 620px) { .spatial-workspace { padding: 10px; } .spatial-stage { height: 290px; } .spatial-toolbar button { padding: 8px 10px; font-size: 12px; } .spatial-stage-note { font-size: 10px; } }
 
 /* Keep explanation typography readable without changing a source label. */

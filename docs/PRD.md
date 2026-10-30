@@ -29,6 +29,10 @@ PM062 raises the shared application testing allowance to $15 total, preserving c
 **PM055 learning interaction:** Add an optional next-node prediction to the checked experiment. Store the original choice, optional explanation, exact state, source/model versions and exposure before feedback. A user-requested visual follow-up uses that owned observation to address the answer; a mismatch is a hypothesis, not a diagnosis. Diagram-visible practice must never count as independent performance. Preserve skip/reveal and free exploration. Weighted shortest paths are the next planned breadth assessment, not currently supported computation.
 
 
+## PM108 — Experimental Anatomy comparison, October 30
+
+The user authorized a local comparison of the existing Three.js spatial view and an Anatomy-based isometric illustration. Both consume the same validated source-bound scene and retain the selected part, explanation step, controls and immutable revisions. Saving/reopening must preserve renderer preference; legacy states remain compatible. Keep explanation-only assurance for general mechanisms and preserve checked graph computation. Offer labeled alternatives to dragging, reduced motion and readable narrow layouts. Adopt neither renderer as a replacement merely because tests pass; visual acceptance remains pending. The cumulative application testing allowance is now $20, retaining past usage and allocation reserve. See `ANATOMY_COMPARISON.md` for scope and executed verification; no main merge or publication is authorized.
+
 ## Current positioning and desktop acceptance — PM049–PM050, October 29
 
 **Soma is a desktop visual learning companion that helps you understand what is on your screen.** Call it up over a slide, paper, problem or application; Muse Spark interprets the captured context and question, then composes an interactive visual explanation you can manipulate, hear and revisit.

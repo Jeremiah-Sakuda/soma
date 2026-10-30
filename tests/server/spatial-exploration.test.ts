@@ -56,13 +56,13 @@ it('persists complete spatial state, isolates accounts and rejects injected view
   expect(artifact.validation.assurance).toBe('explanation-only');
   expect(artifact.generation.calls).toBe(0);
   expect(needsExplorationReview(artifact.spec)).toBe(true);
-  const state = { ...artifact.state, explanationStep: 2, selectedObjectId: 'processor', spatial: { ...defaultSpatialView(), azimuth: -90, elevation: 45, spread: 0.65, slice: 0.4, isolate: true } };
+  const state = { ...artifact.state, explanationStep: 2, selectedObjectId: 'processor', spatial: { ...defaultSpatialView(), renderer: 'anatomy' as const, azimuth: -90, elevation: 45, spread: 0.65, slice: 0.4, isolate: true } };
   await service.save(owner, artifact.id, 1, state);
   closeExplorationStore();
   expect((await service.read(owner, artifact.id, 1)).active!.state).toEqual(state);
   await expect(service.read(principal('b'), artifact.id)).rejects.toMatchObject({ code: 'not_found' });
   await expect(service.save(principal('b'), artifact.id, 1, state)).rejects.toMatchObject({ code: 'not_found' });
-  for (const invalid of [{ ...state, selectedObjectId: 'outside' }, { ...state, spatial: { ...state.spatial, spread: 1.1 } }, { ...state, spatial: { ...state.spatial, script: 'run()' } }])
+  for (const invalid of [{ ...state, selectedObjectId: 'outside' }, { ...state, spatial: { ...state.spatial, spread: 1.1 } }, { ...state, spatial: { ...state.spatial, renderer: 'unapproved' } }, { ...state, spatial: { ...state.spatial, script: 'run()' } }])
     await expect(service.save(owner, artifact.id, 1, invalid)).rejects.toMatchObject({ code: 'invalid_request' });
   expect((await service.read(owner, artifact.id, 1)).active!.state).toEqual(state);
   expect(request).not.toHaveBeenCalled();
@@ -71,7 +71,7 @@ it('persists complete spatial state, isolates accounts and rejects injected view
 it('preserves scene geometry, camera, selection and step across a real service revision and leaves the original untouched', async () => {
   const { service, request, review } = harness({ review: true }), owner = principal(); await service.initialize(owner);
   const { artifact } = await service.example(owner, false, true);
-  const state = { ...artifact.state, explanationStep: 1, selectedObjectId: 'processor', spatial: { ...defaultSpatialView(), spread: 0.8, slice: 0.25, azimuth: 90 } };
+  const state = { ...artifact.state, explanationStep: 1, selectedObjectId: 'processor', spatial: { ...defaultSpatialView(), renderer: 'anatomy' as const, spread: 0.8, slice: 0.25, azimuth: 90 } };
   await service.save(owner, artifact.id, 1, state);
   const { artifact: next } = await service.generate(owner, { action: 'generate', requestId: randomUUID(), artifactId: artifact.id, baseVersion: 1, state, question: 'Explain the processor using this 3D world.' });
   const reviewed = JSON.parse((review.mock.calls[0] as unknown as [{ input: { content: string }[] }])[0].input[0].content);

@@ -9,6 +9,7 @@ import { spatialScene, spatialPresentation, type SpatialScene } from '@/lib/doma
 import { defaultSpatialView, type SpatialView } from '@/lib/domain/spatial-schema';
 
 const Canvas = dynamic(() => import('./spatial-canvas'), { ssr: false, loading: () => <p role="status" className="spatial-loading">Opening the spatial view…</p> });
+const Anatomy = dynamic(() => import('./anatomy-canvas'), { ssr: false, loading: () => <p role="status" className="spatial-loading">Drawing the Anatomy illustration…</p> });
 class CanvasBoundary extends Component<{ children: ReactNode; onFailure: () => void }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
@@ -42,6 +43,7 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
   spec: ExplorationSpec; state: ExplorationViewState; onChange: (state: ExplorationViewState) => void; which?: 'primary' | 'comparison';
 }) {
   const [failed, setFailed] = useState(false), [attempt, setAttempt] = useState(0);
+  const [compare, setCompare] = useState(false);
   const view = state.spatial ?? defaultSpatialView();
   const { spatial: _view, selectedObjectId: _selection, ...computation } = state;
   const computationKey = JSON.stringify(computation);
@@ -54,6 +56,15 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
   const selectedEdge = base.connections.find((edge) => edge.id === state.selectedObjectId);
   const rotate = (amount: number) => update({ azimuth: ((view.azimuth + amount + 180) % 360 + 360) % 360 - 180 });
   const spatial3d = view.mode === '3d';
+  const anatomy = view.renderer === 'anatomy';
+  const hasEnclosure = base.objects.some(object => object.renderStyle === 'housing');
+  const stage = (renderer: 'three' | 'anatomy') => <div className="spatial-stage" data-spatial-mode={spatial3d && (renderer === 'anatomy' || !failed) ? '3d' : '2d'} data-renderer={renderer}>
+    {spatial3d && renderer === 'anatomy' ? <Anatomy scene={scene} view={view} selected={state.selectedObjectId} onSelect={select} onView={update} />
+      : spatial3d && !failed ? <CanvasBoundary key={attempt} onFailure={() => setFailed(true)}>
+        <Canvas scene={scene} view={view} selected={state.selectedObjectId} onSelect={select} onView={update} onFailure={() => setFailed(true)} />
+      </CanvasBoundary> : <FlatScene scene={scene} />}
+    <span className="spatial-stage-note" aria-hidden="true">{spatial3d && renderer === 'anatomy' ? 'Drag to rotate · numbered parts below' : spatial3d && !failed ? 'Drag to orbit · select a part' : 'Front projection · select a part below'}</span>
+  </div>;
   return <section className="spatial-workspace" aria-label="Spatial workspace">
     <div className="spatial-heading">
       <div><span className="overline">{scene.assurance === 'checked' ? 'Checked search · spatial view' : '3D schematic · explanation only'}</span><h3>{scene.title}</h3></div>
@@ -63,13 +74,18 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
       ? 'Height represents the current computed distance. Unreached nodes have unknown distance. Camera and separation never change the search.'
       : 'Shapes, depth and motion illustrate the explanation. They are not recovered geometry or a checked physical simulation.'}</p>
     {scene.annotations?.map((text, index) => <p className="meta" key={index}>{text}</p>)}
-    <div className="spatial-stage" data-spatial-mode={spatial3d && !failed ? '3d' : '2d'}>
-      {spatial3d && !failed ? <CanvasBoundary key={attempt} onFailure={() => setFailed(true)}>
-        <Canvas scene={scene} view={view} selected={state.selectedObjectId} onSelect={select} onView={(next) => update(next)} onFailure={() => setFailed(true)} />
-      </CanvasBoundary> : <FlatScene scene={scene} />}
-      <span className="spatial-stage-note" aria-hidden="true">{spatial3d && !failed ? 'Drag to orbit · select a part' : 'Front projection · select a part below'}</span>
-    </div>
-    {failed && spatial3d && <div className="spatial-fallback" role="status">3D is unavailable on this device. Your scene and controls are preserved in the front projection. <button type="button" onClick={() => { setFailed(false); setAttempt(attempt + 1); }}>Retry 3D</button></div>}
+    {spatial3d && <div className="spatial-renderer-switch" role="group" aria-label="Compare rendering approaches">
+      <button type="button" aria-pressed={!anatomy && !compare} onClick={() => { setCompare(false); update({ renderer: 'three' }); }}>Current 3D</button>
+      <button type="button" aria-pressed={anatomy && !compare} onClick={() => { setCompare(false); update({ renderer: 'anatomy' }); }}>Anatomy illustration</button>
+      <button type="button" aria-pressed={compare} onClick={() => setCompare(!compare)}>Side by side</button>
+    </div>}
+    {compare && spatial3d ? <div className="spatial-comparison">
+      <figure><figcaption>Current 3D <span>Perspective meshes</span></figcaption>{stage('three')}</figure>
+      <figure><figcaption>Anatomy <span>Isometric illustration</span></figcaption>{stage('anatomy')}</figure>
+    </div> : stage(anatomy ? 'anatomy' : 'three')}
+    {compare && spatial3d && <p className="spatial-detail-note">Same scene, step and selected part. Controls below update both views.</p>}
+    {anatomy && spatial3d && <p className="spatial-detail-note">{hasEnclosure ? 'Cutaway opens enclosure walls in the illustration.' : 'This illustration has no enclosure to cut away.'}{view.elevation < 0 ? ' Below-ground camera angles use ground level.' : ''}</p>}
+    {failed && spatial3d && (!anatomy || compare) && <div className="spatial-fallback" role="status">3D is unavailable on this device. Your scene and controls are preserved in the front projection. <button type="button" onClick={() => { setFailed(false); setAttempt(attempt + 1); }}>Retry 3D</button></div>}
     {base.objects.some((object) => object.renderStyle) && <p className="spatial-detail-note">Illustrative parts · geometry and detail are schematic</p>}
     <div className="spatial-toolbar" aria-label="Spatial view controls">
       {spatial3d && <>
@@ -84,14 +100,14 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
         <label>Zoom<input aria-label="Spatial zoom" type="range" min="0.65" max="2" step="0.05" value={view.zoom} onChange={(event) => update({ zoom: Number(event.target.value) })} /></label>
       </>}
       <label>Separate parts<input aria-label="Separate parts" type="range" min="0" max="1" step="0.05" value={view.spread} onChange={(event) => update({ spread: Number(event.target.value) })} /></label>
-      {spatial3d && !failed && <label>Cutaway<input aria-label="Cutaway" type="range" min="0" max="1" step="0.05" value={view.slice} onChange={(event) => update({ slice: Number(event.target.value) })} /></label>}
+      {spatial3d && (!failed || anatomy || compare) && <label>Cutaway<input aria-label="Cutaway" type="range" min="0" max="1" step="0.05" disabled={anatomy && !compare && !hasEnclosure} value={view.slice} onChange={(event) => update({ slice: Number(event.target.value) })} /></label>}
       <div className="spatial-camera-buttons">
         <button type="button" disabled={!selected && !view.isolate} aria-pressed={view.isolate} onClick={() => update({ isolate: !view.isolate })}>{view.isolate ? 'Show all parts' : 'Isolate selected'}</button>
         <button type="button" onClick={() => update({ ...defaultSpatialView(), mode: view.mode })}>Reset view</button>
       </div>
     </div>
     <div className="spatial-object-buttons" role="group" aria-label="Select a spatial object">
-      {base.objects.map((object) => <button key={object.id} type="button" aria-pressed={state.selectedObjectId === object.id} onClick={() => select(object.id)}><span style={{ background: palette[object.color] }} aria-hidden="true" />{object.label}</button>)}
+      {base.objects.map((object, index) => <button key={object.id} type="button" aria-pressed={state.selectedObjectId === object.id} onClick={() => select(object.id)}>{spatial3d && (anatomy || compare) ? <b className="anatomy-object-number" aria-hidden="true">{index + 1}</b> : <span style={{ background: palette[object.color] }} aria-hidden="true" />}{object.label}</button>)}
     </div>
     {(selected || selectedEdge) && <div className="spatial-inspector" role="status">
       <span className="overline">Inspecting</span><strong>{selected?.label ?? selectedEdge?.label}</strong>

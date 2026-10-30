@@ -11,7 +11,7 @@ import type { ExplorationPrincipal } from '../../src/lib/server/exploration-type
 it.skipIf(process.env.SOMA_SPATIAL_LIVE !== 'true')('actual Muse authors a source-grounded 3D schematic, applies a contextual view request and saves exact state', async () => {
   // Original synthetic development source. Shared real application budget, no reset or mock billing.
   expect(process.env.SOMA_PERSISTENCE).toBe('firestore');
-  expect(Number(process.env.META_APP_SPEND_CAP_USD)).toBeLessThanOrEqual(15);
+  expect(Number(process.env.META_APP_SPEND_CAP_USD)).toBeLessThanOrEqual(20);
   const id = randomBytes(32).toString('hex'), principal: ExplorationPrincipal = { kind: 'guest', id, workspaceId: id, generation: id, key: `guest-${id}` };
   const run = `${process.env.SOMA_SPATIAL_ARTIFACT_ROOT ?? '.local/pm096'}/live-${Date.now()}`; mkdirSync(run, { recursive: true });
   const records: unknown[] = [];
@@ -45,12 +45,12 @@ it.skipIf(process.env.SOMA_SPATIAL_LIVE !== 'true')('actual Muse authors a sourc
     expect(panel?.kind).toBe('spatial');
     if (panel?.kind !== 'spatial') throw new Error('No generated spatial panel');
     const processor = panel.objects.find((o) => /processor/i.test(o.label)); expect(processor).toBeDefined();
-    const state = { ...first.state, selectedObjectId: processor!.id, spatial: { ...first.state.spatial!, spread: 0.55, slice: 0.2 } };
+    const state = { ...first.state, selectedObjectId: processor!.id, spatial: { ...first.state.spatial!, renderer: 'anatomy' as const, spread: 0.55, slice: 0.2 } };
     await service.save(principal, first.id, first.version, state);
     const { artifact: next } = await service.generate(principal, { action: 'generate', requestId: randomUUID(), artifactId: first.id, baseVersion: 1, state, selectedObjectId: processor!.id, question: 'Keep this 3D world and its current separation and cutaway. Show the selected processor from the side using the camera, and explain its role in one short sentence. Keep all part names and geometry unchanged.' });
     writeFileSync(`${run}/next-artifact.json`, JSON.stringify(next, null, 2));
     records.push({ phase: 'followup', mode: next.spec.mode, calls: next.generation.calls, elapsedMs: next.generation.elapsedMs, costUsd: next.generation.costUsd, state: next.state }); write();
-    expect(next.spec.mode).toBe('explanation'); expect(next.state.spatial).toMatchObject({ azimuth: 90, spread: 0.55, slice: 0.2 });
+    expect(next.spec.mode).toBe('explanation'); expect(next.state.spatial).toMatchObject({ renderer: 'anatomy', azimuth: 90, spread: 0.55, slice: 0.2 });
     expect(next.state.selectedObjectId).toBe(processor!.id);
     if (next.spec.mode !== 'explanation') throw new Error('Expected continued spatial explanation');
     const after = next.spec.scene.panels.find((p) => p.kind === 'spatial'); expect(after?.kind).toBe('spatial');

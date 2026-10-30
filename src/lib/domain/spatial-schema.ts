@@ -51,6 +51,8 @@ export type SpatialVector = z.infer<typeof spatialVectorSchema>;
 // Presentation only: these controls never mutate source or computational input.
 export const spatialViewSchema = z.strictObject({
   mode: z.enum(['2d', '3d']),
+  // Optional for backward-compatible saved revisions. Both render the same scene.
+  renderer: z.enum(['three', 'anatomy']).optional(),
   azimuth: z.number().finite().min(-180).max(180),
   elevation: z.number().finite().min(-85).max(85),
   zoom: z.number().finite().min(0.65).max(2),

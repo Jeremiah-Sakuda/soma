@@ -249,7 +249,11 @@ export default function SpatialCanvas(props: Props) {
     canvas.addEventListener('webglcontextlost', contextLost);
     const instance: Engine = {
       update(next) {
+        // Parent callbacks can change without a visual change. Keep the latest
+        // handlers, but do not submit duplicate GPU frames while the view is idle.
+        const unchanged = currentScene === next.scene && currentSelection === next.selected && JSON.stringify(current.view) === JSON.stringify(next.view);
         current = drag ? { ...next, view: current.view } : next;
+        if (unchanged) return;
         if (currentScene !== next.scene || currentSelection !== next.selected) {
           const before = new Map([...nodes].map(([id, node]) => [id, node.position.clone()]));
           cancelAnimationFrame(animationFrame); rebuild();

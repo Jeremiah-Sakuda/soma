@@ -488,3 +488,9 @@ limits, source-fit requirement, review and follow-up identity. Component detail
 is explicitly schematic, not recovered geometry or checked science. Muse still
 composes the typed scene and explanation. This is a continuation on
 `codex/spatial-exploration`; no release/main merge or provider limit increase.
+
+### PM108 — Anatomy comparison and cumulative $20 testing allowance
+
+October 30: the user explicitly authorized implementing the proposed Anatomy comparison and raising testing credits to $20. Reuse the current spatial branch and validated scene contract, vendor the MIT-licensed pure geometry kit at a pinned upstream commit, and implement an original isometric mechanism adapter alongside Three.js. Preserve source boundaries, deterministic checks, ownership, revisions and the prohibition on generated executable code. Compare the same explanation/state; do not infer user visual acceptance from automated checks or merge to main without authorization. See `ANATOMY_COMPARISON.md` for implementation, tradeoffs and executed evidence.
+
+The application testing cap is now $20 cumulative, superseding historical $15 allowances. Retain all consumption/reservations and the 20-percent allocation reserve; allocation remains $150. Local testing configuration changed; provider billing credits, hosted configuration and daily admission limits did not. This does not reopen scope, authorize training, publication or change the October 31 freeze/November 4 deadline.

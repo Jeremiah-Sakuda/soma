@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import sharp from 'sharp';
 
 // Real local HTTP/storage and WebGL. No provider or source success is simulated here.
 test.use({ launchOptions: { args: ['--enable-unsafe-swiftshader'] } });
@@ -123,6 +124,16 @@ test('keyboard and reduced-motion controls work at desktop, companion and phone 
 
 
 test('step transitions settle, handle interruption and honor reduced motion without idle animation', async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { spatialDrawCalls: number }).spatialDrawCalls = 0;
+    for (const name of ['drawElements', 'drawArrays', 'drawElementsInstanced', 'drawArraysInstanced'] as const) {
+      const original = WebGL2RenderingContext.prototype[name];
+      Object.defineProperty(WebGL2RenderingContext.prototype, name, { configurable: true, writable: true, value: function (this: WebGL2RenderingContext, ...args: unknown[]) {
+        (window as unknown as { spatialDrawCalls: number }).spatialDrawCalls++;
+        return Reflect.apply(original, this, args);
+      } });
+    }
+  });
   await openSpatial(page); await rendered(page);
   const canvas = page.locator('.spatial-canvas canvas');
   // Observe the whole transition; software WebGL may finish before the click
@@ -140,8 +151,20 @@ test('step transitions settle, handle interruption and honor reduced motion with
   await page.getByRole('button', { name: 'Next explanation', exact: true }).click();
   await expect(canvas).toHaveAttribute('data-transitioning', 'false');
   await expect(page.getByText('Explanation 3 of 3', { exact: true })).toBeVisible();
-  const settled = await canvas.screenshot();
-  expect(await canvas.screenshot()).toEqual(settled);
+  // Let the compositor present the final submitted WebGL frame.
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  const settled = await sharp(await canvas.screenshot()).raw().toBuffer();
+  const draws = await page.evaluate(() => (window as unknown as { spatialDrawCalls: number }).spatialDrawCalls);
+  expect(draws).toBeGreaterThan(0);
+  await page.waitForTimeout(450);
+  const next = await sharp(await canvas.screenshot()).raw().toBuffer();
+  expect(await page.evaluate(() => (window as unknown as { spatialDrawCalls: number }).spatialDrawCalls)).toBe(draws);
+  expect(next.length).toBe(settled.length);
+  // Parallel software GPU runs can differ by a handful of edge-rounding channels.
+  // Permit at most4/255 in <0.01% of channels; any ongoing draw work fails above.
+  let changed = 0, largest = 0;
+  for (let i = 0; i < next.length; i++) { const delta = Math.abs(next[i] - settled[i]); if (delta) changed++; largest = Math.max(largest, delta); }
+  expect(largest).toBeLessThanOrEqual(4); expect(changed / next.length).toBeLessThan(.0001);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.getByRole('button', { name: 'Previous explanation', exact: true }).click();
   await expect(canvas).toHaveAttribute('data-transitioning', 'false');

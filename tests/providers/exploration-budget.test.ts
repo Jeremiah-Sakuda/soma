@@ -25,3 +25,12 @@ it('Gemini playback uses the existing spend cap and preserves reservations witho
  await expect(reserveInference('another','tts')).rejects.toMatchObject({reason:'global'});
  process.env.SOMA_GEMINI_TTS='false';await expect(reserveInference('same','tts')).rejects.toMatchObject({reason:'configured'});
 });
+it('raising the cumulative allowance from15 to20 retains previous charges and unknown reservations',async()=>{
+ setup('15');const old=await reserveInference('previous','exploration');await settleInference(old,14.8,true);
+ const unknown=await reserveInference('interrupted','voice');await settleInference(unknown,0,false);
+ await expect(reserveInference('new','exploration')).rejects.toMatchObject({reason:'global'});
+ process.env.META_APP_SPEND_CAP_USD='20';await reserveInference('new','exploration');
+ const db=new DatabaseSync(process.env.SOMA_BUDGET_DB_PATH!);
+ expect(db.prepare('SELECT COUNT(*) count FROM reservations').get()?.count).toBe(3);
+ expect(db.prepare('SELECT SUM(COALESCE(charged,reserved)) total FROM reservations').get()?.total).toBeCloseTo(15.16);db.close();
+});

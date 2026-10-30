@@ -1,6 +1,6 @@
 # Third-party notices
 
-Soma uses the packages pinned in the root, desktop and service lockfiles. Source is installed from those packages; dependencies are not vendored in this repository. Their licenses remain applicable. Packaged Electron distributions retain their bundled Chromium/Electron notices.
+Soma uses the packages pinned in the root, desktop and service lockfiles. Their licenses remain applicable. The vendored Anatomy geometry toolkit is identified below. Packaged Electron distributions retain their bundled Chromium/Electron notices.
 
 | Direct package | Pinned version | Declared license |
 | --- | --- | --- |
@@ -56,4 +56,34 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+```
+
+
+## Anatomy
+
+The experimental isometric renderer uses `kit/iso-kit.ts` from [wheresryan22/anatomy](https://github.com/wheresryan22/anatomy), pinned to commit `1482e8469b0a9e0d8cc18ea2740a01423d29ae80`. The upstream file is retained verbatim at `src/vendor/anatomy/iso-kit.ts`. Its MIT notice is retained at `src/vendor/anatomy/LICENSE` and reproduced here. Soma component designs and adapter code are original; the upstream showcase artwork is not included.
+
+```text
+MIT License
+
+Copyright (c) 2026 Ryan
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
 ```

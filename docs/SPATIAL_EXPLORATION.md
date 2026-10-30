@@ -271,3 +271,7 @@ two links, zero private-configuration mappings. Root and isolated source match
 253-file manifest `24d1a1c0e6f8e4d0655d84473e0c25d127cf9efaccf6472fb5915d35b28a7839`,
 release `soma-pm106-spatial-2026-10-30`. Private receipts are in `.local/pm106/`.
 No merge to main, push, deployment, publication or fresh live-Muse claim.
+
+## PM108 — Anatomy comparison
+
+The user authorized an Anatomy-backed isometric alternative and shared cumulative testing cap of $20 on October 30. Current Three.js remains available. [Comparison scope, implementation, tradeoffs and executed verification](ANATOMY_COMPARISON.md) distinguishes prepared examples, retained Muse-output replay and fresh inference. This does not establish a feature merge or visual acceptance.

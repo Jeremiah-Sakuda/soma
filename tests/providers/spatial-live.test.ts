@@ -13,7 +13,7 @@ it.skipIf(process.env.SOMA_SPATIAL_LIVE !== 'true')('actual Muse authors a sourc
   expect(process.env.SOMA_PERSISTENCE).toBe('firestore');
   expect(Number(process.env.META_APP_SPEND_CAP_USD)).toBeLessThanOrEqual(15);
   const id = randomBytes(32).toString('hex'), principal: ExplorationPrincipal = { kind: 'guest', id, workspaceId: id, generation: id, key: `guest-${id}` };
-  const run = `.local/pm096/live-${Date.now()}`; mkdirSync(run, { recursive: true });
+  const run = `${process.env.SOMA_SPATIAL_ARTIFACT_ROOT ?? '.local/pm096'}/live-${Date.now()}`; mkdirSync(run, { recursive: true });
   const records: unknown[] = [];
   const write = () => writeFileSync(`${run}/results.json`, JSON.stringify(records, null, 2));
   let call = 0;

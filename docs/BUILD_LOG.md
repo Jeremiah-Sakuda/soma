@@ -2583,3 +2583,21 @@ Focused implementation authorized in original soma under existing $15 cap. Prese
 3. Actual Muse/Firestore source-to-3D and contextual side-view revision passed on one original synthetic screenshot: first publication31,201ms/six bounded calls/$0.0785505 (source-format and color repairs), follow-up12,387ms/two calls/$0.03039475. Parts/geometry, source, selection, spread and slice persisted, exact save/reopen matched, original revision remained unchanged. Both actual generated outputs rendered successfully and were visually inspected. An earlier live continuation was rejected because reviewer context lacked current presentation settings; supplied validated state, retained the failure receipt, and reran successfully. Final settled shared ledger snapshot $12.5904345/$15; no cap reset/raise. Private actual artifacts `.local/pm096/live-1793392062102`; failed receipt `.local/pm096/live-1793391956526`.
 
 Deviations/limits: separate experimental scope explicitly authorized by PM096; no new checked scientific family, arbitrary generated code, XR, recovered digital twin, new service or evidence-of-mastery inference. One development live example is not a cross-subject benchmark; Chromium/software-WebGL and failure coverage is not every physical GPU. Branch remains local/private, not merged, deployed, pushed or published. Existing unrelated log/prompt changes from other chats were preserved and excluded from this completion commit. PM096 verbatim prompt was already committed in ce53a70.
+
+## PM098 — Spatial pre-merge verification
+
+Fresh thorough testing requested before merging. Review current branch changes, rerun full checks, extend adversarial/state/browser coverage where gaps are found, fix defects and record actual evidence. Merge remains pending; do not publish or deploy. Outcomes pending.
+
+
+## DEMO-20261030-ae6b95d1 — Demo scenario exploration
+
+1. Reviewed current spatial schema/renderer/authoring and SPATIAL_EXPLORATION.md rather than earlier scoring or log content. Current experimental branch supports bounded Muse-authored primitives, cutaway/separation/isolation, step poses and saved views, plus solver-driven graph projection; it does not add arbitrary physical simulation or musical synthesis. No fresh provider calls or tests run.
+2. Proposed DSA weighted-search reasoning, audible musical beating, speaker/pump cutaways, seasonal geometry and molecular geometry as candidate demonstrations. Distinguished candidate subject validation from existing renderer capability; tones/waveforms and scientific parameter models would need new deterministic components. Verified candidate references with official LeetCode, NASA and authored Physics Classroom educational material.
+3. Recommended two complete source→question→manipulation→understanding moments, with DSA as the existing checked anchor and one noncoding spatial/music story. Offered an approximately three-minute structure and a specific 440/442 Hz beating interaction. No decision to narrow to coding, add all candidates, deploy the spatial branch or expand the freeze was made.
+
+Status: demo ideation and prioritization only. No runtime, scope or release changes; prior judging scores and build-log contents were not consulted.
+
+
+## PM099 — Lower latency and immediate context feedback
+
+User authorized focused latency iteration. Reuse the same detached main worktree to preserve the concurrently tested spatial branch. Profile actual timings; implement a bounded compact continuation on existing visuals plus immediate frozen-source feedback, with full composition fallback and unchanged review/ownership/current-state/budget guards. No unreviewed generated scene, continuous screen upload, new provider or budget raise. Outcomes pending.

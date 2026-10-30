@@ -171,6 +171,8 @@ export default function SpatialCanvas(props: Props) {
       drag = null;
       if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       if (!clicked) { latest.current.onView(nextView); return; }
+      // A click-sized wobble is selection, not an unsaved camera edit.
+      current = latest.current; draw();
       const rect = canvas.getBoundingClientRect();
       const ray = new THREE.Raycaster();
       ray.setFromCamera(new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1), camera);

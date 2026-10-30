@@ -4,9 +4,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createExplorationService, needsExplorationReview, validateExplorationViewState } from '../../src/lib/server/exploration';
-import { closeExplorationStore } from '../../src/lib/server/exploration-store';
+import { closeExplorationStore, explorationStore } from '../../src/lib/server/exploration-store';
+import { checkExploration } from '../../src/lib/domain/exploration';
 import { defaultSpatialView } from '../../src/lib/domain/spatial-schema';
 import { createSpatialExample } from '../../src/lib/domain/spatial-example';
+import { spatialScene } from '../../src/lib/domain/spatial-exploration';
 import type { ExplorationPrincipal } from '../../src/lib/server/exploration-types';
 
 let directory: string;
@@ -17,7 +19,7 @@ beforeEach(() => {
 });
 afterEach(() => { closeExplorationStore(); vi.unstubAllEnvs(); rmSync(directory, { recursive: true, force: true }); });
 
-function harness(options: { foreignSource?: boolean; renamedObject?: boolean; invalid?: boolean; clarify?: boolean; view?: boolean; review?: boolean; droppedPart?: boolean } = {}) {
+function harness(options: { foreignSource?: boolean; renamedObject?: boolean; invalid?: boolean; clarify?: boolean; view?: boolean; review?: boolean; droppedPart?: boolean; newSteps?: boolean } = {}) {
   const request = vi.fn(async (req: { instructions: string; input: { content: string }[] }) => {
     const context = JSON.parse(req.input[0].content);
     const spec = createSpatialExample({ observationId: options.foreignSource ? 'outside' : context.source.observationId, version: context.source.version, region: null });
@@ -28,6 +30,10 @@ function harness(options: { foreignSource?: boolean; renamedObject?: boolean; in
     spec.scene.panels[0].objects[2].position.x = 5; // The service must preserve an existing world's geometry.
     if (options.renamedObject) spec.scene.panels[0].objects[2].label = 'Different meaning';
     if (options.invalid) spec.scene.panels[0].poses[0].objectId = 'foreign';
+    if (options.newSteps) {
+      for (const step of spec.steps) step.id = `revised_${step.id}`;
+      for (const pose of spec.scene.panels[0].poses) pose.stepId = `revised_${pose.stepId}`;
+    }
     if (options.droppedPart) {
       spec.scene.panels[0].objects = spec.scene.panels[0].objects.filter((o) => o.id !== 'signal');
       spec.scene.panels[0].poses = spec.scene.panels[0].poses.filter((o) => o.objectId !== 'signal');
@@ -95,6 +101,39 @@ it('drops spatial presentation state on a clarification without inventing a worl
   const { artifact: next } = await service.generate(owner, { action: 'generate', requestId: randomUUID(), artifactId: artifact.id, baseVersion: 1, state: artifact.state, question: 'Explain the missing part.' });
   expect(next.spec.mode).toBe('clarify'); expect(next.state.spatial).toBeUndefined();
   expect(() => validateExplorationViewState(next.spec, { ...next.state, spatial: defaultSpatialView() })).toThrow();
+});
+
+it('can lift an existing explanatory diagram into spatial objects while retaining semantic IDs', async () => {
+  const { service } = harness(), owner = principal(); await service.initialize(owner);
+  const { artifact } = await service.example(owner, false, true);
+  const spec = structuredClone(artifact.spec);
+  if (spec.mode !== 'explanation' || spec.scene.panels[0].kind !== 'spatial') throw new Error('fixture');
+  const panel = spec.scene.panels[0];
+  spec.scene.panels = [{ id: panel.id, kind: 'diagram', title: panel.title, placement: panel.placement, objects: [
+    ...panel.objects.map((o, i) => ({ id: o.id, kind: 'block' as const, label: o.label, position: { x: (i + 1) / 6, y: 0.5 } })),
+    ...panel.connections.map((edge) => ({ ...edge, kind: 'edge' as const })),
+  ] }];
+  const state = { ...artifact.state, spatial: undefined, selectedObjectId: 'processor' };
+  // Original synthetic persisted 2D fixture; provider remains scripted for this contract test.
+  await explorationStore.mutate(owner, (session) => { Object.assign(session.artifacts[0], checkExploration(spec), { state }); });
+  const { artifact: next } = await service.generate(owner, { action: 'generate', requestId: randomUUID(), artifactId: artifact.id, baseVersion: 1, state, question: 'Turn this same diagram into a 3D schematic, preserving its named parts.' });
+  expect(next.spec.mode).toBe('explanation');
+  expect(next.state.selectedObjectId).toBe('processor');
+  expect(next.state.spatial?.mode).toBe('3d');
+  expect((await service.read(owner, artifact.id, 1)).active!.spec).toEqual(spec);
+});
+
+it('preserves the inspected pose when a contextual explanation replaces the step IDs', async () => {
+  const { service, review } = harness({ newSteps: true, review: true }), owner = principal(); await service.initialize(owner);
+  const { artifact } = await service.example(owner, false, true);
+  const state = { ...artifact.state, explanationStep: 2, selectedObjectId: 'signal', spatial: { ...defaultSpatialView(), spread: 0.6 } };
+  const before = spatialScene(artifact.spec, state)!;
+  const { artifact: next } = await service.generate(owner, { action: 'generate', requestId: randomUUID(), artifactId: artifact.id, baseVersion: 1, state, question: 'Explain the signal in this current state using a fresh explanation.' });
+  const after = spatialScene(next.spec, next.state)!;
+  for (const part of before.objects) expect(after.objects.find((o) => o.id === part.id)).toMatchObject({ position: part.position, visible: part.visible });
+  const reviewed = JSON.parse((review.mock.calls[0] as unknown as [{ input: { content: string }[] }])[0].input[0].content);
+  expect(spatialScene(reviewed.spec, next.state)).toEqual(after);
+  expect((await service.read(owner, artifact.id, 1)).active!.spec).toEqual(artifact.spec);
 });
 
 

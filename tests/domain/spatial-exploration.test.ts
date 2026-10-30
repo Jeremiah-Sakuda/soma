@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { checkExploration, createWeightedExample, createExampleExploration } from '../../src/lib/domain/exploration';
 import { createSpatialExample } from '../../src/lib/domain/spatial-example';
-import { spatialScene, spatialPresentation } from '../../src/lib/domain/spatial-exploration';
+import { spatialScene, spatialPresentation, supportsSpatial } from '../../src/lib/domain/spatial-exploration';
 import { spatialViewSchema, defaultSpatialView } from '../../src/lib/domain/spatial-schema';
 import { initialExplorationState, explorationExecution } from '../../src/lib/domain/exploration-view';
 
@@ -49,6 +49,39 @@ describe('bounded spatial contracts', () => {
   });
 });
 describe('spatial projection and presentation', () => {
+  it('bounds tentative distance heights even when a large initial cost is later improved', () => {
+    const spec = createWeightedExample({ observationId: 'test-source', version: 1, region: null });
+    if (spec.mode !== 'checked-dijkstra') throw new Error('fixture');
+    const direct = spec.input.edges.find((e) => e.from === spec.input.start && e.to === spec.input.goal)!;
+    const state = { ...initialExplorationState(spec), edgeWeights: { [direct.id]: 1000000 } };
+    const run = explorationExecution(spec, state)!;
+    expect(run.steps.at(-1)!.distances[spec.input.goal!]).toBe(3);
+    for (let step = 0; step < run.steps.length; step++) {
+      const scene = spatialScene(spec, { ...state, step })!;
+      for (const object of scene.objects) { expect(object.position.y).toBeGreaterThanOrEqual(0); expect(object.position.y).toBeLessThanOrEqual(3); }
+      const spread = spatialPresentation(scene, { ...state, spatial: { ...defaultSpatialView(), spread: 1 } });
+      expect(spread.objects.map((o) => o.position.y)).toEqual(scene.objects.map((o) => o.position.y));
+    }
+  });
+  it('keeps separated part positions stable when a revision reorders or adds objects', () => {
+    const { spec } = candidate(), state = { ...initialExplorationState(spec), spatial: { ...defaultSpatialView(), spread: 0.8 } };
+    const scene = spatialScene(spec, state)!, before = spatialPresentation(scene, state);
+    const next = { ...scene, objects: [...scene.objects].reverse().concat([{ ...scene.objects[0], id: 'new_part' }]) };
+    const after = spatialPresentation(next, state);
+    for (const part of before.objects) expect(after.objects.find((o) => o.id === part.id)!.position).toEqual(part.position);
+  });
+  it('does not offer an empty 3D view for a text-only diagram', () => {
+    const { spec } = candidate();
+    spec.scene.panels = [{ id: 'text_diagram', kind: 'diagram', title: 'Annotation', placement: { column: 1, row: 1, columnSpan: 2 }, objects: [{ id: 'annotation', kind: 'text', text: 'No spatial entities here', position: { x: 0.5, y: 0.5 } }] }];
+    spec.steps = [{ ...spec.steps[0], highlightIds: ['annotation'] }];
+    expect(checkExploration(spec).validation.assurance).toBe('explanation-only');
+    expect(supportsSpatial(spec)).toBe(false);
+    const panel = spec.scene.panels[0];
+    if (panel.kind !== 'diagram') throw new Error('fixture');
+    panel.objects.push({ id: 'part', kind: 'block', label: 'A part', position: { x: 0.5, y: 0.5 } });
+    expect(supportsSpatial(spec)).toBe(true);
+    expect(spatialScene(spec, initialExplorationState(spec))!.annotations).toEqual(['No spatial entities here']);
+  });
   it('scrubs poses reversibly without modifying the original scene', () => {
     const { spec } = candidate(), state = initialExplorationState(spec);
     const original = structuredClone(spec);

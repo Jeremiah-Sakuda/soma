@@ -61,6 +61,7 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
     <p className="meta spatial-assurance">{scene.assurance === 'checked'
       ? 'Height represents the current computed distance. Unreached nodes have unknown distance. Camera and separation never change the search.'
       : 'Shapes, depth and motion illustrate the explanation. They are not recovered geometry or a checked physical simulation.'}</p>
+    {scene.annotations?.map((text, index) => <p className="meta" key={index}>{text}</p>)}
     <div className="spatial-stage" data-spatial-mode={spatial3d && !failed ? '3d' : '2d'}>
       {spatial3d && !failed ? <CanvasBoundary key={attempt} onFailure={() => setFailed(true)}>
         <Canvas scene={scene} view={view} selected={state.selectedObjectId} onSelect={select} onView={(next) => update(next)} onFailure={() => setFailed(true)} />

@@ -9,9 +9,10 @@ export type SpatialConnection = SpatialPanel['connections'][number] & { active: 
 export type SpatialScene = {
   title: string; assurance: 'checked' | 'schematic';
   objects: SpatialObject[]; connections: SpatialConnection[];
+  annotations?: string[];
 };
 export function supportsSpatial(spec: ExplorationSpec) {
-  return spec.mode !== 'clarify' && (spec.mode !== 'explanation' || spec.scene.panels.some((p) => p.kind === 'spatial' || p.kind === 'diagram'));
+  return spec.mode !== 'clarify' && (spec.mode !== 'explanation' || spec.scene.panels.some((p) => p.kind === 'spatial' || (p.kind === 'diagram' && p.objects.some((o) => o.kind === 'node' || o.kind === 'block'))));
 }
 
 /** Apply a newly authored, validated presentation request once at publication, never on reopen. */
@@ -40,7 +41,9 @@ export function spatialScene(spec: ExplorationSpec, state: ExplorationViewState,
     const graph = spec.scene.panels.find((p) => p.kind === 'graph' && p.execution === which);
     if (!graph || graph.kind !== 'graph') return null;
     const step = execution.steps[Math.min(state.step, execution.steps.length - 1)];
-    const max = Math.max(1, ...Object.values(execution.steps.at(-1)!.distances).filter((v): v is number => typeof v === 'number' && Number.isFinite(v)));
+    // Tentative costs can be much larger than their eventual settled values.
+    // One scale over the complete trace keeps every frame bounded and comparable.
+    const max = Math.max(1, ...execution.steps.flatMap((s) => Object.values(s.distances)).filter(Number.isFinite));
     const path = step.status === 'found' ? execution.path ?? [] : [];
     const input = which === 'comparison' ? spec.comparison!.input : spec.input;
     return {
@@ -84,6 +87,7 @@ export function spatialScene(spec: ExplorationSpec, state: ExplorationViewState,
   if (diagram?.kind !== 'diagram') return null;
   return {
     title: diagram.title, assurance: 'schematic',
+    annotations: diagram.objects.filter((o) => o.kind === 'text').map((o) => o.text),
     objects: diagram.objects.filter((o) => o.kind === 'node' || o.kind === 'block').map((o) => ({
       id: o.id, label: o.label, description: 'Spatial arrangement of the original explanatory diagram.',
       shape: o.kind === 'node' ? 'sphere' : 'box', color: 'sage',
@@ -104,12 +108,15 @@ export function spatialPresentation(scene: SpatialScene, state: ExplorationViewS
     for (let depth = 0; depth < scene.objects.length; depth++)
       for (const object of scene.objects) if (object.parentId && related.has(object.parentId)) related.add(object.id);
   }
-  const objects = scene.objects.map((object, index) => {
-    const angle = (index / scene.objects.length) * Math.PI * 2;
+  const objects = scene.objects.map((object) => {
+    // Presentation must remain attached to identity across model reordering/additions.
+    let hash = 2166136261;
+    for (const character of object.id) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619) >>> 0;
+    const angle = (hash / 4294967296) * Math.PI * 2;
     const offset = view.spread * (object.parentId ? 2 : 0.8);
     const position: SpatialVector = {
       x: object.position.x + Math.cos(angle) * offset,
-      y: object.position.y + view.spread * index * 0.15,
+      y: object.position.y + (scene.assurance === 'checked' ? 0 : view.spread * (hash >>> 16) / 65535 * 2.25),
       z: object.position.z + Math.sin(angle) * offset,
     };
     return { ...object, position, visible: object.visible && (!view.isolate || !selected || related.has(object.id)) };

@@ -2675,3 +2675,8 @@ Verbatim prompt appended to canonical archive.
 3. Checks: 56 service regressions, 23 desktop unit checks/native fixture smoke, 33 capture/exploration/progress/spatial browser tests and nine landing/credential cases passed. Final native integrated visual/build checks pending.
 
 Deviation: isolated current-spatial integration; browser quick view is in-page; no model spend, production deployment or signed release. See docs/CAPTURE_FIRST_UI.md.
+
+
+### CAPTURE-UI-20261030-01 final verification — October 30
+
+Supersedes pending final checks: actual Electron + current React retained WebContents/draft/step and exact bounds/pin across expansion; 33 exploration/spatial +9 landing/credential browser cases passed; 56 service and23 desktop tests passed. Production build, TypeScript and strict isolated artifact trace passed after replacing shared dependency symlink with clean npm install (1339 files, zero private mappings). Final local production smoke passed. Large diagrams scroll in compact mode. No model spend, production deploy or signed native release. See docs/CAPTURE_FIRST_UI.md; local preview port3198.

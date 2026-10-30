@@ -1332,7 +1332,7 @@
   "outcomes": [
     "Rebuilt capture home, persistent compact/expanded explanation surfaces and minimal visitor entrance.",
     "Implemented actual frameless native shell preserving WebContents, draft, bounds and pin state; independent audit fixed reviewed-pixel consistency, sharing-stop, resize and return controls.",
-    "56 service regressions, 23 desktop tests/native fixture smoke, 33 browser capture/exploration/progress/spatial cases and nine landing/credential checks passed; final build/native integrated visual checks pending at this checkpoint."
+    "Final checks passed: 56 service regressions; 23 desktop tests, native fixture smoke and actual-React native continuity; 33 capture/exploration/progress/spatial browser cases plus nine landing/credential cases; TypeScript, production build and strict isolated trace (1339 files, zero private mappings). Production preview and landscape/phone checks passed; large diagrams require scrolling in the compact window."
   ],
   "deviations": [
     "Reused isolated demo worktree and integrated current spatial work, preserving concurrent root checkout. Browser quick view is in-page; native supplies actual frameless window. No model spend, budget increase, deployment or signed native release.",

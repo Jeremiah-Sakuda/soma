@@ -1,4 +1,5 @@
 'use client';
+import { CompanionMemory } from './companion-memory';
 import { ExplorationSourceGrounding } from './exploration-source-grounding';
 import type { SourceAnchor, SourceChange } from '@/lib/domain/source-grounding';
 
@@ -942,6 +943,9 @@ export function ExplorationWorkspace() {
             </span>
           </div>
         </div>
+        <CompanionMemory sessionReady={initialized} artifact={artifact ? {id: artifact.id, version: artifact.version, saved: artifact.saved} : null}
+          onOpen={(id, version) => { void resume(id, version); }}
+          onAsk={(next) => { setPlaying(false); setQuestion(next); requestAnimationFrame(() => questionRef.current?.focus()); }} />
         <div className="exploration-workbench">
           {artifact && <div className="exploration-composer-column">{composer}</div>}
           <aside className="exploration-source-column" aria-label="Selected context">

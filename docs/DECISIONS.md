@@ -463,3 +463,7 @@ User explicitly directed importing all commits/history from the separate reposit
 Move all tags and release archives with matching checksums before deleting the extra repository. Public GitHub CI logs/metadata are evidence archives, not transferable check-run identities; new CI runs in soma. Release downloads become private with the original repository until publication. Existing hosted deployments are not changed by this consolidation. Do not publish now or schedule publication without the user's next instruction. Future work uses only original soma and its original working folder.
 
 PM091 completion: after explicit action-time confirmation and owner-approved authentication, deletion of the separate repository verified by authenticated API404. Original soma remains private with main as its sole branch and both original release archives preserved. No automatic publication or deployment.
+
+## PM096 — Spatial exploration branch (October 30)
+
+User authorized scoping, building and thoroughly testing the 3D direction on a separate branch. Implement `docs/SPATIAL_EXPLORATION.md` in `codex/spatial-exploration` within original private soma. Scope is bounded Muse-authored schematic scenes plus a checked-graph projection, integrated with existing source/selection/follow-up/persistence. General 3D is explanation-only; no new scientific computation family or arbitrary generated executable code. Preserve existing owned source/evidence/budget rules and October 31 freeze. Branch implementation does not authorize merging main, deployment or public visibility.

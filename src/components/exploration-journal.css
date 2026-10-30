@@ -725,3 +725,79 @@
   box-shadow: none;
   padding: 0;
 }
+
+/* ── Left page header: provenance, version, save, page menu ─────────── */
+.exploration-app .journal-page-meta,
+.exploration-app.has-exploration .journal-page-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.exploration-app .journal-provenance {
+  flex: 1 1 220px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.exploration-app .journal-provenance > span:first-child {
+  font-weight: 600;
+  color: var(--accent);
+}
+.exploration-app .journal-save {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.exploration-app .journal-save .secondary-button {
+  min-height: 44px;
+  padding: 6px 14px;
+  font-size: 13px;
+}
+.exploration-app .journal-page-menu .journal-menu-panel {
+  width: min(440px, calc(100vw - 32px));
+}
+.exploration-app .journal-page-menu .exploration-pipeline,
+.exploration-app .journal-page-menu .exploration-audit,
+.exploration-app .journal-page-menu details {
+  margin: 0;
+}
+.exploration-app .journal-page-menu .exploration-delete {
+  padding-top: 10px;
+  border-top: 1.5px dashed var(--control-border);
+}
+.exploration-app .journal-left-head .exploration-recording-note {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ── Left page body: practice and suggestions as journal entries ─────── */
+.exploration-app .journal-left-body .exploration-prediction,
+.exploration-app .journal-left-body .exploration-application {
+  background: transparent;
+  border: 1.5px dashed var(--control-border);
+  border-radius: 10px;
+  box-shadow: none;
+}
+.exploration-app .journal-left-body .exploration-followups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.exploration-app .journal-left-body .exploration-followups::before {
+  content: 'Try asking';
+  flex: 1 1 100%;
+  font-family: var(--font-journal-serif), 'Young Serif', Georgia, serif;
+  font-size: 15px;
+}
+.exploration-app .journal-left-body .exploration-followups button {
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--ink-2);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  text-align: left;
+}

@@ -1313,9 +1313,9 @@ export function ExplorationWorkspace() {
             aria-label="Visual exploration card"
           >
             <header className="journal-page journal-left journal-left-head">
-              <div className="exploration-artifact-meta">
-                <div className="badge-row">
-                  <span className="status-chip ready">
+              <div className="exploration-artifact-meta journal-page-meta">
+                <p className="journal-provenance">
+                  <span>
                     {artifact.recording
                       ? 'Recorded Muse Spark run'
                       : artifact.generation.mode === 'prepared-example'
@@ -1324,7 +1324,8 @@ export function ExplorationWorkspace() {
                           : 'Prepared original example'
                         : 'Muse Spark generated'}
                   </span>
-                  <span className="status-chip">
+                  <span aria-hidden="true"> · </span>
+                  <span>
                     {artifact.validation.assurance === 'checked-dijkstra'
                       ? 'Checked Dijkstra computation'
                       : artifact.validation.assurance === 'checked-bfs'
@@ -1334,9 +1335,179 @@ export function ExplorationWorkspace() {
                           : 'Explanatory visual'}
                   </span>
                   {newContext && <span className="status-chip caution">Previous context</span>}
-                </div>
+                </p>
                 <span className="meta">Version {artifact.version}</span>
+                <div className="journal-save">
+                  <span className="meta">
+                    {dirty ? 'Unsaved changes' : artifact.saved ? 'Saved' : 'Ready to save'}
+                  </span>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    disabled={saving || busy}
+                    onClick={() => void save()}
+                  >
+                    <Save size={16} aria-hidden="true" /> {saving ? 'Saving…' : 'Save exploration'}
+                  </button>
+                </div>
+                <JournalMenu
+                  label="Page details"
+                  className="journal-page-menu"
+                  summary={<MoreHorizontal size={18} aria-hidden="true" />}
+                >
+                  <ExplorationPipeline
+                    generation={artifact.generation}
+                    checked={artifact.validation.assurance.startsWith('checked-')}
+                    replay={!!artifact.recording}
+                  />
+                  {versionHistory}
+                  <details>
+                    <summary>
+                      <CircleHelp size={15} aria-hidden="true" /> Source & assumptions
+                    </summary>
+                    <p>{artifact.source.summary}</p>
+                    {artifact.source.uncertainty.length > 0 && (
+                      <>
+                        <h3>Source reading uncertainty</h3>
+                        <ul>
+                          {artifact.source.uncertainty.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                    <p className="meta">
+                      {artifact.source.label} · {capturedTime(artifact.source.capturedAt)}
+                    </p>
+                    {artifact.spec.assumptions.length > 0 && (
+                      <>
+                        <h3>Assumptions</h3>
+                        <ul>
+                          {artifact.spec.assumptions.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                    {artifact.spec.uncertainty.length > 0 && (
+                      <>
+                        <h3>Uncertainty</h3>
+                        <ul>
+                          {artifact.spec.uncertainty.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                    {artifact.spec.unsupportedClaims.length > 0 && (
+                      <>
+                        <h3>Outside this explanation</h3>
+                        <ul>
+                          {artifact.spec.unsupportedClaims.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                    <p className="meta">
+                      {artifact.validation.assurance.startsWith('checked-')
+                        ? `Computation: ${artifact.validation.modelVersion}. This checks the search behavior, not every generated explanation.`
+                        : 'Generated explanation; no checked quantitative model is attached.'}{' '}
+                      Exploring does not count as an independent attempt.
+                    </p>
+                  </details>
+                  <details id="exploration-audit" className="exploration-audit">
+                    <summary>How this card was prepared</summary>
+                    <dl>
+                      <div>
+                        <dt>Mode</dt>
+                        <dd>
+                          {artifact.recording
+                            ? 'Replay of a recorded live generation'
+                            : artifact.generation.mode === 'prepared-example'
+                              ? artifact.practiceOrigin
+                                ? 'Fresh practice variation'
+                                : 'Prepared original example'
+                              : 'Recorded live generation'}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Model</dt>
+                        <dd>{artifact.generation.model ?? 'No model call'}</dd>
+                      </div>
+                      <div>
+                        <dt>Provider calls</dt>
+                        <dd>{artifact.generation.calls}</dd>
+                      </div>
+                      <div>
+                        <dt>Generation time</dt>
+                        <dd>{(artifact.generation.elapsedMs / 1000).toFixed(1)} seconds</dd>
+                      </div>
+                      <div>
+                        <dt>Recorded model cost</dt>
+                        <dd>${artifact.generation.costUsd.toFixed(4)}</dd>
+                      </div>
+                    </dl>
+                    {artifact.generation.audit?.length ? (
+                      <ol>
+                        {artifact.generation.audit.map((item, index) => (
+                          <li key={index}>
+                            <strong>
+                              Call {item.call} · {item.event.replaceAll('-', ' ')}
+                            </strong>
+                            <p>{item.detail}</p>
+                          </li>
+                        ))}
+                      </ol>
+                    ) : (
+                      <p>Original authored material; no runtime model investigation was performed.</p>
+                    )}
+                    <p className="meta">
+                      These are recorded actions and validation facts, not private model reasoning.
+                    </p>
+                  </details>
+                  <div className="exploration-delete">
+                    {deleteConfirmation ? (
+                      <div role="group" aria-label="Confirm exploration deletion">
+                        <p>Delete this exploration and all its saved versions? This cannot be undone.</p>
+                        <div className="action-row">
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            disabled={sourceBusy}
+                            onClick={() => setDeleteConfirmation(false)}
+                          >
+                            Keep exploration
+                          </button>
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            disabled={sourceBusy}
+                            onClick={() => void remove()}
+                          >
+                            Delete all versions
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="text-button"
+                        disabled={sourceBusy || saving}
+                        onClick={() => setDeleteConfirmation(true)}
+                      >
+                        Delete exploration
+                      </button>
+                    )}
+                  </div>
+                </JournalMenu>
               </div>
+              {artifact.recording && (
+                <p className="exploration-recording-note">
+                  Recorded {capturedTime(artifact.recording.generatedAt)} · original synthetic
+                  source · no inference on replay. Follow-ups use live generation when available.
+                </p>
+              )}
               <h2>{artifact.spec.title}</h2>
               {artifact.practiceOrigin && (
                 <p className="meta">
@@ -1525,11 +1696,6 @@ export function ExplorationWorkspace() {
                       : 'muse'
                 }
               />
-              <ExplorationPipeline
-                generation={artifact.generation}
-                checked={artifact.validation.assurance.startsWith('checked-')}
-                replay={!!artifact.recording}
-              />
               <ExplorationSourceGrounding
                 capture={
                   source?.capturedAt === artifact.source.capturedAt
@@ -1551,13 +1717,6 @@ export function ExplorationWorkspace() {
                     : (artifact.spec.steps[state?.explanationStep ?? 0]?.sourceHighlightIds ?? [])
                 }
               />
-              {artifact.recording && (
-                <p className="exploration-recording-note">
-                  Recorded {capturedTime(artifact.recording.generatedAt)} · original synthetic
-                  source · no inference on replay. Follow-ups use live generation when available.
-                </p>
-              )}
-              {versionHistory}
               {!newContext && (
                 <ExplorationPredictionCard
                   key={JSON.stringify([artifact.id, artifact.version, state])}
@@ -1658,160 +1817,6 @@ export function ExplorationWorkspace() {
                   ))}
                 </div>
               )}
-              <footer className="exploration-artifact-footer">
-                <details>
-                  <summary>
-                    <CircleHelp size={15} aria-hidden="true" /> Source & assumptions
-                  </summary>
-                  <p>{artifact.source.summary}</p>
-                  {artifact.source.uncertainty.length > 0 && (
-                    <>
-                      <h3>Source reading uncertainty</h3>
-                      <ul>
-                        {artifact.source.uncertainty.map((item) => (
-                          <li key={item}>{item}</li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                  <p className="meta">
-                    {artifact.source.label} · {capturedTime(artifact.source.capturedAt)}
-                  </p>
-                  {artifact.spec.assumptions.length > 0 && (
-                    <>
-                      <h3>Assumptions</h3>
-                      <ul>
-                        {artifact.spec.assumptions.map((item) => (
-                          <li key={item}>{item}</li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                  {artifact.spec.uncertainty.length > 0 && (
-                    <>
-                      <h3>Uncertainty</h3>
-                      <ul>
-                        {artifact.spec.uncertainty.map((item) => (
-                          <li key={item}>{item}</li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                  {artifact.spec.unsupportedClaims.length > 0 && (
-                    <>
-                      <h3>Outside this explanation</h3>
-                      <ul>
-                        {artifact.spec.unsupportedClaims.map((item) => (
-                          <li key={item}>{item}</li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                  <p className="meta">
-                    {artifact.validation.assurance.startsWith('checked-')
-                      ? `Computation: ${artifact.validation.modelVersion}. This checks the search behavior, not every generated explanation.`
-                      : 'Generated explanation; no checked quantitative model is attached.'}{' '}
-                    Exploring does not count as an independent attempt.
-                  </p>
-                </details>
-                <div>
-                  <span className="meta">
-                    {dirty ? 'Unsaved changes' : artifact.saved ? 'Saved' : 'Ready to save'}
-                  </span>
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    disabled={saving || busy}
-                    onClick={() => void save()}
-                  >
-                    <Save size={16} aria-hidden="true" /> {saving ? 'Saving…' : 'Save exploration'}
-                  </button>
-                </div>
-              </footer>
-              <details id="exploration-audit" className="exploration-audit">
-                <summary>How this card was prepared</summary>
-                <dl>
-                  <div>
-                    <dt>Mode</dt>
-                    <dd>
-                      {artifact.recording
-                        ? 'Replay of a recorded live generation'
-                        : artifact.generation.mode === 'prepared-example'
-                          ? artifact.practiceOrigin
-                            ? 'Fresh practice variation'
-                            : 'Prepared original example'
-                          : 'Recorded live generation'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Model</dt>
-                    <dd>{artifact.generation.model ?? 'No model call'}</dd>
-                  </div>
-                  <div>
-                    <dt>Provider calls</dt>
-                    <dd>{artifact.generation.calls}</dd>
-                  </div>
-                  <div>
-                    <dt>Generation time</dt>
-                    <dd>{(artifact.generation.elapsedMs / 1000).toFixed(1)} seconds</dd>
-                  </div>
-                  <div>
-                    <dt>Recorded model cost</dt>
-                    <dd>${artifact.generation.costUsd.toFixed(4)}</dd>
-                  </div>
-                </dl>
-                {artifact.generation.audit?.length ? (
-                  <ol>
-                    {artifact.generation.audit.map((item, index) => (
-                      <li key={index}>
-                        <strong>
-                          Call {item.call} · {item.event.replaceAll('-', ' ')}
-                        </strong>
-                        <p>{item.detail}</p>
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <p>Original authored material; no runtime model investigation was performed.</p>
-                )}
-                <p className="meta">
-                  These are recorded actions and validation facts, not private model reasoning.
-                </p>
-              </details>
-              <div className="exploration-delete">
-                {deleteConfirmation ? (
-                  <div role="group" aria-label="Confirm exploration deletion">
-                    <p>Delete this exploration and all its saved versions? This cannot be undone.</p>
-                    <div className="action-row">
-                      <button
-                        type="button"
-                        className="secondary-button"
-                        disabled={sourceBusy}
-                        onClick={() => setDeleteConfirmation(false)}
-                      >
-                        Keep exploration
-                      </button>
-                      <button
-                        type="button"
-                        className="secondary-button"
-                        disabled={sourceBusy}
-                        onClick={() => void remove()}
-                      >
-                        Delete all versions
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    className="text-button"
-                    disabled={sourceBusy || saving}
-                    onClick={() => setDeleteConfirmation(true)}
-                  >
-                    Delete exploration
-                  </button>
-                )}
-              </div>
             </section>
           </article>
         ) : busy ? null : (

@@ -2664,3 +2664,14 @@ Deviations: isolated worktree preserves concurrent work; production guest quota 
 3. Fresh live test was blocked before inference by the Firestore daily guest-creation cap; no cost, bypass or reset. Ledger unchanged$13.848943/$15. New-style live authoring remains unverified; earlier live-output replay is rendering evidence only. Final252-file manifest2c7eb5049a9b574e24e2b30ffcd1b8d23be7f7c2511e38db1a1275b0e70b1c94. Report:docs/SPATIAL_EXPLORATION.md; private receipts:.local/pm101.
 
 Status: implementation and local checks complete; user visual acceptance and any feature merge remain pending. Existing fixed-composer/small-screen scrolling and broad asset-generation limits remain. Concurrent PM100/PM104 documents are preserved outside this commit.
+
+
+## CAPTURE-UI-20261030-01 — capture-first redesign (October 30; exact prompt timestamp unavailable)
+
+Verbatim prompt appended to canonical archive.
+
+1. Rebuilt capture home, compact/expanded explanation surfaces and visitor entrance.
+2. Implemented frameless resizable native shell preserving session/draft/bounds; independent audit fixed preview consistency, sharing-stop, resize and return controls.
+3. Checks: 56 service regressions, 23 desktop unit checks/native fixture smoke, 33 capture/exploration/progress/spatial browser tests and nine landing/credential cases passed. Final native integrated visual/build checks pending.
+
+Deviation: isolated current-spatial integration; browser quick view is in-page; no model spend, production deployment or signed release. See docs/CAPTURE_FIRST_UI.md.

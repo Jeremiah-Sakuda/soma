@@ -155,3 +155,24 @@
 .capture-shell.is-quick .exploration-notice { flex-shrink: 0; max-height: 65px; overflow: auto; }
 .capture-shell.is-quick .exploration-error { flex-shrink: 0; max-height: 25%; overflow: auto; }
 .capture-shell.is-quick .exploration-working { flex-shrink: 0; max-height: 25%; overflow: auto; }
+.capture-shell.is-native.is-capture .exploration-header { display: flex; justify-content: flex-end; padding: 0 8px; }
+.capture-shell.is-native.is-capture .exploration-header .wordmark,
+.capture-shell.is-native.is-capture .exploration-home { display: none; }
+.capture-shell.is-native.is-capture .exploration-header .text-button { font-size: 12px; }
+/* Keep the first viewport about the visual; detailed playback stays in the app. */
+.capture-shell.is-quick .exploration-playback .exploration-voice-settings,
+.capture-shell.is-quick .exploration-playback .action-row > .text-button,
+.capture-shell.is-quick .exploration-playback .action-row > .meta { display: none; }
+.capture-shell.is-quick [data-exploration-mode^=checked] .exploration-spoken-caption { display: none; }
+.capture-shell.is-quick .exploration-playback { padding: 2px 0 8px; }
+.capture-shell.is-quick .exploration-playback .primary-button { font-size: 13px; }
+.capture-shell.is-quick .exploration-artifact > h2 { font-size: 20px; margin: 6px 0 10px; }
+.capture-shell.is-quick .exploration-artifact-meta .badge-row { flex-wrap: wrap; gap: 4px; }
+.capture-shell.is-quick .exploration-artifact-meta .status-chip { background: transparent; padding: 0; font-size: 11px; }
+.capture-shell.is-quick .exploration-artifact-meta .badge-row .status-chip + .status-chip::before { content: '·'; margin-right: 4px; }
+.capture-shell.is-quick .exploration-step-bar { margin: 0 0 8px; gap: 6px; }
+.capture-shell.is-quick .exploration-step-bar button { font-size: 12px; padding: 8px 10px; }
+.capture-shell.is-quick .exploration-comparison-switch { margin-bottom: 8px; }
+.capture-shell.is-quick .exploration-comparison-switch button { padding: 7px 10px; min-height: 50px; }
+.capture-shell.is-quick .exploration-comparison-switch strong { font-size: 13px; }
+.capture-shell.is-quick .exploration-comparison-switch .meta { font-size: 11px; }

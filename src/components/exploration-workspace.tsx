@@ -228,6 +228,8 @@ export function ExplorationWorkspace() {
     const receive = (event: Event) => {
       const value = (event as CustomEvent).detail?.surface;
       if (value === 'companion' || value === 'workspace') {
+        resultFrameRef.current?.style.removeProperty('width');
+        resultFrameRef.current?.style.removeProperty('height');
         setSurface(value === 'companion' ? 'quick' : 'workspace');
         setNativeCompanion(true);
         setResultOpen(true);
@@ -238,6 +240,8 @@ export function ExplorationWorkspace() {
     return () => window.removeEventListener('soma:surface', receive);
   }, []);
   function changeSurface(next: 'quick' | 'workspace') {
+    resultFrameRef.current?.style.removeProperty('width');
+    resultFrameRef.current?.style.removeProperty('height');
     setSurface(next);
     setResultOpen(true);
     if (nativeCompanion) window.dispatchEvent(new CustomEvent('soma:surface-request', {
@@ -522,20 +526,8 @@ export function ExplorationWorkspace() {
     setPlaying(false);
     setError('');
     setNotice('');
-    let selected = fresh ?? source;
-    try {
-      if (!fresh && capture.sharing && (newContext || !base)) {
-        selected = capture.capture();
-        setSource(selected);
-      }
-    } catch (failure) {
-      setError(
-        failure instanceof Error
-          ? failure.message
-          : 'Capture failed. Upload a screenshot instead.',
-      );
-      return false;
-    }
+    // Send the reviewed snapshot. A newer frame requires explicit Refresh snapshot.
+    const selected = fresh ?? source;
     if ((fresh || !base || newContext) && !selected) {
       setError('Select a window or screenshot first, or try the original example.');
       return false;

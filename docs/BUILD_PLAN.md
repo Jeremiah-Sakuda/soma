@@ -1,3 +1,7 @@
+## Capture-first interface iteration — October 30, 2026
+
+User-authorized sequence: (1) isolate and integrate current spatial work; (2) implement minimal capture home and persistent quick/expanded surfaces; (3) rebuild the native shell frameless with resizing and preserved session; (4) audit capture consent, cancellation, account continuity, resizing and accessibility; (5) verify locally and document before a new production/native release. Details and executed status: [CAPTURE_FIRST_UI.md](CAPTURE_FIRST_UI.md). This changes presentation, not model scope or budget. Keep the October 31 freeze and November 4 deadline.
+
 ## PM073 delivered continuity — October 30
 
 Fresh practice and stable saved-history order are deployed and hosted-verified. Current release/source/budget: CODEX_HANDOFF.md. Final release soma-pm073-2026-10-30-r3 is hosted-verified and clean CI 41004986055 passed; no further feature expansion is planned. Return to actual student/device testing and demo footage before the October 31 freeze. Keep the optional fresh-application beat inside the existing capture → manipulate → explain → save/revisit story.

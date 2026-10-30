@@ -477,3 +477,8 @@ Keep personal interpretations out of source extraction, then retrieve owned memo
 ## October 30 — PM102 / PM103 spatial visual acceptance
 
 Passing interaction/regression tests does not establish visual acceptance. The user rejected the initial primitive 3D look and chose polished educational cutaways. Extend the bounded renderer with application-owned reusable part styles, not generated executable code or measured geometry. Preserve legacy primitives and saved scene identities, distinguish schematic detail from observed facts, and verify the revised result with native Mac computer control before proposing merge. No publication or feature merge authorized here.
+
+
+## Capture-first UI — October 30, 2026
+
+User requested a ground-up minimal UI centered on screen capture, with a frameless resizable explanation window and optional full-app exploration. Adopted same-session expansion rather than a cross-window unsaved-data handoff. Browser quick view remains in-page; native window supplies actual frameless behavior. Capture preview is authoritative for Ask; only explicit refresh selects newer pixels. Existing backend, model budget, source boundaries and course routes remain intact. Implementation/release limits: docs/CAPTURE_FIRST_UI.md.

@@ -1324,5 +1324,20 @@
     "Per user instruction, did not consult build-log content or prior judge scores; this prompt entry is append-only. Exact prompt timestamp was unavailable."
   ]
 }
+  ,
+{
+  "id": "CAPTURE-UI-20261030-01",
+  "timestamp": null,
+  "text": "I want you to rework the UI from the ground up. It was made for the old version of Soma, this new direction should be minimal, centered on the screen capture. Explanations should pop up in a small frameless window you can resize, with the option to explore further in the app ",
+  "outcomes": [
+    "Rebuilt capture home, persistent compact/expanded explanation surfaces and minimal visitor entrance.",
+    "Implemented actual frameless native shell preserving WebContents, draft, bounds and pin state; independent audit fixed reviewed-pixel consistency, sharing-stop, resize and return controls.",
+    "56 service regressions, 23 desktop tests/native fixture smoke, 33 browser capture/exploration/progress/spatial cases and nine landing/credential checks passed; final build/native integrated visual checks pending at this checkpoint."
+  ],
+  "deviations": [
+    "Reused isolated demo worktree and integrated current spatial work, preserving concurrent root checkout. Browser quick view is in-page; native supplies actual frameless window. No model spend, budget increase, deployment or signed native release.",
+    "Exact prompt timestamp unavailable. Append-only logging without consulting earlier build log or judge scores."
+  ]
+}
   ]
 }

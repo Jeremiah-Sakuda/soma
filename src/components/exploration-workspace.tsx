@@ -599,6 +599,30 @@ export function ExplorationWorkspace() {
       : state?.selectedObjectId;
   const earlierVersion =
     artifact && versions.some((item) => item.id === artifact.id && item.version > artifact.version);
+  const versionHistory =
+    artifact && versions.length > 1 ? (
+      <div className="exploration-version-row">
+        <label htmlFor="exploration-version">Version history</label>
+        <select
+          id="exploration-version"
+          value={artifact.version}
+          disabled={busy || sourceBusy || saving}
+          onChange={(event) => void resume(artifact.id, Number(event.target.value))}
+        >
+          {versions.map((item) => (
+            <option key={item.version} value={item.version}>
+              Version {item.version}
+              {item.saved ? ' · Saved' : ''} ·{' '}
+              {item.generationMode === 'prepared-example'
+                ? 'Original example'
+                : item.generationMode === 'recorded-live'
+                  ? 'Recorded run'
+                  : 'Generated'}
+            </option>
+          ))}
+        </select>
+      </div>
+    ) : null;
   const composer = (
     <section className="exploration-ask-card" aria-label="Ask about your context">
       <form
@@ -1046,27 +1070,7 @@ export function ExplorationWorkspace() {
                     source · no inference on replay. Follow-ups use live generation when available.
                   </p>
                 )}
-                {versions.length > 1 && (
-                  <div className="exploration-version-row">
-                    <label htmlFor="exploration-version">Version history</label>
-                    <select
-                      id="exploration-version"
-                      value={artifact.version}
-                      disabled={busy || sourceBusy || saving}
-                      onChange={(event) => void resume(artifact.id, Number(event.target.value))}
-                    >
-                      {versions.map((item) => (
-                        <option key={item.version} value={item.version}>
-                          Version {item.version}
-                          {item.saved ? ' · Saved' : ''} ·{' '}
-                          {item.generationMode === 'prepared-example'
-                            ? 'Original example'
-                            : 'Generated'}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                {(!compact || earlierVersion) && versionHistory}
                 {earlierVersion && (
                   <p className="exploration-unavailable">
                     You are viewing an earlier version.{' '}
@@ -1188,6 +1192,7 @@ export function ExplorationWorkspace() {
                     )
                   }
                 />
+                {compact && !earlierVersion && versionHistory}
                 {!newContext && (
                   <ExplorationPredictionCard
                     key={JSON.stringify([artifact.id, artifact.version, state])}

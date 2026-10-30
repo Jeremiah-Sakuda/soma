@@ -1,6 +1,6 @@
 {
-  "releaseId": "soma-pm069-2026-10-29",
-  "sourceTreeSha256": "2722c0b07a8f048d91b5c8f7dc89ed6ea18115a3dc94193854b80eb306b015ab",
+  "releaseId": "soma-pm069-2026-10-29-r2",
+  "sourceTreeSha256": "4d74e6d0aea83393bb2287deea65f65cd3db59658f1d42497beb27b27f8a18c7",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
     "desktop/Info.plist": "021901a55aaa54c50379fbf83300f39d6486c521ace9924ffbead6a9b1037dd3",
@@ -98,8 +98,8 @@
     "src/components/exploration-search-stage.tsx": "fce6e7270b24bf5b9dc8c3f0b16e2349cf1a1adbcdd033edbe143a69c80d7406",
     "src/components/exploration-voice.tsx": "cf5bee3363530eed7949a4e0f523177aadda130212cbfadcbda563ec5d5f3c8e",
     "src/components/exploration-weighted-stage.tsx": "cbb4e712227ea0168b8eacc36f6782fd6789615dea2b75a4c0d689b54ee08581",
-    "src/components/exploration-workspace.tsx": "f9446c10d51a4a5184df73c01b80b12bf47698ee8309e197723a5a53f0aa2dd2",
-    "src/components/exploration.css": "f3322b8d359a9a6318a20892400b231bafe6b556189921b8dbc0b24b1b5ad2b5",
+    "src/components/exploration-workspace.tsx": "881023b9d2cbd9e9fad9f71093a93b3a91d006910c638374928e77e86f3e2916",
+    "src/components/exploration.css": "89f709c859ad0a0f66e138c1975b171259bf1dc840e7ae708a3838cf33cf3c00",
     "src/components/investigation-panel.tsx": "451be06ce455d37eb296af6a3b8be78d46220334c50d44f2733ff0982b75c2a7",
     "src/components/learning-inspection.tsx": "24548c3e1c79953da4a4a0034d93887052b83c3e9c320f8b559d119ef49113f9",
     "src/components/lesson-stage.tsx": "d0ac3cb2fd03868a48ae464f9d329eb8733e96c75183f2adc2036b6d1e4a1d51",

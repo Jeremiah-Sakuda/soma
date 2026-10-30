@@ -1,4 +1,83 @@
 import { test, expect } from '@playwright/test';
+import { checkExploration, createWeightedExample } from '../../src/lib/domain/exploration';
+import { initialExplorationState } from '../../src/lib/domain/exploration-view';
+
+// Scripted API responses exercise compact revised-card layout only. Actual
+// state-preserving model follow-ups are separately verified on production.
+test('a revised weighted card keeps its complete graph above the native composer', async ({
+  page,
+}) => {
+  const checked = checkExploration(
+    createWeightedExample({ observationId: 'synthetic-layout', version: 1, region: null }),
+  );
+  const original = {
+    ...checked,
+    id: '629cdb47-2131-4c92-9e22-6900e87cba15',
+    version: 1,
+    createdAt: '2026-10-29T15:00:00Z',
+    updatedAt: '2026-10-29T15:00:00Z',
+    question: 'Compare paths',
+    source: {
+      kind: 'example',
+      label: 'Original synthetic fixture',
+      summary: 'A weighted graph.',
+      uncertainty: [],
+      capturedAt: '2026-10-29T15:00:00Z',
+    },
+    generation: {
+      mode: 'prepared-example',
+      provider: 'none',
+      model: null as string | null,
+      calls: 0,
+      costUsd: 0,
+      elapsedMs: 0,
+      audit: [] as { event: string; call: number; detail: string }[],
+    },
+    state: initialExplorationState(checked.spec),
+    saved: false,
+  };
+  let active: typeof original | null = null;
+  await page.route('**/api/explore', async (route) => {
+    if (route.request().method() === 'GET')
+      return route.fulfill({
+        json: { active, artifacts: active ? [active] : [], versions: [], liveEnabled: true },
+      });
+    if (route.request().postDataJSON().action === 'example') active = structuredClone(original);
+    else {
+      active = {
+        ...original,
+        version: 2,
+        spec: { ...original.spec, version: 2 },
+        generation: {
+          ...original.generation,
+          mode: 'live',
+          model: 'muse-spark-1.3',
+          calls: 2,
+          audit: [
+            { event: 'source-reused', call: 0, detail: 'Original synthetic context.' },
+            { event: 'review-approved', call: 2, detail: 'Original scripted review.' },
+          ],
+        },
+      } as typeof original;
+    }
+    return route.fulfill({ json: { artifact: active } });
+  });
+  await page.setViewportSize({ width: 620, height: 704 });
+  await page.goto('/explore');
+  await page.getByRole('button', { name: 'Compare weighted paths', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Where would you like to go next?' })
+    .fill('Explain this experiment.');
+  await page.getByRole('button', { name: 'Ask Soma', exact: true }).click();
+  await expect(page.getByText('Muse Spark generated', { exact: true })).toBeVisible();
+  await page.evaluate(() => scrollTo(0, 0));
+  const graph = await page.locator('.exploration-panel-graph').boundingBox(),
+    composer = await page.getByRole('region', { name: 'Ask about your context' }).boundingBox();
+  expect(graph!.y + graph!.height).toBeLessThanOrEqual(composer!.y);
+  const history = page.getByRole('combobox', { name: 'Version history' });
+  await expect(history).toHaveValue('2');
+  expect((await history.boundingBox())!.y).toBeGreaterThanOrEqual(graph!.y + graph!.height);
+});
 
 test('a recorded real Muse run is inspectable, manipulable and saved without live generation', async ({
   page,

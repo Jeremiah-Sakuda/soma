@@ -2022,3 +2022,13 @@
     margin: 4px 0;
   }
 }
+@media (max-width: 760px) {
+  .has-exploration .exploration-pipeline {
+    margin: 0;
+  }
+}
+@media (max-width: 760px) {
+  .has-exploration .exploration-panel-graph {
+    padding: 2px 8px;
+  }
+}

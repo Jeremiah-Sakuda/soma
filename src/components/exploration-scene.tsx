@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ExplorationSearchStage } from './exploration-search-stage';
 import { useExplorationMotion } from './exploration-motion';
-import { diagramLayout } from '@/lib/domain/exploration-layout';
+import { diagramLayout, diagramEdgeLabels } from '@/lib/domain/exploration-layout';
 import { routeCost } from '@/lib/domain/cost-probe';
 import { beatProgress } from '@/lib/domain/exploration-motion';
 import {
@@ -53,15 +53,28 @@ function DiagramPanel({
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
-  const layout = diagramLayout(panel, compact);
+  const container = useRef<HTMLDivElement>(null);
+  const [availableWidth, setAvailableWidth] = useState<number | undefined>(undefined);
+  useEffect(() => {
+    const observer = new ResizeObserver((entries) =>
+      setAvailableWidth(entries[0].contentRect.width),
+    );
+    if (container.current) observer.observe(container.current);
+    return () => observer.disconnect();
+  }, []);
+  const layout = diagramLayout(panel, compact, availableWidth);
+  const edgeLabels = diagramEdgeLabels(panel, layout);
   const markerId = useId().replace(/[^a-z0-9]/gi, '');
-  const nodes = panel.objects.filter((object) => object.kind === 'node' || object.kind === 'block');
+  const nodes = panel.objects.filter(
+    (object) => object.kind === 'node' || object.kind === 'block',
+  );
   const pos = (id: string) => layout.positions.find((node) => node.id === id)!;
   return (
-    <>
+    <div ref={container} className="exploration-diagram-container">
       <svg
         className="exploration-graph"
         viewBox={`0 0 ${layout.width} ${layout.height}`}
+        data-diagram-progress={progress.toFixed(3)}
         role="img"
         aria-label={`${panel.title}. Select labeled objects below to ask a follow-up.`}
       >
@@ -90,8 +103,19 @@ function DiagramPanel({
               uy = dy / length;
             const inset = (id: string) =>
               nodes.find((node) => node.id === id)?.kind === 'block'
-                ? Math.min(75 / (Math.abs(ux) || 0.0001), 38 / (Math.abs(uy) || 0.0001)) + 4
-                : 1 / Math.sqrt(Math.max(0.000001, (ux / 75) ** 2 + (uy / 38) ** 2)) + 4;
+                ? Math.min(
+                    layout.cardWidth / 2 / (Math.abs(ux) || 0.0001),
+                    layout.cardHeight / 2 / (Math.abs(uy) || 0.0001),
+                  ) + 4
+                : 1 /
+                    Math.sqrt(
+                      Math.max(
+                        0.000001,
+                        (ux / (layout.cardWidth / 2)) ** 2 +
+                          (uy / (layout.cardHeight / 2)) ** 2,
+                      ),
+                    ) +
+                  4;
             const start = inset(edge.from),
               end = inset(edge.to);
             const loop = edge.from === edge.to;
@@ -99,9 +123,7 @@ function DiagramPanel({
               <g key={edge.id}>
                 <path
                   fill="none"
-                  pathLength={1}
-                  strokeDasharray={1}
-                  strokeDashoffset={1 - beatProgress(progress, 0.45, 0.9)}
+                  data-diagram-edge={edge.id}
                   className={`exploration-edge ${highlights.includes(edge.id) ? 'is-highlighted' : ''}`}
                   d={
                     loop
@@ -110,45 +132,73 @@ function DiagramPanel({
                   }
                   markerEnd={edge.directed ? `url(#${markerId})` : undefined}
                 />
-                {edge.label &&
-                  !layout.positions.some(
-                    (p) =>
-                      p.id !== edge.from &&
-                      p.id !== edge.to &&
-                      Math.abs(p.x - (from.x + to.x) / 2) < 84 &&
-                      Math.abs(p.y - (from.y + to.y) / 2) < 48,
-                  ) && (
-                    <text
-                      x={(from.x + to.x) / 2}
-                      y={loop ? from.y - 75 : (from.y + to.y) / 2 - 9}
-                      textAnchor="middle"
-                    >
-                      {edge.label}
-                    </text>
-                  )}
+                {highlights.includes(edge.id) && progress > 0 && progress < 1 && !loop && (
+                  <circle
+                    data-diagram-signal={edge.id}
+                    cx={
+                      from.x +
+                      ux * start +
+                      (to.x - ux * end - from.x - ux * start) *
+                        beatProgress(progress, 0.08, 0.92)
+                    }
+                    cy={
+                      from.y +
+                      uy * start +
+                      (to.y - uy * end - from.y - uy * start) *
+                        beatProgress(progress, 0.08, 0.92)
+                    }
+                    r="5"
+                    fill="var(--accent)"
+                  />
+                )}
               </g>
             );
           })}
-        {nodes.map((node, index) => {
+        {edgeLabels
+          .filter((label) => !label.legend)
+          .map((label) => (
+            <g key={label.id} data-diagram-label={label.id}>
+              <rect
+                x={label.x - label.width / 2}
+                y={label.y - 12}
+                width={label.width}
+                height="24"
+                rx="7"
+                fill="var(--surface)"
+                stroke="var(--border)"
+              />
+              <text x={label.x} y={label.y} textAnchor="middle" dominantBaseline="central">
+                {label.text}
+              </text>
+            </g>
+          ))}
+        {nodes.map((node) => {
           const point = pos(node.id);
           return (
             <g
               key={node.id}
-              opacity={beatProgress(
-                progress,
-                (index * 0.4) / Math.max(nodes.length, 1),
-                (index * 0.4) / Math.max(nodes.length, 1) + 0.2,
-              )}
+              opacity="1"
               transform={`translate(${point.x},${point.y})`}
               className={`exploration-node ${selected === node.id || highlights.includes(node.id) ? 'is-selected' : ''}`}
               onClick={() => onSelect(node.id)}
             >
               {node.kind === 'block' ? (
-                <rect x="-75" y="-38" width="150" height="76" rx="10" />
+                <rect
+                  x={-layout.cardWidth / 2}
+                  y={-layout.cardHeight / 2}
+                  width={layout.cardWidth}
+                  height={layout.cardHeight}
+                  rx="10"
+                />
               ) : (
-                <ellipse rx="75" ry="38" />
+                <ellipse rx={layout.cardWidth / 2} ry={layout.cardHeight / 2} />
               )}
-              <foreignObject x="-69" y="-33" width="138" height="66">
+              <foreignObject
+                x={-layout.cardWidth / 2 + 6}
+                y={-layout.cardHeight / 2 + 6}
+                width={layout.cardWidth - 12}
+                height={layout.cardHeight - 12}
+              >
                 <div className="exploration-diagram-label">{node.label}</div>
               </foreignObject>
             </g>
@@ -166,33 +216,56 @@ function DiagramPanel({
           </foreignObject>
         ))}
       </svg>
-      <div className="exploration-object-buttons" aria-label="Select a diagram object">
-        {nodes.map((node) => (
-          <button
-            type="button"
-            key={node.id}
-            aria-pressed={selected === node.id}
-            onClick={() => onSelect(node.id)}
-          >
-            {node.label}
-          </button>
-        ))}
-      </div>
-      <details>
-        <summary>Diagram in words</summary>
-        <ul>
-          {panel.objects.map((object) => (
-            <li key={object.id}>
-              {object.kind === 'node' || object.kind === 'block'
-                ? object.label
-                : object.kind === 'text'
-                  ? object.text
-                  : `${nodes.find((node) => node.id === object.from)?.label} ${object.directed ? 'points to' : 'connects to'} ${nodes.find((node) => node.id === object.to)?.label}${object.label ? `: ${object.label}` : ''}`}
-            </li>
-          ))}
+      {edgeLabels.some((label) => label.legend) && (
+        <ul className="exploration-diagram-label-legend" aria-label="Diagram connection labels">
+          {edgeLabels
+            .filter((label) => label.legend)
+            .map((label) => {
+              const edge = panel.objects.find((o) => o.id === label.id);
+              return (
+                <li key={label.id}>
+                  {edge?.kind === 'edge'
+                    ? nodes.find((n) => n.id === edge.from)?.label +
+                      ' → ' +
+                      nodes.find((n) => n.id === edge.to)?.label +
+                      ': '
+                    : ''}
+                  {label.text}
+                </li>
+              );
+            })}
         </ul>
+      )}
+      <details className="exploration-diagram-inspector">
+        <summary>Inspect diagram</summary>
+        <div className="exploration-object-buttons" aria-label="Select a diagram object">
+          {nodes.map((node) => (
+            <button
+              type="button"
+              key={node.id}
+              aria-pressed={selected === node.id}
+              onClick={() => onSelect(node.id)}
+            >
+              {node.label}
+            </button>
+          ))}
+        </div>
+        <details>
+          <summary>Diagram in words</summary>
+          <ul>
+            {panel.objects.map((object) => (
+              <li key={object.id}>
+                {object.kind === 'node' || object.kind === 'block'
+                  ? object.label
+                  : object.kind === 'text'
+                    ? object.text
+                    : `${nodes.find((node) => node.id === object.from)?.label} ${object.directed ? 'points to' : 'connects to'} ${nodes.find((node) => node.id === object.to)?.label}${object.label ? `: ${object.label}` : ''}`}
+              </li>
+            ))}
+          </ul>
+        </details>
       </details>
-    </>
+    </div>
   );
 }
 
@@ -277,14 +350,19 @@ export function ExplorationScene({
       ? []
       : spec.mode === 'explanation'
         ? explanation.highlightIds
-        : (spec.steps.find((item) => item.execution !== null && item.executionStep === state.step)
-            ?.highlightIds ?? []);
+        : (spec.steps.find(
+            (item) => item.execution !== null && item.executionStep === state.step,
+          )?.highlightIds ?? []);
   const authoredStep = !changed
-    ? spec.steps.find((item) => item.execution === 'primary' && item.executionStep === state.step)
+    ? spec.steps.find(
+        (item) => item.execution === 'primary' && item.executionStep === state.step,
+      )
     : undefined;
   const finalStep = Math.max(execution?.steps.length ?? 1, comparison?.steps.length ?? 1) - 1;
   const select = (selectedObjectId: string) => onChange({ ...state, selectedObjectId });
   const panels = spec.scene.panels;
+  const heroDiagram =
+    spec.mode === 'explanation' ? panels.find((panel) => panel.kind === 'diagram') : undefined;
   const graphs = panels.filter((panel) => panel.kind === 'graph');
   const singleSearch = compact || spec.mode === 'checked-dijkstra';
   const graphSummary = (which: 'primary' | 'comparison', computed: BfsExecution) => {
@@ -302,8 +380,9 @@ export function ExplorationScene({
         <span className="meta">
           {current.status === 'found' ? (
             <span role="status">
-              Route: {computed.path?.map((id) => nodeName(computed.input, id)).join(' → ')} · total
-              cost {routeCost(computed.input, computed.path)} · {computed.path!.length - 1} edges
+              Route: {computed.path?.map((id) => nodeName(computed.input, id)).join(' → ')} ·
+              total cost {routeCost(computed.input, computed.path)} ·{' '}
+              {computed.path!.length - 1} edges
             </span>
           ) : computed.modelId === 'dijkstra-nonnegative' ? (
             'Full route · lowest cost'
@@ -331,13 +410,16 @@ export function ExplorationScene({
         key={panel.id}
         className={`${combined ? 'sr-only' : ''} exploration-panel exploration-panel-${panel.kind} ${highlights.includes(panel.id) ? 'is-highlighted' : ''}`}
         style={{
-          gridColumn: mainGraph
-            ? '1 / span 2'
-            : `${panel.placement.column} / span ${panel.placement.columnSpan}`,
+          gridColumn:
+            mainGraph || panel === heroDiagram
+              ? '1 / span 2'
+              : `${panel.placement.column} / span ${panel.placement.columnSpan}`,
           gridRow:
-            experiment && panel.placement.row >= experimentRow
-              ? panel.placement.row + 1
-              : panel.placement.row,
+            panel === heroDiagram
+              ? 'auto'
+              : experiment && panel.placement.row >= experimentRow
+                ? panel.placement.row + 1
+                : panel.placement.row,
         }}
         aria-label={panel.title}
       >
@@ -345,7 +427,8 @@ export function ExplorationScene({
         {(spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') &&
           ['sequence', 'matrix', 'diagram', 'callout'].includes(panel.kind) && (
             <p className="meta">
-              Illustration for this explanation. The search controls update the graph and frontier.
+              Illustration for this explanation. The search controls update the graph and
+              frontier.
             </p>
           )}
         {panel.kind === 'sequence' && (
@@ -382,7 +465,9 @@ export function ExplorationScene({
         )}
         {panel.kind === 'callout' && (
           <aside className={`exploration-callout ${panel.tone}`}>
-            <span className="overline">{panel.tone === 'idea' ? 'Key idea' : 'Assumption'}</span>
+            <span className="overline">
+              {panel.tone === 'idea' ? 'Key idea' : 'Assumption'}
+            </span>
             <p>{panel.text}</p>
           </aside>
         )}
@@ -468,6 +553,51 @@ export function ExplorationScene({
   };
   return (
     <>
+      {spec.mode === 'explanation' && (
+        <div className="exploration-explanation-navigation">
+          <div className="exploration-step-bar">
+            <div className="action-row">
+              <button
+                type="button"
+                className="secondary-button"
+                disabled={state.explanationStep === 0}
+                onClick={() =>
+                  onChange({
+                    ...state,
+                    explanationStep: state.explanationStep - 1,
+                  })
+                }
+              >
+                Previous explanation
+              </button>
+              <button
+                type="button"
+                className="primary-button"
+                disabled={state.explanationStep >= spec.steps.length - 1}
+                onClick={() =>
+                  onChange({
+                    ...state,
+                    explanationStep: state.explanationStep + 1,
+                  })
+                }
+              >
+                Next explanation
+              </button>
+            </div>
+          </div>
+          <p
+            className="exploration-active-explanation"
+            role="status"
+            aria-live={playing ? 'off' : 'polite'}
+          >
+            <span className="overline">
+              Explanation {state.explanationStep + 1} of {spec.steps.length}
+            </span>
+            {spec.steps[state.explanationStep].narration ||
+              spec.steps[state.explanationStep].caption}
+          </p>
+        </div>
+      )}
       {(spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') &&
         execution &&
         spec.controls.includes('step') && (
@@ -479,7 +609,7 @@ export function ExplorationScene({
                 disabled={state.step <= 0}
                 onClick={() => onChange({ ...state, step: Math.max(0, state.step - 1) })}
               >
-                Previous step
+                Previous explanation
               </button>
               <button
                 className="primary-button"
@@ -506,7 +636,17 @@ export function ExplorationScene({
         className={`exploration-scene exploration-layout-${spec.scene.layout}`}
         aria-label="Generated visual composition"
       >
-        {singleSearch && execution ? (
+        {heroDiagram ? (
+          <>
+            {renderPanel(heroDiagram)}
+            <details className="exploration-supporting-panels">
+              <summary>Steps, numbers & context</summary>
+              <div className="exploration-scene">
+                {panels.filter((panel) => panel !== heroDiagram).map(renderPanel)}
+              </div>
+            </details>
+          </>
+        ) : singleSearch && execution ? (
           <>
             {graphs
               .filter((panel) => panel.execution === (comparison ? activeGraph : 'primary'))
@@ -538,17 +678,21 @@ export function ExplorationScene({
           panels.map(renderPanel)
         )}
       </div>
-      <div className="exploration-caption" aria-live="polite">
-        <span className="overline">
-          {execution
-            ? `Search step ${step?.index ?? 0}`
-            : `Explanation ${state.explanationStep + 1} of ${spec.steps.length}`}
-        </span>
-        <p>{explorationVisibleCaption(spec, state)}</p>
-        {authoredStep && (
-          <p className="exploration-authored-caption">Soma’s explanation: {authoredStep.caption}</p>
-        )}
-      </div>
+      {execution && (
+        <div className="exploration-caption" aria-live="polite">
+          <span className="overline">
+            {execution
+              ? `Search step ${step?.index ?? 0}`
+              : `Explanation ${state.explanationStep + 1} of ${spec.steps.length}`}
+          </span>
+          <p>{explorationVisibleCaption(spec, state)}</p>
+          {authoredStep && (
+            <p className="exploration-authored-caption">
+              Soma’s explanation: {authoredStep.caption}
+            </p>
+          )}
+        </div>
+      )}
       {(spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') && execution && (
         <details className="exploration-controls-disclosure" open={!compact}>
           <summary>Change the experiment</summary>
@@ -568,7 +712,13 @@ export function ExplorationScene({
                   Start node
                   <select
                     value={state.start ?? spec.input.start}
-                    onChange={(event) => onChange({ ...state, start: event.target.value, step: 0 })}
+                    onChange={(event) =>
+                      onChange({
+                        ...state,
+                        start: event.target.value,
+                        step: 0,
+                      })
+                    }
                   >
                     {spec.input.nodes.map((node) => (
                       <option key={node.id} value={node.id}>
@@ -584,7 +734,11 @@ export function ExplorationScene({
                   <select
                     value={state.goal ?? ''}
                     onChange={(event) =>
-                      onChange({ ...state, goal: event.target.value || null, step: 0 })
+                      onChange({
+                        ...state,
+                        goal: event.target.value || null,
+                        step: 0,
+                      })
                     }
                   >
                     <option value="">Explore every reachable node</option>
@@ -645,26 +799,6 @@ export function ExplorationScene({
             </p>
           </div>
         </details>
-      )}
-      {spec.mode === 'explanation' && (
-        <div className="action-row">
-          <button
-            className="secondary-button"
-            type="button"
-            disabled={state.explanationStep <= 0}
-            onClick={() => onChange({ ...state, explanationStep: state.explanationStep - 1 })}
-          >
-            Previous explanation
-          </button>
-          <button
-            className="primary-button"
-            type="button"
-            disabled={state.explanationStep >= spec.steps.length - 1}
-            onClick={() => onChange({ ...state, explanationStep: state.explanationStep + 1 })}
-          >
-            Next explanation
-          </button>
-        </div>
       )}
     </>
   );

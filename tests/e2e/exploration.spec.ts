@@ -315,7 +315,7 @@ test('bounded explanation panels render, highlight and remain usable by keyboard
  await page.screenshot({path:'.local/pm040/richer-desktop.png',fullPage:true});
  await page.getByRole('button',{name:'Next explanation',exact:true}).focus();await page.keyboard.press('Enter');
  await expect(page.locator('.exploration-edge.is-highlighted')).toHaveCount(1);
- await page.getByRole('button',{name:'sky',exact:true}).focus();await page.keyboard.press('Enter');await expect(page.getByText('Asking about: token2')).toBeVisible();
+ await page.getByText('Steps, numbers & context',{exact:true}).click();await page.getByRole('button',{name:'sky',exact:true}).focus();await page.keyboard.press('Enter');await expect(page.getByText('Asking about: token2')).toBeVisible();
  await page.setViewportSize({width:375,height:812});await page.emulateMedia({reducedMotion:'reduce'});await page.locator('#exploration-card').scrollIntoViewIfNeeded();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  expect(await page.locator('.exploration-node').first().evaluate(el=>getComputedStyle(el).transitionDuration)).toBe('0s');

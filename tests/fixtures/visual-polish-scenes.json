@@ -1,0 +1,568 @@
+{
+  "gradient": {
+    "schemaVersion": "exploration-v1",
+    "id": "polish_gradient",
+    "version": 1,
+    "title": "Two gradient descent steps on L=(w-3)^2",
+    "objective": "Show two gradient-descent updates from w=0 with eta=0.25 and explain why step 2 is smaller.",
+    "sources": [
+      {
+        "observationId": "original-polish-gradient",
+        "version": 1,
+        "region": null
+      }
+    ],
+    "assumptions": [
+      "Learning rate stays fixed at eta=0.25 for both updates.",
+      "Gradient formula dL/dw=2(w-3) from source is taken as given.",
+      "Values shown are illustrative arithmetic, not a checked execution trace."
+    ],
+    "uncertainty": [],
+    "unsupportedClaims": [
+      "No checked execution; arithmetic shown for explanation only."
+    ],
+    "mode": "explanation",
+    "scene": {
+      "layout": "diagram-sidebar",
+      "panels": [
+        {
+          "id": "curveDiagram",
+          "title": "Parabola walk toward minimum",
+          "placement": {
+            "column": 1,
+            "row": 1,
+            "columnSpan": 1
+          },
+          "kind": "diagram",
+          "objects": [
+            {
+              "id": "startBlock",
+              "kind": "block",
+              "label": "w0=0, L=9, steep slope",
+              "position": {
+                "x": 0.15,
+                "y": 0.3
+              }
+            },
+            {
+              "id": "midBlock",
+              "kind": "block",
+              "label": "w1=1.5, L=2.25, gentler",
+              "position": {
+                "x": 0.5,
+                "y": 0.6
+              }
+            },
+            {
+              "id": "minBlock",
+              "kind": "block",
+              "label": "minimum w=3, L=0",
+              "position": {
+                "x": 0.85,
+                "y": 0.75
+              }
+            },
+            {
+              "id": "step1edge",
+              "kind": "edge",
+              "from": "startBlock",
+              "to": "midBlock",
+              "label": "step1 +1.5",
+              "directed": true
+            },
+            {
+              "id": "step2edge",
+              "kind": "edge",
+              "from": "midBlock",
+              "to": "minBlock",
+              "label": "step2 +0.75",
+              "directed": true
+            }
+          ]
+        },
+        {
+          "id": "updateSeq",
+          "title": "Two updates in order",
+          "placement": {
+            "column": 2,
+            "row": 1,
+            "columnSpan": 1
+          },
+          "kind": "sequence",
+          "items": [
+            {
+              "id": "s1",
+              "label": "Step1: grad -6 -> w=1.5"
+            },
+            {
+              "id": "s2",
+              "label": "Step2: grad -3 -> w=2.25"
+            }
+          ]
+        },
+        {
+          "id": "valueMatrix",
+          "title": "Numbers per step",
+          "placement": {
+            "column": 2,
+            "row": 2,
+            "columnSpan": 1
+          },
+          "kind": "matrix",
+          "rows": [
+            [
+              "w",
+              "grad",
+              "move"
+            ],
+            [
+              "0",
+              "-6",
+              "+1.50"
+            ],
+            [
+              "1.5",
+              "-3",
+              "+0.75"
+            ],
+            [
+              "2.25",
+              "result",
+              "near 3"
+            ]
+          ]
+        },
+        {
+          "id": "keyIdea",
+          "title": "Why step 2 differs",
+          "placement": {
+            "column": 1,
+            "row": 2,
+            "columnSpan": 1
+          },
+          "kind": "callout",
+          "text": "Same eta=0.25 both times. Second step is smaller because gradient depends on current w: -6 then -3.",
+          "tone": "idea"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "stepOne",
+        "caption": "Step 1 from w=0: steep negative gradient gives large move",
+        "narration": "At w0=0, grad=2(0-3)=-6. Update w1=0-0.25*(-6)=1.5. Far from minimum, slope steep so jump is 1.5.",
+        "highlightIds": [
+          "startBlock",
+          "step1edge"
+        ],
+        "execution": null,
+        "executionStep": null
+      },
+      {
+        "id": "stepTwo",
+        "caption": "Step 2 from w=1.5: flatter gradient gives smaller move",
+        "narration": "At w1=1.5, grad=2(1.5-3)=-3. Update w2=1.5-0.25*(-3)=2.25. Move is only 0.75.",
+        "highlightIds": [
+          "midBlock",
+          "step2edge"
+        ],
+        "execution": null,
+        "executionStep": null
+      },
+      {
+        "id": "contrastStep",
+        "caption": "Contrast: fixed eta, shrinking gradient explains difference",
+        "narration": "Eta stayed 0.25. Difference comes from gradient recomputed at new w. This illustration is not a checked simulation.",
+        "highlightIds": [
+          "minBlock"
+        ],
+        "execution": null,
+        "executionStep": null
+      }
+    ],
+    "followups": [
+      "Try eta=0.1: what would w1 and w2 become?",
+      "Why does gradient become zero at w=3?"
+    ]
+  },
+  "weighted": {
+    "schemaVersion": "exploration-v1",
+    "id": "polish_weighted",
+    "version": 1,
+    "title": "Fewest hops vs lowest cost",
+    "objective": "Contrast 1-edge path Aster-Fjord cost 12 with 3-edge cheapest path Aster-Birch-Elm-Fjord cost 4 on same preserved graph.",
+    "sources": [
+      {
+        "observationId": "original-polish-weighted",
+        "version": 1,
+        "region": null
+      }
+    ],
+    "assumptions": [
+      "Primary uses supplied undirected weighted graph start Aster goal Fjord with all 8 edges and costs preserved",
+      "Neighbor order alphabetical as supplied for determinism",
+      "Comparison keeps identical nodes edges direction start goal neighbor order; only algorithm changes to BFS to model fewest-connections ignoring costs"
+    ],
+    "uncertainty": [
+      "Neighbor visit order is not printed in source; alphabetical order is assumed for determinism",
+      "Edge Birch-Elm label 1 overlaps middle edge but is read as Birch-Elm cost 1"
+    ],
+    "unsupportedClaims": [],
+    "mode": "checked-dijkstra",
+    "modelId": "dijkstra-nonnegative",
+    "modelVersion": "dijkstra-nonnegative-v1",
+    "input": {
+      "nodes": [
+        {
+          "id": "Aster",
+          "label": "Aster"
+        },
+        {
+          "id": "Birch",
+          "label": "Birch"
+        },
+        {
+          "id": "Cedar",
+          "label": "Cedar"
+        },
+        {
+          "id": "Fjord",
+          "label": "Fjord"
+        },
+        {
+          "id": "Elm",
+          "label": "Elm"
+        },
+        {
+          "id": "Dune",
+          "label": "Dune"
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "from": "Aster",
+          "to": "Birch",
+          "weight": 2
+        },
+        {
+          "id": "e2",
+          "from": "Birch",
+          "to": "Cedar",
+          "weight": 1
+        },
+        {
+          "id": "e3",
+          "from": "Cedar",
+          "to": "Fjord",
+          "weight": 2
+        },
+        {
+          "id": "e4",
+          "from": "Aster",
+          "to": "Fjord",
+          "weight": 12
+        },
+        {
+          "id": "e5",
+          "from": "Birch",
+          "to": "Elm",
+          "weight": 1
+        },
+        {
+          "id": "e6",
+          "from": "Aster",
+          "to": "Dune",
+          "weight": 1
+        },
+        {
+          "id": "e7",
+          "from": "Dune",
+          "to": "Elm",
+          "weight": 6
+        },
+        {
+          "id": "e8",
+          "from": "Elm",
+          "to": "Fjord",
+          "weight": 1
+        }
+      ],
+      "directed": false,
+      "start": "Aster",
+      "goal": "Fjord",
+      "neighborOrder": [
+        "Aster",
+        "Birch",
+        "Cedar",
+        "Dune",
+        "Elm",
+        "Fjord"
+      ],
+      "algorithm": "dijkstra"
+    },
+    "comparison": {
+      "label": "BFS fewest-connections: same graph, costs ignored",
+      "input": {
+        "nodes": [
+          {
+            "id": "Aster",
+            "label": "Aster"
+          },
+          {
+            "id": "Birch",
+            "label": "Birch"
+          },
+          {
+            "id": "Cedar",
+            "label": "Cedar"
+          },
+          {
+            "id": "Fjord",
+            "label": "Fjord"
+          },
+          {
+            "id": "Elm",
+            "label": "Elm"
+          },
+          {
+            "id": "Dune",
+            "label": "Dune"
+          }
+        ],
+        "edges": [
+          {
+            "id": "e1",
+            "from": "Aster",
+            "to": "Birch",
+            "weight": 2
+          },
+          {
+            "id": "e2",
+            "from": "Birch",
+            "to": "Cedar",
+            "weight": 1
+          },
+          {
+            "id": "e3",
+            "from": "Cedar",
+            "to": "Fjord",
+            "weight": 2
+          },
+          {
+            "id": "e4",
+            "from": "Aster",
+            "to": "Fjord",
+            "weight": 12
+          },
+          {
+            "id": "e5",
+            "from": "Birch",
+            "to": "Elm",
+            "weight": 1
+          },
+          {
+            "id": "e6",
+            "from": "Aster",
+            "to": "Dune",
+            "weight": 1
+          },
+          {
+            "id": "e7",
+            "from": "Dune",
+            "to": "Elm",
+            "weight": 6
+          },
+          {
+            "id": "e8",
+            "from": "Elm",
+            "to": "Fjord",
+            "weight": 1
+          }
+        ],
+        "directed": false,
+        "start": "Aster",
+        "goal": "Fjord",
+        "neighborOrder": [
+          "Aster",
+          "Birch",
+          "Cedar",
+          "Dune",
+          "Elm",
+          "Fjord"
+        ],
+        "algorithm": "bfs"
+      }
+    },
+    "scene": {
+      "layout": "comparison",
+      "panels": [
+        {
+          "id": "gPrimary",
+          "title": "Dijkstra: lowest total cost",
+          "placement": {
+            "column": 1,
+            "row": 1,
+            "columnSpan": 1
+          },
+          "kind": "graph",
+          "execution": "primary",
+          "positions": [
+            {
+              "nodeId": "Aster",
+              "x": 0.1,
+              "y": 0.5
+            },
+            {
+              "nodeId": "Birch",
+              "x": 0.3,
+              "y": 0.2
+            },
+            {
+              "nodeId": "Cedar",
+              "x": 0.55,
+              "y": 0.2
+            },
+            {
+              "nodeId": "Dune",
+              "x": 0.3,
+              "y": 0.8
+            },
+            {
+              "nodeId": "Elm",
+              "x": 0.55,
+              "y": 0.8
+            },
+            {
+              "nodeId": "Fjord",
+              "x": 0.9,
+              "y": 0.5
+            }
+          ]
+        },
+        {
+          "id": "gComp",
+          "title": "BFS: fewest connections",
+          "placement": {
+            "column": 2,
+            "row": 1,
+            "columnSpan": 1
+          },
+          "kind": "graph",
+          "execution": "comparison",
+          "positions": [
+            {
+              "nodeId": "Aster",
+              "x": 0.1,
+              "y": 0.5
+            },
+            {
+              "nodeId": "Birch",
+              "x": 0.3,
+              "y": 0.2
+            },
+            {
+              "nodeId": "Cedar",
+              "x": 0.55,
+              "y": 0.2
+            },
+            {
+              "nodeId": "Dune",
+              "x": 0.3,
+              "y": 0.8
+            },
+            {
+              "nodeId": "Elm",
+              "x": 0.55,
+              "y": 0.8
+            },
+            {
+              "nodeId": "Fjord",
+              "x": 0.9,
+              "y": 0.5
+            }
+          ]
+        },
+        {
+          "id": "frontPrimary",
+          "title": "Dijkstra priority queue",
+          "placement": {
+            "column": 1,
+            "row": 2,
+            "columnSpan": 1
+          },
+          "kind": "frontier",
+          "execution": "primary"
+        },
+        {
+          "id": "tablePrimary",
+          "title": "Dijkstra distances",
+          "placement": {
+            "column": 2,
+            "row": 2,
+            "columnSpan": 1
+          },
+          "kind": "state-table",
+          "execution": "primary"
+        },
+        {
+          "id": "keyIdea",
+          "title": "Key contrast",
+          "placement": {
+            "column": 1,
+            "row": 3,
+            "columnSpan": 2
+          },
+          "kind": "callout",
+          "text": "Fewest edges: Aster-Fjord is 1 edge but costs 12. Cheapest: Aster-Birch-Elm-Fjord is 3 edges but costs 2+1+1=4.",
+          "tone": "idea"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "s1",
+        "caption": "Start Aster sees the expensive direct edge",
+        "narration": "From Aster, Dijkstra tentatively reaches Fjord at cost 12, but also Birch at 2 and Dune at 1.",
+        "highlightIds": [
+          "Aster",
+          "Fjord"
+        ],
+        "execution": "primary",
+        "executionStep": 1
+      },
+      {
+        "id": "s2",
+        "caption": "Cheap route via Birch and Elm wins",
+        "narration": "Checked Dijkstra final path is Aster-Birch-Elm-Fjord with total cost 4, not the direct 12.",
+        "highlightIds": [
+          "Aster",
+          "Birch",
+          "Elm",
+          "Fjord"
+        ],
+        "execution": "primary",
+        "executionStep": 6
+      },
+      {
+        "id": "s3",
+        "caption": "BFS prefers the 1-edge connection",
+        "narration": "Ignoring costs, BFS expands from Aster and reaches Fjord in one connection: fewest hops, highest cost.",
+        "highlightIds": [
+          "Aster",
+          "Fjord"
+        ],
+        "execution": "comparison",
+        "executionStep": 1
+      }
+    ],
+    "controls": [
+      "step",
+      "replay"
+    ],
+    "followups": [
+      "Check what happens if Aster-Fjord cost were 3 instead of 12?",
+      "Trace why Dijkstra improves Fjord from 12 to 5 to 4?"
+    ]
+  }
+}

@@ -35,3 +35,8 @@ Actual generated diagrams exposed overlapping labels. Authored positions remain 
 General screenshots produce visual explanations, not verified arbitrary scientific simulations. Checked manipulation remains limited to supported BFS/Dijkstra graphs. Generated prose and source interpretation remain fallible; inaccessible or ambiguous inputs may fail safely or request clarification. Uploads accept PNG/JPEG up to 4 MB before normalization to the bounded service image. Dense tiny text may require a closer capture.
 
 After these changes were deployed, three fresh screenshots passed production generation: a code counter (23, +5, giving 28 and 33), a water-cycle diagram and a results/rows debugging view. The counter went through the real upload-and-Ask UI. Request inspection showed actual image pixels and no prepared-example calls, and a selected-object follow-up, save, reload and reopen all worked on it. The other two went through a direct API harness. `public/release.json` and `node scripts/verify-release.mjs` tie this source to the deployed app.
+
+
+## October 30 adversarial follow-up
+
+A newer [usability and visual audit](POLISH_AUDIT.md) tested five additional original screenshot sources, retaining both semantic defects and first-request failures. The new structured-explanation reviewer caught by regression tests is advisory, and attention/autoencoder first requests still failed in the post-change sample. Do not treat the earlier 8/9 development result as a current reliability guarantee. The two audit batches differ in prompts, model contracts and review policy.

@@ -2103,3 +2103,91 @@
   min-height: 0;
   max-height: none;
 }
+/* Presentation audit: the mechanism stays visible; inspectors remain optional. */
+.exploration-diagram-container {
+  width: 100%;
+  min-width: 0;
+}
+.exploration-diagram-container > svg {
+  display: block;
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+}
+.exploration-diagram-inspector > summary,
+.exploration-supporting-panels > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+}
+.exploration-supporting-panels {
+  grid-column: 1 / -1;
+}
+.exploration-supporting-panels > .exploration-scene {
+  margin-top: 8px;
+}
+.exploration-diagram-label-legend {
+  font-size: 13px;
+  line-height: 1.4;
+  padding-left: 20px;
+}
+.exploration-active-explanation {
+  margin: 4px 0 10px;
+  padding: 10px 12px;
+  background: var(--accent-soft);
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.exploration-active-explanation > .overline {
+  display: block;
+  margin-bottom: 4px;
+}
+[data-exploration-mode='explanation'] .exploration-spoken-caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+@media (min-width: 761px) {
+  .has-exploration .exploration-playback {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    align-items: center;
+    padding: 6px 10px;
+    margin: 8px 0;
+  }
+  .has-exploration .exploration-playback > .action-row {
+    gap: 8px;
+  }
+  .has-exploration .exploration-playback > .action-row > .meta {
+    display: none;
+  }
+  .has-exploration .exploration-playback .exploration-voice-settings {
+    margin: 0;
+  }
+  .has-exploration .exploration-playback .exploration-spoken-caption {
+    flex-basis: 100%;
+    margin: 2px 4px 4px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .has-exploration .exploration-panel-graph > .exploration-weighted-stage {
+    max-width: 680px;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    margin-inline: auto;
+  }
+}
+
+/* A generated diagram may grow vertically; never shrink its labels to fit a graph-height cap. */
+.has-exploration .exploration-panel-diagram .exploration-diagram-container > svg {
+  height: auto;
+  max-height: none;
+  min-height: 0;
+}

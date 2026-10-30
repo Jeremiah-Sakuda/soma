@@ -142,6 +142,10 @@ const errors = {
     422,
     'Choose a readable PNG or JPEG image under 512 KB and 1600 pixels per side.',
   ],
+  review_unavailable: [
+    503,
+    'Soma could not finish reviewing this visual. Your previous exploration is unchanged. Please try again shortly.',
+  ],
   generation_invalid: [
     422,
     'Soma could not validate the generated explanation. Your previous exploration is unchanged.',

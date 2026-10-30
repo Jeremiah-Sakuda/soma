@@ -210,7 +210,7 @@ export function ExplorationWeightedStage({
           {routeCost(execution.input, execution.path)} · {execution.path!.length - 1} edges
         </p>
       )}
-      <details className="exploration-graph-details" open={!compact}>
+      <details className="exploration-graph-details">
         <summary>Select a node</summary>
         <div className="exploration-object-buttons">
           {execution.input.nodes.map((n) => (

@@ -121,6 +121,10 @@ async function api(
       throw new Error(
         'Another exploration is still running. Keep exploring this card and try again shortly.',
       );
+    if (code === 'review_unavailable')
+      throw new Error(
+        'Soma could not finish reviewing the visual. Your last card and current controls are kept; please try again shortly.',
+      );
     if (code === 'generation_invalid')
       throw new Error(
         'Soma could not validate the new visual explanation. Your last valid card was kept; try a narrower question.',
@@ -1041,6 +1045,7 @@ export function ExplorationWorkspace() {
             {artifact && state ? (
               <article
                 id="exploration-card"
+                data-exploration-mode={artifact.spec.mode}
                 tabIndex={-1}
                 className={`exploration-artifact ${newContext ? 'is-previous-context' : ''}`}
                 aria-label="Visual exploration card"

@@ -97,6 +97,21 @@ export const generateExplorationSchema = z
       });
   });
 export type GenerateExplorationRequest = z.infer<typeof generateExplorationSchema>;
+// Layout is a presentation decision, not a model capability. Native CSS already
+// stacks panels; bind new non-graph scenes to the ordinary bounded grid rather
+// than offering a stack discriminator with additional hidden placement rules.
+export const explanationAuthorSceneSchema = explorationSpecSchema.options[1].shape.scene.extend({
+  layout: z.literal('diagram-sidebar'),
+});
+export function needsExplorationReview(spec: ExplorationSpec, learnerObservation = false) {
+  return (
+    spec.mode === 'checked-dijkstra' ||
+    learnerObservation ||
+    (spec.mode === 'explanation' &&
+      spec.scene.panels.some((panel) => ['diagram', 'matrix', 'sequence'].includes(panel.kind)))
+  );
+}
+
 const inspectSchema = z.strictObject({
   summary: z.string().trim().min(1).max(2400),
   uncertainty: z.array(z.string().trim().min(1).max(360)).max(6),
@@ -1196,7 +1211,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           call: calls,
           detail: `Checked ${computed.modelId} trace with ${computed.steps.length} snapshots.`,
         });
-      const sceneInstructions = `${experiment ? 'A checked cost experiment is supplied. Keep checked-dijkstra and include set-weight in controls. Preserve the supplied current primary and comparison graph inputs; the application exposes hypothetical interventions separately. Existing edgeWeights are hypothetical overrides, not new source facts. Explain the verified cases and distinguish an exact direct-route tie from a bounded sample.' : ''} ${genericInstructions} Compose a source-specific scene using compose_exploration. Use block objects for processing stages, sequence panels for ordered tokens, matrix panels for small rectangular data, and callout panels for one key idea when they improve this explanation. These explanatory primitives do not establish checked computation. For explanation mode every step MUST set both execution and executionStep to JSON null; there is no checked trace. Never use an integer index or primary execution for explanation mode. Supply concise narration linked to each visible step. ${reuse ? 'This is a context-preserving follow-up, including auto: preserve the computational mode and the supplied current checked primary and comparison inputs; If the question requests a different primary experiment, explain how to apply the visible controls or return a clarification; a question alone cannot silently apply parameter edits. Keep the current trace step and unchanged object positions. Focus on the selected object when supplied.' : ''} Set schemaVersion="exploration-v1". Required spec id=${`explore_${artifactId.replaceAll('-', '')}`} and version=${version}; every source reference must match observationId=${source.observationId}, version=${source.version}. If a checked graph was supplied, primary input MUST exactly match that graph. Comparison input may be an explicitly described experiment and is independently checked. Preserve every input the user did not ask to change: goal, direction, nodes, edges, neighbor order and start. Changing only the start never changes the goal or graph. Explicitly describe every intended parameter change in assumptions; do not quietly invent a second variable to make an experiment more interesting. Bind explanatory steps to the supplied execution snapshots; A checked scene MUST include a primary graph and at least one frontier or state-table panel. A comparison requires its own graph panel. Use these exact kind values; choose a valid bounded layout for this question. Clarify essential source uncertainty. Do not claim source prose is computationally verified. ${previous ? 'Preserve existing object IDs for unchanged meaning and explain the requested change, using the supplied current controls and checked trace as the experiment context.' : ''}`;
+      const sceneInstructions = `${experiment ? 'A checked cost experiment is supplied. Keep checked-dijkstra and include set-weight in controls. Preserve the supplied current primary and comparison graph inputs; the application exposes hypothetical interventions separately. Existing edgeWeights are hypothetical overrides, not new source facts. Explain the verified cases and distinguish an exact direct-route tie from a bounded sample.' : ''} ${genericInstructions} Compose a source-specific scene using compose_exploration. Use block objects for processing stages, sequence panels for ordered tokens, matrix panels for small rectangular data, and callout panels for one key idea when they improve this explanation. These explanatory primitives do not establish checked computation. For source-specific explanations, prefer one dominant mechanism with a small set of clearly labeled parts, 3-5 meaningful steps and explicit highlighted node/edge IDs for the causal transition in each step. Do not substitute generic decorative boxes for the mechanism. Keep captions and narration concise. Every arrow is a claim: its label and destination must agree with the stated intermediate numerical state; do not skip from a partial update to a limiting/final state. Use the application-bound diagram-sidebar layout; panels must occupy distinct grid cells, column 1 or 2, spans within two columns, rows 1-4. For explanation mode every step MUST set both execution and executionStep to JSON null; there is no checked trace. Never use an integer index or primary execution for explanation mode. Supply concise narration linked to each visible step. ${reuse ? 'This is a context-preserving follow-up, including auto: preserve the computational mode and the supplied current checked primary and comparison inputs; If the question requests a different primary experiment, explain how to apply the visible controls or return a clarification; a question alone cannot silently apply parameter edits. Keep the current trace step and unchanged object positions. Focus on the selected object when supplied.' : ''} Set schemaVersion="exploration-v1". Required spec id=${`explore_${artifactId.replaceAll('-', '')}`} and version=${version}; every source reference must match observationId=${source.observationId}, version=${source.version}. If a checked graph was supplied, primary input MUST exactly match that graph. Comparison input may be an explicitly described experiment and is independently checked. Preserve every input the user did not ask to change: goal, direction, nodes, edges, neighbor order and start. Changing only the start never changes the goal or graph. Explicitly describe every intended parameter change in assumptions; do not quietly invent a second variable to make an experiment more interesting. Bind explanatory steps to the supplied execution snapshots; A checked scene MUST include a primary graph and at least one frontier or state-table panel. A comparison requires its own graph panel. Use these exact kind values; choose a valid bounded layout for this question. Clarify essential source uncertainty. Do not claim source prose is computationally verified. ${previous ? 'Preserve existing object IDs for unchanged meaning and explain the requested change, using the supplied current controls and checked trace as the experiment context.' : ''}`;
       let history: unknown[] = [
         {
           role: 'user',
@@ -1279,7 +1294,10 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             clarifySchema,
           ])
         : z.discriminatedUnion('mode', [
-            explorationSpecSchema.options[1].extend(turnBinding),
+            explorationSpecSchema.options[1].extend({
+              ...turnBinding,
+              scene: explanationAuthorSceneSchema,
+            }),
             clarifySchema,
           ]);
       const composeTool = experiment
@@ -1395,7 +1413,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           }
           if (
             deps.reviewEnabled() &&
-            (spec.mode === 'checked-dijkstra' || learnerObservation || applicationObservation)
+            needsExplorationReview(spec, !!(learnerObservation || applicationObservation))
           ) {
             stage = 'review';
             await live();
@@ -1570,6 +1588,10 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           };
           break;
         } catch (error) {
+          if (stage === 'review') {
+            if (error instanceof ExplorationError) throw error;
+            throw new ExplorationError('review_unavailable');
+          }
           failureIssues = validationFacts(error);
           if (attempt === 1) throw error;
           audit.push({

@@ -61,7 +61,7 @@ test('failed saves and revision conflicts preserve drafts for explicit retry', a
   await expect(page.getByText('I want to understand financial spreadsheets.', { exact: true })).toBeVisible();
 });
 
-for (const width of [375, 620]) test(`proposed map has evidence and editable recommendations at ${width}px`, async ({ page }) => {
+for (const width of [375, 620]) test(`proposed map has evidence and editable recommendations at ${width}px`, async ({ page }, testInfo) => {
   await page.setViewportSize({ width, height: 704 }); await page.emulateMedia({ reducedMotion: 'reduce' });
   let memory: CompanionMemoryView = { revision: 0, goals: [], concepts: [], relationships: [], evidence: [] };
   const posts: unknown[] = [];
@@ -87,7 +87,7 @@ for (const width of [375, 620]) test(`proposed map has evidence and editable rec
   expect(posts).toHaveLength(0);
   await page.getByRole('button', { name: 'Connect this exploration with Muse', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Concept relationship map' })).toBeVisible();
-  await page.getByRole('region', { name: 'Your goals and understanding' }).screenshot({ path: `/private/tmp/soma-memory-${width}.png` });
+  await page.getByRole('region', { name: 'Your goals and understanding' }).screenshot({ path: testInfo.outputPath(`memory-${width}.png`) });
   expect(posts).toHaveLength(1);
   await page.getByRole('button', { name: 'Correct Keeping a frontier', exact: true }).click();
   await expect(page.getByLabel('Concept name', { exact: true })).toBeFocused();

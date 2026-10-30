@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { createExplorationService, needsExplorationReview, validateExplorationViewState } from '../../src/lib/server/exploration';
 import { closeExplorationStore, explorationStore } from '../../src/lib/server/exploration-store';
 import { checkExploration } from '../../src/lib/domain/exploration';
+import { visionRequestUpperBoundUsd } from '../../src/lib/server/meta-vision';
 import { defaultSpatialView } from '../../src/lib/domain/spatial-schema';
 import { createSpatialExample } from '../../src/lib/domain/spatial-example';
 import { spatialScene } from '../../src/lib/domain/spatial-exploration';
@@ -44,7 +45,7 @@ function harness(options: { foreignSource?: boolean; renamedObject?: boolean; in
     return { status: 'completed', tools: [], structured: { spec: output }, usage: { input_tokens: 100, output_tokens: 200 } };
   });
   const review = vi.fn(async () => ({ status: 'completed' as const, tools: [], structured: { verdict: 'approve', findings: [] }, usage: { input_tokens: 50, output_tokens: 20 } }));
-  const service = createExplorationService({ review, request: request as never, enabled: () => true, reviewEnabled: () => !!options.review, revalidate: async () => {}, reserve: async () => randomUUID(), settle: async () => {}, upperBound: () => 0.03 });
+  const service = createExplorationService({ review, request: request as never, enabled: () => true, reviewEnabled: () => !!options.review, revalidate: async () => {}, reserve: async () => randomUUID(), settle: async () => {}, upperBound: visionRequestUpperBoundUsd });
   return { service, request, review };
 }
 

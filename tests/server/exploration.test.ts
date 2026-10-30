@@ -129,12 +129,12 @@ afterEach(() => {
   vi.restoreAllMocks();
   rmSync(directory, { recursive: true, force: true });
 });
-function harness(request = script()) {
+function harness(request = script(), upperBound: typeof visionRequestUpperBoundUsd = () => 0.03) {
   const settle = vi.fn(async () => {}),
     reserve = vi.fn(async () => randomUUID());
   const service = createExplorationService({
     request: request as never,
-    upperBound: () => 0.03,
+    upperBound,
     reserve,
     settle,
     enabled: () => true,
@@ -414,8 +414,18 @@ describe('bounded exploration provider and persistence pipeline', () => {
       revalidate: async () => {},
     });
     await service.initialize(principal());
-    expect((await service.generate(principal(), generate())).artifact.generation.calls).toBe(3);
-    expect(upperBound).toHaveBeenCalledTimes(3);
+    const first = (await service.generate(principal(), generate())).artifact;
+    expect(first.generation.calls).toBe(3);
+    // Follow-up instructions add state-preservation constraints. Exercise the real
+    // encoder: a mocked price previously hid an over-limit prompt before send.
+    const { artifact: next } = await service.generate(principal(), {
+      action: 'generate', requestId: randomUUID(), artifactId: first.id,
+      baseVersion: first.version, state: first.state,
+      question: 'Explain this same graph while preserving my current controls.',
+    });
+    expect(next.version).toBe(2);
+    expect(next.executions!.primary.input).toEqual(first.executions!.primary.input);
+    expect(upperBound).toHaveBeenCalledTimes(4);
     expect(
       upperBound.mock.results.every(
         (value) => value.type === 'return' && value.value > 0 && value.value < 0.35,
@@ -1085,7 +1095,7 @@ describe('targeted exploration Wonder review', () => {
       request: request as never,
       review,
       reviewEnabled: () => true,
-      upperBound: () => 0.01,
+      upperBound: visionRequestUpperBoundUsd,
       reserve: async () => randomUUID(),
       settle,
       enabled: () => true,
@@ -1191,7 +1201,7 @@ describe('model-directed checked cost experiment', () => {
         calls,
       );
     });
-    const service = harness(request as never).service;
+    const service = harness(request as never, visionRequestUpperBoundUsd).service;
     const a = (
       await service.generate(principal(), {
         action: 'generate',
@@ -1229,7 +1239,7 @@ describe('model-directed checked cost experiment', () => {
       return result('compose_cost_experiment', copy, 1);
     });
     const next = (
-      await harness(follow as never).service.generate(principal(), {
+      await harness(follow as never, visionRequestUpperBoundUsd).service.generate(principal(), {
         action: 'generate',
         requestId: randomUUID(),
         artifactId: a.id,

@@ -249,6 +249,10 @@ test('point-and-ask joins source and prepared browser audio, submits once, prese
   await expect(page.getByLabel('Selected circle region')).toBeVisible();
   await native(page, 'end');
   await expect.poll(() => h.calls.filter((c) => c.action === 'generate').length).toBe(1);
+  const pendingSource = page.getByRole('figure', {name:'Source being explained'});
+  await expect(pendingSource).toBeVisible();
+  await expect(pendingSource.getByLabel('Selected circle region')).toBeVisible();
+  await expect(pendingSource.getByRole('img')).toBeVisible();
   const sent = h.calls.find((c) => c.action === 'generate');
   expect(sent.source.focus).toEqual(focus);
   expect(sent.question).toBe('Why this connection?');

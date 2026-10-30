@@ -1252,6 +1252,20 @@
       "kind": "message",
       "prompt": "**Improve reliability and polish.** The latest cross-subject batch succeeded initially on **8/10**, with successful explanations taking roughly **20 seconds**. Focus on source accuracy, useful memory connections, diagram quality, narration pacing an lets do this for now ",
       "timestamp_note": "Exact received timestamp unavailable; ambient context excluded."
+    },
+    {
+      "id": "PM099",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Yeah lets work on latency. How do we make it feel close to live? ",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 30, 2026 America/New_York. Ambient context excluded."
+    },
+    {
+      "id": "PM100",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Make sure quality is not being sacrificed",
+      "timestamp_note": "Exact received timestamp unavailable; ambient context excluded."
     }
   ]
 }

@@ -262,6 +262,15 @@ export function ExplorationWorkspace() {
   const questionRef = useRef<HTMLTextAreaElement>(null),
     errorRef = useRef<HTMLParagraphElement>(null);
   const [progress, setProgress] = useState<ExplorationProgress | null>(null);
+  const pendingSourceRef = useRef<HTMLElement>(null);
+  const [pendingSource, setPendingSource] = useState<{
+    capture: ExplorationCapture;
+    question: string;
+  } | null>(null);
+  useEffect(() => {
+    if (busy && pendingSource)
+      pendingSourceRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+  }, [busy, pendingSource]);
   const [streamingVoiceEnabled, setStreamingVoiceEnabled] = useState(false);
   const sourceMemory = useRef<{
     capture: ExplorationCapture;
@@ -373,11 +382,14 @@ export function ExplorationWorkspace() {
   ) {
     pointAsk.cancel('');
     setPlaying(false);
+    const initialWait = busy && !artifact;
     const pending = request.current;
     request.current = null;
     epoch.current++;
     pending?.controller.abort();
     setBusy(false);
+    setPendingSource(null);
+    if (initialWait) requestAnimationFrame(() => questionRef.current?.focus());
     if (pending)
       void api('POST', { action: 'cancel', requestId: pending.id }).catch(() => undefined);
     setNotice(message);
@@ -521,6 +533,9 @@ export function ExplorationWorkspace() {
       sourceMemory.current.capture.capturedAt === base.source.capturedAt
     );
     const followup = base && !newContext && !fresh;
+    setPendingSource(
+      !followup && selected ? { capture: selected, question: draft.trim() } : null,
+    );
     const submittedDraft = draft;
     const payload = {
       action: 'generate',
@@ -601,6 +616,7 @@ export function ExplorationWorkspace() {
     } finally {
       if (request.current?.id === id) {
         request.current = null;
+        setPendingSource(null);
         setBusy(false);
       }
     }
@@ -939,7 +955,7 @@ export function ExplorationWorkspace() {
     </section>
   );
   return (
-    <div className={`exploration-app ${artifact ? 'has-exploration' : ''}`}>
+    <div className={`exploration-app ${artifact || busy ? 'has-exploration' : ''}`}>
       <a className="skip-link" href="#exploration-main">
         Skip to exploration
       </a>
@@ -976,15 +992,28 @@ export function ExplorationWorkspace() {
           </div>
         </div>
         <div className="exploration-workbench">
-          {artifact && <div className="exploration-composer-column">{composer}</div>}
+          {(artifact || busy) && <div className="exploration-composer-column">{composer}</div>}
           <aside className="exploration-source-column" aria-label="Selected context">
-        <CompanionMemory sessionReady={initialized} artifact={artifact ? {id: artifact.id, version: artifact.version, saved: artifact.saved} : null}
-          onOpen={(id, version) => { void resume(id, version); }}
-          onAsk={(next) => { setPlaying(false); setQuestion(next); requestAnimationFrame(() => questionRef.current?.focus()); }} />
+            <CompanionMemory
+              sessionReady={initialized}
+              artifact={
+                artifact
+                  ? { id: artifact.id, version: artifact.version, saved: artifact.saved }
+                  : null
+              }
+              onOpen={(id, version) => {
+                void resume(id, version);
+              }}
+              onAsk={(next) => {
+                setPlaying(false);
+                setQuestion(next);
+                requestAnimationFrame(() => questionRef.current?.focus());
+              }}
+            />
 
             <details
               className="exploration-context-disclosure"
-              open={!artifact || newContext || capture.sharing}
+              open={capture.sharing || (!busy && (!artifact || newContext))}
             >
               <summary>Source & sharing</summary>
               <section className="exploration-source-card">
@@ -1219,17 +1248,54 @@ export function ExplorationWorkspace() {
             )}
             {busy && (
               <div role="status" className="exploration-working">
-                <span />{' '}
-                {progress
-                  ? explorationProgressLabel[progress.phase]
-                  : 'Soma is preparing your visual explanation…'}{' '}
-                <span aria-hidden="true">{waitingSeconds}s elapsed.</span>{' '}
-                {artifact
-                  ? 'Your current diagram stays available. Changing a control cancels this request.'
-                  : 'You can cancel below without losing your question.'}{' '}
-                {waitingSeconds >= 15 &&
-                  'The last valid visual stays available until this revision passes its checks.'}
+                <span aria-hidden="true" />
+                <div>
+                  {progress
+                    ? explorationProgressLabel[progress.phase]
+                    : 'Soma is preparing your visual explanation…'}{' '}
+                  <span aria-hidden="true">{waitingSeconds}s elapsed.</span>{' '}
+                  {artifact
+                    ? 'Your current diagram stays available. Changing a control cancels this request.'
+                    : 'You can cancel below without losing your question.'}{' '}
+                  {waitingSeconds >= 15 &&
+                    'The last valid visual stays available until this revision passes its checks.'}
+                </div>
               </div>
+            )}
+            {busy && pendingSource && (
+              <figure
+                ref={pendingSourceRef}
+                className="exploration-pending-source"
+                aria-label="Source being explained"
+              >
+                <figcaption>Your selected screen · explanation preparing</figcaption>
+                <div className="exploration-pending-image">
+                  {/* This is the user's frozen input, never a partial model scene. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={pendingSource.capture.dataUrl}
+                    alt="Frozen screen selected for this question"
+                  />
+                  {pendingSource.capture.focus && (
+                    <span
+                      className="exploration-source-focus"
+                      aria-label={`Selected ${pendingSource.capture.focus.kind} region`}
+                      style={{
+                        left: `${pendingSource.capture.focus.region.x * 100}%`,
+                        top: `${pendingSource.capture.focus.region.y * 100}%`,
+                        width: `${pendingSource.capture.focus.region.width * 100}%`,
+                        height: `${pendingSource.capture.focus.region.height * 100}%`,
+                      }}
+                    />
+                  )}
+                </div>
+                <p>
+                  You asked:{' '}
+                  {pendingSource.question.length > 180
+                    ? pendingSource.question.slice(0, 180) + '…'
+                    : pendingSource.question}
+                </p>
+              </figure>
             )}
             {notice && (
               <p role="status" className="exploration-notice">
@@ -1748,7 +1814,7 @@ export function ExplorationWorkspace() {
                   )}
                 </div>
               </article>
-            ) : (
+            ) : busy ? null : (
               <section className="exploration-empty-stage">
                 <div className="exploration-empty-symbol">
                   <Sparkles size={34} strokeWidth={1.4} aria-hidden="true" />
@@ -1779,7 +1845,7 @@ export function ExplorationWorkspace() {
                 </span>
               </section>
             )}
-            {!artifact && composer}
+            {!artifact && !busy && composer}
           </div>
         </div>
         <footer className="exploration-page-footer">

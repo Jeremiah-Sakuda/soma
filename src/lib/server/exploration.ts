@@ -1,3 +1,4 @@
+import { continueExploration, continuationSchemaFor } from './exploration-continuation';
 import { arrangeExplanationPanels } from '../domain/exploration-layout';
 import { companionMemoryContext, pruneCompanionMemory } from './companion-memory';
 import type { ExplorationProgress } from '../domain/exploration-progress';
@@ -1549,7 +1550,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           call: calls,
           detail: `Checked ${computed.modelId} trace with ${computed.steps.length} snapshots.`,
         });
-      const sceneInstructions = `${experiment ? 'A checked cost experiment is supplied. Keep checked-dijkstra and include set-weight in controls. Preserve the supplied current primary and comparison graph inputs; the application exposes hypothetical interventions separately. Existing edgeWeights are hypothetical overrides, not new source facts. Explain the verified cases and distinguish an exact direct-route tie from a bounded sample.' : ''} ${genericInstructions} Compose a source-specific scene using compose_exploration. Use block objects for processing stages, sequence panels for ordered tokens, matrix panels for small rectangular data, and callout panels for one key idea when they improve this explanation. These explanatory primitives do not establish checked computation. For source-specific explanations, prefer one dominant mechanism with a small set of clearly labeled parts, 3-4 meaningful steps and explicit highlighted node/edge IDs for the causal transition in each step. Do not substitute generic decorative boxes for the mechanism. Keep captions and narration concise (one short sentence each). Preserve source qualifiers such as almost all, usually and may, as well as signs, negations and direction. A statement outside the visible source must be labeled contextual in that step, not presented as observed fact. Prefer 1-2 panels, at most three; include only the parts needed for this question. If the capture shows only one part of a broader question, explain the visible part and label the unseen part as contextual explanation; never invent unseen diagrams or values. Every arrow is a claim: its label and destination must agree with the stated intermediate numerical state; do not skip from a partial update to a limiting/final state. Use the application-bound diagram-sidebar layout; panels must occupy distinct grid cells, column 1 or 2, spans within two columns, rows 1-4. For explanation mode every step MUST set both execution and executionStep to JSON null; there is no checked trace. Never use an integer index or primary execution for explanation mode. Supply concise narration linked to each visible step. ${reuse ? 'This is a context-preserving follow-up, including auto: preserve the computational mode and the supplied current checked primary and comparison inputs; If the question requests a different primary experiment, explain how to apply the visible controls or return a clarification; a question alone cannot silently apply parameter edits. Keep the current trace step and unchanged object positions. Focus on the selected object when supplied.' : ''} Set schemaVersion="exploration-v1". Required spec id=${`explore_${artifactId.replaceAll('-', '')}`} and version=${version}; every source reference must match observationId=${source.observationId}, version=${source.version}. If a checked graph was supplied, primary input MUST exactly match that graph. Comparison input may be an explicitly described experiment and is independently checked. Preserve every input the user did not ask to change: goal, direction, nodes, edges, neighbor order and start. Changing only the start never changes the goal or graph. Explicitly describe every intended parameter change in assumptions; do not quietly invent a second variable to make an experiment more interesting. Bind explanatory steps to the supplied execution snapshots; A checked scene MUST include a primary graph and at least one frontier or state-table panel. A comparison requires its own graph panel. Use these exact kind values; choose a valid bounded layout for this question. Clarify essential source uncertainty. Do not claim source prose is computationally verified. ${previous ? 'Preserve existing object IDs for unchanged meaning and explain the requested change, using the supplied current controls and checked trace as the experiment context.' : ''}`;
+      const sceneInstructions = `${experiment ? 'A checked cost experiment is supplied. Keep checked-dijkstra and include set-weight in controls. Preserve the supplied current primary and comparison graph inputs; the application exposes hypothetical interventions separately. Existing edgeWeights are hypothetical overrides, not new source facts. Explain the verified cases and distinguish an exact direct-route tie from a bounded sample.' : ''} ${genericInstructions} Compose a source-specific scene using compose_exploration. Use block objects for processing stages, sequence panels for ordered tokens, matrix panels for small rectangular data, and callout panels for one key idea when they improve this explanation. These explanatory primitives do not establish checked computation. For source-specific explanations, prefer one dominant mechanism with a small set of clearly labeled parts, 3-4 meaningful steps and explicit highlighted node/edge IDs for the causal transition in each step. Do not substitute generic decorative boxes for the mechanism. Keep captions and narration concise (one short sentence each). Preserve source qualifiers such as almost all, usually and may, as well as signs, negations and direction. Label contextual claims. Never guess unreadable source labels/curve styles, even in a clarification. Distinguish a new schematic based on visible text from an unreadable source figure. Prefer 1-2 panels, at most three; include only the parts needed for this question. If the capture shows only one part of a broader question, explain the visible part and label the unseen part as contextual explanation; never invent unseen diagrams or values. Every arrow is a claim: its label and destination must agree with the stated intermediate numerical state; do not skip from a partial update to a limiting/final state. Use the application-bound diagram-sidebar layout; panels must occupy distinct grid cells, column 1 or 2, spans within two columns, rows 1-4. For explanation mode every step MUST set both execution and executionStep to JSON null; there is no checked trace. Never use an integer index or primary execution for explanation mode. Supply concise narration linked to each visible step. ${reuse ? 'This is a context-preserving follow-up, including auto: preserve the computational mode and the supplied current checked primary and comparison inputs; If the question requests a different primary experiment, explain how to apply the visible controls or return a clarification; a question alone cannot silently apply parameter edits. Keep the current trace step and unchanged object positions. Focus on the selected object when supplied.' : ''} Set schemaVersion="exploration-v1". Required spec id=${`explore_${artifactId.replaceAll('-', '')}`} and version=${version}; every source reference must match observationId=${source.observationId}, version=${source.version}. If a checked graph was supplied, primary input MUST exactly match that graph. Comparison input may be an explicitly described experiment and is independently checked. Preserve every input the user did not ask to change: goal, direction, nodes, edges, neighbor order and start. Changing only the start never changes the goal or graph. Explicitly describe every intended parameter change in assumptions; do not quietly invent a second variable to make an experiment more interesting. Bind explanatory steps to the supplied execution snapshots; A checked scene MUST include a primary graph and at least one frontier or state-table panel. A comparison requires its own graph panel. Use these exact kind values; choose a valid bounded layout for this question. Clarify essential source uncertainty. Do not claim source prose is computationally verified. ${previous ? 'Preserve existing object IDs for unchanged meaning and explain the requested change, using the supplied current controls and checked trace as the experiment context.' : ''}`;
       let history: unknown[] = [
         {
           role: 'user',
@@ -1627,6 +1628,15 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             }),
             clarifySchema,
           ]);
+      const canContinue =
+        reuse &&
+        !experiment &&
+        previous?.spec.mode !== 'clarify' &&
+        (!computed || (currentState?.step ?? 0) < computed.steps.length);
+      const continuationContract =
+        canContinue && previous && previous.spec.mode !== 'clarify'
+          ? continuationSchemaFor(previous.spec, currentState?.step ?? 0)
+          : null;
       const composeTool = experiment
         ? tool(
             'compose_cost_experiment',
@@ -1636,7 +1646,11 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         : tool(
             'compose_exploration',
             'Compose the complete approved scene specification in the spec field. Application supplies validation and execution results.',
-            z.strictObject({ spec: turnSpecSchema }),
+            z.strictObject({
+              spec: canContinue
+                ? z.union([turnSpecSchema, continuationContract!])
+                : turnSpecSchema,
+            }),
           );
       type AuthorProposal = { parsedArguments: Record<string, unknown>; tool?: MetaToolCall };
       function authorFeedback(proposal: AuthorProposal, facts: unknown) {
@@ -1652,9 +1666,29 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
       }
       function proposalSpec(proposal: AuthorProposal): unknown {
         if (!experiment) {
-          const candidate = explorationSpecSchema.parse(
-            z.strictObject({ spec: z.unknown() }).parse(proposal.parsedArguments).spec,
-          );
+          const raw = z
+            .strictObject({ spec: z.unknown() })
+            .parse(proposal.parsedArguments).spec;
+          const isContinuation =
+            raw && typeof raw === 'object' && 'mode' in raw && raw.mode === 'continue';
+          if (isContinuation && (!canContinue || !previous || previous.spec.mode === 'clarify'))
+            throw new SceneBindingError('source_binding');
+          const candidate =
+            isContinuation && previous && previous.spec.mode !== 'clarify'
+              ? continueExploration(previous.spec, continuationContract!.parse(raw), {
+                  id: `explore_${artifactId.replaceAll('-', '')}`,
+                  version,
+                  input: extracted.graph,
+                  comparison: currentComparison?.input ?? null,
+                })
+              : explorationSpecSchema.parse(raw);
+          if (isContinuation)
+            audit.push({
+              event: 'scene-continued',
+              call: calls,
+              detail:
+                'Spark authored a compact continuation on the existing visual. Application preserved source, geometry, controls and current computation; full validation and review still required.',
+            });
           const arranged = arrangeExplanationPanels(candidate);
           if (arranged.changed)
             audit.push({
@@ -1710,7 +1744,13 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
       }
       const composeInstructions = experiment
         ? `${genericInstructions} Use compose_cost_experiment. The existing graph, layout, controls, source and model bindings are preserved by the application. You author concise objective, trace-bound captions/narration and useful follow-ups from the supplied checked cost experiment. Use visible node labels in learner-facing words; never mention tool names, schema fields or internal IDs. Distinguish a direct edge cost from a whole path cost. At the critical tie, state equal total cost; equal costs do not guarantee the same chosen path. Describe recorded sampled paths as sampled outcomes. Captions describe their bound current trace snapshot; any other cost must be explicitly hypothetical. traceIndex must reference checkedExecution. highlightIds must name existing graph nodes or edges. Distinguish the original current cost from hypothetical interventions. Do not claim a global boundary when criticalCost is null. No invented measurements or mastery claims.`
-        : sceneInstructions;
+        : sceneInstructions +
+          (canContinue && computed
+            ? ` A compact checked reply must contain exactly ONE step, execution="primary" and executionStep=${currentState?.step ?? 0}, so its answer is heard on the currently visible snapshot. Explain this actual state. Label any prediction or later/final outcome explicitly; never describe it as already visible. Use a full spec instead if this cannot answer the question faithfully.`
+            : '') +
+          (canContinue
+            ? ' For a follow-up that the existing visual can explain, prefer spec.mode="continue": return only a concise title, objective, assumptions, 1-3 steps and up to three followups. Reuse existing object/source IDs and checked execution indices. The application preserves all source bindings, geometry, labels, connections, controls and current inputs. Do not resend the scene or computation. Choose a full ordinary spec or clarification instead when a genuinely new visual, correction to its content, additional uncertainty or unsupported request cannot be handled by emphasis/narration alone. Never imply the old visual has new parts or values. Both paths receive the same checks and review.'
+            : '');
       let artifact: ExplorationArtifact | undefined;
       let applicationRepairs = 0,
         reviewRepairs = 0;
@@ -1796,7 +1836,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             deps.reviewEnabled() &&
             (needsExplorationReview(spec, !!(learnerObservation || applicationObservation)) ||
               !!source.anchors?.length ||
-              !!source.change)
+              !!source.change ||
+              (spec.mode === 'clarify' && source.uncertainty.length > 0))
           ) {
             stage = 'review';
             await live();

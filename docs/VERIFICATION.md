@@ -87,3 +87,12 @@ Pointing adds an interaction-ID-fenced native shortcut, local gesture overlay, r
 The compiled native helper reported successful chord registration. An actual Electron overlay/bridge/render/hide journey passed with controlled helper events, original synthetic desktop/audio and replayed actual generation. Two fresh selected-region requests returned the intended distinct program traces and preserved exact focus on save/reopen. This is a small development sample; failed harness UI waits and physical-input/OS-permission/clean-Mac limitations are retained in [Point & ask](POINT_AND_ASK.md). No real student or learning-gain claim.
 
 A stricter manual-upload-during-hold check then reproduced a native-session cancellation gap. Source selection now sends cancellation immediately, before any late native release/capture. All **25 affected browser journeys** passed after this change. Signed package inspection also removed unnecessary compiler caches; only the compiled helper is shipped as an extra resource.
+
+
+## PM077 release checkpoint — October 30
+
+Public code **be83c63c0f031495256c5e38699863c4be312ab3**, clean CI [41071744426](https://github.com/Jeremiah-Sakuda/soma-hackathon/actions/runs/41071744426): **1,401 offline passes / 89 opt-in skipped**, **13 desktop checks**, **28 isolated credential-browser checks**, and **123 browser journeys**. Final typecheck, production build, source-manifest verification and isolated runtime import passed.
+
+Production deployment **dpl_7iqYXQRwyUPUGKP2tptkRxJ6XgN3** serves `soma-pm077-2026-10-30`; its complete 214-file runtime manifest matches committed source, fingerprint `f228f56827a1ab7dd28bf0246ba555c5fdac9f6ede0ee738a17870318a70f20a`. The first deployment attempt returned Not authorized; explicitly selecting the verified owner scope/project succeeded. A final actual Electron-to-production bridge/render/hide check passed with synthetic screen/audio/helper events and replayed actual model output, making no new model calls. The first hosted harness incorrectly passed production as a development override and was stopped; the successful run uses the app's fixed production origin.
+
+0.2.0 is Developer ID signed and deep/strict verified, including the shortcut helper. Its app archive contains 27 entries and no compiler cache. Apple notarization remains blocked by the missing local `soma-notary` profile; no new notarized download is claimed. Physical hold/release, microphone quality, capture permission, fullscreen/multi-monitor and clean-Mac installation remain human checks.

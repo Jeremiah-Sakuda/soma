@@ -22,7 +22,7 @@ const {
   panelBounds,
   captureSource,
 } = require('./policy.cjs');
-const { createSurfaceController, validSurface } = require('./surface.cjs');
+const { createSurfaceController, validSurface, fitBounds } = require('./surface.cjs');
 const origin = appOrigin(process.env.SOMA_DESKTOP_URL, app.isPackaged);
 const toolbarURL = pathToFileURL(path.join(__dirname, 'toolbar.html')).href;
 let win,
@@ -119,7 +119,10 @@ async function capture() {
     if (!trustedPage(view.webContents.getURL(), origin))
       throw new Error('Soma navigated away; snapshot discarded.');
     surfaces.set('companion');
-    win.setBounds(panelBounds(display.workArea));
+    const compact = win.getBounds();
+    win.setBounds(fitBounds({ ...compact,
+      x: display.workArea.x + display.workArea.width - compact.width,
+      y: display.workArea.y }, display.workArea));
     show();
     view.webContents.setAudioMuted(false);
     view.webContents.send('desktop:snapshot', { ...snapshot, name: 'Current display.jpg' });

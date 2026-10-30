@@ -1,5 +1,7 @@
 # General screenshot validation — October 29, 2026
 
+Soma is not built around one hard-coded example. We froze nine varied screenshots: three real public pages (MDN, Google's ML course and OpenStax) and six original test images (two code variants, a spreadsheet, a circuit, a cache diagram and an unreadable crop). Each was sent with the same generic question and no hints. Eight of nine first requests produced a source-specific explanation or the right clarifying question. The one failure, the OpenStax page, was rejected safely. This is a small development sample, not a reliability rate.
+
 Soma's upload/capture path sends actual image pixels to Muse Spark. It does not call the prepared-example action or attach its graph facts. Spark authors the source interpretation, content, labels, steps and visual composition using approved components. Reusable renderers do not imply reusable lesson content.
 
 ## Production baseline
@@ -32,4 +34,4 @@ Actual generated diagrams exposed overlapping labels. Authored positions remain 
 
 General screenshots produce visual explanations, not verified arbitrary scientific simulations. Checked manipulation remains limited to supported BFS/Dijkstra graphs. Generated prose and source interpretation remain fallible; inaccessible or ambiguous inputs may fail safely or request clarification. Uploads accept PNG/JPEG up to 4 MB before normalization to the bounded service image. Dense tiny text may require a closer capture.
 
-Post-change production UI verification and exact release identity are recorded in the private build handoff after deployment; preparation alone does not establish deployment.
+After these changes were deployed, three fresh screenshots passed production generation: a code counter (23, +5, giving 28 and 33), a water-cycle diagram and a results/rows debugging view. The counter went through the real upload-and-Ask UI. Request inspection showed actual image pixels and no prepared-example calls, and a selected-object follow-up, save, reload and reopen all worked on it. The other two went through a direct API harness. `public/release.json` and `node scripts/verify-release.mjs` tie this source to the deployed app.

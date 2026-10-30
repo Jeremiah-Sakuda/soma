@@ -231,7 +231,9 @@ export function ExplorationPlayback({
         </button>
         <button
           type="button"
-          className="text-button"
+          className="text-button journal-icon-button"
+          aria-label="Replay from start"
+          title="Replay from start"
           disabled={disabled || spec.mode === 'clarify'}
           onClick={() => {
             resume.current = null;
@@ -241,8 +243,7 @@ export function ExplorationPlayback({
             onAdvance({ ...state, step: 0, explanationStep: 0 });
           }}
         >
-          <RotateCcw size={15} aria-hidden="true" />
-          Replay from start
+          <RotateCcw size={16} aria-hidden="true" />
         </button>
         <button type="button" className="text-button" onClick={onQuestion}>
           Ask about this

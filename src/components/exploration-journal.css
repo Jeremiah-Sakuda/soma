@@ -608,3 +608,120 @@
   fill: var(--ink);
   font-family: var(--font-geist-mono);
 }
+
+/* ── Transport: one row above the diagram ────────────────────────────── */
+.exploration-app .journal-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: flex-start;
+  gap: 14px 12px;
+}
+.exploration-app .journal-right > * {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.exploration-app .journal-right > .exploration-playback,
+.exploration-app.has-exploration .journal-right > .exploration-playback {
+  flex: 0 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.exploration-app .journal-right > .exploration-playback > .action-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.exploration-app .journal-right > .exploration-step-bar,
+.exploration-app .journal-right > .exploration-explanation-navigation,
+.exploration-app.has-exploration .journal-right > .exploration-step-bar {
+  flex: 1 1 340px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.exploration-app .journal-right .exploration-step-bar .action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.exploration-app .journal-right .exploration-step-bar .primary-button,
+.exploration-app .journal-right .exploration-step-bar .secondary-button,
+.exploration-app.has-exploration .journal-right .exploration-step-bar .primary-button,
+.exploration-app.has-exploration .journal-right .exploration-step-bar .secondary-button {
+  min-height: 44px;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+.exploration-app .journal-right .exploration-step-bar .primary-button {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+  box-shadow: 0 3px 0 var(--ink);
+}
+.exploration-app .journal-right .exploration-step-bar .primary-button:hover {
+  background: var(--highlight-soft);
+}
+.exploration-app .journal-page-number,
+.exploration-app.has-exploration .journal-page-number {
+  font-family: var(--font-journal-serif), 'Young Serif', Georgia, serif;
+  font-size: 15px;
+  color: var(--ink-2);
+  padding: 0 4px;
+}
+.exploration-app .journal-icon-button {
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--ink);
+}
+.exploration-app .journal-right .exploration-playback .exploration-voice-settings > summary,
+.exploration-app.has-exploration .journal-right .exploration-playback .exploration-voice-settings summary {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.exploration-app .journal-right .exploration-comparison-switch {
+  display: flex;
+  gap: 8px;
+}
+.exploration-app .journal-right .exploration-comparison-switch button,
+.exploration-app.has-exploration .journal-right .exploration-comparison-switch button {
+  flex: 1;
+  min-height: 52px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  text-align: left;
+}
+.exploration-app .journal-right .exploration-comparison-switch button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--paper);
+}
+.exploration-app .journal-right .exploration-comparison-switch button[aria-pressed='true'] .meta {
+  color: #e6dcc9;
+}
+.exploration-app .journal-right .exploration-panel,
+.exploration-app.has-exploration .journal-right .exploration-panel {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}

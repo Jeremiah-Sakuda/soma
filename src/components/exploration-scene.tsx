@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ExplorationSearchStage } from './exploration-search-stage';
 import { useExplorationMotion } from './exploration-motion';
 import { diagramRoutes, pointOnDiagramRoute } from '@/lib/domain/diagram-routing';
@@ -550,7 +551,7 @@ export function ExplorationScene({
                   })
                 }
               >
-                Previous explanation
+                <ChevronLeft size={16} aria-hidden="true" /> Previous explanation
               </button>
               <button
                 type="button"
@@ -563,7 +564,7 @@ export function ExplorationScene({
                   })
                 }
               >
-                Next explanation
+                Next explanation <ChevronRight size={16} aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -591,7 +592,7 @@ export function ExplorationScene({
                 disabled={state.step <= 0}
                 onClick={() => onChange({ ...state, step: Math.max(0, state.step - 1) })}
               >
-                Previous explanation
+                <ChevronLeft size={16} aria-hidden="true" /> Previous step
               </button>
               <button
                 className="primary-button"
@@ -599,9 +600,9 @@ export function ExplorationScene({
                 disabled={state.step >= finalStep}
                 onClick={() => onChange({ ...state, step: state.step + 1 })}
               >
-                Next step
+                Next step <ChevronRight size={16} aria-hidden="true" />
               </button>
-              <span className="meta">
+              <span className="meta journal-page-number">
                 Step {Math.min(state.step, finalStep)} / {finalStep}
               </span>
               {singleSearch && experimentInline && experiment}
@@ -679,15 +680,6 @@ export function ExplorationScene({
         <details className="exploration-controls-disclosure" open={!compact}>
           <summary>Change the experiment</summary>
           <div className="exploration-controls" aria-label="Search controls">
-            {spec.controls.includes('replay') && (
-              <button
-                className="text-button"
-                type="button"
-                onClick={() => onChange({ ...state, step: 0, explanationStep: 0 })}
-              >
-                Restart search
-              </button>
-            )}
             <div className="exploration-inputs">
               {spec.controls.includes('set-start') && (
                 <label>

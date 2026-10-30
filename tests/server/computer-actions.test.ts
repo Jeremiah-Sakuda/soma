@@ -1,21 +1,219 @@
-import {describe,it,expect,vi} from 'vitest';
-import {createComputerPlanner,computerRequestSchema,checkedComputerPlan} from '../../src/lib/server/computer-actions';
-import {MetaClientError} from '../../src/lib/server/meta-client';
-import {ExplorationError,type ExplorationPrincipal} from '../../src/lib/server/exploration-types';
-const principal:ExplorationPrincipal={kind:'guest',id:'a'.repeat(64),workspaceId:'a'.repeat(64),generation:'a'.repeat(64),key:'original-computer-test'};
-const input={history:[],goal:'Set the font size to 18',app:'Original synthetic settings',controls:[{id:0,role:'AXTextField' as const,label:'Font size'},{id:1,role:'AXButton' as const,label:'Apply'}]};
-const plan={kind:'type',target:0,text:'18',reason:'Replace the font size field with 18.'};
-const completion=()=>({status:'completed' as const,tools:[{type:'function_call' as const,name:'propose_action',call_id:'one',arguments:JSON.stringify(plan),parsedArguments:plan}],usage:{input_tokens:100,output_tokens:50}});
-function harness(){const store={read:vi.fn(async()=>({})),mutate:vi.fn(async()=>({}))},revalidate=vi.fn(async()=>{}),reserve=vi.fn(async()=>'reservation'),settle=vi.fn(async()=>{}),request=vi.fn(async(_request:unknown)=>completion());return {store,revalidate,reserve,settle,request,run:createComputerPlanner({store:store as never,revalidate,reserve,settle,request,enabled:()=>true})};}
-describe('scoped Muse computer proposals',()=>{
- it('returns a typed proposal and audit while execution remains local',async()=>{const h=harness();const result=await h.run(principal,input);expect(result.plan).toEqual(plan);expect(result.audit).toMatchObject({executed:false,calls:1,model:'muse-spark-1.3'});expect(h.store.mutate).toHaveBeenCalledTimes(2);const r=h.request.mock.calls[0][0] as unknown as {input:unknown;tools:unknown};expect(JSON.stringify(r.input)).not.toContain('screenshot');expect(h.settle).toHaveBeenCalledWith('reservation',expect.any(Number),true);});
- it('rejects values and sensitive controls before acquiring budget',async()=>{const h=harness();await expect(h.run(principal,{...input,controls:[{id:0,role:'AXTextField',label:'Password'}]})).rejects.toThrow();await expect(h.run(principal,{...input,controls:[{...input.controls[0],value:'private'}]})).rejects.toThrow();expect(h.reserve).not.toHaveBeenCalled();});
- it('cannot target missing controls, type into buttons, or add control characters',()=>{for(const p of [{...plan,target:20},{...plan,target:1},{...plan,text:'18\n'},{...plan,kind:'shell'}])expect(()=>checkedComputerPlan(p,input)).toThrow();expect(computerRequestSchema.safeParse({...input,controls:[{...input.controls[0],id:19}]}).success).toBe(false);});
- it('revalidates deletion during settlement before publishing',async()=>{const h=harness();h.settle.mockImplementation(async()=>{h.revalidate.mockRejectedValue(new ExplorationError('forbidden'));});await expect(h.run(principal,input)).rejects.toMatchObject({code:'forbidden'});});
- it('preserves reservation on unknown post-send failure',async()=>{const h=harness();h.request.mockRejectedValue(new MetaClientError('network',null,true));await expect(h.run(principal,input)).rejects.toThrow();expect(h.settle).toHaveBeenCalledWith('reservation',0,false);});
- it('settles known invalid output usage without returning an action',async()=>{const h=harness();h.request.mockResolvedValue({...completion(),tools:[]});await expect(h.run(principal,input)).rejects.toThrow();expect(h.settle).toHaveBeenCalledWith('reservation',expect.any(Number),true);});
- it('cancellation suppresses a late proposal and still bills known usage',async()=>{const h=harness(),controller=new AbortController();h.request.mockImplementation(async()=>{controller.abort();return completion();});await expect(h.run(principal,input,controller.signal)).rejects.toThrow();expect(h.settle).toHaveBeenCalledWith('reservation',expect.any(Number),true);});
- it('expired owner cannot send a task',async()=>{const h=harness();h.store.read.mockResolvedValue(null as never);await expect(h.run(principal,input)).rejects.toMatchObject({code:'session_expired'});expect(h.request).not.toHaveBeenCalled();});
+import { describe, it, expect, vi } from "vitest";
+import {
+  createComputerPlanner,
+  computerRequestSchema,
+  checkedComputerPlan,
+} from "../../src/lib/server/computer-actions";
+import { MetaClientError } from "../../src/lib/server/meta-client";
+import {
+  ExplorationError,
+  type ExplorationPrincipal,
+} from "../../src/lib/server/exploration-types";
+const principal: ExplorationPrincipal = {
+  kind: "guest",
+  id: "a".repeat(64),
+  workspaceId: "a".repeat(64),
+  generation: "a".repeat(64),
+  key: "original-computer-test",
+};
+const input = {
+  history: [],
+  goal: "Set the font size to 18",
+  app: "Original synthetic settings",
+  controls: [
+    { id: 0, role: "AXTextField" as const, label: "Font size" },
+    { id: 1, role: "AXButton" as const, label: "Apply" },
+  ],
+};
+const plan = {
+  kind: "type",
+  target: 0,
+  text: "18",
+  reason: "Replace the font size field with 18.",
+};
+const completion = () => ({
+  status: "completed" as const,
+  tools: [
+    {
+      type: "function_call" as const,
+      name: "propose_action",
+      call_id: "one",
+      arguments: JSON.stringify(plan),
+      parsedArguments: plan,
+    },
+  ],
+  usage: { input_tokens: 100, output_tokens: 50 },
 });
-it('passes bounded actual action history to Muse and marks done as an assessment only',async()=>{const h=harness();h.request.mockResolvedValue({...completion(),tools:[{...completion().tools[0],parsedArguments:{kind:'done',target:0,text:'',reason:'The requested size was confirmed.'}}]});const result=await h.run(principal,{...input,history:[{kind:'type',label:'Font size',text:'18',outcome:'value-confirmed'}]});expect(result.plan.kind).toBe('done');expect(result.audit.executed).toBe(false);expect(JSON.stringify(h.request.mock.calls[0][0])).toContain('value-confirmed');});
-it('rejects duplicate labels instead of pretending their IDs are meaningful to the user',()=>{expect(()=>checkedComputerPlan({...plan,kind:'click',target:1,text:''},{...input,controls:[...input.controls,{id:2,role:'AXButton',label:'Apply'}]})).toThrow('Ambiguous');});
+function harness() {
+  const store = {
+      read: vi.fn(async () => ({})),
+      mutate: vi.fn(async () => ({})),
+    },
+    revalidate = vi.fn(async () => {}),
+    reserve = vi.fn(async () => "reservation"),
+    settle = vi.fn(async () => {}),
+    request = vi.fn(async (_request: unknown) => completion());
+  return {
+    store,
+    revalidate,
+    reserve,
+    settle,
+    request,
+    run: createComputerPlanner({
+      store: store as never,
+      revalidate,
+      reserve,
+      settle,
+      request,
+      enabled: () => true,
+    }),
+  };
+}
+describe("scoped Muse computer proposals", () => {
+  it("returns a typed proposal and audit while execution remains local", async () => {
+    const h = harness();
+    const result = await h.run(principal, input);
+    expect(result.plan).toEqual(plan);
+    expect(result.audit).toMatchObject({
+      executed: false,
+      calls: 1,
+      model: "muse-spark-1.3",
+    });
+    expect(h.store.mutate).toHaveBeenCalledTimes(2);
+    const r = h.request.mock.calls[0][0] as unknown as {
+      input: unknown;
+      tools: unknown;
+    };
+    expect(JSON.stringify(r.input)).not.toContain("screenshot");
+    expect(h.settle).toHaveBeenCalledWith(
+      "reservation",
+      expect.any(Number),
+      true,
+    );
+  });
+  it("rejects values and sensitive controls before acquiring budget", async () => {
+    const h = harness();
+    await expect(
+      h.run(principal, {
+        ...input,
+        controls: [{ id: 0, role: "AXTextField", label: "Password" }],
+      }),
+    ).rejects.toThrow();
+    await expect(
+      h.run(principal, {
+        ...input,
+        controls: [{ ...input.controls[0], value: "private" }],
+      }),
+    ).rejects.toThrow();
+    expect(h.reserve).not.toHaveBeenCalled();
+  });
+  it("cannot target missing controls, type into buttons, or add control characters", () => {
+    for (const p of [
+      { ...plan, target: 20 },
+      { ...plan, target: 1 },
+      { ...plan, text: "18\n" },
+      { ...plan, kind: "shell" },
+    ])
+      expect(() => checkedComputerPlan(p, input)).toThrow();
+    expect(
+      computerRequestSchema.safeParse({
+        ...input,
+        controls: [{ ...input.controls[0], id: 19 }],
+      }).success,
+    ).toBe(false);
+  });
+  it("revalidates deletion during settlement before publishing", async () => {
+    const h = harness();
+    h.settle.mockImplementation(async () => {
+      h.revalidate.mockRejectedValue(new ExplorationError("forbidden"));
+    });
+    await expect(h.run(principal, input)).rejects.toMatchObject({
+      code: "forbidden",
+    });
+  });
+  it("preserves reservation on unknown post-send failure", async () => {
+    const h = harness();
+    h.request.mockRejectedValue(new MetaClientError("network", null, true));
+    await expect(h.run(principal, input)).rejects.toThrow();
+    expect(h.settle).toHaveBeenCalledWith("reservation", 0, false);
+  });
+  it("settles known invalid output usage without returning an action", async () => {
+    const h = harness();
+    h.request.mockResolvedValue({ ...completion(), tools: [] });
+    await expect(h.run(principal, input)).rejects.toThrow();
+    expect(h.settle).toHaveBeenCalledWith(
+      "reservation",
+      expect.any(Number),
+      true,
+    );
+  });
+  it("cancellation suppresses a late proposal and still bills known usage", async () => {
+    const h = harness(),
+      controller = new AbortController();
+    h.request.mockImplementation(async () => {
+      controller.abort();
+      return completion();
+    });
+    await expect(h.run(principal, input, controller.signal)).rejects.toThrow();
+    expect(h.settle).toHaveBeenCalledWith(
+      "reservation",
+      expect.any(Number),
+      true,
+    );
+  });
+  it("expired owner cannot send a task", async () => {
+    const h = harness();
+    h.store.read.mockResolvedValue(null as never);
+    await expect(h.run(principal, input)).rejects.toMatchObject({
+      code: "session_expired",
+    });
+    expect(h.request).not.toHaveBeenCalled();
+  });
+});
+it("passes bounded actual action history to Muse and marks done as an assessment only", async () => {
+  const h = harness();
+  h.request.mockResolvedValue({
+    ...completion(),
+    tools: [
+      {
+        ...completion().tools[0],
+        parsedArguments: {
+          kind: "done",
+          target: 0,
+          text: "",
+          reason: "The requested size was confirmed.",
+        },
+      },
+    ],
+  });
+  const result = await h.run(principal, {
+    ...input,
+    history: [
+      {
+        kind: "type",
+        label: "Font size",
+        text: "18",
+        outcome: "value-confirmed",
+      },
+    ],
+  });
+  expect(result.plan.kind).toBe("done");
+  expect(result.audit.executed).toBe(false);
+  expect(JSON.stringify(h.request.mock.calls[0][0])).toContain(
+    "value-confirmed",
+  );
+});
+it("rejects duplicate labels instead of pretending their IDs are meaningful to the user", () => {
+  expect(() =>
+    checkedComputerPlan(
+      { ...plan, kind: "click", target: 1, text: "" },
+      {
+        ...input,
+        controls: [
+          ...input.controls,
+          { id: 2, role: "AXButton", label: "Apply" },
+        ],
+      },
+    ),
+  ).toThrow("Ambiguous");
+});

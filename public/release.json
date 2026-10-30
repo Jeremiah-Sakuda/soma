@@ -1,6 +1,6 @@
 {
   "releaseId": "soma-pm086-2026-10-30",
-  "sourceTreeSha256": "13ad66a468d758c0b161a5b6fecedd1c8c9aa052cfc77275366b669022bf5a3d",
+  "sourceTreeSha256": "c5d27a62fa5f41a7f961564ea95e5f6505a286e068978d2f75b5266be02a52d7",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
     "desktop/Info.plist": "a7566833b9abda71d595bb76ba892daf8c33cccb10413e3a510a1a502c0db050",
@@ -219,8 +219,8 @@
     "src/lib/server/execution-failure.ts": "06a5179f128cb4bf73b6f2f8c08badeff9e7206f461de1e74625142a9d85eacf",
     "src/lib/server/exploration-review.ts": "8911ae8611b7bb3c2ade72daf42a4f6499f9e038ddde4f5465e90efdcf9b7cae",
     "src/lib/server/exploration-store.ts": "f47b55d933713e550bb569b8235927486d77d1d4c77a20196c7855581cc3be1e",
-    "src/lib/server/exploration-types.ts": "b7c4b5572920440fcdd681b2a12b9f7cf492b66d1b4fd1728317961fcbb861d7",
-    "src/lib/server/exploration.ts": "8bceaa6832622b94f0bf4d2da9cee9821b810948b4cbcc972e02524162a544ea",
+    "src/lib/server/exploration-types.ts": "93291ea7b67d630ee011f5157fd89499710cac84ab23cbf260118e38cf292d36",
+    "src/lib/server/exploration.ts": "7364869d614545f57b6825683b78aeb946d9fe3d420dec60a364e9b9308c75c8",
     "src/lib/server/firebase-config.ts": "5d4d84f5572044eb8dae9d99bbf7fd44ec18e5dd7ecde68bf418ae50990f755a",
     "src/lib/server/firestore.ts": "7ed2699066c5eefbe06215014045be369911a1cf89c709be0bde57a4a2c7425c",
     "src/lib/server/gemini-speech.ts": "05cde5cb02de833291065d0e5095aba80865a9f57ea35a043f595bd849f19c26",

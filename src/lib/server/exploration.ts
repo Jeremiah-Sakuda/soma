@@ -1276,7 +1276,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         inspectSchema,
       );
       let extractedCall: MetaToolCall | undefined;
-      let extracted: z.infer<typeof inspectSchema>;
+      let extracted!: z.infer<typeof inspectSchema>;
       if (reuse) {
         extracted = {
           summary: source.summary,
@@ -1366,25 +1366,55 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
               ' Crop supplied. You MUST now return inspect_source; no second crop.',
           );
         }
-        extractedCall = typedCall(inspection, 'inspect_source');
-        const normalizedNull = extractedCall.parsedArguments.graph === 'null';
-        const normalizedChange = extractedCall.parsedArguments.change === 'null';
-        const locations =
-          extractedCall.parsedArguments.anchors === undefined
-            ? undefined
-            : inspectSourceAnchors(extractedCall.parsedArguments.anchors);
-        if (locations?.omitted)
-          audit.push({
-            event: 'source-locations-omitted',
-            call: calls,
-            detail: `Omitted ${locations.omitted} optional source location(s) with invalid image bounds; no coordinates were clamped or invented.`,
-          });
-        extracted = inspectSchema.parse({
-          ...extractedCall.parsedArguments,
-          ...(locations ? { anchors: locations.anchors } : {}),
-          ...(normalizedNull ? { graph: null } : {}),
-          ...(normalizedChange ? { change: null } : {}),
-        });
+        let normalizedNull = false;
+        for (let readingAttempt = 0; readingAttempt < 2; readingAttempt++) {
+          try {
+            extractedCall = typedCall(inspection, 'inspect_source');
+            normalizedNull = extractedCall.parsedArguments.graph === 'null';
+            const normalizedChange = extractedCall.parsedArguments.change === 'null';
+            const locations =
+              extractedCall.parsedArguments.anchors === undefined
+                ? undefined
+                : inspectSourceAnchors(extractedCall.parsedArguments.anchors);
+            if (locations?.omitted)
+              audit.push({
+                event: 'source-locations-omitted',
+                call: calls,
+                detail: `Omitted ${locations.omitted} optional source location(s) with invalid image bounds; no coordinates were clamped or invented.`,
+              });
+            extracted = inspectSchema.parse({
+              ...extractedCall.parsedArguments,
+              ...(locations ? { anchors: locations.anchors } : {}),
+              ...(normalizedNull ? { graph: null } : {}),
+              ...(normalizedChange ? { change: null } : {}),
+            });
+            break;
+          } catch (error) {
+            if (readingAttempt === 1 || !(error instanceof z.ZodError) || !extractedCall)
+              throw error;
+            audit.push({
+              event: 'source-repair-requested',
+              call: calls,
+              detail:
+                'Source interpretation failed its typed contract; one re-reading of the same frozen image requested. No new screen access.',
+            });
+            progress('reading-source');
+            inspection = await call(
+              [
+                ...sourceInput,
+                ...toolHistory(extractedCall, {
+                  accepted: false,
+                  issues: validationFacts(error),
+                  instruction:
+                    'Correct the inspect_source format using the same image. At most six anchors and six uncertainty items; omit uncertain locations. Use graph=null for material that is not a supported search graph. Preserve legible facts; no new crop.',
+                }),
+              ],
+              [inspectTool, detailTool],
+              inspectInstructions +
+                ' Return only inspect_source, correcting its typed contract. No additional crop.',
+            );
+          }
+        }
         if (request.previousImage && !extracted.change)
           throw new SceneBindingError('source_binding');
         source.anchors = extracted.anchors ?? [];
@@ -1778,6 +1808,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
               }
             }
             let reviewed = await reviewOnce(reviewer);
+            let reviewRetried = false;
             if (reviewed.status === 'incomplete') {
               // No usable verdict exists. Retry this same candidate once, never
               // a material rejection or an unknown-billing transport failure.
@@ -1787,10 +1818,47 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                 detail:
                   'Wonder returned an incomplete response; retrying the same unchanged candidate once within existing call/time/spend bounds.',
               });
+              reviewRetried = true;
               reviewed = await reviewOnce({ ...reviewer, maxOutputTokens: 2048 });
             }
             await live();
-            const review = parseExplorationReview(reviewed);
+            let review;
+            try {
+              review = parseExplorationReview(reviewed);
+            } catch (error) {
+              if (
+                reviewRetried ||
+                !(error instanceof ExplorationReviewContractError) ||
+                !['review_output_schema', 'review_empty_finding'].includes(error.issue)
+              )
+                throw error;
+              audit.push({
+                event: 'review-format-retried',
+                call: calls,
+                detail:
+                  'The review had no usable typed verdict; one format repair of the same unchanged candidate requested, preserving the prior response.',
+              });
+              const prior = reviewed.structured ?? reviewed.tools[0]?.parsedArguments ?? {};
+              reviewed = await reviewOnce({
+                ...reviewer,
+                maxOutputTokens: 2048,
+                instructions:
+                  reviewer.instructions +
+                  ' The previous review format was invalid. Correct its format on this same candidate. Preserve every material defect; never turn a criticism into approval merely to satisfy the schema.',
+                input: [
+                  ...reviewer.input,
+                  {
+                    role: 'user',
+                    content: JSON.stringify({
+                      previousReview: prior,
+                      contractIssue: error.issue,
+                    }),
+                  },
+                ],
+              });
+              await live();
+              review = parseExplorationReview(reviewed);
+            }
             audit.push({
               event: review.verdict === 'approve' ? 'review-approved' : 'review-rejected',
               call: calls,

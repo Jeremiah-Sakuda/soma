@@ -51,3 +51,12 @@ The UI advertises streaming only when the backend is configured; otherwise it us
 
 
 PM078 verification: 1,412 offline passes/89 opt-in skips, 126 browser passes, 14 desktop and three relay passes; final numbered source markers passed all seven affected journeys. Eight-subject actual-model testing, original failures and narrower recovery are recorded in the general-screenshot validation report. Signed 0.3.0 is local only; cloud streaming and notarization are not established by those tests.
+
+
+### PM078 published verification — October 30
+
+Runtime source: [be62bdca061251851346ec6d9468901bd5e47df5](https://github.com/Jeremiah-Sakuda/soma-hackathon/commit/be62bdca061251851346ec6d9468901bd5e47df5). [Clean CI 41089794472](https://github.com/Jeremiah-Sakuda/soma-hackathon/actions/runs/41089794472) passed unit/type/build/trace, 14 desktop tests, three relay tests, 28 isolated adversarial browser cases and all 126 browser journeys. The complete local unit result is 1,412 passes/89 opt-in skips; CI also passed that suite.
+
+Production https://soma-woad-beta.vercel.app/explore is deployment `dpl_6qeBzywPSDaKKChCA1UC1hUgCYvW`. The exact committed/public/production runtime manifest matches: `soma-pm078-2026-10-30`, 228 files, SHA-256 `0d0cf1d45b7ca39077e9ded9f4c039b4936a7bcb64bc05a1f95a0f778f978f7c`. Hosted guest creation, prepared weighted experiment, exact save/reopen, companion/phone rendering, explicit reopen after reload and microphone policy passed without inference; own test records were removed. The first smoke harness expected a false capability field instead of its intentionally absent disabled form; the second omitted the explicit saved-card reopen action after reload. Both harness failures are retained; the stage-aware corrected run passed with zero page exceptions.
+
+No relay provisioned: streaming capability is absent in production, so recorded input remains the normal path. Local signed 0.3.0 passed normal macOS deep/strict signature verification in both original and copied bundles (all file bytes matched); a restricted-environment verification gave an inconsistent invalid-signature result, retained separately. Notarization/physical native capture and audible-device checks remain outstanding. Total measured shared testing ledger is $8.440255/$15.

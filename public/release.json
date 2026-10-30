@@ -1,6 +1,6 @@
 {
   "releaseId": "soma-pm077-2026-10-30",
-  "sourceTreeSha256": "de5a48dca442ccd2a23e67e2612c12492d6c0b9b899c621df5b8dc02ad4c8e60",
+  "sourceTreeSha256": "552bd4a0419dc69756e7bdcc94fc2caaff783309fe53b6f1d30647c6f50e9278",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
     "desktop/Info.plist": "021901a55aaa54c50379fbf83300f39d6486c521ace9924ffbead6a9b1037dd3",
@@ -10,7 +10,7 @@
     "desktop/main.cjs": "dca42625e2ad08ca084d038957178f13555b4f8c2067e058b95beedeca09ac7c",
     "desktop/native/HoldShortcut.swift": "2ca329bfb8b1ee7e35231d5daf6e6aa94ee509fc8144fafb9170aeab79462a22",
     "desktop/package-lock.json": "e7e2867d62212a5b188353f6847a8d99c8987d75f75940fbeaf3eb46cc0b0b27",
-    "desktop/package.json": "8b13bbe4a539d2283608ceb283c059ecd1b7cb92cc5002fe688fceda0985c8b5",
+    "desktop/package.json": "671b66d384c76ff18cacbe1bb57664e52c1da8b0a2178cb1edd07969b86adc79",
     "desktop/point-ask.cjs": "36d1484b247f88de91b25f47de13710ae99ea7b0e319320e38217e9f2f7c9652",
     "desktop/point-geometry.cjs": "56cb3a4d2acf2a13c45901d8aa241df1947c01a7f5eea3240d7a912ae646017c",
     "desktop/point-overlay.css": "8b88379cf09f42023778bfb874e2545b113f5ac9e4f3664cf25b38e1ced63998",
@@ -18,7 +18,7 @@
     "desktop/point-overlay.js": "266433acebbecd15be36682b6be90d65428be73b38ddaa3730d1cb0bf18f6a20",
     "desktop/point-preload.cjs": "f19cda6ae41d2bccb720fb2d59809291670143955406cbd9b6844f98a0ff52e0",
     "desktop/policy.cjs": "7edf2d548d183e9181a80d4107fbbd085d7e46d85195e72a7ff2197b1e04ffc3",
-    "desktop/release.cjs": "255a7e6dd64ed54b8e965f36f2ab3563e911822b7aa0c6665905907bf7140227",
+    "desktop/release.cjs": "07b01f9d900b0f471847ef719aa33f794d866ca1115229396b277e3bacdd1497",
     "desktop/toolbar-preload.cjs": "33358b17e0b1c49bed4ebf2c9b2e84937629c2adb703efe740069e09f974c876",
     "desktop/toolbar.css": "4a983e59eb60be04be4d7acadb316ea1335badf34abf3a15e8d4c72a5ceec5da",
     "desktop/toolbar.html": "df0d577d8f7cd4e28ce71760aeccf925eed2c10b4f18de9eaf6491a73b527b79",

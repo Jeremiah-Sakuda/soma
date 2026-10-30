@@ -12,7 +12,7 @@ async function release(){
  if(!notarizeOnly){
   const helper=require('./build-native.cjs').buildNative();
   const {packager}=await import('@electron/packager');
-  await packager({dir:__dirname,name:'Soma',platform:'darwin',arch:'arm64',out:output,overwrite:true,asar:true,appBundleId:'app.soma.desktop',extendInfo:path.join(__dirname,'Info.plist'),extraResource:[helper],ignore:[/^\/test(?:\/|$)/,/^\/README\.md$/]});
+  await packager({dir:__dirname,name:'Soma',platform:'darwin',arch:'arm64',out:output,overwrite:true,asar:true,appBundleId:'app.soma.desktop',extendInfo:path.join(__dirname,'Info.plist'),extraResource:[helper],ignore:[/^\/test(?:\/|$)/,/^\/README\.md$/,/^\/node_modules\/\.cache(?:\/|$)/]});
   const {sign}=await import('@electron/osx-sign');
   await sign({app:bundle,identity,platform:'darwin',binaries:[path.join(bundle,'Contents/Resources/hold-shortcut')],optionsForFile:()=>({hardenedRuntime:true,entitlements:path.join(__dirname,'entitlements.plist')})});
  }

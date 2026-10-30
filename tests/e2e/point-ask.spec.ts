@@ -361,3 +361,16 @@ test('a press and release in the same render cannot leave an orphaned point sess
     .toBe(true);
   expect(h.calls.some((c) => c.action === 'generate')).toBe(false);
 });
+
+test('choosing an upload during a hold cancels native audio and ignores its late context', async ({page}) => {
+  const h=await setup(page);
+  await native(page,'begin');
+  await expect.poll(()=>page.evaluate(()=>(window as any).__pointTest.recorder?.state)).toBe('recording');
+  await page.getByLabel('Upload a PNG or JPEG screenshot',{exact:true}).setInputFiles({name:'Replacement.jpg',mimeType:'image/jpeg',buffer:Buffer.from(h.source.split(',')[1],'base64')});
+  await expect.poll(()=>page.evaluate(()=>(window as any).__pointTest.stops)).toBeGreaterThan(0);
+  await expect.poll(()=>page.evaluate(()=>(window as any).__pointTest.feedback.some((e:any)=>e.state==='cancelled'))).toBe(true);
+  await native(page,'end');
+  await native(page,'source',first,{dataUrl:h.source,focus,capturedAt:'2026-10-30T12:00:00Z'});
+  expect(h.calls.some(c=>c.action==='generate')).toBe(false);
+  await expect(page.getByText('Replacement.jpg',{exact:true})).toBeVisible();
+});

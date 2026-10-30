@@ -346,6 +346,7 @@ export function ExplorationWorkspace() {
     setDirty(true);
   }
   function chooseSource(next: ExplorationCapture | null) {
+    pointAsk.cancel('');
     setPlaying(false);
     if (request.current)
       cancel('Source changed. The previous request will not replace your current card.');
@@ -359,6 +360,7 @@ export function ExplorationWorkspace() {
     );
   }
   async function share() {
+    pointAsk.cancel('');
     setSourceBusy(true);
     setError('');
     try {
@@ -375,6 +377,7 @@ export function ExplorationWorkspace() {
   }
   async function upload(file?: File) {
     if (!file) return;
+    pointAsk.cancel('');
     setSourceBusy(true);
     setError('');
     try {

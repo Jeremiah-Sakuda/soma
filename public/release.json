@@ -1,9 +1,9 @@
 {
   "releaseId": "soma-pm077-2026-10-30",
-  "sourceTreeSha256": "552bd4a0419dc69756e7bdcc94fc2caaff783309fe53b6f1d30647c6f50e9278",
+  "sourceTreeSha256": "f228f56827a1ab7dd28bf0246ba555c5fdac9f6ede0ee738a17870318a70f20a",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
-    "desktop/Info.plist": "021901a55aaa54c50379fbf83300f39d6486c521ace9924ffbead6a9b1037dd3",
+    "desktop/Info.plist": "a7566833b9abda71d595bb76ba892daf8c33cccb10413e3a510a1a502c0db050",
     "desktop/build-native.cjs": "89b6fceb6a3bf9b6499986851520fc5392d60f9781dd211279dcfc86a921175a",
     "desktop/capture-preload.cjs": "295b9bbd59c3e31bb72745d6b884c2868c116ce4973761458e7aafb6da4aadd9",
     "desktop/entitlements.plist": "10e05feb0f31d546b4df7e3e444975d8d2ad2a6cc3acfe4c3514e4214ef78823",
@@ -108,7 +108,7 @@
     "src/components/exploration-search-stage.tsx": "fce6e7270b24bf5b9dc8c3f0b16e2349cf1a1adbcdd033edbe143a69c80d7406",
     "src/components/exploration-voice.tsx": "1e11f7a9ab2f0062ba5efe63450539e96dc96a86559de02f38cac3bd95099962",
     "src/components/exploration-weighted-stage.tsx": "f760705989cc478d89d28db8e432783d020d4180d54b64281485bb38bc45b224",
-    "src/components/exploration-workspace.tsx": "fff86d679090987af49ed693623246156266dcbd0102f7e98f8383ad1b721574",
+    "src/components/exploration-workspace.tsx": "46a4afbc98f076255f8786e184275e8ae3a26cee9dcd39c2bcab9188477ba429",
     "src/components/exploration.css": "42eb86a590d3ed279f5fb258a51628bb2d622b781ee35309cdabbf940a9f40a9",
     "src/components/investigation-panel.tsx": "451be06ce455d37eb296af6a3b8be78d46220334c50d44f2733ff0982b75c2a7",
     "src/components/learning-inspection.tsx": "24548c3e1c79953da4a4a0034d93887052b83c3e9c320f8b559d119ef49113f9",

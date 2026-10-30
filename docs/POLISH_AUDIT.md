@@ -36,7 +36,7 @@ Actual Gemini TTS returned audio/wav and played through a real Chromium HTMLAudi
 
 A real Electron shell with an isolated temporary profile passed hosted React loading, pin toggle, JPEG snapshot-to-preview/focus, hide/mute, activate/show/unmute, resize to a 620×704 content view, and sandbox/context isolation. No desktop capture, owner profile, global shortcut registration or private screen content was used. Initial native harness attempts selected the wrong window and supplied PNG to the JPEG-only bridge; the corrected contract check passed. The signed native shell itself is unchanged.
 
-Final source identity, clean CI and hosted checks are recorded in VERIFICATION.md after publication. Shared consumed testing ledger after all provider and speech calls: $7.3758095 of the existing $15 allowance. Unknown/cancelled usage retains its reservation.
+Final source identity, successful clean CI (1,396 offline tests plus 89 opt-in skipped; 116 browser journeys) and hosted checks are recorded in VERIFICATION.md. Shared consumed testing ledger after all provider and speech calls: $7.3758095 of the existing $15 allowance. Unknown/cancelled usage retains its reservation.
 
 ## Remaining release risks
 

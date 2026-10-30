@@ -4,7 +4,7 @@ Headline results from executed checks on clean checkouts and on production. Thes
 
 - **Source reading:** 8 of 8 fresh original graph images (3–4 nodes) were read exactly, and the results matched an independent Floyd–Warshall reference. The full frozen set produced 12 of 13 intended outcomes.
 - **Varied screenshots:** of nine screenshots (three real public pages and six original test images), 8 produced a source-specific explanation or a clarifying question on the first request ([details](GENERAL_SCREENSHOTS.md)).
-- **Engineering:** clean CI passed 1,384 offline tests (89 opt-in skipped) and all 110 browser journeys. Browser journeys cover the weighted comparison, cost experiment, companion layout, replay and label geometry.
+- **Engineering:** the October 30 polish release passed clean CI with 1,396 offline tests (89 opt-in skipped) and all 116 browser journeys. Browser journeys cover the weighted comparison, cost experiment, companion layout, replay and label geometry.
 - **Release identity:** `node scripts/verify-release.mjs` matches a committed source tree to the deployed app.
 
 The sections below give the method, every failure and the limits.
@@ -71,3 +71,10 @@ The corrected history release passed [clean CI](https://github.com/Jeremiah-Saku
 ## Usability and visual audit — October 30
 
 See [executed polish audit](POLISH_AUDIT.md) for observed defects, changes, viewport/keyboard checks, real audio-clock verification and an isolated actual Electron run. The final focused checks passed 62 provider/domain cases and 28 browser journeys after earlier complete offline/browser runs (1,394 tests plus 89 opt-in skipped; 116 browser journeys). First-request attention and autoencoder generation failures remain in the record even though controlled repeats succeeded. No general reliability or learning-outcome claim follows. Publication/hosted identity is recorded below when verified.
+
+
+### Published PM075 verification
+
+Runtime source [3784227](https://github.com/Jeremiah-Sakuda/soma-hackathon/commit/3784227188f66ebeed38fa26ce33bc37c337f4b1) passed [clean CI 41009103487](https://github.com/Jeremiah-Sakuda/soma-hackathon/actions/runs/41009103487): 1,396 offline tests, 89 opt-in skipped, all 116 browser journeys, build, manifest, production browser trace and adversarial isolated browser gates. Production dpl_4ZfbJeADmec9cDbys9U2VrVsebN3 serves soma-pm075-2026-10-30. Anonymous source/production manifests match 204 runtime files, SHA-256 799156cb92662ef7366a68e40e701558f2f3ee59d117e23fd02d7e54b0433db7.
+
+The deployed six-viewport audit (320–1440px) had no horizontal overflow, sub-40px visible buttons or page exceptions. A 45-tab walk had no obscured focus; save/fresh-practice/cleanup passed without inference. At 620×704, the prepared weighted graph panel sits at y293.5–525.5 above the composer at y564. Shorter phone views still need vertical scrolling. Exact source-specific live-model results and retained first-request failures are in the polish audit; they were tested on the production build locally, not relabeled as new hosted requests. Shared final testing ledger $7.3758095/$15. The following documentation-only update does not change this runtime or require a new deployment.

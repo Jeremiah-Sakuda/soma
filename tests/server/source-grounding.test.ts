@@ -57,7 +57,13 @@ const image = async (color: string) =>
       .png()
       .toBuffer()
   ).toString('base64');
-function service({ crop = false, badAnchor = false, badChange = false } = {}) {
+function service({
+  crop = false,
+  badAnchor = false,
+  badChange = false,
+  invalidRegion = false,
+  structured = false,
+} = {}) {
   let inspections = 0;
   const seen: any[] = [];
   const request = vi.fn(async (args) => {
@@ -77,7 +83,18 @@ function service({ crop = false, badAnchor = false, badChange = false } = {}) {
         summary: 'Original synthetic graph; application-boundary test only.',
         uncertainty: [],
         graph: s.mode === 'checked-bfs' ? s.input : null,
-        anchors: [anchor],
+        anchors: [
+          anchor,
+          ...(invalidRegion
+            ? [
+                {
+                  ...anchor,
+                  id: 'bad_region',
+                  region: { x: 0.9, y: 0.2, width: 0.3, height: 0.2 },
+                },
+              ]
+            : []),
+        ],
         change: c.previous?.imageProvided
           ? {
               relationship: 'same-material',
@@ -97,7 +114,14 @@ function service({ crop = false, badAnchor = false, badChange = false } = {}) {
     ];
     if (s.mode !== 'clarify')
       s.steps[0].sourceHighlightIds = [badAnchor ? 'absent' : anchor.id];
-    return answer('compose_exploration', { spec: s });
+    return structured
+      ? {
+          status: 'completed',
+          tools: [],
+          structured: { spec: s },
+          usage: { input_tokens: 100, output_tokens: 100 },
+        }
+      : answer('compose_exploration', { spec: s });
   });
   return {
     seen,
@@ -218,4 +242,28 @@ it('binds before/after images to the exact owned prior source and retains immuta
     }),
   ).rejects.toMatchObject({ code: 'invalid_request' });
   expect(h.request).toHaveBeenCalledTimes(calls);
+});
+
+it('omits an invalid optional location without fabricating coordinates or losing the valid explanation', async () => {
+  const h = service({ invalidRegion: true });
+  await h.service.initialize(owner);
+  const a = (await h.service.generate(owner, input(await image('red')))).artifact;
+  expect(a.source.anchors).toEqual([anchor]);
+  expect(a.generation.audit.some((e) => e.event === 'source-locations-omitted')).toBe(true);
+  expect(h.request).toHaveBeenCalledTimes(2);
+  expect(a.validation.assurance).toBe('checked-bfs');
+  await h.service.save(owner, a.id, a.version, a.state);
+  expect((await h.service.read(owner, a.id)).active?.source).toEqual(a.source);
+});
+
+it('validates and persists structured scene data through the same source and numeric checks', async () => {
+  const h = service({ structured: true });
+  await h.service.initialize(owner);
+  const a = (await h.service.generate(owner, input(await image('red')))).artifact;
+  expect(a.validation.assurance).toBe('checked-bfs');
+  expect(a.source.anchors).toEqual([anchor]);
+  expect(h.seen[1].tools).toEqual([]);
+  expect(h.seen[1].structuredOutput.schema).toBeTruthy();
+  await h.service.save(owner, a.id, a.version, a.state);
+  expect((await h.service.read(owner, a.id)).active?.spec).toEqual(a.spec);
 });

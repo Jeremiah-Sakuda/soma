@@ -75,7 +75,14 @@ export async function POST(request: Request) {
     const body = await readJsonBody(request, 1_460_000);
     const action = z
       .object({
-        action: z.enum(['generate', 'cancel', 'example', 'recording', 'prediction', 'application']),
+        action: z.enum([
+          'generate',
+          'cancel',
+          'example',
+          'recording',
+          'prediction',
+          'application',
+        ]),
       })
       .safeParse(body);
     if (!action.success) throw new ExplorationError('invalid_request');
@@ -111,6 +118,55 @@ export async function POST(request: Request) {
         .safeParse(body);
       if (!parsed.success) throw new ExplorationError('invalid_request');
       return response(await explorationService.cancel(principal, parsed.data.requestId));
+    }
+    if (request.headers.get('Accept')?.includes('application/x-ndjson')) {
+      const stopped = new AbortController();
+      const signal = AbortSignal.any([request.signal, stopped.signal]);
+      const encoder = new TextEncoder();
+      let closed = false;
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          const emit = (value: unknown) => {
+            if (!closed && !signal.aborted)
+              controller.enqueue(encoder.encode(JSON.stringify(value) + '\n'));
+          };
+          void (async () => {
+            try {
+              const result = await explorationService.generate(
+                principal,
+                body,
+                signal,
+                (progress) => emit({ type: 'progress', progress }),
+              );
+              emit({ type: 'result', result });
+            } catch (error) {
+              const result = failure(error);
+              const payload = await result.json();
+              emit({
+                type: 'error',
+                status: result.status,
+                code: payload.code,
+              });
+            } finally {
+              if (!closed) {
+                closed = true;
+                controller.close();
+              }
+            }
+          })();
+        },
+        cancel() {
+          closed = true;
+          stopped.abort();
+        },
+      });
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'application/x-ndjson; charset=utf-8',
+          'Cache-Control': 'private, no-store',
+          'X-Accel-Buffering': 'no',
+        },
+      });
     }
     return response(await explorationService.generate(principal, body, request.signal));
   } catch (error) {

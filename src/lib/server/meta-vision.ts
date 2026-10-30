@@ -6,6 +6,7 @@ import {
   META_MAX_RESPONSE_BYTES,
   MetaClientError,
   parseMetaResponse,
+  parseMetaStructuredResult,
   type MetaResult,
 } from './meta-client';
 
@@ -17,6 +18,7 @@ export type MetaVisionRequest = {
   signal?: AbortSignal;
   maxOutputTokens?: number;
   maxImages?: number;
+  structuredOutput?: { name: string; schema: Record<string, unknown> };
 };
 const name = z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
   callId = z.string().regex(/^[A-Za-z0-9_.:-]{1,256}$/);
@@ -70,7 +72,11 @@ function encode(request: MetaVisionRequest) {
       .min(1)
       .max(12)
       .parse(request.input);
-    const tools = z.array(tool).min(1).max(4).parse(request.tools),
+    const tools = z
+        .array(tool)
+        .min(request.structuredOutput ? 0 : 1)
+        .max(4)
+        .parse(request.tools),
       names = tools.map((item) => item.name);
     if (
       new Set(names).size !== names.length ||
@@ -128,7 +134,30 @@ function encode(request: MetaVisionRequest) {
       request.deadlineMs <= 0
     )
       throw new Error();
+    const format =
+      request.structuredOutput === undefined
+        ? undefined
+        : z
+            .strictObject({
+              name: z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/),
+              schema: z
+                .record(z.string(), z.unknown())
+                .refine((value) => value.type === 'object'),
+            })
+            .parse(request.structuredOutput);
     const common = {
+      ...(format
+        ? {
+            text: {
+              format: {
+                type: 'json_schema',
+                name: format.name,
+                schema: format.schema,
+                strict: true,
+              },
+            },
+          }
+        : {}),
       model: META_MODEL,
       instructions,
       tools,
@@ -232,7 +261,10 @@ export async function requestMetaVisionResponse(
         } catch {
           throw new MetaClientError('response_invalid', null, true);
         }
-        return parseMetaResponse(value, encoded.names, response.ok, 'vision');
+        const result = parseMetaResponse(value, encoded.names, response.ok, 'vision');
+        return request.structuredOutput
+          ? parseMetaStructuredResult(value, result, 'vision')
+          : result;
       })(),
     ]);
   } catch (error) {

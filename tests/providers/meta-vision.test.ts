@@ -41,3 +41,9 @@ describe('bounded transient screenshot and vision profile',()=>{
   let cancelled=false;vi.stubGlobal('fetch',vi.fn(async()=>new Response(new ReadableStream({start(c){c.enqueue(new Uint8Array(META_MAX_RESPONSE_BYTES+1));},cancel(){cancelled=true;}}))));await expect(requestMetaVisionResponse(request())).rejects.toMatchObject({code:'response_limit',requestSent:true});expect(cancelled).toBe(true);
  });
 });
+
+it('decodes schema-constrained scene data without offering or fabricating a function call',async()=>{
+ const fetcher=vi.fn(async(_url:unknown,_init?:RequestInit)=>new Response(JSON.stringify({status:'completed',output:[{type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:'{"spec":{"title":"Original synthetic scene"}}'}]}],usage:{input_tokens:100,output_tokens:40}})));
+ vi.stubGlobal('fetch',fetcher);const reply=await requestMetaVisionResponse(request({tools:[],structuredOutput:{name:'scene',schema:{type:'object',properties:{spec:{type:'object'}},required:['spec'],additionalProperties:false}}}));
+ expect(reply.tools).toEqual([]);expect(reply.structured).toEqual({spec:{title:'Original synthetic scene'}});const sent=JSON.parse(String(fetcher.mock.calls[0][1]?.body));expect(sent.tools).toEqual([]);expect(sent.text.format).toMatchObject({type:'json_schema',strict:true});
+});

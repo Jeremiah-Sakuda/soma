@@ -28,3 +28,20 @@ export const sourceChangeSchema = z.strictObject({
 export type ImageRegion = z.infer<typeof imageRegionSchema>;
 export type SourceAnchor = z.infer<typeof sourceAnchorSchema>;
 export type SourceChange = z.infer<typeof sourceChangeSchema>;
+
+/** Optional source locations must never invalidate otherwise legible facts.
+ * Keep identity/count rules strict; omit an invalid region rather than clamp it
+ * into a plausible-looking highlight. Detail crops still require valid bounds. */
+export function inspectSourceAnchors(value: unknown) {
+  const candidates = z
+    .array(sourceAnchorSchema.extend({ region: z.unknown() }))
+    .max(6)
+    .refine((a) => new Set(a.map((v) => v.id)).size === a.length, 'Duplicate source anchor.')
+    .parse(value);
+  const anchors: SourceAnchor[] = [];
+  for (const candidate of candidates) {
+    const region = imageRegionSchema.safeParse(candidate.region);
+    if (region.success) anchors.push({ ...candidate, region: region.data });
+  }
+  return { anchors, omitted: candidates.length - anchors.length };
+}

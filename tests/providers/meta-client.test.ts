@@ -112,3 +112,24 @@ describe('bounded Meta Responses boundary', () => {
     expect(await failure(requestMetaResponse(request({ signal: controller.signal })))).toMatchObject({ code: 'timeout', requestSent: false });
   });
 });
+
+it('accepts schema-constrained JSON data without inventing a tool call, only when explicitly requested', async () => {
+  vi.stubEnv('MODEL_API_KEY','synthetic-key');vi.stubEnv('META_API_BASE_URL','https://api.meta.ai/v1');vi.stubEnv('META_MODEL_ID','muse-spark-1.3');
+  const raw=payload({output:[{type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:'{"verdict":"approve","findings":[]}'}]}]});
+  const fetcher=vi.fn(async(_url:unknown,_init?:RequestInit)=>response(raw));vi.stubGlobal('fetch',fetcher);
+  const plain=await requestMetaResponse(request());expect(plain).not.toHaveProperty('structured');expect(plain.tools).toEqual([]);
+  const format={name:'review',schema:{type:'object',properties:{verdict:{type:'string'},findings:{type:'array',items:{type:'string'}}},required:['verdict','findings'],additionalProperties:false}};
+  const structured=await requestMetaResponse(request({structuredOutput:format}));expect(structured.tools).toEqual([]);expect(structured.structured).toEqual({verdict:'approve',findings:[]});
+  expect(JSON.parse(String(fetcher.mock.calls[1][1]?.body)).text.format).toMatchObject({type:'json_schema',strict:true,name:'review'});
+  const fallback=await requestMetaResponse(request({jsonFallback:true}));expect(fallback.structured).toEqual({verdict:'approve',findings:[]});expect(JSON.parse(String(fetcher.mock.calls[2][1]?.body))).not.toHaveProperty('text');
+
+});
+
+it('rejects prose or ambiguous messages in structured mode while retaining known billing', async () => {
+  vi.stubEnv('MODEL_API_KEY','synthetic-key');vi.stubEnv('META_API_BASE_URL','https://api.meta.ai/v1');vi.stubEnv('META_MODEL_ID','muse-spark-1.3');
+  const message={type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:'Looks good to me.'}]};
+  vi.stubGlobal('fetch',vi.fn(async()=>response(payload({output:[message]}))));
+  await expect(requestMetaResponse(request({structuredOutput:{name:'review',schema:{type:'object'}}}))).rejects.toMatchObject({code:'response_invalid',usage,requestSent:true});
+});
+
+afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });

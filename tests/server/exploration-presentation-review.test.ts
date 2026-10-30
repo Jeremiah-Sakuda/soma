@@ -174,6 +174,12 @@ it('binds new explanatory authoring to the valid ordinary grid without relaxing 
     explanationAuthorSceneSchema.safeParse({
       ...scene,
       layout: 'diagram-sidebar',
+      panels: scene.panels
+        .filter(
+          (p: { kind: string }) =>
+            !['steps', 'graph', 'frontier', 'state-table'].includes(p.kind),
+        )
+        .slice(0, 3),
     }).success,
   ).toBe(true);
   expect(explanationAuthorSceneSchema.safeParse({ ...scene, layout: 'stack' }).success).toBe(
@@ -188,4 +194,46 @@ it('binds new explanatory authoring to the valid ordinary grid without relaxing 
   expect(needsExplorationReview(checkExploration(fixtures.gradient).spec)).toBe(true);
   expect(needsExplorationReview(createExampleExploration())).toBe(false);
   expect(needsExplorationReview(createExampleExploration(), true)).toBe(true);
+});
+
+it('retries only an incomplete critic once on the unchanged candidate with bounded extra headroom', async () => {
+  const review = vi.fn(async (_request: any) =>
+    review.mock.calls.length === 1
+      ? {
+          status: 'incomplete' as const,
+          tools: [],
+          usage: { input_tokens: 100, output_tokens: 1536 },
+        }
+      : result('review_exploration', { verdict: 'approve', findings: [] }),
+  );
+  const h = harness(review);
+  await h.service.initialize(owner);
+  const a = (await h.service.generate(owner, generate())).artifact;
+  expect(h.request).toHaveBeenCalledTimes(2);
+  expect(review).toHaveBeenCalledTimes(2);
+  expect(review.mock.calls[0][0].input).toEqual(review.mock.calls[1][0].input);
+  expect(review.mock.calls.map((c) => c[0].maxOutputTokens)).toEqual([1536, 2048]);
+  expect(a.generation.calls).toBe(4);
+  expect(a.generation.audit.some((e) => e.event === 'review-incomplete-retried')).toBe(true);
+});
+
+it('does not publish or retry indefinitely when the critic stays incomplete', async () => {
+  const review = vi.fn(async () => ({
+    status: 'incomplete' as const,
+    tools: [],
+    usage: { input_tokens: 100, output_tokens: 1536 },
+  }));
+  const h = harness(review);
+  await h.service.initialize(owner);
+  const original = (await h.service.example(owner)).artifact;
+  await expect(h.service.generate(owner, generate())).rejects.toMatchObject({
+    code: 'review_unavailable',
+  });
+  expect(review).toHaveBeenCalledTimes(2);
+  expect(h.request).toHaveBeenCalledTimes(2);
+  const s = await explorationStore.read(owner);
+  expect(s?.artifacts).toEqual([original]);
+  expect(s?.runs.at(-1)?.failure?.issues).toEqual([
+    { code: 'review_incomplete', path: ['review'] },
+  ]);
 });

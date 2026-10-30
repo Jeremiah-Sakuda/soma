@@ -1,4 +1,9 @@
 'use client';
+import { readExplorationStream } from '@/lib/client/exploration-stream';
+import {
+  explorationProgressLabel,
+  type ExplorationProgress,
+} from '@/lib/domain/exploration-progress';
 import { ExplorationSourceGrounding } from './exploration-source-grounding';
 import type { SourceAnchor, SourceChange } from '@/lib/domain/source-grounding';
 
@@ -111,18 +116,32 @@ async function api(
   body?: unknown,
   signal?: AbortSignal,
   query = '',
+  onProgress?: (value: ExplorationProgress) => void,
 ): Promise<ApiResponse> {
-  const response = await fetch(`/api/explore${query}`, {
+  let response = await fetch(`/api/explore${query}`, {
     method,
     cache: 'no-store',
     signal,
     ...(body === undefined
       ? {}
       : {
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(onProgress ? { Accept: 'application/x-ndjson' } : {}),
+          },
           body: JSON.stringify(body),
         }),
   });
+  if (response.ok && response.headers.get('Content-Type')?.includes('application/x-ndjson')) {
+    try {
+      response = await readExplorationStream(response, onProgress ?? (() => {}), signal);
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      throw new Error(
+        'Soma could not finish receiving the visual. Your last card and question are kept. Please try again.',
+      );
+    }
+  }
   if (!response.ok) {
     const payload: unknown = await response.json().catch(() => null);
     const code =
@@ -241,6 +260,7 @@ export function ExplorationWorkspace() {
   const viewSequence = useRef(0);
   const questionRef = useRef<HTMLTextAreaElement>(null),
     errorRef = useRef<HTMLParagraphElement>(null);
+  const [progress, setProgress] = useState<ExplorationProgress | null>(null);
   const [streamingVoiceEnabled, setStreamingVoiceEnabled] = useState(false);
   const sourceMemory = useRef<{
     capture: ExplorationCapture;
@@ -490,6 +510,7 @@ export function ExplorationWorkspace() {
       turnEpoch = epoch.current;
     request.current = { id, controller, epoch: turnEpoch };
     setBusy(true);
+    setProgress(null);
     const pair = !!(
       base &&
       selected &&
@@ -539,7 +560,9 @@ export function ExplorationWorkspace() {
           }),
     };
     try {
-      const result = await api('POST', payload, controller.signal);
+      const result = await api('POST', payload, controller.signal, '', (value) => {
+        if (request.current?.id === id && epoch.current === turnEpoch) setProgress(value);
+      });
       if (request.current?.id !== id || epoch.current !== turnEpoch) return false;
       if (!result.artifact) throw new Error('No complete visual card was returned.');
       if (pair && selected)
@@ -811,7 +834,14 @@ export function ExplorationWorkspace() {
                 : 'Share a window, upload an image, or try the example'}
           </span>
           {busy ? (
-            <button type="button" className="secondary-button" onClick={() => cancel()}>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={(event) => {
+                event.preventDefault();
+                cancel();
+              }}
+            >
               <Square size={14} aria-hidden="true" /> Cancel request
             </button>
           ) : (
@@ -1182,13 +1212,16 @@ export function ExplorationWorkspace() {
             )}
             {busy && (
               <div role="status" className="exploration-working">
-                <span /> Soma is preparing your visual explanation…{' '}
+                <span />{' '}
+                {progress
+                  ? explorationProgressLabel[progress.phase]
+                  : 'Soma is preparing your visual explanation…'}{' '}
                 <span aria-hidden="true">{waitingSeconds}s elapsed.</span>{' '}
                 {artifact
                   ? 'Your current diagram stays available. Changing a control cancels this request.'
                   : 'You can cancel below without losing your question.'}{' '}
                 {waitingSeconds >= 15 &&
-                  'This is taking longer. We publish only after the scene passes validation.'}
+                  'The last valid visual stays available until this revision passes its checks.'}
               </div>
             )}
             {notice && (
@@ -1507,7 +1540,10 @@ export function ExplorationWorkspace() {
                           });
                           const card = document.getElementById('exploration-card');
                           card?.focus({ preventScroll: true });
-                          card?.scrollIntoView({ block: 'start', behavior: 'instant' });
+                          card?.scrollIntoView({
+                            block: 'start',
+                            behavior: 'instant',
+                          });
                           if (explain)
                             await ask(
                               'Use my recorded fresh-problem answer and explanation to choose a useful visual contrast. Explain the checked result on this practice graph, preserve its inputs, and distinguish this hypothetical variation from the original source. Do not diagnose mastery or a confirmed misconception.',

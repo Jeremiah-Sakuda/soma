@@ -24,7 +24,11 @@ export type ExplorationSource = {
   imageSha256?: string;
   anchors?: SourceAnchor[];
   detailRegion?: ImageRegion;
-  change?: SourceChange & { fromObservationId: string; fromVersion: number; fromArtifactVersion: number };
+  change?: SourceChange & {
+    fromObservationId: string;
+    fromVersion: number;
+    fromArtifactVersion: number;
+  };
   summary: string;
   uncertainty: string[];
 };
@@ -36,7 +40,9 @@ export type ExplorationAudit = {
     | 'cost-probe-unavailable'
     | 'review-approved'
     | 'review-rejected'
+    | 'review-incomplete-retried'
     | 'source-detail-requested'
+    | 'source-locations-omitted'
     | 'source-compared'
     | 'source-reused'
     | 'source-interpreted'
@@ -61,6 +67,11 @@ export type ExplorationArtifact = CheckedExploration & {
     usage: { input_tokens: number; output_tokens: number };
     costUsd: number;
     elapsedMs: number;
+    timings?: {
+      call: number;
+      stage: ExplorationFailure['stage'];
+      durationMs: number;
+    }[];
     checks: string[];
     audit: ExplorationAudit[];
   };
@@ -87,7 +98,8 @@ export type ExplorationArtifact = CheckedExploration & {
   saved: boolean;
 };
 export type ExplorationFailure = {
-  stage: 'interpretation' | 'computation' | 'composition' | 'validation' | 'review' | 'publication';
+  stage:
+    'interpretation' | 'computation' | 'composition' | 'validation' | 'review' | 'publication';
   issues: { code: string; path: (string | number)[] }[];
 };
 export type ExplorationRun = {
@@ -99,6 +111,12 @@ export type ExplorationRun = {
   version: number;
   code?: string;
   failure?: ExplorationFailure;
+  audit?: ExplorationAudit[];
+  timings?: {
+    call: number;
+    stage: ExplorationFailure['stage'];
+    durationMs: number;
+  }[];
   calls?: number;
   costUsd?: number;
   usageCertain?: boolean;
@@ -143,7 +161,10 @@ const errors = {
   account_required: [401, 'Please sign in again.'],
   forbidden: [403, 'This exploration belongs to a different session.'],
   not_found: [404, 'This exploration could not be found.'],
-  revision_conflict: [409, 'This exploration changed. Reopen the latest version and try again.'],
+  revision_conflict: [
+    409,
+    'This exploration changed. Reopen the latest version and try again.',
+  ],
   cancelled: [409, 'This request was cancelled. Your previous exploration is unchanged.'],
   busy: [429, 'Another exploration is running. Please try again shortly.'],
   capacity: [429, 'The exploration limit has been reached. Please try again later.'],

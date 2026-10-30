@@ -1,5 +1,7 @@
+import type { ExplorationProgress } from '../domain/exploration-progress';
 import {
   imageRegionSchema,
+  inspectSourceAnchors,
   sourceAnchorsSchema,
   sourceChangeSchema,
 } from '../domain/source-grounding';
@@ -14,7 +16,11 @@ import {
 import { probeEdgeCost, type CostProbe } from '../domain/cost-probe';
 import recordedExploration from '../fixtures/recorded-exploration.json';
 import { comparisonExecution, explorationExecution } from '../domain/exploration-view';
-import { explorationReviewRequest, parseExplorationReview } from './exploration-review';
+import {
+  explorationReviewRequest,
+  parseExplorationReview,
+  ExplorationReviewContractError,
+} from './exploration-review';
 import { requestMetaResponse, META_REVIEW_MODEL } from './meta-client';
 import {
   predictionQuestion,
@@ -26,6 +32,7 @@ import {
   createWeightedExample,
   checkExploration,
   explorationSpecSchema,
+  explorationPanelSchema,
   sourceObservationRefSchema,
   createExampleExploration,
   bfsInputSchema,
@@ -67,7 +74,10 @@ const sourceSchema = z
   })
   .superRefine((source, ctx) => {
     if (source.focus && source.kind !== 'screenshot')
-      ctx.addIssue({ code: 'custom', message: 'Pointing requires a captured image.' });
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Pointing requires a captured image.',
+      });
   });
 export const explorationViewStateSchema = z.strictObject({
   step: z.number().int().min(0).max(12).default(0),
@@ -125,6 +135,20 @@ export type GenerateExplorationRequest = z.infer<typeof generateExplorationSchem
 export const explanationAuthorSceneSchema = explorationSpecSchema.options[1].shape.scene.extend(
   {
     layout: z.literal('diagram-sidebar'),
+    // Unchecked explanations cannot contain trace-only panels. Keep the author
+    // contract small; old saved scenes retain their full domain compatibility.
+    panels: z
+      .array(
+        z.discriminatedUnion('kind', [
+          explorationPanelSchema.options[0],
+          explorationPanelSchema.options[1],
+          explorationPanelSchema.options[2],
+          explorationPanelSchema.options[7],
+          explorationPanelSchema.options[8],
+        ]),
+      )
+      .min(1)
+      .max(3),
   },
 );
 export function needsExplorationReview(spec: ExplorationSpec, learnerObservation = false) {
@@ -218,10 +242,7 @@ function objectMeanings(spec: ExplorationSpec) {
 class SceneBindingError extends Error {
   constructor(
     public readonly rule:
-      | 'source_binding'
-      | 'artifact_binding'
-      | 'graph_binding'
-      | 'stable_object',
+      'source_binding' | 'artifact_binding' | 'graph_binding' | 'stable_object',
   ) {
     super(rule);
   }
@@ -254,6 +275,8 @@ const schemaPathFields = new Set(
   ),
 );
 function validationFacts(error: unknown): { code: string; path: (string | number)[] }[] {
+  if (error instanceof ExplorationReviewContractError)
+    return [{ code: error.issue, path: ['review'] }];
   if (error instanceof SceneBindingError) return [{ code: error.rule, path: ['spec'] }];
   if (error instanceof z.ZodError)
     return error.issues.slice(0, 6).map((issue) => ({
@@ -928,7 +951,12 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
     });
     return { prediction: publicPrediction(result!) };
   }
-  async function generate(principal: ExplorationPrincipal, raw: unknown, signal?: AbortSignal) {
+  async function generate(
+    principal: ExplorationPrincipal,
+    raw: unknown,
+    signal?: AbortSignal,
+    onProgress?: (value: ExplorationProgress) => void,
+  ) {
     const parsed = generateExplorationSchema.safeParse(raw);
     if (!parsed.success) throw new ExplorationError('invalid_request');
     const request = parsed.data;
@@ -1064,6 +1092,20 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
       certain = true;
     const usage = { input_tokens: 0, output_tokens: 0 };
     const audit: ExplorationAudit[] = [];
+    const timings: {
+      call: number;
+      stage: ExplorationFailure['stage'];
+      durationMs: number;
+    }[] = [];
+    function progress(phase: ExplorationProgress['phase']) {
+      // Observability cannot grant authority or make publication succeed.
+      try {
+        onProgress?.({
+          phase,
+          elapsedMs: Math.min(120000, Date.now() - start),
+        });
+      } catch {}
+    }
     let stage: ExplorationFailure['stage'] = 'interpretation';
     let failureIssues: ExplorationFailure['issues'] = [];
     async function live() {
@@ -1083,6 +1125,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
       input: readonly unknown[],
       tools: readonly unknown[],
       instructions: string,
+      structuredOutput?: { name: string; schema: Record<string, unknown> },
     ): Promise<MetaResult> {
       await live();
       if (calls >= (deps.reviewEnabled() ? 6 : 4))
@@ -1095,10 +1138,14 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         signal,
         maxOutputTokens: 4096,
         maxImages: 3,
+        ...(structuredOutput ? { structuredOutput } : {}),
       };
       if (costUsd + deps.upperBound(args) > EXPLORATION_RESERVATION_USD)
         throw new ExplorationError('capacity');
       calls++;
+      const callNumber = calls,
+        began = Date.now(),
+        callStage = stage;
       try {
         const response = await deps.request(args);
         usage.input_tokens += response.usage.input_tokens;
@@ -1115,6 +1162,12 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           } else if (error.requestSent) certain = false;
         }
         throw error;
+      } finally {
+        timings.push({
+          call: callNumber,
+          stage: callStage,
+          durationMs: Date.now() - began,
+        });
       }
     }
     try {
@@ -1131,7 +1184,9 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             ...(request.source.kind === 'screenshot'
               ? {
                   ...(deps.validateImage(request.source.dataUrl!)?.sha256
-                    ? { imageSha256: deps.validateImage(request.source.dataUrl!).sha256 }
+                    ? {
+                        imageSha256: deps.validateImage(request.source.dataUrl!).sha256,
+                      }
                     : {}),
                 }
               : {}),
@@ -1190,7 +1245,10 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                           type: 'input_text',
                           text: 'EARLIER CAPTURE (matches the owned previous source)',
                         },
-                        { type: 'input_image', image_url: request.previousImage },
+                        {
+                          type: 'input_image',
+                          image_url: request.previousImage,
+                        },
                       ]
                     : []),
                   {
@@ -1232,7 +1290,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         );
         const inspectInstructions =
           genericInstructions +
-          ' This turn is source interpretation only. Return exactly one inspect_source call, or request_source_detail once if the current image needs a closer crop. If the user explicitly asks for a closer look, select the relevant region and request that crop before interpreting it. For non-graph material summarize actual concepts and set graph to JSON null. anchors is at most six precise, useful labeled regions in the CURRENT full image (not crop coordinates); omit uncertain locations. If an EARLIER image is supplied, change must identify whether this is the same material, the actual changes and uncertainties; do not infer change from cursor position or altered page layout alone. Otherwise change=null. No prose.';
+          ' This turn is source interpretation only. Return exactly one inspect_source call, or request_source_detail once if the current image needs a closer crop. If the user explicitly asks for a closer look, select the relevant region and request that crop before interpreting it. For non-graph material summarize actual concepts and set graph to JSON null. anchors is at most six precise, useful labeled regions in the CURRENT full image (not crop coordinates); omit uncertain locations. If an EARLIER image is supplied, change must identify whether this is the same material, the actual changes and uncertainties; do not infer change from cursor position or altered page layout alone. Otherwise change=null. Distinguish facts actually visible in the capture from related concepts requested but outside it; record those visibility limits in uncertainty. Keep summary concise (roughly 120 words), anchor labels short, and uncertainty specific. No prose.';
+        progress('reading-source');
         let inspection = await call(
           sourceInput,
           request.source?.kind === 'screenshot'
@@ -1262,6 +1321,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                 reason: z.string().trim().min(1).max(140),
               })
               .parse(detailCall.parsedArguments);
+          progress('reading-detail');
           const crop = await deps.crop(request.source.dataUrl!, detail.region);
           await live();
           source.detailRegion = crop.region;
@@ -1299,8 +1359,19 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         extractedCall = typedCall(inspection, 'inspect_source');
         const normalizedNull = extractedCall.parsedArguments.graph === 'null';
         const normalizedChange = extractedCall.parsedArguments.change === 'null';
+        const locations =
+          extractedCall.parsedArguments.anchors === undefined
+            ? undefined
+            : inspectSourceAnchors(extractedCall.parsedArguments.anchors);
+        if (locations?.omitted)
+          audit.push({
+            event: 'source-locations-omitted',
+            call: calls,
+            detail: `Omitted ${locations.omitted} optional source location(s) with invalid image bounds; no coordinates were clamped or invented.`,
+          });
         extracted = inspectSchema.parse({
           ...extractedCall.parsedArguments,
+          ...(locations ? { anchors: locations.anchors } : {}),
           ...(normalizedNull ? { graph: null } : {}),
           ...(normalizedChange ? { change: null } : {}),
         });
@@ -1400,7 +1471,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           call: calls,
           detail: `Checked ${computed.modelId} trace with ${computed.steps.length} snapshots.`,
         });
-      const sceneInstructions = `${experiment ? 'A checked cost experiment is supplied. Keep checked-dijkstra and include set-weight in controls. Preserve the supplied current primary and comparison graph inputs; the application exposes hypothetical interventions separately. Existing edgeWeights are hypothetical overrides, not new source facts. Explain the verified cases and distinguish an exact direct-route tie from a bounded sample.' : ''} ${genericInstructions} Compose a source-specific scene using compose_exploration. Use block objects for processing stages, sequence panels for ordered tokens, matrix panels for small rectangular data, and callout panels for one key idea when they improve this explanation. These explanatory primitives do not establish checked computation. For source-specific explanations, prefer one dominant mechanism with a small set of clearly labeled parts, 3-5 meaningful steps and explicit highlighted node/edge IDs for the causal transition in each step. Do not substitute generic decorative boxes for the mechanism. Keep captions and narration concise. Every arrow is a claim: its label and destination must agree with the stated intermediate numerical state; do not skip from a partial update to a limiting/final state. Use the application-bound diagram-sidebar layout; panels must occupy distinct grid cells, column 1 or 2, spans within two columns, rows 1-4. For explanation mode every step MUST set both execution and executionStep to JSON null; there is no checked trace. Never use an integer index or primary execution for explanation mode. Supply concise narration linked to each visible step. ${reuse ? 'This is a context-preserving follow-up, including auto: preserve the computational mode and the supplied current checked primary and comparison inputs; If the question requests a different primary experiment, explain how to apply the visible controls or return a clarification; a question alone cannot silently apply parameter edits. Keep the current trace step and unchanged object positions. Focus on the selected object when supplied.' : ''} Set schemaVersion="exploration-v1". Required spec id=${`explore_${artifactId.replaceAll('-', '')}`} and version=${version}; every source reference must match observationId=${source.observationId}, version=${source.version}. If a checked graph was supplied, primary input MUST exactly match that graph. Comparison input may be an explicitly described experiment and is independently checked. Preserve every input the user did not ask to change: goal, direction, nodes, edges, neighbor order and start. Changing only the start never changes the goal or graph. Explicitly describe every intended parameter change in assumptions; do not quietly invent a second variable to make an experiment more interesting. Bind explanatory steps to the supplied execution snapshots; A checked scene MUST include a primary graph and at least one frontier or state-table panel. A comparison requires its own graph panel. Use these exact kind values; choose a valid bounded layout for this question. Clarify essential source uncertainty. Do not claim source prose is computationally verified. ${previous ? 'Preserve existing object IDs for unchanged meaning and explain the requested change, using the supplied current controls and checked trace as the experiment context.' : ''}`;
+      const sceneInstructions = `${experiment ? 'A checked cost experiment is supplied. Keep checked-dijkstra and include set-weight in controls. Preserve the supplied current primary and comparison graph inputs; the application exposes hypothetical interventions separately. Existing edgeWeights are hypothetical overrides, not new source facts. Explain the verified cases and distinguish an exact direct-route tie from a bounded sample.' : ''} ${genericInstructions} Compose a source-specific scene using compose_exploration. Use block objects for processing stages, sequence panels for ordered tokens, matrix panels for small rectangular data, and callout panels for one key idea when they improve this explanation. These explanatory primitives do not establish checked computation. For source-specific explanations, prefer one dominant mechanism with a small set of clearly labeled parts, 3-4 meaningful steps and explicit highlighted node/edge IDs for the causal transition in each step. Do not substitute generic decorative boxes for the mechanism. Keep captions and narration concise (one short sentence each). Prefer 1-2 panels, at most three; include only the parts needed for this question. If the capture shows only one part of a broader question, explain the visible part and label the unseen part as contextual explanation; never invent unseen diagrams or values. Every arrow is a claim: its label and destination must agree with the stated intermediate numerical state; do not skip from a partial update to a limiting/final state. Use the application-bound diagram-sidebar layout; panels must occupy distinct grid cells, column 1 or 2, spans within two columns, rows 1-4. For explanation mode every step MUST set both execution and executionStep to JSON null; there is no checked trace. Never use an integer index or primary execution for explanation mode. Supply concise narration linked to each visible step. ${reuse ? 'This is a context-preserving follow-up, including auto: preserve the computational mode and the supplied current checked primary and comparison inputs; If the question requests a different primary experiment, explain how to apply the visible controls or return a clarification; a question alone cannot silently apply parameter edits. Keep the current trace step and unchanged object positions. Focus on the selected object when supplied.' : ''} Set schemaVersion="exploration-v1". Required spec id=${`explore_${artifactId.replaceAll('-', '')}`} and version=${version}; every source reference must match observationId=${source.observationId}, version=${source.version}. If a checked graph was supplied, primary input MUST exactly match that graph. Comparison input may be an explicitly described experiment and is independently checked. Preserve every input the user did not ask to change: goal, direction, nodes, edges, neighbor order and start. Changing only the start never changes the goal or graph. Explicitly describe every intended parameter change in assumptions; do not quietly invent a second variable to make an experiment more interesting. Bind explanatory steps to the supplied execution snapshots; A checked scene MUST include a primary graph and at least one frontier or state-table panel. A comparison requires its own graph panel. Use these exact kind values; choose a valid bounded layout for this question. Clarify essential source uncertainty. Do not claim source prose is computationally verified. ${previous ? 'Preserve existing object IDs for unchanged meaning and explain the requested change, using the supplied current controls and checked trace as the experiment context.' : ''}`;
       let history: unknown[] = [
         {
           role: 'user',
@@ -1412,19 +1483,6 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             experiment,
           }),
         },
-        ...(extractedCall
-          ? toolHistory(extractedCall, {
-              accepted: true,
-              sourceObservation: {
-                observationId: source.observationId,
-                version: source.version,
-              },
-              graph: extracted.graph,
-              checkedExecution: computed,
-              assurance:
-                'The computation checks only the proposed graph; source extraction and prose remain fallible.',
-            })
-          : []),
       ];
       const costCopySchema = z.strictObject({
         title: z.string().min(1).max(100),
@@ -1502,7 +1560,19 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             'Compose the complete approved scene specification in the spec field. Application supplies validation and execution results.',
             z.strictObject({ spec: turnSpecSchema }),
           );
-      function proposalSpec(proposal: MetaToolCall): unknown {
+      type AuthorProposal = { parsedArguments: Record<string, unknown>; tool?: MetaToolCall };
+      function authorFeedback(proposal: AuthorProposal, facts: unknown) {
+        return [
+          {
+            role: 'user' as const,
+            content: JSON.stringify({
+              previousProposal: proposal.parsedArguments,
+              validation: facts,
+            }),
+          },
+        ];
+      }
+      function proposalSpec(proposal: AuthorProposal): unknown {
         if (!experiment)
           return z.strictObject({ spec: z.unknown() }).parse(proposal.parsedArguments).spec;
         if (!previous || previous.spec.mode !== 'checked-dijkstra' || !extracted.graph)
@@ -1554,16 +1624,30 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
       let artifact: ExplorationArtifact | undefined;
       for (let attempt = 0; attempt < 2; attempt++) {
         stage = 'composition';
-        const proposal = typedCall(
-          await call(
-            history,
-            extractedCall ? [inspectTool, composeTool] : [composeTool],
-            composeInstructions,
-          ),
-          experiment ? 'compose_cost_experiment' : 'compose_exploration',
+        progress(attempt === 0 ? 'building-visual' : 'repairing-visual');
+        const authored = await call(
+          history,
+          [],
+          composeInstructions + ' Return only the schema-constrained JSON object; never prose.',
+          { name: 'soma_visual', schema: composeTool.parameters },
         );
+        let proposal: AuthorProposal;
+        if (
+          authored.status === 'completed' &&
+          authored.tools.length === 0 &&
+          authored.structured
+        )
+          proposal = { parsedArguments: authored.structured };
+        else {
+          const choice = typedCall(
+            authored,
+            experiment ? 'compose_cost_experiment' : 'compose_exploration',
+          );
+          proposal = { parsedArguments: choice.parsedArguments, tool: choice };
+        }
         try {
           stage = 'validation';
+          progress('checking-visual');
           const checked = checkExploration(proposalSpec(proposal));
           const spec = checked.spec;
           if (
@@ -1623,6 +1707,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             stage = 'review';
             await live();
             if (calls >= 6) throw new ExplorationError('capacity');
+            progress('reviewing-visual');
             const reviewer = explorationReviewRequest(
               spec,
               source.summary,
@@ -1630,39 +1715,69 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                 executions: checked.executions,
                 costExperiment: experiment ?? null,
                 sourceAnchors: source.anchors ?? [],
+                sourceUncertainty: source.uncertainty,
                 sourceChange: source.change ?? null,
               },
               Math.min(25000, deadline - Date.now()),
               signal,
             );
-            const bound =
-              (Buffer.byteLength(JSON.stringify(reviewer)) * 4 + 768 * 20) / 1000000;
-            if (costUsd + bound > EXPLORATION_RESERVATION_USD)
-              throw new ExplorationError('capacity');
-            calls++;
-            let reviewed;
-            try {
-              reviewed = await deps.review(reviewer);
-              usage.input_tokens += reviewed.usage.input_tokens;
-              usage.output_tokens += reviewed.usage.output_tokens;
-              costUsd += usageCost(
-                reviewed.usage.input_tokens,
-                reviewed.usage.output_tokens,
-                META_REVIEW_MODEL,
-              );
-            } catch (error) {
-              if (error instanceof MetaClientError) {
-                if (error.usage) {
-                  usage.input_tokens += error.usage.input_tokens;
-                  usage.output_tokens += error.usage.output_tokens;
-                  costUsd += usageCost(
-                    error.usage.input_tokens,
-                    error.usage.output_tokens,
-                    META_REVIEW_MODEL,
-                  );
-                } else if (error.requestSent) certain = false;
+            async function reviewOnce(request: typeof reviewer) {
+              await live();
+              if (calls >= 6) throw new ExplorationError('capacity');
+              const bound =
+                (Buffer.byteLength(JSON.stringify(request)) * 4 +
+                  (request.maxOutputTokens ?? 1536) * 20) /
+                1000000;
+              if (costUsd + bound > EXPLORATION_RESERVATION_USD)
+                throw new ExplorationError('capacity');
+              calls++;
+              const reviewCall = calls,
+                began = Date.now();
+              try {
+                const result = await deps.review({
+                  ...request,
+                  deadlineMs: Math.min(25000, deadline - Date.now()),
+                });
+                usage.input_tokens += result.usage.input_tokens;
+                usage.output_tokens += result.usage.output_tokens;
+                costUsd += usageCost(
+                  result.usage.input_tokens,
+                  result.usage.output_tokens,
+                  META_REVIEW_MODEL,
+                );
+                return result;
+              } catch (error) {
+                if (error instanceof MetaClientError) {
+                  if (error.usage) {
+                    usage.input_tokens += error.usage.input_tokens;
+                    usage.output_tokens += error.usage.output_tokens;
+                    costUsd += usageCost(
+                      error.usage.input_tokens,
+                      error.usage.output_tokens,
+                      META_REVIEW_MODEL,
+                    );
+                  } else if (error.requestSent) certain = false;
+                }
+                throw error;
+              } finally {
+                timings.push({
+                  call: reviewCall,
+                  stage: 'review',
+                  durationMs: Date.now() - began,
+                });
               }
-              throw error;
+            }
+            let reviewed = await reviewOnce(reviewer);
+            if (reviewed.status === 'incomplete') {
+              // No usable verdict exists. Retry this same candidate once, never
+              // a material rejection or an unknown-billing transport failure.
+              audit.push({
+                event: 'review-incomplete-retried',
+                call: calls,
+                detail:
+                  'Wonder returned an incomplete response; retrying the same unchanged candidate once within existing call/time/spend bounds.',
+              });
+              reviewed = await reviewOnce({ ...reviewer, maxOutputTokens: 2048 });
             }
             await live();
             const review = parseExplorationReview(reviewed);
@@ -1675,7 +1790,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
               if (attempt === 1) throw new ExplorationError('generation_invalid');
               history = [
                 ...history,
-                ...toolHistory(proposal, {
+                ...authorFeedback(proposal, {
                   accepted: false,
                   reviewFindings: review.findings,
                   instruction:
@@ -1760,6 +1875,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
               usage: { ...usage },
               costUsd,
               elapsedMs: Date.now() - start,
+              timings: [...timings],
               checks: checked.validation.checks,
               audit: [...audit],
             },
@@ -1797,6 +1913,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           break;
         } catch (error) {
           if (stage === 'review') {
+            failureIssues = validationFacts(error);
             if (error instanceof ExplorationError) throw error;
             throw new ExplorationError('review_unavailable');
           }
@@ -1809,7 +1926,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           });
           history = [
             ...history,
-            ...toolHistory(proposal, {
+            ...authorFeedback(proposal, {
               accepted: false,
               issues: validationFacts(error),
               instruction: experiment
@@ -1821,6 +1938,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
       }
       if (!artifact) throw new ExplorationError('generation_invalid');
       stage = 'publication';
+      progress('saving-visual');
       await live();
       await deps.store.mutate(
         principal,
@@ -1839,6 +1957,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             throw new ExplorationError('revision_conflict');
           session.artifacts.push(artifact!);
           run.status = 'published';
+          run.audit = [...audit];
+          run.timings = [...timings];
           run.calls = calls;
           run.costUsd = costUsd;
           run.usageCertain = certain;
@@ -1876,6 +1996,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                   issues: failureIssues.length ? failureIssues : validationFacts(error),
                 };
               }
+              run.audit = [...audit];
+              run.timings = [...timings];
               run.calls = calls;
               run.costUsd = costUsd;
               run.usageCertain = certain;

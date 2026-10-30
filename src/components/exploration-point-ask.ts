@@ -114,6 +114,8 @@ export function useExplorationPointAsk(options: {
             s.source = {
               ...source,
               kind: 'capture',
+              nativeId: s.id,
+              nativeHighlight: d.canPointBack === true,
               capturedAt: d.capturedAt,
               focus: focus.data,
             };
@@ -154,9 +156,19 @@ export function useExplorationPointAsk(options: {
       feedback(s.id, 'error');
     }
   }
+  function partial(text: string, id?: string) {
+    if (id && active.current?.id === id) {
+      setStatus('Hearing: ' + text);
+      window.dispatchEvent(
+        new CustomEvent('soma:point-feedback', {
+          detail: { id, state: 'partial', text: text.slice(0, 240) },
+        }),
+      );
+    }
+  }
   function voicePhase(phase: string, id?: string) {
     if (id && active.current?.id === id && ['recording', 'transcribing'].includes(phase))
       feedback(id, phase);
   }
-  return { command, sessionId, status, cancel, transcript, voiceError, voicePhase };
+  return { command, sessionId, status, cancel, transcript, voiceError, voicePhase, partial };
 }

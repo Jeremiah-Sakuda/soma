@@ -1,3 +1,4 @@
+import type { SourceAnchor, SourceChange, ImageRegion } from '../domain/source-grounding';
 import type { PointFocus } from '../domain/point-context';
 import type { ExplorationApplication } from '../domain/exploration-application';
 import type { CostProbe } from '../domain/cost-probe';
@@ -20,6 +21,10 @@ export type ExplorationSource = {
   label: string;
   capturedAt: string;
   focus?: PointFocus;
+  imageSha256?: string;
+  anchors?: SourceAnchor[];
+  detailRegion?: ImageRegion;
+  change?: SourceChange & { fromObservationId: string; fromVersion: number; fromArtifactVersion: number };
   summary: string;
   uncertainty: string[];
 };
@@ -31,6 +36,8 @@ export type ExplorationAudit = {
     | 'cost-probe-unavailable'
     | 'review-approved'
     | 'review-rejected'
+    | 'source-detail-requested'
+    | 'source-compared'
     | 'source-reused'
     | 'source-interpreted'
     | 'model-computed'

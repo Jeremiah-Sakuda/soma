@@ -71,11 +71,47 @@ window.addEventListener('soma:point-feedback', (event) => {
     !isExploration() ||
     !payload ||
     payload.id !== pointInteraction ||
-    !['recording', 'transcribing', 'generating', 'ready', 'error', 'cancelled'].includes(
-      payload.state,
-    )
+    ![
+      'recording',
+      'transcribing',
+      'generating',
+      'ready',
+      'error',
+      'cancelled',
+      'partial',
+    ].includes(payload.state)
   )
     return;
-  ipcRenderer.send('desktop:point-feedback', { id: pointInteraction, state: payload.state });
+  ipcRenderer.send('desktop:point-feedback', {
+    id: pointInteraction,
+    state: payload.state,
+    ...(payload.state === 'partial' && typeof payload.text === 'string'
+      ? { text: payload.text.slice(0, 240) }
+      : {}),
+  });
   if (['ready', 'error', 'cancelled'].includes(payload.state)) pointInteraction = null;
+});
+
+let sourceInteraction = null;
+ipcRenderer.on('desktop:point-ask', (_event, payload) => {
+  if (isExploration() && payload?.type === 'source' && payload.id === pointInteraction)
+    sourceInteraction = payload.id;
+});
+window.addEventListener('soma:source-highlight', (event) => {
+  const d = event.detail;
+  if (
+    isExploration() &&
+    d?.id === sourceInteraction &&
+    Array.isArray(d.anchors) &&
+    d.anchors.length <= 6
+  )
+    ipcRenderer.send('desktop:source-highlight', { id: d.id, anchors: d.anchors });
+});
+ipcRenderer.on('desktop:source-highlight-result', (_event, d) => {
+  if (isExploration() && d?.id === sourceInteraction)
+    window.dispatchEvent(
+      new CustomEvent('soma:source-highlight-result', {
+        detail: { id: d.id, shown: d.shown === true },
+      }),
+    );
 });

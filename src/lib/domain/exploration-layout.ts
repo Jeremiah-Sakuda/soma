@@ -1,3 +1,4 @@
+import { type DiagramPoint } from './diagram-routing';
 import type { ExplorationPanel } from './exploration';
 type Diagram = Extract<ExplorationPanel, { kind: 'diagram' }>;
 /** Presentation only. Retain semantic identities; positions are not measurements. */
@@ -104,7 +105,11 @@ export function diagramLayout(panel: Diagram, compact: boolean, availableWidth?:
 }
 /** Labels must not cover their own endpoint cards, another label or a note.
  * A bounded dense case uses the explicit connection list instead of clipping. */
-export function diagramEdgeLabels(panel: Diagram, layout: ReturnType<typeof diagramLayout>) {
+export function diagramEdgeLabels(
+  panel: Diagram,
+  layout: ReturnType<typeof diagramLayout>,
+  routes?: { id: string; points: DiagramPoint[] }[],
+) {
   const placed: {
     id: string;
     text: string;
@@ -120,13 +125,29 @@ export function diagramEdgeLabels(panel: Diagram, layout: ReturnType<typeof diag
     const length = Math.hypot(b.x - a.x, b.y - a.y) || 1,
       normal = { x: -(b.y - a.y) / length, y: (b.x - a.x) / length };
     const width = Math.max(32, edge.label.length * 7.6 + 14);
+    const route = routes?.find((r) => r.id === edge.id);
     const candidates =
       edge.from === edge.to
         ? [{ x: a.x, y: a.y - 66 }]
-        : [0, -54, 54, -80, 80, -108, 108].map((offset) => ({
-            x: (a.x + b.x) / 2 + normal.x * offset,
-            y: (a.y + b.y) / 2 + normal.y * offset,
-          }));
+        : route
+          ? route.points
+              .slice(1)
+              .map((p, i) => ({
+                a: route.points[i],
+                b: p,
+                length: Math.hypot(p.x - route.points[i].x, p.y - route.points[i].y),
+              }))
+              .sort((a, b) => b.length - a.length)
+              .flatMap(({ a, b }) =>
+                [0, -14, 14].map((offset) => ({
+                  x: (a.x + b.x) / 2 + (a.x === b.x ? offset : 0),
+                  y: (a.y + b.y) / 2 + (a.y === b.y ? offset : 0),
+                })),
+              )
+          : [0, -54, 54, -80, 80, -108, 108].map((offset) => ({
+              x: (a.x + b.x) / 2 + normal.x * offset,
+              y: (a.y + b.y) / 2 + normal.y * offset,
+            }));
     const candidate = candidates.find(
       (p) =>
         p.x - width / 2 >= 4 &&

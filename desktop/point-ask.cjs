@@ -13,6 +13,8 @@ function createPointAsk({
   send,
   status,
   hidePanel,
+  hideForHighlight = hidePanel,
+  highlightResult = () => {},
   showPanel,
   captureImage,
   available,
@@ -20,6 +22,9 @@ function createPointAsk({
   enabledChange = () => {},
   platform = process.platform,
 }) {
+  let lastCapture = null,
+    lastCaptureTimer = null,
+    highlightBusy = false;
   let child = null,
     overlay = null,
     enabled = false,
@@ -64,6 +69,8 @@ function createPointAsk({
   function stop(reason = 'Point & ask stopped.', show = false) {
     const previous = current;
     current = null;
+    lastCapture = null;
+    clearTimeout(lastCaptureTimer);
     clearTimers();
     hideOverlay();
     if (previous) send({ type: 'cancel', id: previous.id, message: reason });
@@ -91,7 +98,7 @@ function createPointAsk({
       x: p.x - b.x,
       y: p.y - b.y,
       path: s.points.map((q) => ({ x: q.x - b.x, y: q.y - b.y })),
-      text: s.text || 'Preparing microphone · keep holding',
+      text: s.text || 'Preparing voice · keep holding',
     });
   }
   function begin() {
@@ -100,7 +107,7 @@ function createPointAsk({
       return;
     }
     if (current?.phase === 'holding') return;
-    if (current) stop('', false);
+    stop('', false);
     const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
     const s = { id: randomUUID(), display, phase: 'holding', points: [] };
     current = s;
@@ -135,8 +142,13 @@ function createPointAsk({
       if (current !== s) return;
       // Coordinates belong to this exact display snapshot, not to a later screen state.
       s.phase = 'preparing';
+      lastCapture = { id: s.id, snapshot, display: s.display, expires: Date.now() + 120000 };
+      const held = lastCapture;
+      lastCaptureTimer = setTimeout(() => {
+        if (lastCapture === held) lastCapture = null;
+      }, 120000);
       showPanel(pointPanelBounds(s.display.workArea, focus));
-      send({ type: 'source', id: s.id, ...snapshot, focus });
+      send({ type: 'source', id: s.id, ...snapshot, focus, canPointBack: true });
       status('Question and selected region are being prepared.');
       overlayFor(s.display);
       draw({
@@ -227,6 +239,11 @@ function createPointAsk({
       stop(event.message || 'Point & ask stopped. Your previous visual is kept.', true);
       return;
     }
+    if (event.state === 'partial' && typeof event.text === 'string') {
+      current.text = 'Heard: ' + event.text.slice(0, 240);
+      status(current.text);
+      return;
+    }
     if (event.state === 'ready') {
       clearTimers();
       hideOverlay();
@@ -239,6 +256,78 @@ function createPointAsk({
     else if (event.state === 'generating')
       status('Muse is preparing the selected explanation…');
   }
+  async function highlight(event) {
+    const c = lastCapture;
+    const valid =
+      event &&
+      typeof event.id === 'string' &&
+      Array.isArray(event.anchors) &&
+      event.anchors.length > 0 &&
+      event.anchors.length <= 6 &&
+      event.anchors.every(
+        (a) =>
+          a &&
+          typeof a.label === 'string' &&
+          a.label.length <= 100 &&
+          a.region &&
+          ['x', 'y', 'width', 'height'].every((k) => Number.isFinite(a.region[k])) &&
+          a.region.x >= 0 &&
+          a.region.y >= 0 &&
+          a.region.width > 0 &&
+          a.region.height > 0 &&
+          a.region.x + a.region.width <= 1.000001 &&
+          a.region.y + a.region.height <= 1.000001,
+      );
+    if (
+      highlightBusy ||
+      !valid ||
+      !c ||
+      c.id !== event.id ||
+      Date.now() > c.expires ||
+      current
+    ) {
+      highlightResult({ id: event?.id, shown: false });
+      return;
+    }
+    highlightBusy = true;
+    globalShortcut.register('Escape', () => {
+      stop('Source highlight cancelled.', true);
+      highlightResult({ id: c.id, shown: false });
+    });
+    hideForHighlight();
+    try {
+      await new Promise((r) => setTimeout(r, 120));
+      if (lastCapture !== c) return;
+      const fresh = await captureImage(c.display);
+      if (lastCapture !== c) return;
+      // Exact match is intentionally conservative: a changed screen must never
+      // receive a confident overlay at stale coordinates. No tracking claim.
+      const match = fresh.dataUrl === c.snapshot.dataUrl;
+      showPanel();
+      if (match) {
+        overlayFor(c.display);
+        draw({
+          type: 'annotations',
+          anchors: event.anchors.map((a) => ({ label: a.label, region: a.region })),
+          text: 'Soma · source reference',
+        });
+        hideTimer = setTimeout(() => {
+          hideOverlay();
+          globalShortcut.unregister('Escape');
+        }, 4500);
+      }
+      if (!match) globalShortcut.unregister('Escape');
+      highlightResult({ id: c.id, shown: match });
+    } catch {
+      if (lastCapture === c) {
+        globalShortcut.unregister('Escape');
+        showPanel();
+        highlightResult({ id: c.id, shown: false });
+      }
+    } finally {
+      highlightBusy = false;
+    }
+  }
   function dispose() {
     disable();
     overlay?.destroy();
@@ -249,6 +338,7 @@ function createPointAsk({
     disable,
     stop,
     feedback,
+    highlight,
     dispose,
     get enabled() {
       return enabled;

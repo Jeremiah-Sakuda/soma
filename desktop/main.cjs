@@ -227,19 +227,37 @@ else {
         win.showInactive();
         view.webContents.setAudioMuted(false);
       },
+      hideForHighlight: () => win.hide(),
+      highlightResult: (payload) =>
+        view.webContents.send('desktop:source-highlight-result', payload),
       captureImage: snapshotDisplay,
       enabledChange: (value) => win.webContents.send('desktop:point-enabled', value),
+    });
+    ipcMain.on('desktop:source-highlight', (event, payload) => {
+      if (trusted(event)) void pointAsk.highlight(payload);
     });
     ipcMain.on('desktop:point-feedback', (event, payload) => {
       if (
         trusted(event) &&
         payload &&
         typeof payload.id === 'string' &&
-        ['recording', 'transcribing', 'generating', 'ready', 'error', 'cancelled'].includes(
-          payload.state,
-        )
+        [
+          'recording',
+          'transcribing',
+          'generating',
+          'ready',
+          'error',
+          'cancelled',
+          'partial',
+        ].includes(payload.state)
       )
-        pointAsk.feedback({ id: payload.id, state: payload.state });
+        pointAsk.feedback({
+          id: payload.id,
+          state: payload.state,
+          ...(payload.state === 'partial' && typeof payload.text === 'string'
+            ? { text: payload.text.slice(0, 240) }
+            : {}),
+        });
     });
     ipcMain.handle('desktop:action', async (event, action) => {
       if (!trusted(event, true)) throw new Error('Untrusted desktop control.');

@@ -370,7 +370,17 @@ test('choosing an upload during a hold cancels native audio and ignores its late
   await expect.poll(()=>page.evaluate(()=>(window as any).__pointTest.stops)).toBeGreaterThan(0);
   await expect.poll(()=>page.evaluate(()=>(window as any).__pointTest.feedback.some((e:any)=>e.state==='cancelled'))).toBe(true);
   await native(page,'end');
-  await native(page,'source',first,{dataUrl:h.source,focus,capturedAt:'2026-10-30T12:00:00Z'});
+  await native(page,'source',first,{dataUrl:h.source,focus,canPointBack:true,capturedAt:'2026-10-30T12:00:00Z'});
   expect(h.calls.some(c=>c.action==='generate')).toBe(false);
   await expect(page.getByText('Replacement.jpg',{exact:true})).toBeVisible();
+});
+
+test('source regions stay attached to the capture and a later native capture carries its exact earlier image',async({page})=>{
+ const h=await setup(page);let firstImage='';const generated:any[]=[];
+ await page.route('**/api/explore',async route=>{if(route.request().method()!=='POST'||route.request().postDataJSON().action!=='generate')return route.fallback();const b=route.request().postDataJSON();generated.push(b);const a=artifact(second,'Grounded visual',b.source.focus);a.version=generated.length;a.spec.version=a.version;a.source.capturedAt=b.source.capturedAt;(a.source as any).anchors=[{id:'source-region',label:'Original connection',region:focus.region}];if(a.spec.mode!=='clarify')a.spec.steps[0].sourceHighlightIds=['source-region'];if(generated.length===1)firstImage=b.source.dataUrl;else{expect(b.previousImage).toBe(firstImage);expect(b.artifactId).toBe(second);expect(b.baseVersion).toBe(1);(a.source as any).change={relationship:'same-material',summary:'No source content changed.',changed:[],uncertainty:[]};}await route.fulfill({json:{artifact:a}});});
+ await begin(page);await native(page,'end');await native(page,'source',first,{dataUrl:h.source,focus,canPointBack:true,capturedAt:'2026-10-30T12:00:00Z'});
+ await expect(page.getByRole('heading',{name:'Grounded visual',exact:true})).toBeVisible();await page.getByText('See on source · 1 model-located region',{exact:true}).click();await expect(page.locator('.exploration-grounding-region')).toHaveCount(1);
+ await page.evaluate(()=>window.addEventListener('soma:source-highlight',(e:any)=>{(window as any).__sourcePoint=e.detail;}));await page.getByRole('button',{name:'Point on screen',exact:true}).click();expect(await page.evaluate(()=>(window as any).__sourcePoint.id)).toBe(first);
+ await page.evaluate(id=>window.dispatchEvent(new CustomEvent('soma:source-highlight-result',{detail:{id,shown:false}})),first);await expect(page.getByText(/The screen changed or this capture expired/)).toBeVisible();
+ await native(page,'begin',second);await expect.poll(()=>page.evaluate(()=>(window as any).__pointTest.recorder?.state)).toBe('recording');await native(page,'end',second);await native(page,'source',second,{dataUrl:h.source,focus,capturedAt:'2026-10-30T12:01:00Z'});await expect(page.getByText('No source content changed.',{exact:false})).toBeVisible();await page.getByText('Compare captures',{exact:true}).click();await expect(page.getByRole('img',{name:'Earlier captured source',exact:true})).toBeVisible();await expect(page.getByRole('img',{name:'Current captured source',exact:true})).toBeVisible();expect(generated).toHaveLength(2);
 });

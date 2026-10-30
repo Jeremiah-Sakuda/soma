@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { startStreamingVoice, type StreamingVoice } from '@/lib/client/streaming-voice';
 import { Mic, Square } from 'lucide-react';
 import type { PointVoiceCommand } from './exploration-point-ask';
 import { encodeVoiceWav, MAX_VOICE_SECONDS, VOICE_SAMPLE_RATE } from '@/lib/domain/voice-audio';
@@ -13,12 +14,16 @@ export function ExplorationVoice({
   pointCommand,
   onPointError,
   onPointPhase,
+  onPointPartial,
+  streamingEnabled = false,
 }: {
   turnKey: string;
+  streamingEnabled?: boolean;
   onTranscript: (text: string, pointId?: string) => void;
   pointCommand?: PointVoiceCommand | null;
   onPointError?: (pointId?: string) => void;
   onPointPhase?: (phase: string, pointId?: string) => void;
+  onPointPartial?: (text: string, pointId?: string) => void;
   disabled?: boolean;
   onInterrupt?: () => void;
 }) {
@@ -30,6 +35,9 @@ export function ExplorationVoice({
     pointPhase = useRef(onPointPhase);
   pointError.current = onPointError;
   pointPhase.current = onPointPhase;
+  const streaming = useRef<StreamingVoice | null>(null);
+  const pointPartial = useRef(onPointPartial);
+  pointPartial.current = onPointPartial;
   const sequence = useRef(0),
     stream = useRef<MediaStream | null>(null),
     recorder = useRef<MediaRecorder | null>(null),
@@ -40,6 +48,8 @@ export function ExplorationVoice({
   transcriptCallback.current = onTranscript;
   const cancel = useCallback(() => {
     sequence.current++;
+    streaming.current?.cancel();
+    streaming.current = null;
     pending.current?.abort();
     pending.current = null;
     if (timer.current) clearTimeout(timer.current);
@@ -76,6 +86,10 @@ export function ExplorationVoice({
     return cancel;
   }, [turnKey, disabled, cancel]);
   const stop = () => {
+    if (streaming.current) {
+      streaming.current.stop();
+      return;
+    }
     const current = recorder.current;
     if (current?.state === 'recording') current.stop();
     for (const track of stream.current?.getTracks() ?? []) track.stop();
@@ -101,6 +115,65 @@ export function ExplorationVoice({
         return;
       }
       stream.current = selected;
+      const streamingController = new AbortController();
+      pending.current = streamingController;
+      try {
+        const liveStream = streamingEnabled
+          ? await startStreamingVoice(selected, {
+              signal: streamingController.signal,
+              partial: (text) => {
+                if (current()) {
+                  setNotice('Hearing: ' + text);
+                  pointPartial.current?.(text, nativeId);
+                }
+              },
+              phase: (next) => {
+                if (current()) {
+                  setPhase(next);
+                  setNotice(
+                    next === 'recording'
+                      ? 'Listening with Muse · release to finish.'
+                      : 'Finishing your question…',
+                  );
+                }
+              },
+              final: (text) => {
+                if (!current()) return;
+                streaming.current = null;
+                pending.current = null;
+                stream.current = null;
+                setPhase('idle');
+                setNotice('Question transcribed with Muse.');
+                transcriptCallback.current(text, nativeId);
+              },
+              error: () => {
+                if (current()) {
+                  cancel();
+                  setPhase('idle');
+                  setNotice('Streaming stopped. Record again or type your question.');
+                  pointError.current?.(nativeId);
+                }
+              },
+            })
+          : null;
+        if (!current()) {
+          liveStream?.cancel();
+          return;
+        }
+        if (liveStream) {
+          streaming.current = liveStream;
+          return;
+        }
+        pending.current = null;
+      } catch {
+        if (current()) {
+          cancel();
+          setPhase('idle');
+          setNotice('Streaming could not start. Record again or type.');
+          pointError.current?.(nativeId);
+        }
+        return;
+      }
       const type = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'].find((value) =>
         MediaRecorder.isTypeSupported(value),
       );
@@ -224,7 +297,8 @@ export function ExplorationVoice({
     else if (pointCommand.action === 'cancel') {
       external.current.cancel();
       setPhase('idle');
-    } else if (recorder.current?.state === 'recording') external.current.stop();
+    } else if (streaming.current || recorder.current?.state === 'recording')
+      external.current.stop();
     else if (['permission', 'idle'].includes(external.current.phase)) {
       external.current.cancel();
       setPhase('idle');

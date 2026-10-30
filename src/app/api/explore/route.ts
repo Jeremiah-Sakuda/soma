@@ -72,7 +72,7 @@ export async function POST(request: Request) {
   try {
     assertExplorationOrigin(request);
     const { principal } = await resolveExplorationPrincipal(request);
-    const body = await readJsonBody(request, 730_000);
+    const body = await readJsonBody(request, 1_460_000);
     const action = z
       .object({
         action: z.enum(['generate', 'cancel', 'example', 'recording', 'prediction', 'application']),

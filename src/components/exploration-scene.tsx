@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ExplorationSearchStage } from './exploration-search-stage';
 import { useExplorationMotion } from './exploration-motion';
+import { diagramRoutes, pointOnDiagramRoute } from '@/lib/domain/diagram-routing';
 import { diagramLayout, diagramEdgeLabels } from '@/lib/domain/exploration-layout';
 import { routeCost } from '@/lib/domain/cost-probe';
 import { beatProgress } from '@/lib/domain/exploration-motion';
@@ -62,8 +63,15 @@ function DiagramPanel({
     if (container.current) observer.observe(container.current);
     return () => observer.disconnect();
   }, []);
-  const layout = diagramLayout(panel, compact, availableWidth);
-  const edgeLabels = diagramEdgeLabels(panel, layout);
+  const layout = useMemo(
+    () => diagramLayout(panel, compact, availableWidth),
+    [panel, compact, availableWidth],
+  );
+  const routes = useMemo(() => diagramRoutes(panel, layout), [panel, layout]);
+  const edgeLabels = useMemo(
+    () => diagramEdgeLabels(panel, layout, routes),
+    [panel, layout, routes],
+  );
   const markerId = useId().replace(/[^a-z0-9]/gi, '');
   const nodes = panel.objects.filter(
     (object) => object.kind === 'node' || object.kind === 'block',
@@ -95,30 +103,12 @@ function DiagramPanel({
           .filter((object) => object.kind === 'edge')
           .map((edge) => {
             const from = pos(edge.from),
-              to = pos(edge.to),
-              dx = to.x - from.x,
-              dy = to.y - from.y,
-              length = Math.hypot(dx, dy) || 1,
-              ux = dx / length,
-              uy = dy / length;
-            const inset = (id: string) =>
-              nodes.find((node) => node.id === id)?.kind === 'block'
-                ? Math.min(
-                    layout.cardWidth / 2 / (Math.abs(ux) || 0.0001),
-                    layout.cardHeight / 2 / (Math.abs(uy) || 0.0001),
-                  ) + 4
-                : 1 /
-                    Math.sqrt(
-                      Math.max(
-                        0.000001,
-                        (ux / (layout.cardWidth / 2)) ** 2 +
-                          (uy / (layout.cardHeight / 2)) ** 2,
-                      ),
-                    ) +
-                  4;
-            const start = inset(edge.from),
-              end = inset(edge.to);
-            const loop = edge.from === edge.to;
+              loop = edge.from === edge.to;
+            const route = routes.find((r) => r.id === edge.id);
+            const signal = pointOnDiagramRoute(
+              route?.points ?? [],
+              beatProgress(progress, 0.08, 0.92),
+            );
             return (
               <g key={edge.id}>
                 <path
@@ -128,25 +118,15 @@ function DiagramPanel({
                   d={
                     loop
                       ? `M ${from.x - 32} ${from.y - 34} C ${from.x - 85} ${from.y - 82},${from.x + 85} ${from.y - 82},${from.x + 32} ${from.y - 34}`
-                      : `M ${from.x + ux * start} ${from.y + uy * start} L ${to.x - ux * end} ${to.y - uy * end}`
+                      : (route?.d ?? '')
                   }
                   markerEnd={edge.directed ? `url(#${markerId})` : undefined}
                 />
                 {highlights.includes(edge.id) && progress > 0 && progress < 1 && !loop && (
                   <circle
                     data-diagram-signal={edge.id}
-                    cx={
-                      from.x +
-                      ux * start +
-                      (to.x - ux * end - from.x - ux * start) *
-                        beatProgress(progress, 0.08, 0.92)
-                    }
-                    cy={
-                      from.y +
-                      uy * start +
-                      (to.y - uy * end - from.y - uy * start) *
-                        beatProgress(progress, 0.08, 0.92)
-                    }
+                    cx={signal.x}
+                    cy={signal.y}
                     r="5"
                     fill="var(--accent)"
                   />

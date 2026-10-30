@@ -329,7 +329,7 @@ test('explicit recording posts bounded WAV and inserts editable text without sub
   expect(calls[0].body?.length).toBe(48044);
   expect(
     h.requests.filter(
-      (request) => request.method === 'POST' && !request.path.endsWith('/transcribe'),
+      (request) => request.method === 'POST' && !request.path.endsWith('/transcribe') && !request.path.endsWith('/transcribe/session'),
     ),
   ).toHaveLength(0);
   expect(await page.evaluate(() => (window as any).__voice.stops)).toBeGreaterThan(0);

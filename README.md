@@ -6,7 +6,7 @@ Soma is a macOS study companion that turns what is on your screen into an experi
 
 **[Try it in your browser](https://soma-woad-beta.vercel.app/explore)** (no account needed) · **[Download for macOS](https://github.com/Jeremiah-Sakuda/soma-hackathon/releases/tag/v0.1.0)** (Apple Silicon, signed and notarized)
 
-**New native interaction (0.2.0):** enable **Point & ask**, hold **Control–Option–Space**, point or circle while speaking, and release to ask about that region. The local trail responds immediately; Muse prepares the visual afterward. The new signed shell awaits notarization and is not yet the 0.1.0 download above. [Details and verification](docs/POINT_AND_ASK.md).
+**New native interaction (0.3.0 local build):** enable **Point & ask**, hold **Control–Option–Space**, point or circle while speaking, and release to ask about that region. The local trail responds immediately; Muse prepares the visual afterward. Step highlights now link back to the captured source. Compare a new capture with the prior one, or ask for a closer look at a formula. Native source references require an unchanged screen. The signed shell awaits notarization and is not yet the 0.1.0 download above. Streaming speech is tested locally; its cloud relay awaits provisioning approval. [Details and verification](docs/POINT_AND_ASK.md).
 
 In the browser, **Watch a recorded Muse run** opens a real completed Spark and Wonder run on an original synthetic screenshot. Its original timing, cost and model actions are shown, and opening it needs no inference. The prepared examples load instantly too. New questions use live generation.
 

@@ -104,6 +104,7 @@ const step = z.strictObject({
   caption: text,
   narration: text.nullable(),
   highlightIds: z.array(sceneIdSchema).max(24),
+  sourceHighlightIds: z.array(sceneIdSchema).max(6).optional(),
   execution: execution.nullable(),
   executionStep: z.number().int().min(0).max(12).nullable(),
 });

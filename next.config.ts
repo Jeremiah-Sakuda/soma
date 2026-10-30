@@ -15,7 +15,7 @@ const config: NextConfig = {
       { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
       { key: 'X-Frame-Options', value: 'DENY' },
       { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-    ] }];
+    ] },{source:'/explore/:path*',headers:[{key:'Permissions-Policy',value:'camera=(), microphone=(self), geolocation=()'}]}];
   },
 };
 export default config;

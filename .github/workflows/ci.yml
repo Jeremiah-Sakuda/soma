@@ -16,6 +16,10 @@ jobs:
         run: npm ci --prefix services/browser-runner --ignore-scripts
       - name: Install pinned isolated credential-runner dependencies
         run: npm ci --prefix services/credential-runner --ignore-scripts
+      - name: Install isolated voice-relay dependencies
+        run: npm ci --prefix services/voice-runner --ignore-scripts
+      - name: Verify authenticated voice relay
+        run: node --test services/voice-runner/test/*.test.mjs
       - name: Verify Firebase loads under serverless module restrictions
         run: node --no-experimental-require-module -e "require('firebase-admin/auth')"
       - name: Verify published runtime source identity

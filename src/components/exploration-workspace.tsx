@@ -1,4 +1,6 @@
 'use client';
+import { ExplorationSourceGrounding } from './exploration-source-grounding';
+import type { SourceAnchor, SourceChange } from '@/lib/domain/source-grounding';
 
 import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
@@ -75,6 +77,9 @@ type Artifact = {
     label: string;
     capturedAt: string;
     focus?: PointFocus;
+    observationId?: string;
+    anchors?: SourceAnchor[];
+    change?: SourceChange;
     kind: 'screenshot' | 'example';
     summary: string;
     uncertainty: string[];
@@ -98,6 +103,7 @@ type ApiResponse = {
   artifacts?: Artifact[];
   active?: Artifact | null;
   liveEnabled?: boolean;
+  streamingVoiceEnabled?: boolean;
   versions?: VersionSummary[];
 };
 async function api(
@@ -235,6 +241,17 @@ export function ExplorationWorkspace() {
   const viewSequence = useRef(0);
   const questionRef = useRef<HTMLTextAreaElement>(null),
     errorRef = useRef<HTMLParagraphElement>(null);
+  const [streamingVoiceEnabled, setStreamingVoiceEnabled] = useState(false);
+  const sourceMemory = useRef<{
+    capture: ExplorationCapture;
+    id: string;
+    version: number;
+  } | null>(null);
+  const [compareCapture, setCompareCapture] = useState(false);
+  const [comparisonCapture, setComparisonCapture] = useState<{
+    currentCapturedAt: string;
+    previous: ExplorationCapture;
+  } | null>(null);
   const pointAsk = useExplorationPointAsk({
     ready: initialized && liveEnabled !== false,
     interrupt: () => {
@@ -269,6 +286,7 @@ export function ExplorationWorkspace() {
             ),
           ]);
           setLiveEnabled(result.liveEnabled ?? false);
+          setStreamingVoiceEnabled(result.streamingVoiceEnabled === true);
           setInitialized(true);
           setInitializing(false);
         }
@@ -292,6 +310,12 @@ export function ExplorationWorkspace() {
   useEffect(() => {
     if (error) errorRef.current?.focus();
   }, [error]);
+  useEffect(() => {
+    if (!artifact) return;
+    const card = document.getElementById('exploration-card');
+    card?.focus({ preventScroll: true });
+    card?.scrollIntoView({ block: 'start', behavior: 'instant' });
+  }, [artifact?.id, artifact?.version]);
   function apply(next: Artifact, history?: VersionSummary[]) {
     setPlaying(false);
     const value = validated(next);
@@ -466,6 +490,14 @@ export function ExplorationWorkspace() {
       turnEpoch = epoch.current;
     request.current = { id, controller, epoch: turnEpoch };
     setBusy(true);
+    const pair = !!(
+      base &&
+      selected &&
+      (fresh || compareCapture) &&
+      sourceMemory.current?.id === base.id &&
+      sourceMemory.current.version === base.version &&
+      sourceMemory.current.capture.capturedAt === base.source.capturedAt
+    );
     const followup = base && !newContext && !fresh;
     const submittedDraft = draft;
     const payload = {
@@ -475,6 +507,14 @@ export function ExplorationWorkspace() {
       requestId: id,
       question: draft.trim(),
       intent: investigate ? 'investigate' : 'auto',
+      ...(pair
+        ? {
+            previousImage: sourceMemory.current!.capture.dataUrl,
+            artifactId: base!.id,
+            baseVersion: base!.version,
+            state: baseState,
+          }
+        : {}),
       ...(followup
         ? {
             artifactId: base.id,
@@ -502,7 +542,25 @@ export function ExplorationWorkspace() {
       const result = await api('POST', payload, controller.signal);
       if (request.current?.id !== id || epoch.current !== turnEpoch) return false;
       if (!result.artifact) throw new Error('No complete visual card was returned.');
+      if (pair && selected)
+        setComparisonCapture({
+          currentCapturedAt: selected.capturedAt,
+          previous: sourceMemory.current!.capture,
+        });
+      else if (!followup) setComparisonCapture(null);
+      if (selected && (!followup || pair))
+        sourceMemory.current = {
+          capture: selected,
+          id: result.artifact.id,
+          version: result.artifact.version,
+        };
+      else if (
+        sourceMemory.current?.id === result.artifact.id &&
+        sourceMemory.current.capture.capturedAt === result.artifact.source.capturedAt
+      )
+        sourceMemory.current.version = result.artifact.version;
       apply(result.artifact);
+      setCompareCapture(false);
       setNewContext(false);
       setQuestion((current) => (current === submittedDraft ? '' : current));
       setNotice('New visual card ready. Explore it or ask a follow-up.');
@@ -793,9 +851,11 @@ export function ExplorationWorkspace() {
           </label>
         </details>
         <ExplorationVoice
+          streamingEnabled={streamingVoiceEnabled}
           pointCommand={pointAsk.command}
           onPointError={pointAsk.voiceError}
           onPointPhase={pointAsk.voicePhase}
+          onPointPartial={pointAsk.partial}
           turnKey={
             pointAsk.sessionId
               ? `point:${pointAsk.sessionId}`
@@ -903,6 +963,16 @@ export function ExplorationWorkspace() {
                           : 'Not shared'}
                   </span>
                 </div>
+                {artifact && sourceMemory.current?.id === artifact.id && (
+                  <label className="exploration-compare-source">
+                    <input
+                      type="checkbox"
+                      checked={compareCapture}
+                      onChange={(e) => setCompareCapture(e.target.checked)}
+                    />{' '}
+                    Compare next upload or snapshot with this capture
+                  </label>
+                )}
                 <input
                   ref={uploadRef}
                   type="file"
@@ -1217,6 +1287,28 @@ export function ExplorationWorkspace() {
                   generation={artifact.generation}
                   checked={artifact.validation.assurance.startsWith('checked-')}
                   replay={!!artifact.recording}
+                />
+                <ExplorationSourceGrounding
+                  capture={
+                    source?.capturedAt === artifact.source.capturedAt
+                      ? source
+                      : sourceMemory.current?.capture.capturedAt === artifact.source.capturedAt
+                        ? sourceMemory.current.capture
+                        : undefined
+                  }
+                  anchors={artifact.source.anchors ?? []}
+                  change={artifact.source.change}
+                  previous={
+                    comparisonCapture?.currentCapturedAt === artifact.source.capturedAt
+                      ? comparisonCapture.previous
+                      : undefined
+                  }
+                  activeIds={
+                    artifact.spec.mode === 'clarify'
+                      ? []
+                      : (artifact.spec.steps[state?.explanationStep ?? 0]?.sourceHighlightIds ??
+                        [])
+                  }
                 />
                 {artifact.recording && (
                   <p className="exploration-recording-note">

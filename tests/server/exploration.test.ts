@@ -1448,7 +1448,7 @@ describe('general screenshot contract without prepared-example fallback', () => 
       expect(context.sourceText).toBeNull();
       expect(context.previous).toBeNull();
       if (!args.instructions.includes('Required spec id=')) {
-        expect(raw[1]).toEqual({
+        expect(raw.find((part:any)=>part.type==='input_image')).toEqual({
           type: 'input_image',
           image_url: 'data:image/png;base64,ORIGINAL_TEST_IMAGE',
         });

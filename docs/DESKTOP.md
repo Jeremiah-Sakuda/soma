@@ -15,3 +15,6 @@ Only an application-owned origin can use the restricted capture bridge. Renderer
 Release tooling is `npm run release --prefix desktop -- --sign-only`, followed by `--notarize-only` after credentials are available locally. Distribution requires the developer's own Developer ID Application identity and a Keychain notarization profile. No signing credential is included in this source snapshot.
 
 The owner's existing arm64 bundle passed Apple notarization, stapling and Gatekeeper verification on October 29. The hosted visual engine updates independently of that unchanged shell. Clean-Mac installation, actual screen/microphone consent, multi-display/fullscreen behavior and audible quality remain human verification gates; automated policy and synthetic capture checks do not establish them.
+
+
+0.3.0 adds source references with exact-frame verification and Escape cancellation. [Behavior and current limits](POINT_AND_ASK.md#grounded-source-interaction--october-30-pm078). The existing public notarized 0.1.0 download has neither the 0.2.0 Point & ask shortcut nor these 0.3.0 source references. Build locally or use the owner's separate signed test bundle while notarization is pending.

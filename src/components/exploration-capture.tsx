@@ -6,6 +6,8 @@ import type { PointFocus } from '@/lib/domain/point-context';
 
 export type ExplorationCapture = {
   focus?: PointFocus;
+  nativeId?: string;
+  nativeHighlight?: boolean;
   kind: 'upload' | 'capture';
   label: string;
   capturedAt: string;

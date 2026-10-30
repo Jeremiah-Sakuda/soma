@@ -50,6 +50,7 @@ export type ExplorationAudit = {
     | 'source-interpreted'
     | 'source-repair-requested'
     | 'model-computed'
+    | 'scene-layout-adjusted'
     | 'scene-validated'
     | 'repair-requested';
   call: number;

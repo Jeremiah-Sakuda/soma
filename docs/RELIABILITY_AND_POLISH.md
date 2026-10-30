@@ -1,0 +1,56 @@
+# Source reliability and experience polish — PM097, October 30
+
+This release improves the existing selected-context → visual → manipulation → follow-up → saved revision journey. It adds no checked scientific domain, model, training job or native distribution change. General visual explanations remain fallible and explanation-only; BFS/Dijkstra computation remains independently checked.
+
+## What changed
+
+- **Read the source before retrieving learning context.** Spark's image-reading stage no longer receives personal memory or learner interpretations. After reading, retrieval uses the actual source summary and the question, so “Explain this” can still retrieve a related saved concept. Unsupported search-graph interpretation is explicitly excluded for circuits, biochemical pathways and attention mechanisms.
+- **Abstain from irrelevant memory.** Exact normalized terms and conservative plural handling replace substring matching and the previous always-recent fallback. Unrelated concepts, their relationships, answer evidence and suggested next activity are omitted. Self-reported goals remain labeled. This is bounded lexical retrieval, not a semantic guarantee; it may miss synonyms. Ownership, source/version lineage, deletion, correction and concurrent-change fences remain enforced.
+- **Recover within existing limits.** One application-contract repair and one substantive Wonder-review repair have separate allowances. They still share the original six-call, 90-second and $0.35 reservation limits. Repeated errors of either kind terminate; unknown-billing transport failures do not invite another author call. Review is advisory, not proof that prose is scientifically correct.
+- **Arrange presentation without buying another model call.** Valid authored layouts stay unchanged. Colliding explanatory panels can be placed into free approved grid cells without altering content, panel order, objects, source references or solver inputs. Capacity or other validation failures retain normal bounded repair. Full validation and review still precede publication, and actual adjustment appears in the audit.
+- **Keep diagrams readable.** Connection labels cannot cover another routed connection; dense cases retain their full text in the connection legend. Undirected explanatory links use a line rather than an arrow in that legend. Balanced, legible node labels retain the complete source wording. General follow-ups use explanation-specific wording rather than graph-control instructions.
+- **Control narration.** Pausing and resuming Gemini audio retains the media position for the same artifact/version/state and reuses the existing bounded audio buffer. Replay restarts. Playback settings offer 0.8×, 1×, 1.2× and 1.5×. Gemini changes rate in place; browser speech pauses before a rate change. Visual progress follows actual media time. Captions/manual exploration remain available; this is not word-level alignment.
+
+## Actual source evaluation
+
+Four public captures were new to this development evaluation; two reused earlier development sources. Screenshots, hashes and reference facts were frozen before requests. Reference facts, URLs and topic names were not supplied as hidden prompt hints. Each request used a fresh guest, an opaque capture label and “Explain the mechanism on this screen step by step.” Bounded application repairs remained enabled.
+
+| Source | First development batch | Final repeat | Repeat wait | Repeat calls |
+| --- | --- | --- | --- | --- |
+| [Python floating point](https://docs.python.org/3/tutorial/floatingpoint.html) | Published | Published, exact save/reopen | 31.281s | 5 |
+| [MDN lexical scoping](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Closures) | Published | Published, exact save/reopen | 17.544s | 3 |
+| [NASA lunar eclipse](https://science.nasa.gov/moon/eclipses/) | Published | Published, exact save/reopen | 24.634s | 4 |
+| [PyTorch attention](https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html) | Published | Published, exact save/reopen | 36.145s | 5 |
+| [OpenStax Kirchhoff rules](https://openstax.org/books/university-physics-volume-2/pages/10-3-kirchhoffs-rules), reused | Published | Published, exact save/reopen | 12.553s | 3 |
+| [OpenStax enzymes](https://openstax.org/books/biology-2e/pages/6-5-enzymes), reused | Rejected | Published, exact save/reopen | 31.277s | 5 |
+
+The first batch was **5/6**, not 6/6. Biology needed an application repair followed by a substantive correction; the old shared author-repair allowance stopped it. The final repeat was **6/6 published**, with exact saved specification/source readback and rendering at 620×704 and 375×704, without observed horizontal overflow, clipped diagram labels or page errors. These are repeated development cases, not a fresh held-out accuracy benchmark. They do not replace the earlier ten-subject 8/10 result or prove universal accuracy.
+
+The final repeat's median wait was **27.956 seconds**, range 12.553–36.145 seconds. This does **not** establish improvement on the earlier roughly 20-second observation. Corrective review adds time. The changes remove an avoidable panel-layout repair and improve recovery/pacing without skipping checks or presenting partial unvalidated scenes. The final deterministic layout adjustment was added after this repeat; it is verified by regression and retained-output replay, not included retroactively in these model timings.
+
+Actual Wonder findings included a 53-bit-significand versus fractional-bit claim, a mismatched attention sequence, and assigning meaning to a cropped enzyme-chart curve without its legend. Repaired candidates were reviewed again. Source uncertainty about cropped code/figures remained inspectable. The published examples still need human judgment: a model reviewer and consistent animation do not constitute independent scientific validation.
+
+## Verification and limits
+
+Final automated results and release identity are appended below after execution. Regression cases cover unrelated-memory abstention and whole-word relevance, source-stage independence, concurrent memory changes, both repair-order interleavings, bounded repeated failure, deterministic layout preservation, connection-label geometry, and real Chromium media-clock resume/rate behavior. Browser coverage also includes keyboard, reduced motion, phone layouts, exact state preservation and cancellation. Synthetic WAV tests make no speech-provider calls and do not establish audible voice quality on a physical Mac.
+
+The first local UI evaluation was disrupted by a development-server HMR reload loop; it did not establish a render pass. The production-build repeat established the six render/save checks above. Initial source-capture selector and test-observer errors are retained separately from product failures. A native audio observer initially measured time after cleanup reset the media element; the corrected observer records at actual pause, and the test passes. Restricted localhost-server tests require the normal network-enabled test context.
+
+Private captures, provider outputs, screenshots and logs stay under `.local/pm097`; no personal course documents, credentials, guest cookies or raw provider output are committed. The lifetime shared testing cap remains $15, with prior use/reservations preserved. No student trial, learning gain, native hardware acceptance, fine-tuning or 3D release is claimed.
+
+### Final executed evidence
+
+- Complete network-enabled offline suite: **1,524 passed, 93 opt-in skipped** (126 test files passed, 39 skipped). The restricted run had 48 localhost-listen failures; it is not presented as a product pass. The unchanged synthetic relay likewise required localhost permission, then all three cases passed.
+- Complete Chromium suite: **135 passed**, including mock-media and real-WAV pause/resume/rate, keyboard/reduced-motion and native/phone layout coverage. Desktop policy/lifecycle: **21 passed**; synthetic voice relay: **3 passed**. The new layout-service regression and type narrowing were checked; the first build caught that test's missing TypeScript union narrowing before the corrected typecheck/build passed.
+- Optimized webpack production build and isolated production trace passed: **1,339 files, zero links, zero private configuration mappings**. Next-generated development route declarations reverted naturally on production build. Clean default-build CI is recorded separately after push.
+- Replayed all six retained provider outputs through the final production build at **620×704 and 375×704**. All six passed page-error, horizontal-overflow, full-label and contextual-composer checks without new inference. Visually inspected biology/companion and lunar/phone full-page captures. Long mechanisms still require scrolling; this is not a claim that every generated diagram fits above the fixed composer.
+- Actual Firestore/API continuity: saved the explicitly prepared BFS example; created a self-reported goal; real Muse analysis proposed **two source-bound concepts**; a fresh screenshot with the generic question “Explain this.” retrieved relevant evidence-linked memory, published in **18.747s**, and saved/reopened its exact spec. This is one development continuity check, not proof of learning or broad memory usefulness. Test guest was deleted.
+- Final measured shared consumed ledger: **$12.96341875/$15** after the above provider calls, including previous use and concurrent settled work. No reset, raise or speech-provider call was needed. Runtime manifest: `soma-pm097-2026-10-30`, **246 files**, SHA-256 `67c66684d408c3d7f2fff5c9b19077caa6e9ecac82aadc0cb52bfec0fa9a74d7`.
+
+### Hosted acceptance
+
+Commit `e877662` fast-forwarded the original private repository main; all prior main history remains reachable. Existing Vercel integration deployed [this update](https://vercel.com/jeremiah-sakudas-projects/soma/5wTAyZFz2E2txeC1uJYwtHAckixE). The hosted manifest matches the246-file fingerprint above. A fresh production guest loaded an explicitly prepared example, changed/saved state, reopened the exact spec/state, used the0.8× setting and rendered at620/375 without page errors or horizontal overflow. That acceptance required no inference or speech synthesis, and its guest was deleted. Existing installed desktop shells receive the hosted engine; this does not establish physical capture, audible playback or a newly signed package. Final ledger read2026-10-30T20:52:01.871Z remained$12.96341875/$15.
+
+### Clean verification completed
+
+[GitHub Actions41126305678](https://github.com/Jeremiah-Sakuda/soma/actions/runs/41126305678) succeeded on implementation commit `e877662`:1524offlinepassed/93opt-in-skipped,135Chromium journeys,28isolated adversarial credential-browser cases,21desktop,4credential diagnostics and3relay. Default Next production build and isolated runtime trace passed (1224files/twolinks/no private configuration mappings); the different trace count from the local webpack build is reported distinctly. No failing browser retry is hidden: the clean run reports135passed. This supersedes the earlier pending-CI notes; runtime identity and hosted acceptance above remain unchanged.

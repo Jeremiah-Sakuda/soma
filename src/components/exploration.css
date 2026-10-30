@@ -2235,3 +2235,30 @@
 .spatial-description li { margin-bottom: 8px; overflow-wrap: anywhere; }
 .spatial-fallback { padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-top: 10px; }
 @media(max-width: 620px) { .spatial-workspace { padding: 10px; } .spatial-stage { height: 290px; } .spatial-toolbar button { padding: 8px 10px; font-size: 12px; } .spatial-stage-note { font-size: 10px; } }
+
+/* Keep explanation typography readable without changing a source label. */
+.exploration-diagram-label {
+  font-size: 15px;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+.exploration-diagram-container .exploration-node:not(.is-selected) :is(rect, ellipse) {
+  stroke: var(--border);
+}
+.exploration-playback-rate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  font-size: 14px;
+}
+.exploration-playback-rate select {
+  min-height: 44px;
+  padding: 8px 10px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--control-border);
+  border-radius: 10px;
+  font: inherit;
+}

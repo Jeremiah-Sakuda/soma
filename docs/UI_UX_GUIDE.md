@@ -206,3 +206,10 @@ A dark theme; a force-directed or editable graph; mastery or readiness dashboard
 ## PM080 generation waiting behavior — October 30
 
 Display only actual application stage events; elapsed time is not a completion estimate. Keep the current visual and draft during replacement generation. Changing current controls cancels that pending replacement. Prevent the cancel button's default form action before changing its state, so cancellation cannot submit another generation. Interrupted streams retain context and offer a clear retry message. Do not render partial unchecked model scenes, fabricated tool activity, percentage progress or predicted completion times. Keep status announcements concise; hide the ticking elapsed timer from assistive technology. Released browser coverage includes terminal/cancel/recovery and exact saved versions; physical-device checks remain separate.
+
+
+## PM097 — Source-specific explanations and narration pacing
+
+General explanation follow-ups say “Ask about this explanation…”; new selected context says “Ask about what is on your screen…”. Preserve graph-specific wording only for checked graph scenes. Keep visible uncertainty concise and expose details under Source & assumptions. Connection labels must avoid other routed connections as well as nodes and labels; use the full-text legend when they cannot fit. Undirected legend entries use a line. Do not shrink or truncate source labels for compact views.
+
+Playback settings expose four narration rates (0.8×–1.5×). Same-state Gemini pause/resume continues from actual audio position; Replay resets. Changing rate uses media playbackRate, retaining audio-driven visual progress. Browser speech pauses before its rate changes. Provider/version/state changes retain cancellation and stale-result guards. Manual stepping and captions remain usable while voice prepares. Real media-clock tests establish synchronization, not word timing or physical-speaker quality.

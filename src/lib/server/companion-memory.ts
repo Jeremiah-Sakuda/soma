@@ -30,10 +30,7 @@ const latest = <T extends { id: string; revision: number }>(items: T[]) => {
       result.set(item.id, item);
   return [...result.values()];
 };
-function bind(
-  session: ExplorationSession,
-  ref: MemoryReference,
-): BoundMemoryReference | null {
+function bind(session: ExplorationSession, ref: MemoryReference): BoundMemoryReference | null {
   const artifact = session.artifacts.find(
     (a) => a.id === ref.artifactId && a.version === ref.version && a.saved,
   );
@@ -60,8 +57,7 @@ function validRefs(session: ExplorationSession, refs: BoundMemoryReference[]) {
 }
 function bindAll(session: ExplorationSession, refs: MemoryReference[]) {
   const result = refs.map((ref) => bind(session, ref));
-  if (result.some((ref) => !ref))
-    throw new ExplorationError("revision_conflict");
+  if (result.some((ref) => !ref)) throw new ExplorationError("revision_conflict");
   return result as BoundMemoryReference[];
 }
 /** Derive observations from actual answer records. Model prose never supplies these. */
@@ -90,8 +86,7 @@ function evidence(session: ExplorationSession): MemoryEvidence[] {
       exposure: prediction.exposure,
       assistance: "diagram-visible",
       revealedBeforeAnswer: Boolean(
-        prediction.revealedAt &&
-          prediction.revealedAt <= prediction.answer.recordedAt,
+        prediction.revealedAt && prediction.revealedAt <= prediction.answer.recordedAt,
       ),
     });
   }
@@ -116,29 +111,19 @@ function evidence(session: ExplorationSession): MemoryEvidence[] {
       reason: application.answer.reason,
       matches: application.answer.matches,
       exposure: application.exposure,
-      assistance:
-        application.answer.assistance === "hint"
-          ? "hint"
-          : "reference-available",
+      assistance: application.answer.assistance === "hint" ? "hint" : "reference-available",
       revealedBeforeAnswer: Boolean(
-        application.revealedAt &&
-          application.revealedAt <= application.answer.recordedAt,
+        application.revealedAt && application.revealedAt <= application.answer.recordedAt,
       ),
     });
   }
-  return rows
-    .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))
-    .slice(0, 48);
+  return rows.sort((a, b) => b.recordedAt.localeCompare(a.recordedAt)).slice(0, 48);
 }
 /** Reads and retrieval always project against current owned sources. Removing a
  * source invalidates the WHOLE dependent interpretation, not just its citation. */
-export function projectCompanionMemory(
-  session: ExplorationSession,
-): CompanionMemoryView {
+export function projectCompanionMemory(session: ExplorationSession): CompanionMemoryView {
   const memory = session.memory ?? empty();
-  const concepts = latest(memory.concepts).filter((c) =>
-    validRefs(session, c.refs),
-  );
+  const concepts = latest(memory.concepts).filter((c) => validRefs(session, c.refs));
   const ids = new Set(concepts.map((c) => c.id));
   const relationships = latest(memory.relationships).filter(
     (r) => ids.has(r.from) && ids.has(r.to) && validRefs(session, r.refs),
@@ -150,9 +135,7 @@ export function projectCompanionMemory(
     concepts,
     relationships,
     evidence: evidence(session),
-    ...(next &&
-    validRefs(session, next.refs) &&
-    next.conceptIds.every((id) => ids.has(id))
+    ...(next && validRefs(session, next.refs) && next.conceptIds.every((id) => ids.has(id))
       ? { nextActivity: next }
       : {}),
   });
@@ -228,10 +211,8 @@ export function applyCompanionMemoryProposal(
   const now = options.now ?? new Date().toISOString();
   const proposal = parsed.data;
   if (
-    new Set(proposal.concepts.map((c) => c.id)).size !==
-      proposal.concepts.length ||
-    new Set(proposal.relationships.map((r) => r.id)).size !==
-      proposal.relationships.length
+    new Set(proposal.concepts.map((c) => c.id)).size !== proposal.concepts.length ||
+    new Set(proposal.relationships.map((r) => r.id)).size !== proposal.relationships.length
   )
     throw new ExplorationError("invalid_request");
   const current = new Map(latest(memory.concepts).map((c) => [c.id, c]));
@@ -256,9 +237,7 @@ export function applyCompanionMemoryProposal(
       !ids.has(relationship.to)
     )
       throw new ExplorationError("invalid_request");
-    const prior = latest(memory.relationships).find(
-      (r) => r.id === relationship.id,
-    );
+    const prior = latest(memory.relationships).find((r) => r.id === relationship.id);
     if (
       prior &&
       (prior.from !== relationship.from ||
@@ -290,10 +269,7 @@ export function applyCompanionMemoryProposal(
   session.memory = memory;
   return projectCompanionMemory(session);
 }
-export function applyCompanionMemoryCommand(
-  session: ExplorationSession,
-  value: unknown,
-) {
+export function applyCompanionMemoryCommand(session: ExplorationSession, value: unknown) {
   const parsed = companionMemoryCommandSchema.safeParse(value);
   if (!parsed.success) throw new ExplorationError("invalid_request");
   const command = parsed.data,
@@ -322,8 +298,7 @@ export function applyCompanionMemoryCommand(
     });
   }
   if (command.action === "delete-goal") {
-    if (!memory.goals.some((g) => g.id === command.id))
-      throw new ExplorationError("not_found");
+    if (!memory.goals.some((g) => g.id === command.id)) throw new ExplorationError("not_found");
     memory.goals = memory.goals.filter((g) => g.id !== command.id);
   }
   if (command.action === "correct-concept") {
@@ -354,9 +329,7 @@ export function applyCompanionMemoryCommand(
   if (command.action === "delete-relationship") {
     if (!memory.relationships.some((r) => r.id === command.id))
       throw new ExplorationError("not_found");
-    memory.relationships = memory.relationships.filter(
-      (r) => r.id !== command.id,
-    );
+    memory.relationships = memory.relationships.filter((r) => r.id !== command.id);
   }
   memory.revision++;
   capacity(memory);
@@ -368,12 +341,9 @@ export async function mutateCompanionMemory(
   command: unknown,
   options: { store?: ExplorationStore } = {},
 ) {
-  const session = await (options.store ?? explorationStore).mutate(
-    principal,
-    (s) => {
-      applyCompanionMemoryCommand(s, command);
-    },
-  );
+  const session = await (options.store ?? explorationStore).mutate(principal, (s) => {
+    applyCompanionMemoryCommand(s, command);
+  });
   return projectCompanionMemory(session);
 }
 /** Bounded, relevance-ranked data for a model prompt, never instruction text.
@@ -383,19 +353,44 @@ export function companionMemoryContext(
   options: { query?: string; limit?: number } = {},
 ) {
   const view = projectCompanionMemory(session);
-  const words = new Set(
-    (options.query ?? "").toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? [],
+  const ignored = new Set(
+    "the and for that this with from into about explain explanation understand help show does how what why can could would should please source screenshot image material concept example question works work".split(
+      " ",
+    ),
   );
-  const score = (value: string) =>
-    [...words].reduce(
-      (n, word) => n + Number(value.toLowerCase().includes(word)),
-      0,
+  const terms = (text: string) =>
+    new Set(
+      (
+        text
+          .normalize("NFKC")
+          .toLowerCase()
+          .match(/[\p{L}][\p{L}\p{N}]{2,}/gu) ?? []
+      )
+        .filter((word) => !ignored.has(word))
+        .map((word) =>
+          word.length > 5 && word.endsWith("ies")
+            ? word.slice(0, -3) + "y"
+            : word.length > 4 && word.endsWith("s") && !/(ss|is|us)$/.test(word)
+              ? word.slice(0, -1)
+              : word,
+        ),
     );
+  const words = terms(options.query ?? "");
+  const score = (value: string) => {
+    const candidates = terms(value);
+    return [...words].reduce((n, word) => n + Number(candidates.has(word)), 0);
+  };
   const limit = Math.max(1, Math.min(8, Math.floor(options.limit ?? 6) || 6));
   const concepts = [...view.concepts]
+    // An explicit query is retrieval, not a request for every recent memory.
+    // No lexical evidence means abstain; Muse may still use explicit goals.
+    .filter(
+      (concept) =>
+        options.query === undefined || score(`${concept.label} ${concept.summary}`) > 0,
+    )
     .sort(
       (a, b) =>
-        score(`${b.label} ${b.summary}`) - score(`${a.label} ${a.summary}`) ||
+        score(b.label) * 2 + score(b.summary) - (score(a.label) * 2 + score(a.summary)) ||
         b.createdAt.localeCompare(a.createdAt),
     )
     .slice(0, limit);
@@ -420,19 +415,21 @@ export function companionMemoryContext(
   // Bound the complete JSON without truncating fields into malformed JSON.
   while (JSON.stringify(context).length > 14_000 && context.evidence.length)
     context.evidence.pop();
-  while (
-    JSON.stringify(context).length > 14_000 &&
-    context.relationships.length
-  )
+  while (JSON.stringify(context).length > 14_000 && context.relationships.length)
     context.relationships.pop();
   while (JSON.stringify(context).length > 14_000 && context.concepts.length)
     context.concepts.pop();
-  while (JSON.stringify(context).length > 14_000 && context.goals.length)
-    context.goals.pop();
+  while (JSON.stringify(context).length > 14_000 && context.goals.length) context.goals.pop();
   if (JSON.stringify(context).length > 14_000) context.nextActivity = undefined;
   const retainedIds = new Set(context.concepts.map((c) => c.id));
   context.relationships = context.relationships.filter(
     (r) => retainedIds.has(r.from) && retainedIds.has(r.to),
+  );
+  const retainedRefs = new Set(
+    context.concepts.flatMap((c) => c.refs.map((r) => `${r.artifactId}:${r.version}`)),
+  );
+  context.evidence = context.evidence.filter((e) =>
+    retainedRefs.has(`${e.ref.artifactId}:${e.ref.version}`),
   );
   if (
     context.nextActivity &&

@@ -1,5 +1,5 @@
-import { type DiagramPoint } from './diagram-routing';
-import type { ExplorationPanel } from './exploration';
+import { segmentCrossesBox, type DiagramPoint } from './diagram-routing';
+import type { ExplorationPanel, ExplorationSpec } from './exploration';
 type Diagram = Extract<ExplorationPanel, { kind: 'diagram' }>;
 /** Presentation only. Retain semantic identities; positions are not measurements. */
 export function diagramLayout(panel: Diagram, compact: boolean, availableWidth?: number) {
@@ -159,6 +159,18 @@ export function diagramEdgeLabels(
             Math.abs(p.x - n.x) < (width + layout.cardWidth) / 2 + 5 &&
             Math.abs(p.y - n.y) < (24 + layout.cardHeight) / 2 + 5,
         ) &&
+        !routes?.some(
+          (route) =>
+            route.id !== edge.id &&
+            route.points.slice(1).some((point, i) =>
+              segmentCrossesBox(route.points[i], point, {
+                x1: p.x - width / 2 - 3,
+                x2: p.x + width / 2 + 3,
+                y1: p.y - 14,
+                y2: p.y + 14,
+              }),
+            ),
+        ) &&
         !placed.some(
           (l) =>
             !l.legend &&
@@ -176,4 +188,43 @@ export function diagramEdgeLabels(
     });
   }
   return placed;
+}
+
+/** Grid cells are presentation, never source/solver facts. Repack only an
+ * overlapping/out-of-grid explanation; keep every panel and its declared order.
+ * If capacity is insufficient, ordinary validation/repair still owns failure. */
+export function arrangeExplanationPanels(spec: ExplorationSpec): {
+  spec: ExplorationSpec;
+  changed: boolean;
+} {
+  if (spec.mode !== 'explanation' || spec.scene.layout !== 'diagram-sidebar')
+    return { spec, changed: false };
+  const occupied = new Set<string>(),
+    panels: ExplorationPanel[] = [];
+  let changed = false;
+  const fits = (p: ExplorationPanel['placement']) =>
+    p.column + p.columnSpan <= 3 &&
+    Array.from({ length: p.columnSpan }, (_, i) => `${p.row}:${p.column + i}`).every(
+      (c) => !occupied.has(c),
+    );
+  for (const panel of spec.scene.panels) {
+    let placement = panel.placement;
+    if (!fits(placement)) {
+      const candidates = [1, 2, 3, 4].flatMap((row) =>
+        [1, 2].map((column) => ({ ...placement, row, column })),
+      ) as ExplorationPanel['placement'][];
+      const found = candidates.find(fits);
+      if (!found) return { spec, changed: false };
+      placement = found;
+      changed = true;
+    }
+    for (let i = 0; i < placement.columnSpan; i++)
+      occupied.add(`${placement.row}:${placement.column + i}`);
+    panels.push(panel.kind === 'spatial'
+      ? { ...panel, placement: { column: 1, row: placement.row, columnSpan: 2 } }
+      : { ...panel, placement });
+  }
+  return changed
+    ? { spec: { ...spec, scene: { ...spec.scene, panels } }, changed: true }
+    : { spec, changed: false };
 }

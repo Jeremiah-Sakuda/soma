@@ -199,7 +199,11 @@ async function setup(
   }, options);
   const checked = checkExploration(
       options.weighted
-        ? createWeightedExample({ observationId: 'original-weighted', version: 1, region: null })
+        ? createWeightedExample({
+            observationId: 'original-weighted',
+            version: 1,
+            region: null,
+          })
         : createExampleExploration(),
     ),
     now = '2026-10-29T15:00:00.000Z';
@@ -230,7 +234,8 @@ async function setup(
     state: initialExplorationState(checked.spec),
     saved: false,
   };
-  const requests: { path: string; method: string; type: string | null; body: Buffer | null }[] = [];
+  const requests: { path: string; method: string; type: string | null; body: Buffer | null }[] =
+    [];
   let pending: Route | undefined, speechPending: Route | undefined;
   await page.route('**/api/explore**', async (route) => {
     const request = route.request(),
@@ -246,7 +251,8 @@ async function setup(
         speechPending = route;
         return;
       }
-      if (options.failSpeech) return route.fulfill({ status: 503, json: { code: 'unavailable' } });
+      if (options.failSpeech)
+        return route.fulfill({ status: 503, json: { code: 'unavailable' } });
       return route.fulfill({
         contentType: 'audio/wav',
         body: Buffer.from(encodeVoiceWav(new Float32Array(24000))),
@@ -276,7 +282,9 @@ async function setup(
     });
   });
   await page.goto('/explore');
-  await expect(page.getByRole('button', { name: 'Record question', exact: true })).toBeEnabled();
+  await expect(
+    page.getByRole('button', { name: 'Record question', exact: true }),
+  ).toBeEnabled();
   return {
     requests,
     finishSpeech: async () => {
@@ -329,7 +337,10 @@ test('explicit recording posts bounded WAV and inserts editable text without sub
   expect(calls[0].body?.length).toBe(48044);
   expect(
     h.requests.filter(
-      (request) => request.method === 'POST' && !request.path.endsWith('/transcribe') && !request.path.endsWith('/transcribe/session'),
+      (request) =>
+        request.method === 'POST' &&
+        !request.path.endsWith('/transcribe') &&
+        !request.path.endsWith('/transcribe/session'),
     ),
   ).toHaveLength(0);
   expect(await page.evaluate(() => (window as any).__voice.stops)).toBeGreaterThan(0);
@@ -410,7 +421,9 @@ test('guided explanation advances on actual playback completion, pauses on manua
   const h = await setup(page);
   await h.example();
   await page.getByRole('button', { name: 'Play explanation', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Pause explanation', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Pause explanation', exact: true }),
+  ).toBeVisible();
   await page.evaluate(() => {
     (window as any).__voice.old = (window as any).__voice.last;
     (window as any).__voice.last.onend();
@@ -426,7 +439,9 @@ test('guided explanation advances on actual playback completion, pauses on manua
   ).toHaveText(['NextA', '2B']);
   await page.getByRole('button', { name: 'Play explanation', exact: true }).click();
   await page.getByRole('button', { name: 'Next step', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Pause explanation', exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Pause explanation', exact: true }),
+  ).toHaveCount(0);
   await page.getByRole('button', { name: 'Replay from start', exact: true }).click();
   await expect(
     page.getByRole('list', { name: 'First in, first out queue' }).locator('li'),
@@ -455,7 +470,9 @@ test('conversational submission is opt-in and sends a completed transcript again
   expect(body.question).toBe('Why does A leave the queue before B?');
   expect(body.artifactId).toBeTruthy();
   expect(body.source).toBeUndefined();
-  await expect(page.getByRole('alert').filter({ hasText: 'Soma could not prepare' })).toBeVisible();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Soma could not prepare' }),
+  ).toBeVisible();
   await expect(
     page.getByRole('heading', { name: 'Why does A come before B?', exact: true }),
   ).toBeVisible();
@@ -478,7 +495,9 @@ test('recording interrupts narration and a late completion cannot advance the di
   await expect(
     page.getByRole('list', { name: 'First in, first out queue' }).locator('li'),
   ).toHaveText(['NextS']);
-  await expect(page.getByRole('button', { name: 'Play explanation', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Play explanation', exact: true }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Cancel voice', exact: true }).click();
   expect(h.requests.some((r) => r.path.endsWith('/transcribe'))).toBe(false);
 });
@@ -623,7 +642,9 @@ test('failed prefetch keeps the current step playing, then stops without an impl
   });
   await page.getByRole('button', { name: 'Play explanation', exact: true }).click();
   await expect.poll(() => steps).toEqual([0, 1]);
-  await expect(page.getByRole('button', { name: 'Pause explanation', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Pause explanation', exact: true }),
+  ).toBeVisible();
   await page.evaluate(() => (window as any).__gemini.last.onended());
   await expect(
     page.getByRole('status').filter({ hasText: 'Gemini voice is unavailable' }),
@@ -636,20 +657,29 @@ test('one question surface and disclosed settings remain usable on keyboard and 
   page,
 }) => {
   const h = await setup(page);
-  await page.getByRole('button', { name: 'Try the original example', exact: true }).first().click();
+  await page
+    .getByRole('button', { name: 'Try the original example', exact: true })
+    .first()
+    .click();
   await expect(page.getByRole('button', { name: 'Read step', exact: true })).toHaveCount(0);
   await expect(page.getByRole('combobox', { name: 'Follow-up action' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Use browser voice', exact: true })).toBeHidden();
+  await expect(
+    page.getByRole('button', { name: 'Use browser voice', exact: true }),
+  ).toBeHidden();
   const settings = page.getByText('Playback settings', { exact: true });
   await settings.focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('button', { name: 'Use browser voice', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Use browser voice', exact: true }),
+  ).toBeVisible();
   await page.keyboard.press('Enter');
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.screenshot({ path: '.local/pm044/desktop.png', fullPage: true });
   await page.setViewportSize({ width: 375, height: 812 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+    true,
+  );
   await page.screenshot({ path: '.local/pm044/mobile.png', fullPage: true });
   await page.getByRole('button', { name: 'Ask about this', exact: true }).click();
   await expect(page.locator('#exploration-question')).toBeFocused();
@@ -673,7 +703,9 @@ test('audio progress choreographs dequeue, edge discovery and enqueue in the sam
     (window as any).__gemini.last.currentTime = 1.5;
   });
   await expect(stage).toHaveAttribute('data-motion-progress', '0.150');
-  await expect(page.locator('.exploration-motion-caption')).toHaveText('Take S from the front.');
+  await expect(page.locator('.exploration-motion-caption')).toHaveText(
+    'Take S from the front.',
+  );
   const departing = stage.locator('[data-token="s"][data-motion="departure"]');
   await expect(departing).toHaveCount(1);
   await stage.screenshot({ path: '.local/pm047/dequeue.png' });
@@ -696,7 +728,9 @@ test('audio progress choreographs dequeue, edge discovery and enqueue in the sam
     (window as any).__gemini.last.currentTime = 9.5;
   });
   await expect(stage).toHaveAttribute('data-motion-progress', '0.950');
-  await expect(page.locator('.exploration-motion-caption')).toHaveText('A is next in the queue.');
+  await expect(page.locator('.exploration-motion-caption')).toHaveText(
+    'A is next in the queue.',
+  );
   await page.getByRole('button', { name: 'Pause explanation', exact: true }).click();
   await expect(stage).toHaveAttribute('data-motion-progress', '1.000');
   await expect(stage.locator('[data-motion="departure"]')).toHaveCount(0);
@@ -704,7 +738,9 @@ test('audio progress choreographs dequeue, edge discovery and enqueue in the sam
   await page.screenshot({ path: '.local/pm047/desktop.png', fullPage: true });
   await page.setViewportSize({ width: 375, height: 812 });
   await page.screenshot({ path: '.local/pm047/phone.png', fullPage: true });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+    true,
+  );
   expect(h.requests.filter((r) => r.path.endsWith('/speech')).length).toBeLessThanOrEqual(3);
 });
 
@@ -735,7 +771,8 @@ test('manual replay settles to the checked result and reduced motion skips all i
 
 test.describe('checked motion recording', () => {
   test('manual sequence reveals a terminal path and keeps the queue consistent', async ({
-    browser, baseURL,
+    browser,
+    baseURL,
   }) => {
     const context = await browser.newContext({
         baseURL,
@@ -756,7 +793,9 @@ test.describe('checked motion recording', () => {
         await expect
           .poll(async () =>
             Number(
-              await page.locator('.exploration-search-stage').getAttribute('data-motion-progress'),
+              await page
+                .locator('.exploration-search-stage')
+                .getAttribute('data-motion-progress'),
             ),
           )
           .toBeLessThan(1);
@@ -779,7 +818,9 @@ test.describe('checked motion recording', () => {
 
 // Synthetic WAV and Audio clock double: verifies the real React timing path,
 // not the quality of provider speech or word alignment.
-test('weighted narration replays a queued goal cost improvement from 10 to 3', async ({ page }) => {
+test('weighted narration replays a queued goal cost improvement from 10 to 3', async ({
+  page,
+}) => {
   const h = await setup(page, { weighted: true });
   await h.example();
   await page.getByRole('button', { name: 'Use Gemini voice', exact: true }).click();
@@ -803,4 +844,90 @@ test('weighted narration replays a queued goal cost improvement from 10 to 3', a
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.getByRole('button', { name: 'Next step', exact: true }).click();
   await expect(stage).toHaveAttribute('data-motion-progress', '1.000');
+});
+
+test('Gemini pause resumes from the same audio position and speed follows the actual audio clock', async ({
+  page,
+}) => {
+  const h = await setup(page);
+  await h.example();
+  await page.getByRole('button', { name: 'Use Gemini voice', exact: true }).click();
+  await page.getByRole('button', { name: 'Play explanation', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => (window as any).__gemini.played)).toBe(1);
+  await page.evaluate(() => {
+    (window as any).__gemini.last.currentTime = 0.4;
+  });
+  await page.getByRole('button', { name: 'Pause explanation', exact: true }).click();
+  await page.getByRole('button', { name: 'Play explanation', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => (window as any).__gemini.played)).toBe(2);
+  expect(await page.evaluate(() => (window as any).__gemini.last.currentTime)).toBeCloseTo(0.4);
+  await page.getByLabel('Narration speed').selectOption('0.8');
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__gemini.last.playbackRate))
+    .toBe(0.8);
+  expect(
+    h.requests.filter(
+      (r) => r.path.endsWith('/speech') && JSON.parse(r.body!.toString()).state.step === 0,
+    ),
+  ).toHaveLength(1);
+  await page.getByRole('button', { name: 'Pause explanation', exact: true }).click();
+  await page.getByRole('button', { name: 'Replay from start', exact: true }).click();
+  await page.getByRole('button', { name: 'Play explanation', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => (window as any).__gemini.played)).toBe(3);
+  expect(await page.evaluate(() => (window as any).__gemini.last.currentTime)).toBe(0);
+});
+
+test('real WAV pause and resume preserve the media position at the chosen narration speed', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const NativeAudio = window.Audio;
+    (window as any).__realPlayback = [];
+    Object.defineProperty(window, 'Audio', {
+      configurable: true,
+      value: function (src: string) {
+        const audio = new NativeAudio(src),
+          play = audio.play.bind(audio),
+          pause = audio.pause.bind(audio);
+        audio.pause = () => {
+          (window as any).__realPausedAt = audio.currentTime;
+          pause();
+        };
+        audio.play = () => {
+          (window as any).__realPlayback.push({
+            seconds: audio.currentTime,
+            rate: audio.playbackRate,
+          });
+          return play();
+        };
+        (window as any).__realCurrent = audio;
+        return audio;
+      },
+    });
+  });
+  const h = await setup(page, { nativePlayback: true });
+  await page.route('**/api/explore/speech', (r) =>
+    r.fulfill({
+      contentType: 'audio/wav',
+      body: Buffer.from(encodeVoiceWav(new Float32Array(96000))),
+    }),
+  );
+  await h.example();
+  await page.getByRole('button', { name: 'Use Gemini voice', exact: true }).click();
+  await page.getByRole('button', { name: 'Play explanation', exact: true }).click();
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__realCurrent?.currentTime ?? 0))
+    .toBeGreaterThan(0.2);
+  await page.getByRole('button', { name: 'Pause explanation', exact: true }).click();
+  const position = await page.evaluate(() => (window as any).__realPausedAt);
+  await page.getByLabel('Narration speed').selectOption('0.8');
+  await page.getByRole('button', { name: 'Play explanation', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => (window as any).__realPlayback.length)).toBe(2);
+  const resumed = await page.evaluate(() => (window as any).__realPlayback[1]);
+  expect(resumed.seconds).toBeCloseTo(position, 1);
+  expect(resumed.rate).toBe(0.8);
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__realCurrent.currentTime))
+    .toBeGreaterThan(position);
+  await page.getByRole('button', { name: 'Pause explanation', exact: true }).click();
 });

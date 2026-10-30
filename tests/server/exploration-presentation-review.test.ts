@@ -50,7 +50,11 @@ const result = (name: string, value: unknown): MetaResult => ({
   ],
   usage: { input_tokens: 100, output_tokens: 200 },
 });
-function harness(review: (request: any) => Promise<MetaResult>) {
+function harness(
+  review: (request: any) => Promise<MetaResult>,
+  invalidAuthors: number[] = [],
+  overlap = false,
+) {
   let composed = 0;
   const request = vi.fn(async (request: any) => {
     if (!request.instructions.includes('Required spec id='))
@@ -66,6 +70,8 @@ function harness(review: (request: any) => Promise<MetaResult>) {
     const spec = structuredClone(fixtures.gradient);
     spec.id = binding[1];
     spec.version = Number(binding[2]);
+    if (invalidAuthors.includes(composed)) spec.version = 0;
+    if (overlap) spec.scene.panels[1].placement = { ...spec.scene.panels[0].placement };
     spec.sources = [
       {
         observationId: context.source.observationId,
@@ -270,4 +276,86 @@ it('repairs an unusable review format once without losing its criticism or chang
   expect(JSON.stringify(review.mock.calls[1][0].input.at(-1))).toContain('endpoint');
   expect(a.generation.audit.some((e) => e.event === 'review-format-retried')).toBe(true);
   expect(a.generation.audit.some((e) => e.event === 'review-rejected')).toBe(true);
+});
+
+it.each([{ invalidAuthors: [1] }, { invalidAuthors: [2] }])(
+  'separates one contract repair from one factual repair within six total calls: $invalidAuthors',
+  async ({ invalidAuthors }) => {
+    const review = vi.fn(async () =>
+      result(
+        'review_exploration',
+        review.mock.calls.length === 1
+          ? {
+              verdict: 'revise',
+              findings: [
+                'Keep the numerical arrow endpoint consistent with the checked update.',
+              ],
+            }
+          : { verdict: 'approve', findings: [] },
+      ),
+    );
+    const h = harness(review, invalidAuthors);
+    await h.service.initialize(owner);
+    const out = await h.service.generate(owner, generate());
+    expect(out.artifact.generation.calls).toBe(6);
+    expect(h.request).toHaveBeenCalledTimes(4);
+    expect(review).toHaveBeenCalledTimes(2);
+    expect(
+      out.artifact.generation.audit.filter((a) => a.event === 'repair-requested'),
+    ).toHaveLength(1);
+    expect(
+      out.artifact.generation.audit.filter((a) => a.event === 'review-rejected'),
+    ).toHaveLength(1);
+    expect(checkExploration(out.artifact.spec).spec).toEqual(out.artifact.spec);
+  },
+);
+it('never buys repeated factual repairs after a contract repair', async () => {
+  const review = vi.fn(async () =>
+    result('review_exploration', {
+      verdict: 'revise',
+      findings: ['Source qualifier is still missing.'],
+    }),
+  );
+  const h = harness(review, [1]);
+  await h.service.initialize(owner);
+  const original = (await h.service.example(owner)).artifact;
+  await expect(h.service.generate(owner, generate())).rejects.toMatchObject({
+    code: 'generation_invalid',
+  });
+  expect(h.request).toHaveBeenCalledTimes(4);
+  expect(review).toHaveBeenCalledTimes(2);
+  expect((await h.service.read(owner, original.id)).active).toEqual(original);
+});
+it('never buys repeated application repairs before review', async () => {
+  const review = vi.fn(async () =>
+    result('review_exploration', { verdict: 'approve', findings: [] }),
+  );
+  const h = harness(review, [1, 2]);
+  await h.service.initialize(owner);
+  await expect(h.service.generate(owner, generate())).rejects.toBeDefined();
+  expect(h.request).toHaveBeenCalledTimes(3);
+  expect(review).not.toHaveBeenCalled();
+});
+
+it('publishes a reflowed explanation after ordinary checks and review without buying a layout repair', async () => {
+  const review = vi.fn(async () =>
+    result('review_exploration', { verdict: 'approve', findings: [] }),
+  );
+  const h = harness(review, [], true);
+  await h.service.initialize(owner);
+  const artifact = (await h.service.generate(owner, generate())).artifact;
+  expect(artifact.generation.calls).toBe(3);
+  expect(h.request).toHaveBeenCalledTimes(2);
+  expect(review).toHaveBeenCalledTimes(1);
+  expect(artifact.generation.audit.map((a) => a.event)).toEqual(
+    expect.arrayContaining(['scene-layout-adjusted', 'review-approved', 'scene-validated']),
+  );
+  expect(artifact.generation.audit.some((a) => a.event === 'repair-requested')).toBe(false);
+  expect(artifact.spec.mode).toBe('explanation');
+  if (artifact.spec.mode !== 'explanation') throw new Error('Expected explanation');
+  expect(artifact.spec.scene.panels.map(({ placement, ...content }) => content)).toEqual(
+    fixtures.gradient.scene.panels.map(({ placement, ...content }: any) => content),
+  );
+  expect(checkExploration(artifact.spec).spec).toEqual(artifact.spec);
+  expect((await h.service.read(owner, artifact.id)).active).toEqual(artifact);
 });

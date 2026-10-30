@@ -4,6 +4,7 @@ import { createSpatialExample } from '../../src/lib/domain/spatial-example';
 import { spatialScene, spatialPresentation, supportsSpatial } from '../../src/lib/domain/spatial-exploration';
 import { spatialViewSchema, defaultSpatialView } from '../../src/lib/domain/spatial-schema';
 import { initialExplorationState, explorationExecution } from '../../src/lib/domain/exploration-view';
+import { arrangeExplanationPanels } from '../../src/lib/domain/exploration-layout';
 
 function candidate() {
   const spec = createSpatialExample();
@@ -13,6 +14,16 @@ function candidate() {
   return { spec, panel };
 }
 describe('bounded spatial contracts', () => {
+  it('reflows a spatial panel without narrowing it or changing its contents', () => {
+    const { spec, panel } = candidate(), original = structuredClone(panel);
+    spec.scene.panels.unshift({ id: 'context', kind: 'text', title: 'Context', text: 'Original teaching schematic', placement: { column: 1, row: 1, columnSpan: 1 } });
+    const result = arrangeExplanationPanels(spec);
+    expect(result.changed).toBe(true);
+    expect(() => checkExploration(result.spec)).not.toThrow();
+    if (result.spec.mode !== 'explanation') throw new Error('fixture');
+    expect(result.spec.scene.panels[1]).toEqual({ ...original, placement: { column: 1, row: 2, columnSpan: 2 } });
+    expect(panel).toEqual(original);
+  });
   it('retains explanation-only assurance and accepts legacy scenes', () => {
     expect(checkExploration(createSpatialExample()).validation.assurance).toBe('explanation-only');
     expect(checkExploration(createExampleExploration()).validation.assurance).toBe('checked-bfs');

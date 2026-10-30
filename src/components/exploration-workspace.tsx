@@ -821,8 +821,10 @@ export function ExplorationWorkspace() {
           maxLength={2000}
           placeholder={
             artifact && !newContext
-              ? 'Why that node? What if we change the start?'
-              : 'Show me what this algorithm is doing…'
+              ? artifact.spec.mode === 'explanation' || artifact.spec.mode === 'clarify'
+                ? 'Ask about this explanation…'
+                : 'Why that node? What if we change the start?'
+              : 'Ask about what is on your screen…'
           }
           value={question}
           onChange={(event) => {
@@ -1322,8 +1324,7 @@ export function ExplorationWorkspace() {
                 <p className="exploration-objective">{artifact.spec.objective}</p>
                 {artifact.source.uncertainty.length > 0 && (
                   <p className="exploration-unavailable">
-                    Some source details need review. Open “Source & assumptions” to inspect the
-                    reading uncertainty.
+                    Some source details need review. See “Source & assumptions”.
                   </p>
                 )}
                 <ExplorationPipeline

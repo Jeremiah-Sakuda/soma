@@ -209,7 +209,7 @@ function DiagramPanel({
                 <li key={label.id}>
                   {edge?.kind === 'edge'
                     ? nodes.find((n) => n.id === edge.from)?.label +
-                      ' → ' +
+                      (edge.directed ? ' → ' : ' — ') +
                       nodes.find((n) => n.id === edge.to)?.label +
                       ': '
                     : ''}

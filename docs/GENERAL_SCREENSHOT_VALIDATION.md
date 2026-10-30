@@ -2,6 +2,8 @@
 
 Soma's upload/capture path sends actual image pixels to Muse Spark. It does not call the prepared-example action or attach its graph facts. Spark authors the source interpretation, content, labels, steps and visual composition using approved components. Reusable renderers do not imply reusable lesson content.
 
+Latest follow-up: [PM097 reliability and polish](RELIABILITY_AND_POLISH.md), with first 5/6 and final repeated 6/6, exact save/reopen, source-review corrections and honest latency limits. Earlier batches below retain their original results.
+
 ## Production baseline
 
 Nine screenshots were frozen before model requests, SHA-256 `eb2c3e615ab39eb0f53a0e3b74dbfa91c7e929e967bfcc7644986bd59c43e6e0`. Each used a new session, an opaque source label and the identical generic question, with no expected facts, topic hints, source URL or earlier artifact in the request. There was one outer request per case; bounded application repair remained enabled.

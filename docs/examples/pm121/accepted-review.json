@@ -1,0 +1,12 @@
+{
+  "status": "completed",
+  "tools": [],
+  "usage": {
+    "input_tokens": 4164,
+    "output_tokens": 1215
+  },
+  "structured": {
+    "approved": true,
+    "issues": []
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "status": "completed",
+  "tools": [],
+  "usage": {
+    "input_tokens": 5466,
+    "output_tokens": 437
+  },
+  "structured": {
+    "updates": [
+      {
+        "d": "M-6,-43 L6,-43 L6,3 L-6,3 Z M-15,3 L15,3 L10,8 L-10,8 Z",
+        "id": "exhaust-valve-stem"
+      },
+      {
+        "d": "M306,88 H494 V110 H306 Z M306,132 H345 V144 H306 Z M375,132 H425 V144 H375 Z M455,132 H494 V144 H455 Z",
+        "id": "head-deck"
+      },
+      {
+        "d": "M-10,-64 L10,-64 L14,-40 L12,20 L-12,20 L-14,-40 Z",
+        "id": "crank-web"
+      }
+    ]
+  }
+}

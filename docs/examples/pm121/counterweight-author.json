@@ -1,0 +1,16 @@
+{
+  "status": "completed",
+  "tools": [],
+  "usage": {
+    "input_tokens": 5925,
+    "output_tokens": 168
+  },
+  "structured": {
+    "updates": [
+      {
+        "d": "M-12,-4 L12,-4 L24,14 L48,30 C42,55 24,72 0,74 C-24,72 -42,55 -48,30 L-24,14 Z",
+        "id": "crank-counterweight"
+      }
+    ]
+  }
+}

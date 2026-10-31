@@ -1385,6 +1385,21 @@
       "kind": "message",
       "prompt": "Yeah let’s make that and compare",
       "timestamp_note": "Exact received timestamp unavailable; recorded October 31, 2026 America/New_York."
+    },
+    {
+      "id": "PM121",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Okay focus on refinement and polish now. I want the demo to be an engine",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 31, 2026 America/New_York."
+    },
+    {
+      "id": "PM122",
+      "received_at": null,
+      "kind": "answer",
+      "question_context": "For the engine demo, I’m assuming a single-cylinder four-stroke combustion engine with a cutaway and the intake, compression, power and exhaust strokes. Is that the engine you mean?",
+      "prompt": "Yes, four-stroke engine",
+      "timestamp_note": "Exact received timestamp unavailable; recorded October 31, 2026 America/New_York. Answer through question tool."
     }
   ]
 }

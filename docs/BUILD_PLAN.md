@@ -188,3 +188,7 @@ Extend the existing spatial branch with Muse-authored bounded geometry and contr
 ## October31 — PM120 authorized local motion comparison
 
 Build one source-matched piston film alongside Anatomy on the unmerged spatial branch; verify actual Muse authorship, bounded rendering, playback/scrubbing/interruption, geometry and legibility, local export and Mac behavior. This is the user's explicitly adopted comparison experiment, not a new release dependency or default-renderer decision. Keep the existing feature freeze, submission date, checked domains and publication gates. Executed status and retained failures:docs/examples/pm120/README.md and BUILD_LOG PM120.
+
+### October31 — PM121–PM122 authorized engine refinement
+
+Refine the experimental motion presentation into one single-cylinder four-stroke cutaway with direct720° manipulation, constrained joints, clear valve/flow storytelling, narrated export and readable phone framing. Keep the earlier comparison, v1/v2 canonical runtime, freeze and existing cumulative$20 test cap intact. This is local demonstration polish, not a main merge or new release gate. Executed evidence and retained failures: [PM121 record](examples/pm121/README.md).

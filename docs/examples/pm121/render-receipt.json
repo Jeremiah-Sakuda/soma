@@ -1,0 +1,170 @@
+{
+  "renderer": "Same React/SVG EngineScene, rasterized with sharp and encoded locally with FFmpeg; no video model",
+  "voice": "macOS Samantha, prepared locally; Muse authored the script",
+  "filmSha256": "72ec6c64ad1aa8234ae0d8dbccd608a63aa1a4008795033a4c65e49848612059",
+  "videoSha256": "193d73b9d832a09f7d5b8878ddfa3ed361411e095321b9fa293f5e9b9b64257f",
+  "fps": 30,
+  "frameCount": 720,
+  "duration": 24,
+  "chapters": [
+    {
+      "at": 0,
+      "text": "Piston moves down, intake opens, fresh mixture flows into cylinder.",
+      "rawDuration": 4.362494,
+      "paddedDuration": 6
+    },
+    {
+      "at": 6,
+      "text": "Both valves close as piston rises, squeezing mixture before ignition.",
+      "rawDuration": 4.241905,
+      "paddedDuration": 6
+    },
+    {
+      "at": 12,
+      "text": "Spark fires at top, expanding gas pushes the piston down.",
+      "rawDuration": 3.844943,
+      "paddedDuration": 6
+    },
+    {
+      "at": 18,
+      "text": "Exhaust opens as piston rises, pushing most burnt gas out toward exhaust.",
+      "rawDuration": 4.48966,
+      "paddedDuration": 6
+    }
+  ],
+  "probe": {
+    "streams": [
+      {
+        "index": 0,
+        "codec_name": "h264",
+        "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+        "profile": "High",
+        "codec_type": "video",
+        "codec_tag_string": "avc1",
+        "codec_tag": "0x31637661",
+        "mime_codec_string": "avc1.64001f",
+        "width": 800,
+        "height": 600,
+        "coded_width": 800,
+        "coded_height": 600,
+        "has_b_frames": 2,
+        "sample_aspect_ratio": "1:1",
+        "display_aspect_ratio": "4:3",
+        "pix_fmt": "yuv420p",
+        "level": 31,
+        "chroma_location": "left",
+        "field_order": "progressive",
+        "is_avc": "true",
+        "nal_length_size": "4",
+        "id": "0x1",
+        "r_frame_rate": "30/1",
+        "avg_frame_rate": "30/1",
+        "time_base": "1/15360",
+        "start_pts": 0,
+        "start_time": "0.000000",
+        "duration_ts": 368640,
+        "duration": "24.000000",
+        "bit_rate": "229326",
+        "bits_per_raw_sample": "8",
+        "nb_frames": "720",
+        "extradata_size": 47,
+        "disposition": {
+          "default": 1,
+          "dub": 0,
+          "original": 0,
+          "comment": 0,
+          "lyrics": 0,
+          "karaoke": 0,
+          "forced": 0,
+          "hearing_impaired": 0,
+          "visual_impaired": 0,
+          "clean_effects": 0,
+          "attached_pic": 0,
+          "timed_thumbnails": 0,
+          "non_diegetic": 0,
+          "captions": 0,
+          "descriptions": 0,
+          "metadata": 0,
+          "dependent": 0,
+          "still_image": 0,
+          "multilayer": 0
+        },
+        "tags": {
+          "language": "und",
+          "handler_name": "VideoHandler",
+          "encoder": "Lavc63.1.101 libx264"
+        }
+      },
+      {
+        "index": 1,
+        "codec_name": "aac",
+        "codec_long_name": "AAC (Advanced Audio Coding)",
+        "profile": "LC",
+        "codec_type": "audio",
+        "codec_tag_string": "mp4a",
+        "codec_tag": "0x6134706d",
+        "mime_codec_string": "mp4a.40.2",
+        "sample_fmt": "fltp",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bits_per_sample": 0,
+        "initial_padding": 1024,
+        "id": "0x2",
+        "r_frame_rate": "0/0",
+        "avg_frame_rate": "0/0",
+        "time_base": "1/24000",
+        "start_pts": 0,
+        "start_time": "0.000000",
+        "duration_ts": 576000,
+        "duration": "24.000000",
+        "bit_rate": "80681",
+        "nb_frames": "564",
+        "extradata_size": 5,
+        "disposition": {
+          "default": 1,
+          "dub": 0,
+          "original": 0,
+          "comment": 0,
+          "lyrics": 0,
+          "karaoke": 0,
+          "forced": 0,
+          "hearing_impaired": 0,
+          "visual_impaired": 0,
+          "clean_effects": 0,
+          "attached_pic": 0,
+          "timed_thumbnails": 0,
+          "non_diegetic": 0,
+          "captions": 0,
+          "descriptions": 0,
+          "metadata": 0,
+          "dependent": 0,
+          "still_image": 0,
+          "multilayer": 0
+        },
+        "tags": {
+          "language": "und",
+          "handler_name": "SoundHandler"
+        }
+      }
+    ],
+    "format": {
+      "nb_streams": 2,
+      "nb_programs": 0,
+      "nb_stream_groups": 0,
+      "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+      "format_long_name": "QuickTime / MOV",
+      "start_time": "0.000000",
+      "duration": "24.000000",
+      "size": "951055",
+      "bit_rate": "317018",
+      "probe_score": 100,
+      "tags": {
+        "major_brand": "isom",
+        "minor_version": "512",
+        "compatible_brands": "isomiso2avc1mp41",
+        "encoder": "Lavf63.1.101"
+      }
+    }
+  }
+}

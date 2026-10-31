@@ -1,0 +1,156 @@
+{
+  "mode": "Actual Muse Spark generation; Wonder advisory review; deterministic three-path patch application",
+  "runCount": 5,
+  "calls": 16,
+  "costUsd": 0.47103575,
+  "before": 15.814326,
+  "after": 16.285361749999996,
+  "cap": 20,
+  "finishedAt": "2026-10-31T23:31:01.878Z",
+  "sourceSha256": "376a321b37dcc18844c10e25164425372d2a02e45417b7b26327223fea976c99",
+  "filmSha256": "412fbccd9b82092024f5d8de116180dde482ac1660c9555f8eef0549be5a6201",
+  "runs": [
+    {
+      "startedAt": "2026-10-31T23:20:05.836Z",
+      "finishedAt": "2026-10-31T23:20:58.862Z",
+      "status": "failed",
+      "calls": 4,
+      "costUsd": 0.1184085,
+      "certain": true,
+      "before": 15.814326,
+      "after": 15.932734499999999,
+      "elapsedMs": 52565
+    },
+    {
+      "startedAt": "2026-10-31T23:22:06.165Z",
+      "finishedAt": "2026-10-31T23:22:54.695Z",
+      "status": "failed",
+      "calls": 4,
+      "costUsd": 0.132021,
+      "certain": true,
+      "before": 15.932734499999999,
+      "after": 16.0647555,
+      "elapsedMs": 48213
+    },
+    {
+      "startedAt": "2026-10-31T23:23:21.943Z",
+      "finishedAt": "2026-10-31T23:24:10.911Z",
+      "status": "failed",
+      "calls": 4,
+      "costUsd": 0.13562025,
+      "certain": true,
+      "before": 16.0647555,
+      "after": 16.20037575,
+      "elapsedMs": 48575
+    },
+    {
+      "startedAt": "2026-10-31T23:24:54.483Z",
+      "finishedAt": "2026-10-31T23:25:03.547Z",
+      "status": "authored-validated-reviewed",
+      "calls": 2,
+      "costUsd": 0.035909750000000004,
+      "certain": true,
+      "before": 16.20037575,
+      "after": 16.236285499999997,
+      "elapsedMs": 8666
+    },
+    {
+      "startedAt": "2026-10-31T23:30:47.529Z",
+      "finishedAt": "2026-10-31T23:31:01.878Z",
+      "status": "authored-validated-reviewed",
+      "calls": 2,
+      "costUsd": 0.04907625,
+      "certain": true,
+      "before": 16.236285499999997,
+      "after": 16.285361749999996,
+      "elapsedMs": 14047
+    }
+  ],
+  "advisoryReviews": [
+    {
+      "run": 1,
+      "review": "review-1.json",
+      "verdict": {
+        "approved": false,
+        "issues": [
+          "No spark-plug, spark, or gas-flow artwork is present\u2014only a dark plug hole and colored port mouths\u2014so the claimed spark and blue-mixture flow are not visually recognizable.",
+          "Every evaluated pose has spark=0, including 360\u00b0 at the start of Power, contradicting \u201cSpark fires at top.\u201d",
+          "Exhaust narration says burnt gas is pushed \u201ccompletely out\u201d; some residual exhaust necessarily remains at top dead center, so this absolute claim is scientifically inaccurate."
+        ]
+      }
+    },
+    {
+      "run": 1,
+      "review": "review-2.json",
+      "verdict": {
+        "approved": false,
+        "issues": [
+          "Spark is never actually shown as an event: every evaluated pose has `spark: 0`, including 360\u00b0 at the start of Power, while the fixed yellow zigzag below the plug is visible throughout all strokes. Make the spark flash only at/near 360\u00b0 and remove or redraw the permanent zigzag as a plain electrode.",
+          "The intake-flow path (`ports-intake-flow`) is fixed and always visible, so blue mixture appears to fill/flow through the intake port during Compression, Power, and Exhaust even with the intake valve closed. Hide it or fade it to a neutral port colour whenever the intake valve is closed.",
+          "The narration for Power says the gas pushes the piston down \u201cstrongly,\u201d which reads as an unmeasured force claim in an otherwise qualitative teaching film. Reword to a purely kinematic description, e.g. \u201cSpark fires at top, expanding gas pushes piston down.\u201d"
+        ]
+      }
+    },
+    {
+      "run": 2,
+      "review": "review-1.json",
+      "verdict": {
+        "approved": false,
+        "issues": [
+          "Exhaust valve is incomplete: only `exhaust-valve-stem` is authored, with no exhaust-valve head, so it cannot visibly seal or open the exhaust port like the intake valve.",
+          "The solid colored `ports-intake-mouth` and `ports-exhaust-mouth` bars completely cap the outer ends of both passages at x=250\u2013258 and x=542\u2013550, visually blocking intake entry and exhaust exit.",
+          "Both valve heads sit at y=136\u2013141 when closed, leaving a gap below the head deck underside at y=132 with no visible seat contact, so the valves appear open/leaking even during compression and power."
+        ]
+      }
+    },
+    {
+      "run": 2,
+      "review": "review-2.json",
+      "verdict": {
+        "approved": false,
+        "issues": [
+          "The exhaust valve has only a stem (`exhaust-valve-stem`) and no valve head, unlike the intake valve. It therefore cannot visibly seal the exhaust port when closed or open it when lifted during the exhaust stroke, weakening valve recognizability and the intake/exhaust distinction."
+        ]
+      }
+    },
+    {
+      "run": 3,
+      "review": "review-1.json",
+      "verdict": {
+        "approved": false,
+        "issues": [
+          "Exhaust valve head is drawn at local y 0..5 (absolute ends 136..141) versus intake head at 3..8 (139..144); at zero lift it sits 3 px above/offset from the intake seating plane and the stated 144 roof, so it does not read consistently closed at phase boundaries.",
+          "Crank art has a clear 40-unit mechanical discontinuity: the crank web terminates at local y -20 while the counterweight only begins at y +20, leaving no crankshaft hub/main journal at the crank origin (400,450) connecting the rotating assembly.",
+          "Head-deck path sets the central ceiling at absolute y 132 (step 332..468,132) rather than the supplied roof line 144; together with the plug hole ending at y 116 this creates ambiguous combustion-chamber/plug deck geometry around the app-rendered spark plug."
+        ]
+      }
+    },
+    {
+      "run": 3,
+      "review": "review-2.json",
+      "verdict": {
+        "approved": false,
+        "issues": [
+          "Exhaust valve is incomplete: `exhaust-valve-stem` has no matching valve head, unlike the intake valve. At zero lift it cannot visibly seat against the head/roof at y144 and will read as an open or broken exhaust valve during intake, compression, and power. Add an exhaust-valve head mirroring `intake-valve-head`."
+        ]
+      }
+    },
+    {
+      "run": 4,
+      "review": "review-1.json",
+      "verdict": {
+        "approved": true,
+        "issues": []
+      }
+    },
+    {
+      "run": 5,
+      "review": "review-1.json",
+      "verdict": {
+        "approved": true,
+        "issues": []
+      }
+    }
+  ],
+  "lineage": "Final film = base-author.json structured, then three d fields from path-repair-author.json structured.updates, then crank-counterweight d from counterweight-author.json structured.updates. No artistic hand edits. Rejected artifacts and actual requests retained privately in .local/pm121."
+}

@@ -1,3 +1,7 @@
+## PM121–PM122 — Four-stroke engine refinement, October31
+
+Review **http://localhost:41914**: one Muse-authored cutaway with constrained crank/rod/piston/valves, direct720° scrubbing, four stroke selectors, narrated24-second MP4 and enlarged phone framing. [Authorship, actual generation, failures and verification](docs/examples/pm121/README.md). Five bounded operations/16calls added$0.47103575; latest shared ledger$16.28536175/$20. Canonical PM118 runtime unchanged. Local private spatial branch only; no main merge, push or publication. Earlier comparison remains41912.
+
 ## PM120 — Muse motion film comparison, October31
 
 Review [Anatomy versus a24-second Muse vector film](http://localhost:41912) on the existing spatial branch. Actual Muse artwork/labels/choreography and narration script, prepared Mac voice, direct shared travel controls, media-clock playback and downloadable MP4. Nine browser journeys,20 domain cases and720-frame export passed; full offline1,667passed/97opt-in skipped. [Scope, reproduction and retained generation/visual failures](docs/examples/pm120/README.md). Twenty development calls added$0.50475875; last observed shared ledger$15.814326/$20. Product runtime remains PM118 unchanged. Local prototype only; no canonical film save/follow-up integration, main merge, deployment or publication.

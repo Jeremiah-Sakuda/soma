@@ -1,0 +1,369 @@
+{
+  "schemaVersion": "engine-film-v1",
+  "title": "Four-Stroke Spark Engine Cycle",
+  "summary": "Four-stroke single-cylinder spark engine cutaway. Four piston strokes need two crank turns, 720 degrees, per cycle.",
+  "palette": {
+    "metal": "#D8DDD3",
+    "edge": "#2B2B2E",
+    "piston": "#D98E5F",
+    "rod": "#3A3A3E",
+    "crank": "#4A4A4E",
+    "intake": "#7FB3D5",
+    "compression": "#E8D9A8",
+    "power": "#F2B134",
+    "exhaust": "#E8A07A"
+  },
+  "art": [
+    {
+      "id": "housing-left-curve",
+      "role": "housing",
+      "d": "M306,144 L330,144 L330,360 C330,400 318,425 300,455 C288,477 284,500 288,528 L284,528 C278,490 290,440 306,400 L306,144 Z",
+      "fill": "#D8DDD3",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.2
+    },
+    {
+      "id": "housing-right-curve",
+      "role": "housing",
+      "d": "M470,144 L494,144 L494,400 C510,440 522,490 516,528 L512,528 C516,500 512,477 500,455 C482,425 470,400 470,360 L470,144 Z",
+      "fill": "#D8DDD3",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.2
+    },
+    {
+      "id": "housing-rounded-base",
+      "role": "housing",
+      "d": "M288,520 C300,542 330,550 400,550 C470,550 500,542 512,520 L512,532 C500,550 460,558 400,558 C340,558 300,550 288,532 Z",
+      "fill": "#C9CFC4",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.2
+    },
+    {
+      "id": "head-deck",
+      "role": "head",
+      "d": "M306,88 H494 V110 H306 Z M306,132 H345 V144 H306 Z M375,132 H425 V144 H375 Z M455,132 H494 V144 H455 Z",
+      "fill": "#CBD1C6",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.2
+    },
+    {
+      "id": "head-fin-upper-left",
+      "role": "head",
+      "d": "M286,98 C292,98 300,99 306,100 L306,106 C300,107 292,108 286,107 C283,104 283,101 286,98 Z",
+      "fill": "#C9CFC4",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1
+    },
+    {
+      "id": "head-fin-upper-right",
+      "role": "head",
+      "d": "M494,100 C500,99 508,98 514,98 C517,101 517,104 514,107 C508,108 500,107 494,106 Z",
+      "fill": "#C9CFC4",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1
+    },
+    {
+      "id": "head-fin-lower-left",
+      "role": "head",
+      "d": "M286,114 C292,114 300,115 306,116 L306,122 C300,123 292,124 286,123 C283,120 283,117 286,114 Z",
+      "fill": "#C9CFC4",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1
+    },
+    {
+      "id": "head-fin-lower-right",
+      "role": "head",
+      "d": "M494,116 C500,115 508,114 514,114 C517,117 517,120 514,123 C508,124 500,123 494,122 Z",
+      "fill": "#C9CFC4",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1
+    },
+    {
+      "id": "head-plug-hole",
+      "role": "head",
+      "d": "M392,88 L408,88 L406,132 L394,132 Z",
+      "fill": "#2B2B2E",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1
+    },
+    {
+      "id": "ports-intake-top",
+      "role": "ports",
+      "d": "M250,110 L360,110 L360,118 L250,118 Z",
+      "fill": "#D8DDD3",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.1
+    },
+    {
+      "id": "ports-intake-bottom",
+      "role": "ports",
+      "d": "M250,132 L360,132 L360,140 L250,140 Z",
+      "fill": "#D8DDD3",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.1
+    },
+    {
+      "id": "ports-exhaust-top",
+      "role": "ports",
+      "d": "M440,110 L550,110 L550,118 L440,118 Z",
+      "fill": "#D8DDD3",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.1
+    },
+    {
+      "id": "ports-exhaust-bottom",
+      "role": "ports",
+      "d": "M440,132 L550,132 L550,140 L440,140 Z",
+      "fill": "#D8DDD3",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.1
+    },
+    {
+      "id": "ports-intake-mouth",
+      "role": "ports",
+      "d": "M250,110 L250,118 M250,132 L250,140",
+      "fill": "none",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1
+    },
+    {
+      "id": "ports-exhaust-mouth",
+      "role": "ports",
+      "d": "M550,110 L550,118 M550,132 L550,140",
+      "fill": "none",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1
+    },
+    {
+      "id": "detail-bolt-left",
+      "role": "detail",
+      "d": "M318,398 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z M318,395 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 Z",
+      "fill": "none",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1
+    },
+    {
+      "id": "detail-bolt-right",
+      "role": "detail",
+      "d": "M482,398 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z M482,395 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 Z",
+      "fill": "none",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1
+    },
+    {
+      "id": "detail-case-bolt-l",
+      "role": "detail",
+      "d": "M300,512 m-6,0 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 Z",
+      "fill": "none",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1
+    },
+    {
+      "id": "detail-case-bolt-r",
+      "role": "detail",
+      "d": "M500,512 m-6,0 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 Z",
+      "fill": "none",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1
+    },
+    {
+      "id": "detail-fin-left-1",
+      "role": "detail",
+      "d": "M288,168 L330,168 L330,172 L288,172 Z",
+      "fill": "none",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 0.8
+    },
+    {
+      "id": "detail-fin-left-2",
+      "role": "detail",
+      "d": "M288,196 L330,196 L330,200 L288,200 Z",
+      "fill": "none",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 0.8
+    },
+    {
+      "id": "detail-fin-left-3",
+      "role": "detail",
+      "d": "M288,224 L330,224 L330,228 L288,228 Z",
+      "fill": "none",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 0.8
+    },
+    {
+      "id": "detail-fin-right-1",
+      "role": "detail",
+      "d": "M470,168 L512,168 L512,172 L470,172 Z",
+      "fill": "none",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 0.8
+    },
+    {
+      "id": "detail-fin-right-2",
+      "role": "detail",
+      "d": "M470,196 L512,196 L512,200 L470,200 Z",
+      "fill": "none",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 0.8
+    },
+    {
+      "id": "detail-fin-right-3",
+      "role": "detail",
+      "d": "M470,224 L512,224 L512,228 L470,228 Z",
+      "fill": "none",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 0.8
+    },
+    {
+      "id": "piston-crown",
+      "role": "piston",
+      "d": "M-64,-36 L64,-36 L60,-26 L-60,-26 Z",
+      "fill": "#D98E5F",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.2
+    },
+    {
+      "id": "piston-crown-highlight",
+      "role": "piston",
+      "d": "M-60,-32 L60,-32 L60,-30 L-60,-30 Z",
+      "fill": "#F2C9A8",
+      "stroke": "none",
+      "strokeWidth": 0
+    },
+    {
+      "id": "piston-ring-band",
+      "role": "piston",
+      "d": "M-64,-26 L64,-26 L64,-12 L-64,-12 Z",
+      "fill": "#C97A4A",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1
+    },
+    {
+      "id": "piston-ring-top",
+      "role": "piston",
+      "d": "M-64,-28 L64,-28 L64,-24 L-64,-24 Z",
+      "fill": "#8E8E93",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 0.8
+    },
+    {
+      "id": "piston-ring-second",
+      "role": "piston",
+      "d": "M-64,-21 L64,-21 L64,-17 L-64,-17 Z",
+      "fill": "#8E8E93",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 0.8
+    },
+    {
+      "id": "piston-skirt",
+      "role": "piston",
+      "d": "M-52,-12 L52,-12 L44,26 L-44,26 Z",
+      "fill": "#D98E5F",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.2
+    },
+    {
+      "id": "rod-beam",
+      "role": "rod",
+      "d": "M-12,-170 L12,-170 L15,-140 L8,-70 L12,0 L-12,0 L-8,-70 L-15,-140 Z",
+      "fill": "#3A3A3E",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.1
+    },
+    {
+      "id": "rod-small-end",
+      "role": "rod",
+      "d": "M-14,-170 A14,14 0 1,1 14,-170 L10,-170 L10,-166 L-10,-166 Z",
+      "fill": "none",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.2
+    },
+    {
+      "id": "rod-big-end",
+      "role": "rod",
+      "d": "M-16,0 A16,16 0 1,0 16,0 L12,0 L12,4 L-12,4 Z",
+      "fill": "none",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.2
+    },
+    {
+      "id": "crank-web",
+      "role": "crank",
+      "d": "M-10,-64 L10,-64 L14,-40 L12,20 L-12,20 L-14,-40 Z",
+      "fill": "#4A4A4E",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.2
+    },
+    {
+      "id": "crank-counterweight",
+      "role": "crank",
+      "d": "M-12,-4 L12,-4 L24,14 L48,30 C42,55 24,72 0,74 C-24,72 -42,55 -48,30 L-24,14 Z",
+      "fill": "#5A5A5E",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.2
+    },
+    {
+      "id": "crank-cheek-lower",
+      "role": "crank",
+      "d": "M-20,0 A20,20 0 1,0 20,0 A20,20 0 1,0 -20,0 Z",
+      "fill": "#4A4A4E",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1
+    },
+    {
+      "id": "intake-valve-stem",
+      "role": "intake-valve",
+      "d": "M-6,-43 L6,-43 L6,3 L-6,3 Z",
+      "fill": "#9AA0A6",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1
+    },
+    {
+      "id": "intake-valve-head",
+      "role": "intake-valve",
+      "d": "M-15,3 L15,3 L10,8 L-10,8 Z",
+      "fill": "#9AA0A6",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.1
+    },
+    {
+      "id": "exhaust-valve-stem",
+      "role": "exhaust-valve",
+      "d": "M-6,-43 L6,-43 L6,3 L-6,3 Z M-15,3 L15,3 L10,8 L-10,8 Z",
+      "fill": "#9AA0A6",
+      "stroke": "#2B2B2E",
+      "strokeWidth": 1.1
+    }
+  ],
+  "strokes": [
+    {
+      "name": "Intake",
+      "verb": "suck in mixture",
+      "caption": "Piston falls, intake valve opens, fresh blue mixture flows into cylinder.",
+      "narration": "Piston moves down, intake opens, fresh mixture flows into cylinder."
+    },
+    {
+      "name": "Compression",
+      "verb": "squeeze mixture",
+      "caption": "Both valves closed; rising piston squeezes mixture before ignition.",
+      "narration": "Both valves close as piston rises, squeezing mixture before ignition."
+    },
+    {
+      "name": "Power",
+      "verb": "push with fire",
+      "caption": "Spark fires at top; expanding gas drives piston down.",
+      "narration": "Spark fires at top, expanding gas pushes the piston down."
+    },
+    {
+      "name": "Exhaust",
+      "verb": "push out burnt gas",
+      "caption": "Exhaust opens; rising piston pushes burnt gas out; two turns complete.",
+      "narration": "Exhaust opens as piston rises, pushing most burnt gas out toward exhaust."
+    }
+  ],
+  "assumptions": [
+    "Illustrative dimensions preserve crank radius 64, rod 170, bore and clearances.",
+    "Idealized valves without overlap or ignition advance; no overlap shown.",
+    "Qualitative gas color only; no thermodynamic simulation or pressure values."
+  ]
+}

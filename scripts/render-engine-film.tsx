@@ -4,10 +4,13 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { renderToStaticMarkup } from 'react-dom/server';
 import sharp from 'sharp';
-import { EngineScene } from '../docs/examples/pm121/lib/EngineScene';
+import {EngineFilmFrame} from '../docs/examples/pm123/EngineFilmFrame';
+import {validatePresentation,presentFilm} from '../docs/examples/pm123/presentation';
 import { validateEngine } from '../docs/examples/pm121/lib/engine';
 export async function renderEngineFilm() {
-  const film = validateEngine(JSON.parse(readFileSync('docs/examples/pm121/film.json', 'utf8'))), folder = resolve('.local/pm121/render'), output = resolve('docs/examples/pm121/public');
+  const base=validateEngine(JSON.parse(readFileSync('docs/examples/pm121/film.json','utf8')));
+  const presentation=validatePresentation(JSON.parse(readFileSync('docs/examples/pm123/presentation.json','utf8')),base);
+  const film = validateEngine(presentFilm(base,presentation)), folder = resolve('.local/pm123/render'), output = resolve('docs/examples/pm121/public');
   mkdirSync(folder, { recursive: true }); mkdirSync(`${folder}/frames`, { recursive: true });
   const run = (bin: string, args: string[]) => {
     const r = spawnSync(bin, args, { encoding: 'utf8', timeout: 90000, maxBuffer: 2_000_000 });
@@ -27,13 +30,13 @@ export async function renderEngineFilm() {
   run('/opt/homebrew/bin/ffmpeg', ['-nostdin', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', list, '-c:a', 'copy', `${output}/narration.wav`]);
   const fps = 30, count = 24 * fps;
   for (let frame = 0; frame < count; frame++) {
-    const svg = renderToStaticMarkup(<EngineScene film={film} degrees={frame} captions />);
-    await sharp(Buffer.from(svg)).resize(800, 600).png().toFile(`${folder}/frames/${String(frame).padStart(5, '0')}.png`);
+    const svg = renderToStaticMarkup(<EngineFilmFrame film={film} degrees={frame} />);
+    await sharp(Buffer.from(svg)).resize(1920, 1080).png().toFile(`${folder}/frames/${String(frame).padStart(5, '0')}.png`);
   }
   run('/opt/homebrew/bin/ffmpeg', ['-nostdin', '-y', '-loglevel', 'error', '-framerate', String(fps), '-i', `${folder}/frames/%05d.png`, '-i', `${output}/narration.wav`, '-c:v', 'libx264', '-crf', '18', '-preset', 'medium', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', '-t', String(24), `${output}/engine-film.mp4`]);
   const probe = JSON.parse(run('/opt/homebrew/bin/ffprobe', ['-v', 'error', '-show_streams', '-show_format', '-of', 'json', `${output}/engine-film.mp4`]));
   delete probe.format.filename;
-  const receipt = { renderer: 'Same React/SVG EngineScene, rasterized with sharp and encoded locally with FFmpeg; no video model', voice: 'macOS Samantha, prepared locally; Muse authored the script', filmSha256: createHash('sha256').update(JSON.stringify(film)).digest('hex'), videoSha256: createHash('sha256').update(readFileSync(`${output}/engine-film.mp4`)).digest('hex'), fps, frameCount: count, duration: 24, chapters, probe };
-  writeFileSync('docs/examples/pm121/render-receipt.json', JSON.stringify(receipt, null, 2)+'\n');
+  const receipt = { renderer: 'Same React/SVG EngineScene in a1920×1080 branded EngineFilmFrame, rasterized with sharp and encoded locally with FFmpeg; no video model', voice: 'macOS Samantha, prepared locally; Muse authored the script', filmSha256: createHash('sha256').update(JSON.stringify(film)).digest('hex'), videoSha256: createHash('sha256').update(readFileSync(`${output}/engine-film.mp4`)).digest('hex'), fps, frameCount: count, duration: 24, chapters, probe };
+  writeFileSync('docs/examples/pm123/render-receipt.json', JSON.stringify(receipt, null, 2)+'\n');
   return receipt;
 }

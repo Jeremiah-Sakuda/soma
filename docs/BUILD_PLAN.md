@@ -192,3 +192,7 @@ Build one source-matched piston film alongside Anatomy on the unmerged spatial b
 ### October31 — PM121–PM122 authorized engine refinement
 
 Refine the experimental motion presentation into one single-cylinder four-stroke cutaway with direct720° manipulation, constrained joints, clear valve/flow storytelling, narrated export and readable phone framing. Keep the earlier comparison, v1/v2 canonical runtime, freeze and existing cumulative$20 test cap intact. This is local demonstration polish, not a main merge or new release gate. Executed evidence and retained failures: [PM121 record](examples/pm121/README.md).
+
+### October31 — PM123 authorized startup-demo refinement
+
+Iterate on the same local engine: actual Muse art/copy refinement, application material finish, direct crank and part inspection, compact responsive controls and full-HD film. Preserve original model lineage, deterministic constraints, existing cumulative$20 cap and private spatial branch. Executed checks/limits: [PM123 record](examples/pm123/README.md). No new release gate, canonical integration or publication.

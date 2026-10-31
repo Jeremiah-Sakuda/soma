@@ -1,32 +1,53 @@
+import {useRef} from 'react';
 import type { EngineFilm } from './engine';
 import { enginePose } from './engine';
-export function EngineScene({film,degrees,labels=true,captions=false,compact=false}:{film:EngineFilm;degrees:number;labels?:boolean;captions?:boolean;compact?:boolean}) {
-  const p=enginePose(degrees), palette=film.palette, active=[palette.intake,palette.compression,palette.power,palette.exhaust][p.phase];
-  const paths=(role:string)=>film.art.filter(a=>a.role===role).map(a=><path key={a.id} data-art={a.id} d={a.d} fill={a.fill} stroke={a.stroke} strokeWidth={a.strokeWidth} strokeLinejoin="round" strokeLinecap="round"/>);
-  const bearing=(x:number,y:number,r=10)=><g><circle cx={x} cy={y} r={r} fill="#f7f6f3" stroke={palette.edge} strokeWidth="2"/><circle cx={x} cy={y} r={r*.38} fill={palette.edge}/></g>;
-  const phaseNames=['Intake','Compression','Power','Exhaust'];
-  const callout=(name:string,x:number,y:number,px:number,py:number,side:'left'|'right')=><g fill="none" stroke="#a8aaa4" strokeWidth="1"><path d={side==='left'?`M${x+116} ${y-5} H${px-20} L${px} ${py}`:`M${x-12} ${y-5} H${px+20} L${px} ${py}`}/><circle cx={px} cy={py} r="3" fill="#f7f6f3"/><text x={x} y={y} fill="#45454f" stroke="none" fontFamily="Arial, sans-serif" fontSize="17">{name}</text></g>;
-  return <svg data-engine data-phase={p.phase} data-degrees={p.degrees} viewBox={compact?"235 60 330 510":"0 0 800 600"} role="img" aria-label={`Four-stroke cutaway: ${phaseNames[p.phase]}, crank ${Math.round(p.degrees)} degrees`}>
-    <title>{film.title}</title><desc>{film.strokes[p.phase].caption} Idealized timing; not a thermodynamic simulation.</desc>
-    <defs><pattern id="engine-hatch" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M-1 1 L1 -1 M0 6 L6 0 M5 7 L7 5" stroke="#c7cdc5" strokeWidth=".7"/></pattern><clipPath id="engine-chamber"><rect x="333" y="144" width="134" height={Math.max(0,p.pistonTop-144)}/></clipPath><radialGradient id="ignition"><stop stopColor="#fff6b7"/><stop offset=".5" stopColor={palette.power}/><stop offset="1" stopColor={palette.power} stopOpacity="0"/></radialGradient></defs>
-    <rect width="800" height="600" fill="#fbfaf7"/>
-    {captions&&<text x="32" y="37" fill="#17171c" fontFamily="Arial" fontSize="25" fontWeight="700">{String(p.phase+1).padStart(2,'0')} / {phaseNames[p.phase]}</text>}
-    <ellipse cx="400" cy="561" rx="130" ry="7" fill="#17171c" opacity=".05"/>
-    <path d="M400 73 V545" stroke="#c7ccc6" strokeWidth="1" strokeDasharray="3 7"/>
-    <g data-role="housing">{paths('housing')}</g>
-    <g clipPath="url(#engine-chamber)"><rect x="333" y="144" width="134" height="220" fill={active} opacity={p.phase===1?.12+.16*p.fraction:p.phase===2?.28-.12*p.fraction:.12}/>{Array.from({length:24},(_,i)=>{const x=342+(i%6)*22, height=p.pistonTop-151, y=151+((Math.floor(i/6)/4+p.fraction*.26)%1)*height;return <circle key={i} cx={x} cy={y} r={p.phase===1?2.8:2.3} fill={active} opacity=".62"/>;})}</g>
-    <g data-role="ports">{paths('ports')}</g><g data-role="head">{paths('head')}</g><g data-role="detail">{paths('detail')}</g>
-    <g data-role="crank" transform={`translate(400 450) rotate(${p.degrees})`}>{paths('crank')}</g>
-    <g data-role="rod" transform={`translate(${p.pinX} ${p.pinY}) rotate(${p.rodAngle})`}>{paths('rod')}</g>
-    <g data-role="piston" transform={`translate(400 ${p.pistonY})`}>{paths('piston')}</g>
-    {bearing(p.pinX,p.pinY,13)}{bearing(400,p.pistonY,9)}{bearing(400,450,17)}
-    <g data-role="intake-valve" transform={`translate(360 ${136+p.intakeLift})`}>{paths('intake-valve')}</g><g data-role="exhaust-valve" transform={`translate(440 ${136+p.exhaustLift})`}>{paths('exhaust-valve')}</g>
-    <g aria-hidden="true"><path d="M393 83 H407 V111 H403 V127 L400 133 L397 127 V111 H393Z" fill="#efede7" stroke={palette.edge} strokeWidth="2"/><path d="M397 84 V73 H403 V84 M398 116 H402 M398 121 H402" stroke={palette.edge} strokeWidth="2"/>
-    {p.spark>0&&<g opacity={p.spark}><circle cx="400" cy="153" r="38" fill="url(#ignition)"/><path d="M402 133 L394 148 H404 L397 163" stroke="#e6a62c" fill="none" strokeWidth="3"/></g>}</g>
-    {(p.phase===0||p.phase===3)&&<g fill="none" stroke={active} strokeWidth="3" strokeLinecap="round" opacity={Math.sin(Math.PI*p.fraction)}><path d={p.phase===0?'M254 122 H318 Q355 122 360 160':'M440 160 Q445 122 482 122 H547'} strokeDasharray="4 11" strokeDashoffset={-p.fraction*90}/><path d={p.phase===0?'M354 151 L360 163 L367 152':'M537 116 L549 122 L537 128'}/></g>}
-    {labels&&!compact&&<g data-labels>{callout('Air + fuel',60,124,262,122,'left')}{callout('Intake valve',60,180,360,140+p.intakeLift,'left')}{callout('Piston',60,275,335,p.pistonY-12,'left')}{callout('Connecting rod',60,374,(400+p.pinX)/2,(p.pistonY+p.pinY)/2,'left')}{callout('Spark plug',603,82,403,84,'right')}{callout('Exhaust',603,133,543,122,'right')}{callout('Crankshaft',603,454,420,450,'right')}</g>}
-    {compact&&labels&&<g data-compact-labels fontFamily="Arial" fontSize="13" textAnchor="middle" fill="#45454f">{[[1,510,p.pistonY-12],[2,510,(p.pistonY+p.pinY)/2],[3,540,450]].map(([n,x,y])=><g key={n}><circle cx={x} cy={y} r="11" fill="#fbfaf7" stroke="#a8aaa4"/><text x={x} y={y+4}>{n}</text></g>)}</g>}
-    <g transform="translate(400 450)" aria-hidden="true"><circle r="95" fill="none" stroke="#bec5bb" strokeWidth="1" strokeDasharray="1 8"/><path d="M-82 -53 A98 98 0 0 1 -58 -79 M-58 -79 L-68 -79 M-58 -79 L-60 -69" fill="none" stroke="#6b7669" strokeWidth="1.5"/></g>
-    {captions&&<text x="400" y="590" textAnchor="middle" fill="#45454f" fontFamily="Arial" fontSize="16">{film.strokes[p.phase].caption}</text>}
-  </svg>;
+import type {PartId} from '../../pm123/presentation';
+type Props={film:EngineFilm;degrees:number;labels?:boolean;captions?:boolean;compact?:boolean;selected?:PartId|null;onSelect?:(part:PartId)=>void;onCrankStart?:()=>void;onCrankChange?:(degrees:number)=>void};
+export function EngineScene({film,degrees,labels=true,captions=false,compact=false,selected=null,onSelect,onCrankStart,onCrankChange}:Props) {
+ const drag=useRef<{pointer:number;angle:number;degrees:number}|null>(null);
+ const pointerAngle=(event:React.PointerEvent<SVGCircleElement>)=>{const svg=event.currentTarget.ownerSVGElement!,m=svg.getScreenCTM();if(!m)return null;const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(m.inverse());return Math.hypot(point.x-400,point.y-450)<35?null:Math.atan2(point.x-400,450-point.y)*180/Math.PI;};
+ const p=enginePose(degrees),palette=film.palette,active=[palette.intake,palette.compression,palette.power,palette.exhaust][p.phase];
+ const material=(role:string,id:string)=>role==='housing'?'casting':role==='piston'?(id.includes('ring-top')||id.includes('ring-second')?'chrome':'copper'):role==='rod'?'steel':role==='crank'?'graphite':role.endsWith('valve')?'chrome':'casting';
+ const paths=(role:string)=>film.art.filter(a=>a.role===role).map(a=><g key={a.id}><path data-art={a.id} d={a.d} fill={a.fill==='none'?'none':a.id==='head-plug-hole'?a.fill:`url(#material-${material(role,a.id)})`} stroke={a.stroke} strokeWidth={a.strokeWidth} strokeLinejoin="round" strokeLinecap="round"/>{role==='housing'&&a.fill!=='none'&&<path d={a.d} fill="url(#engine-hatch)" opacity=".42"/>}</g>);
+ const bearing=(x:number,y:number,r=10)=><g><circle cx={x} cy={y} r={r+1.4} fill="#171c24" opacity=".16"/><circle cx={x} cy={y} r={r} fill="url(#material-chrome)" stroke="#46515a" strokeWidth="1"/><circle cx={x} cy={y} r={r*.69} fill="#fbfaf7" stroke="#909994" strokeWidth=".8"/><circle cx={x} cy={y} r={r*.32} fill="#48515a"/><path d={`M${x-r*.7} ${y-r*.35} A${r*.78} ${r*.78} 0 0 1 ${x+r*.35} ${y-r*.7}`} fill="none" stroke="#fff" strokeWidth="1"/></g>;
+ const names=['Intake','Compression','Power','Exhaust'];
+ const callout=(name:string,x:number,y:number,px:number,py:number,side:'left'|'right',part?:PartId)=>{
+  const chosen=part&&selected===part,color=chosen?'#2d5d56':'#69736d';
+  return <g data-callout={part} onClick={part&&onSelect?()=>onSelect(part):undefined} style={{cursor:part&&onSelect?'pointer':undefined}} fill="none" stroke={chosen?'#75938a':'#bdc6be'} strokeWidth=".8"><path d={side==='left'?`M${x+116} ${y-5} H${px-20} L${px} ${py}`:`M${x-12} ${y-5} H${px+20} L${px} ${py}`}/><circle cx={px} cy={py} r="3" fill="#fbfaf7"/><text x={x} y={y} fill={color} stroke="none" fontFamily="Arial, sans-serif" fontWeight={chosen?600:400} fontSize="18">{name}</text></g>;
+ };
+ const selectedStyle=(id:PartId)=>({opacity:selected && selected!==id ? .62 : 1,cursor:onSelect?'pointer':undefined});
+ return <svg data-engine data-phase={p.phase} data-degrees={p.degrees} data-selected={selected??'none'} viewBox={captions?'0 0 800 600':compact?'235 60 330 510':'30 60 740 520'} role="img" aria-label={`Four-stroke cutaway: ${names[p.phase]}, crank ${Math.round(p.degrees)} degrees`}>
+ <title>{film.title}</title><desc>{film.strokes[p.phase].caption} Idealized timing; not a thermodynamic simulation.</desc>
+ <defs>
+  <linearGradient id="material-casting" x1="0" y1="0" x2="1" y2=".2"><stop stopColor="#e8ece5"/><stop offset=".3" stopColor="#cbd3c8"/><stop offset=".6" stopColor="#e1e7dc"/><stop offset="1" stopColor="#aebbaa"/></linearGradient>
+  <linearGradient id="material-copper"><stop stopColor="#9c5634"/><stop offset=".13" stopColor="#d58d60"/><stop offset=".45" stopColor="#f1c397"/><stop offset=".66" stopColor="#d58e60"/><stop offset="1" stopColor="#a65d3c"/></linearGradient>
+  <linearGradient id="material-steel"><stop stopColor="#596a73"/><stop offset=".2" stopColor="#b9c8c8"/><stop offset=".42" stopColor="#e4ece7"/><stop offset=".52" stopColor="#a9b8b8"/><stop offset="1" stopColor="#5c6b73"/></linearGradient>
+  <linearGradient id="material-chrome" x2=".8" y2="1"><stop stopColor="#f2f6ef"/><stop offset=".38" stopColor="#a3afb0"/><stop offset=".6" stopColor="#e5ebe2"/><stop offset="1" stopColor="#697b81"/></linearGradient>
+  <linearGradient id="material-graphite" x2=".8" y2="1"><stop stopColor="#74847f"/><stop offset=".5" stopColor="#4c605d"/><stop offset="1" stopColor="#2f4243"/></linearGradient>
+  <linearGradient id="gas-wash" x1="0" x2="0" y2="1"><stop stopColor={active} stopOpacity=".3"/><stop offset="1" stopColor={active} stopOpacity=".06"/></linearGradient>
+  <pattern id="engine-hatch" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M-1 1 L1 -1 M0 5 L5 0 M4 6 L6 4" stroke="#60725d" strokeWidth=".5"/></pattern>
+  <clipPath id="engine-chamber"><rect x="333" y="144" width="134" height={Math.max(0,p.pistonTop-144)}/></clipPath>
+  <radialGradient id="ignition"><stop stopColor="#fff6b7"/><stop offset=".4" stopColor={palette.power}/><stop offset="1" stopColor={palette.power} stopOpacity="0"/></radialGradient>
+ </defs>
+ <rect width="800" height="600" fill="#fbfaf7"/>
+ {captions&&<g fontFamily="Arial"><text x="32" y="32" fontSize="12" letterSpacing="2" fill="#69736d">SOMA / MOTION STUDY 01</text><text x="32" y="64" fill="#253b34" fontSize="25" fontWeight="600">{String(p.phase+1).padStart(2,'0')} / {names[p.phase]}</text></g>}
+ <ellipse cx="400" cy="565" rx="115" ry="5" fill="#20382d" opacity=".055"/>
+ <path d="M400 73 V545" stroke="#bbc5bc" strokeWidth=".65" strokeDasharray="2 6"/>
+ <g data-role="housing" opacity={selected ? .7 : 1}>{paths('housing')}</g>
+ <g clipPath="url(#engine-chamber)"><rect x="333" y="144" width="134" height="220" fill="url(#gas-wash)"/>{Array.from({length:26},(_,i)=>{const height=p.pistonTop-151,q=(i*.381966+p.fraction*.19)%1,x=341+(i*43%117)+Math.sin(p.fraction*4+i)*2,y=151+q*height;return <circle key={i} cx={x} cy={y} r={i%3===0?2:1.4} fill={active} opacity={.3+(i%4)*.13}/>;})}</g>
+ <g data-role="ports">{paths('ports')}</g><g data-role="head">{paths('head')}</g><g data-role="detail">{paths('detail')}</g>
+ <g data-role="crank" style={selectedStyle('crank')} onClick={onSelect?()=>onSelect('crank'):undefined} transform={`translate(400 450) rotate(${p.degrees})`}>{paths('crank')}<path d="M-7 -54 L-6 -18" fill="none" stroke="#eef4e7" opacity=".55" strokeWidth="1"/></g>
+ <g data-role="rod" style={selectedStyle('rod')} onClick={onSelect?()=>onSelect('rod'):undefined} transform={`translate(${p.pinX} ${p.pinY}) rotate(${p.rodAngle})`}>{paths('rod')}<path d="M-3 -142 L-2 -30" fill="none" stroke="#f6faf2" opacity=".65" strokeWidth="1.2"/></g>
+ <g data-role="piston" style={selectedStyle('piston')} onClick={onSelect?()=>onSelect('piston'):undefined} transform={`translate(400 ${p.pistonY})`}>{paths('piston')}<path d="M-45 -5 Q0 2 45 -5 M-39 20 H39" fill="none" stroke="#844728" strokeWidth=".8" opacity=".55"/></g>
+ {bearing(p.pinX,p.pinY,13)}{bearing(400,p.pistonY,9)}{bearing(400,450,17)}
+ <g data-role="intake-valve" transform={`translate(360 ${136+p.intakeLift})`}>{paths('intake-valve')}</g><g data-role="exhaust-valve" transform={`translate(440 ${136+p.exhaustLift})`}>{paths('exhaust-valve')}</g>
+ <g aria-hidden="true"><path d="M393 83 H407 V111 H403 V127 L400 133 L397 127 V111 H393Z" fill="#f5f4ea" stroke="#59645e" strokeWidth="1.1"/><path d="M397 84 V73 H403 V84 M398 116 H402 M398 121 H402 M394 89 H406 M394 94 H406 M394 99 H406" stroke="#626e67" strokeWidth="1"/>
+ {p.spark>0&&<g opacity={p.spark}><circle cx="400" cy="153" r="38" fill="url(#ignition)"/><path d="M402 133 L394 148 H404 L397 163" stroke="#e6a62c" fill="none" strokeWidth="2.5"/></g>}</g>
+ {(p.phase===0||p.phase===3)&&<g data-flow={p.phase===0?'intake':'exhaust'} fill="none" stroke={active} strokeWidth="2.2" strokeLinecap="round" opacity={Math.sin(Math.PI*p.fraction)}><path d={p.phase===0?'M254 124 H326 Q355 124 360 160':'M440 160 Q445 124 480 124 H547'} strokeDasharray="2 8" strokeDashoffset={-p.fraction*100}/><path d={p.phase===0?'M355 154 L360 162 L365 154':'M541 119 L549 124 L541 129'}/></g>}
+ {labels&&!compact&&<g data-labels>{callout('Air + fuel',60,124,262,122,'left')}{callout('Intake valve',60,180,360,140+p.intakeLift,'left')}{callout('Piston',60,275,335,p.pistonY-12,'left','piston')}{callout('Connecting rod',60,374,(400+p.pinX)/2,(p.pistonY+p.pinY)/2,'left','rod')}{callout('Spark plug',603,82,403,84,'right')}{callout('Exhaust',603,133,543,122,'right')}{callout('Crankshaft',603,454,420,450,'right','crank')}</g>}
+ {compact&&labels&&<g data-compact-labels fontFamily="Arial" fontSize="13" textAnchor="middle" fill="#45454f">{[[1,510,p.pistonY-12],[2,510,(p.pistonY+p.pinY)/2],[3,540,450]].map(([n,x,y])=><g key={n}><circle cx={x} cy={y} r="11" fill="#fbfaf7" stroke="#a8aaa4"/><text x={x} y={y+4}>{n}</text></g>)}</g>}
+ <g transform="translate(400 450)" aria-hidden="true"><circle r="94" fill="none" stroke="#b6c3b6" strokeWidth=".7" strokeDasharray="1 7"/><path d="M-82 -53 A98 98 0 0 1 -58 -79 M-58 -79 L-68 -79 M-58 -79 L-60 -69" fill="none" stroke="#6b7669" strokeWidth="1"/></g>
+ {onCrankChange&&<g data-crank-handle aria-hidden="true"><circle cx={400+94*Math.sin(p.degrees*Math.PI/180)} cy={450-94*Math.cos(p.degrees*Math.PI/180)} r="7" fill="#b97845" stroke="#fbfaf7" strokeWidth="3"/><circle className="crank-grab" cx={400+94*Math.sin(p.degrees*Math.PI/180)} cy={450-94*Math.cos(p.degrees*Math.PI/180)} r="31" fill="transparent" style={{touchAction:'none',cursor:'grab'}} onPointerDown={event=>{const angle=pointerAngle(event);if(angle===null)return;onCrankStart?.();drag.current={pointer:event.pointerId,angle,degrees:p.degrees};event.currentTarget.setPointerCapture(event.pointerId);event.preventDefault();}} onPointerMove={event=>{const d=drag.current,angle=pointerAngle(event);if(!d||d.pointer!==event.pointerId||angle===null)return;let delta=angle-d.angle;if(delta>180)delta-=360;if(delta< -180)delta+=360;d.degrees=Math.max(0,Math.min(720,d.degrees+delta));d.angle=angle;onCrankChange(d.degrees);}} onPointerUp={event=>{if(drag.current?.pointer===event.pointerId){drag.current=null;event.currentTarget.releasePointerCapture(event.pointerId);}}} onPointerCancel={()=>{drag.current=null;}} onLostPointerCapture={()=>{drag.current=null;}}/></g>}
+ {captions&&<text x="400" y="590" textAnchor="middle" fill="#45454f" fontFamily="Arial" fontSize="16">{film.strokes[p.phase].caption}</text>}
+ </svg>;
 }

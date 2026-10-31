@@ -1,3 +1,7 @@
+## PM123 — Engine demo presentation refinement, October31
+
+Review **http://localhost:41914**: actual Muse art/copy refinements with machined material finishes, direct two-turn crank dragging, selectable part explanations, tighter desktop/phone controls and a1920×1080 narrated film. [Authorship, retained failures and checks](docs/examples/pm123/README.md). Sixteen browser journeys,1690offline/100opt-in skipped, typecheck/build/export and unchanged PM118 manifest passed. Eight actual calls added$0.1686385; latest shared ledger$16.45400025/$20. Native Mac remained locked; final in-app playback, direct dragging and part/focus review passed. Local spatial branch only, no merge/push/publication or canonical engine save/follow-up integration.
+
 ## PM121–PM122 — Four-stroke engine refinement, October31
 
 Review **http://localhost:41914**: one Muse-authored cutaway with constrained crank/rod/piston/valves, direct720° scrubbing, four stroke selectors, narrated24-second MP4 and enlarged phone framing. [Authorship, actual generation, failures and verification](docs/examples/pm121/README.md). Five bounded operations/16calls added$0.47103575; latest shared ledger$16.28536175/$20. Canonical PM118 runtime unchanged. Local private spatial branch only; no main merge, push or publication. Earlier comparison remains41912.

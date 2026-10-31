@@ -1,0 +1,78 @@
+{
+  "status": "completed",
+  "tools": [],
+  "usage": {
+    "input_tokens": 5748,
+    "output_tokens": 1458
+  },
+  "structured": {
+    "parts": [
+      {
+        "cue": "Turn the crank slowly and watch the piston follow the rod.",
+        "description": "Slides in the bore to change cylinder volume, carrying rings that seal mixture during strokes.",
+        "id": "piston",
+        "name": "Piston"
+      },
+      {
+        "cue": "Turn the crank and see both ends stay joined while angling.",
+        "description": "Joins piston pin to crank pin, converting reciprocating motion to rotation throughout the cycle.",
+        "id": "rod",
+        "name": "Connecting Rod"
+      },
+      {
+        "cue": "Rotate the crank through two full turns to complete one cycle.",
+        "description": "Rotates with counterweight to carry the crank pin around, driving piston position each stroke.",
+        "id": "crank",
+        "name": "Crankshaft"
+      }
+    ],
+    "refinements": [
+      {
+        "d": "M-52,-12 L52,-12 C50,5 48,16 44,26 C30,24 15,23 0,23 C-15,23 -30,24 -44,26 C-48,16 -50,5 -52,-12 Z",
+        "fill": "#D98E5F",
+        "id": "piston-skirt",
+        "strokeWidth": 1.1
+      },
+      {
+        "d": "M-7,-170 L7,-170 C9,-140 6,-100 7,0 L-7,0 C-6,-100 -9,-140 -7,-170 Z",
+        "fill": "#3A3A3E",
+        "id": "rod-beam",
+        "strokeWidth": 1.1
+      },
+      {
+        "d": "M-12,-6 L12,-6 L20,12 C35,25 48,38 44,55 C38,68 20,74 0,74 C-20,74 -38,68 -44,55 C-48,38 -35,25 -20,12 Z",
+        "fill": "#5A5A5E",
+        "id": "crank-counterweight",
+        "strokeWidth": 1.1
+      }
+    ],
+    "strokes": [
+      {
+        "caption": "Piston descends, intake valve open, fresh mixture enters the cylinder.",
+        "name": "Intake",
+        "narration": "Piston descends with intake open, drawing fresh mixture in as chamber volume grows.",
+        "verb": "Admit fresh charge"
+      },
+      {
+        "caption": "Both valves closed; rising piston compresses the trapped mixture.",
+        "name": "Compression",
+        "narration": "Both valves close as the piston rises, compressing trapped mixture before spark.",
+        "verb": "Compress trapped charge"
+      },
+      {
+        "caption": "Spark at top; both closed; expanding gas drives piston downward.",
+        "name": "Power",
+        "narration": "Spark occurs near top with both valves closed; expanding gas pushes piston down.",
+        "verb": "Expand driving piston"
+      },
+      {
+        "caption": "Exhaust open; rising piston expels burnt gas from cylinder.",
+        "name": "Exhaust",
+        "narration": "Exhaust opens as piston rises, expelling burnt gas; two turns complete cycle.",
+        "verb": "Expel burnt gases"
+      }
+    ],
+    "subtitle": "Follow four strokes across two crank turns in a cutaway",
+    "title": "Four-Stroke Spark Engine Cycle"
+  }
+}

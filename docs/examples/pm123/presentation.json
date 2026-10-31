@@ -1,0 +1,70 @@
+{
+  "title": "Four-Stroke Spark Engine Cycle",
+  "subtitle": "Watch four piston strokes unfold across two crank turns",
+  "strokes": [
+    {
+      "name": "Intake",
+      "verb": "Admit fresh charge",
+      "caption": "The piston moves down with the intake valve open, drawing fresh mixture into the cylinder.",
+      "narration": "Piston descends with intake open, drawing fresh mixture in as chamber volume grows."
+    },
+    {
+      "name": "Compression",
+      "verb": "Compress trapped charge",
+      "caption": "The piston moves up with intake and exhaust valves closed, compressing the trapped mixture.",
+      "narration": "Both valves close as the piston rises, compressing trapped mixture before spark."
+    },
+    {
+      "name": "Power",
+      "verb": "Drive piston downward",
+      "caption": "A spark ignites the mixture and the expanding gas drives the piston down.",
+      "narration": "Spark occurs near top with both valves closed; expanding gas pushes piston down."
+    },
+    {
+      "name": "Exhaust",
+      "verb": "Expel burnt gases",
+      "caption": "The piston moves up with the exhaust valve open, pushing burnt gas out of the cylinder.",
+      "narration": "Exhaust opens as piston rises, expelling burnt gas; two turns complete cycle."
+    }
+  ],
+  "parts": [
+    {
+      "id": "piston",
+      "name": "Piston",
+      "description": "Slides in the bore to change cylinder volume, carrying rings that seal mixture during strokes.",
+      "cue": "Turn the crank slowly and watch the piston follow the rod."
+    },
+    {
+      "id": "rod",
+      "name": "Connecting Rod",
+      "description": "Joins piston pin to crank pin, converting reciprocating motion to rotation throughout the cycle.",
+      "cue": "Turn the crank and see both ends stay joined while angling."
+    },
+    {
+      "id": "crank",
+      "name": "Crankshaft",
+      "description": "Rotates with counterweight to carry the crank pin around, driving piston position each stroke.",
+      "cue": "Rotate the crank through two full turns to complete one cycle."
+    }
+  ],
+  "refinements": [
+    {
+      "id": "piston-skirt",
+      "d": "M-52,-12 L52,-12 C50,5 48,16 44,26 C30,24 15,23 0,23 C-15,23 -30,24 -44,26 C-48,16 -50,5 -52,-12 Z",
+      "fill": "#D98E5F",
+      "strokeWidth": 1.1
+    },
+    {
+      "id": "rod-beam",
+      "d": "M-7,-170 L7,-170 C9,-140 6,-100 7,0 L-7,0 C-6,-100 -9,-140 -7,-170 Z",
+      "fill": "#3A3A3E",
+      "strokeWidth": 1.1
+    },
+    {
+      "id": "crank-counterweight",
+      "d": "M-12,-6 L12,-6 L20,12 C35,25 48,38 44,55 C38,68 20,74 0,74 C-20,74 -38,68 -44,55 C-48,38 -35,25 -20,12 Z",
+      "fill": "#5A5A5E",
+      "strokeWidth": 1.1
+    }
+  ]
+}

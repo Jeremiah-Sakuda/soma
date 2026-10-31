@@ -507,3 +507,7 @@ October31: the user adopted a same-source piston comparison of current Anatomy w
 ## PM121–PM122 — Four-stroke engine refinement, October31
 
 User requested refinement/polish and selected a single-cylinder four-stroke engine. Keep this local on the private spatial branch and retain the previous comparison. Muse authors typed SVG art and explanatory copy; deterministic constrained slider-crank/valve transforms keep parts connected. Gas/ignition remain illustrative, with no new thermodynamics, graded scientific family or learner-evidence claim. The film/engine is a prepared replay of actual generation; no canonical engine endpoint or persistence integration is implied. Existing cumulative$20 cap and prior consumption retained. [Implementation, authorship and executed checks](examples/pm121/README.md).
+
+## PM123 — Refine the engine presentation, October31
+
+User asked to keep iterating toward startup-demo quality. Adopt direct crank manipulation and optional part inspection in the same local replay, plus recorded Muse copy/path refinements and application-owned SVG material finishing. Export the same scene in a1920×1080 composition. Preserve the original base/art lineage, checked-physics boundaries and unchanged canonical runtime. Retain all spending under existing$20 cap and distinguish replay/material finish from live generated output. This is a local demonstration-quality iteration, not a production-readiness or general engine-generation claim. See [verification and limitations](examples/pm123/README.md).

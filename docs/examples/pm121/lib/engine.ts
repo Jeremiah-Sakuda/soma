@@ -5,7 +5,7 @@ export const engineSchema = z.strictObject({
   schemaVersion: z.literal('engine-film-v1'), title: z.string().min(1).max(65), summary: z.string().min(1).max(240),
   palette: z.strictObject({ metal: color, edge: color, piston: color, rod: color, crank: color, intake: color, compression: color, power: color, exhaust: color }),
   art: z.array(z.strictObject({ id: z.string().regex(/^[a-z][a-z0-9-]{0,30}$/), role, d: z.string().min(3).max(1600).regex(/^[MmLlHhVvCcSsQqTtAaZz0-9.,+eE\s-]+$/), fill: z.union([color,z.literal('none')]), stroke: z.union([color,z.literal('none')]), strokeWidth: z.number().min(0).max(5) })).min(12).max(40),
-  strokes: z.array(z.strictObject({ name: z.enum(['Intake','Compression','Power','Exhaust']), verb: z.string().min(1).max(22), caption: z.string().min(1).max(110), narration: z.string().min(1).max(160) })).length(4),
+  strokes: z.array(z.strictObject({ name: z.enum(['Intake','Compression','Power','Exhaust']), verb: z.string().min(1).max(26), caption: z.string().min(1).max(110), narration: z.string().min(1).max(160) })).length(4),
   assumptions: z.array(z.string().min(1).max(180)).min(2).max(5),
 });
 export type EngineFilm = z.infer<typeof engineSchema>;

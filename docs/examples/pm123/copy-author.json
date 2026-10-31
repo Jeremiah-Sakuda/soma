@@ -1,0 +1,33 @@
+{
+  "status": "completed",
+  "tools": [],
+  "usage": {
+    "input_tokens": 5296,
+    "output_tokens": 601
+  },
+  "structured": {
+    "strokes": [
+      {
+        "caption": "The piston moves down with the intake valve open, drawing fresh mixture into the cylinder.",
+        "name": "Intake",
+        "verb": "Admit fresh charge"
+      },
+      {
+        "caption": "The piston moves up with intake and exhaust valves closed, compressing the trapped mixture.",
+        "name": "Compression",
+        "verb": "Compress trapped charge"
+      },
+      {
+        "caption": "A spark ignites the mixture and the expanding gas drives the piston down.",
+        "name": "Power",
+        "verb": "Drive piston downward"
+      },
+      {
+        "caption": "The piston moves up with the exhaust valve open, pushing burnt gas out of the cylinder.",
+        "name": "Exhaust",
+        "verb": "Expel burnt gases"
+      }
+    ],
+    "subtitle": "Watch four piston strokes unfold across two crank turns"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "mode": "Actual Muse presentation refinement of recorded PM121 engine; runtime material finishes are application code",
+  "runCount": 4,
+  "calls": 8,
+  "costUsd": 0.1686385,
+  "before": 16.285361749999996,
+  "after": 16.454000249999996,
+  "finishedAt": "2026-10-31T23:47:12.201Z",
+  "cap": 20,
+  "runs": [
+    {
+      "startedAt": "2026-10-31T23:35:30.228Z",
+      "finishedAt": "2026-10-31T23:35:31.623Z",
+      "status": "failed",
+      "calls": 0,
+      "costUsd": 0,
+      "certain": true,
+      "before": 16.285361749999996,
+      "after": 16.285361749999996,
+      "elapsedMs": 1030
+    },
+    {
+      "startedAt": "2026-10-31T23:37:03.494Z",
+      "finishedAt": "2026-10-31T23:37:28.773Z",
+      "status": "authored-validated-reviewed",
+      "calls": 4,
+      "costUsd": 0.08449875000000001,
+      "certain": true,
+      "before": 16.285361749999996,
+      "after": 16.369860499999998,
+      "elapsedMs": 24971
+    },
+    {
+      "startedAt": "2026-10-31T23:41:28.074Z",
+      "finishedAt": "2026-10-31T23:41:42.291Z",
+      "status": "authored-validated-reviewed",
+      "calls": 2,
+      "costUsd": 0.045169499999999994,
+      "certain": true,
+      "before": 16.369860499999998,
+      "after": 16.415029999999998,
+      "elapsedMs": 13813
+    },
+    {
+      "startedAt": "2026-10-31T23:47:02.440Z",
+      "finishedAt": "2026-10-31T23:47:12.201Z",
+      "status": "authored-validated-reviewed",
+      "calls": 2,
+      "costUsd": 0.03897025,
+      "certain": true,
+      "before": 16.415029999999998,
+      "after": 16.454000249999996,
+      "elapsedMs": 9343
+    }
+  ],
+  "lineage": "copy-base.json equals refinement-author.json structured. Final presentation.json = copy-base with subtitle and per-stroke name/verb/caption from copy-author.json structured; narration and all art/parts preserved. Runtime material finishes are application code. First rejected request made no provider calls or charge. Rejected and earlier accepted copy retained privately."
+}

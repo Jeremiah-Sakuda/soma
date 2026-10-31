@@ -1,5 +1,7 @@
 # PM121–PM122 — Inside the engine
 
+**Historical PM121 verification record.** [PM123](../pm123/README.md) supersedes the presentation and exported media at the same URL. The original Muse base specification remains intact; its800×600 film and prior presentation are preserved in commit9d5c71c. Current viewer applies additional recorded Muse refinements and application material finishes, direct crank/part inspection and a1920×1080 export.
+
 A refined local four-stroke cutaway on `codex/spatial-exploration`. Open **http://localhost:41914**. The earlier same-piston Anatomy/film comparison remains at **http://localhost:41912**. Engine versus piston is not a matched-source quality benchmark.
 
 The user selected a single-cylinder four-stroke combustion engine. The primary presentation is now one large cutaway: intake, compression, power and exhaust; synchronized piston, connecting rod, crank and poppet valves; illustrative gas flow and a brief ignition flash; four direct stroke selectors and one crank control covering 720°. Playback is a24-second recorded explanation. Touch/keyboard manipulation pauses immediately, without a settling tail. At phone width the drawing enlarges and a numbered part key replaces tiny side labels. Detailed provenance stays collapsed.

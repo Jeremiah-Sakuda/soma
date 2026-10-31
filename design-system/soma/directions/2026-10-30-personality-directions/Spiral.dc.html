@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Soma · Spiral notepad</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&amp;family=Caveat:wght@500;700&amp;family=DM+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#4B2A99}a:hover{color:#2E1A61}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+input::placeholder{color:#6E6E78;font-family:'Caveat',cursive;font-size:26px}
+</style>
+</helmet>
+<div style="position: relative; width: 1280px; height: 800px; background: #D8D2C6; font-family: 'Atkinson Hyperlegible', system-ui, sans-serif; color: #1E1E24; overflow: hidden">
+
+<button type="button" style="position: absolute; left: 1170px; top: 70px; width: 76px; height: 150px; box-sizing: border-box; padding: 0; background: #FFFEFA; border: 0; border-radius: 0 10px 10px 0; writing-mode: vertical-rl; font: 700 15px 'Atkinson Hyperlegible', sans-serif; color: #1E1E24">Weighted paths</button>
+<button type="button" style="position: absolute; left: 1176px; top: 228px; width: 70px; height: 150px; box-sizing: border-box; padding: 0; background: #FFD9A8; border: 0; border-radius: 0 10px 10px 0; writing-mode: vertical-rl; font: 400 15px 'Atkinson Hyperlegible', sans-serif; color: #4A2F0E">BFS order</button>
+<button type="button" style="position: absolute; left: 1176px; top: 386px; width: 70px; height: 150px; box-sizing: border-box; padding: 0; background: #C8E8D3; border: 0; border-radius: 0 10px 10px 0; writing-mode: vertical-rl; font: 400 15px 'Atkinson Hyperlegible', sans-serif; color: #17432A">Signal relay</button>
+<button type="button" aria-label="New exploration" style="position: absolute; left: 1176px; top: 544px; width: 70px; height: 92px; box-sizing: border-box; padding: 0; background: #E2DAF7; border: 0; border-radius: 0 10px 10px 0; font: 700 26px 'Caveat', cursive; color: #2E1A61">+</button>
+
+<div style="position: absolute; left: 28px; top: 20px; width: 1150px; height: 760px; box-sizing: border-box; background-color: #FFFEFA; background-image: repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, #D3E0F2 31px, #D3E0F2 32px); background-position: 0 109px; background-size: 100% calc(100% - 109px); background-repeat: no-repeat; box-shadow: 0 2px 0 #BDB6A8">
+
+<span aria-hidden="true" style="position: absolute; left: 118px; top: 0; width: 1px; height: 760px; background: #EBA3A3"></span>
+<span aria-hidden="true" style="position: absolute; left: 122px; top: 0; width: 1px; height: 760px; background: #EBA3A3"></span>
+
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 34px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 37px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 80px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 83px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 126px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 129px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 172px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 175px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 218px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 221px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 264px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 267px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 310px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 313px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 356px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 359px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 402px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 405px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 448px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 451px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 494px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 497px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 540px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 543px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 586px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 589px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 632px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 635px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 678px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 681px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+<span aria-hidden="true" style="position: absolute; left: 18px; top: 724px; width: 14px; height: 14px; border-radius: 7px; background: #D8D2C6"></span><span aria-hidden="true" style="position: absolute; left: -16px; top: 727px; width: 40px; height: 8px; border-radius: 4px; background: #55555C; transform: rotate(-14deg)"></span>
+
+<p style="position: absolute; left: 50px; top: 40px; width: 62px; margin: 0; text-align: center; font: 700 26px/1 'Caveat', cursive; color: #4B2A99">3/5</p>
+<p style="position: absolute; left: 46px; top: 590px; width: 70px; margin: 0; font: 500 17px/1.15 'Caveat', cursive; color: #4B2A99">printed = checked<br><br>written = Muse</p>
+
+<h1 style="position: absolute; left: 150px; top: 38px; margin: 0; font: 700 30px 'Atkinson Hyperlegible', sans-serif; letter-spacing: -0.01em">Fewest edges or lowest cost?</h1>
+<span style="position: absolute; left: 1000px; top: 46px; font: 700 18px 'Atkinson Hyperlegible', sans-serif; color: #6E6E78">soma</span>
+<button type="button" aria-label="More" style="position: absolute; left: 1080px; top: 34px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; color: #1E1E24"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+
+<div role="img" aria-label="Weighted graph, step 3 of 5. S, A and B are settled; B is highlighted. Through B, Goal's cost drops from 10 to 3. C at 2 and Goal at 3 are waiting. Unconnected X is unreached." style="position: absolute; left: 150px; top: 116px; width: 760px; height: 410px">
+<svg width="760" height="410" viewBox="0 0 760 410" aria-hidden="true" style="position: absolute; left: 0; top: 0">
+<defs>
+<marker id="sp-k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1E1E24"></path></marker>
+</defs>
+<line x1="551" y1="117" x2="636" y2="172" stroke="{{highlight}}" stroke-width="18" stroke-linecap="round" stroke-opacity="0.85"></line>
+<g stroke="#1E1E24" stroke-width="2" fill="none">
+<line x1="142.7" y1="171" x2="235.6" y2="119.9" marker-end="url(#sp-k)"></line>
+<line x1="348" y1="90" x2="450" y2="90" marker-end="url(#sp-k)"></line>
+<line x1="147.9" y1="222.4" x2="340.3" y2="296.9" marker-end="url(#sp-k)"></line>
+<line x1="457.8" y1="295.2" x2="620.3" y2="225.6" marker-end="url(#sp-k)"></line>
+<line x1="148" y1="200" x2="620" y2="200" marker-end="url(#sp-k)"></line>
+<line x1="555" y1="119.1" x2="633.4" y2="169.8" stroke-width="2.6" marker-end="url(#sp-k)"></line>
+</g>
+</svg>
+
+<div style="position: absolute; left: 176px; top: 134px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #FFFEFA; border: 1.5px solid #1E1E24; border-radius: 4px; font: 500 12px 'DM Mono', monospace">1</div>
+<div style="position: absolute; left: 386px; top: 79px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #FFFEFA; border: 1.5px solid #1E1E24; border-radius: 4px; font: 500 12px 'DM Mono', monospace">1</div>
+<div style="position: absolute; left: 581px; top: 134px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #FFFEFA; border: 2px solid #1E1E24; border-radius: 4px; font: 600 12px 'DM Mono', monospace">1</div>
+<div style="position: absolute; left: 231px; top: 249px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #FFFEFA; border: 1.5px solid #1E1E24; border-radius: 4px; font: 500 12px 'DM Mono', monospace">2</div>
+<div style="position: absolute; left: 526px; top: 249px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #FFFEFA; border: 1.5px solid #1E1E24; border-radius: 4px; font: 500 12px 'DM Mono', monospace">6</div>
+<div style="position: absolute; left: 369px; top: 189px; width: 32px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #FFFEFA; border: 1.5px solid #1E1E24; border-radius: 4px; font: 500 12px 'DM Mono', monospace">10</div>
+
+<span aria-hidden="true" style="position: absolute; left: 446px; top: 70px; width: 128px; height: 36px; background: {{highlight}}; opacity: 0.85; transform: rotate(-3deg); border-radius: 3px"></span>
+<div style="position: absolute; left: 34px; top: 172px; width: 112px; height: 56px; box-sizing: border-box; border-radius: 28px; background: #1E1E24; color: #FFFEFA; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 17px">S</b><br><span style="font: 500 13px 'DM Mono', monospace">0</span></span></div>
+<div style="position: absolute; left: 234px; top: 62px; width: 112px; height: 56px; box-sizing: border-box; border-radius: 28px; background: #1E1E24; color: #FFFEFA; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 17px">A</b><br><span style="font: 500 13px 'DM Mono', monospace">1</span></span></div>
+<div style="position: absolute; left: 454px; top: 62px; width: 112px; height: 56px; box-sizing: border-box; border-radius: 28px; background: #1E1E24; color: #FFFEFA; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 17px">B</b><br><span style="font: 500 13px 'DM Mono', monospace">2</span></span></div>
+<div style="position: absolute; left: 624px; top: 172px; width: 112px; height: 56px; box-sizing: border-box; border-radius: 28px; background: #FFFEFA; border: 2px solid #1E1E24; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 17px">Goal</b><br><span style="font: 500 13px 'DM Mono', monospace"><s style="color: #6E6E78">10</s> 3</span></span></div>
+<div style="position: absolute; left: 344px; top: 292px; width: 112px; height: 56px; box-sizing: border-box; border-radius: 28px; background: #FFFEFA; border: 2px solid #1E1E24; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 17px">C</b><br><span style="font: 500 13px 'DM Mono', monospace">2</span></span></div>
+<div style="position: absolute; left: 20px; top: 316px; width: 160px; height: 56px; box-sizing: border-box; border-radius: 28px; background: #FFFEFA; border: 2px dashed #6E6E78; color: #44444C; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 15px">Unconnected X</b><br><span style="font: 500 12px 'DM Mono', monospace">unreached</span></span></div>
+
+<div style="position: absolute; left: 616px; top: 238px; width: 140px; font: 700 21px/1.05 'Caveat', cursive; color: #4B2A99">it was 10! now 3</div>
+<div style="position: absolute; left: 470px; top: 370px; display: flex; align-items: center; gap: 8px; font: 500 13px 'DM Mono', monospace; color: #44444C">waiting<span style="padding: 3px 10px; background: #FFFEFA; border: 1.5px solid #1E1E24; border-radius: 12px">C 2</span><span style="padding: 3px 10px; background: #FFFEFA; border: 1.5px solid #1E1E24; border-radius: 12px">Goal 3</span></div>
+</div>
+
+<div style="position: absolute; left: 932px; top: 118px; width: 196px; height: 196px; box-sizing: border-box; padding: 26px 16px 14px; background: #FFF0A0; transform: rotate(2.5deg); box-shadow: 0 3px 0 #E3D27E">
+<span aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 196px; height: 14px; background: #F5E07A"></span>
+<p style="margin: 0; font: 700 28px/1.08 'Caveat', cursive; color: #3E2280">Through B, Goal drops from 10 to 3.</p>
+</div>
+
+<div role="radiogroup" aria-label="Route" style="position: absolute; left: 932px; top: 346px; width: 196px; display: flex; flex-direction: column; gap: 8px">
+<button type="button" role="radio" aria-checked="true" style="height: 48px; padding: 0 4px; display: flex; align-items: center; gap: 10px; background: transparent; border: 0; font: 700 15px 'Atkinson Hyperlegible', sans-serif; color: #1E1E24; text-align: left"><span style="width: 20px; height: 20px; box-sizing: border-box; border: 2px solid #1E1E24; border-radius: 4px; display: flex; align-items: center; justify-content: center; font: 700 16px 'Caveat', cursive; color: #4B2A99">✓</span><span style="flex: 1">Lowest cost</span><span style="font: 500 16px 'DM Mono', monospace">3</span></button>
+<button type="button" role="radio" aria-checked="false" style="height: 48px; padding: 0 4px; display: flex; align-items: center; gap: 10px; background: transparent; border: 0; font: 400 15px 'Atkinson Hyperlegible', sans-serif; color: #1E1E24; text-align: left"><span style="width: 20px; height: 20px; box-sizing: border-box; border: 2px solid #1E1E24; border-radius: 4px"></span><span style="flex: 1">Fewest edges</span><span style="font: 500 16px 'DM Mono', monospace">10</span></button>
+</div>
+<div role="group" aria-label="View" style="position: absolute; left: 932px; top: 460px; display: flex; gap: 4px">
+<button type="button" aria-pressed="true" style="height: 44px; padding: 0 16px; background: #1E1E24; border: 0; border-radius: 22px; color: #FFFEFA; font: 700 14px 'Atkinson Hyperlegible', sans-serif">2D</button>
+<button type="button" aria-pressed="false" style="height: 44px; padding: 0 16px; background: transparent; border: 1.5px solid #1E1E24; border-radius: 22px; color: #1E1E24; font: 400 14px 'Atkinson Hyperlegible', sans-serif">3D</button>
+</div>
+
+<div style="position: absolute; left: 150px; top: 566px; width: 970px; height: 52px; display: flex; align-items: center; gap: 10px">
+<button type="button" aria-label="Previous step" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1.5px solid #1E1E24; border-radius: 22px; color: #1E1E24"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<button type="button" aria-label="Play explanation" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background: #1E1E24; border: 0; border-radius: 25px; color: #FFFEFA"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></button>
+<button type="button" aria-label="Next step" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1.5px solid #1E1E24; border-radius: 22px; color: #1E1E24"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+<span style="font: 500 13px 'DM Mono', monospace; color: #44444C; padding-left: 8px">step 3 of 5</span>
+<span style="flex: 1"></span>
+<button type="button" style="height: 44px; padding: 0 16px; background: transparent; border: 1.5px solid #1E1E24; border-radius: 22px; font: 400 15px 'Atkinson Hyperlegible', sans-serif; color: #1E1E24">Predict the next node</button>
+<button type="button" style="height: 44px; padding: 0 12px; display: flex; align-items: center; gap: 6px; background: transparent; border: 0; font: 400 14px 'Atkinson Hyperlegible', sans-serif; color: #44444C">Checked by Soma<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01" stroke-linecap="round"></path></svg></button>
+</div>
+
+<form style="position: absolute; left: 150px; top: 660px; width: 970px; height: 60px; display: flex; align-items: flex-end; gap: 12px; margin: 0">
+<label for="sp-ask" class="sr">Ask about this page</label>
+<input id="sp-ask" type="text" placeholder="Write a question…" style="flex: 1; height: 54px; box-sizing: border-box; padding: 0 4px; background: transparent; border: 0; border-bottom: 2px solid #1E1E24; font: 400 18px 'Atkinson Hyperlegible', sans-serif; color: #1E1E24">
+<button type="button" aria-label="Record a question" style="width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1.5px solid #1E1E24; border-radius: 26px; color: #1E1E24"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></button>
+<button type="submit" style="height: 52px; padding: 0 28px; background: #4B2A99; border: 0; border-radius: 26px; color: #FFFFFF; font: 700 16px 'Atkinson Hyperlegible', sans-serif">Ask Soma</button>
+</form>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"highlight":{"editor":"color","default":"#FFE45C","options":["#FFE45C","#9CF0C8","#FFB3D9"]},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { highlight: this.props.highlight ?? '#FFE45C' };
+  }
+}
+</script>
+</body>
+</html>

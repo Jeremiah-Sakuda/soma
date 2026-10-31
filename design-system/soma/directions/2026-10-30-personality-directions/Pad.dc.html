@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Soma · Engineering pad</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Architects+Daughter&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FAD}a:hover{color:#163F73}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+input::placeholder{color:#5E7F5A}
+</style>
+</helmet>
+<div style="position: relative; width: 1280px; height: 800px; background: #D3D7C8; font-family: 'IBM Plex Sans Condensed', system-ui, sans-serif; color: #2F3437">
+<div style="position: absolute; left: 20px; top: 16px; width: 1240px; height: 768px; box-sizing: border-box; background-color: #EEF4E4; background-image: linear-gradient(#BCD3AB 1px, transparent 1px), linear-gradient(90deg, #BCD3AB 1px, transparent 1px), linear-gradient(#D8E6CD 1px, transparent 1px), linear-gradient(90deg, #D8E6CD 1px, transparent 1px); background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px; border: 1px solid #B4C3A6; box-shadow: 0 2px 0 #BDC4B1">
+
+<header style="position: absolute; left: 24px; top: 20px; width: 1192px; height: 64px; display: flex; gap: 12px">
+<div style="flex: 1; display: grid; grid-template-columns: 120px minmax(0, 1fr) 190px 130px 170px; border: 2px solid #2F3437; background: #F5F9EE">
+<div style="display: flex; align-items: center; justify-content: center; border-right: 1.5px solid #2F3437; font: 700 22px 'IBM Plex Sans Condensed', sans-serif; letter-spacing: 0.02em">soma</div>
+<div style="padding: 6px 12px; border-right: 1.5px solid #2F3437; display: flex; flex-direction: column; justify-content: center; gap: 2px"><span style="font: 500 11px 'IBM Plex Mono', monospace; letter-spacing: 0.08em; color: #4A5248">SUBJECT</span><h1 style="margin: 0; font-size: 19px; font-weight: 600">Fewest edges or lowest cost?</h1></div>
+<div style="padding: 6px 12px; border-right: 1.5px solid #2F3437; display: flex; flex-direction: column; justify-content: center; gap: 2px"><span style="font: 500 11px 'IBM Plex Mono', monospace; letter-spacing: 0.08em; color: #4A5248">SOURCE</span><span style="font-size: 15px">Lecture slide</span></div>
+<div style="padding: 6px 12px; border-right: 1.5px solid #2F3437; display: flex; flex-direction: column; justify-content: center; gap: 2px"><span style="font: 500 11px 'IBM Plex Mono', monospace; letter-spacing: 0.08em; color: #4A5248">SHEET</span><span style="font: 600 17px 'IBM Plex Mono', monospace">3 of 5</span></div>
+<button type="button" style="padding: 6px 12px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 2px; background: transparent; border: 0; font: inherit; color: #2F3437; text-align: left"><span style="font: 500 11px 'IBM Plex Mono', monospace; letter-spacing: 0.08em; color: #4A5248">CHECKED BY</span><span style="font-size: 15px; font-weight: 600">Soma ✓</span></button>
+</div>
+<button type="button" style="height: 64px; padding: 0 16px; display: flex; align-items: center; gap: 8px; background: #F5F9EE; border: 2px solid #2F3437; font: 600 15px 'IBM Plex Sans Condensed', sans-serif; color: #2F3437">Explorations<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<button type="button" aria-label="More" style="width: 56px; height: 64px; display: flex; align-items: center; justify-content: center; background: #F5F9EE; border: 2px solid #2F3437; color: #2F3437"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+</header>
+
+<div role="img" aria-label="Weighted graph, sheet 3 of 5. S, A and B are settled; B is circled in red. Through B, Goal's cost drops from 10 to 3. C at 2 and Goal at 3 are waiting. Unconnected X is unreached." style="position: absolute; left: 40px; top: 118px; width: 760px; height: 410px">
+<svg width="760" height="410" viewBox="0 0 760 410" aria-hidden="true" style="position: absolute; left: 0; top: 0; overflow: visible">
+<defs>
+<marker id="pd-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#2F3437"></path></marker>
+<marker id="pd-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="{{red}}"></path></marker>
+<marker id="pd-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1F5FAD"></path></marker>
+</defs>
+<g stroke="#2F3437" stroke-width="2" fill="none">
+<line x1="142.7" y1="171" x2="235.6" y2="119.9" marker-end="url(#pd-g)"></line>
+<line x1="348" y1="90" x2="450" y2="90" marker-end="url(#pd-g)"></line>
+<line x1="147.9" y1="222.4" x2="340.3" y2="296.9" marker-end="url(#pd-g)"></line>
+<line x1="457.8" y1="295.2" x2="620.3" y2="225.6" marker-end="url(#pd-g)"></line>
+<line x1="148" y1="200" x2="620" y2="200" marker-end="url(#pd-g)"></line>
+</g>
+<line x1="555" y1="119.1" x2="633.4" y2="169.8" stroke="{{red}}" stroke-width="3" marker-end="url(#pd-r)"></line>
+<ellipse cx="510" cy="90" rx="74" ry="40" fill="none" stroke="{{red}}" stroke-width="2" transform="rotate(-4 510 90)"></ellipse>
+<path d="M690 286 C 712 272, 716 254, 704 240" fill="none" stroke="#1F5FAD" stroke-width="1.8" stroke-linecap="round" marker-end="url(#pd-b)"></path>
+</svg>
+
+<div style="position: absolute; left: 176px; top: 134px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #F5F9EE; border: 1.5px solid #2F3437; font: 600 12px 'IBM Plex Mono', monospace">1</div>
+<div style="position: absolute; left: 386px; top: 79px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #F5F9EE; border: 1.5px solid #2F3437; font: 600 12px 'IBM Plex Mono', monospace">1</div>
+<div style="position: absolute; left: 581px; top: 134px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #F5F9EE; border: 2px solid {{red}}; color: {{red}}; font: 600 12px 'IBM Plex Mono', monospace">1</div>
+<div style="position: absolute; left: 231px; top: 249px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #F5F9EE; border: 1.5px solid #2F3437; font: 600 12px 'IBM Plex Mono', monospace">2</div>
+<div style="position: absolute; left: 526px; top: 249px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #F5F9EE; border: 1.5px solid #2F3437; font: 600 12px 'IBM Plex Mono', monospace">6</div>
+<div style="position: absolute; left: 369px; top: 189px; width: 32px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #F5F9EE; border: 1.5px solid #2F3437; font: 600 12px 'IBM Plex Mono', monospace">10</div>
+
+<div style="position: absolute; left: 34px; top: 172px; width: 112px; height: 56px; box-sizing: border-box; border-radius: 26px 30px 27px 29px; background: #2F3437; color: #EEF4E4; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 17px">S</b><br><span style="font: 500 13px 'IBM Plex Mono', monospace">0</span></span></div>
+<div style="position: absolute; left: 234px; top: 62px; width: 112px; height: 56px; box-sizing: border-box; border-radius: 29px 26px 30px 27px; background: #2F3437; color: #EEF4E4; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 17px">A</b><br><span style="font: 500 13px 'IBM Plex Mono', monospace">1</span></span></div>
+<div style="position: absolute; left: 454px; top: 62px; width: 112px; height: 56px; box-sizing: border-box; border-radius: 27px 29px 26px 30px; background: #2F3437; color: #EEF4E4; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 17px">B</b><br><span style="font: 500 13px 'IBM Plex Mono', monospace">2</span></span></div>
+<div style="position: absolute; left: 624px; top: 172px; width: 112px; height: 56px; box-sizing: border-box; border-radius: 30px 27px 29px 26px; background: #F5F9EE; border: 2px solid #2F3437; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 17px">Goal</b><br><span style="font: 500 13px 'IBM Plex Mono', monospace"><s style="color: {{red}}">10</s> 3</span></span></div>
+<div style="position: absolute; left: 344px; top: 292px; width: 112px; height: 56px; box-sizing: border-box; border-radius: 28px 30px 26px 29px; background: #F5F9EE; border: 2px solid #2F3437; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 17px">C</b><br><span style="font: 500 13px 'IBM Plex Mono', monospace">2</span></span></div>
+<div style="position: absolute; left: 20px; top: 316px; width: 160px; height: 56px; box-sizing: border-box; border-radius: 28px; border: 2px dashed #5D6466; color: #3F4547; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 15px">Unconnected X</b><br><span style="font: 500 12px 'IBM Plex Mono', monospace">unreached</span></span></div>
+
+<div style="position: absolute; left: 600px; top: 290px; width: 150px; font: 400 16px/1.25 'Architects Daughter', cursive; color: #1F5FAD">was 10 — now 3, via B</div>
+<div style="position: absolute; left: 470px; top: 368px; display: flex; align-items: center; gap: 8px; font: 500 12px 'IBM Plex Mono', monospace; color: #3F4547">WAITING<span style="padding: 3px 10px; background: #F5F9EE; border: 1.5px solid #2F3437">C 2</span><span style="padding: 3px 10px; background: #F5F9EE; border: 1.5px solid #2F3437">Goal 3</span></div>
+</div>
+
+<aside style="position: absolute; left: 840px; top: 118px; width: 376px; display: flex; flex-direction: column; gap: 20px">
+<p style="margin: 0; font: 400 27px/1.35 'Architects Daughter', cursive; color: #1F5FAD">Going through B, Goal drops from 10 to 3.</p>
+<div style="padding: 4px; border: 2px solid #2F3437; background: #F5F9EE">
+<div style="border: 1.5px solid #2F3437; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px">
+<span style="font: 500 11px 'IBM Plex Mono', monospace; letter-spacing: 0.08em; color: #4A5248">ANSWER SO FAR</span>
+<button type="button" aria-pressed="true" style="height: 44px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; background: #2F3437; border: 0; color: #EEF4E4; font: 600 15px 'IBM Plex Sans Condensed', sans-serif">Lowest cost · Dijkstra<span style="font: 600 17px 'IBM Plex Mono', monospace">3</span></button>
+<button type="button" aria-pressed="false" style="height: 44px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; background: transparent; border: 1.5px solid #2F3437; color: #2F3437; font: 500 15px 'IBM Plex Sans Condensed', sans-serif">Fewest edges · BFS<span style="font: 600 17px 'IBM Plex Mono', monospace">10</span></button>
+</div>
+</div>
+<div role="group" aria-label="View" style="display: flex; align-self: flex-start; border: 2px solid #2F3437">
+<button type="button" aria-pressed="true" style="height: 44px; padding: 0 16px; background: #2F3437; border: 0; color: #EEF4E4; font: 600 14px 'IBM Plex Mono', monospace">2D</button>
+<button type="button" aria-pressed="false" style="height: 44px; padding: 0 16px; background: #F5F9EE; border: 0; color: #2F3437; font: 500 14px 'IBM Plex Mono', monospace">3D</button>
+</div>
+<p style="margin: 0; font-size: 14px; line-height: 1.4; color: #3F4547">Printed values are checked by Soma. <span style="font-family: 'Architects Daughter', cursive; color: #1F5FAD; font-size: 15px">Handwriting is Muse’s explanation.</span></p>
+</aside>
+
+<div style="position: absolute; left: 40px; top: 560px; width: 1176px; height: 64px; display: flex; align-items: center; gap: 10px; border-top: 2px solid #2F3437; border-bottom: 2px solid #2F3437; background: rgba(245,249,238,0.85); padding: 0 12px; box-sizing: border-box">
+<button type="button" aria-label="Previous sheet" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1.5px solid #2F3437; color: #2F3437"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<button type="button" aria-label="Play explanation" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: #2F3437; border: 0; color: #EEF4E4"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></button>
+<button type="button" aria-label="Next sheet" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1.5px solid #2F3437; color: #2F3437"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+<span style="width: 12px"></span>
+<nav aria-label="Sheets" style="display: flex; gap: 6px">
+<button type="button" style="width: 44px; height: 44px; background: transparent; border: 1.5px solid #2F3437; font: 500 14px 'IBM Plex Mono', monospace; color: #2F3437">1</button>
+<button type="button" style="width: 44px; height: 44px; background: transparent; border: 1.5px solid #2F3437; font: 500 14px 'IBM Plex Mono', monospace; color: #2F3437">2</button>
+<button type="button" aria-current="step" style="width: 44px; height: 44px; background: transparent; border: 2.5px solid {{red}}; border-radius: 22px; font: 700 14px 'IBM Plex Mono', monospace; color: {{red}}">3</button>
+<button type="button" style="width: 44px; height: 44px; background: transparent; border: 1.5px dashed #6B7270; font: 500 14px 'IBM Plex Mono', monospace; color: #4A5248">4</button>
+<button type="button" style="width: 44px; height: 44px; background: transparent; border: 1.5px dashed #6B7270; font: 500 14px 'IBM Plex Mono', monospace; color: #4A5248">5</button>
+</nav>
+<span style="flex: 1"></span>
+<button type="button" style="height: 44px; padding: 0 14px; background: transparent; border: 1.5px solid #2F3437; font: 600 14px 'IBM Plex Sans Condensed', sans-serif; color: #2F3437">Predict the next node</button>
+</div>
+
+<form style="position: absolute; left: 40px; top: 656px; width: 1176px; height: 72px; display: flex; align-items: flex-end; gap: 12px; margin: 0">
+<label for="pd-ask" style="font: 500 11px 'IBM Plex Mono', monospace; letter-spacing: 0.08em; color: #4A5248; padding-bottom: 18px">Q.</label>
+<input id="pd-ask" type="text" placeholder="Ask about this sheet…" style="flex: 1; height: 52px; box-sizing: border-box; padding: 0 4px; background: transparent; border: 0; border-bottom: 2px solid #2F3437; font: 400 22px 'Architects Daughter', cursive; color: #2F3437">
+<button type="button" aria-label="Record a question" style="width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: #F5F9EE; border: 2px solid #2F3437; color: #2F3437"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></button>
+<button type="submit" style="height: 52px; padding: 0 28px; background: #2F3437; border: 0; color: #EEF4E4; font: 600 16px 'IBM Plex Sans Condensed', sans-serif">Ask Soma</button>
+</form>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"red":{"editor":"color","default":"#C21F32","options":["#C21F32","#D9611C","#1F5FAD"]},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { red: this.props.red ?? '#C21F32' };
+  }
+}
+</script>
+</body>
+</html>

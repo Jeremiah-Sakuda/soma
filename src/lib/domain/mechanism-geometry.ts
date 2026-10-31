@@ -76,16 +76,31 @@ export function mechanismMeshes(object: GeometryObject): MechanismMesh[] {
   });
 }
 
+// Specifications are immutable. Cache local swept bounds by piece identity so a
+// slider event does not rebuild seventeen complete meshes just to fit the camera.
+// Weak keys release old revisions; callers only receive fresh world-space arrays.
+const sweptBounds = new WeakMap<MechanismPiece, { min: MeshPoint; max: MeshPoint }>();
+function pieceBounds(piece: MechanismPiece) {
+  const cached = sweptBounds.get(piece);
+  if (cached) return cached;
+  const min: MeshPoint = [Infinity, Infinity, Infinity], max: MeshPoint = [-Infinity, -Infinity, -Infinity];
+  const rest = pieceMesh(piece), pivot = piece.driver ? tuple(piece.driver.pivot) : [0, 0, 0] as MeshPoint;
+  const radius = Math.max(...rest.vertices.map(p => Math.hypot(...sub(p, pivot))));
+  const pad = piece.driver ? radius * tuple(piece.driver.rotation).reduce((sum, n) => sum + Math.abs(n) * Math.PI / 180, 0) / 32 : 0;
+  for (let i = 0; i <= (piece.driver ? 16 : 0); i++) for (const p of pieceMesh(piece, i / 16).vertices) for (let axis = 0; axis < 3; axis++) {
+    min[axis] = Math.min(min[axis], p[axis] - pad); max[axis] = Math.max(max[axis], p[axis] + pad);
+  }
+  const bounds = { min, max }; sweptBounds.set(piece, bounds); return bounds;
+}
+
 /** Covers a part's complete driver range, keeping framing stable while scrubbing. */
 export function mechanismBounds(object: GeometryObject): { min: MeshPoint; max: MeshPoint } {
   const min: MeshPoint = [Infinity, Infinity, Infinity], max: MeshPoint = [-Infinity, -Infinity, -Infinity];
   for (const piece of object.geometry ?? []) {
-    const rest = pieceMesh(piece), pivot = piece.driver ? tuple(piece.driver.pivot) : [0, 0, 0] as MeshPoint;
-    const radius = Math.max(...rest.vertices.map(p => Math.hypot(...sub(p, pivot))));
-    const pad = piece.driver ? radius * tuple(piece.driver.rotation).reduce((sum, n) => sum + Math.abs(n) * Math.PI / 180, 0) / 32 : 0;
-    for (let i = 0; i <= (piece.driver ? 16 : 0); i++) for (const p of pieceMesh(piece, i / 16).vertices) for (let axis = 0; axis < 3; axis++) {
+    const local = pieceBounds(piece);
+    for (let axis = 0; axis < 3; axis++) {
       const size = tuple(object.size)[axis], origin = tuple(object.position)[axis];
-      min[axis] = Math.min(min[axis], origin + (p[axis] - pad) * size); max[axis] = Math.max(max[axis], origin + (p[axis] + pad) * size);
+      min[axis] = Math.min(min[axis], origin + local.min[axis] * size); max[axis] = Math.max(max[axis], origin + local.max[axis] * size);
     }
   }
   return { min, max };

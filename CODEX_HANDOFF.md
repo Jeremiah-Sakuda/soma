@@ -1,3 +1,7 @@
+## PM118 — Anatomy slider response and corrected piston, October 31
+
+The spatial branch now renders manual mechanism controls directly, with smooth transitions reserved for explanation steps. Camera-bound caching avoids repeated geometry compilation during dragging; numbered markers follow current parts. The [local gallery](http://localhost:41908/#piston) includes an actual new Muse piston recording that fixes base intersection and disconnected parts. Original output remains archived. [Fix, verification and spending](docs/ANATOMY_SLIDER_FIX.md). Runtime263files/SHA195d3d553598638a63403e84534d7196f76aa165d48d415178273f844f32d8d1. Shared ledger$15.30956725/$20; no reset, main merge, push or publication.
+
 ## PM113 — Muse authors mechanism geometry and motion, October 30
 
 Experimental `codex/spatial-exploration` now lets Muse construct bounded custom prisms, lathe profiles and tube paths, coupled controls and explanation poses. Both renderers compile the same data; Anatomy defaults for custom scenes. Review at http://localhost:41906/explore → Source & sharing → **Open Muse mechanism recording** (actual accepted Muse/Wonder output; no new inference). The separate geometry authoring example is prepared. The preview has live inference disabled.

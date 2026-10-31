@@ -1,6 +1,6 @@
 {
-  "releaseId": "soma-pm113-mechanisms-2026-10-30",
-  "sourceTreeSha256": "2453777e926c3ed1084f131541e9388d337673e9ddb0501ee56e791d36ac436d",
+  "releaseId": "soma-pm118-slider-2026-10-31",
+  "sourceTreeSha256": "195d3d553598638a63403e84534d7196f76aa165d48d415178273f844f32d8d1",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
     "desktop/Info.plist": "a7566833b9abda71d595bb76ba892daf8c33cccb10413e3a510a1a502c0db050",
@@ -111,8 +111,8 @@
     "src/app/page.tsx": "f93a200cbf8a9329e818063df91d2dbe1ab83b92acdcf6a0a34d515d07810e06",
     "src/components/account-panel.tsx": "2982be3393a2dfd4c6a6c1254f1db367f6f0ab0692044fea4db6acb9e6f1d549",
     "src/components/ai-activity.tsx": "0038687d1381a0e81687e993d2f3848a451c4db4035c53f8e6dff1b4ef0a0b0d",
-    "src/components/anatomy-canvas.tsx": "52a01e1a50b89f48fe4272248fb9696237acf13089ee440bcf00a06b371e5793",
-    "src/components/anatomy-geometry.ts": "03f4943cfe3c9e20ba27cd679e029ba3c46db027fb9db549dec70d16b3b32d27",
+    "src/components/anatomy-canvas.tsx": "a06b58078f50a3a080c9d3a5623644cdceddf6dc3b565a971e9ae542a8049762",
+    "src/components/anatomy-geometry.ts": "c0f4608700f0605941cc4921e29cedccc0c8840ecf544484b1feb82952881efe",
     "src/components/blackboard-course-picker.tsx": "39616ae07e1c757d0464d558d2396cdeea0d3d0e9a0ed3cdffb9ddc3a3aee694",
     "src/components/circuit-diagram.tsx": "8600343dc4798be0fd4db0021c823696e4286032c26a96f5e01977573dac457a",
     "src/components/companion-memory.css": "df8fc58a5e0126942d8ff221776717204c747f6bec9ea9b52c7cba824e06c02c",
@@ -177,7 +177,7 @@
     "src/lib/domain/learning.ts": "c07644db63ad9624e29d570dbf779d1888ec94aae9de43f02b7b0e4ace94e9af",
     "src/lib/domain/lessons.ts": "6b6ee724dac772f7d990db559eeb2f8da368f1b5b346bb2adc20533a73d4fc12",
     "src/lib/domain/mechanism-example.ts": "04a68e0a8a21e11edbcd3a8a00fd6cbe9eccc0baff23eb2458cc4b05b94e2fd1",
-    "src/lib/domain/mechanism-geometry.ts": "cc2ad2882c8e9e9f40a0b8b7a16355d786fcfdf3bd0965a9052ae20c7ee8048f",
+    "src/lib/domain/mechanism-geometry.ts": "4a24eccb3a6ce1ec280c8a5d17e2bc8bc6f0a933ce3e8706c15d837c0a93bb4c",
     "src/lib/domain/mechanism-schema.ts": "71e08d7124f6252ef010c1e4b898f86e3c1c8f026872c69add00d7276cbeb2b1",
     "src/lib/domain/piazza-navigation.ts": "5a9b00682f7b44f5d600936710b1ed4054907fde47ed07e382ae3e4c157a3cec",
     "src/lib/domain/point-context.ts": "7844e1bb996872c2ff7cc3f0cd1a0e4c6c563ed061bc5a201e8d18c91342f4e4",

@@ -157,8 +157,10 @@ export function anatomyPart(object: SpatialObject, projection: Projection, slice
 function authoredPart(object: SpatialObject, p: Projection): AnatomyPart {
   const solids: AnatomySolid[] = [], a = (p.azimuth ?? 45) * Math.PI / 180, e = (p.elevation ?? 30) * Math.PI / 180;
   const viewer = [Math.cos(a) * Math.cos(e), Math.sin(e), Math.sin(a) * Math.cos(e)];
+  const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
   for (const mesh of mechanismMeshes(object)) {
     const vertices = mesh.vertices.map(v => v.map((n, i) => n + [object.position.x, object.position.y, object.position.z][i]) as [number, number, number]);
+    for (const v of vertices) for (let axis = 0; axis < 3; axis++) { min[axis] = Math.min(min[axis], v[axis]); max[axis] = Math.max(max[axis], v[axis]); }
     const normals = mesh.faces.map(f => faceNormal(vertices, f));
     const visible = normals.map(n => n.reduce((sum, v, i) => sum + v * viewer[i], 0) > 1e-7);
     const edges = new Map<string, number[]>();
@@ -180,8 +182,8 @@ function authoredPart(object: SpatialObject, p: Projection): AnatomyPart {
       solids.push({ paths: { fill: pathOf(flat, true), top: '', shades, outline, crease }, color: mechanismPalette[mesh.color], depth: depthOf(center, p), opacity: 1, min, max, screen: { left: Math.min(...flat.map(v => v[0])), right: Math.max(...flat.map(v => v[0])), top: Math.min(...flat.map(v => v[1])), bottom: Math.max(...flat.map(v => v[1])) } });
     });
   }
-  const b = mechanismBounds(object);
-  return { object, solids, lines: [], anchor: iso([(b.min[0] + b.max[0]) / 2, (b.min[2] + b.max[2]) / 2, b.max[1]], p) };
+  // Labels follow the current part. Only camera fitting uses the full motion range.
+  return { object, solids, lines: [], anchor: iso([(min[0] + max[0]) / 2, (min[2] + max[2]) / 2, max[1]], p) };
 }
 
 /** Painter constraints from separating world axes, then a stable depth fallback.

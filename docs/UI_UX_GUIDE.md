@@ -213,3 +213,8 @@ Display only actual application stage events; elapsed time is not a completion e
 General explanation follow-ups say “Ask about this explanation…”; new selected context says “Ask about what is on your screen…”. Preserve graph-specific wording only for checked graph scenes. Keep visible uncertainty concise and expose details under Source & assumptions. Connection labels must avoid other routed connections as well as nodes and labels; use the full-text legend when they cannot fit. Undirected legend entries use a line. Do not shrink or truncate source labels for compact views.
 
 Playback settings expose four narration rates (0.8×–1.5×). Same-state Gemini pause/resume continues from actual audio position; Replay resets. Changing rate uses media playbackRate, retaining audio-driven visual progress. Browser speech pauses before its rate changes. Provider/version/state changes retain cancellation and stale-result guards. Manual stepping and captions remain usable while voice prepares. Real media-clock tests establish synchronization, not word timing or physical-speaker quality.
+
+
+## PM118 — Spatial direct manipulation
+
+Manual geometry sliders render the exact current control value immediately, including reversals and takeover during an explanation transition. Reserve bounded easing for authored explanation steps. Keep framing stable over the full control range; markers follow the currently drawn part. Known flaws in actual generated examples must be disclosed, with original outputs preserved when revised. Targeted geometry checks do not imply a general physical simulation.

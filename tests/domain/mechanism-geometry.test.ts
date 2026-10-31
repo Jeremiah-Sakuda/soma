@@ -64,6 +64,20 @@ describe('bounded mechanism compiler', () => {
       expect(mechanismBounds({ ...object, parameterValues: { opening: i / 257 } })).toEqual(bound);
     }
   });
+  it('fits revised geometry and world frames independently, even if a caller changes returned bounds', () => {
+    const object = { ...panel.objects[1], geometry: [panel.objects[1].geometry![0]] };
+    const original = mechanismBounds(object), expected = structuredClone(original);
+    original.min[0] = -1e6; original.max[1] = 1e6;
+    expect(mechanismBounds(object)).toEqual(expected);
+    const piece = object.geometry[0];
+    const revised = { ...object, position: { x: 3, y: -2, z: 1 }, size: { x: 2, y: 2, z: 2 }, geometry: [{ ...piece, position: { ...piece.position, x: piece.position.x + .8 } }] };
+    const bound = mechanismBounds(revised);
+    expect(bound).not.toEqual(expected);
+    for (const value of [0, .17, .83, 1]) for (const mesh of mechanismMeshes({ ...revised, parameterValues: { opening: value } })) for (const p of mesh.vertices) for (const axis of [0, 1, 2]) {
+      const actual = p[axis] + [revised.position.x, revised.position.y, revised.position.z][axis];
+      expect(actual).toBeGreaterThanOrEqual(bound.min[axis]); expect(actual).toBeLessThanOrEqual(bound.max[axis]);
+    }
+  });
   it('shares exact compiled surfaces between Three and Anatomy, including world framing at phone sizes', () => {
     for (const value of [0, .45, 1]) {
       const state = { ...initialExplorationState(spec), spatial: { ...defaultSpatialView(), parameters: { opening: value } } }, scene = spatialScene(spec, state)!;
@@ -93,6 +107,20 @@ describe('bounded mechanism compiler', () => {
         }
       }
     }
+  });
+  it('moves part markers with the actual geometry while keeping the camera fixed over the full travel', () => {
+    const scene = (opening: number) => spatialScene(spec, { ...initialExplorationState(spec), spatial: { ...defaultSpatialView(), parameters: { opening } } })!;
+    const start = scene(0), end = scene(1), view = defaultSpatialView();
+    const projection = anatomyProjection(start, view, 640, 360);
+    expect(anatomyProjection(end, view, 640, 360)).toEqual(projection);
+    const anchors = [start, end].map(s => {
+      const o = s.objects[1], points = mechanismMeshes(o).flatMap(m => m.vertices.map(v => v.map((n, i) => n + [o.position.x, o.position.y, o.position.z][i])));
+      const min = [0, 1, 2].map(axis => Math.min(...points.map(p => p[axis]))), max = [0, 1, 2].map(axis => Math.max(...points.map(p => p[axis])));
+      const anchor = anatomyPart(o, projection, 0).anchor;
+      expect(anchor).toEqual(iso([(min[0] + max[0]) / 2, (min[2] + max[2]) / 2, max[1]], projection));
+      return anchor;
+    });
+    expect(anchors[0]).not.toEqual(anchors[1]);
   });
   it('resolves explanation poses separately from saved manual overrides', () => {
     const state = initialExplorationState(spec);

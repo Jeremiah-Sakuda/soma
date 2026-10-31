@@ -58,7 +58,7 @@ test('keyboard control, reduced motion and responsive geometry retain visible, r
   }
 });
 
-test('normal parameter motion interpolates a rigid hinge and stops after the final frame', async ({ page }) => {
+test('explanation motion interpolates a rigid hinge; manual takeover is immediate and stops', async ({ page }) => {
   await page.addInitScript(() => {
     const original = requestAnimationFrame; (window as unknown as { frames: number }).frames = 0;
     window.requestAnimationFrame = callback => { (window as unknown as { frames: number }).frames++; return original(callback); };
@@ -70,10 +70,24 @@ test('normal parameter motion interpolates a rigid hinge and stops after the fin
     const states: string[] = []; new MutationObserver(() => states.push([...element.querySelectorAll('[data-anatomy-object="gate"] .anatomy-fill')].map(p => p.getAttribute('d')).join(' '))).observe(element, { subtree: true, attributes: true, attributeFilter: ['d'] });
     (window as unknown as { states: string[] }).states = states;
   });
-  await page.getByRole('slider', { name: 'Gate opening', exact: true }).fill('1');
+  await page.getByRole('button', { name: 'Next explanation', exact: true }).click();
   await page.waitForTimeout(500);
   expect(await page.evaluate(() => new Set((window as unknown as { states: string[] }).states).size)).toBeGreaterThan(2);
-  const settled = await drawing(page), before = await page.evaluate(() => (window as unknown as { frames: number }).frames);
+  // Begin another authored transition, then reverse it with direct manipulation.
+  await page.getByRole('button', { name: 'Next explanation', exact: true }).click();
+  await page.getByRole('slider', { name: 'Gate opening', exact: true }).fill('0.17');
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  const manual = await drawing(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.getByRole('slider', { name: 'Gate opening', exact: true }).fill('0.83');
+  await page.getByRole('slider', { name: 'Gate opening', exact: true }).fill('0.17');
+  expect(await drawing(page)).toBe(manual);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const settled = await drawing(page);
+  await page.waitForTimeout(450); expect(await drawing(page)).toBe(settled);
+  // Stepping also restarts the separate, bounded 2.4s narration/card clock.
+  await page.waitForTimeout(2200);
+  const before = await page.evaluate(() => (window as unknown as { frames: number }).frames);
   await page.waitForTimeout(450); expect(await drawing(page)).toBe(settled);
   expect(await page.evaluate(() => (window as unknown as { frames: number }).frames)).toBe(before);
 });

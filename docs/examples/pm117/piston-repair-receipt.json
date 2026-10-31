@@ -1,0 +1,58 @@
+{
+  "startAt": "2026-10-31T17:28:30.150Z",
+  "before": 15.261894,
+  "cap": 20,
+  "status": "accepted-and-exactly-reopened",
+  "generation": {
+    "mode": "live",
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "calls": 3,
+    "usage": {
+      "input_tokens": 12006,
+      "output_tokens": 4766
+    },
+    "costUsd": 0.04767325,
+    "elapsedMs": 19510,
+    "timings": [
+      {
+        "call": 1,
+        "stage": "interpretation",
+        "durationMs": 4682
+      },
+      {
+        "call": 2,
+        "stage": "composition",
+        "durationMs": 11423
+      },
+      {
+        "call": 3,
+        "stage": "review",
+        "durationMs": 2000
+      }
+    ],
+    "checks": [
+      "schema",
+      "references"
+    ],
+    "audit": [
+      {
+        "event": "source-interpreted",
+        "call": 1,
+        "detail": "No checked graph inferred; clarification or explanation only. Provider no-graph sentinel normalized to JSON null."
+      },
+      {
+        "event": "review-approved",
+        "call": 3,
+        "detail": "Muse Wonder advisory review: approve."
+      },
+      {
+        "event": "scene-validated",
+        "call": 3,
+        "detail": "Typed scene, source versions and checked model references validated."
+      }
+    ]
+  },
+  "endAt": "2026-10-31T17:28:51.758Z",
+  "after": 15.30956725
+}

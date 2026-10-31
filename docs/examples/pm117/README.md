@@ -1,5 +1,7 @@
 # Actual Muse before/after examples — PM117
 
+**October 31, PM118:** The current gallery includes a fresh Muse piston correction: shorter travel avoids the base, and the rod touches the head and grip. The original After recording is retained in `piston-original-after.json`. Direct slider dragging no longer eases behind input, and markers follow moving parts. See [the correction and verification record](../../ANATOMY_SLIDER_FIX.md). The generation/results paragraphs below record the original PM117 run; the correction added $0.04767325, bringing cumulative spending to $15.30956725/$20.
+
 Open **[the local comparison gallery](http://localhost:41908)**. The three tabs contain matched original-synthetic source images and actual Muse outputs:
 
 | Example | Before: fixed parts | After: authored geometry |

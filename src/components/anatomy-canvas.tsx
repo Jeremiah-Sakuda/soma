@@ -16,39 +16,39 @@ function Solid({ solid, emphasized }: { solid: AnatomySolid; emphasized: boolean
   </g>;
 }
 
-/** Bounded pose interpolation; no idle animation, generated markup or independent simulation. */
+/** Ease authored steps; direct manipulation must render the requested pose immediately. */
 function usePose(scene: SpatialScene) {
   const [frame, setFrame] = useState(scene), current = useRef(scene);
+  const direct = scene.parameters?.some(parameter => parameter.overridden) ?? false;
   useEffect(() => {
     const before = current.current;
     const moved = scene.objects.some(o => {
       const old = before.objects.find(p => p.id === o.id);
       return old && o.visible && old.visible && (JSON.stringify(o.position) !== JSON.stringify(old.position) || JSON.stringify(o.parameterValues) !== JSON.stringify(old.parameterValues));
     });
-    if (!moved || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (direct || !moved || matchMedia('(prefers-reduced-motion: reduce)').matches) {
       current.current = scene; setFrame(scene); return;
     }
-    let id = 0, start = performance.now(), last = -Infinity;
+    let id = 0, start = performance.now();
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / 360), k = 1 - (1 - t) ** 3;
-      if (now - last >= 30 || t === 1) {
-        last = now;
-        const next = { ...scene, objects: scene.objects.map(o => {
-          const old = before.objects.find(p => p.id === o.id);
-          return !old || !old.visible || !o.visible ? o : { ...o, position: {
-            x: old.position.x + (o.position.x - old.position.x) * k,
-            y: old.position.y + (o.position.y - old.position.y) * k,
-            z: old.position.z + (o.position.z - old.position.z) * k,
-          }, ...(o.parameterValues ? { parameterValues: Object.fromEntries(Object.entries(o.parameterValues).map(([id, to]) => [id, (old.parameterValues?.[id] ?? to) + (to - (old.parameterValues?.[id] ?? to)) * k])) } : {}) };
-        }) };
-        current.current = next; setFrame(next);
-      }
+      // Land on the exact authored values, without interpolation round-off.
+      const next = t === 1 ? scene : { ...scene, objects: scene.objects.map(o => {
+        const old = before.objects.find(p => p.id === o.id);
+        return !old || !old.visible || !o.visible ? o : { ...o, position: {
+          x: old.position.x + (o.position.x - old.position.x) * k,
+          y: old.position.y + (o.position.y - old.position.y) * k,
+          z: old.position.z + (o.position.z - old.position.z) * k,
+        }, ...(o.parameterValues ? { parameterValues: Object.fromEntries(Object.entries(o.parameterValues).map(([id, to]) => [id, (old.parameterValues?.[id] ?? to) + (to - (old.parameterValues?.[id] ?? to)) * k])) } : {}) };
+      }) };
+      current.current = next; setFrame(next);
       if (t < 1) id = requestAnimationFrame(tick);
     };
     id = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(id);
   }, [scene]);
-  return frame;
+  // Do not wait for an effect (or one extra stale frame) when scrubbing/reversing.
+  return direct ? scene : frame;
 }
 
 export default function AnatomyCanvas({ scene, view, selected, onSelect, onView }: {

@@ -87,9 +87,10 @@ export async function POST(request: Request) {
       .safeParse(body);
     if (!action.success) throw new ExplorationError('invalid_request');
     if (action.data.action === 'recording') {
-      if (!z.strictObject({ action: z.literal('recording') }).safeParse(body).success)
+      const parsed = z.strictObject({ action: z.literal('recording'), mechanism: z.boolean().optional() }).safeParse(body);
+      if (!parsed.success)
         throw new ExplorationError('invalid_request');
-      return response(await explorationService.recording(principal));
+      return response(await explorationService.recording(principal, parsed.data.mechanism));
     }
     if (action.data.action === 'application')
       return response(await explorationService.application(principal, body));
@@ -102,6 +103,7 @@ export async function POST(request: Request) {
             action: z.literal('example'),
             weighted: z.boolean().optional(),
             spatial: z.boolean().optional(),
+            mechanism: z.boolean().optional(),
           })
           .safeParse(body).success
       )
@@ -111,6 +113,7 @@ export async function POST(request: Request) {
           principal,
           (body as { weighted?: boolean }).weighted === true,
           (body as { spatial?: boolean }).spatial === true,
+          (body as { mechanism?: boolean }).mechanism === true,
         ),
       );
     }

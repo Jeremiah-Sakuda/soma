@@ -47,3 +47,13 @@ it('decodes schema-constrained scene data without offering or fabricating a func
  vi.stubGlobal('fetch',fetcher);const reply=await requestMetaVisionResponse(request({tools:[],structuredOutput:{name:'scene',schema:{type:'object',properties:{spec:{type:'object'}},required:['spec'],additionalProperties:false}}}));
  expect(reply.tools).toEqual([]);expect(reply.structured).toEqual({spec:{title:'Original synthetic scene'}});const sent=JSON.parse(String(fetcher.mock.calls[0][1]?.body));expect(sent.tools).toEqual([]);expect(sent.text.format).toMatchObject({type:'json_schema',strict:true});
 });
+
+
+it('bounds the explicit mechanism output profile while preserving ordinary vision defaults', async () => {
+  vi.stubEnv('MODEL_API_KEY', 'synthetic-test-key');
+  const fetcher = vi.fn(async () => new Response(JSON.stringify(payload()))); vi.stubGlobal('fetch', fetcher);
+  await requestMetaVisionResponse(request({ maxOutputTokens: 6144, reasoningEffort: 'minimal' }));
+  expect(JSON.parse(String((fetcher.mock.calls[0] as unknown as [string, RequestInit])[1].body))).toMatchObject({ max_output_tokens: 6144, reasoning: { effort: 'minimal' } });
+  await expect(requestMetaVisionResponse(request({ maxOutputTokens: 6145 }))).rejects.toMatchObject({ code: 'request_invalid', requestSent: false });
+  expect(fetcher).toHaveBeenCalledTimes(1);
+});

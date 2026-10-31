@@ -2687,3 +2687,27 @@ Deviation/status: research and recommendation only, not an adopted architecture 
 Retained failures: sandbox socket restrictions affected48 offline cases before the permitted rerun. The first preview/trace used a dependency symlink incompatible with isolated packaging; materialized the same pinned dependencies, then default build/trace passed. Initial SVG painter order hid a sensor behind its support board; corrected. Transparent-shell picking and real hit-point/disclosure test defects were fixed. Final default-build regression initially155/156; strict pixel checks exposed tiny software-GPU edge differences and direct instrumentation then found redundant actual GPU draws. Fixed callback-only rendering, retained zero-idle-draw assertion, bounded raster tolerance and repeated full suite to156/156. No provider billing purchase, hosted configuration change, main merge, push, deployment, publication or user visual acceptance claim. Concurrent PM100/PM104/PM109/PM110 records and unrelated design/proposal work remain outside this change.
 
 Implementation commit: [3ee1edf](https://github.com/Jeremiah-Sakuda/soma/commit/3ee1edf).
+
+## PM111 — Clarify Anatomy authorship (October 30)
+
+1. Clarified that Muse authors validated scene specifications: part choices, positions, connections, explanation steps and bounded poses.
+2. Anatomy projection and Soma component geometry/detail are application code. The currently reviewed relay is an original prepared example, not a fresh model-generated figure.
+3. The implemented comparison supports existing structured Muse scenes, not bespoke Anatomy figure generation from scratch. No code, tests, model calls, spending, merge or publication in this clarification.
+
+Deviation: none; authorship clarification only.
+
+## PM112 — Compare Muse involvement across renderers (October 30)
+
+1. Clarified that current Three.js and Anatomy views consume the same validated scene specification; neither currently gives Muse more authorship.
+2. Distinguished application-owned geometry and rendering from Muse-authored part choice, arrangement, connections, poses and explanation. Renderer preference changes presentation only.
+3. Identified richer bounded mechanism/geometry/motion authoring as the way to expand Muse involvement; this remains proposed, not implemented or verified by the comparison. No code, calls, spending or release change.
+
+Deviation: none; clarification only.
+
+## PM113 — Muse mechanism authoring (October 30)
+
+1. Implemented bounded Muse-authored convex prisms, lathe profiles and tube paths, with named controls, coupled motion and step poses. A shallow provider payload stays within the ten-level API limit; the application binds one model-chosen assembly frame and validates the complete scene before factual review/storage. Both renderers use one compiler; new custom mechanisms default to Anatomy. Catalog styles and legacy saves remain compatible. No generated code, arbitrary assets or checked physics.
+2. Completed a real synthetic-source Muse/Wonder journey after recorded fixes: six custom pieces/all three forms, a gate/handle coupling independently checked across five opening values, substantive geometry rejection/repair before publication, then a contextual follow-up and exact Firestore reopening. First5calls/40.218s/$0.08729075; follow-up3calls/26.695s/$0.06486925. Added an accurately labeled recording alongside the separately labeled prepared fixture. This is development evidence, not a reliability, learning or latency benchmark.
+3. Final verification:1,640offline passed/95opt-in skipped;166production-browser passed, including both actual revisions in both renderers; TypeScript/default build/packaging trace passed (1,224files/two package links/zero private configuration mappings). Native Mac Chrome exercised prepared steps, manual controls, comparison, selection and exact reopening, plus actual recorded comparison. Runtime263files/SHA2453777e926c3ed1084f131541e9388d337673e9ddb0501ee56e791d36ac436d. Preview41906 has live inference disabled. At2026-10-31T00:13:10.915Z shared ledger$14.93734875/$20, leaving$5.06265125; prior charges and two uncertain$0.35reservations retained.
+
+Retained failures: two provider schema-depth failures; one4,096-token truncation; missing spatial panel and duplicate sequence/step IDs; live Wonder geometry correction and contextual contract repair. Fixed the shallow authoring contract, constrained spatial composition and shared frame, and bounded spatial output to6,144tokens/minimal effort under the same6calls/90s/$0.35turn reservation. Local instruction-length, shared-fixture-coordinate, collinear-edge, motion-observer/entry-clock and sandbox-build failures were corrected and rerun; receipts retained. Full details: MUSE_MECHANISM_AUTHORING.md. No daily-limit reset, main merge, push, deployment, publication or user visual-acceptance claim. Concurrent PM100/PM104/PM109/PM110/PM114/PM115 design/polish work remains outside this commit.

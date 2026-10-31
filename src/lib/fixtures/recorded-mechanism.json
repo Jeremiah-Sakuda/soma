@@ -1,0 +1,643 @@
+{
+  "spec": {
+    "schemaVersion": "exploration-v1",
+    "id": "explore_7f06901cc47049caa309424a2c74f83b",
+    "version": 1,
+    "title": "Hinged passage gate",
+    "objective": "Show fixed frame, hinged gate, hinge axis and attached handle moving closed to open with one control.",
+    "sources": [
+      {
+        "observationId": "capture_fc121769847b478298484de7b7d6019d",
+        "version": 1,
+        "region": null
+      }
+    ],
+    "assumptions": [
+      "Chosen frame width, gate thickness, pin diameter, handle bends and 85 deg open angle are illustrative assumptions.",
+      "Outward means forward swing away from viewer.",
+      "Handle is rigidly attached to gate and shares left hinge pivot."
+    ],
+    "uncertainty": [
+      "No numeric dimensions or opening angles visible.",
+      "Only closed front view shown; partial and open are illustrative.",
+      "3D depth and pin diameter not shown."
+    ],
+    "unsupportedClaims": [],
+    "mode": "explanation",
+    "scene": {
+      "layout": "diagram-sidebar",
+      "panels": [
+        {
+          "id": "gateScene",
+          "kind": "spatial",
+          "title": "Hinged passage mechanism",
+          "placement": {
+            "column": 1,
+            "row": 1,
+            "columnSpan": 2
+          },
+          "objects": [
+            {
+              "id": "frameObj",
+              "label": "Fixed frame",
+              "description": "Fixed open rectangular U frame stays in place.",
+              "shape": "box",
+              "renderStyle": null,
+              "geometry": [
+                {
+                  "id": "frameLeft",
+                  "purpose": "fixed left jamb of open frame",
+                  "form": {
+                    "kind": "prism",
+                    "outline": [
+                      {
+                        "x": -0.4,
+                        "z": -0.1
+                      },
+                      {
+                        "x": -0.32,
+                        "z": -0.1
+                      },
+                      {
+                        "x": -0.32,
+                        "z": 0.1
+                      },
+                      {
+                        "x": -0.4,
+                        "z": 0.1
+                      }
+                    ],
+                    "height": 0.5
+                  },
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "color": "sage",
+                  "driver": null
+                },
+                {
+                  "id": "frameTop",
+                  "purpose": "fixed top of open frame",
+                  "form": {
+                    "kind": "prism",
+                    "outline": [
+                      {
+                        "x": -0.4,
+                        "z": -0.1
+                      },
+                      {
+                        "x": 0.4,
+                        "z": -0.1
+                      },
+                      {
+                        "x": 0.4,
+                        "z": 0.1
+                      },
+                      {
+                        "x": -0.4,
+                        "z": 0.1
+                      }
+                    ],
+                    "height": 0.08
+                  },
+                  "position": {
+                    "x": 0,
+                    "y": 0.29,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "color": "sage",
+                  "driver": null
+                },
+                {
+                  "id": "frameRight",
+                  "purpose": "fixed right jamb of open frame",
+                  "form": {
+                    "kind": "prism",
+                    "outline": [
+                      {
+                        "x": 0.32,
+                        "z": -0.1
+                      },
+                      {
+                        "x": 0.4,
+                        "z": -0.1
+                      },
+                      {
+                        "x": 0.4,
+                        "z": 0.1
+                      },
+                      {
+                        "x": 0.32,
+                        "z": 0.1
+                      }
+                    ],
+                    "height": 0.5
+                  },
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "color": "sage",
+                  "driver": null
+                }
+              ],
+              "color": "sage",
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "size": {
+                "x": 2,
+                "y": 2,
+                "z": 2
+              },
+              "parentId": null
+            },
+            {
+              "id": "gateObj",
+              "label": "Gate",
+              "description": "Thin panel that opens outward about left hinge.",
+              "shape": "box",
+              "renderStyle": null,
+              "geometry": [
+                {
+                  "id": "gateLeaf",
+                  "purpose": "thin gate panel that opens outward",
+                  "form": {
+                    "kind": "prism",
+                    "outline": [
+                      {
+                        "x": -0.3,
+                        "z": -0.02
+                      },
+                      {
+                        "x": 0.3,
+                        "z": -0.02
+                      },
+                      {
+                        "x": 0.3,
+                        "z": 0.02
+                      },
+                      {
+                        "x": -0.3,
+                        "z": 0.02
+                      }
+                    ],
+                    "height": 0.5
+                  },
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "color": "clay",
+                  "driver": {
+                    "parameterId": "openAmt",
+                    "pivot": {
+                      "x": -0.3,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "translation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": -85,
+                      "z": 0
+                    }
+                  }
+                }
+              ],
+              "color": "clay",
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "size": {
+                "x": 2,
+                "y": 2,
+                "z": 2
+              },
+              "parentId": null
+            },
+            {
+              "id": "hingeObj",
+              "label": "Left hinge",
+              "description": "Left vertical axis for rotation.",
+              "shape": "cylinder",
+              "renderStyle": null,
+              "geometry": [
+                {
+                  "id": "hingePin",
+                  "purpose": "left vertical hinge pin axis",
+                  "form": {
+                    "kind": "lathe",
+                    "profile": [
+                      {
+                        "radius": 0.03,
+                        "y": -0.25
+                      },
+                      {
+                        "radius": 0.03,
+                        "y": 0.25
+                      }
+                    ]
+                  },
+                  "position": {
+                    "x": -0.3,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "color": "metal",
+                  "driver": null
+                }
+              ],
+              "color": "blue",
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "size": {
+                "x": 2,
+                "y": 2,
+                "z": 2
+              },
+              "parentId": null
+            },
+            {
+              "id": "handleObj",
+              "label": "Handle stays attached",
+              "description": "C-shaped handle fixed to gate right side.",
+              "shape": "torus",
+              "renderStyle": null,
+              "geometry": [
+                {
+                  "id": "bentHandle",
+                  "purpose": "bent handle attached to gate right side",
+                  "form": {
+                    "kind": "tube",
+                    "path": [
+                      {
+                        "x": 0.18,
+                        "y": -0.08,
+                        "z": 0.05
+                      },
+                      {
+                        "x": 0.24,
+                        "y": -0.08,
+                        "z": 0.12
+                      },
+                      {
+                        "x": 0.24,
+                        "y": 0.08,
+                        "z": 0.12
+                      },
+                      {
+                        "x": 0.18,
+                        "y": 0.08,
+                        "z": 0.05
+                      }
+                    ],
+                    "radius": 0.02
+                  },
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "color": "gold",
+                  "driver": {
+                    "parameterId": "openAmt",
+                    "pivot": {
+                      "x": -0.3,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "translation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": -85,
+                      "z": 0
+                    }
+                  }
+                }
+              ],
+              "color": "gold",
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "size": {
+                "x": 2,
+                "y": 2,
+                "z": 2
+              },
+              "parentId": "gateObj"
+            }
+          ],
+          "connections": [],
+          "poses": [],
+          "parameters": [
+            {
+              "id": "openAmt",
+              "label": "Opening",
+              "description": "One control rotates gate and attached handle together about left hinge axis.",
+              "initial": 0
+            }
+          ],
+          "parameterPoses": [
+            {
+              "stepId": "closedStep",
+              "parameterId": "openAmt",
+              "value": 0
+            },
+            {
+              "stepId": "partStep",
+              "parameterId": "openAmt",
+              "value": 0.5
+            },
+            {
+              "stepId": "openStep",
+              "parameterId": "openAmt",
+              "value": 1
+            }
+          ],
+          "viewAction": null
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "closedStep",
+        "caption": "Closed: gate fills frame, handle on right side.",
+        "narration": "Frame stays fixed while gate rests closed on the hinge.",
+        "highlightIds": [
+          "frameObj",
+          "gateObj",
+          "hingeObj"
+        ],
+        "sourceHighlightIds": [
+          "frame",
+          "gate",
+          "hinge"
+        ],
+        "execution": null,
+        "executionStep": null
+      },
+      {
+        "id": "partStep",
+        "caption": "Partly open: gate and handle swing together about left hinge.",
+        "narration": "One opening control rotates gate and attached handle outward.",
+        "highlightIds": [
+          "gateObj",
+          "handleObj",
+          "hingeObj"
+        ],
+        "sourceHighlightIds": [
+          "motion_note",
+          "handle"
+        ],
+        "execution": null,
+        "executionStep": null
+      },
+      {
+        "id": "openStep",
+        "caption": "Open: gate swung outward, handle carried with it.",
+        "narration": "At full opening the handle remains attached to the gate.",
+        "highlightIds": [
+          "gateObj",
+          "handleObj"
+        ],
+        "sourceHighlightIds": [
+          "gate",
+          "handle",
+          "motion_note"
+        ],
+        "execution": null,
+        "executionStep": null
+      }
+    ],
+    "followups": [
+      "Try the Opening slider to see gate and handle move together."
+    ]
+  },
+  "question": "Build this as a spatial mechanism using custom geometry, not catalog renderStyle meshes. Design the open rectangular frame, a thin gate, hinge pin and bent handle using prism, lathe and tube forms. Use one opening parameter coupled to both the gate and attached handle around the same left hinge. Give three explanation steps with parameterPoses for closed, partial and open. Preserve source roles; label chosen dimensions and angle as illustrative assumptions. Keep the construction concise enough to finish.",
+  "source": {
+    "observationId": "capture_fc121769847b478298484de7b7d6019d",
+    "version": 1,
+    "kind": "screenshot",
+    "label": "Original synthetic hinged passage schematic",
+    "capturedAt": "2026-10-31T00:08:34.711Z",
+    "imageSha256": "ab2f14a4429e11327d2f2e326f4b10fd1e4ab0ecee066de48bab4fc85f36f36d",
+    "summary": "Original teaching schematic shows a fixed open rectangular frame (green U) surrounding a thin brown gate panel. Left vertical light strip is the hinge axis. Yellow C-shaped handle is attached to gate right side. Text roles: Frame stays fixed; Left hinge is the axis; Gate opens outward; Handle stays attached. Motion is Closed \u2192 partly open \u2192 open with one opening control for gate and handle together about left vertical hinge. Illustrative dimensions and motion only; no forces, rates or tolerances.",
+    "uncertainty": [
+      "No numeric dimensions, thicknesses, or opening angles visible",
+      "No 3D depth, hinge pin diameter, or handle bend dimensions shown",
+      "Only closed front view shown; partial/open poses not pictured",
+      "Gate outward direction defined only as text, not drawn"
+    ],
+    "anchors": [
+      {
+        "id": "title",
+        "label": "Title: hinged passage",
+        "region": {
+          "x": 0.03,
+          "y": 0.04,
+          "width": 0.6,
+          "height": 0.09
+        }
+      },
+      {
+        "id": "frame",
+        "label": "Fixed U-shaped frame",
+        "region": {
+          "x": 0.18,
+          "y": 0.27,
+          "width": 0.56,
+          "height": 0.57
+        }
+      },
+      {
+        "id": "gate",
+        "label": "Gate panel",
+        "region": {
+          "x": 0.215,
+          "y": 0.34,
+          "width": 0.48,
+          "height": 0.48
+        }
+      },
+      {
+        "id": "hinge",
+        "label": "Left hinge axis strip",
+        "region": {
+          "x": 0.188,
+          "y": 0.335,
+          "width": 0.03,
+          "height": 0.5
+        }
+      },
+      {
+        "id": "handle",
+        "label": "Attached handle",
+        "region": {
+          "x": 0.591,
+          "y": 0.51,
+          "width": 0.06,
+          "height": 0.2
+        }
+      },
+      {
+        "id": "motion_note",
+        "label": "Closed to open instruction",
+        "region": {
+          "x": 0.032,
+          "y": 0.87,
+          "width": 0.72,
+          "height": 0.07
+        }
+      }
+    ]
+  },
+  "generation": {
+    "mode": "live",
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "calls": 5,
+    "usage": {
+      "input_tokens": 21979,
+      "output_tokens": 7216
+    },
+    "costUsd": 0.08729075,
+    "elapsedMs": 40218,
+    "timings": [
+      {
+        "call": 1,
+        "stage": "interpretation",
+        "durationMs": 3872
+      },
+      {
+        "call": 2,
+        "stage": "composition",
+        "durationMs": 13051
+      },
+      {
+        "call": 3,
+        "stage": "review",
+        "durationMs": 7572
+      },
+      {
+        "call": 4,
+        "stage": "composition",
+        "durationMs": 8897
+      },
+      {
+        "call": 5,
+        "stage": "review",
+        "durationMs": 5090
+      }
+    ],
+    "checks": [
+      "schema",
+      "references"
+    ],
+    "audit": [
+      {
+        "event": "source-interpreted",
+        "call": 1,
+        "detail": "No checked graph inferred; clarification or explanation only. Provider no-graph sentinel normalized to JSON null."
+      },
+      {
+        "event": "review-rejected",
+        "call": 3,
+        "detail": "Muse Wonder advisory review: revise. gateObj/gateLeaf: prism height is 0.04 while the fixed frame members are 0.5 high, so the rendered gate is a low horizontal slab rather than a thin vertical panel filling the frame. Increase the gate leaf's vertical height to approximately match the frame opening (about 0.5, illustratively) so closedStep's 'gate fills frame' is true."
+      },
+      {
+        "event": "review-approved",
+        "call": 5,
+        "detail": "Muse Wonder advisory review: approve."
+      },
+      {
+        "event": "scene-validated",
+        "call": 5,
+        "detail": "Typed scene, source versions and checked model references validated."
+      }
+    ]
+  },
+  "createdAt": "2026-10-31T00:09:14.940Z",
+  "notice": "Actual Muse Spark/Wonder output from an original synthetic source, October 30 America/New_York. Generation included an advisory geometry revision. Replay makes no provider call; this is not a reliability or physics benchmark."
+}

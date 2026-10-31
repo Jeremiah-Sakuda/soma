@@ -1,6 +1,7 @@
 import { cylinder, depthOf, extrude, fitProjection, iso, pathOf, slabOf, type Point3, type Projection, type SolidPaths } from '@/vendor/anatomy/iso-kit';
 import type { SpatialObject, SpatialScene } from '@/lib/domain/spatial-exploration';
 import type { SpatialView } from '@/lib/domain/spatial-schema';
+import { faceNormal, mechanismBounds, mechanismMeshes, mechanismPalette } from '@/lib/domain/mechanism-geometry';
 
 export type AnatomySolid = { paths: SolidPaths; color: string; depth: number; opacity: number; min: Point3; max: Point3; screen: { left: number; right: number; top: number; bottom: number } };
 export type AnatomyLine = { d: string; color: string; width: number };
@@ -12,6 +13,11 @@ export const anatomyPoint = ({ x, y, z }: SpatialObject['position']): Point3 => 
 export function anatomyProjection(scene: SpatialScene, view: SpatialView, width: number, height: number): Projection {
   const points: Point3[] = [];
   for (const o of scene.objects.filter(o => o.visible)) {
+    if (o.geometry?.length) {
+      const b = mechanismBounds(o);
+      for (const x of [b.min[0], b.max[0]]) for (const y of [b.min[1], b.max[1]]) for (const z of [b.min[2], b.max[2]]) points.push([x, z, y]);
+      continue;
+    }
     for (const x of [-.5, .5]) for (const y of [-.5, .5]) for (const z of [-.5, .5])
       points.push(anatomyPoint({ x: o.position.x + x * o.size.x, y: o.position.y + y * o.size.y, z: o.position.z + z * o.size.z }));
   }
@@ -26,6 +32,7 @@ export function anatomyProjection(scene: SpatialScene, view: SpatialView, width:
 
 /** Application-owned illustration grammar. No strings from the model become markup or code. */
 export function anatomyPart(object: SpatialObject, projection: Projection, slice: number): AnatomyPart {
+  if (object.geometry?.length) return authoredPart(object, projection);
   const [cx, cy, cz] = anatomyPoint(object.position), { x: w, y: h, z: d } = object.size;
   const color = anatomyPalette[object.color], metal = '#aab5ad', dark = '#3e514d', pale = '#d7dfd3';
   const solids: AnatomySolid[] = [], lines: AnatomyLine[] = [];
@@ -144,6 +151,37 @@ export function anatomyPart(object: SpatialObject, projection: Projection, slice
   }
   solids.sort((a, b) => a.depth - b.depth);
   return { object, solids, lines, anchor: iso(point(0, 0, .5), projection) };
+}
+
+/** Muse-authored surfaces, shaded and projected as data through the Anatomy kit. */
+function authoredPart(object: SpatialObject, p: Projection): AnatomyPart {
+  const solids: AnatomySolid[] = [], a = (p.azimuth ?? 45) * Math.PI / 180, e = (p.elevation ?? 30) * Math.PI / 180;
+  const viewer = [Math.cos(a) * Math.cos(e), Math.sin(e), Math.sin(a) * Math.cos(e)];
+  for (const mesh of mechanismMeshes(object)) {
+    const vertices = mesh.vertices.map(v => v.map((n, i) => n + [object.position.x, object.position.y, object.position.z][i]) as [number, number, number]);
+    const normals = mesh.faces.map(f => faceNormal(vertices, f));
+    const visible = normals.map(n => n.reduce((sum, v, i) => sum + v * viewer[i], 0) > 1e-7);
+    const edges = new Map<string, number[]>();
+    mesh.faces.forEach((face, i) => face.forEach((from, j) => { const to = face[(j + 1) % face.length], key = [from, to].sort((a, b) => a - b).join(':'); edges.set(key, [...(edges.get(key) ?? []), i]); }));
+    mesh.faces.forEach((face, index) => {
+      if (!visible[index]) return;
+      const world = face.map(i => vertices[i]), points = world.map(v => [v[0], v[2], v[1]] as Point3), flat = points.map(v => iso(v, p));
+      let outline = '', crease = '';
+      face.forEach((from, j) => {
+        const to = face[(j + 1) % face.length], neighbors = edges.get([from, to].sort((a, b) => a - b).join(':')) ?? [];
+        const d = pathOf([flat[j], flat[(j + 1) % flat.length]]);
+        if (neighbors.length === 1 || neighbors.some(i => !visible[i])) outline += d;
+        else if (neighbors.some(i => normals[i].reduce((sum, n, axis) => sum + n * normals[index][axis], 0) < .7)) crease += d;
+      });
+      const n = normals[index], light = Math.max(0, Math.min(1, .5 + .35 * n[1] + .15 * (n[0] * Math.cos(a) + n[2] * Math.sin(a))));
+      const shades = ['', '', '', '']; shades[Math.min(3, Math.floor(light * 4))] = pathOf(flat, true);
+      const min = [0, 1, 2].map(axis => Math.min(...points.map(v => v[axis]))) as Point3, max = [0, 1, 2].map(axis => Math.max(...points.map(v => v[axis]))) as Point3;
+      const center = min.map((v, i) => (v + max[i]) / 2) as Point3;
+      solids.push({ paths: { fill: pathOf(flat, true), top: '', shades, outline, crease }, color: mechanismPalette[mesh.color], depth: depthOf(center, p), opacity: 1, min, max, screen: { left: Math.min(...flat.map(v => v[0])), right: Math.max(...flat.map(v => v[0])), top: Math.min(...flat.map(v => v[1])), bottom: Math.max(...flat.map(v => v[1])) } });
+    });
+  }
+  const b = mechanismBounds(object);
+  return { object, solids, lines: [], anchor: iso([(b.min[0] + b.max[0]) / 2, (b.min[2] + b.max[2]) / 2, b.max[1]], p) };
 }
 
 /** Painter constraints from separating world axes, then a stable depth fallback.

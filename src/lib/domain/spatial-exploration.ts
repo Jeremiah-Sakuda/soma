@@ -1,15 +1,18 @@
 import type { ExplorationSpec } from './exploration';
 import { comparisonExecution, explorationExecution, type ExplorationViewState } from './exploration-view';
 import { defaultSpatialView, type SpatialPanel, type SpatialVector } from './spatial-schema';
+import type { MechanismParameter } from './mechanism-schema';
 
 export type SpatialObject = SpatialPanel['objects'][number] & {
   visible: boolean; highlighted: boolean; status: string;
+  parameterValues?: Record<string, number>;
 };
 export type SpatialConnection = SpatialPanel['connections'][number] & { active: boolean; highlighted: boolean };
 export type SpatialScene = {
   title: string; assurance: 'checked' | 'schematic';
   objects: SpatialObject[]; connections: SpatialConnection[];
   annotations?: string[];
+  parameters?: (MechanismParameter & { value: number; overridden: boolean })[];
 };
 export function supportsSpatial(spec: ExplorationSpec) {
   return spec.mode !== 'clarify' && (spec.mode !== 'explanation' || spec.scene.panels.some((p) => p.kind === 'spatial' || (p.kind === 'diagram' && p.objects.some((o) => o.kind === 'node' || o.kind === 'block'))));
@@ -71,15 +74,21 @@ export function spatialScene(spec: ExplorationSpec, state: ExplorationViewState,
   const spatial = spec.scene.panels.find((panel) => panel.kind === 'spatial');
   const stepIndex = Math.min(state.explanationStep, spec.steps.length - 1);
   const highlights = spec.steps[stepIndex].highlightIds;
+  const parameterValues = Object.fromEntries((spatial?.kind === 'spatial' ? spatial.parameters ?? [] : []).map(p => [p.id, p.initial]));
+  if (spatial?.kind === 'spatial') {
+    for (const step of spec.steps.slice(0, stepIndex + 1)) for (const pose of spatial.parameterPoses ?? []) if (pose.stepId === step.id) parameterValues[pose.parameterId] = pose.value;
+    Object.assign(parameterValues, state.spatial?.parameters ?? {});
+  }
   if (spatial?.kind === 'spatial') return {
     title: spatial.title, assurance: 'schematic',
+    parameters: (spatial.parameters ?? []).map(p => ({ ...p, value: parameterValues[p.id], overridden: state.spatial?.parameters?.[p.id] !== undefined })),
     objects: spatial.objects.map((object) => {
       let position = object.position, visible = true;
       for (const step of spec.steps.slice(0, stepIndex + 1)) {
         const pose = spatial.poses.find((p) => p.stepId === step.id && p.objectId === object.id);
         if (pose) { position = pose.position; visible = pose.visible; }
       }
-      return { ...object, position, visible, highlighted: highlights.includes(object.id), status: visible ? 'Visible' : 'Hidden at this step' };
+      return { ...object, position, ...(object.geometry?.length ? { parameterValues } : {}), visible, highlighted: highlights.includes(object.id), status: visible ? 'Visible' : 'Hidden at this step' };
     }),
     connections: spatial.connections.map((edge) => ({ ...edge, active: true, highlighted: highlights.includes(edge.id) })),
   };

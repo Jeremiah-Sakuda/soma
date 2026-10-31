@@ -1,12 +1,25 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import type { SpatialObject } from '@/lib/domain/spatial-exploration';
+import { pieceMesh, meshTriangles, mechanismPalette } from '@/lib/domain/mechanism-geometry';
 
 export const spatialColors = { clay: 0xb56845, sage: 0x408779, blue: 0x668597, gold: 0xd4a237, violet: 0x6553cf };
 
-/** Fixed illustrative parts. Detail communicates a role, never recovered construction. */
+/** Compile validated custom surfaces or fixed catalog parts; neither is recovered construction. */
 export function createSpatialPart(object: SpatialObject, selected: boolean, shell: boolean) {
   const root = new THREE.Group();
+  if (object.geometry?.length) {
+    for (const piece of object.geometry) {
+      const geometry = new THREE.BufferGeometry();
+      const model = pieceMesh(piece, piece.driver ? object.parameterValues?.[piece.driver.parameterId] ?? 0 : 0);
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(meshTriangles(model), 3)); geometry.computeVertexNormals();
+      const color = new THREE.Color(mechanismPalette[piece.color]);
+      const material = new THREE.MeshStandardMaterial({ color, metalness: piece.color === 'metal' ? .65 : .12, roughness: .48, side: THREE.DoubleSide, emissive: color, emissiveIntensity: selected || object.highlighted ? .14 : 0 });
+      const mesh = new THREE.Mesh(geometry, material); mesh.userData.objectId = object.id; mesh.castShadow = true; mesh.receiveShadow = true; root.add(mesh);
+    }
+    root.scale.set(object.size.x, object.size.y, object.size.z); root.position.set(object.position.x, object.position.y, object.position.z);
+    return root;
+  }
   const tint = spatialColors[object.color];
   const surface = (color: number, metalness = 0.15, opacity = 1) => new THREE.MeshStandardMaterial({
     color, metalness, roughness: metalness > 0.5 ? 0.32 : 0.42,

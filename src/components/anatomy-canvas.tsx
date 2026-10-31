@@ -23,7 +23,7 @@ function usePose(scene: SpatialScene) {
     const before = current.current;
     const moved = scene.objects.some(o => {
       const old = before.objects.find(p => p.id === o.id);
-      return old && o.visible && old.visible && JSON.stringify(o.position) !== JSON.stringify(old.position);
+      return old && o.visible && old.visible && (JSON.stringify(o.position) !== JSON.stringify(old.position) || JSON.stringify(o.parameterValues) !== JSON.stringify(old.parameterValues));
     });
     if (!moved || matchMedia('(prefers-reduced-motion: reduce)').matches) {
       current.current = scene; setFrame(scene); return;
@@ -39,7 +39,7 @@ function usePose(scene: SpatialScene) {
             x: old.position.x + (o.position.x - old.position.x) * k,
             y: old.position.y + (o.position.y - old.position.y) * k,
             z: old.position.z + (o.position.z - old.position.z) * k,
-          } };
+          }, ...(o.parameterValues ? { parameterValues: Object.fromEntries(Object.entries(o.parameterValues).map(([id, to]) => [id, (old.parameterValues?.[id] ?? to) + (to - (old.parameterValues?.[id] ?? to)) * k])) } : {}) };
         }) };
         current.current = next; setFrame(next);
       }

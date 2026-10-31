@@ -1,3 +1,9 @@
+## PM113 — Muse authors mechanism geometry and motion, October 30
+
+Experimental `codex/spatial-exploration` now lets Muse construct bounded custom prisms, lathe profiles and tube paths, coupled controls and explanation poses. Both renderers compile the same data; Anatomy defaults for custom scenes. Review at http://localhost:41906/explore → Source & sharing → **Open Muse mechanism recording** (actual accepted Muse/Wonder output; no new inference). The separate geometry authoring example is prepared. The preview has live inference disabled.
+
+One real original-synthetic source → geometry → advisory review/geometry repair → contextual follow-up → exact Firestore reopen passed after documented schema/output fixes. Final1,640offline/95opt-in skipped,166production-browser, TypeScript/default build/trace passed; native Mac interactions checked. Runtime263files/SHA2453777e926c3ed1084f131541e9388d337673e9ddb0501ee56e791d36ac436d. Ledger$14.93734875/$20 at2026-10-31T00:13:10.915Z, including uncertain reservations; no resets. See [scope, real-run evidence and retained failures](docs/MUSE_MECHANISM_AUTHORING.md). Main remains unmerged; no push, deployment, publication, checked-physics or user-acceptance claim.
+
 ## PM108 — Local Anatomy comparison, October 30
 
 Experimental `codex/spatial-exploration` now compares Three.js with an Anatomy-backed isometric illustration using the same scene/state. Open http://localhost:41904/explore and use the relay example or library, then Current3D/Anatomy/Side by side. Detailed scope, tradeoffs, retained failures and verification: [ANATOMY_COMPARISON.md](docs/ANATOMY_COMPARISON.md). Final1,615offline/94opt-in-skipped,156production-browser, typecheck/default build and isolated trace passed; native Chrome interactions were checked. Runtime257files/SHAd4b232df147e8b1f680aa459bce2e155b006782fde44d228dcfbd95a13436925. Main remains unmerged; no push/deployment/publication or user visual acceptance.

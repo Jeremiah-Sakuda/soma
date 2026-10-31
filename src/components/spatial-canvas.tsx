@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { createSpatialPart } from './spatial-parts';
 import { placeSpatialLabel, spatialCameraDistance, type LabelRect } from './spatial-layout';
+import { mechanismBounds } from '@/lib/domain/mechanism-geometry';
 import type { SpatialScene } from '@/lib/domain/spatial-exploration';
 import type { SpatialView } from '@/lib/domain/spatial-schema';
 
@@ -82,6 +83,9 @@ export default function SpatialCanvas(props: Props) {
       // Stepping retains whole-scene framing; explicit isolation frames the selected assembly.
       const framing = current.view.isolate && visible.length ? visible : current.scene.objects;
       for (const object of framing) {
+        if (object.geometry?.length) {
+          const b = mechanismBounds(object); bounds.expandByPoint(new THREE.Vector3(...b.min)); bounds.expandByPoint(new THREE.Vector3(...b.max)); continue;
+        }
         const p = new THREE.Vector3(object.position.x, object.position.y, object.position.z);
         const s = new THREE.Vector3(object.size.x, object.size.y, object.size.z).multiplyScalar(0.5);
         bounds.expandByPoint(p.clone().sub(s)); bounds.expandByPoint(p.clone().add(s));

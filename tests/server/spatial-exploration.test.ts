@@ -7,6 +7,7 @@ import { createExplorationService, needsExplorationReview, validateExplorationVi
 import { closeExplorationStore, explorationStore } from '../../src/lib/server/exploration-store';
 import { checkExploration } from '../../src/lib/domain/exploration';
 import { defaultSpatialView, spatialRenderStyles } from '../../src/lib/domain/spatial-schema';
+import { createMechanismExample } from '../../src/lib/domain/mechanism-example';
 import { createSpatialExample } from '../../src/lib/domain/spatial-example';
 import { spatialScene } from '../../src/lib/domain/spatial-exploration';
 import type { ExplorationPrincipal } from '../../src/lib/server/exploration-types';
@@ -19,21 +20,22 @@ beforeEach(() => {
 });
 afterEach(() => { closeExplorationStore(); vi.unstubAllEnvs(); rmSync(directory, { recursive: true, force: true }); });
 
-function harness(options: { foreignSource?: boolean; renamedObject?: boolean; invalid?: boolean; clarify?: boolean; view?: boolean; review?: boolean; droppedPart?: boolean; newSteps?: boolean } = {}) {
+function harness(options: { foreignSource?: boolean; renamedObject?: boolean; invalid?: boolean; clarify?: boolean; view?: boolean; review?: boolean; droppedPart?: boolean; newSteps?: boolean; mechanism?: boolean } = {}) {
   const request = vi.fn(async (req: { instructions: string; input: { content: string }[] }) => {
     const context = JSON.parse(req.input[0].content);
-    const spec = createSpatialExample({ observationId: options.foreignSource ? 'outside' : context.source.observationId, version: context.source.version, region: null });
+    const spec = (options.mechanism ? createMechanismExample : createSpatialExample)({ observationId: options.foreignSource ? 'outside' : context.source.observationId, version: context.source.version, region: null });
     const binding = /Required spec id=([^ ]+) and version=(\d+)/.exec(req.instructions)!;
     spec.id = binding[1]; spec.version = Number(binding[2]);
     if (spec.mode !== 'explanation' || spec.scene.panels[0].kind !== 'spatial') throw new Error('fixture');
     if (options.view) spec.scene.panels[0].viewAction = { camera: 'side', focusObjectId: 'processor', isolate: true, spread: 0.6, slice: null };
-    spec.scene.panels[0].objects[2].renderStyle = 'sensor'; // Existing part identity includes its bounded styling.
+    if (!options.mechanism) spec.scene.panels[0].objects[2].renderStyle = 'sensor'; // Existing part identity includes its bounded styling.
     spec.scene.panels[0].objects[2].position.x = 5; // The service must preserve an existing world's geometry.
     if (options.renamedObject) spec.scene.panels[0].objects[2].label = 'Different meaning';
     if (options.invalid) spec.scene.panels[0].poses[0].objectId = 'foreign';
     if (options.newSteps) {
       for (const step of spec.steps) step.id = `revised_${step.id}`;
       for (const pose of spec.scene.panels[0].poses) pose.stepId = `revised_${pose.stepId}`;
+      for (const pose of spec.scene.panels[0].parameterPoses ?? []) pose.stepId = `revised_${pose.stepId}`;
     }
     if (options.droppedPart) {
       spec.scene.panels[0].objects = spec.scene.panels[0].objects.filter((o) => o.id !== 'signal');
@@ -42,7 +44,14 @@ function harness(options: { foreignSource?: boolean; renamedObject?: boolean; in
     }
     const output = options.clarify ? { ...spec, mode: 'clarify', question: 'Which source region do you mean?' } as Record<string, unknown> : spec;
     if (options.clarify) { delete (output as Record<string, unknown>).scene; delete (output as Record<string, unknown>).steps; delete (output as Record<string, unknown>).followups; }
-    return { status: 'completed', tools: [], structured: { spec: output }, usage: { input_tokens: 100, output_tokens: 200 } };
+    let mechanism;
+    if (options.mechanism && spec.mode === 'explanation' && spec.scene.panels[0].kind === 'spatial') {
+      const p = spec.scene.panels[0];
+      mechanism = { panelId: p.id, frame: { position: { x: 0, y: 0, z: 0 }, scale: 3 }, parts: p.objects.map(o => ({ objectId: o.id, pieces: o.geometry! })), parameters: p.parameters, parameterPoses: p.parameterPoses };
+      for (const object of p.objects) delete object.geometry;
+      delete p.parameters; delete p.parameterPoses;
+    }
+    return { status: 'completed', tools: [], structured: { spec: output, ...(mechanism ? { mechanism } : {}) }, usage: { input_tokens: 100, output_tokens: 200 } };
   });
   const review = vi.fn(async () => ({ status: 'completed' as const, tools: [], structured: { verdict: 'approve', findings: [] }, usage: { input_tokens: 50, output_tokens: 20 } }));
   const service = createExplorationService({ review, request: request as never, enabled: () => true, reviewEnabled: () => !!options.review, revalidate: async () => {}, reserve: async () => randomUUID(), settle: async () => {} });
@@ -176,4 +185,46 @@ it('retains every new component style through review, revision, persistence and 
     expect(request.mock.calls.at(-1)![0].instructions.length).toBeLessThan(7800);
     for (const style of styles) expect(request.mock.calls.at(-1)![0].instructions).toContain(style);
   }
+});
+
+
+it('retains authored surfaces, coupled drivers and explanation defaults separately from manual controls through review and reopening', async () => {
+  const { service, request, review } = harness({ mechanism: true, newSteps: true, review: true }), owner = principal();
+  await service.initialize(owner); await service.initialize(principal('b'));
+  const { artifact } = await service.example(owner, false, false, true);
+  expect(artifact.generation.calls).toBe(0); expect(artifact.state.spatial?.renderer).toBe('anatomy');
+  const state = { ...artifact.state, explanationStep: 1, selectedObjectId: 'gate', spatial: { ...artifact.state.spatial!, parameters: { opening: .6 } } };
+  await service.save(owner, artifact.id, 1, state);
+  for (const parameters of [{ foreign: .5 }, { opening: 1.1 }, { opening: -.1 }, { opening: 'run()' }])
+    await expect(service.save(owner, artifact.id, 1, { ...state, spatial: { ...state.spatial, parameters } })).rejects.toMatchObject({ code: 'invalid_request' });
+  await expect(service.read(principal('b'), artifact.id)).rejects.toMatchObject({ code: 'not_found' });
+  const { artifact: next } = await service.generate(owner, { action: 'generate', requestId: randomUUID(), artifactId: artifact.id, baseVersion: 1, state, question: 'Explain this gate while preserving my current opening and all custom geometry.' });
+  const before = spatialScene(artifact.spec, state)!, after = spatialScene(next.spec, next.state)!;
+  expect(after.parameters).toEqual(before.parameters);
+  for (const object of before.objects) expect(after.objects.find(o => o.id === object.id)).toMatchObject({ geometry: object.geometry, parameterValues: object.parameterValues, position: object.position });
+  const baseline = spatialScene(next.spec, { ...next.state, spatial: { ...next.state.spatial!, parameters: {} } })!;
+  expect(baseline.parameters![0].value).toBe(.45); // Never bake the manual .6 into the explanation.
+  const reviewed = JSON.parse((review.mock.calls[0] as unknown as [{ input: { content: string }[] }])[0].input[0].content);
+  expect(reviewed.checked.spatialPresentation.view.parameters).toEqual({ opening: .6 });
+  expect(spatialScene(reviewed.spec, next.state)).toEqual(after);
+  expect(request.mock.calls[0][0].instructions.length).toBeLessThan(7800);
+  expect(request.mock.calls[0][0].instructions).toContain('lathe');
+  expect(Buffer.byteLength((review.mock.calls[0] as unknown as [{ input: { content: string }[] }])[0].input[0].content)).toBeLessThan(20000);
+  await service.save(owner, next.id, next.version, next.state); closeExplorationStore();
+  expect((await service.read(owner, next.id, next.version)).active!.state).toEqual(next.state);
+  expect((await service.read(owner, artifact.id, 1)).active!.spec).toEqual(artifact.spec);
+});
+
+it('replays the actual Muse mechanism honestly without inference and rebinds ownership before saving', async () => {
+  const { service, request, review } = harness(), owner = principal(); await service.initialize(owner); await service.initialize(principal('b'));
+  const { artifact } = await service.recording(owner, true);
+  expect(artifact.recording).toMatchObject({ id: 'mechanism-2026-10-30', sourceImage: '/synthetic/recorded-mechanism.png' });
+  expect(artifact.generation.mode).toBe('live'); expect(artifact.generation.calls).toBe(5); // Original run, not replay billing.
+  expect(artifact.generation.audit.some(e => e.event === 'review-rejected' && e.detail.includes('gateLeaf'))).toBe(true);
+  expect(artifact.source.observationId).toBe(artifact.spec.sources[0].observationId);
+  expect(spatialScene(artifact.spec, artifact.state)!.parameters).toHaveLength(1);
+  await service.save(owner, artifact.id, 1, artifact.state); closeExplorationStore();
+  expect((await service.read(owner, artifact.id, 1)).active!.spec).toEqual(artifact.spec);
+  await expect(service.read(principal('b'), artifact.id)).rejects.toMatchObject({ code: 'not_found' });
+  expect(request).not.toHaveBeenCalled(); expect(review).not.toHaveBeenCalled();
 });

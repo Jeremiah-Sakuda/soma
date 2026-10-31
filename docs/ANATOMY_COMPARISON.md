@@ -49,3 +49,6 @@ Final release evidence: runtime257 files, SHA-256 `d4b232df147e8b1f680aa459bce2e
 At `2026-10-30T22:47:42.862Z` the shared ledger remained$13.99902475/$20, leaving$6.00097525. No inference spend was added by PM108. Final local review server: `http://localhost:41904/explore`, live inference disabled. Main remains unmerged and no push, deployment or publication occurred.
 
 Final native reload also reopened the saved Anatomy state on the last tested build. The review tab is left at explanation2, Processor selected, assembled perspective and Side by side; these last review changes are unsaved, so the earlier saved view remains available in the library.
+
+
+PM113 supersedes the earlier authorship boundary for custom mechanisms: Muse can now author bounded geometry and coupled motion, rendered by both adapters. See [MUSE_MECHANISM_AUTHORING.md](MUSE_MECHANISM_AUTHORING.md) for the separate real-provider run, preserved failures and final verification. Changing renderers alone still does not change authorship.

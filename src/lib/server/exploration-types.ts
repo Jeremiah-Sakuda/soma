@@ -83,7 +83,7 @@ export type ExplorationArtifact = CheckedExploration & {
   recording?: {
     id: string;
     generatedAt: string;
-    sourceImage: '/synthetic/recorded-detour.png';
+    sourceImage: '/synthetic/recorded-detour.png' | '/synthetic/recorded-mechanism.png';
   };
   practiceOrigin?: {
     applicationId: string;

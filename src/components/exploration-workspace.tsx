@@ -438,7 +438,7 @@ export function ExplorationWorkspace() {
       if (uploadRef.current) uploadRef.current.value = '';
     }
   }
-  async function example(weighted = false, spatial = false) {
+  async function example(weighted = false, spatial = false, mechanism = false) {
     if (!initialized) return;
     cancel('');
     capture.stop();
@@ -452,6 +452,7 @@ export function ExplorationWorkspace() {
         action: 'example',
         ...(weighted ? { weighted: true } : {}),
         ...(spatial ? { spatial: true } : {}),
+        ...(mechanism ? { mechanism: true } : {}),
       });
       if (sequence !== loadSequence.current) return;
       if (!result.artifact) throw new Error('The original example could not be loaded.');
@@ -683,13 +684,13 @@ export function ExplorationWorkspace() {
       if (sequence === loadSequence.current) setSourceBusy(false);
     }
   }
-  async function openRecording() {
+  async function openRecording(mechanism = false) {
     cancel('');
     setSourceBusy(true);
     setError('');
     const sequence = ++loadSequence.current;
     try {
-      const result = await api('POST', { action: 'recording' });
+      const result = await api('POST', { action: 'recording', ...(mechanism ? { mechanism: true } : {}) });
       if (sequence !== loadSequence.current) return;
       if (!result.artifact) throw new Error('The recorded run could not be opened.');
       capture.stop();
@@ -1163,6 +1164,8 @@ export function ExplorationWorkspace() {
                   Compare weighted paths
                 </button>
                 <button type="button" className="exploration-example-button" disabled={sourceBusy || !initialized} onClick={() => void example(false, true)}>Open the 3D example</button>
+                <button type="button" className="exploration-example-button" disabled={sourceBusy || !initialized} onClick={() => void example(false, false, true)}>Open geometry authoring example</button>
+                <button type="button" className="exploration-example-button" disabled={sourceBusy || !initialized} onClick={() => void openRecording(true)}>Open Muse mechanism recording</button>
                 <button
                   type="button"
                   className="exploration-example-button"

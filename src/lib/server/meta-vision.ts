@@ -17,6 +17,7 @@ export type MetaVisionRequest = {
   deadlineMs: number;
   signal?: AbortSignal;
   maxOutputTokens?: number;
+  reasoningEffort?: 'minimal' | 'low';
   maxImages?: number;
   structuredOutput?: { name: string; schema: Record<string, unknown> };
 };
@@ -88,7 +89,7 @@ function encode(request: MetaVisionRequest) {
       .number()
       .int()
       .min(1)
-      .max(4096)
+      .max(6144)
       .parse(request.maxOutputTokens ?? 4096);
     const pending = new Set<string>(),
       seen = new Set<string>();
@@ -165,7 +166,7 @@ function encode(request: MetaVisionRequest) {
       stream: false,
       background: false,
       parallel_tool_calls: false,
-      reasoning: { effort: 'low' },
+      reasoning: { effort: z.enum(['minimal', 'low']).parse(request.reasoningEffort ?? 'low') },
       max_output_tokens: maxTokens,
     };
     const body = JSON.stringify({ ...common, input }),

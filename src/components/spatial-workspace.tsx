@@ -46,8 +46,9 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
   const [compare, setCompare] = useState(false);
   const view = state.spatial ?? defaultSpatialView();
   const { spatial: _view, selectedObjectId: _selection, ...computation } = state;
+  const parameterKey = JSON.stringify(view.parameters ?? {});
   const computationKey = JSON.stringify(computation);
-  const base = useMemo(() => spatialScene(spec, state, which), [spec, computationKey, which]);
+  const base = useMemo(() => spatialScene(spec, state, which), [spec, computationKey, parameterKey, which]);
   const scene = useMemo(() => base ? spatialPresentation(base, state) : null, [base, view.spread, view.isolate, state.selectedObjectId]);
   if (!scene || !base) return null;
   const update = (change: Partial<SpatialView>) => onChange({ ...state, spatial: { ...view, ...change } });
@@ -58,11 +59,12 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
   const spatial3d = view.mode === '3d';
   const anatomy = view.renderer === 'anatomy';
   const hasEnclosure = base.objects.some(object => object.renderStyle === 'housing');
+  const authored = base.objects.some(object => object.geometry?.length);
   const stage = (renderer: 'three' | 'anatomy') => <div className="spatial-stage" data-spatial-mode={spatial3d && (renderer === 'anatomy' || !failed) ? '3d' : '2d'} data-renderer={renderer}>
     {spatial3d && renderer === 'anatomy' ? <Anatomy scene={scene} view={view} selected={state.selectedObjectId} onSelect={select} onView={update} />
       : spatial3d && !failed ? <CanvasBoundary key={attempt} onFailure={() => setFailed(true)}>
         <Canvas scene={scene} view={view} selected={state.selectedObjectId} onSelect={select} onView={update} onFailure={() => setFailed(true)} />
-      </CanvasBoundary> : <FlatScene scene={scene} />}
+      </CanvasBoundary> : authored ? <Anatomy scene={scene} view={{ ...view, azimuth: 0, elevation: 0 }} selected={state.selectedObjectId} onSelect={select} onView={update} /> : <FlatScene scene={scene} />}
     <span className="spatial-stage-note" aria-hidden="true">{spatial3d && renderer === 'anatomy' ? 'Drag to rotate · numbered parts below' : spatial3d && !failed ? 'Drag to orbit · select a part' : 'Front projection · select a part below'}</span>
   </div>;
   return <section className="spatial-workspace" aria-label="Spatial workspace">
@@ -84,7 +86,14 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
       <figure><figcaption>Anatomy <span>Isometric illustration</span></figcaption>{stage('anatomy')}</figure>
     </div> : stage(anatomy ? 'anatomy' : 'three')}
     {compare && spatial3d && <p className="spatial-detail-note">Same scene, step and selected part. Controls below update both views.</p>}
-    {anatomy && spatial3d && <p className="spatial-detail-note">{hasEnclosure ? 'Cutaway opens enclosure walls in the illustration.' : 'This illustration has no enclosure to cut away.'}{view.elevation < 0 ? ' Below-ground camera angles use ground level.' : ''}</p>}
+    {anatomy && spatial3d && <p className="spatial-detail-note">{hasEnclosure ? 'Cutaway opens enclosure walls in the illustration.' : authored ? 'Use separation and isolation to inspect this drawing.' : 'This illustration has no enclosure to cut away.'}{view.elevation < 0 ? ' Below-ground camera angles use ground level.' : ''}</p>}
+    {authored && <p className="spatial-detail-note">Custom geometry specification · motion is illustrative, not a checked physical model</p>}
+    {!!scene.parameters?.length && <div className="mechanism-controls" role="group" aria-label="Mechanism controls">
+      {scene.parameters.map(parameter => <label key={parameter.id}><span>{parameter.label} <output>{Math.round(parameter.value * 100)}%{parameter.overridden ? ' · Your setting' : ' · Explanation'}</output></span>
+        <input type="range" aria-label={parameter.label} aria-valuetext={`${Math.round(parameter.value * 100)} percent, ${parameter.overridden ? 'your setting' : 'explanation step'}`} min="0" max="1" step="0.01" value={parameter.value} onChange={event => update({ parameters: { ...view.parameters, [parameter.id]: Number(event.target.value) } })} />
+        <span className="meta">{parameter.description}</span></label>)}
+      {scene.parameters.some(p => p.overridden) && <><p className="meta">Your controls override the explanation’s motion. Follow explanation motion to match each step.</p><button type="button" onClick={() => update({ parameters: {} })}>Follow explanation motion</button></>}
+    </div>}
     {failed && spatial3d && (!anatomy || compare) && <div className="spatial-fallback" role="status">3D is unavailable on this device. Your scene and controls are preserved in the front projection. <button type="button" onClick={() => { setFailed(false); setAttempt(attempt + 1); }}>Retry 3D</button></div>}
     {base.objects.some((object) => object.renderStyle) && <p className="spatial-detail-note">Illustrative parts · geometry and detail are schematic</p>}
     <div className="spatial-toolbar" aria-label="Spatial view controls">
@@ -116,7 +125,9 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
       <span className="meta">Selected for your next question. Source facts remain unchanged.</span>
     </div>}
     <details className="spatial-description"><summary>Objects, connections & spatial state</summary>
+      {authored && <p>Custom geometry is stored with this version. Each surface has a stated purpose; the application validates its format and bounds.</p>}
       <ul>{base.objects.map((object) => <li key={object.id}><strong>{object.label}</strong> — {object.description} {object.parentId ? `Inside ${base.objects.find((o) => o.id === object.parentId)?.label}. ` : ''}{object.status}. Position ({object.position.x}, {object.position.y}, {object.position.z}).</li>)}</ul>
+      {authored && <ul>{base.objects.flatMap(object => (object.geometry ?? []).map(piece => <li key={`${object.id}:${piece.id}`}><strong>{object.label} / {piece.id}</strong> · {piece.form.kind} — {piece.purpose}{piece.driver ? ` Motion follows ${scene.parameters?.find(p => p.id === piece.driver!.parameterId)?.label}.` : ''}</li>))}</ul>}
       <ul>{base.connections.map((edge) => <li key={edge.id}><button type="button" aria-pressed={state.selectedObjectId === edge.id} onClick={() => select(edge.id)}>{base.objects.find((o) => o.id === edge.from)?.label} {edge.directed ? '→' : '—'} {base.objects.find((o) => o.id === edge.to)?.label}{edge.label ? `: ${edge.label}` : ''}{edge.active ? '' : ' (disabled)'}</button></li>)}</ul>
     </details>
   </section>;

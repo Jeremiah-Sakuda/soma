@@ -2619,3 +2619,39 @@ PM099 deviations: user PM100 explicitly prioritized quality. Expanded hardening 
 PM099/PM100 hosted evidence: implementationb5147d7 fast-forwarded original private soma main with original histories intact; spatialbranch/rootcode untouched. Vercel succeeded at https://vercel.com/jeremiah-sakudas-projects/soma/ETSUGPBaaTSiZcjqhX3DMZjAZ8Gi; production247-fileSHA0cc02ce97fd03e355260fe01566fd6191107dc6650fb92eae6cd05b82d79daf3 matches. Actualhosted edited-state reply9.296s/2calls preserves disabledSA/editedcost2/nogoal/currentprimary2/comparison/sourceoriginal10; correctC/Goaltie, actualWonderapproval, exactsave/readback. Hostedprepared/rate/render and blocked-before-backend391mslocalreceipt620/375/cancel/draft/nooverflow/noerrors pass; guestsdeleted. Sixfinaloutputrendererreplays plushostedactualoutputreplay pass withoutnewinference. Finalactualledger21:55:01.125Z$13.99902475/$15,208created/181turns/0active. Ownlocalserverstopped; no raw private material committed. CleanCI41134296347 pending.
 
 PM099/PM100 final completion: cleanCI41134296347 succeeded onb5147d7,1539offline/93skipped,137browser,28adversarial,21desktop,4diagnostic,3relay/defaultNextbuild/isolatedtrace1224files/twolinks/0privateconfig. Sixfinalactualoutputreplays andhostedresultreplay pass; initialwaitinglayoutreceipt/cancelandcurrenteditedgraphliveAPIpass. Sharedbudgetremainsbelow$15; no moreinference afterhostedproof. Currenthandoff/report updated; source/privatevalue/promptarchivechecks pass. Rootspatialbranchandunrelatedlogeditsleftuntouched.
+
+
+## PM114–PM116 — The dot journal, implemented and less wordy (October 30)
+
+The user chose the dot-journal direction (N3, from PM109–PM110) and asked for it to be built with frequent commits, pushed to main, and explained in a UI doc (PM114). Asked which base to use, they had no preference (PM115). It was built on main in an isolated worktree (`codex/dot-journal`), so the push carries only this change. The unmerged `codex/capture-first-ui` and `codex/spatial-exploration` branches were left alone and will need to adopt the journal. Mid-build the user asked to focus on UX and not overwhelm with text (PM116).
+
+1. **Implemented across eight interface commits:**
+   - Journal tokens and type, scoped to `/explore`: Young Serif, Work Sans, Fragment Mono and Kalam.
+   - A cover page and a two-page spread, with source, memory, settings and the library in top-bar menus.
+   - A printed bullet-journal search log derived from the checked trace, a handwritten explanation note, and a key. Printed is checked; handwriting is the explanation.
+   - The checked caption names Dijkstra and BFS and reports cheaper routes ("Goal drops from 10 to 3").
+   - Weighted costs on their own edge, with a new test that fails on the old placement.
+   - Full-name BFS pills, and one node language for both searches.
+   - One transport, and a page menu.
+   - Companion and phone layouts.
+   - A text pass that took the weighted example from 416 to 243 words on desktop.
+2. **Verification:**
+   - Typecheck passed.
+   - Offline suite: 1,543 passed, 93 opt-in skipped. Three service test files first failed only because the fresh worktree lacked the isolated services' dependencies; after `npm ci` in both services they passed.
+   - Browser journeys: 137/137 passed. The first full run failed 40.
+     - **Seven product regressions were found and fixed:** the BFS screen-reader queue list, resuming from the cover, a new source hidden in a menu, the question line off screen at 1280×720, the companion graph under the question line, a dead audit link, and keyboard access to Playback settings.
+     - **The remaining failures were tests of the replaced layout,** updated to open the menu, picker or tab that now holds what they check.
+   - Visual checks at 1440, 620 and 375 px with live inference off; no provider calls or spend.
+3. **Documentation:**
+   - `docs/UI_DOT_JOURNAL.md` explains the idea, layout, tokens, diagram rules, narrow screens, accessibility, measurements, verification and limits.
+   - `UI_UX_GUIDE.md` now opens with the current `/explore` direction.
+   - `DECISIONS.md` records PM114.
+
+Limits and deviations:
+- On a 375 px phone, weighted node text is still about 10–11 px. The search log lists every value at 16 px. A font increase overflowed the layout's cards and was reverted.
+- Desktop transport is two rows.
+- `exploration.css` still carries dead rules from the old layout.
+- Not checked: live generation and its waiting states, Gemini audio, native Electron, and real screen capture.
+- An early preview misstep started a dev server in the root checkout's configuration. It was stopped immediately, and its `next-env.d.ts` rewrite was reverted.
+- The October 31 freeze permits polish. This change adds no features, models or scope.
+

@@ -1,0 +1,3613 @@
+[
+  {
+    "id": "gate",
+    "label": "Hinged gate",
+    "source": "sources/gate.png",
+    "before": {
+      "spec": {
+        "schemaVersion": "exploration-v1",
+        "id": "explore_43a8e1562fd049518175f4d76b42891f",
+        "version": 1,
+        "title": "Hinged Passage Gate Mechanism",
+        "objective": "Show fixed frame, left hinge, gate and handle as a 3D mechanism in Closed, Partly Open, Open stages.",
+        "sources": [
+          {
+            "observationId": "capture_9336ece5c76c43308f7a8fdd0910fa4d",
+            "version": 1,
+            "region": null
+          }
+        ],
+        "assumptions": [
+          "Dimensions, angles and hardware are illustrative, not from source.",
+          "Gate and handle move together as one rigid body about left hinge.",
+          "True hinge rotation is approximated by shifted poses; not a physical simulation."
+        ],
+        "uncertainty": [
+          "No numeric dimensions or open angles in source.",
+          "True hinge rotation approximated by position shifts; not a physical simulation."
+        ],
+        "unsupportedClaims": [],
+        "mode": "explanation",
+        "scene": {
+          "layout": "diagram-sidebar",
+          "panels": [
+            {
+              "id": "GateMechanism",
+              "kind": "spatial",
+              "title": "Hinged Gate 3D Mechanism",
+              "placement": {
+                "column": 1,
+                "row": 1,
+                "columnSpan": 2
+              },
+              "objects": [
+                {
+                  "id": "FrameLeft",
+                  "label": "Fixed Frame Left",
+                  "description": "Fixed left post of passage frame, stays still.",
+                  "shape": "box",
+                  "renderStyle": "housing",
+                  "color": "sage",
+                  "position": {
+                    "x": -2.2,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 0.3,
+                    "y": 3,
+                    "z": 0.3
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "FrameRight",
+                  "label": "Fixed Frame Right",
+                  "description": "Fixed right post of passage frame, stays still.",
+                  "shape": "box",
+                  "renderStyle": "housing",
+                  "color": "sage",
+                  "position": {
+                    "x": 2.2,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 0.3,
+                    "y": 3,
+                    "z": 0.3
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "HingePin",
+                  "label": "Left Hinge",
+                  "description": "Vertical left hinge axis, fixed to frame.",
+                  "shape": "cylinder",
+                  "renderStyle": "marker",
+                  "color": "blue",
+                  "position": {
+                    "x": -1.8,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 0.2,
+                    "y": 2.8,
+                    "z": 0.2
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "GatePanel",
+                  "label": "Gate",
+                  "description": "Movable brown gate panel that swings about left hinge.",
+                  "shape": "box",
+                  "renderStyle": null,
+                  "color": "clay",
+                  "position": {
+                    "x": -0.5,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 2.6,
+                    "y": 2.2,
+                    "z": 0.15
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "HandleBar",
+                  "label": "Handle",
+                  "description": "Yellow handle bar attached to gate and moves with it.",
+                  "shape": "cylinder",
+                  "renderStyle": "pipe",
+                  "color": "gold",
+                  "position": {
+                    "x": 0.6,
+                    "y": 0,
+                    "z": 0.3
+                  },
+                  "size": {
+                    "x": 0.7,
+                    "y": 0.15,
+                    "z": 0.15
+                  },
+                  "parentId": "GatePanel"
+                }
+              ],
+              "connections": [
+                {
+                  "id": "cHingeGate",
+                  "from": "HingePin",
+                  "to": "GatePanel",
+                  "label": "hinge axis for gate",
+                  "directed": true
+                },
+                {
+                  "id": "cGateHandle",
+                  "from": "GatePanel",
+                  "to": "HandleBar",
+                  "label": "handle attached to gate",
+                  "directed": false
+                },
+                {
+                  "id": "cFrameHinge",
+                  "from": "FrameLeft",
+                  "to": "HingePin",
+                  "label": "hinge fixed to frame",
+                  "directed": false
+                }
+              ],
+              "poses": [
+                {
+                  "stepId": "closedStep",
+                  "objectId": "GatePanel",
+                  "position": {
+                    "x": -0.5,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "closedStep",
+                  "objectId": "HandleBar",
+                  "position": {
+                    "x": 0.6,
+                    "y": 0,
+                    "z": 0.3
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "ajarStep",
+                  "objectId": "GatePanel",
+                  "position": {
+                    "x": -0.9,
+                    "y": 0,
+                    "z": 0.9
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "ajarStep",
+                  "objectId": "HandleBar",
+                  "position": {
+                    "x": -0.1,
+                    "y": 0,
+                    "z": 2
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "openStep",
+                  "objectId": "GatePanel",
+                  "position": {
+                    "x": -1.8,
+                    "y": 0,
+                    "z": 1.3
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "openStep",
+                  "objectId": "HandleBar",
+                  "position": {
+                    "x": -2.1,
+                    "y": 0,
+                    "z": 2.4
+                  },
+                  "visible": true
+                }
+              ],
+              "viewAction": null
+            }
+          ]
+        },
+        "steps": [
+          {
+            "id": "closedStep",
+            "caption": "Closed: gate spans frame, handle attached to gate.",
+            "narration": "Frame is fixed; gate and handle rest closed on the hinge.",
+            "highlightIds": [
+              "FrameLeft",
+              "FrameRight",
+              "GatePanel",
+              "HandleBar",
+              "HingePin"
+            ],
+            "sourceHighlightIds": [
+              "gate_graphic",
+              "labels_right"
+            ],
+            "execution": null,
+            "executionStep": null
+          },
+          {
+            "id": "ajarStep",
+            "caption": "Partly open: gate and handle swing together about left hinge.",
+            "narration": "One control moves gate plus handle outward together.",
+            "highlightIds": [
+              "GatePanel",
+              "HandleBar",
+              "HingePin"
+            ],
+            "sourceHighlightIds": [
+              "desc_fixed",
+              "bottom_control"
+            ],
+            "execution": null,
+            "executionStep": null
+          },
+          {
+            "id": "openStep",
+            "caption": "Open: passage is clear; frame unchanged.",
+            "narration": "Frame stays fixed while gate-handle assembly rests open.",
+            "highlightIds": [
+              "GatePanel",
+              "HandleBar",
+              "FrameLeft"
+            ],
+            "sourceHighlightIds": [
+              "title",
+              "bottom_control"
+            ],
+            "execution": null,
+            "executionStep": null
+          }
+        ],
+        "followups": []
+      },
+      "validation": {
+        "assurance": "explanation-only",
+        "modelVersion": null,
+        "checks": [
+          "schema",
+          "references"
+        ]
+      },
+      "executions": null,
+      "id": "43a8e156-2fd0-4951-8175-f4d76b42891f",
+      "version": 1,
+      "createdAt": "2026-10-31T00:21:42.790Z",
+      "updatedAt": "2026-10-31T00:21:43.490Z",
+      "question": "Turn this original teaching schematic into a clear 3D educational mechanism with exactly three short explanation stages. The fixed passage frame, left hinge, gate and attached handle. The gate and handle move together about the left hinge. Keep source roles and part counts. Chosen dimensions, angles and hardware are illustrative assumptions. Do not claim a checked physical simulation. Use only the existing catalog render styles or basic shapes and their supported poses. If a source motion cannot be shown faithfully, state that limitation. Keep the source mechanism prominent.",
+      "source": {
+        "observationId": "capture_9336ece5c76c43308f7a8fdd0910fa4d",
+        "version": 1,
+        "kind": "screenshot",
+        "label": "Original synthetic hinged gate schematic",
+        "capturedAt": "2026-10-31T00:20:54.035Z",
+        "imageSha256": "ab2f14a4429e11327d2f2e326f4b10fd1e4ab0ecee066de48bab4fc85f36f36d",
+        "summary": "Original teaching schematic: a hinged passage. Fixed frame, gate and handle rotate together about left vertical hinge. Frame stays fixed, left hinge is axis, gate opens outward, handle stays attached. Sequence Closed -> partly open -> open with one opening control for gate and handle. Illustrative dimensions and motion only; no forces, rates or engineering tolerances. Flat 2D diagram with brown gate, green frame, yellow handle, not 3D.",
+        "uncertainty": [
+          "No numeric dimensions, angles, or tolerances visible in capture",
+          "No forces, rates, materials, or hardware details shown",
+          "Only closed pose illustrated; partly open/open poses not drawn"
+        ],
+        "anchors": [
+          {
+            "id": "title",
+            "label": "Title: hinged passage",
+            "region": {
+              "x": 0.032,
+              "y": 0.039,
+              "width": 0.58,
+              "height": 0.09
+            }
+          },
+          {
+            "id": "desc_fixed",
+            "label": "Fixed frame and hinge description",
+            "region": {
+              "x": 0.032,
+              "y": 0.141,
+              "width": 0.68,
+              "height": 0.17
+            }
+          },
+          {
+            "id": "gate_graphic",
+            "label": "Gate in frame with handle",
+            "region": {
+              "x": 0.181,
+              "y": 0.326,
+              "width": 0.54,
+              "height": 0.517
+            }
+          },
+          {
+            "id": "labels_right",
+            "label": "Frame, hinge, gate, handle labels",
+            "region": {
+              "x": 0.731,
+              "y": 0.35,
+              "width": 0.225,
+              "height": 0.396
+            }
+          },
+          {
+            "id": "bottom_control",
+            "label": "Closed to open control note",
+            "region": {
+              "x": 0.032,
+              "y": 0.877,
+              "width": 0.67,
+              "height": 0.072
+            }
+          }
+        ]
+      },
+      "generation": {
+        "mode": "live",
+        "provider": "meta",
+        "model": "muse-spark-1.3",
+        "calls": 5,
+        "usage": {
+          "input_tokens": 20274,
+          "output_tokens": 8178
+        },
+        "costUsd": 0.08959575,
+        "elapsedMs": 48751,
+        "timings": [
+          {
+            "call": 1,
+            "stage": "interpretation",
+            "durationMs": 3963
+          },
+          {
+            "call": 2,
+            "stage": "composition",
+            "durationMs": 16613
+          },
+          {
+            "call": 3,
+            "stage": "review",
+            "durationMs": 8507
+          },
+          {
+            "call": 4,
+            "stage": "composition",
+            "durationMs": 13192
+          },
+          {
+            "call": 5,
+            "stage": "review",
+            "durationMs": 4504
+          }
+        ],
+        "checks": [
+          "schema",
+          "references"
+        ],
+        "audit": [
+          {
+            "event": "source-interpreted",
+            "call": 1,
+            "detail": "No checked graph inferred; clarification or explanation only. Provider no-graph sentinel normalized to JSON null."
+          },
+          {
+            "event": "review-rejected",
+            "call": 3,
+            "detail": "Muse Wonder advisory review: revise. Ajar/open poses translate GatePanel from x=-0.5,z=0 to x=-0.2,z=1.6, moving its hinge-side edge away from the fixed HingePin at x=-1.8; this depicts sliding away from the axis, not swinging about the left hinge. Keep the gate's hinge edge coincident with the hinge and rotate the gate/handle assembly outward. HandleBar likewise must rotate with the gate, not only shift in x/z. HandleBar is rendered violet, while the source identifies the handle as yellow (gate brown, frame green). Recolor the handle yellow to preserve the source color coding."
+          },
+          {
+            "event": "review-approved",
+            "call": 5,
+            "detail": "Muse Wonder advisory review: approve."
+          },
+          {
+            "event": "scene-validated",
+            "call": 5,
+            "detail": "Typed scene, source versions and checked model references validated."
+          }
+        ]
+      },
+      "state": {
+        "step": 0,
+        "explanationStep": 0,
+        "start": null,
+        "goal": null,
+        "disabledEdgeIds": [],
+        "reversed": false,
+        "selectedObjectId": null,
+        "spatial": {
+          "mode": "3d",
+          "renderer": "anatomy",
+          "azimuth": 35,
+          "elevation": 25,
+          "zoom": 1,
+          "spread": 0,
+          "slice": 0,
+          "isolate": false
+        }
+      },
+      "saved": true
+    },
+    "after": {
+      "spec": {
+        "schemaVersion": "exploration-v1",
+        "id": "explore_7f06901cc47049caa309424a2c74f83b",
+        "version": 1,
+        "title": "Hinged passage gate",
+        "objective": "Show fixed frame, hinged gate, hinge axis and attached handle moving closed to open with one control.",
+        "sources": [
+          {
+            "observationId": "capture_fc121769847b478298484de7b7d6019d",
+            "version": 1,
+            "region": null
+          }
+        ],
+        "assumptions": [
+          "Chosen frame width, gate thickness, pin diameter, handle bends and 85 deg open angle are illustrative assumptions.",
+          "Outward means forward swing away from viewer.",
+          "Handle is rigidly attached to gate and shares left hinge pivot."
+        ],
+        "uncertainty": [
+          "No numeric dimensions or opening angles visible.",
+          "Only closed front view shown; partial and open are illustrative.",
+          "3D depth and pin diameter not shown."
+        ],
+        "unsupportedClaims": [],
+        "mode": "explanation",
+        "scene": {
+          "layout": "diagram-sidebar",
+          "panels": [
+            {
+              "id": "gateScene",
+              "kind": "spatial",
+              "title": "Hinged passage mechanism",
+              "placement": {
+                "column": 1,
+                "row": 1,
+                "columnSpan": 2
+              },
+              "objects": [
+                {
+                  "id": "frameObj",
+                  "label": "Fixed frame",
+                  "description": "Fixed open rectangular U frame stays in place.",
+                  "shape": "box",
+                  "renderStyle": null,
+                  "geometry": [
+                    {
+                      "id": "frameLeft",
+                      "purpose": "fixed left jamb of open frame",
+                      "form": {
+                        "kind": "prism",
+                        "outline": [
+                          {
+                            "x": -0.4,
+                            "z": -0.1
+                          },
+                          {
+                            "x": -0.32,
+                            "z": -0.1
+                          },
+                          {
+                            "x": -0.32,
+                            "z": 0.1
+                          },
+                          {
+                            "x": -0.4,
+                            "z": 0.1
+                          }
+                        ],
+                        "height": 0.5
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "sage",
+                      "driver": null
+                    },
+                    {
+                      "id": "frameTop",
+                      "purpose": "fixed top of open frame",
+                      "form": {
+                        "kind": "prism",
+                        "outline": [
+                          {
+                            "x": -0.4,
+                            "z": -0.1
+                          },
+                          {
+                            "x": 0.4,
+                            "z": -0.1
+                          },
+                          {
+                            "x": 0.4,
+                            "z": 0.1
+                          },
+                          {
+                            "x": -0.4,
+                            "z": 0.1
+                          }
+                        ],
+                        "height": 0.08
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": 0.29,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "sage",
+                      "driver": null
+                    },
+                    {
+                      "id": "frameRight",
+                      "purpose": "fixed right jamb of open frame",
+                      "form": {
+                        "kind": "prism",
+                        "outline": [
+                          {
+                            "x": 0.32,
+                            "z": -0.1
+                          },
+                          {
+                            "x": 0.4,
+                            "z": -0.1
+                          },
+                          {
+                            "x": 0.4,
+                            "z": 0.1
+                          },
+                          {
+                            "x": 0.32,
+                            "z": 0.1
+                          }
+                        ],
+                        "height": 0.5
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "sage",
+                      "driver": null
+                    }
+                  ],
+                  "color": "sage",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 2,
+                    "y": 2,
+                    "z": 2
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "gateObj",
+                  "label": "Gate",
+                  "description": "Thin panel that opens outward about left hinge.",
+                  "shape": "box",
+                  "renderStyle": null,
+                  "geometry": [
+                    {
+                      "id": "gateLeaf",
+                      "purpose": "thin gate panel that opens outward",
+                      "form": {
+                        "kind": "prism",
+                        "outline": [
+                          {
+                            "x": -0.3,
+                            "z": -0.02
+                          },
+                          {
+                            "x": 0.3,
+                            "z": -0.02
+                          },
+                          {
+                            "x": 0.3,
+                            "z": 0.02
+                          },
+                          {
+                            "x": -0.3,
+                            "z": 0.02
+                          }
+                        ],
+                        "height": 0.5
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "clay",
+                      "driver": {
+                        "parameterId": "openAmt",
+                        "pivot": {
+                          "x": -0.3,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "translation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": -85,
+                          "z": 0
+                        }
+                      }
+                    }
+                  ],
+                  "color": "clay",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 2,
+                    "y": 2,
+                    "z": 2
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "hingeObj",
+                  "label": "Left hinge",
+                  "description": "Left vertical axis for rotation.",
+                  "shape": "cylinder",
+                  "renderStyle": null,
+                  "geometry": [
+                    {
+                      "id": "hingePin",
+                      "purpose": "left vertical hinge pin axis",
+                      "form": {
+                        "kind": "lathe",
+                        "profile": [
+                          {
+                            "radius": 0.03,
+                            "y": -0.25
+                          },
+                          {
+                            "radius": 0.03,
+                            "y": 0.25
+                          }
+                        ]
+                      },
+                      "position": {
+                        "x": -0.3,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "metal",
+                      "driver": null
+                    }
+                  ],
+                  "color": "blue",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 2,
+                    "y": 2,
+                    "z": 2
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "handleObj",
+                  "label": "Handle stays attached",
+                  "description": "C-shaped handle fixed to gate right side.",
+                  "shape": "torus",
+                  "renderStyle": null,
+                  "geometry": [
+                    {
+                      "id": "bentHandle",
+                      "purpose": "bent handle attached to gate right side",
+                      "form": {
+                        "kind": "tube",
+                        "path": [
+                          {
+                            "x": 0.18,
+                            "y": -0.08,
+                            "z": 0.05
+                          },
+                          {
+                            "x": 0.24,
+                            "y": -0.08,
+                            "z": 0.12
+                          },
+                          {
+                            "x": 0.24,
+                            "y": 0.08,
+                            "z": 0.12
+                          },
+                          {
+                            "x": 0.18,
+                            "y": 0.08,
+                            "z": 0.05
+                          }
+                        ],
+                        "radius": 0.02
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "gold",
+                      "driver": {
+                        "parameterId": "openAmt",
+                        "pivot": {
+                          "x": -0.3,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "translation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": -85,
+                          "z": 0
+                        }
+                      }
+                    }
+                  ],
+                  "color": "gold",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 2,
+                    "y": 2,
+                    "z": 2
+                  },
+                  "parentId": "gateObj"
+                }
+              ],
+              "connections": [],
+              "poses": [],
+              "parameters": [
+                {
+                  "id": "openAmt",
+                  "label": "Opening",
+                  "description": "One control rotates gate and attached handle together about left hinge axis.",
+                  "initial": 0
+                }
+              ],
+              "parameterPoses": [
+                {
+                  "stepId": "closedStep",
+                  "parameterId": "openAmt",
+                  "value": 0
+                },
+                {
+                  "stepId": "partStep",
+                  "parameterId": "openAmt",
+                  "value": 0.5
+                },
+                {
+                  "stepId": "openStep",
+                  "parameterId": "openAmt",
+                  "value": 1
+                }
+              ],
+              "viewAction": null
+            }
+          ]
+        },
+        "steps": [
+          {
+            "id": "closedStep",
+            "caption": "Closed: gate fills frame, handle on right side.",
+            "narration": "Frame stays fixed while gate rests closed on the hinge.",
+            "highlightIds": [
+              "frameObj",
+              "gateObj",
+              "hingeObj"
+            ],
+            "sourceHighlightIds": [
+              "frame",
+              "gate",
+              "hinge"
+            ],
+            "execution": null,
+            "executionStep": null
+          },
+          {
+            "id": "partStep",
+            "caption": "Partly open: gate and handle swing together about left hinge.",
+            "narration": "One opening control rotates gate and attached handle outward.",
+            "highlightIds": [
+              "gateObj",
+              "handleObj",
+              "hingeObj"
+            ],
+            "sourceHighlightIds": [
+              "motion_note",
+              "handle"
+            ],
+            "execution": null,
+            "executionStep": null
+          },
+          {
+            "id": "openStep",
+            "caption": "Open: gate swung outward, handle carried with it.",
+            "narration": "At full opening the handle remains attached to the gate.",
+            "highlightIds": [
+              "gateObj",
+              "handleObj"
+            ],
+            "sourceHighlightIds": [
+              "gate",
+              "handle",
+              "motion_note"
+            ],
+            "execution": null,
+            "executionStep": null
+          }
+        ],
+        "followups": [
+          "Try the Opening slider to see gate and handle move together."
+        ]
+      },
+      "validation": {
+        "assurance": "explanation-only",
+        "modelVersion": null,
+        "checks": [
+          "schema",
+          "references"
+        ]
+      },
+      "executions": null,
+      "id": "7f06901c-c470-49ca-a309-424a2c74f83b",
+      "version": 1,
+      "createdAt": "2026-10-31T00:09:14.940Z",
+      "updatedAt": "2026-10-31T00:09:14.940Z",
+      "question": "Build this as a spatial mechanism using custom geometry, not catalog renderStyle meshes. Design the open rectangular frame, a thin gate, hinge pin and bent handle using prism, lathe and tube forms. Use one opening parameter coupled to both the gate and attached handle around the same left hinge. Give three explanation steps with parameterPoses for closed, partial and open. Preserve source roles; label chosen dimensions and angle as illustrative assumptions. Keep the construction concise enough to finish.",
+      "source": {
+        "observationId": "capture_fc121769847b478298484de7b7d6019d",
+        "version": 1,
+        "kind": "screenshot",
+        "label": "Original synthetic hinged passage schematic",
+        "capturedAt": "2026-10-31T00:08:34.711Z",
+        "imageSha256": "ab2f14a4429e11327d2f2e326f4b10fd1e4ab0ecee066de48bab4fc85f36f36d",
+        "summary": "Original teaching schematic shows a fixed open rectangular frame (green U) surrounding a thin brown gate panel. Left vertical light strip is the hinge axis. Yellow C-shaped handle is attached to gate right side. Text roles: Frame stays fixed; Left hinge is the axis; Gate opens outward; Handle stays attached. Motion is Closed \u2192 partly open \u2192 open with one opening control for gate and handle together about left vertical hinge. Illustrative dimensions and motion only; no forces, rates or tolerances.",
+        "uncertainty": [
+          "No numeric dimensions, thicknesses, or opening angles visible",
+          "No 3D depth, hinge pin diameter, or handle bend dimensions shown",
+          "Only closed front view shown; partial/open poses not pictured",
+          "Gate outward direction defined only as text, not drawn"
+        ],
+        "anchors": [
+          {
+            "id": "title",
+            "label": "Title: hinged passage",
+            "region": {
+              "x": 0.03,
+              "y": 0.04,
+              "width": 0.6,
+              "height": 0.09
+            }
+          },
+          {
+            "id": "frame",
+            "label": "Fixed U-shaped frame",
+            "region": {
+              "x": 0.18,
+              "y": 0.27,
+              "width": 0.56,
+              "height": 0.57
+            }
+          },
+          {
+            "id": "gate",
+            "label": "Gate panel",
+            "region": {
+              "x": 0.215,
+              "y": 0.34,
+              "width": 0.48,
+              "height": 0.48
+            }
+          },
+          {
+            "id": "hinge",
+            "label": "Left hinge axis strip",
+            "region": {
+              "x": 0.188,
+              "y": 0.335,
+              "width": 0.03,
+              "height": 0.5
+            }
+          },
+          {
+            "id": "handle",
+            "label": "Attached handle",
+            "region": {
+              "x": 0.591,
+              "y": 0.51,
+              "width": 0.06,
+              "height": 0.2
+            }
+          },
+          {
+            "id": "motion_note",
+            "label": "Closed to open instruction",
+            "region": {
+              "x": 0.032,
+              "y": 0.87,
+              "width": 0.72,
+              "height": 0.07
+            }
+          }
+        ]
+      },
+      "generation": {
+        "mode": "live",
+        "provider": "meta",
+        "model": "muse-spark-1.3",
+        "calls": 5,
+        "usage": {
+          "input_tokens": 21979,
+          "output_tokens": 7216
+        },
+        "costUsd": 0.08729075,
+        "elapsedMs": 40218,
+        "timings": [
+          {
+            "call": 1,
+            "stage": "interpretation",
+            "durationMs": 3872
+          },
+          {
+            "call": 2,
+            "stage": "composition",
+            "durationMs": 13051
+          },
+          {
+            "call": 3,
+            "stage": "review",
+            "durationMs": 7572
+          },
+          {
+            "call": 4,
+            "stage": "composition",
+            "durationMs": 8897
+          },
+          {
+            "call": 5,
+            "stage": "review",
+            "durationMs": 5090
+          }
+        ],
+        "checks": [
+          "schema",
+          "references"
+        ],
+        "audit": [
+          {
+            "event": "source-interpreted",
+            "call": 1,
+            "detail": "No checked graph inferred; clarification or explanation only. Provider no-graph sentinel normalized to JSON null."
+          },
+          {
+            "event": "review-rejected",
+            "call": 3,
+            "detail": "Muse Wonder advisory review: revise. gateObj/gateLeaf: prism height is 0.04 while the fixed frame members are 0.5 high, so the rendered gate is a low horizontal slab rather than a thin vertical panel filling the frame. Increase the gate leaf's vertical height to approximately match the frame opening (about 0.5, illustratively) so closedStep's 'gate fills frame' is true."
+          },
+          {
+            "event": "review-approved",
+            "call": 5,
+            "detail": "Muse Wonder advisory review: approve."
+          },
+          {
+            "event": "scene-validated",
+            "call": 5,
+            "detail": "Typed scene, source versions and checked model references validated."
+          }
+        ]
+      },
+      "state": {
+        "step": 0,
+        "explanationStep": 0,
+        "start": null,
+        "goal": null,
+        "disabledEdgeIds": [],
+        "reversed": false,
+        "selectedObjectId": null,
+        "spatial": {
+          "mode": "3d",
+          "renderer": "anatomy",
+          "azimuth": 35,
+          "elevation": 25,
+          "zoom": 1,
+          "spread": 0,
+          "slice": 0,
+          "isolate": false
+        }
+      },
+      "saved": false
+    },
+    "reusedAfter": true
+  },
+  {
+    "id": "piston",
+    "label": "Sliding piston",
+    "source": "sources/piston.png",
+    "before": {
+      "spec": {
+        "schemaVersion": "exploration-v1",
+        "id": "explore_da04ad9568da40b186346da12b65f0da",
+        "version": 1,
+        "title": "Sliding piston in fixed guide",
+        "objective": "Show fixed open guide with vertically sliding head, rod and grip in three stages.",
+        "sources": [
+          {
+            "observationId": "capture_ae02a17b7ce04538b0a8e6a96846d895",
+            "version": 1,
+            "region": null
+          }
+        ],
+        "assumptions": [
+          "Chosen 3D dimensions, angles and clearances are illustrative only.",
+          "Guide walls and base stay fixed; head, rod and grip translate vertically together.",
+          "No pressure, fluid, force or timing model is shown."
+        ],
+        "uncertainty": [
+          "Exact colors and dimensions are schematic only.",
+          "No force, pressure or timing values shown.",
+          "Vertical travel is illustrative, not measured."
+        ],
+        "unsupportedClaims": [],
+        "mode": "explanation",
+        "scene": {
+          "layout": "diagram-sidebar",
+          "panels": [
+            {
+              "id": "mech3d",
+              "kind": "spatial",
+              "title": "Sliding piston 3D mechanism",
+              "placement": {
+                "column": 1,
+                "row": 1,
+                "columnSpan": 2
+              },
+              "objects": [
+                {
+                  "id": "guideLeft",
+                  "label": "Fixed guide left wall",
+                  "description": "Left wall of fixed open U guide, never moves.",
+                  "shape": "box",
+                  "renderStyle": "housing",
+                  "color": "sage",
+                  "position": {
+                    "x": -1.6,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 0.4,
+                    "y": 2.8,
+                    "z": 1.2
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "guideRight",
+                  "label": "Fixed guide right wall",
+                  "description": "Right wall of fixed open U guide, never moves.",
+                  "shape": "box",
+                  "renderStyle": "housing",
+                  "color": "sage",
+                  "position": {
+                    "x": 1.6,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 0.4,
+                    "y": 2.8,
+                    "z": 1.2
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "guideBase",
+                  "label": "Fixed guide base",
+                  "description": "Base of fixed open U guide, never moves.",
+                  "shape": "box",
+                  "renderStyle": "housing",
+                  "color": "sage",
+                  "position": {
+                    "x": 0,
+                    "y": -1.5,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 3.6,
+                    "y": 0.4,
+                    "z": 1.2
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "pistonHead",
+                  "label": "Wide piston head",
+                  "description": "Wide piston head that slides vertically inside guide.",
+                  "shape": "cylinder",
+                  "renderStyle": "piston",
+                  "color": "clay",
+                  "position": {
+                    "x": 0,
+                    "y": 0.5,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 2.2,
+                    "y": 0.6,
+                    "z": 2.2
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "pistonRod",
+                  "label": "Moving rod",
+                  "description": "Vertical rod connected to head and grip.",
+                  "shape": "cylinder",
+                  "renderStyle": "pipe",
+                  "color": "blue",
+                  "position": {
+                    "x": 0,
+                    "y": 1.5,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 0.4,
+                    "y": 1.8,
+                    "z": 0.4
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "gripHead",
+                  "label": "Grip follows rod",
+                  "description": "Top grip that follows the rod vertically.",
+                  "shape": "box",
+                  "renderStyle": "marker",
+                  "color": "gold",
+                  "position": {
+                    "x": 0,
+                    "y": 2.6,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 1.2,
+                    "y": 0.4,
+                    "z": 0.8
+                  },
+                  "parentId": null
+                }
+              ],
+              "connections": [
+                {
+                  "id": "c1",
+                  "from": "pistonRod",
+                  "to": "pistonHead",
+                  "label": "moves with head",
+                  "directed": false
+                },
+                {
+                  "id": "c2",
+                  "from": "pistonRod",
+                  "to": "gripHead",
+                  "label": "moves with grip",
+                  "directed": false
+                }
+              ],
+              "poses": [
+                {
+                  "stepId": "s1",
+                  "objectId": "pistonHead",
+                  "position": {
+                    "x": 0,
+                    "y": 0.5,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s1",
+                  "objectId": "pistonRod",
+                  "position": {
+                    "x": 0,
+                    "y": 1.5,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s1",
+                  "objectId": "gripHead",
+                  "position": {
+                    "x": 0,
+                    "y": 2.6,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s2",
+                  "objectId": "pistonHead",
+                  "position": {
+                    "x": 0,
+                    "y": -0.1,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s2",
+                  "objectId": "pistonRod",
+                  "position": {
+                    "x": 0,
+                    "y": 0.9,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s2",
+                  "objectId": "gripHead",
+                  "position": {
+                    "x": 0,
+                    "y": 2,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s3",
+                  "objectId": "pistonHead",
+                  "position": {
+                    "x": 0,
+                    "y": -0.8,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s3",
+                  "objectId": "pistonRod",
+                  "position": {
+                    "x": 0,
+                    "y": 0.2,
+                    "z": 0
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s3",
+                  "objectId": "gripHead",
+                  "position": {
+                    "x": 0,
+                    "y": 1.3,
+                    "z": 0
+                  },
+                  "visible": true
+                }
+              ],
+              "viewAction": null
+            }
+          ]
+        },
+        "steps": [
+          {
+            "id": "s1",
+            "caption": "Stage 1 Raised: assembly sits high in the fixed open guide.",
+            "narration": "Guide stays fixed while head, rod and grip are together at the top.",
+            "highlightIds": [
+              "pistonHead",
+              "pistonRod",
+              "gripHead",
+              "guideLeft",
+              "guideRight",
+              "guideBase"
+            ],
+            "sourceHighlightIds": [
+              "piston_assembly",
+              "fixed_guide",
+              "bottom_caption"
+            ],
+            "execution": null,
+            "executionStep": null
+          },
+          {
+            "id": "s2",
+            "caption": "Stage 2 Partly compressed: head, rod and grip move down together.",
+            "narration": "One downward motion carries all three moving parts together.",
+            "highlightIds": [
+              "pistonHead",
+              "pistonRod",
+              "gripHead"
+            ],
+            "sourceHighlightIds": [
+              "piston_assembly",
+              "right_labels"
+            ],
+            "execution": null,
+            "executionStep": null
+          },
+          {
+            "id": "s3",
+            "caption": "Stage 3 Lowered: assembly is low; guide never moved.",
+            "narration": "Travel distance is illustrative only with no force simulation.",
+            "highlightIds": [
+              "pistonHead",
+              "pistonRod",
+              "gripHead",
+              "guideBase"
+            ],
+            "sourceHighlightIds": [
+              "bottom_caption",
+              "top_note"
+            ],
+            "execution": null,
+            "executionStep": null
+          }
+        ],
+        "followups": []
+      },
+      "validation": {
+        "assurance": "explanation-only",
+        "modelVersion": null,
+        "checks": [
+          "schema",
+          "references"
+        ]
+      },
+      "executions": null,
+      "id": "da04ad95-68da-40b1-8634-6da12b65f0da",
+      "version": 1,
+      "createdAt": "2026-10-31T00:22:06.230Z",
+      "updatedAt": "2026-10-31T00:22:06.818Z",
+      "question": "Turn this original teaching schematic into a clear 3D educational mechanism with exactly three short explanation stages. The open fixed guide, wide piston head, rod and grip. The head, rod and grip translate together vertically; keep the guide fixed. Keep source roles and part counts. Chosen dimensions, angles and hardware are illustrative assumptions. Do not claim a checked physical simulation. Use only the existing catalog render styles or basic shapes and their supported poses. If a source motion cannot be shown faithfully, state that limitation. Keep the source mechanism prominent.",
+      "source": {
+        "observationId": "capture_ae02a17b7ce04538b0a8e6a96846d895",
+        "version": 1,
+        "kind": "screenshot",
+        "label": "Original synthetic sliding piston schematic",
+        "capturedAt": "2026-10-31T00:21:44.376Z",
+        "imageSha256": "48b6bffb700c1a9962ec8d1da2c4fb307f10a4bd20ca215c4343d32a4aa3edf0",
+        "summary": "Original teaching schematic of a sliding piston. Text states guide stays fixed; piston head, rod and top grip slide vertically together; one compression control; illustrative motion only with no pressure, fluid or force model. Visual shows U-shaped fixed open guide with two vertical walls and base, and centered moving assembly: wide brown rectangular piston head, vertical gray rod, mustard top grip. Right side lists Fixed open guide, Moving rod, Wide piston head, Grip follows rod with downward arrow. Bottom caption: Raised \u2192 partly compressed \u2192 lowered. The guide never moves.",
+        "uncertainty": [
+          "Exact colors and dimensions are schematic only, no numeric values visible.",
+          "No force, pressure, or timing values shown; motion is illustrative only.",
+          "Arrow indicates direction, not measured travel distance."
+        ],
+        "anchors": [
+          {
+            "id": "title",
+            "label": "Title: sliding piston schematic",
+            "region": {
+              "x": 0.03,
+              "y": 0.03,
+              "width": 0.6,
+              "height": 0.09
+            }
+          },
+          {
+            "id": "top_note",
+            "label": "Fixed guide and sliding parts note",
+            "region": {
+              "x": 0.03,
+              "y": 0.12,
+              "width": 0.73,
+              "height": 0.14
+            }
+          },
+          {
+            "id": "piston_assembly",
+            "label": "Moving grip, rod and wide head",
+            "region": {
+              "x": 0.29,
+              "y": 0.27,
+              "width": 0.3,
+              "height": 0.42
+            }
+          },
+          {
+            "id": "fixed_guide",
+            "label": "U-shaped fixed open guide",
+            "region": {
+              "x": 0.19,
+              "y": 0.4,
+              "width": 0.51,
+              "height": 0.49
+            }
+          },
+          {
+            "id": "right_labels",
+            "label": "Right-side part labels and arrow",
+            "region": {
+              "x": 0.77,
+              "y": 0.32,
+              "width": 0.21,
+              "height": 0.4
+            }
+          },
+          {
+            "id": "bottom_caption",
+            "label": "Raised to lowered stages caption",
+            "region": {
+              "x": 0.03,
+              "y": 0.91,
+              "width": 0.65,
+              "height": 0.07
+            }
+          }
+        ]
+      },
+      "generation": {
+        "mode": "live",
+        "provider": "meta",
+        "model": "muse-spark-1.3",
+        "calls": 3,
+        "usage": {
+          "input_tokens": 11373,
+          "output_tokens": 4370
+        },
+        "costUsd": 0.04530825,
+        "elapsedMs": 21852,
+        "timings": [
+          {
+            "call": 1,
+            "stage": "interpretation",
+            "durationMs": 4935
+          },
+          {
+            "call": 2,
+            "stage": "composition",
+            "durationMs": 11566
+          },
+          {
+            "call": 3,
+            "stage": "review",
+            "durationMs": 4095
+          }
+        ],
+        "checks": [
+          "schema",
+          "references"
+        ],
+        "audit": [
+          {
+            "event": "source-interpreted",
+            "call": 1,
+            "detail": "No checked graph inferred; clarification or explanation only. Provider no-graph sentinel normalized to JSON null."
+          },
+          {
+            "event": "review-approved",
+            "call": 3,
+            "detail": "Muse Wonder advisory review: approve."
+          },
+          {
+            "event": "scene-validated",
+            "call": 3,
+            "detail": "Typed scene, source versions and checked model references validated."
+          }
+        ]
+      },
+      "state": {
+        "step": 0,
+        "explanationStep": 0,
+        "start": null,
+        "goal": null,
+        "disabledEdgeIds": [],
+        "reversed": false,
+        "selectedObjectId": null,
+        "spatial": {
+          "mode": "3d",
+          "renderer": "anatomy",
+          "azimuth": 35,
+          "elevation": 25,
+          "zoom": 1,
+          "spread": 0,
+          "slice": 0,
+          "isolate": false
+        }
+      },
+      "saved": true
+    },
+    "after": {
+      "spec": {
+        "schemaVersion": "exploration-v1",
+        "id": "explore_9de657ac725b44628359c8f8c5311df7",
+        "version": 1,
+        "title": "Sliding piston: fixed guide, moving assembly",
+        "objective": "Show sliding piston with fixed guide and head-rod-grip moving together vertically.",
+        "sources": [
+          {
+            "observationId": "capture_46efde2312e04dbfad1d27527d9825c1",
+            "version": 1,
+            "region": null
+          }
+        ],
+        "assumptions": [
+          "Guide geometry, colors, clearances and travel are illustrative assumptions.",
+          "Raised, partly compressed and lowered poses are evenly spaced illustration, not measured values.",
+          "No pressure, fluid or force model is represented."
+        ],
+        "uncertainty": [
+          "Exact colors, dimensions, clearances and travel distances are not labeled.",
+          "No quantified forces, pressures or timing for the three stages."
+        ],
+        "unsupportedClaims": [],
+        "mode": "explanation",
+        "scene": {
+          "layout": "diagram-sidebar",
+          "panels": [
+            {
+              "id": "pistonPanel",
+              "kind": "spatial",
+              "title": "Sliding piston mechanism",
+              "placement": {
+                "column": 1,
+                "row": 1,
+                "columnSpan": 2
+              },
+              "objects": [
+                {
+                  "id": "guideObj",
+                  "label": "Fixed open guide",
+                  "description": "U-shaped open guide with base; stays fixed in all stages.",
+                  "shape": "box",
+                  "renderStyle": null,
+                  "geometry": [
+                    {
+                      "id": "guideBase",
+                      "purpose": "Fixed open guide base",
+                      "form": {
+                        "kind": "prism",
+                        "outline": [
+                          {
+                            "x": -0.35,
+                            "z": -0.2
+                          },
+                          {
+                            "x": 0.35,
+                            "z": -0.2
+                          },
+                          {
+                            "x": 0.35,
+                            "z": 0.2
+                          },
+                          {
+                            "x": -0.35,
+                            "z": 0.2
+                          }
+                        ],
+                        "height": 0.08
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": -0.42,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "sage",
+                      "driver": null
+                    },
+                    {
+                      "id": "guideLeft",
+                      "purpose": "Fixed left wall of U guide",
+                      "form": {
+                        "kind": "prism",
+                        "outline": [
+                          {
+                            "x": -0.35,
+                            "z": -0.15
+                          },
+                          {
+                            "x": -0.25,
+                            "z": -0.15
+                          },
+                          {
+                            "x": -0.25,
+                            "z": 0.15
+                          },
+                          {
+                            "x": -0.35,
+                            "z": 0.15
+                          }
+                        ],
+                        "height": 0.6
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": -0.08,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "sage",
+                      "driver": null
+                    },
+                    {
+                      "id": "guideRight",
+                      "purpose": "Fixed right wall of U guide",
+                      "form": {
+                        "kind": "prism",
+                        "outline": [
+                          {
+                            "x": 0.25,
+                            "z": -0.15
+                          },
+                          {
+                            "x": 0.35,
+                            "z": -0.15
+                          },
+                          {
+                            "x": 0.35,
+                            "z": 0.15
+                          },
+                          {
+                            "x": 0.25,
+                            "z": 0.15
+                          }
+                        ],
+                        "height": 0.6
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": -0.08,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "sage",
+                      "driver": null
+                    }
+                  ],
+                  "color": "sage",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "headObj",
+                  "label": "Wide piston head",
+                  "description": "Wide piston head block that slides vertically inside guide.",
+                  "shape": "box",
+                  "renderStyle": null,
+                  "geometry": [
+                    {
+                      "id": "headBlock",
+                      "purpose": "Wide piston head slides vertically",
+                      "form": {
+                        "kind": "prism",
+                        "outline": [
+                          {
+                            "x": -0.22,
+                            "z": -0.14
+                          },
+                          {
+                            "x": 0.22,
+                            "z": -0.14
+                          },
+                          {
+                            "x": 0.22,
+                            "z": 0.14
+                          },
+                          {
+                            "x": -0.22,
+                            "z": 0.14
+                          }
+                        ],
+                        "height": 0.12
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": -0.15,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "clay",
+                      "driver": {
+                        "parameterId": "compress",
+                        "pivot": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "translation": {
+                          "x": 0,
+                          "y": -0.3,
+                          "z": 0
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        }
+                      }
+                    }
+                  ],
+                  "color": "clay",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "rodObj",
+                  "label": "Moving rod",
+                  "description": "Vertical rod connected to head and grip; moves together with them.",
+                  "shape": "cylinder",
+                  "renderStyle": null,
+                  "geometry": [
+                    {
+                      "id": "rodShaft",
+                      "purpose": "Vertical moving rod shaft",
+                      "form": {
+                        "kind": "tube",
+                        "path": [
+                          {
+                            "x": 0,
+                            "y": 0.35,
+                            "z": 0
+                          },
+                          {
+                            "x": 0,
+                            "y": -0.1,
+                            "z": 0
+                          }
+                        ],
+                        "radius": 0.04
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "ivory",
+                      "driver": {
+                        "parameterId": "compress",
+                        "pivot": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "translation": {
+                          "x": 0,
+                          "y": -0.3,
+                          "z": 0
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        }
+                      }
+                    }
+                  ],
+                  "color": "blue",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "gripObj",
+                  "label": "Grip follows rod",
+                  "description": "Top grip bar attached to rod; follows rod motion.",
+                  "shape": "box",
+                  "renderStyle": null,
+                  "geometry": [
+                    {
+                      "id": "gripBar",
+                      "purpose": "Top grip follows rod vertically",
+                      "form": {
+                        "kind": "prism",
+                        "outline": [
+                          {
+                            "x": -0.16,
+                            "z": -0.06
+                          },
+                          {
+                            "x": 0.16,
+                            "z": -0.06
+                          },
+                          {
+                            "x": 0.16,
+                            "z": 0.06
+                          },
+                          {
+                            "x": -0.16,
+                            "z": 0.06
+                          }
+                        ],
+                        "height": 0.07
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": 0.42,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "gold",
+                      "driver": {
+                        "parameterId": "compress",
+                        "pivot": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "translation": {
+                          "x": 0,
+                          "y": -0.3,
+                          "z": 0
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        }
+                      }
+                    }
+                  ],
+                  "color": "gold",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "parentId": null
+                }
+              ],
+              "connections": [],
+              "poses": [],
+              "parameters": [
+                {
+                  "id": "compress",
+                  "label": "Compression control",
+                  "description": "Vertical compression: 0 raised, 0.5 partly compressed, 1 lowered. Illustrative only.",
+                  "initial": 0
+                }
+              ],
+              "parameterPoses": [
+                {
+                  "stepId": "s1Raised",
+                  "parameterId": "compress",
+                  "value": 0
+                },
+                {
+                  "stepId": "s2Partial",
+                  "parameterId": "compress",
+                  "value": 0.5
+                },
+                {
+                  "stepId": "s3Lowered",
+                  "parameterId": "compress",
+                  "value": 1
+                }
+              ],
+              "viewAction": null
+            }
+          ]
+        },
+        "steps": [
+          {
+            "id": "s1Raised",
+            "caption": "Raised: head high, guide fixed.",
+            "narration": "Start raised with piston head high inside the fixed guide.",
+            "highlightIds": [
+              "guideObj",
+              "headObj"
+            ],
+            "sourceHighlightIds": [
+              "piston_head",
+              "fixed_U_guide"
+            ],
+            "execution": null,
+            "executionStep": null
+          },
+          {
+            "id": "s2Partial",
+            "caption": "Partly compressed: head, rod and grip move down together.",
+            "narration": "Compression moves head, rod and grip down together.",
+            "highlightIds": [
+              "headObj",
+              "rodObj",
+              "gripObj"
+            ],
+            "sourceHighlightIds": [
+              "moving_rod",
+              "top_grip"
+            ],
+            "execution": null,
+            "executionStep": null
+          },
+          {
+            "id": "s3Lowered",
+            "caption": "Lowered: assembly fully down, guide still fixed.",
+            "narration": "Lowered pose keeps the guide fixed.",
+            "highlightIds": [
+              "guideObj",
+              "gripObj"
+            ],
+            "sourceHighlightIds": [
+              "side_legend",
+              "fixed_U_guide"
+            ],
+            "execution": null,
+            "executionStep": null
+          }
+        ],
+        "followups": [
+          "What visible change would show the guide moving, which the source says never happens?"
+        ]
+      },
+      "validation": {
+        "assurance": "explanation-only",
+        "modelVersion": null,
+        "checks": [
+          "schema",
+          "references"
+        ]
+      },
+      "executions": null,
+      "id": "9de657ac-725b-4462-8359-c8f8c5311df7",
+      "version": 1,
+      "createdAt": "2026-10-31T00:22:27.011Z",
+      "updatedAt": "2026-10-31T00:22:27.883Z",
+      "question": "Turn this original teaching schematic into a clear 3D educational mechanism with exactly three short explanation stages. The open fixed guide, wide piston head, rod and grip. The head, rod and grip translate together vertically; keep the guide fixed. Keep source roles and part counts. Chosen dimensions, angles and hardware are illustrative assumptions. Do not claim a checked physical simulation. Use custom geometry in one spatial panel. Build a concise assembly of about six pieces with one named movement control and three parameter poses. Use one shared assembly frame; pieces that move together have identical drivers. Use prism, lathe or tube forms where appropriate; no catalog meshes. Keep all IDs globally unique.",
+      "source": {
+        "observationId": "capture_46efde2312e04dbfad1d27527d9825c1",
+        "version": 1,
+        "kind": "screenshot",
+        "label": "Original synthetic sliding piston schematic",
+        "capturedAt": "2026-10-31T00:22:07.827Z",
+        "imageSha256": "48b6bffb700c1a9962ec8d1da2c4fb307f10a4bd20ca215c4343d32a4aa3edf0",
+        "summary": "Original teaching schematic shows a sliding piston. Text states: Guide stays fixed. Piston head, rod and top grip slide vertically together. One compression control; illustrative motion only. No pressure, fluid or force model. Center diagram has gold top grip bar, light grey vertical rod, wide brown piston head with dark outline, inside a dark green U-shaped fixed open guide with base. Right side legend lists Fixed open guide, Moving rod, Wide piston head, Grip follows rod with long down arrow. Bottom caption: Raised \u2192 partly compressed \u2192 lowered. The guide never moves.",
+        "uncertainty": [
+          "Exact colors, dimensions, clearances, and vertical travel distances are not numerically labeled.",
+          "No quantified poses, forces, pressures, or timing for raised/partly/lowered stages are visible.",
+          "Side legend ordering is explanatory, not a measured assembly sequence."
+        ],
+        "anchors": [
+          {
+            "id": "title_text",
+            "label": "Title: sliding piston schematic",
+            "region": {
+              "x": 0.032,
+              "y": 0.032,
+              "width": 0.64,
+              "height": 0.09
+            }
+          },
+          {
+            "id": "fixed_U_guide",
+            "label": "Fixed open U-shaped guide",
+            "region": {
+              "x": 0.196,
+              "y": 0.5,
+              "width": 0.48,
+              "height": 0.36
+            }
+          },
+          {
+            "id": "top_grip",
+            "label": "Top grip handle bar",
+            "region": {
+              "x": 0.43,
+              "y": 0.313,
+              "width": 0.14,
+              "height": 0.08
+            }
+          },
+          {
+            "id": "moving_rod",
+            "label": "Vertical moving rod shaft",
+            "region": {
+              "x": 0.48,
+              "y": 0.357,
+              "width": 0.045,
+              "height": 0.27
+            }
+          },
+          {
+            "id": "piston_head",
+            "label": "Wide piston head block",
+            "region": {
+              "x": 0.349,
+              "y": 0.605,
+              "width": 0.26,
+              "height": 0.13
+            }
+          },
+          {
+            "id": "side_legend",
+            "label": "Side legend labels and arrow",
+            "region": {
+              "x": 0.773,
+              "y": 0.365,
+              "width": 0.195,
+              "height": 0.415
+            }
+          }
+        ]
+      },
+      "generation": {
+        "mode": "live",
+        "provider": "meta",
+        "model": "muse-spark-1.3",
+        "calls": 3,
+        "usage": {
+          "input_tokens": 11839,
+          "output_tokens": 3946
+        },
+        "costUsd": 0.042928999999999995,
+        "elapsedMs": 19173,
+        "timings": [
+          {
+            "call": 1,
+            "stage": "interpretation",
+            "durationMs": 4420
+          },
+          {
+            "call": 2,
+            "stage": "composition",
+            "durationMs": 10372
+          },
+          {
+            "call": 3,
+            "stage": "review",
+            "durationMs": 3124
+          }
+        ],
+        "checks": [
+          "schema",
+          "references"
+        ],
+        "audit": [
+          {
+            "event": "source-interpreted",
+            "call": 1,
+            "detail": "No checked graph inferred; clarification or explanation only. Provider no-graph sentinel normalized to JSON null."
+          },
+          {
+            "event": "review-approved",
+            "call": 3,
+            "detail": "Muse Wonder advisory review: approve."
+          },
+          {
+            "event": "scene-validated",
+            "call": 3,
+            "detail": "Typed scene, source versions and checked model references validated."
+          }
+        ]
+      },
+      "state": {
+        "step": 0,
+        "explanationStep": 0,
+        "start": null,
+        "goal": null,
+        "disabledEdgeIds": [],
+        "reversed": false,
+        "selectedObjectId": null,
+        "spatial": {
+          "mode": "3d",
+          "renderer": "anatomy",
+          "azimuth": 35,
+          "elevation": 25,
+          "zoom": 1,
+          "spread": 0,
+          "slice": 0,
+          "isolate": false
+        }
+      },
+      "saved": true
+    },
+    "reusedAfter": false
+  },
+  {
+    "id": "rotor",
+    "label": "Three-blade rotor",
+    "source": "sources/rotor.png",
+    "before": {
+      "spec": {
+        "schemaVersion": "exploration-v1",
+        "id": "explore_a392a95e795b4554863f0d396df4b3b8",
+        "version": 1,
+        "title": "Three-blade rotor turning on fixed axle",
+        "objective": "Show the three-blade rotor mechanism in 3D with hub and blades turning together on a fixed axle and support.",
+        "sources": [
+          {
+            "observationId": "capture_60994a9be33845bf83c6c6acb4575005",
+            "version": 1,
+            "region": null
+          }
+        ],
+        "assumptions": [
+          "Support geometry behind hub is illustrative; source implies support but shows no shape.",
+          "All dimensions, blade angles and rotation direction are illustrative assumptions.",
+          "Axle and support remain fixed; hub plus three blades move as one rigid group."
+        ],
+        "uncertainty": [
+          "Support shape and 3D angles are illustrative, not shown in 2D source.",
+          "No rotation direction, speed, airflow or torque model in source."
+        ],
+        "unsupportedClaims": [],
+        "mode": "explanation",
+        "scene": {
+          "layout": "diagram-sidebar",
+          "panels": [
+            {
+              "id": "rotor3d",
+              "kind": "spatial",
+              "title": "Three-blade rotor 3D mechanism",
+              "placement": {
+                "column": 1,
+                "row": 1,
+                "columnSpan": 2
+              },
+              "objects": [
+                {
+                  "id": "support",
+                  "label": "Support (fixed)",
+                  "description": "Fixed support block behind rotor, illustrative shape.",
+                  "shape": "box",
+                  "renderStyle": "housing",
+                  "color": "clay",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": -2
+                  },
+                  "size": {
+                    "x": 1.6,
+                    "y": 1.6,
+                    "z": 0.6
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "axle",
+                  "label": "Central axle (fixed)",
+                  "description": "Fixed central axle through hub, illustrative cylinder.",
+                  "shape": "cylinder",
+                  "renderStyle": "piston",
+                  "color": "gold",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": -0.8
+                  },
+                  "size": {
+                    "x": 0.35,
+                    "y": 0.35,
+                    "z": 2
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "hub",
+                  "label": "Hub (turns)",
+                  "description": "Central mustard hub that turns with blades.",
+                  "shape": "cylinder",
+                  "renderStyle": "gear",
+                  "color": "gold",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0.5
+                  },
+                  "size": {
+                    "x": 0.7,
+                    "y": 0.7,
+                    "z": 0.5
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "bladeA",
+                  "label": "Blade 1 (turns)",
+                  "description": "Tapered blade 1, turns rigidly with hub.",
+                  "shape": "box",
+                  "renderStyle": "turbine",
+                  "color": "clay",
+                  "position": {
+                    "x": 0,
+                    "y": 1.5,
+                    "z": 0.5
+                  },
+                  "size": {
+                    "x": 0.5,
+                    "y": 1.4,
+                    "z": 0.2
+                  },
+                  "parentId": "hub"
+                },
+                {
+                  "id": "bladeB",
+                  "label": "Blade 2 (turns)",
+                  "description": "Tapered blade 2, turns rigidly with hub.",
+                  "shape": "box",
+                  "renderStyle": "turbine",
+                  "color": "clay",
+                  "position": {
+                    "x": -1.3,
+                    "y": -0.75,
+                    "z": 0.5
+                  },
+                  "size": {
+                    "x": 0.5,
+                    "y": 1.4,
+                    "z": 0.2
+                  },
+                  "parentId": "hub"
+                },
+                {
+                  "id": "bladeC",
+                  "label": "Blade 3 (turns)",
+                  "description": "Tapered blade 3, turns rigidly with hub.",
+                  "shape": "box",
+                  "renderStyle": "turbine",
+                  "color": "clay",
+                  "position": {
+                    "x": 1.3,
+                    "y": -0.75,
+                    "z": 0.5
+                  },
+                  "size": {
+                    "x": 0.5,
+                    "y": 1.4,
+                    "z": 0.2
+                  },
+                  "parentId": "hub"
+                }
+              ],
+              "connections": [
+                {
+                  "id": "c1",
+                  "from": "support",
+                  "to": "axle",
+                  "label": "holds fixed",
+                  "directed": true
+                },
+                {
+                  "id": "c2",
+                  "from": "axle",
+                  "to": "hub",
+                  "label": "hub rotates around",
+                  "directed": true
+                },
+                {
+                  "id": "c3",
+                  "from": "hub",
+                  "to": "bladeA",
+                  "label": "carries 3 blades",
+                  "directed": true
+                },
+                {
+                  "id": "c4",
+                  "from": "hub",
+                  "to": "bladeB",
+                  "label": "carries 3 blades",
+                  "directed": true
+                },
+                {
+                  "id": "c5",
+                  "from": "hub",
+                  "to": "bladeC",
+                  "label": "carries 3 blades",
+                  "directed": true
+                }
+              ],
+              "poses": [
+                {
+                  "stepId": "s1",
+                  "objectId": "bladeA",
+                  "position": {
+                    "x": 0,
+                    "y": 1.5,
+                    "z": 0.5
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s1",
+                  "objectId": "bladeB",
+                  "position": {
+                    "x": -1.3,
+                    "y": -0.75,
+                    "z": 0.5
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s1",
+                  "objectId": "bladeC",
+                  "position": {
+                    "x": 1.3,
+                    "y": -0.75,
+                    "z": 0.5
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s1",
+                  "objectId": "hub",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0.5
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s2",
+                  "objectId": "bladeA",
+                  "position": {
+                    "x": -0.96,
+                    "y": 1.15,
+                    "z": 0.5
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s2",
+                  "objectId": "bladeB",
+                  "position": {
+                    "x": -0.52,
+                    "y": -1.41,
+                    "z": 0.5
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s2",
+                  "objectId": "bladeC",
+                  "position": {
+                    "x": 1.48,
+                    "y": 0.26,
+                    "z": 0.5
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s2",
+                  "objectId": "hub",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0.5
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s3",
+                  "objectId": "bladeA",
+                  "position": {
+                    "x": -1.41,
+                    "y": 0.52,
+                    "z": 0.5
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s3",
+                  "objectId": "bladeB",
+                  "position": {
+                    "x": 0.26,
+                    "y": -1.48,
+                    "z": 0.5
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s3",
+                  "objectId": "bladeC",
+                  "position": {
+                    "x": 1.15,
+                    "y": 0.96,
+                    "z": 0.5
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s3",
+                  "objectId": "hub",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0.5
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s1",
+                  "objectId": "support",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": -2
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s1",
+                  "objectId": "axle",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": -0.8
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s2",
+                  "objectId": "support",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": -2
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s2",
+                  "objectId": "axle",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": -0.8
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s3",
+                  "objectId": "support",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": -2
+                  },
+                  "visible": true
+                },
+                {
+                  "stepId": "s3",
+                  "objectId": "axle",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": -0.8
+                  },
+                  "visible": true
+                }
+              ],
+              "viewAction": {
+                "camera": "perspective",
+                "focusObjectId": "hub",
+                "isolate": false,
+                "spread": null,
+                "slice": null
+              }
+            }
+          ]
+        },
+        "steps": [
+          {
+            "id": "s1",
+            "caption": "Initial: three blades and hub together on fixed axle and support.",
+            "narration": "Exactly three blades join the central hub; axle and support stay fixed.",
+            "highlightIds": [
+              "bladeA",
+              "bladeB",
+              "bladeC",
+              "hub",
+              "axle",
+              "support"
+            ],
+            "sourceHighlightIds": [
+              "rotor_graphic",
+              "role_labels"
+            ],
+            "execution": null,
+            "executionStep": null
+          },
+          {
+            "id": "s2",
+            "caption": "Partial turn: hub plus all three blades rotate as one group.",
+            "narration": "The rigid blade-hub group turns around the fixed axle; support does not move.",
+            "highlightIds": [
+              "bladeA",
+              "bladeB",
+              "bladeC",
+              "hub"
+            ],
+            "sourceHighlightIds": [
+              "subtitle",
+              "stage_text"
+            ],
+            "execution": null,
+            "executionStep": null
+          },
+          {
+            "id": "s3",
+            "caption": "Further turn: same rigid rotation continues, no airflow model.",
+            "narration": "Rotation is illustrative only; blade count and fixed-axle roles stay unchanged.",
+            "highlightIds": [
+              "bladeA",
+              "bladeB",
+              "bladeC",
+              "hub",
+              "axle"
+            ],
+            "sourceHighlightIds": [
+              "stage_text",
+              "role_labels"
+            ],
+            "execution": null,
+            "executionStep": null
+          }
+        ],
+        "followups": [
+          "Ask for a labeled airflow or torque extension if needed."
+        ]
+      },
+      "validation": {
+        "assurance": "explanation-only",
+        "modelVersion": null,
+        "checks": [
+          "schema",
+          "references"
+        ]
+      },
+      "executions": null,
+      "id": "a392a95e-795b-4554-863f-0d396df4b3b8",
+      "version": 1,
+      "createdAt": "2026-10-31T00:22:51.389Z",
+      "updatedAt": "2026-10-31T00:22:51.962Z",
+      "question": "Turn this original teaching schematic into a clear 3D educational mechanism with exactly three short explanation stages. Exactly three tapered blades and a central hub on a fixed axle/support. The three blades and hub turn as one rigid group around the axle. Keep support and axle fixed. Keep source roles and part counts. Chosen dimensions, angles and hardware are illustrative assumptions. Do not claim a checked physical simulation. Use only the existing catalog render styles or basic shapes and their supported poses. If a source motion cannot be shown faithfully, state that limitation. Keep the source mechanism prominent.",
+      "source": {
+        "observationId": "capture_60994a9be33845bf83c6c6acb4575005",
+        "version": 1,
+        "kind": "screenshot",
+        "label": "Original synthetic three-blade rotor schematic",
+        "capturedAt": "2026-10-31T00:22:28.809Z",
+        "imageSha256": "c544591da0dec3a692f72b98167fd5cf87e2d013171d68d2a152322516725412",
+        "summary": "Original teaching schematic shows a three-blade rotor: exactly three tapered reddish-brown blades attached to a central mustard-yellow hub with light axle center. Text states three tapered blades and hub turn together about central axle; axle and support stay fixed; illustrative rotation only, no airflow or torque model. Right side lists: exactly three tapered blades, hub turns with blades, central axle stays fixed, support behind rotor is fixed. Bottom states: Initial -> partial turn -> further turn, one turning control. This is 2D schematic explanation material, not a search graph.",
+        "uncertainty": [
+          "Support behind rotor mentioned as fixed but no support geometry is visibly drawn, only implied behind hub.",
+          "No dimensions, angles, rotation direction, or 3D perspective shown; all must be illustrative assumptions.",
+          "No axle/support hardware detail or motion sequence beyond text Initial -> partial -> further."
+        ],
+        "anchors": [
+          {
+            "id": "title",
+            "label": "Title: three-blade rotor",
+            "region": {
+              "x": 0.03,
+              "y": 0.035,
+              "width": 0.6,
+              "height": 0.08
+            }
+          },
+          {
+            "id": "subtitle",
+            "label": "Subtitle: blades/hub turn, axle fixed",
+            "region": {
+              "x": 0.03,
+              "y": 0.12,
+              "width": 0.66,
+              "height": 0.12
+            }
+          },
+          {
+            "id": "rotor_graphic",
+            "label": "Rotor graphic: 3 tapered blades + hub",
+            "region": {
+              "x": 0.19,
+              "y": 0.23,
+              "width": 0.42,
+              "height": 0.6
+            }
+          },
+          {
+            "id": "role_labels",
+            "label": "Right labels: blade/hub/axle/support roles",
+            "region": {
+              "x": 0.703,
+              "y": 0.32,
+              "width": 0.27,
+              "height": 0.36
+            }
+          },
+          {
+            "id": "stage_text",
+            "label": "Bottom text: initial to further turn",
+            "region": {
+              "x": 0.03,
+              "y": 0.865,
+              "width": 0.55,
+              "height": 0.07
+            }
+          }
+        ]
+      },
+      "generation": {
+        "mode": "live",
+        "provider": "meta",
+        "model": "muse-spark-1.3",
+        "calls": 3,
+        "usage": {
+          "input_tokens": 11823,
+          "output_tokens": 4757
+        },
+        "costUsd": 0.046088500000000004,
+        "elapsedMs": 22579,
+        "timings": [
+          {
+            "call": 1,
+            "stage": "interpretation",
+            "durationMs": 4194
+          },
+          {
+            "call": 2,
+            "stage": "composition",
+            "durationMs": 15261
+          },
+          {
+            "call": 3,
+            "stage": "review",
+            "durationMs": 1897
+          }
+        ],
+        "checks": [
+          "schema",
+          "references"
+        ],
+        "audit": [
+          {
+            "event": "source-interpreted",
+            "call": 1,
+            "detail": "No checked graph inferred; clarification or explanation only. Provider no-graph sentinel normalized to JSON null."
+          },
+          {
+            "event": "review-approved",
+            "call": 3,
+            "detail": "Muse Wonder advisory review: approve."
+          },
+          {
+            "event": "scene-validated",
+            "call": 3,
+            "detail": "Typed scene, source versions and checked model references validated."
+          }
+        ]
+      },
+      "state": {
+        "step": 0,
+        "explanationStep": 0,
+        "start": null,
+        "goal": null,
+        "disabledEdgeIds": [],
+        "reversed": false,
+        "selectedObjectId": "hub",
+        "spatial": {
+          "mode": "3d",
+          "renderer": "anatomy",
+          "azimuth": 35,
+          "elevation": 25,
+          "zoom": 1,
+          "spread": 0,
+          "slice": 0,
+          "isolate": false
+        }
+      },
+      "saved": true
+    },
+    "after": {
+      "spec": {
+        "schemaVersion": "exploration-v1",
+        "id": "explore_4a49c85979f944f49ad26a60f80d20ac",
+        "version": 1,
+        "title": "Three-blade rotor turning on fixed axle",
+        "objective": "Show three tapered blades plus hub turning as one group about fixed axle and support.",
+        "sources": [
+          {
+            "observationId": "capture_cd0a1580bb26436b8a35cff22209599a",
+            "version": 1,
+            "region": null
+          }
+        ],
+        "assumptions": [
+          "Support shape, axle length, blade taper and sizes are illustrative assumptions",
+          "Rotation is illustrative only with no airflow or torque model"
+        ],
+        "uncertainty": [
+          "Support behind rotor is stated as fixed but no support geometry was visibly drawn",
+          "All 3D sizes, angles and thicknesses are illustrative assumptions"
+        ],
+        "unsupportedClaims": [],
+        "mode": "explanation",
+        "scene": {
+          "layout": "diagram-sidebar",
+          "panels": [
+            {
+              "id": "rotorPanel",
+              "kind": "spatial",
+              "title": "Three-blade rotor mechanism",
+              "placement": {
+                "column": 1,
+                "row": 1,
+                "columnSpan": 2
+              },
+              "objects": [
+                {
+                  "id": "hubObj",
+                  "label": "Hub turns with blades",
+                  "description": "Central hub attached to three blades, turns with them.",
+                  "shape": "cylinder",
+                  "renderStyle": null,
+                  "geometry": [
+                    {
+                      "id": "hubPiece",
+                      "purpose": "Central hub that turns with blades",
+                      "form": {
+                        "kind": "lathe",
+                        "profile": [
+                          {
+                            "radius": 0.08,
+                            "y": -0.05
+                          },
+                          {
+                            "radius": 0.08,
+                            "y": 0.05
+                          },
+                          {
+                            "radius": 0.04,
+                            "y": 0.07
+                          }
+                        ]
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0.1
+                      },
+                      "rotation": {
+                        "x": 90,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "gold",
+                      "driver": {
+                        "parameterId": "spin",
+                        "pivot": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "translation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 120
+                        }
+                      }
+                    }
+                  ],
+                  "color": "gold",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "bladeAObj",
+                  "label": "Tapered blade 1 of 3",
+                  "description": "One of exactly three tapered blades.",
+                  "shape": "box",
+                  "renderStyle": null,
+                  "geometry": [
+                    {
+                      "id": "bladeAPiece",
+                      "purpose": "Tapered blade one of three, rigid with hub",
+                      "form": {
+                        "kind": "prism",
+                        "outline": [
+                          {
+                            "x": 0.06,
+                            "z": -0.05
+                          },
+                          {
+                            "x": 0.34,
+                            "z": -0.02
+                          },
+                          {
+                            "x": 0.34,
+                            "z": 0.02
+                          },
+                          {
+                            "x": 0.06,
+                            "z": 0.05
+                          }
+                        ],
+                        "height": 0.04
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0.1
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 90
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "clay",
+                      "driver": {
+                        "parameterId": "spin",
+                        "pivot": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "translation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 120
+                        }
+                      }
+                    }
+                  ],
+                  "color": "clay",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "bladeBObj",
+                  "label": "Tapered blade 2 of 3",
+                  "description": "One of exactly three tapered blades.",
+                  "shape": "box",
+                  "renderStyle": null,
+                  "geometry": [
+                    {
+                      "id": "bladeBPiece",
+                      "purpose": "Tapered blade two of three, rigid with hub",
+                      "form": {
+                        "kind": "prism",
+                        "outline": [
+                          {
+                            "x": 0.06,
+                            "z": -0.05
+                          },
+                          {
+                            "x": 0.34,
+                            "z": -0.02
+                          },
+                          {
+                            "x": 0.34,
+                            "z": 0.02
+                          },
+                          {
+                            "x": 0.06,
+                            "z": 0.05
+                          }
+                        ],
+                        "height": 0.04
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0.1
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": -30
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "clay",
+                      "driver": {
+                        "parameterId": "spin",
+                        "pivot": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "translation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 120
+                        }
+                      }
+                    }
+                  ],
+                  "color": "clay",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "bladeCObj",
+                  "label": "Tapered blade 3 of 3",
+                  "description": "One of exactly three tapered blades.",
+                  "shape": "box",
+                  "renderStyle": null,
+                  "geometry": [
+                    {
+                      "id": "bladeCPiece",
+                      "purpose": "Tapered blade three of three, rigid with hub",
+                      "form": {
+                        "kind": "prism",
+                        "outline": [
+                          {
+                            "x": 0.06,
+                            "z": -0.05
+                          },
+                          {
+                            "x": 0.34,
+                            "z": -0.02
+                          },
+                          {
+                            "x": 0.34,
+                            "z": 0.02
+                          },
+                          {
+                            "x": 0.06,
+                            "z": 0.05
+                          }
+                        ],
+                        "height": 0.04
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0.1
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": -150
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "clay",
+                      "driver": {
+                        "parameterId": "spin",
+                        "pivot": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "translation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 120
+                        }
+                      }
+                    }
+                  ],
+                  "color": "clay",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "axleObj",
+                  "label": "Central axle fixed",
+                  "description": "Central axle that stays fixed while rotor turns.",
+                  "shape": "cylinder",
+                  "renderStyle": null,
+                  "geometry": [
+                    {
+                      "id": "axlePiece",
+                      "purpose": "Fixed central axle, rotor turns around it",
+                      "form": {
+                        "kind": "tube",
+                        "path": [
+                          {
+                            "x": 0,
+                            "y": 0,
+                            "z": -0.2
+                          },
+                          {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0.18
+                          }
+                        ],
+                        "radius": 0.03
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "ivory",
+                      "driver": null
+                    }
+                  ],
+                  "color": "sage",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "parentId": null
+                },
+                {
+                  "id": "supportObj",
+                  "label": "Support fixed behind",
+                  "description": "Support behind rotor that stays fixed.",
+                  "shape": "box",
+                  "renderStyle": null,
+                  "geometry": [
+                    {
+                      "id": "supportPiece",
+                      "purpose": "Fixed support behind rotor, stays still",
+                      "form": {
+                        "kind": "prism",
+                        "outline": [
+                          {
+                            "x": -0.15,
+                            "z": -0.1
+                          },
+                          {
+                            "x": 0.15,
+                            "z": -0.1
+                          },
+                          {
+                            "x": 0.15,
+                            "z": 0.1
+                          },
+                          {
+                            "x": -0.15,
+                            "z": 0.1
+                          }
+                        ],
+                        "height": 0.1
+                      },
+                      "position": {
+                        "x": 0,
+                        "y": -0.4,
+                        "z": -0.2
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                      },
+                      "color": "graphite",
+                      "driver": null
+                    }
+                  ],
+                  "color": "blue",
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                  },
+                  "parentId": null
+                }
+              ],
+              "connections": [],
+              "poses": [],
+              "parameters": [
+                {
+                  "id": "spin",
+                  "label": "Turning control",
+                  "description": "Illustrative rotor angle control: turns hub plus three blades together about fixed axle.",
+                  "initial": 0
+                }
+              ],
+              "parameterPoses": [
+                {
+                  "stepId": "stageA",
+                  "parameterId": "spin",
+                  "value": 0
+                },
+                {
+                  "stepId": "stageB",
+                  "parameterId": "spin",
+                  "value": 0.5
+                },
+                {
+                  "stepId": "stageC",
+                  "parameterId": "spin",
+                  "value": 1
+                }
+              ],
+              "viewAction": null
+            }
+          ]
+        },
+        "steps": [
+          {
+            "id": "stageA",
+            "caption": "Initial: three blades and hub at rest on fixed axle.",
+            "narration": "Hub plus three blades start together; axle and support stay fixed.",
+            "highlightIds": [
+              "hubObj",
+              "bladeAObj",
+              "bladeBObj",
+              "bladeCObj",
+              "axleObj"
+            ],
+            "sourceHighlightIds": [
+              "title_hdr",
+              "blade_top",
+              "hub_axle"
+            ],
+            "execution": null,
+            "executionStep": null
+          },
+          {
+            "id": "stageB",
+            "caption": "Partial turn: hub and blades rotate together.",
+            "narration": "One control moves the rigid blade-hub group around the axle.",
+            "highlightIds": [
+              "hubObj",
+              "bladeAObj",
+              "bladeBObj",
+              "bladeCObj"
+            ],
+            "sourceHighlightIds": [
+              "blade_left",
+              "blade_right",
+              "roles_caption"
+            ],
+            "execution": null,
+            "executionStep": null
+          },
+          {
+            "id": "stageC",
+            "caption": "Further turn: same group advances; support fixed.",
+            "narration": "Blades and hub advance further; axle and rear support remain fixed.",
+            "highlightIds": [
+              "hubObj",
+              "bladeAObj",
+              "supportObj"
+            ],
+            "sourceHighlightIds": [
+              "roles_caption"
+            ],
+            "execution": null,
+            "executionStep": null
+          }
+        ],
+        "followups": [
+          "Ask about housing or mounting details beyond this schematic"
+        ]
+      },
+      "validation": {
+        "assurance": "explanation-only",
+        "modelVersion": null,
+        "checks": [
+          "schema",
+          "references"
+        ]
+      },
+      "executions": null,
+      "id": "4a49c859-79f9-44f4-9ad2-6a60f80d20ac",
+      "version": 1,
+      "createdAt": "2026-10-31T00:23:45.233Z",
+      "updatedAt": "2026-10-31T00:23:45.815Z",
+      "question": "Turn this original teaching schematic into a clear 3D educational mechanism with exactly three short explanation stages. Exactly three tapered blades and a central hub on a fixed axle/support. The three blades and hub turn as one rigid group around the axle. Keep support and axle fixed. Keep source roles and part counts. Chosen dimensions, angles and hardware are illustrative assumptions. Do not claim a checked physical simulation. Use custom geometry in one spatial panel. Build a concise assembly of about six pieces with one named movement control and three parameter poses. Use one shared assembly frame; pieces that move together have identical drivers. Use prism, lathe or tube forms where appropriate; no catalog meshes. Keep all IDs globally unique.",
+      "source": {
+        "observationId": "capture_cd0a1580bb26436b8a35cff22209599a",
+        "version": 1,
+        "kind": "screenshot",
+        "label": "Original synthetic three-blade rotor schematic",
+        "capturedAt": "2026-10-31T00:23:23.256Z",
+        "imageSha256": "c544591da0dec3a692f72b98167fd5cf87e2d013171d68d2a152322516725412",
+        "summary": "Original teaching schematic shows a three-blade rotor: exactly three tapered reddish-brown blades attached to a central mustard-yellow hub with small light axle center. Text states three tapered blades and hub turn together about central axle; axle and support stay fixed; illustrative rotation only with no airflow or torque model. Right-side labels: exactly three tapered blades, hub turns with blades, central axle stays fixed, support behind rotor is fixed. Bottom caption: Initial \u2192 partial turn \u2192 further turn with one turning control. Support structure behind rotor is stated but not visibly drawn; no dimensions, angles, or 3D geometry given.",
+        "uncertainty": [
+          "Support behind rotor is stated as fixed but no support geometry is visibly drawn in this view",
+          "No dimensions, angles, thicknesses, materials, or 3D positions are given; all would be assumptions",
+          "Axle is shown only as small central circle; its length, mounting, and front/back extent are not visible"
+        ],
+        "anchors": [
+          {
+            "id": "title_hdr",
+            "label": "Title and rotation description",
+            "region": {
+              "x": 0.03,
+              "y": 0.055,
+              "width": 0.62,
+              "height": 0.17
+            }
+          },
+          {
+            "id": "blade_top",
+            "label": "Top tapered blade",
+            "region": {
+              "x": 0.331,
+              "y": 0.23,
+              "width": 0.14,
+              "height": 0.29
+            }
+          },
+          {
+            "id": "blade_left",
+            "label": "Lower-left tapered blade",
+            "region": {
+              "x": 0.19,
+              "y": 0.565,
+              "width": 0.18,
+              "height": 0.2
+            }
+          },
+          {
+            "id": "blade_right",
+            "label": "Lower-right tapered blade",
+            "region": {
+              "x": 0.393,
+              "y": 0.57,
+              "width": 0.18,
+              "height": 0.22
+            }
+          },
+          {
+            "id": "hub_axle",
+            "label": "Central hub and axle",
+            "region": {
+              "x": 0.322,
+              "y": 0.51,
+              "width": 0.1,
+              "height": 0.14
+            }
+          },
+          {
+            "id": "roles_caption",
+            "label": "Part roles and stages caption",
+            "region": {
+              "x": 0.53,
+              "y": 0.32,
+              "width": 0.45,
+              "height": 0.57
+            }
+          }
+        ]
+      },
+      "generation": {
+        "mode": "live",
+        "provider": "meta",
+        "model": "muse-spark-1.3",
+        "calls": 3,
+        "usage": {
+          "input_tokens": 12066,
+          "output_tokens": 4703
+        },
+        "costUsd": 0.04806,
+        "elapsedMs": 21975,
+        "timings": [
+          {
+            "call": 1,
+            "stage": "interpretation",
+            "durationMs": 5974
+          },
+          {
+            "call": 2,
+            "stage": "composition",
+            "durationMs": 10592
+          },
+          {
+            "call": 3,
+            "stage": "review",
+            "durationMs": 3870
+          }
+        ],
+        "checks": [
+          "schema",
+          "references"
+        ],
+        "audit": [
+          {
+            "event": "source-interpreted",
+            "call": 1,
+            "detail": "No checked graph inferred; clarification or explanation only. Provider no-graph sentinel normalized to JSON null."
+          },
+          {
+            "event": "review-approved",
+            "call": 3,
+            "detail": "Muse Wonder advisory review: approve."
+          },
+          {
+            "event": "scene-validated",
+            "call": 3,
+            "detail": "Typed scene, source versions and checked model references validated."
+          }
+        ]
+      },
+      "state": {
+        "step": 0,
+        "explanationStep": 0,
+        "start": null,
+        "goal": null,
+        "disabledEdgeIds": [],
+        "reversed": false,
+        "selectedObjectId": null,
+        "spatial": {
+          "mode": "3d",
+          "renderer": "anatomy",
+          "azimuth": 35,
+          "elevation": 25,
+          "zoom": 1,
+          "spread": 0,
+          "slice": 0,
+          "isolate": false
+        }
+      },
+      "saved": true
+    },
+    "reusedAfter": false
+  }
+]

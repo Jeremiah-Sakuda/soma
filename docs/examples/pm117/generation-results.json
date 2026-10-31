@@ -1,0 +1,135 @@
+[
+  {
+    "phase": "start",
+    "at": "2026-10-31T00:20:52.705Z",
+    "consumed": 14.93734875,
+    "cap": 20
+  },
+  {
+    "case": "gate",
+    "variant": "before",
+    "attempt": 1,
+    "phase": "accepted-and-reopened",
+    "calls": 5,
+    "costUsd": 0.08959575,
+    "elapsedMs": 48751,
+    "generatedAt": "2026-10-31T00:21:42.790Z",
+    "sourceSha256": "ab2f14a4429e11327d2f2e326f4b10fd1e4ab0ecee066de48bab4fc85f36f36d"
+  },
+  {
+    "case": "gate",
+    "variant": "before",
+    "attempt": 1,
+    "phase": "ledger",
+    "at": "2026-10-31T00:21:43.892Z",
+    "consumed": 15.0269445
+  },
+  {
+    "case": "gate",
+    "variant": "after",
+    "phase": "reused-accepted-output",
+    "generatedAt": "2026-10-31T00:09:14.940Z",
+    "originalCalls": 5,
+    "originalCostUsd": 0.08729075,
+    "newCalls": 0
+  },
+  {
+    "case": "piston",
+    "variant": "before",
+    "attempt": 1,
+    "phase": "accepted-and-reopened",
+    "calls": 3,
+    "costUsd": 0.04530825,
+    "elapsedMs": 21852,
+    "generatedAt": "2026-10-31T00:22:06.230Z",
+    "sourceSha256": "48b6bffb700c1a9962ec8d1da2c4fb307f10a4bd20ca215c4343d32a4aa3edf0"
+  },
+  {
+    "case": "piston",
+    "variant": "before",
+    "attempt": 1,
+    "phase": "ledger",
+    "at": "2026-10-31T00:22:07.240Z",
+    "consumed": 15.07225275
+  },
+  {
+    "case": "piston",
+    "variant": "after",
+    "attempt": 1,
+    "phase": "accepted-and-reopened",
+    "calls": 3,
+    "costUsd": 0.042928999999999995,
+    "elapsedMs": 19173,
+    "generatedAt": "2026-10-31T00:22:27.011Z",
+    "sourceSha256": "48b6bffb700c1a9962ec8d1da2c4fb307f10a4bd20ca215c4343d32a4aa3edf0"
+  },
+  {
+    "case": "piston",
+    "variant": "after",
+    "attempt": 1,
+    "phase": "ledger",
+    "at": "2026-10-31T00:22:28.322Z",
+    "consumed": 15.115181750000001
+  },
+  {
+    "case": "rotor",
+    "variant": "before",
+    "attempt": 1,
+    "phase": "accepted-and-reopened",
+    "calls": 3,
+    "costUsd": 0.046088500000000004,
+    "elapsedMs": 22579,
+    "generatedAt": "2026-10-31T00:22:51.389Z",
+    "sourceSha256": "c544591da0dec3a692f72b98167fd5cf87e2d013171d68d2a152322516725412"
+  },
+  {
+    "case": "rotor",
+    "variant": "before",
+    "attempt": 1,
+    "phase": "ledger",
+    "at": "2026-10-31T00:22:52.390Z",
+    "consumed": 15.161270250000001
+  },
+  {
+    "case": "rotor",
+    "variant": "after",
+    "attempt": 1,
+    "phase": "failed",
+    "code": "generation_invalid",
+    "uncertain": false
+  },
+  {
+    "case": "rotor",
+    "variant": "after",
+    "attempt": 1,
+    "phase": "ledger",
+    "at": "2026-10-31T00:23:22.790Z",
+    "consumed": 15.213834
+  },
+  {
+    "case": "rotor",
+    "variant": "after",
+    "attempt": 2,
+    "phase": "accepted-and-reopened",
+    "calls": 3,
+    "costUsd": 0.04806,
+    "elapsedMs": 21975,
+    "generatedAt": "2026-10-31T00:23:45.233Z",
+    "sourceSha256": "c544591da0dec3a692f72b98167fd5cf87e2d013171d68d2a152322516725412"
+  },
+  {
+    "case": "rotor",
+    "variant": "after",
+    "attempt": 2,
+    "phase": "ledger",
+    "at": "2026-10-31T00:23:46.168Z",
+    "consumed": 15.261894
+  },
+  {
+    "phase": "final",
+    "at": "2026-10-31T00:23:46.288Z",
+    "consumed": 15.261894,
+    "cap": 20,
+    "completePairs": 3
+  }
+]

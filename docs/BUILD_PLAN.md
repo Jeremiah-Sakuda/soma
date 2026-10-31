@@ -183,3 +183,8 @@ Clean-install feature CI 41105422019 passed 1,497 offline tests, 133 browser jou
 ## October 30 — PM113 authorized geometry authoring slice
 
 Extend the existing spatial branch with Muse-authored bounded geometry and control-driven motion, preserve both renderers and source/revision invariants, verify compiler transforms and topology independently, then service persistence/ownership/review and production-browser/native Mac journeys. Run a bounded real Muse source-to-mechanism/follow-up test under the retained $20 cumulative cap without changing admission limits. Prepared examples do not establish real generation. Record executed checks and limitations in MUSE_MECHANISM_AUTHORING.md before proposing merge; October 31 freeze and publication boundary remain unchanged.
+
+
+## October31 — PM120 authorized local motion comparison
+
+Build one source-matched piston film alongside Anatomy on the unmerged spatial branch; verify actual Muse authorship, bounded rendering, playback/scrubbing/interruption, geometry and legibility, local export and Mac behavior. This is the user's explicitly adopted comparison experiment, not a new release dependency or default-renderer decision. Keep the existing feature freeze, submission date, checked domains and publication gates. Executed status and retained failures:docs/examples/pm120/README.md and BUILD_LOG PM120.

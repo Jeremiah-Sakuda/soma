@@ -1,0 +1,699 @@
+{
+  "schemaVersion": "motion-film-v1",
+  "title": "Sliding Piston: Fixed Guide, Moving Assembly",
+  "summary": "Fixed guide and base hold a connected head-rod-grip that lowers together; illustrative travel only.",
+  "width": 640,
+  "height": 460,
+  "duration": 24,
+  "background": "#FAF6EB",
+  "assumptions": [
+    "Head width and travel distances are illustrative.",
+    "Motion is illustrative sliding only.",
+    "No fluid or pressure model.",
+    "Guides and base never move."
+  ],
+  "styles": [
+    {
+      "id": "paper",
+      "fill": "#FAF6EB",
+      "stroke": "#FAF6EB",
+      "strokeWidth": 2,
+      "fontSize": 28,
+      "fontWeight": "400",
+      "fontFamily": "sans"
+    },
+    {
+      "id": "ink",
+      "fill": "#2E3B38",
+      "stroke": "#2E3B38",
+      "strokeWidth": 2,
+      "fontSize": 28,
+      "fontWeight": "600",
+      "fontFamily": "sans"
+    },
+    {
+      "id": "sage",
+      "fill": "#7A9A8D",
+      "stroke": "#2E3B38",
+      "strokeWidth": 3,
+      "fontSize": 28,
+      "fontWeight": "500",
+      "fontFamily": "sans"
+    },
+    {
+      "id": "copper",
+      "fill": "#B86A44",
+      "stroke": "#2E3B38",
+      "strokeWidth": 3,
+      "fontSize": 28,
+      "fontWeight": "600",
+      "fontFamily": "sans"
+    },
+    {
+      "id": "gold",
+      "fill": "#C9A23C",
+      "stroke": "#2E3B38",
+      "strokeWidth": 3,
+      "fontSize": 28,
+      "fontWeight": "600",
+      "fontFamily": "sans"
+    },
+    {
+      "id": "mist",
+      "fill": "#C9D1CC",
+      "stroke": "#2E3B38",
+      "strokeWidth": 3,
+      "fontSize": 28,
+      "fontWeight": "500",
+      "fontFamily": "sans"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "movers",
+      "parentId": null,
+      "kind": "group",
+      "role": "assembly",
+      "styleId": "ink",
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "",
+      "text": ""
+    },
+    {
+      "id": "guide-l",
+      "parentId": null,
+      "kind": "rect",
+      "role": "guide",
+      "styleId": "sage",
+      "x": 140,
+      "y": 160,
+      "width": 32,
+      "height": 180,
+      "radius": 0,
+      "shape": "",
+      "text": ""
+    },
+    {
+      "id": "call-head",
+      "parentId": null,
+      "kind": "path",
+      "role": "annotation",
+      "styleId": "ink",
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "M420 286 H516",
+      "text": ""
+    },
+    {
+      "id": "call-grip",
+      "parentId": null,
+      "kind": "path",
+      "role": "annotation",
+      "styleId": "ink",
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "M375 168 H516",
+      "text": ""
+    },
+    {
+      "id": "call-rod",
+      "parentId": null,
+      "kind": "path",
+      "role": "annotation",
+      "styleId": "ink",
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "M335 225 H516",
+      "text": ""
+    },
+    {
+      "id": "guide-r",
+      "parentId": null,
+      "kind": "rect",
+      "role": "guide",
+      "styleId": "sage",
+      "x": 468,
+      "y": 160,
+      "width": 32,
+      "height": 180,
+      "radius": 0,
+      "shape": "",
+      "text": ""
+    },
+    {
+      "id": "base",
+      "parentId": null,
+      "kind": "rect",
+      "role": "base",
+      "styleId": "sage",
+      "x": 140,
+      "y": 340,
+      "width": 360,
+      "height": 32,
+      "radius": 0,
+      "shape": "",
+      "text": ""
+    },
+    {
+      "id": "head",
+      "parentId": "movers",
+      "kind": "rect",
+      "role": "head",
+      "styleId": "copper",
+      "x": 220,
+      "y": 270,
+      "width": 200,
+      "height": 32,
+      "radius": 0,
+      "shape": "",
+      "text": ""
+    },
+    {
+      "id": "rod",
+      "parentId": "movers",
+      "kind": "rect",
+      "role": "rod",
+      "styleId": "mist",
+      "x": 305,
+      "y": 180,
+      "width": 30,
+      "height": 90,
+      "radius": 0,
+      "shape": "",
+      "text": ""
+    },
+    {
+      "id": "grip",
+      "parentId": "movers",
+      "kind": "rect",
+      "role": "grip",
+      "styleId": "gold",
+      "x": 255,
+      "y": 156,
+      "width": 120,
+      "height": 24,
+      "radius": 0,
+      "shape": "",
+      "text": ""
+    },
+    {
+      "id": "groove",
+      "parentId": "movers",
+      "kind": "path",
+      "role": "none",
+      "styleId": "ink",
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "M230 282 H410 M230 292 H410",
+      "text": ""
+    },
+    {
+      "id": "highlight",
+      "parentId": "movers",
+      "kind": "path",
+      "role": "none",
+      "styleId": "paper",
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "M311 186 L311 264",
+      "text": ""
+    },
+    {
+      "id": "grip-line",
+      "parentId": "movers",
+      "kind": "path",
+      "role": "none",
+      "styleId": "ink",
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "M261 164 H369",
+      "text": ""
+    },
+    {
+      "id": "arrow",
+      "parentId": null,
+      "kind": "path",
+      "role": "annotation",
+      "styleId": "ink",
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "M580 150 L580 250 M571 241 L580 252 L589 241",
+      "text": ""
+    },
+    {
+      "id": "call-guide",
+      "parentId": null,
+      "kind": "path",
+      "role": "annotation",
+      "styleId": "ink",
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "M140 220 H110 L100 220",
+      "text": ""
+    },
+    {
+      "id": "lbl-guide",
+      "parentId": null,
+      "kind": "text",
+      "role": "annotation",
+      "styleId": "ink",
+      "x": 20,
+      "y": 212,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "",
+      "text": "Guide"
+    },
+    {
+      "id": "lbl-rod",
+      "parentId": null,
+      "kind": "text",
+      "role": "annotation",
+      "styleId": "ink",
+      "x": 520,
+      "y": 217,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "",
+      "text": "Rod"
+    },
+    {
+      "id": "lbl-grip",
+      "parentId": null,
+      "kind": "text",
+      "role": "annotation",
+      "styleId": "ink",
+      "x": 520,
+      "y": 160,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "",
+      "text": "Grip"
+    },
+    {
+      "id": "lbl-head",
+      "parentId": null,
+      "kind": "text",
+      "role": "annotation",
+      "styleId": "ink",
+      "x": 520,
+      "y": 278,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "",
+      "text": "Head"
+    },
+    {
+      "id": "lbl-travel",
+      "parentId": null,
+      "kind": "text",
+      "role": "annotation",
+      "styleId": "ink",
+      "x": 452,
+      "y": 125,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "",
+      "text": "Travel"
+    },
+    {
+      "id": "lbl-fixed",
+      "parentId": null,
+      "kind": "text",
+      "role": "annotation",
+      "styleId": "ink",
+      "x": 20,
+      "y": 350,
+      "width": 0,
+      "height": 0,
+      "radius": 0,
+      "shape": "",
+      "text": "Fixed"
+    }
+  ],
+  "parameter": {
+    "id": "compression",
+    "label": "Travel control lowers head rod grip",
+    "description": "Illustrative vertical travel distance only.",
+    "targetId": "movers",
+    "property": "ty",
+    "amount": 28
+  },
+  "tracks": [
+    {
+      "targetId": "$compression",
+      "property": "value",
+      "easing": "smooth",
+      "keys": [
+        {
+          "at": 0,
+          "value": 0
+        },
+        {
+          "at": 6,
+          "value": 0
+        },
+        {
+          "at": 16,
+          "value": 1
+        },
+        {
+          "at": 24,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "targetId": "lbl-guide",
+      "property": "opacity",
+      "easing": "smooth",
+      "keys": [
+        {
+          "at": 0.5,
+          "value": 0
+        },
+        {
+          "at": 1.5,
+          "value": 1
+        },
+        {
+          "at": 3,
+          "value": 1
+        },
+        {
+          "at": 4,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "targetId": "call-guide",
+      "property": "opacity",
+      "easing": "smooth",
+      "keys": [
+        {
+          "at": 0.5,
+          "value": 0
+        },
+        {
+          "at": 1.5,
+          "value": 1
+        },
+        {
+          "at": 3,
+          "value": 1
+        },
+        {
+          "at": 4,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "targetId": "lbl-rod",
+      "property": "opacity",
+      "easing": "smooth",
+      "keys": [
+        {
+          "at": 1.5,
+          "value": 0
+        },
+        {
+          "at": 2.5,
+          "value": 1
+        },
+        {
+          "at": 3.5,
+          "value": 1
+        },
+        {
+          "at": 4.5,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "targetId": "call-rod",
+      "property": "opacity",
+      "easing": "smooth",
+      "keys": [
+        {
+          "at": 1.5,
+          "value": 0
+        },
+        {
+          "at": 2.5,
+          "value": 1
+        },
+        {
+          "at": 3.5,
+          "value": 1
+        },
+        {
+          "at": 4.5,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "targetId": "lbl-grip",
+      "property": "opacity",
+      "easing": "smooth",
+      "keys": [
+        {
+          "at": 3,
+          "value": 0
+        },
+        {
+          "at": 4,
+          "value": 1
+        },
+        {
+          "at": 5,
+          "value": 1
+        },
+        {
+          "at": 6,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "targetId": "lbl-head",
+      "property": "opacity",
+      "easing": "smooth",
+      "keys": [
+        {
+          "at": 3.5,
+          "value": 0
+        },
+        {
+          "at": 4.5,
+          "value": 1
+        },
+        {
+          "at": 5,
+          "value": 1
+        },
+        {
+          "at": 6,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "targetId": "call-grip",
+      "property": "opacity",
+      "easing": "smooth",
+      "keys": [
+        {
+          "at": 3,
+          "value": 0
+        },
+        {
+          "at": 4,
+          "value": 1
+        },
+        {
+          "at": 5,
+          "value": 1
+        },
+        {
+          "at": 6,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "targetId": "call-head",
+      "property": "opacity",
+      "easing": "smooth",
+      "keys": [
+        {
+          "at": 3.5,
+          "value": 0
+        },
+        {
+          "at": 4.5,
+          "value": 1
+        },
+        {
+          "at": 5,
+          "value": 1
+        },
+        {
+          "at": 6,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "targetId": "lbl-travel",
+      "property": "opacity",
+      "easing": "smooth",
+      "keys": [
+        {
+          "at": 12,
+          "value": 0
+        },
+        {
+          "at": 13.5,
+          "value": 1
+        },
+        {
+          "at": 20,
+          "value": 1
+        },
+        {
+          "at": 22,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "targetId": "arrow",
+      "property": "opacity",
+      "easing": "smooth",
+      "keys": [
+        {
+          "at": 12,
+          "value": 0
+        },
+        {
+          "at": 13.5,
+          "value": 1
+        },
+        {
+          "at": 20,
+          "value": 1
+        },
+        {
+          "at": 22,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "targetId": "lbl-fixed",
+      "property": "opacity",
+      "easing": "smooth",
+      "keys": [
+        {
+          "at": 18,
+          "value": 0
+        },
+        {
+          "at": 19.5,
+          "value": 1
+        },
+        {
+          "at": 24,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "targetId": "guide-l",
+      "property": "reveal",
+      "easing": "smooth",
+      "keys": [
+        {
+          "at": 0,
+          "value": 0
+        },
+        {
+          "at": 3,
+          "value": 1
+        },
+        {
+          "at": 24,
+          "value": 1
+        }
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "meet-piston",
+      "at": 0,
+      "title": "Meet Piston",
+      "caption": "A fixed guide holds a sliding piston assembly.",
+      "narration": "Meet the fixed guide and sliding piston."
+    },
+    {
+      "id": "one-assembly",
+      "at": 6,
+      "title": "One Assembly",
+      "caption": "Head, rod and grip are one rigid assembly.",
+      "narration": "Head rod and grip move as one."
+    },
+    {
+      "id": "lower-together",
+      "at": 12,
+      "title": "Lower Together",
+      "caption": "One Travel control lowers the assembly together.",
+      "narration": "Lower them together with Travel."
+    },
+    {
+      "id": "guide-stays",
+      "at": 18,
+      "title": "Guide Stays",
+      "caption": "Guide and base stay fixed; gap narrows, stays open.",
+      "narration": "Guide stays fixed, gap stays open."
+    }
+  ],
+  "experimentAt": 18
+}

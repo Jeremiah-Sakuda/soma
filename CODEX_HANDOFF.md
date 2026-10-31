@@ -1,3 +1,7 @@
+## PM120 — Muse motion film comparison, October31
+
+Review [Anatomy versus a24-second Muse vector film](http://localhost:41912) on the existing spatial branch. Actual Muse artwork/labels/choreography and narration script, prepared Mac voice, direct shared travel controls, media-clock playback and downloadable MP4. Nine browser journeys,20 domain cases and720-frame export passed; full offline1,667passed/97opt-in skipped. [Scope, reproduction and retained generation/visual failures](docs/examples/pm120/README.md). Twenty development calls added$0.50475875; last observed shared ledger$15.814326/$20. Product runtime remains PM118 unchanged. Local prototype only; no canonical film save/follow-up integration, main merge, deployment or publication.
+
 ## PM118 — Anatomy slider response and corrected piston, October 31
 
 The spatial branch now renders manual mechanism controls directly, with smooth transitions reserved for explanation steps. Camera-bound caching avoids repeated geometry compilation during dragging; numbered markers follow current parts. The [local gallery](http://localhost:41908/#piston) includes an actual new Muse piston recording that fixes base intersection and disconnected parts. Original output remains archived. [Fix, verification and spending](docs/ANATOMY_SLIDER_FIX.md). Runtime263files/SHA195d3d553598638a63403e84534d7196f76aa165d48d415178273f844f32d8d1. Shared ledger$15.30956725/$20; no reset, main merge, push or publication.

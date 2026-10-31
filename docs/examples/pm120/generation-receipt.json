@@ -1,0 +1,382 @@
+{
+  "mode": "Actual Muse source-to-vector-film development comparison; rejected outputs and failed review retained",
+  "status": "authored-validated-reviewed",
+  "sourceSha256": "48b6bffb700c1a9962ec8d1da2c4fb307f10a4bd20ca215c4343d32a4aa3edf0",
+  "startedAt": "2026-10-31T21:22:41.205Z",
+  "finishedAt": "2026-10-31T21:46:18.087Z",
+  "before": 15.30956725,
+  "after": 15.814326,
+  "cap": 20,
+  "calls": 20,
+  "costUsd": 0.50475875,
+  "elapsedMs": 191186,
+  "runCount": 7,
+  "runs": [
+    {
+      "startedAt": "2026-10-31T21:22:41.205Z",
+      "before": 15.30956725,
+      "cap": 20,
+      "mode": "actual Muse generation on an original synthetic source",
+      "attempts": [
+        {
+          "stage": "author",
+          "attempt": 1,
+          "durationMs": 11808,
+          "usage": {
+            "input_tokens": 2475,
+            "output_tokens": 3703
+          }
+        }
+      ],
+      "status": "failed",
+      "code": "[\n  {\n    \"expected\": \"object\",\n    \"code\": \"invalid_type\",\n    \"path\": [],\n    \"message\": \"Invalid input: expected object, received undefined\"\n  }\n]",
+      "elapsedMs": 23345,
+      "finishedAt": "2026-10-31T21:23:05.163Z",
+      "after": 15.35717475,
+      "calls": 2,
+      "costUsd": 0.0476075,
+      "certain": true
+    },
+    {
+      "startedAt": "2026-10-31T21:25:38.520Z",
+      "before": 15.35717475,
+      "cap": 20,
+      "mode": "actual Muse generation on an original synthetic source",
+      "attempts": [
+        {
+          "stage": "reuse-candidate",
+          "path": ".local/pm120/attempt-1/candidate.json",
+          "newCalls": 0
+        },
+        {
+          "stage": "review",
+          "attempt": 1,
+          "durationMs": 7373,
+          "usage": {
+            "input_tokens": 2115,
+            "output_tokens": 889
+          },
+          "verdict": {
+            "approved": false,
+            "issues": [
+              "1. CLIPPING: Right labels at x=448 use fontSize 30, not 28. \u201cTravel: illustrative\u201d (21 chars, ~300px) reaches ~748, beyond x=616 limit; \u201cMoves together\u201d also clips. Shorten/move labels left or reduce font.",
+              "2. WRONG MOTION CLAIM: Narration/caption at 12s says control \u201ccompresses the assembly,\u201d but the rigid group only translates: with ty=70, grip (y103\u2013125), rod (125\u2013220) and head (220\u2013260) keep identical lengths/attachments. Say \u201clowers/translates the whole assembly.\u201d",
+              "3. TRAVEL MARKERS MISALIGNED: Arrow/ticks span y142\u2013298, but actual mover travel is ty 0\u219270 (e.g. head top y220\u2192290, head bottom 260\u2192330, leaving 14px above base top y344). Align arrow/ticks to a named part\u2019s start/end positions."
+            ]
+          }
+        },
+        {
+          "stage": "author",
+          "attempt": 2,
+          "durationMs": 11553,
+          "usage": {
+            "input_tokens": 2689,
+            "output_tokens": 3460
+          }
+        },
+        {
+          "stage": "review",
+          "attempt": 2,
+          "durationMs": 4470,
+          "usage": {
+            "input_tokens": 2174,
+            "output_tokens": 588
+          },
+          "verdict": {
+            "approved": false,
+            "issues": [
+              "\"Gap stays\" (x452,y350) is false: head bottom moves 260\u2192330, so gap to base top y344 shrinks 84\u219214px. Relabel \"14px gap remains\"; marks at y330/y344 are correct.",
+              "Head/guide collision: head x230\u2013410 overlaps right guide x400\u2013430 throughout travel. Narrow/shift head to fit open channel x180\u2013400, e.g. x240\u2013390.",
+              "\"Compression control\" implies unsupported pressure/force science. Rename \"Travel control\"; other labels at x452/font28 fit within x616."
+            ]
+          }
+        }
+      ],
+      "status": "failed",
+      "code": "Reviewer found: \"Gap stays\" (x452,y350) is false: head bottom moves 260\u2192330, so gap to base top y344 shrinks 84\u219214px. Relabel \"14px gap remains\"; marks at y330/y344 are correct. Head/guide collision: head x230\u2013410 overlaps right guide x400\u2013430 throughout travel. Narrow/shift head to fit open channel x180\u2013400, e.g. x240\u2013390. \"Compression control\" implies unsupported pressure/force science. Rename \"Travel control\"; other labels at x452/font28 fit within x616. Return a complete corrected film.",
+      "elapsedMs": 24307,
+      "finishedAt": "2026-10-31T21:26:03.012Z",
+      "after": 15.421937,
+      "calls": 3,
+      "costUsd": 0.06476225,
+      "certain": true
+    },
+    {
+      "startedAt": "2026-10-31T21:26:52.547Z",
+      "before": 15.421937,
+      "cap": 20,
+      "mode": "actual Muse generation on an original synthetic source",
+      "attempts": [
+        {
+          "stage": "author",
+          "attempt": 1,
+          "durationMs": 10983,
+          "usage": {
+            "input_tokens": 4649,
+            "output_tokens": 4066
+          }
+        },
+        {
+          "stage": "review",
+          "attempt": 1,
+          "durationMs": 8051,
+          "usage": {
+            "input_tokens": 2496,
+            "output_tokens": 912
+          },
+          "verdict": {
+            "approved": false,
+            "issues": [
+              "Moving-part callouts are unparented/static: call-rod/head/grip stay at y175/240/114 while slide moves down up to 70px during their 6\u201312s display, detaching from rod/head/grip. Parent them to slide or show them only before motion.",
+              "Gap annotation disconnect: gap-mark correctly spans final head-bottom y326 to base y344 at x250, but \u201cGap small\u201d sits at x452,y320 with no leader; add a leader to x250 or move label beside the mark.",
+              "lbl-guide has no leader and labels right guide only from x452; add call-guide from guide-r (x430,y200) to x448\u2013452. Other labels \u22649 chars at x452 fit within x616."
+            ]
+          }
+        },
+        {
+          "stage": "author",
+          "attempt": 2,
+          "durationMs": 13220,
+          "usage": {
+            "input_tokens": 2728,
+            "output_tokens": 4287
+          }
+        },
+        {
+          "stage": "review",
+          "attempt": 2,
+          "durationMs": 8235,
+          "usage": {
+            "input_tokens": 2476,
+            "output_tokens": 1014
+          },
+          "verdict": {
+            "approved": false,
+            "issues": [
+              "Labels collide after travel: slide-parented Grip label moves 114\u2192184, exactly overlapping fixed Guide label at (452,184); Head label moves to y310, overlapping Gap label at y320. Parent part labels/callouts outside `slide`, or offset them to avoid fixed labels.",
+              "Gap/clearance is wrong: head bottom moves 260\u2192330, leaving 330\u2013344 = 14, but `gap-mark` spans 326\u2013344 (18) and overlaps the head by 4. Change its top/ticks to y330; do not claim the 14 gap \u201cstays\u201d throughout\u2014it shrinks from 84 to 14.",
+              "Double drive risks collision: `compression` targets `slide.ty` by 70 and a separate track also drives `slide.ty` to 70; if combined, head bottom reaches 400, crashing through base at y344. Keep only one driver for the 70-unit travel."
+            ]
+          }
+        }
+      ],
+      "status": "failed",
+      "code": "Reviewer found: Labels collide after travel: slide-parented Grip label moves 114\u2192184, exactly overlapping fixed Guide label at (452,184); Head label moves to y310, overlapping Gap label at y320. Parent part labels/callouts outside `slide`, or offset them to avoid fixed labels. Gap/clearance is wrong: head bottom moves 260\u2192330, leaving 330\u2013344 = 14, but `gap-mark` spans 326\u2013344 (18) and overlaps the head by 4. Change its top/ticks to y330; do not claim the 14 gap \u201cstays\u201d throughout\u2014it shrinks from 84 to 14. Double drive risks collision: `compression` targets `slide.ty` by 70 and a separate track also drives `slide.ty` to 70; if combined, head bottom reaches 400, crashing through base at y344. Keep only one driver for the 70-unit travel. Return a complete corrected film.",
+      "elapsedMs": 41375,
+      "finishedAt": "2026-10-31T21:27:34.300Z",
+      "after": 15.5250665,
+      "calls": 4,
+      "costUsd": 0.1031295,
+      "certain": true
+    },
+    {
+      "startedAt": "2026-10-31T21:29:11.735Z",
+      "before": 15.5250665,
+      "cap": 20,
+      "mode": "actual Muse generation on an original synthetic source",
+      "attempts": [
+        {
+          "stage": "author",
+          "attempt": 1,
+          "durationMs": 11445,
+          "usage": {
+            "input_tokens": 5051,
+            "output_tokens": 4113
+          }
+        },
+        {
+          "stage": "review",
+          "attempt": 1,
+          "durationMs": 7098,
+          "usage": {
+            "input_tokens": 2487,
+            "output_tokens": 770
+          },
+          "verdict": {
+            "approved": false,
+            "issues": [
+              "Science overclaim: chapter `Compress Together` and parameter id `compression` imply compression/pressure, though none supplied. Rename to `Lower Together`/`travel`; keep only Travel wording.",
+              "Fixed-structure break: guides end at y=340 (`170+170`), base starts y=350, leaving a 10px float. Extend guides to height 180 or move base to y=340.",
+              "Label collision: at 6\u20137.5s `Guide` (y190) and `Rod` (y170) overlap at font 28. Stagger fades or separate labels by \u226532px."
+            ]
+          }
+        },
+        {
+          "stage": "author",
+          "attempt": 2,
+          "durationMs": 12045,
+          "usage": {
+            "input_tokens": 2766,
+            "output_tokens": 3805
+          }
+        },
+        {
+          "stage": "review",
+          "attempt": 2,
+          "durationMs": 4567,
+          "usage": {
+            "input_tokens": 2249,
+            "output_tokens": 455
+          },
+          "verdict": {
+            "approved": false,
+            "issues": [
+              "Clearance: head bottom is 302 (270+32); base top is 340, leaving 38 gap, but compression ty adds 48 \u2014 head penetrates base by 10 at full travel. Reduce ty to \u226430.",
+              "Moving leader mismatch: head callout is fixed at y286 and grip callout at y168, while head/grip move +48; parent them to `movers` or fade before motion (6\u201316s).",
+              "False closing caption: at 18s \u2018gap stays open\u2019 is wrong after the 10px base collision above; fix travel first, then retain caption."
+            ]
+          }
+        }
+      ],
+      "status": "failed",
+      "code": "Reviewer found: Clearance: head bottom is 302 (270+32); base top is 340, leaving 38 gap, but compression ty adds 48 \u2014 head penetrates base by 10 at full travel. Reduce ty to \u226430. Moving leader mismatch: head callout is fixed at y286 and grip callout at y168, while head/grip move +48; parent them to `movers` or fade before motion (6\u201316s). False closing caption: at 18s \u2018gap stays open\u2019 is wrong after the 10px base collision above; fix travel first, then retain caption. Return a complete corrected film.",
+      "elapsedMs": 36493,
+      "finishedAt": "2026-10-31T21:29:48.783Z",
+      "after": 15.61193325,
+      "calls": 4,
+      "costUsd": 0.08686674999999999,
+      "certain": true
+    },
+    {
+      "startedAt": "2026-10-31T21:30:41.193Z",
+      "before": 15.61193325,
+      "cap": 20,
+      "mode": "actual Muse generation on an original synthetic source",
+      "attempts": [
+        {
+          "stage": "author",
+          "attempt": 1,
+          "durationMs": 13275,
+          "usage": {
+            "input_tokens": 4902,
+            "output_tokens": 4283
+          }
+        },
+        {
+          "stage": "review",
+          "attempt": 1,
+          "durationMs": 9858,
+          "usage": {
+            "input_tokens": 2429,
+            "output_tokens": 1203
+          },
+          "verdict": {
+            "approved": false,
+            "issues": [
+              "\"Travel\" at x452,font28 (~452-536) overlaps the arrow shaft/head at x531-549,y150-252: move arrow to x580 or label left/up.",
+              "\"Rod\" label at (452,130) sits above the grip (y156-180) with no leader, while rod spans y180-270: align it with the rod or add a leader to x335."
+            ]
+          }
+        },
+        {
+          "stage": "author",
+          "attempt": 2,
+          "durationMs": 9842,
+          "usage": {
+            "input_tokens": 4962,
+            "output_tokens": 3622
+          }
+        },
+        {
+          "stage": "review",
+          "attempt": 2,
+          "durationMs": 11658,
+          "usage": {
+            "input_tokens": 2544,
+            "output_tokens": 1479
+          },
+          "verdict": {
+            "approved": false,
+            "issues": [
+              "Labels/callouts/arrow default to visible before their first opacity keys (0.5\u201318s): add `value:0` keys at `t=0` for every annotation track.",
+              "Right callouts/labels vanish by 6s, before lowering starts at 6\u201316s; keep them hidden then or parent/re-time them with `movers` so pointers track the +28px `ty` (e.g. head pointer ends at y314, not y286).",
+              "`Fixed` at (20,350) has no pointer and aligns between guide and base: add a leader to the base (140,356) or guide, or move the label adjacent to one fixed part."
+            ]
+          }
+        }
+      ],
+      "status": "failed",
+      "code": "Reviewer found: Labels/callouts/arrow default to visible before their first opacity keys (0.5\u201318s): add `value:0` keys at `t=0` for every annotation track. Right callouts/labels vanish by 6s, before lowering starts at 6\u201316s; keep them hidden then or parent/re-time them with `movers` so pointers track the +28px `ty` (e.g. head pointer ends at y314, not y286). `Fixed` at (20,350) has no pointer and aligns between guide and base: add a leader to the base (140,356) or guide, or move the label adjacent to one fixed part. Repair this exact film, preserving ALL geometry, IDs and artwork except the specific fixes. Return a complete corrected film: {\"schemaVersion\":\"motion-film-v1\",\"title\":\"Sliding Piston: Fixed Guide, Moving Assembly\",\"summary\":\"Fixed guide and base hold a connected head-rod-grip that lowers together; illustrative travel only.\",\"width\":640,\"height\":460,\"duration\":24,\"background\":\"#FAF6EB\",\"assumptions\":[\"Head width and travel distances are illustrative.\",\"Motion is illustrative sliding only.\",\"No fluid or pressure model.\",\"Guides and base never move.\"],\"styles\":[{\"id\":\"paper\",\"fill\":\"#FAF6EB\",\"stroke\":\"#FAF6EB\",\"strokeWidth\":2,\"fontSize\":28,\"fontWeight\":\"400\",\"fontFamily\":\"sans\"},{\"id\":\"ink\",\"fill\":\"#2E3B38\",\"stroke\":\"#2E3B38\",\"strokeWidth\":2,\"fontSize\":28,\"fontWeight\":\"600\",\"fontFamily\":\"sans\"},{\"id\":\"sage\",\"fill\":\"#7A9A8D\",\"stroke\":\"#2E3B38\",\"strokeWidth\":3,\"fontSize\":28,\"fontWeight\":\"500\",\"fontFamily\":\"sans\"},{\"id\":\"copper\",\"fill\":\"#B86A44\",\"stroke\":\"#2E3B38\",\"strokeWidth\":3,\"fontSize\":28,\"fontWeight\":\"600\",\"fontFamily\":\"sans\"},{\"id\":\"gold\",\"fill\":\"#C9A23C\",\"stroke\":\"#2E3B38\",\"strokeWidth\":3,\"fontSize\":28,\"fontWeight\":\"600\",\"fontFamily\":\"sans\"},{\"id\":\"mist\",\"fill\":\"#C9D1CC\",\"stroke\":\"#2E3B38\",\"strokeWidth\":3,\"fontSize\":28,\"fontWeight\":\"500\",\"fontFamily\":\"sans\"}],\"nodes\":[{\"id\":\"movers\",\"parentId\":null,\"kind\":\"group\",\"role\":\"assembly\",\"styleId\":\"ink\",\"x\":0,\"y\":0,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"\",\"text\":\"\"},{\"id\":\"guide-l\",\"parentId\":null,\"kind\":\"rect\",\"role\":\"guide\",\"styleId\":\"sage\",\"x\":140,\"y\":160,\"width\":32,\"height\":180,\"radius\":0,\"shape\":\"\",\"text\":\"\"},{\"id\":\"guide-r\",\"parentId\":null,\"kind\":\"rect\",\"role\":\"guide\",\"styleId\":\"sage\",\"x\":468,\"y\":160,\"width\":32,\"height\":180,\"radius\":0,\"shape\":\"\",\"text\":\"\"},{\"id\":\"base\",\"parentId\":null,\"kind\":\"rect\",\"role\":\"base\",\"styleId\":\"sage\",\"x\":140,\"y\":340,\"width\":360,\"height\":32,\"radius\":0,\"shape\":\"\",\"text\":\"\"},{\"id\":\"head\",\"parentId\":\"movers\",\"kind\":\"rect\",\"role\":\"head\",\"styleId\":\"copper\",\"x\":220,\"y\":270,\"width\":200,\"height\":32,\"radius\":0,\"shape\":\"\",\"text\":\"\"},{\"id\":\"rod\",\"parentId\":\"movers\",\"kind\":\"rect\",\"role\":\"rod\",\"styleId\":\"mist\",\"x\":305,\"y\":180,\"width\":30,\"height\":90,\"radius\":0,\"shape\":\"\",\"text\":\"\"},{\"id\":\"grip\",\"parentId\":\"movers\",\"kind\":\"rect\",\"role\":\"grip\",\"styleId\":\"gold\",\"x\":255,\"y\":156,\"width\":120,\"height\":24,\"radius\":0,\"shape\":\"\",\"text\":\"\"},{\"id\":\"groove\",\"parentId\":\"movers\",\"kind\":\"path\",\"role\":\"none\",\"styleId\":\"ink\",\"x\":0,\"y\":0,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"M230 282 H410 M230 292 H410\",\"text\":\"\"},{\"id\":\"highlight\",\"parentId\":\"movers\",\"kind\":\"path\",\"role\":\"none\",\"styleId\":\"paper\",\"x\":0,\"y\":0,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"M311 186 L311 264\",\"text\":\"\"},{\"id\":\"grip-line\",\"parentId\":\"movers\",\"kind\":\"path\",\"role\":\"none\",\"styleId\":\"ink\",\"x\":0,\"y\":0,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"M261 164 H369\",\"text\":\"\"},{\"id\":\"arrow\",\"parentId\":null,\"kind\":\"path\",\"role\":\"annotation\",\"styleId\":\"ink\",\"x\":0,\"y\":0,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"M580 150 L580 250 M571 241 L580 252 L589 241\",\"text\":\"\"},{\"id\":\"call-head\",\"parentId\":null,\"kind\":\"path\",\"role\":\"annotation\",\"styleId\":\"ink\",\"x\":0,\"y\":0,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"M420 286 H452\",\"text\":\"\"},{\"id\":\"call-grip\",\"parentId\":null,\"kind\":\"path\",\"role\":\"annotation\",\"styleId\":\"ink\",\"x\":0,\"y\":0,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"M375 168 H452\",\"text\":\"\"},{\"id\":\"call-guide\",\"parentId\":null,\"kind\":\"path\",\"role\":\"annotation\",\"styleId\":\"ink\",\"x\":0,\"y\":0,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"M140 220 H110 L100 220\",\"text\":\"\"},{\"id\":\"call-rod\",\"parentId\":null,\"kind\":\"path\",\"role\":\"annotation\",\"styleId\":\"ink\",\"x\":0,\"y\":0,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"M335 225 H452\",\"text\":\"\"},{\"id\":\"lbl-guide\",\"parentId\":null,\"kind\":\"text\",\"role\":\"annotation\",\"styleId\":\"ink\",\"x\":20,\"y\":212,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"\",\"text\":\"Guide\"},{\"id\":\"lbl-rod\",\"parentId\":null,\"kind\":\"text\",\"role\":\"annotation\",\"styleId\":\"ink\",\"x\":452,\"y\":217,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"\",\"text\":\"Rod\"},{\"id\":\"lbl-grip\",\"parentId\":null,\"kind\":\"text\",\"role\":\"annotation\",\"styleId\":\"ink\",\"x\":452,\"y\":160,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"\",\"text\":\"Grip\"},{\"id\":\"lbl-head\",\"parentId\":null,\"kind\":\"text\",\"role\":\"annotation\",\"styleId\":\"ink\",\"x\":452,\"y\":278,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"\",\"text\":\"Head\"},{\"id\":\"lbl-travel\",\"parentId\":null,\"kind\":\"text\",\"role\":\"annotation\",\"styleId\":\"ink\",\"x\":452,\"y\":125,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"\",\"text\":\"Travel\"},{\"id\":\"lbl-fixed\",\"parentId\":null,\"kind\":\"text\",\"role\":\"annotation\",\"styleId\":\"ink\",\"x\":20,\"y\":350,\"width\":0,\"height\":0,\"radius\":0,\"shape\":\"\",\"text\":\"Fixed\"}],\"parameter\":{\"id\":\"compression\",\"label\":\"Travel control lowers head rod grip\",\"description\":\"Illustrative vertical travel distance only.\",\"targetId\":\"movers\",\"property\":\"ty\",\"amount\":28},\"tracks\":[{\"targetId\":\"$compression\",\"property\":\"value\",\"easing\":\"smooth\",\"keys\":[{\"at\":0,\"value\":0},{\"at\":6,\"value\":0},{\"at\":16,\"value\":1},{\"at\":24,\"value\":1}]},{\"targetId\":\"lbl-guide\",\"property\":\"opacity\",\"easing\":\"smooth\",\"keys\":[{\"at\":0.5,\"value\":0},{\"at\":1.5,\"value\":1},{\"at\":3,\"value\":1},{\"at\":4,\"value\":0}]},{\"targetId\":\"call-guide\",\"property\":\"opacity\",\"easing\":\"smooth\",\"keys\":[{\"at\":0.5,\"value\":0},{\"at\":1.5,\"value\":1},{\"at\":3,\"value\":1},{\"at\":4,\"value\":0}]},{\"targetId\":\"lbl-rod\",\"property\":\"opacity\",\"easing\":\"smooth\",\"keys\":[{\"at\":1.5,\"value\":0},{\"at\":2.5,\"value\":1},{\"at\":3.5,\"value\":1},{\"at\":4.5,\"value\":0}]},{\"targetId\":\"call-rod\",\"property\":\"opacity\",\"easing\":\"smooth\",\"keys\":[{\"at\":1.5,\"value\":0},{\"at\":2.5,\"value\":1},{\"at\":3.5,\"value\":1},{\"at\":4.5,\"value\":0}]},{\"targetId\":\"lbl-grip\",\"property\":\"opacity\",\"easing\":\"smooth\",\"keys\":[{\"at\":3,\"value\":0},{\"at\":4,\"value\":1},{\"at\":5,\"value\":1},{\"at\":6,\"value\":0}]},{\"targetId\":\"lbl-head\",\"property\":\"opacity\",\"easing\":\"smooth\",\"keys\":[{\"at\":3.5,\"value\":0},{\"at\":4.5,\"value\":1},{\"at\":5,\"value\":1},{\"at\":6,\"value\":0}]},{\"targetId\":\"call-grip\",\"property\":\"opacity\",\"easing\":\"smooth\",\"keys\":[{\"at\":3,\"value\":0},{\"at\":4,\"value\":1},{\"at\":5,\"value\":1},{\"at\":6,\"value\":0}]},{\"targetId\":\"call-head\",\"property\":\"opacity\",\"easing\":\"smooth\",\"keys\":[{\"at\":3.5,\"value\":0},{\"at\":4.5,\"value\":1},{\"at\":5,\"value\":1},{\"at\":6,\"value\":0}]},{\"targetId\":\"lbl-travel\",\"property\":\"opacity\",\"easing\":\"smooth\",\"keys\":[{\"at\":12,\"value\":0},{\"at\":13.5,\"value\":1},{\"at\":20,\"value\":1},{\"at\":22,\"value\":0}]},{\"targetId\":\"arrow\",\"property\":\"opacity\",\"easing\":\"smooth\",\"keys\":[{\"at\":12,\"value\":0},{\"at\":13.5,\"value\":1},{\"at\":20,\"value\":1},{\"at\":22,\"value\":0}]},{\"targetId\":\"lbl-fixed\",\"property\":\"opacity\",\"easing\":\"smooth\",\"keys\":[{\"at\":18,\"value\":0},{\"at\":19.5,\"value\":1},{\"at\":24,\"value\":1}]},{\"targetId\":\"guide-l\",\"property\":\"reveal\",\"easing\":\"smooth\",\"keys\":[{\"at\":0,\"value\":0},{\"at\":3,\"value\":1},{\"at\":24,\"value\":1}]}],\"chapters\":[{\"id\":\"meet-piston\",\"at\":0,\"title\":\"Meet Piston\",\"caption\":\"A fixed guide holds a sliding piston assembly.\",\"narration\":\"Meet the fixed guide and sliding piston.\"},{\"id\":\"one-assembly\",\"at\":6,\"title\":\"One Assembly\",\"caption\":\"Head, rod and grip are one rigid assembly.\",\"narration\":\"Head rod and grip move as one.\"},{\"id\":\"lower-together\",\"at\":12,\"title\":\"Lower Together\",\"caption\":\"One Travel control lowers the assembly together.\",\"narration\":\"Lower them together with Travel.\"},{\"id\":\"guide-stays\",\"at\":18,\"title\":\"Guide Stays\",\"caption\":\"Guide and base stay fixed; gap narrows, stays open.\",\"narration\":\"Guide stays fixed, gap stays open.\"}],\"experimentAt\":18}",
+      "elapsedMs": 45524,
+      "finishedAt": "2026-10-31T21:31:26.994Z",
+      "after": 15.731391499999999,
+      "calls": 4,
+      "costUsd": 0.11945825,
+      "certain": true
+    },
+    {
+      "startedAt": "2026-10-31T21:32:45.296Z",
+      "before": 15.731391499999999,
+      "cap": 20,
+      "mode": "actual Muse generation on an original synthetic source",
+      "attempts": [
+        {
+          "stage": "reuse-candidate",
+          "path": ".local/pm120/attempt-5/film.json",
+          "newCalls": 0
+        },
+        {
+          "stage": "review",
+          "attempt": 1,
+          "durationMs": 5577,
+          "usage": {
+            "input_tokens": 5640,
+            "output_tokens": 527
+          },
+          "verdict": {
+            "approved": true,
+            "issues": []
+          }
+        }
+      ],
+      "status": "authored-validated-reviewed",
+      "sourceSha256": "48b6bffb700c1a9962ec8d1da2c4fb307f10a4bd20ca215c4343d32a4aa3edf0",
+      "instructions": "You are Soma's motion designer. Author an original polished 24-second educational vector film from the supplied source using motion-film-v1, not executable code. You author the artwork, paths, composition, grouping, palette, typography, explanatory captions, narration and timed choreography. Source facts: fixed open guide/base; a wide piston head, rod and top grip slide vertically as a rigid connected group. No fluid, force, pressure or checked physics claim. Label chosen dimensions and travel as illustrative assumptions. We compare this to a previous 3D-derived illustration of the same source.\nDesign a crafted editorial teaching film at640x460: warm light paper, charcoal text, sage guide, copper head, gold grip, clear dark outlines. Meaningful close framing, strong negative space, no card UI inside the drawing. Use18-32 concise nodes, <=8 styles, <=12 tracks, custom paths for details/arrow callouts, large readable type>=28. At most3 short labels visible at once, beside the mechanism without collision. Keep bounds inside a24px margin including movement. Text must fit: at font28 estimate 15pixels per letter, so right labels atx452 may be at most10letters. Use short words such as Guide, Head, Rod, Grip; avoid collisions. All visible head x bounds must lie strictly inside the guide opening. Include a few crafted path details (head grooves, rod highlight, grip contour) with purposeful callout lines; do not merely draw four undecorated rectangles. Text starts top-left(x,y), hanging baseline; no multiline. A node's x/y translates its shape; children inherit group transforms. shape is SVG path d ONLY for path nodes, empty otherwise. text is nonempty ONLY for text nodes. Rect/circle sizes describe only those kinds; unused numeric fields0. Styles must be referenced. Groups do not override child styles.\nExactly one node each with role base/head/rod/grip: actual visible shapes, not labels. Head/rod/grip share the parameter target group. The parameter drives only that group, ty positive downward. In the experiment frame rod bottom touches head top and rod top touches grip bottom; head stays visibly ABOVE base at compression1. Guide/base fixed. Do not scale/rotate individual movers. ALL text nodes must have parentId null, always outside moving groups. NEVER add tx/ty/scale/rotate tracks: physical translation is applied ONLY by parameter.amount times $compression. Tracks may animate opacity/reveal of annotations and $compression:value ONLY. For gap annotation avoid numeric measurements or constant-gap claims; the gap decreases and remains positive. Prefer a continuously connected assembly; any introduction separation must be explicitly explained then reconnected. Put roles on actual shape nodes.\nExactly4 chapters at0,6,12,18 seconds, duration24, experimentAt18. Each narration <=12 spoken words; concise captions. Author $compression:value with0 at0and6, smoothly1 by16, then hold1 through24. Introduce the mechanism, reveal shared movement, compress, recap what stayed fixed. Add purposeful staged label/arrow appearances and drawing reveal. Tracks target node IDs, opacity/reveal0..1. Transform tracks are OFFSETS, not absolute x/y. No external assets or arbitrary expressions. All mechanism parts remain visible at the final frame. Aim for an authored motion explanation, not a static diagram with a play button.",
+      "elapsedMs": 6519,
+      "finishedAt": "2026-10-31T21:32:52.163Z",
+      "after": 15.764491499999998,
+      "calls": 1,
+      "costUsd": 0.0331,
+      "certain": true
+    },
+    {
+      "startedAt": "2026-10-31T21:46:04.107Z",
+      "before": 15.764491499999998,
+      "cap": 20,
+      "mode": "actual Muse generation on an original synthetic source",
+      "attempts": [
+        {
+          "stage": "author",
+          "attempt": 1,
+          "durationMs": 8769,
+          "usage": {
+            "input_tokens": 5113,
+            "output_tokens": 3389
+          }
+        },
+        {
+          "stage": "review",
+          "attempt": 1,
+          "durationMs": 3687,
+          "usage": {
+            "input_tokens": 5640,
+            "output_tokens": 324
+          },
+          "verdict": {
+            "approved": true,
+            "issues": []
+          }
+        }
+      ],
+      "status": "authored-validated-reviewed",
+      "sourceSha256": "48b6bffb700c1a9962ec8d1da2c4fb307f10a4bd20ca215c4343d32a4aa3edf0",
+      "instructions": "You are Soma's motion designer. Author an original polished 24-second educational vector film from the supplied source using motion-film-v1, not executable code. You author the artwork, paths, composition, grouping, palette, typography, explanatory captions, narration and timed choreography. Source facts: fixed open guide/base; a wide piston head, rod and top grip slide vertically as a rigid connected group. No fluid, force, pressure or checked physics claim. Label chosen dimensions and travel as illustrative assumptions. We compare this to a previous 3D-derived illustration of the same source.\nDesign a crafted editorial teaching film at640x460: warm light paper, charcoal text, sage guide, copper head, gold grip, clear dark outlines. Meaningful close framing, strong negative space, no card UI inside the drawing. Use18-32 concise nodes, <=8 styles, <=12 tracks, custom paths for details/arrow callouts, large readable type>=28. At most3 short labels visible at once, beside the mechanism without collision. Keep bounds inside a24px margin including movement. Text must fit: at font28 estimate 15pixels per letter, so right labels atx452 may be at most10letters. Use short words such as Guide, Head, Rod, Grip; avoid collisions. All visible head x bounds must lie strictly inside the guide opening. Include a few crafted path details (head grooves, rod highlight, grip contour) with purposeful callout lines; do not merely draw four undecorated rectangles. Text starts top-left(x,y), hanging baseline; no multiline. A node's x/y translates its shape; children inherit group transforms. shape is SVG path d ONLY for path nodes, empty otherwise. text is nonempty ONLY for text nodes. Rect/circle sizes describe only those kinds; unused numeric fields0. Styles must be referenced. Groups do not override child styles.\nExactly one node each with role base/head/rod/grip: actual visible shapes, not labels. Head/rod/grip share the parameter target group. The parameter drives only that group, ty positive downward. In the experiment frame rod bottom touches head top and rod top touches grip bottom; head stays visibly ABOVE base at compression1. Guide/base fixed. Do not scale/rotate individual movers. ALL text nodes must have parentId null, always outside moving groups. NEVER add tx/ty/scale/rotate tracks: physical translation is applied ONLY by parameter.amount times $compression. Tracks may animate opacity/reveal of annotations and $compression:value ONLY. For gap annotation avoid numeric measurements or constant-gap claims; the gap decreases and remains positive. Prefer a continuously connected assembly; any introduction separation must be explicitly explained then reconnected. Put roles on actual shape nodes.\nExactly4 chapters at0,6,12,18 seconds, duration24, experimentAt18. Each narration <=12 spoken words; concise captions. Author $compression:value with0 at0and6, smoothly1 by16, then hold1 through24. Introduce the mechanism, reveal shared movement, compress, recap what stayed fixed. Add purposeful staged label/arrow appearances and drawing reveal. Tracks target node IDs, opacity/reveal0..1. Transform tracks are OFFSETS, not absolute x/y. No external assets or arbitrary expressions. All mechanism parts remain visible at the final frame. Aim for an authored motion explanation, not a static diagram with a play button.",
+      "elapsedMs": 13623,
+      "finishedAt": "2026-10-31T21:46:18.087Z",
+      "after": 15.814326,
+      "calls": 2,
+      "costUsd": 0.049834500000000004,
+      "certain": true
+    }
+  ]
+}

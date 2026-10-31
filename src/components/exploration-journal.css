@@ -801,3 +801,194 @@
   font-size: 13px;
   text-align: left;
 }
+
+/* ── Narrow: the spread becomes one page; the visual comes right after the title ── */
+@media (max-width: 1099px) {
+  .exploration-app .exploration-artifact.journal-spread,
+  .exploration-app.has-exploration .exploration-artifact.journal-spread {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+  .exploration-app .journal-left-head,
+  .exploration-app .journal-right,
+  .exploration-app .journal-left-body {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .exploration-app .journal-left-head {
+    border-radius: 12px 12px 0 0;
+    padding: 22px 24px 8px;
+  }
+  .exploration-app .journal-right {
+    border-radius: 0;
+    padding: 12px 24px 20px;
+    box-shadow: none;
+  }
+  .exploration-app .journal-right::after,
+  .exploration-app .journal-gutter {
+    display: none;
+  }
+  .exploration-app .journal-left-body {
+    border-radius: 0 0 12px 12px;
+    padding: 8px 24px 24px;
+    border-top: 1.5px dashed var(--control-border);
+  }
+}
+
+@media (max-width: 760px) {
+  .exploration-app .journal-topbar,
+  .exploration-app.has-exploration .journal-topbar {
+    padding: 8px 12px;
+    gap: 8px;
+    min-height: 0;
+  }
+  .exploration-app .journal-menu > summary {
+    padding: 0 12px;
+  }
+  .exploration-app .journal-source-menu > summary {
+    font-size: 0;
+    gap: 0;
+    padding: 0;
+    width: 44px;
+  }
+  .exploration-app .journal-sharing {
+    font-size: 12px;
+  }
+  .exploration-app .journal-desk,
+  .exploration-app.has-exploration .journal-desk {
+    padding: 0 8px 12px;
+    gap: 10px;
+  }
+  .exploration-app .journal-left-head,
+  .exploration-app.has-exploration .journal-left-head {
+    padding: 16px 16px 6px;
+  }
+  .exploration-app .journal-left-head h2,
+  .exploration-app.has-exploration .exploration-artifact .journal-left-head h2 {
+    font-size: 24px;
+    margin: 6px 0 4px;
+  }
+  .exploration-app .journal-left-head .exploration-objective {
+    font-size: 14px;
+  }
+  .exploration-app .journal-right,
+  .exploration-app.has-exploration .journal-right {
+    padding: 8px 12px 16px;
+    gap: 10px 8px;
+  }
+  .exploration-app .journal-left-body,
+  .exploration-app.has-exploration .journal-left-body {
+    padding: 8px 16px 20px;
+  }
+  .exploration-app .journal-note {
+    font-size: 21px;
+  }
+  .exploration-app .journal-cover {
+    margin-top: 8px;
+    padding: 24px 18px;
+  }
+  .exploration-app .journal-cover h1 {
+    font-size: 30px;
+  }
+  /* The composer stays one line at the bottom of the screen and never covers the visual
+   * with settings or notices; those live in the menus. */
+  .exploration-app .exploration-ask-card.journal-composer,
+  .exploration-app.has-exploration .exploration-ask-card.journal-composer {
+    position: sticky;
+    bottom: 0;
+    z-index: 30;
+    left: auto;
+    right: auto;
+    margin: 0 -8px -12px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -3px 0 #c9bb9f;
+    max-height: none;
+    overflow: visible;
+  }
+  .exploration-app .journal-composer form > label,
+  .exploration-app .journal-composer-context,
+  .exploration-app.has-exploration .journal-composer form > label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .exploration-app .journal-composer .exploration-voice .secondary-button {
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    font-size: 0;
+    gap: 0;
+  }
+  .exploration-app .journal-composer .primary-button {
+    min-height: 44px;
+    padding: 0 16px;
+    font-size: 14px;
+  }
+  .exploration-app .journal-composer .exploration-unavailable {
+    font-size: 12px;
+    margin: 4px 0 0;
+  }
+}
+@media (max-width: 760px) {
+  .exploration-app .journal-composer-hint {
+    font-size: 11px;
+  }
+}
+
+/* The diagram is the page's subject: it scales with the page and is never squeezed
+ * to make room for chrome. */
+.exploration-app .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+.exploration-app.has-exploration .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+.exploration-app .journal-right .exploration-search-stage,
+.exploration-app.has-exploration .journal-right .exploration-search-stage {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  max-width: none;
+}
+@media (max-width: 760px) {
+  .exploration-app .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app.has-exploration .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app .journal-right .exploration-search-stage,
+  .exploration-app.has-exploration .journal-right .exploration-search-stage {
+    height: auto;
+    max-height: none;
+  }
+}
+@media (max-width: 760px) {
+  .exploration-app .journal-right .exploration-comparison-switch button,
+  .exploration-app.has-exploration .journal-right .exploration-comparison-switch button {
+    min-height: 44px;
+    padding: 6px 14px;
+  }
+  .exploration-app .journal-right .exploration-comparison-switch button .meta {
+    display: none;
+  }
+}
+@media (max-width: 480px) {
+  .exploration-app .journal-save > .meta {
+    display: none;
+  }
+  .exploration-app .journal-save .secondary-button,
+  .exploration-app .journal-right .exploration-step-bar .secondary-button:has(> svg),
+  .exploration-app .journal-right .exploration-step-bar .primary-button:has(> svg),
+  .exploration-app.has-exploration .journal-right .exploration-step-bar .secondary-button:has(> svg),
+  .exploration-app.has-exploration .journal-right .exploration-step-bar .primary-button:has(> svg) {
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    gap: 0;
+    font-size: 0;
+  }
+  .exploration-app .journal-right .exploration-playback > .action-row > .text-button:not(.journal-icon-button) {
+    display: none;
+  }
+  .exploration-app .journal-provenance {
+    font-size: 12px;
+  }
+}

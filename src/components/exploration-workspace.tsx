@@ -911,12 +911,15 @@ export function ExplorationWorkspace() {
           )}
         </div>
         <span className="meta journal-composer-hint">
-          {newContext && artifact
-            ? 'New source → a new exploration'
-            : artifact
-              ? 'Soma uses your current diagram, controls and selection'
-              : 'Share a window, upload an image, or try the example'}{' '}
-          · Recordings go to Meta for transcription.
+          <span className="journal-composer-context">
+            {newContext && artifact
+              ? 'New source → a new exploration'
+              : artifact
+                ? 'Soma uses your current diagram, controls and selection'
+                : 'Share a window, upload an image, or try the example'}{' '}
+            ·{' '}
+          </span>
+          Recordings go to Meta for transcription.
         </span>
       </form>
       {pointAsk.status && (

@@ -4,6 +4,8 @@ import type { CompanionMemoryView } from "../../src/lib/domain/companion-memory"
 // Original synthetic profile and scene references. Scripted analysis checks UI
 // behavior only; the first journey exercises real local owned persistence.
 async function openMemory(page: Page) {
+  // Memory lives in the More menu of the journal's top bar.
+  await page.getByLabel("More", { exact: true }).click();
   await page
     .getByRole("button", { name: "Your goals & understanding" })
     .click();

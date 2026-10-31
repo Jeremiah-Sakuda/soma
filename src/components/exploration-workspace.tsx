@@ -770,6 +770,32 @@ export function ExplorationWorkspace() {
     );
     return () => clearInterval(timer);
   }, [busy]);
+  // On narrow windows the diagram fits the room between its top and the docked
+  // question line, so the whole graph and the question share the screen.
+  useEffect(() => {
+    if (!artifact) return;
+    const fit = () => {
+      const root = document.querySelector<HTMLElement>('.exploration-app'),
+        graph = document.querySelector<HTMLElement>('.journal-right .exploration-graph'),
+        panel = graph?.closest<HTMLElement>('.exploration-panel'),
+        dock = document.querySelector<HTMLElement>('.journal-composer');
+      if (!root || !graph || !panel || !dock) return;
+      if (!matchMedia('(max-width: 760px)').matches) {
+        root.style.removeProperty('--journal-graph-room');
+        return;
+      }
+      const box = graph.getBoundingClientRect(),
+        below = panel.getBoundingClientRect().bottom - box.bottom;
+      const room = window.innerHeight - dock.offsetHeight - (box.top + window.scrollY) - below - 12;
+      root.style.setProperty('--journal-graph-room', `${Math.max(220, Math.floor(room))}px`);
+    };
+    const frame = requestAnimationFrame(fit);
+    window.addEventListener('resize', fit);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', fit);
+    };
+  }, [artifact, compact]);
   const selectedLabel =
     state?.selectedObjectId &&
     (artifact?.spec.mode === 'checked-bfs' || artifact?.spec.mode === 'checked-dijkstra')
@@ -911,14 +937,6 @@ export function ExplorationWorkspace() {
           )}
         </div>
         <span className="meta journal-composer-hint">
-          <span className="journal-composer-context">
-            {newContext && artifact
-              ? 'New source → a new exploration'
-              : artifact
-                ? 'Soma uses your current diagram, controls and selection'
-                : 'Share a window, upload an image, or try the example'}{' '}
-            ·{' '}
-          </span>
           Recordings go to Meta for transcription.
         </span>
       </form>
@@ -988,6 +1006,29 @@ export function ExplorationWorkspace() {
         Watch a recorded Muse run <ArrowUpRight size={16} aria-hidden="true" />
       </button>
     </div>
+  );
+  const library = artifacts.length > 0 && (
+    <section className="exploration-library">
+                  <h2>Pick up where you left off</h2>
+                  {artifacts.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      aria-current={artifact?.id === item.id ? 'true' : undefined}
+                      disabled={sourceBusy || saving}
+                      onClick={() => void resume(item.id)}
+                    >
+                      <span>
+                        <strong>{item.spec.title}</strong>
+                        <small>
+                          Version {item.version}
+                          {item.saved ? ' · Saved' : ''}
+                        </small>
+                      </span>
+                      <ChevronRight size={16} aria-hidden="true" />
+                    </button>
+                  ))}
+                </section>
   );
   const sourcePanel = (
     <section className="exploration-source-card">
@@ -1154,7 +1195,7 @@ export function ExplorationWorkspace() {
           </div>
         )}
         <div className="journal-topbar-actions">
-          {(artifact || busy) && (
+          {(artifact || busy) && !(artifact && (newContext || capture.sharing)) && (
             <JournalMenu
               className="journal-source-menu"
               summary={
@@ -1166,40 +1207,20 @@ export function ExplorationWorkspace() {
               {sourcePanel}
             </JournalMenu>
           )}
-          <JournalMenu
-            className="journal-explorations-menu"
-            closeOn=".exploration-library button, .journal-examples button"
-            summary={
-              <>
-                Explorations <ChevronDown size={15} aria-hidden="true" />
-              </>
-            }
-          >
-            {artifacts.length > 0 && (
-              <section className="exploration-library">
-                <h2>Pick up a thread</h2>
-                {artifacts.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    aria-current={artifact?.id === item.id ? 'true' : undefined}
-                    disabled={sourceBusy || saving}
-                    onClick={() => void resume(item.id)}
-                  >
-                    <span>
-                      <strong>{item.spec.title}</strong>
-                      <small>
-                        Version {item.version}
-                        {item.saved ? ' · Saved' : ''}
-                      </small>
-                    </span>
-                    <ChevronRight size={16} aria-hidden="true" />
-                  </button>
-                ))}
-              </section>
-            )}
-            {(artifact || busy) && examples}
-          </JournalMenu>
+          {(artifact || busy) && (
+            <JournalMenu
+              className="journal-explorations-menu"
+              closeOn=".exploration-library button, .journal-examples button"
+              summary={
+                <>
+                  Explorations <ChevronDown size={15} aria-hidden="true" />
+                </>
+              }
+            >
+              {library}
+              {examples}
+            </JournalMenu>
+          )}
           <JournalMenu label="More" summary={<MoreHorizontal size={18} aria-hidden="true" />}>
             <CompanionMemory
               sessionReady={initialized}
@@ -1307,6 +1328,9 @@ export function ExplorationWorkspace() {
             {error}
           </p>
         )}
+        {artifact && (newContext || capture.sharing) && (
+          <div className="journal-new-source">{sourcePanel}</div>
+        )}
         {artifact && state ? (
           <article
             id="exploration-card"
@@ -1339,10 +1363,10 @@ export function ExplorationWorkspace() {
                   </span>
                   {newContext && <span className="status-chip caution">Previous context</span>}
                 </p>
-                <span className="meta">Version {artifact.version}</span>
+                {artifact.version > 1 && <span className="meta">Version {artifact.version}</span>}
                 <div className="journal-save">
                   <span className="meta">
-                    {dirty ? 'Unsaved changes' : artifact.saved ? 'Saved' : 'Ready to save'}
+                    {dirty ? 'Unsaved changes' : artifact.saved ? 'Saved' : ''}
                   </span>
                   <button
                     type="button"
@@ -1358,12 +1382,6 @@ export function ExplorationWorkspace() {
                   className="journal-page-menu"
                   summary={<MoreHorizontal size={18} aria-hidden="true" />}
                 >
-                  <ExplorationPipeline
-                    generation={artifact.generation}
-                    checked={artifact.validation.assurance.startsWith('checked-')}
-                    replay={!!artifact.recording}
-                  />
-                  {versionHistory}
                   <details>
                     <summary>
                       <CircleHelp size={15} aria-hidden="true" /> Source & assumptions
@@ -1505,10 +1523,15 @@ export function ExplorationWorkspace() {
                   </div>
                 </JournalMenu>
               </div>
+              <ExplorationPipeline
+                generation={artifact.generation}
+                checked={artifact.validation.assurance.startsWith('checked-')}
+                replay={!!artifact.recording}
+              />
               {artifact.recording && (
                 <p className="exploration-recording-note">
                   Recorded {capturedTime(artifact.recording.generatedAt)} · original synthetic
-                  source · no inference on replay. Follow-ups use live generation when available.
+                  source · no inference on replay.
                 </p>
               )}
               <h2>{artifact.spec.title}</h2>
@@ -1699,6 +1722,7 @@ export function ExplorationWorkspace() {
                       : 'muse'
                 }
               />
+              {versionHistory}
               <ExplorationSourceGrounding
                 capture={
                   source?.capturedAt === artifact.source.capturedAt
@@ -1803,7 +1827,7 @@ export function ExplorationWorkspace() {
                 )}
               {artifact.spec.mode !== 'clarify' && artifact.spec.followups.length > 0 && (
                 <div className="exploration-followups" aria-label="Suggested follow-ups">
-                  {artifact.spec.followups.map((item) => (
+                  {artifact.spec.followups.slice(0, 2).map((item) => (
                     <button
                       type="button"
                       key={item}
@@ -1827,14 +1851,15 @@ export function ExplorationWorkspace() {
             <p className="overline">Your study journal</p>
             <h1 id="journal-cover-title">Point Soma at something you’re studying.</h1>
             <p className="journal-cover-lede">
-              Share a window or upload a screenshot, then ask about it. Soma draws an explanation
-              you can change, and checks the parts that can be checked.
+              Share a window or upload a screenshot, then ask. Soma draws an explanation you can
+              change.
             </p>
             {sourcePanel}
+            {library}
             <h2 className="journal-cover-subhead">Or open an example</h2>
             {examples}
             <span className="meta">
-              Examples and recorded runs use original synthetic material. No account needed.
+              Examples use original synthetic material. No account needed.
             </span>
           </section>
         )}

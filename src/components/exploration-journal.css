@@ -985,10 +985,196 @@
     gap: 0;
     font-size: 0;
   }
-  .exploration-app .journal-right .exploration-playback > .action-row > .text-button:not(.journal-icon-button) {
-    display: none;
-  }
   .exploration-app .journal-provenance {
     font-size: 12px;
+  }
+}
+
+/* Icon-and-word controls: the word is visible on wide pages and stays as the
+ * accessible name when narrow pages show only the icon. */
+.exploration-app .journal-labelled-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* A new source chosen while a page is open is reviewed on the desk before Ask. */
+.exploration-app .journal-new-source .exploration-source-card {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  border: 1.5px dashed var(--accent);
+  border-radius: 12px;
+}
+.exploration-app .exploration-library h2 {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 760px) {
+  /* Companion window: one transport row, and the whole diagram fits above the
+   * question line (PM064), scaled to the remaining height rather than shrunk to 200 px. */
+  .exploration-app .journal-right > .exploration-playback,
+  .exploration-app.has-exploration .journal-right > .exploration-playback {
+    gap: 4px;
+  }
+  .exploration-app .journal-right .exploration-playback .primary-button,
+  .exploration-app.has-exploration .journal-right .exploration-playback .primary-button {
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    gap: 0;
+    font-size: 0;
+  }
+  .exploration-app .journal-labelled-icon > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .exploration-app .journal-right .exploration-playback .journal-labelled-icon {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+    padding: 0;
+  }
+  .exploration-app .journal-right > .exploration-step-bar,
+  .exploration-app.has-exploration .journal-right > .exploration-step-bar {
+    flex: 1 1 260px;
+  }
+  .exploration-app .journal-right .exploration-step-bar .secondary-button:has(> svg),
+  .exploration-app .journal-right .exploration-step-bar .primary-button:has(> svg),
+  .exploration-app.has-exploration .journal-right .exploration-step-bar .secondary-button:has(> svg),
+  .exploration-app.has-exploration .journal-right .exploration-step-bar .primary-button:has(> svg) {
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    gap: 0;
+    font-size: 0;
+  }
+  .exploration-app .journal-left-head .exploration-objective {
+    display: none;
+  }
+  .exploration-app .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app.has-exploration .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app .journal-right .exploration-search-stage,
+  .exploration-app.has-exploration .journal-right .exploration-search-stage {
+    width: auto;
+    max-width: 100%;
+    max-height: max(220px, calc(100dvh - 450px));
+    margin-inline: auto;
+    display: block;
+  }
+}
+@media (max-width: 760px) {
+  .exploration-app .journal-save > .meta {
+    display: none;
+  }
+  .exploration-app .journal-save .secondary-button {
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    gap: 0;
+    font-size: 0;
+  }
+  .exploration-app .journal-page-meta,
+  .exploration-app.has-exploration .journal-page-meta {
+    flex-wrap: nowrap;
+  }
+  .exploration-app .journal-provenance {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+}
+
+/* The question line docks at the bottom of the window at every width, so the
+ * diagram and the question always share the viewport (PM044). */
+.exploration-app .exploration-ask-card.journal-composer,
+.exploration-app.has-exploration .exploration-ask-card.journal-composer {
+  position: sticky;
+  bottom: 12px;
+  z-index: 30;
+  box-shadow: 0 3px 0 #c9bb9f, 0 -6px 24px rgb(38 34 29 / 0.08);
+}
+@media (max-width: 760px) {
+  .exploration-app .exploration-ask-card.journal-composer,
+  .exploration-app.has-exploration .exploration-ask-card.journal-composer {
+    bottom: 0;
+  }
+  .exploration-app .exploration-playback summary.journal-summary-icon {
+    font-size: 0;
+    gap: 0;
+  }
+}
+
+/* ── Less text: labels the reader doesn't need to read ───────────────── */
+.exploration-app .journal-composer form > label,
+.exploration-app.has-exploration .journal-composer form > label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.exploration-app .journal-key {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.exploration-app .journal-key > summary {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  min-height: 32px;
+  align-items: center;
+  cursor: pointer;
+}
+.exploration-app .journal-key > summary::-webkit-details-marker {
+  display: none;
+}
+.exploration-app .journal-key > p {
+  margin: 6px 0 0;
+}
+.exploration-app .journal-key b {
+  font-family: var(--font-geist-mono);
+}
+/* Route tabs: the name and total are enough; the found route stays as status text. */
+.exploration-app .journal-right .exploration-comparison-switch button .meta:not(:has([role='status'])) {
+  display: none;
+}
+.exploration-app .journal-right .exploration-controls > p.meta:last-child {
+  display: none;
+}
+.exploration-app .journal-left-body .exploration-prediction .section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.exploration-app .journal-left-body .exploration-prediction h3 {
+  font-size: 16px;
+}
+
+/* Narrow windows: the diagram takes the room actually left above the question line. */
+@media (max-width: 760px) {
+  .exploration-app .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app.has-exploration .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app .journal-right .exploration-search-stage,
+  .exploration-app.has-exploration .journal-right .exploration-search-stage {
+    max-height: var(--journal-graph-room, max(220px, calc(100dvh - 450px)));
+  }
+}
+@media (max-width: 760px) {
+  .exploration-app .journal-right .exploration-playback .exploration-voice-settings > summary.journal-summary-icon,
+  .exploration-app.has-exploration .journal-right .exploration-playback .exploration-voice-settings summary.journal-summary-icon {
+    font-size: 0;
+    gap: 0;
+    min-width: 44px;
+    justify-content: center;
   }
 }

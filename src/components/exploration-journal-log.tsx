@@ -3,7 +3,7 @@ import type { ExplorationSpec } from '@/lib/domain/exploration';
 import {
   explorationExecution,
   explorationInputsChanged,
-  explorationVisibleCaption,
+  explorationStepCaption,
   type ExplorationViewState,
 } from '@/lib/domain/exploration-view';
 
@@ -34,7 +34,7 @@ export function ExplorationJournalLog({
           );
   const note = authored ? authored.narration || authored.caption : null;
   // Without an explanation written for this exact step, the step is told once, in print.
-  const printed = !note && !changed && spec.mode !== 'explanation' ? explorationVisibleCaption(spec, state) : null;
+  const printed = !note && !changed && spec.mode !== 'explanation' ? explorationStepCaption(spec, state) : null;
   const execution = explorationExecution(spec, state);
   const step = execution?.steps[Math.min(state.step, execution.steps.length - 1)];
   const previous = execution?.steps[Math.max(0, Math.min(state.step, execution.steps.length - 1) - 1)];
@@ -125,26 +125,32 @@ export function ExplorationJournalLog({
           written notes pause until you ask about it.
         </p>
       ) : null}
-      <p className="journal-key">
-        {execution && (
-          <>
-            <span>
-              <b aria-hidden="true">×</b> {weighted ? 'settled' : 'done'}
-            </span>
-            <span>
-              <b aria-hidden="true">→</b> now
-            </span>
-            <span>
-              <b aria-hidden="true">•</b> waiting
-            </span>
-            <span>
-              <b aria-hidden="true">○</b> not reached
-            </span>
-          </>
-        )}
-        <span className="journal-key-hand">handwriting = the explanation</span>
-        {execution && <span>printed = checked</span>}
-      </p>
+      <details className="journal-key">
+        <summary>
+          {execution ? (
+            <>
+              <span>
+                <b aria-hidden="true">×</b> {weighted ? 'settled' : 'done'}
+              </span>
+              <span>
+                <b aria-hidden="true">→</b> now
+              </span>
+              <span>
+                <b aria-hidden="true">•</b> waiting
+              </span>
+              <span>
+                <b aria-hidden="true">○</b> not reached
+              </span>
+            </>
+          ) : (
+            <span>Key</span>
+          )}
+        </summary>
+        <p>
+          {execution ? 'Printed values are checked by Soma. ' : ''}
+          <span className="journal-key-hand">Handwriting is the explanation.</span>
+        </p>
+      </details>
     </div>
   );
 }

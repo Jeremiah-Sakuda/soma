@@ -70,6 +70,13 @@ function executionCaption(execution: BfsExecution, index: number) {
       : [];
   return `${nodeName(execution.input, step.current)} ${execution.modelId === 'dijkstra-nonnegative' ? `is settled at cost ${step.distances[step.current]}` : 'leaves the front of the queue'}.${step.discovered.length ? ` Added ${step.discovered.map((id) => nodeName(execution.input, id)).join(', ')}.` : cheaper.length ? '' : ' No new nodes added.'}${cheaper.map((id) => ` ${nodeName(execution.input, id)} drops from ${before.distances[id]} to ${step.distances[id]}.`).join('')}${step.status === 'found' ? ' Goal reached.' : step.status === 'unreachable' ? ' The queue is empty; the goal is unreachable with these connections.' : step.status === 'complete' ? ' All reachable nodes have been explored.' : ''}`;
 }
+/** The inspected search's step in one sentence; the journal shows only this. */
+export function explorationStepCaption(spec: ExplorationSpec, state: ExplorationViewState): string {
+  if (spec.mode === 'clarify') return spec.question;
+  const execution = explorationExecution(spec, state);
+  if (!execution) return spec.steps[Math.min(state.explanationStep, spec.steps.length - 1)].caption;
+  return executionCaption(execution, state.step);
+}
 export function explorationVisibleCaption(
   spec: ExplorationSpec,
   state: ExplorationViewState,

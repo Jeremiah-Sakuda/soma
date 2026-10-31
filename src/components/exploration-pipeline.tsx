@@ -52,8 +52,13 @@ export function ExplorationPipeline({
       <a
         href="#exploration-audit"
         onClick={() => {
-          const details = document.getElementById('exploration-audit');
-          if (details instanceof HTMLDetailsElement) details.open = true;
+          // The audit can sit inside a closed menu; open every enclosing disclosure.
+          for (
+            let details = document.getElementById('exploration-audit')?.closest('details') ?? null;
+            details;
+            details = details.parentElement?.closest('details') ?? null
+          )
+            details.open = true;
         }}
       >
         Inspect recorded calls and timing

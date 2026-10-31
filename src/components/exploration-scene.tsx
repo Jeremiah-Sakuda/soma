@@ -634,6 +634,15 @@ export function ExplorationScene({
             {graphs
               .filter((panel) => panel.execution === (comparison ? activeGraph : 'primary'))
               .map(renderPanel)}
+            {/* The inspected search's queue stays available as text. */}
+            {panels
+              .filter(
+                (panel) =>
+                  panel.kind === 'frontier' &&
+                  panel.execution === (comparison ? activeGraph : 'primary') &&
+                  execution.modelId !== 'dijkstra-nonnegative',
+              )
+              .map(renderPanel)}
             {experiment && !experimentInline && (
               <div className="exploration-experiment-slot">{experiment}</div>
             )}

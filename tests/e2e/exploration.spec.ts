@@ -44,7 +44,7 @@ async function setup(page: Page, options: { live?: boolean; delay?: boolean; fai
     return route.fulfill({ json: { artifact } });
   });
   await page.goto('/explore');
-  await expect(page.getByRole('heading', { name: 'Make the idea visible.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Point Soma at something/ })).toBeVisible();
   return { requests,completeInitialization:async()=>{await expect.poll(()=>initialRequests.length).toBeGreaterThan(0);await Promise.all(initialRequests.splice(0).map(item=>item.route.fulfill({json:item.response})));}, completeResume:async()=>{if(pendingResume)await pendingResume.route.fulfill({json:pendingResume.response});},completeDelayed: async () => { if (pending) await pending.fulfill({ json: { artifact: fixture({ comparison: true, version: 2 }) } }).catch(() => undefined); } };
 }
 async function example(page: Page) {
@@ -70,11 +70,12 @@ test('original example runs actual BFS controls, saves exact state and resumes w
   await page.getByRole('button', { name: 'Reverse neighbor order' }).click();
   await page.getByRole('button', { name: 'Next step', exact: true }).click();
   await expect(frontier.locator('li')).toHaveText(['NextB', '2A']);
-  await expect(page.getByText('The inputs changed.', { exact: false })).toBeVisible();
+  await expect(page.getByText('You changed the experiment.', { exact: false })).toBeVisible();
   await page.getByText('Change a connection', { exact: true }).click();
   await page.getByRole('checkbox', { name: 'S → A', exact: true }).uncheck();
   await page.getByRole('button', { name: 'Next step', exact: true }).click();
   await expect(frontier.locator('li')).toHaveText(['NextB']);
+  await page.getByText('Select a node & inspect graph', { exact: true }).click();
   await page.getByRole('button', { name: 'Node B', exact: true }).click();
   await page.getByRole('button', { name: 'Save exploration', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Saved this version' })).toBeVisible();
@@ -89,15 +90,18 @@ test('original example runs actual BFS controls, saves exact state and resumes w
 
 test('follow-up submits selected object and current experiment state and renders a distinct generated composition', async ({ page }) => {
   const { requests } = await setup(page); await example(page);
+  await page.getByText('Select a node & inspect graph', { exact: true }).click();
   await page.getByRole('button', { name: 'Node A', exact: true }).click();
   await page.getByRole('combobox', { name: 'Start node', exact: true }).selectOption('b');
   await page.getByLabel('Where would you like to go next?').fill('Compare the opposite neighbor order.');
   await page.getByRole('button', { name: 'Ask Soma', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Same shortest distance, different tie order', exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'A before B', exact: true })).toBeVisible();
+  await page.locator('.exploration-comparison-switch button').nth(1).click();
   await expect(page.getByRole('region', { name: 'B before A', exact: true })).toBeVisible();
   expect(requests.find(item => item.action === 'generate')).toMatchObject({ artifactId: firstId, baseVersion: 1, selectedObjectId: 'a', state: { start: 'b', selectedObjectId: 'a' } });
   await expect(page.getByRole('article', { name: 'Visual exploration card' }).getByText('Version 2', { exact: true })).toBeVisible();
+  await page.getByLabel('Page details', { exact: true }).click();
   await page.getByText('How this card was prepared', { exact: true }).click();
   await expect(page.getByText('Typed scene and deterministic trace checked.', {exact:true})).toBeVisible();
   await expect(page.getByText('muse-spark-1.3', {exact:true})).toBeVisible();
@@ -218,6 +222,8 @@ test('comparison can advance and save beyond a shorter primary trace', async ({ 
   await expect(page.getByRole('button',{name:'Next step',exact:true})).toBeDisabled();
   await expect(page.getByText('Step 5 / 5',{exact:true})).toBeVisible();
   await expect(page.getByRole('region',{name:'A before B',exact:true})).toContainText('Start: Goal · Goal: Goal');
+  // The journal inspects one search at a time; the second route tab shows the comparison.
+  await page.locator('.exploration-comparison-switch button').nth(1).click();
   await expect(page.getByRole('region',{name:'B before A',exact:true})).toContainText('Start: S · Goal: All reachable nodes');
   await page.getByRole('button',{name:'Save exploration',exact:true}).click();
   await expect(page.getByRole('status').filter({hasText:'Saved this version'})).toBeVisible();
@@ -245,6 +251,7 @@ test('late window permission is released if an earlier sharing session is stoppe
 
 test('exploration deletion requires explicit confirmation and clears its versions without another inference',async({page})=>{
   const {requests}=await setup(page);await example(page);
+  await page.getByLabel('Page details',{exact:true}).click();
   await page.getByRole('button',{name:'Delete exploration',exact:true}).click();
   expect(requests.filter(item=>item.artifactId&&Object.keys(item).length===1)).toHaveLength(0);
   await page.getByRole('button',{name:'Keep exploration',exact:true}).click();
@@ -253,23 +260,26 @@ test('exploration deletion requires explicit confirmation and clears its version
   await page.getByRole('button',{name:'Delete all versions',exact:true}).focus();await page.keyboard.press('Enter');
   await expect(page.getByRole('status').filter({hasText:'Deleted this exploration'})).toBeVisible();
   await expect(page.getByRole('article',{name:'Visual exploration card'})).toHaveCount(0);
-  await expect(page.getByRole('heading',{name:'A question can become an experiment.',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:/Point Soma at something/})).toBeVisible();
   expect(requests.some(item=>item.action==='generate')).toBe(false);
 });
 
 test('a delayed resume cannot overwrite experiment controls changed while it was loading',async({page})=>{
   const {completeResume}=await setup(page,{delayResume:true});await example(page);
+  await page.locator('.journal-explorations-menu summary').click();
   await page.getByRole('button',{name:'Why does A come before B? Version 1',exact:true}).click();
   await page.getByRole('button',{name:'Next step',exact:true}).click();
   await completeResume();
   await expect(page.getByRole('status').filter({hasText:'Kept your newer experiment controls'})).toBeVisible();
   await expect(page.getByRole('list',{name:'First in, first out queue'}).locator('li')).toHaveText(['NextA','2B']);
+  await page.locator('.journal-explorations-menu summary').click();
   await expect(page.getByRole('button',{name:'Why does A come before B? Version 1',exact:true})).toBeEnabled();
 });
 
 test('source-reading uncertainty remains inspectable even when the generated explanation omits that uncertainty',async({page})=>{
   await setup(page,{uncertainSource:true});await example(page);
   await expect(page.getByText('Some source details need review.',{exact:false})).toBeVisible();
+  await page.getByLabel('Page details',{exact:true}).click();
   await page.getByText('Source & assumptions',{exact:true}).click();
   await expect(page.getByRole('heading',{name:'Source reading uncertainty',exact:true})).toBeVisible();
   await expect(page.getByText('The arrow between A and Goal is unclear in this synthetic source.',{exact:true})).toBeVisible();
@@ -294,8 +304,8 @@ test('server actions wait for guest-session initialization while local screensho
 
 test('diagram and question share the desktop viewport and automatic follow-ups retain the selected object',async({page})=>{
  await page.setViewportSize({width:1280,height:720});const h=await setup(page);await example(page);await page.evaluate(()=>window.scrollTo(0,0));
- const graph=await page.locator('.exploration-graph').first().boundingBox(),composer=await page.locator('.exploration-ask-card').boundingBox();expect(graph!.y).toBeLessThan(600);expect(composer!.y).toBeLessThan(250);expect(composer!.x).toBeLessThan(graph!.x);
- await page.getByRole('button',{name:'Node A',exact:true}).click();await expect(page.getByRole('combobox',{name:'Follow-up action'})).toHaveCount(0);
+ const graph=await page.locator('.exploration-graph').first().boundingBox(),composer=await page.locator('.exploration-ask-card').boundingBox();expect(graph!.y).toBeLessThan(600);expect(composer!.y).toBeGreaterThan(graph!.y);expect(composer!.y+composer!.height).toBeLessThanOrEqual(720);
+ await page.getByText('Select a node & inspect graph',{exact:true}).click();await page.getByRole('button',{name:'Node A',exact:true}).click();await expect(page.getByRole('combobox',{name:'Follow-up action'})).toHaveCount(0);
  await page.locator('#exploration-question').fill('Why is this next?');await page.getByRole('button',{name:'Ask Soma',exact:true}).click();await expect.poll(()=>h.requests.filter(item=>item.action==='generate').length).toBe(1);expect(h.requests.find(item=>item.action==='generate')!.intent).toBe('auto');expect(h.requests.find(item=>item.action==='generate')!.selectedObjectId).toBe('a');
 });
 

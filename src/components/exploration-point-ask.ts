@@ -23,6 +23,8 @@ export function useExplorationPointAsk(options: {
   source: (capture: ExplorationCapture) => void;
   submit: (text: string, capture: ExplorationCapture) => Promise<boolean>;
   error: (message: string) => void;
+  /** A question already typed in the composer; when present, pointing uses it instead of voice. */
+  typed?: () => string;
 }) {
   const callbacks = useRef(options);
   callbacks.current = options;
@@ -70,9 +72,14 @@ export function useExplorationPointAsk(options: {
           return;
         }
         if (active.current) feedback(active.current.id, 'cancelled');
+        const typed = callbacks.current.typed?.().trim().slice(0, 1000) ?? '';
         callbacks.current.interrupt();
-        active.current = { id: d.id, ended: false, submitted: false };
+        active.current = { id: d.id, ended: false, submitted: false, ...(typed ? { text: typed } : {}) };
         setSessionId(d.id);
+        if (typed) {
+          setStatus('Point or circle, then release to ask your typed question.');
+          return;
+        }
         setStatus('Listening · circle or point, then release to ask.');
         setCommand({ id: d.id, action: 'start', sequence: ++sequence.current });
         return;
@@ -81,7 +88,7 @@ export function useExplorationPointAsk(options: {
       if (!s || s.id !== d.id) return;
       if (d.type === 'end') {
         s.ended = true;
-        setCommand({ id: d.id, action: 'stop', sequence: ++sequence.current });
+        if (!s.text) setCommand({ id: d.id, action: 'stop', sequence: ++sequence.current });
         setStatus('Preparing your question and selected region…');
         void maybeSubmit(s);
       } else if (d.type === 'cancel') {

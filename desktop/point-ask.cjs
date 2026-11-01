@@ -74,8 +74,15 @@ function createPointAsk({
       }
     }
   }
+  let overlayDisplay = null;
   function draw(payload) {
-    if (overlay && !overlay.isDestroyed()) overlay.webContents.send('point:draw', payload);
+    if (!overlay || overlay.isDestroyed()) return;
+    // macOS may keep the window off the menu bar or otherwise clamp it, so report where it
+    // actually sits relative to the captured display; the renderer compensates.
+    const d = overlayDisplay?.bounds,
+      b = overlay.getBounds?.();
+    const frame = d && b ? { dx: d.x - b.x, dy: d.y - b.y, width: d.width, height: d.height } : null;
+    overlay.webContents.send('point:draw', frame ? { ...payload, frame } : payload);
   }
   function overlayFor(display) {
     if (!overlay) {
@@ -87,6 +94,7 @@ function createPointAsk({
         skipTaskbar: true,
         hasShadow: false,
         alwaysOnTop: true,
+        enableLargerThanScreen: true,
         webPreferences: { ...locked, preload: path.join(__dirname, 'point-preload.cjs') },
       });
       overlay.setIgnoreMouseEvents(true);
@@ -95,6 +103,8 @@ function createPointAsk({
       overlay.webContents.on('will-navigate', (e) => e.preventDefault());
       overlay.loadFile(path.join(__dirname, 'point-overlay.html'));
     }
+    overlayDisplay = display;
+    overlay.setAlwaysOnTop?.(true, 'screen-saver');
     overlay.setBounds(display.bounds);
     overlay.showInactive();
   }

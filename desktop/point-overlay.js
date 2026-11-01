@@ -36,7 +36,7 @@ function renderGraph(m) {
   pointer.style.display = 'none';
   selection.style.display = 'none';
   trail.setAttribute('d', '');
-  const W = innerWidth, H = innerHeight, r = m.radius * W, font = m.font * W,
+  const W = frame.width, H = frame.height, r = m.radius * W, font = m.font * W,
     at = (p) => ({ x: p.x * W, y: p.y * H });
   const now = new Set(), fresh = (key) => { now.add(key); return seen.has(key) ? '' : ' ink-new'; };
   const layer = el('g', { id: 'graph-layer' }, svg);
@@ -98,9 +98,9 @@ function renderGraph(m) {
     note.textContent = 'Esc hides';
     box.append(title, note, document.createTextNode(m.caption.text));
     box.style.fontSize = Math.max(12, m.caption.font * W) + 'px';
-    box.style.left = m.caption.x * W + 'px';
-    if (m.caption.anchor === 'top') box.style.top = m.caption.y * H + 'px';
-    else box.style.bottom = (1 - m.caption.y) * H + 'px';
+    box.style.left = m.caption.x * W + frame.dx + 'px';
+    if (m.caption.anchor === 'top') box.style.top = m.caption.y * H + frame.dy + 'px';
+    else box.style.bottom = innerHeight - (m.caption.y * H + frame.dy) + 'px';
     document.body.appendChild(box);
   }
 }
@@ -116,7 +116,16 @@ document.addEventListener('click', (event) => {
   const edge = event.target?.getAttribute?.('data-edge');
   if (edge) window.somaPointOverlay.toggleEdge(edge);
 });
+// Coordinates are relative to the captured display; the window may sit offset from it.
+let frame = { dx: 0, dy: 0, width: innerWidth, height: innerHeight };
+function applyFrame(event) {
+  frame = event.frame ?? { dx: 0, dy: 0, width: innerWidth, height: innerHeight };
+  svg.style.transform = `translate(${frame.dx}px, ${frame.dy}px)`;
+  svg.style.width = frame.width + 'px';
+  svg.style.height = frame.height + 'px';
+}
 window.somaPointOverlay.onDraw((event) => {
+  applyFrame(event);
   if (event.type === 'graph') return renderGraph(event.model);
   if (event.type === 'graph-clear') {
     clearGraph();
@@ -137,15 +146,15 @@ window.somaPointOverlay.onDraw((event) => {
     for (const a of event.anchors) {
       const r = a.region,
         rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      rect.setAttribute('x', r.x * innerWidth);
-      rect.setAttribute('y', r.y * innerHeight);
-      rect.setAttribute('width', r.width * innerWidth);
-      rect.setAttribute('height', r.height * innerHeight);
+      rect.setAttribute('x', r.x * frame.width);
+      rect.setAttribute('y', r.y * frame.height);
+      rect.setAttribute('width', r.width * frame.width);
+      rect.setAttribute('height', r.height * frame.height);
       rect.setAttribute('class', 'source-reference');
       group.appendChild(rect);
       const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      label.setAttribute('x', Math.max(8, r.x * innerWidth));
-      label.setAttribute('y', Math.max(22, r.y * innerHeight - 8));
+      label.setAttribute('x', Math.max(8, r.x * frame.width));
+      label.setAttribute('y', Math.max(22, r.y * frame.height - 8));
       label.textContent = a.label;
       group.appendChild(label);
     }
@@ -161,18 +170,18 @@ window.somaPointOverlay.onDraw((event) => {
       'd',
       event.path.map((p, i) => `${i ? 'L' : 'M'} ${p.x} ${p.y}`).join(' '),
     );
-    hint.style.left = Math.min(innerWidth - 270, Math.max(8, event.x + 22)) + 'px';
-    hint.style.top = Math.min(innerHeight - 60, Math.max(8, event.y + 22)) + 'px';
+    hint.style.left = Math.min(innerWidth - 270, Math.max(8, event.x + frame.dx + 22)) + 'px';
+    hint.style.top = Math.min(innerHeight - 60, Math.max(8, event.y + frame.dy + 22)) + 'px';
   } else if (event.type === 'focus') {
     pointer.style.display = 'none';
     trail.setAttribute('d', '');
     selection.style.display = '';
     const r = event.region;
-    selection.setAttribute('x', r.x * innerWidth);
-    selection.setAttribute('y', r.y * innerHeight);
-    selection.setAttribute('width', r.width * innerWidth);
-    selection.setAttribute('height', r.height * innerHeight);
-    hint.style.left = Math.min(innerWidth - 270, Math.max(8, r.x * innerWidth)) + 'px';
-    hint.style.top = Math.max(8, r.y * innerHeight - 48) + 'px';
+    selection.setAttribute('x', r.x * frame.width);
+    selection.setAttribute('y', r.y * frame.height);
+    selection.setAttribute('width', r.width * frame.width);
+    selection.setAttribute('height', r.height * frame.height);
+    hint.style.left = Math.min(innerWidth - 270, Math.max(8, r.x * frame.width)) + 'px';
+    hint.style.top = Math.max(8, r.y * frame.height - 48) + 'px';
   }
 });

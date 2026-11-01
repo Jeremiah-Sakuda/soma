@@ -304,6 +304,7 @@ export function ExplorationWorkspace() {
     },
     submit: (text, next) => ask(text, undefined, false, undefined, next),
     error: setError,
+    typed: () => question,
   });
   useEffect(() => {
     let active = true;

@@ -2977,3 +2977,28 @@ PM138: "I also think the description should overlay over the screen that was gra
 1. **Merged deployed main into the demo branch.** `origin/main` (dot journal, latency work, 12 commits) was missing from the spatial branch that the demo branch started from. Resolved code conflicts in `exploration.ts` (spatial/mechanism authoring together with compact continuations), `exploration-review.ts`, `exploration-scene.tsx`, `exploration-workspace.tsx` (dot-journal layout plus the 3D example entry; the geometry-authoring and mechanism-recording buttons were left out of the shortened example list) and the release script. Doc logs were union-merged. The combined scene instructions exceeded the 8,000-character application bound and broke follow-ups (`request_invalid`); the bound is now 12,000 characters and its tests were updated.
 2. **Source-faithful layout and overlay.** Source inspection also returns node centres and printed-weight positions. Checked graphs are laid out like the source and keep that layout across revisions (`source-layout.ts`, tests). The source record stores those coordinates, never pixels. While the capture is still in memory, the graph stage draws the checked trace on the captured slide (`source-overlay.tsx`): settled, current and waiting rings, distance badges, best-so-far and route edges (arcs follow their printed labels), cuts made by clicking a connection on the slide, cost changes shown over the printed weight, and a caption that follows the visible trace. After a learner change the caption states only the computed result. A toggle switches back to the diagram. Reduced motion and phone fallbacks are included.
 3. **Live UI rehearsal (local, live inference, Wonder review on).** Upload → ask → generation in under 30 s with "Wonder reviewed" shown; layout matches the slide; stepping shows rings and tree edges; cutting D–F on the slide gives "Checked route: A → C → E → F, cost 9"; Find the tipping point returned the A–F boundary at 7; the slider at 6 moves the route onto the A–F arc with an 11 → 6 label. Offline suite 1,732 passed / 103 skipped; typecheck passed. Not yet done: hosted deployment, engine hosting, script rewrite, native Point & ask with the overlay, final video.
+
+## PM139–PM150 — North Star references, native on-screen overlay, review loop (November 1)
+
+Prompts PM139–PM150 are archived verbatim. Decisions: [DECISIONS.md PM139–PM143](DECISIONS.md). They cover two reference videos, the native overlay, being on camera, translucency, multi-step approved control, frequent commits, a subagent review loop, full computer access, matching the references directly and working without sound.
+
+1. **The search drawn on the real screen.**
+   - The Mac companion mirrors the overlay over the captured window after a region-match check. The shared normalized model in `source-overlay-model.ts` drives both the page and the native renderers.
+   - Coordinate fixes found on the real screen: macOS clamped the overlay window, so its offset is now measured in the renderer at draw time.
+   - Follow-up reuse could pair an old layout with a new capture; this was diagnosed and the overlay is now bound to its capture.
+   - Location fixes: positions are re-located in a closer crop when the slide is small, and every node is snapped onto the drawn circles with a deterministic mean-shift (`node-snap.ts`, tested on a synthetic slide).
+   - The companion is translucent, and Point & ask accepts a typed question for silent use.
+2. **The reference visual language,** iterated through two experience reviews:
+   - computed tags with leader lines, ① to ⑥ settle order and quiet dashed tentative tags ("F ≤ 11");
+   - the relaxation equation on its edge ("4 + 3 = 7 < 11") with the beaten route struck, replayed on the final frame;
+   - thin highlighter strokes with staggered ink-on, hand-drawn loops, a compact caption and tags placed away from slide content.
+
+   Verified live over Preview through repeated silent gestures. The final frame aligns on every node.
+3. **Review loop.**
+   - Code review: round 1 scored 6/10, with eleven defects fixed (lifecycle, Escape, refusals, captions, validator); round 2 scored 6/10, with budget, stale-overlay, text-bound, sanity-check and approval-verb fixes.
+   - Experience review: round 1 scored 5/10; round 2 scored 5/10, and its restraint, notation and "aha" annotation changes are applied.
+   - Judge review: 67/100, after which copy overclaims and event-scope wording were fixed, the Wonder receipt was published and a one-click Lecture 14 example was added.
+   - Multi-step approved computer control was built by a worktree agent and merged.
+   - Tests: 1,740 offline passed / 103 skipped, 42 desktop, typecheck passed. Live Meta spend for today's rehearsals is within the $40 cap.
+
+Not yet done: a third review round against the latest frames, production deployment of these changes, a signed companion build, the script update for on-camera beats and the final video.

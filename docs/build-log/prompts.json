@@ -1612,6 +1612,55 @@
       "question_context": "How far should computer control go before Nov 4?",
       "prompt": "Multi-step, still approved",
       "timestamp_note": "Exact received timestamp unavailable; recorded November 1, 2026 America/New_York. Answer given through the question tool."
+    },
+    {
+      "id": "PM144",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "I just don’t think the drawing is on par with my vision yet",
+      "timestamp_note": "Exact received timestamp unavailable; recorded November 1, 2026 America/New_York."
+    },
+    {
+      "id": "PM145",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "@\"/Users/jerem/.claude/uploads/1adcd50a-4ae8-4b77-b1a0-7be1aad1dada/325a5cf3-ScreenRecording_11-01-2026_03-40-04_1.mp4\" Another reference video",
+      "timestamp_note": "Exact received timestamp unavailable; recorded November 1, 2026 America/New_York."
+    },
+    {
+      "id": "PM146",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Commit frequently by the way",
+      "timestamp_note": "Exact received timestamp unavailable; recorded November 1, 2026 America/New_York."
+    },
+    {
+      "id": "PM147",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Have subagents audit the quality of your work when you’re done and iterate based on their feedback. Do this in a loop until quality reviews are consistently good",
+      "timestamp_note": "Exact received timestamp unavailable; recorded November 1, 2026 America/New_York."
+    },
+    {
+      "id": "PM148",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "You should have access to everything now",
+      "timestamp_note": "Exact received timestamp unavailable; recorded November 1, 2026 America/New_York."
+    },
+    {
+      "id": "PM149",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Just use the reference videos",
+      "timestamp_note": "Exact received timestamp unavailable; recorded November 1, 2026 America/New_York."
+    },
+    {
+      "id": "PM150",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Can you iterate without sound for now",
+      "timestamp_note": "Exact received timestamp unavailable; recorded November 1, 2026 America/New_York."
     }
   ]
 }

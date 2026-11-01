@@ -1,6 +1,6 @@
 # Soma — submission copy
 
-PM129 · November 1, 2026. Ready-to-edit copy for the event form; exact form fields/length limits have not been confirmed. Current repository: Jeremiah-Sakuda/soma. This draft does not publish or submit anything.
+PM132 · November 1, 2026. Supersedes the PM129 draft (kept in git history). Ready-to-edit copy for the Cerebral Valley form; exact field limits are unconfirmed. This draft does not publish or submit anything.
 
 ## Project name
 
@@ -8,86 +8,85 @@ Soma
 
 ## Tagline
 
-Turn what you’re studying into something you can explore.
+Turn what you're studying into something you can explore.
 
 ## One sentence
 
-Soma uses Meta’s Muse models to turn selected material and a question into an interactive visual explanation that you can manipulate, investigate and revisit.
+Soma uses Meta's Muse models to turn the slide you're studying into a live, checked experiment drawn right on top of it: cut a connection, find the tipping point, ask why.
 
 ## Short description
 
-Soma brings interactive explanations to the material you are already studying. Muse interprets the source, composes the visual and helps choose what to investigate. Change a connection, inspect a mechanism or ask about the consequence. Supported graph results are computed by Soma, and explorations can be saved and revisited.
+Point Soma at a lecture slide and ask a question. Muse Spark reads every node and weight, and Soma runs the real algorithm directly on your captured slide, drawing each step, distance and route over it. Cut a connection on the slide and the route changes instantly. Ask for the tipping point and Muse picks the experiment while Soma proves the exact answer. Muse Wonder checks every explanation against the computed result before you see it.
 
 ## Main description
 
-A lecture diagram gives you one example. The question you want to ask is often more specific: “What if I change this?” Getting from that question to an experiment can mean rebuilding the example in another tool or finding a demonstration that happens to match.
+Every student knows the moment: a slide shows one worked example, and your real question is a different one. What if this edge weren't there? Why doesn't it take the direct route? Getting from that question to an answer you trust usually means redrawing the example in another tool, or asking a chatbot that may confidently get the numbers wrong.
 
-Soma’s opportunity is to reduce that setup. It is a visual learning companion that starts with selected material and a question, then uses Meta’s Muse models to create an explanation you can explore.
+Soma makes the slide itself the experiment. Capture your screen or upload a screenshot and ask. Muse Spark reads the source into a typed graph, including where each node and printed weight sits. Soma's own solver runs Dijkstra or BFS, and the result is drawn over your capture: settled and waiting vertices, tentative distances, the route along the slide's own edges.
 
-The working graph workflow makes the idea concrete. Muse Spark interprets a screenshot and composes the visual explanation. Soma independently computes supported BFS and Dijkstra results. Change a connection or cost, inspect the consequence, ask a contextual follow-up and reopen a saved revision. The current experiment carries into the explanation.
+Then you experiment. Click a connection on the slide to cut it and Soma recomputes at once, with no model call. Choose **Find the tipping point** and Muse decides which connection is most revealing to test; Soma establishes exactly where the answer flips, and dragging the cost moves the route on the slide. Ask why, by voice or text, and the answer addresses the experiment you're running. Before any explanation reaches you, Muse Wonder reviews it against Soma's computed trace and sends mistakes back for repair. Explorations save and reopen, and Soma can generate a fresh problem from the same idea with the answer hidden.
 
-We also explored a more expressive visual direction: an engine cutaway whose vector artwork, teaching copy and investigation choices were authored by Muse. In this recorded local prototype, Spark selects revealing comparisons or a part inspection; Soma validates the data and supplies constrained motion. A study export preserves the actual prepared question, visual action and explanation.
-
-The potential is a shorter path from encountering a difficult idea to investigating it. For students and independent learners, Soma could bring explorable explanations to their own examples without rebuilding each one from scratch. The graph product demonstrates the existing exploration loop; the engine prototype explores how rich model-authored explanations could become.
+The model chooses how to read, explain and investigate. The code proves the answer.
 
 ## Impact and problem-statement fit
 
 **Track:** Indie Developer / Build for Your World.
 
-**Who could benefit:** students and independent learners working with diagrams, algorithms and technical explanations.
+**Who it's for:** students and independent learners working through algorithms and other diagram-heavy material, starting with graph search, a topic every computing student meets.
 
-**Why it matters:** the setup needed to make an example explorable interrupts the question that prompted it. Soma could reduce that translation and reconstruction work, giving people a useful way to investigate the material already in front of them.
+**Why it matters:** the questions that build understanding are "what if" questions, and static slides can't answer them. Soma removes the reconstruction step between a slide and an experiment, and it gives answers a learner can trust because the numbers are computed rather than generated.
 
-**What makes the potential credible:** the demo shows an actual source becoming a controllable explanation, a change producing a visible consequence, model-guided investigation and a result the user can keep. Those tangible capabilities make the proposed benefit visible: a question can become an investigation the user controls and keeps.
+**Why it's credible:** the demo is one continuous live run on an original slide. The source becomes a controllable experiment, each change has a computed consequence, the model makes a visible decision, and the result can be kept and practiced. No study or adoption figures are claimed; the potential is shown through a working capability.
 
 ## Creative use of Meta tooling
 
-Muse contributes to the explanation’s structure and investigation, as well as its words.
+- **Muse Spark 1.3:** reads the captured slide into a typed graph with node and label positions; composes the explanation and its steps; chooses which connection to test for the tipping point; answers follow-ups about the current experiment.
+- **Muse Wonder 1.0:** reviews each explanation against Soma's computed trace and returns concrete findings that Spark repairs. In a retained live run it caught a step claiming two vertices settled at once.
+- **Muse Voice Transcribe 1.0:** spoken questions in the browser and the Mac companion's Point & ask.
 
-- **Muse Spark 1.3:** interprets selected screenshots, composes source-bound visuals, selects informative graph interventions when requested and writes contextual revisions. In the engine prototype, actual recorded Spark responses authored vector paths/refinements and selected visual actions for three prepared questions.
-- **Muse Wonder 1.0:** provides advisory review of generated explanations or artifacts. Retained outputs show real findings and repairs; approval is not a guarantee of scientific correctness.
-- **Muse Voice Transcribe 1.0:** supports spoken questions in the existing companion. Spoken input is optional to the visual workflow.
-
-Soma validates bounded model data and controls what it can affect. Supported graph paths/costs come from code; the engine uses illustrative constrained motion. Model calls, source identity and recorded/live status are inspectable. Optional spoken playback uses the configured speech provider; Muse authors the explanation.
+The models decide; the application constrains. Spark's output is validated against strict schemas, the solver alone produces routes and costs, and every model call, source reading and review is visible under **How Muse made this**.
 
 ## Technical execution
 
-The project combines multimodal source interpretation, typed visual composition, independently checked graph computation, interruptible manipulation/playback and owned versioned persistence. Contextual revisions preserve the effective experiment and source lineage. The engine’s recorded guidance and exports are bound to the actual source/film/author artifacts; changed artifacts cannot silently inherit old provenance. Spend and retries are application-bounded.
-
-A fresh original-synthetic service journey demonstrated generation, an edge intervention, contextual revision and exact Firestore reopen. Earlier unsuccessful outcomes are retained. This is concrete development evidence, not a reliability percentage or hosted-UI acceptance claim.
+- Multimodal source reading into a validated graph, with deterministic repairs for underspecified details (for example, an incomplete neighbor order) recorded as assumptions.
+- Independent BFS/Dijkstra solver and exact cost-boundary probe; learner changes (cut edges, costs, start, goal) recompute locally.
+- A source-anchored overlay that draws the checked trace on the learner's own capture. Coordinates are stored; screenshot pixels are not.
+- Wonder review with bounded repair, application-enforced spend caps and retries, owned versioned persistence with exact reopen.
+- 1,700+ automated tests plus opt-in live-provider journeys; the hero journey's live runs, including retained failures, are logged in `docs/BUILD_LOG.md`.
 
 ## Built during the event
 
-Event work includes the visual-exploration workflow, checked graph engines/interventions, generated explanatory scenes, contextual revisions/persistence, companion capture/voice interactions and the recorded spatial/engine experiments. The canonical repository retains the original histories and identifies third-party components in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). The dated build log identifies event implementation and release status alongside the archived planning and third-party notices.
+All product code was written between October 26 and November 4, 2026. The dated build log (`docs/BUILD_LOG.md`) and verbatim prompt archive (`docs/build-log/prompts.json`) record every step, including the November 1 work on the hero journey, source overlay and engine lab. Pre-event material is limited to planning documents in the first commit. Third-party components are listed in `THIRD_PARTY_NOTICES.md`.
 
 ## What works now and what comes next
 
-**Working product:** selected-context interpretation, supported checked graph experiments, explanatory visuals, contextual follow-ups and saved revisions. The native companion and newer source features have separate release/device verification records.
+**Working product:** screenshot or screen capture → checked graph search drawn on the source → cut, re-cost and probe → contextual follow-up with Wonder review → save, reopen and fresh practice. Prepared examples and a 3D view of the same checked search are included.
 
-**Recorded local exploration:** the Muse-authored engine, prepared model-selected investigations and standalone study exports. Generic live engine generation/follow-up/cloud saving is not integrated into the canonical product.
+**Soma lab:** a recorded Muse run in which Spark drew and explained a four-stroke engine and chose which comparisons to show. It replays without a model call; live engine generation is not part of the product yet.
 
-**Opportunity ahead:** connect richer visual explanations to the same exploration workflow, extend checked subjects with appropriate validation, and investigate usefulness with learners. This describes potential and future work, not a new release commitment.
+**Next:** more checked subjects, each with its own solver, and richer source-anchored visuals.
 
 ## Project links
 
-- Canonical repository:[Jeremiah-Sakuda/soma](https://github.com/Jeremiah-Sakuda/soma). Currently private; publication requires the user’s separate authorization.
-- Existing browser product:[Soma Explore](https://soma-woad-beta.vercel.app/explore). Recheck the clean judge path against the final release before submitting.
-- macOS distribution: choose the verified signed release from the canonical repository at final release review. Do not infer that the older binary contains all newer source features.
-- Demo video:pending final recording/edit/upload. Insert its actual accessible URL after completion.
+- Live app: https://soma-woad-beta.vercel.app/explore
+- Demo slide: `public/examples/lecture-14-dijkstra.png`
+- Soma lab engine: https://soma-woad-beta.vercel.app/lab/engine/index.html
+- Repository: https://github.com/Jeremiah-Sakuda/soma (to be made public before submission)
+- Demo video: pending
 
 ## Short answers for judges
 
-**What is the potential impact?**
-Soma could reduce the work between a question about a diagram and a useful way to test it. The opportunity is bringing interactive explanations to the learner’s own material, at the moment they want to explore.
-
 **What did Muse actually decide?**
-In the graph product it interprets the source and composes the explanation; supported experiment selection is visible in the model record. In the engine study it chose90°/450° and270°/630° comparisons and a450° connecting-rod inspection for exact prepared questions. Those decisions and explanations are retained actual outputs.
+How to read the slide, how to explain each step, and which connection to test for the tipping point (it chose the direct A–F edge). Wonder decided whether each explanation matched the computed trace.
 
-**What does “checked” mean?**
-Soma computes supported graph results from the interpreted input. It does not make all screenshot readings infallible or turn every explanatory illustration into a quantitative simulation.
+**What does "checked" mean?**
+Routes, distances and the tipping point come from Soma's solver, run on the graph Spark read. If the reading is wrong, the source panel shows what was read and its assumptions; the computation itself is never generated.
 
-**Is the engine generated live in the product?**
-The engine shown is a recorded local prototype of Muse-authored art and investigation. It demonstrates that expressive direction; canonical graph generation/revision/saving is a separate working workflow.
+**Is this an AI-for-education chatbot?**
+No. The answer is an experiment you manipulate on your own material, with computed results and an explanation that follows your changes.
+
+**Is the engine generated live?**
+No. It is a recorded Muse run in the Soma lab, labelled as such.
 
 **Have you measured learning gains?**
-No. We are demonstrating a working capability and its plausible benefit at hackathon scale. The potential is easier access to exploration of a learner’s own examples; any later learning or time-saving claims would need their own evidence.
+No. We demonstrate the capability and its potential; learning outcomes would need their own study.

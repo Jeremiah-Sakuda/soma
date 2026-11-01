@@ -1,0 +1,20 @@
+:root{font:13px -apple-system,system-ui,sans-serif;color:#24221f;--paper:rgb(250 247 240 / .62);--line:rgb(0 0 0 / .12);--accent:#ff7a3d;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{color:#f2efe8;--paper:rgb(36 34 31 / .55);--line:rgb(255 255 255 / .14)}}
+*{box-sizing:border-box}html,body{margin:0;background:transparent;overflow:hidden;-webkit-user-select:none}
+body{padding:6px 8px;-webkit-app-region:drag}
+form{display:flex;align-items:center;gap:6px;height:46px;padding:0 6px 0 14px;border-radius:23px;background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 30px rgb(0 0 0 / .18)}
+.mark{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent);flex:none}
+body.busy .mark{animation:pulse 1.1s ease-in-out infinite}@keyframes pulse{50%{transform:scale(.6);opacity:.6}}
+@media (prefers-reduced-motion:reduce){body.busy .mark{animation:none;opacity:.6}}
+input{flex:1;min-width:0;height:34px;border:0;background:transparent;font:inherit;font-size:15px;color:inherit;outline:none;-webkit-app-region:no-drag;-webkit-user-select:text}
+input::placeholder{color:color-mix(in srgb,currentColor 50%,transparent)}
+button{-webkit-app-region:no-drag;font:inherit;font-size:12px;height:30px;padding:0 10px;border-radius:15px;border:1px solid var(--line);background:color-mix(in srgb,var(--paper) 70%,white 30%);color:inherit;cursor:pointer;flex:none}
+button:hover{background:color-mix(in srgb,currentColor 10%,transparent)}button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button:disabled{opacity:.45;cursor:default}
+#test{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+#fresh[aria-pressed=true]{background:var(--accent);color:white;border-color:var(--accent)}
+.steps{display:flex;align-items:center;gap:3px}.steps button{width:30px;padding:0}#step{font-variant-numeric:tabular-nums;font-size:11px;min-width:3.6em;text-align:center;opacity:.8}
+#expand{width:30px;padding:0}
+#status{margin:4px 18px 0;font-size:11px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:color-mix(in srgb,currentColor 72%,transparent);text-shadow:0 1px 2px rgb(255 255 255 / .5)}
+@media (prefers-color-scheme:dark){#status{text-shadow:0 1px 2px rgb(0 0 0 / .6)}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}

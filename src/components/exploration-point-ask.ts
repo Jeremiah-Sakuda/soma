@@ -72,7 +72,10 @@ export function useExplorationPointAsk(options: {
           return;
         }
         if (active.current) feedback(active.current.id, 'cancelled');
-        const typed = callbacks.current.typed?.().trim().slice(0, 1000) ?? '';
+        // The compact ask bar sends its typed question with the gesture; otherwise use the composer.
+        const typed = (typeof d.text === 'string' ? d.text : (callbacks.current.typed?.() ?? ''))
+          .trim()
+          .slice(0, 1000);
         callbacks.current.interrupt();
         active.current = { id: d.id, ended: false, submitted: false, ...(typed ? { text: typed } : {}) };
         setSessionId(d.id);

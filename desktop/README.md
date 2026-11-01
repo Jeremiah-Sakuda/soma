@@ -27,6 +27,13 @@ Only loopback HTTP overrides are allowed in development; packaged builds lock to
 The smoke script launches real Electron with an original local HTML fixture; it checks screenshot delivery without OS capture or provider calls. See `docs/DESKTOP.md` for current verification evidence and open gates. The upload adapter deliberately targets the existing labeled file input. Keep that integration check when editing source setup.
 
 
+## Compact ask bar
+
+**Compact** in the toolbar, **Soma → Compact ask bar**, or **Option+Space** (Command+Option+Space if another launcher owns Option+Space) swaps the panel for a small translucent bar near the bottom of the screen. Type a question and press Return: Soma takes one snapshot of the display under the pointer, with its own windows left out, and the checked search is drawn over your screen by the same overlay as Point & ask. Pressing Return is the consent to send that snapshot; nothing is captured before it.
+
+Once something is drawn, Return asks a follow-up about it without a new snapshot; **New snapshot** (⌘N) captures again for the next question. **Test it** (⌘Return) asks Muse to pick the connection your question is about and Soma computes where the route changes. The step arrows and ▶ move through the drawn search and play the narration. Esc hides the bar (the drawing owns Esc while it is shown); ⤢ opens the full panel. The hosted page keeps running in the hidden panel.
+
+
 ## Developer ID release phases
 
 The separate signed release copy is under `.local/desktop-release/Soma-darwin-arm64/Soma.app`. `npm run release --prefix desktop -- --sign-only` packages and signs without uploading. `npm run release --prefix desktop -- --notarize-only` reuses that signed bundle, accesses only the named Keychain profile, submits to Apple, staples/validates the result and checks Gatekeeper before generating `.local/desktop-release/Soma-macOS-arm64.zip`. Default profile is `soma-notary`; use SOMA_NOTARY_PROFILE to select another. A sole Developer ID identity is selected automatically; multiple identities require SOMA_SIGNING_IDENTITY. The public distribution archive is only created after all checks pass. Keep Apple passwords and private keys in Keychain; none belongs in this repository or chat.

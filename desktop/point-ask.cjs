@@ -151,8 +151,59 @@ function createPointAsk({
     clearTimers();
     hideOverlay();
     if (previous) send({ type: 'cancel', id: previous.id, message: reason });
-    if (show) showPanel();
+    // A compact-mode question keeps the panel hidden; its status goes to the ask bar.
+    if (show && !previous?.compact) showPanel();
     status(reason);
+  }
+  /** Compact mode: one snapshot of the display the pointer is on, sent with a typed question.
+   * Soma's own windows are left out of the snapshot; the panel stays hidden and the checked
+   * search is drawn over the screen as usual. */
+  async function askTyped(text) {
+    const question = typeof text === 'string' ? text.trim().slice(0, 1000) : '';
+    if (!question) return false;
+    if (!available()) {
+      status('Soma is still loading. Try again in a moment.');
+      return false;
+    }
+    stop('', false);
+    overlayCapture = null;
+    refused = null;
+    clearGraph();
+    overlay?.hide();
+    const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+    const s = { id: randomUUID(), display, phase: 'preparing', points: [], compact: true };
+    current = s;
+    send({ type: 'begin', id: s.id, text: question });
+    status('Taking one snapshot of this screen…');
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      const snapshot = await captureClean(display);
+      if (current !== s) return false;
+      lastCapture = { id: s.id, snapshot, display, expires: Date.now() + 120000, compact: true };
+      overlayCapture = { ...lastCapture, expires: Date.now() + OVERLAY_RETENTION_MS };
+      const held = lastCapture;
+      clearTimeout(lastCaptureTimer);
+      lastCaptureTimer = setTimeout(() => {
+        if (lastCapture === held) lastCapture = null;
+      }, 120000);
+      send({
+        type: 'source',
+        id: s.id,
+        ...snapshot,
+        focus: { kind: 'circle', region: { x: 0, y: 0, width: 1, height: 1 } },
+        canPointBack: true,
+      });
+      send({ type: 'end', id: s.id });
+      status('Muse is reading your screen…');
+      return true;
+    } catch {
+      if (current === s) stop('Capture failed. Check Screen Recording permission for Soma.', false);
+      return false;
+    }
+  }
+  /** True while a checked search is drawn over the screen. */
+  function hasDrawing() {
+    return Boolean(graph?.verified);
   }
   function sample() {
     const s = current;
@@ -461,16 +512,17 @@ function createPointAsk({
       if (verifying) return; // the latest model is drawn once verification finishes
       verifying = true;
       let ok = false;
-      hideForHighlight();
+      // A compact-mode snapshot left Soma's windows out; check the same way, panel unopened.
+      if (!c.compact) hideForHighlight();
       try {
         await new Promise((r) => setTimeout(r, 120));
-        const fresh = await captureImage(c.display);
+        const fresh = c.compact ? await captureClean(c.display) : await captureImage(c.display);
         ok = compareRegion(c.snapshot.dataUrl, fresh.dataUrl, overlayRegion(graph.model));
       } catch {
         ok = false;
       } finally {
         verifying = false;
-        if (overlayCapture === c && !current) showPanel();
+        if (overlayCapture === c && !current && !c.compact) showPanel();
       }
       if (overlayCapture !== c || graph?.id !== c.id) return;
       if (!ok) {
@@ -521,6 +573,8 @@ function createPointAsk({
   return {
     enable,
     disable,
+    askTyped,
+    hasDrawing,
     clearScreenOverlay,
     markStale,
     stop,

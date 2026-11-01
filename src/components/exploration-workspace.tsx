@@ -297,6 +297,15 @@ export function ExplorationWorkspace() {
     currentCapturedAt: string;
     previous: ExplorationCapture;
   } | null>(null);
+  const compactAction = useRef<(d: { action: string; text?: string }) => void>(() => {});
+  useEffect(() => {
+    const handle = (event: Event) => {
+      const d = (event as CustomEvent).detail;
+      if (d && typeof d.action === 'string') compactAction.current(d);
+    };
+    window.addEventListener('soma:compact', handle);
+    return () => window.removeEventListener('soma:compact', handle);
+  }, []);
   const pointAsk = useExplorationPointAsk({
     ready: initialized && liveEnabled !== false,
     interrupt: () => {
@@ -843,6 +852,37 @@ export function ExplorationWorkspace() {
   const earlierVersion =
     artifact &&
     versions.some((item) => item.id === artifact.id && item.version > artifact.version);
+  // Compact mode: the companion's ask bar drives follow-ups, investigations, steps and
+  // playback on the current exploration, and shows a one-line status from here.
+  compactAction.current = (d: { action: string; text?: string }) => {
+    const text = typeof d.text === 'string' ? d.text.trim().slice(0, 1000) : '';
+    if (d.action === 'ask' && text) void ask(text);
+    else if (d.action === 'investigate')
+      void ask(
+        text ||
+          'Choose an informative connection and investigate where fewest edges and lowest cost agree or diverge. Use the checked intervention results to explain the boundary, preserve the original graph and expose a hypothetical cost control.',
+        undefined,
+        true,
+      );
+    else if ((d.action === 'next' || d.action === 'previous') && artifact && state) {
+      const run = explorationExecution(artifact.spec, state);
+      const last = Math.max(0, (run?.steps.length ?? 1) - 1);
+      updateState({ ...state, step: Math.max(0, Math.min(last, state.step + (d.action === 'next' ? 1 : -1))) });
+    } else if (d.action === 'play' && artifact) setPlaying(!playing);
+  };
+  const compactRun = artifact && state ? explorationExecution(artifact.spec, state) : null;
+  const compactStatus = JSON.stringify({
+    busy: busy || sourceBusy,
+    visual: !!artifact,
+    step: compactRun ? Math.min(state!.step, compactRun.steps.length - 1) : null,
+    steps: compactRun ? compactRun.steps.length - 1 : null,
+    playing,
+    message: error || pointAsk.status || '',
+    investigable: artifact?.spec.mode === 'checked-dijkstra' && !!state?.goal && liveEnabled !== false,
+  });
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('soma:compact-state', { detail: JSON.parse(compactStatus) }));
+  }, [compactStatus]);
   const versionHistory =
     artifact && versions.length > 1 ? (
       <div className="exploration-version-row">

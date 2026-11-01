@@ -2,7 +2,7 @@ const status = document.getElementById('status');
 window.somaControls.onStatus((message) => {
   status.textContent = message;
 });
-for (const action of ['point', 'capture', 'pin', 'hide', 'reload', 'permission']) {
+for (const action of ['point', 'capture', 'compact', 'pin', 'hide', 'reload', 'permission']) {
   const button = document.getElementById(action);
   button.addEventListener('click', async () => {
     button.disabled = true;

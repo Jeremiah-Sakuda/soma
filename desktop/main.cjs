@@ -24,6 +24,9 @@ const {
 } = require('./policy.cjs');
 const origin = appOrigin(process.env.SOMA_DESKTOP_URL, app.isPackaged);
 const toolbarURL = pathToFileURL(path.join(__dirname, 'toolbar.html')).href;
+const compactURL = pathToFileURL(path.join(__dirname, 'compact.html')).href;
+let bar = null,
+  compactShortcut = null;
 let win,
   view,
   quitting = false,
@@ -40,6 +43,60 @@ const locked = {
 };
 function status(message) {
   if (win && !win.isDestroyed()) win.webContents.send('desktop:status', message);
+  if (bar && !bar.isDestroyed()) bar.webContents.send('compact:status', message);
+}
+/** Compact mode: a small translucent ask bar instead of the panel. Questions are typed;
+ * the checked search is drawn over the screen by the existing overlay. The hosted page
+ * keeps running in the hidden panel. */
+function compactBar() {
+  if (bar && !bar.isDestroyed()) return bar;
+  bar = new BrowserWindow({
+    width: 680,
+    height: 86,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    skipTaskbar: true,
+    hasShadow: false,
+    alwaysOnTop: true,
+    show: false,
+    title: 'Soma ask bar',
+    webPreferences: { ...locked, preload: path.join(__dirname, 'compact-preload.cjs') },
+  });
+  bar.setAlwaysOnTop(true, 'floating');
+  bar.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  bar.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  bar.webContents.on('will-navigate', (event) => event.preventDefault());
+  bar.on('closed', () => {
+    bar = null;
+  });
+  // Leaving the bar for another app may change the slide; the next drawn step re-checks it.
+  bar.on('blur', () => pointAsk?.markStale());
+  void bar.loadURL(compactURL);
+  return bar;
+}
+function enterCompact() {
+  const b = compactBar();
+  const wa = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea;
+  const { width, height } = b.getBounds();
+  b.setBounds({ x: Math.round(wa.x + (wa.width - width) / 2), y: Math.round(wa.y + wa.height - height - 28), width, height });
+  if (win.isVisible()) win.hide();
+  // The page keeps working while hidden; its narration stays audible in compact mode.
+  view.webContents.setAudioMuted(false);
+  b.show();
+  b.focus();
+  b.webContents.send('compact:focus');
+}
+function leaveCompact() {
+  bar?.hide();
+  show();
+  view.webContents.setAudioMuted(false);
+}
+function trustedBar(event) {
+  return Boolean(bar && !bar.isDestroyed() && event.sender === bar.webContents && event.senderFrame?.url === compactURL);
 }
 function pause() {
   view?.webContents.send('desktop:pause');
@@ -91,6 +148,7 @@ async function snapshotDisplay(display) {
 async function capture() {
   computerControl?.stop('Computer task ended.');
   if (capturing) return;
+  bar?.hide();
   // Never photograph Soma's own drawing as part of the next slide.
   pointAsk?.clearScreenOverlay();
   if (!trustedPage(view.webContents.getURL(), origin)) {
@@ -241,11 +299,12 @@ else {
       hideForHighlight: () => win.hide(),
       // Leaves the panel out of a check's capture without hiding it from the learner.
       excludePanel: async (fn) => {
-        win.setContentProtection(true);
+        const windows = [win, bar].filter((w) => w && !w.isDestroyed());
+        for (const w of windows) w.setContentProtection(true);
         try {
           return await fn();
         } finally {
-          if (!win.isDestroyed()) win.setContentProtection(false);
+          for (const w of windows) if (!w.isDestroyed()) w.setContentProtection(false);
         }
       },
       highlightResult: (payload) =>
@@ -292,6 +351,46 @@ else {
             : {}),
         });
     });
+    ipcMain.handle('compact:ask', async (event, payload) => {
+      if (!trustedBar(event)) throw new Error('Untrusted ask bar.');
+      const text = typeof payload?.text === 'string' ? payload.text.trim().slice(0, 1000) : '';
+      if (!trustedPage(view.webContents.getURL(), origin))
+        return { ok: false, message: 'Soma is still loading. Try again in a moment.' };
+      computerControl?.stop('Computer task ended.');
+      if (payload?.mode === 'snapshot') {
+        if (!text) return { ok: false, message: 'Type a question first.' };
+        if (process.platform === 'darwin' && systemPreferences.getMediaAccessStatus('screen') === 'denied')
+          return { ok: false, message: 'Allow Soma under Screen & System Audio Recording, then reopen Soma.' };
+        const ok = await pointAsk.askTyped(text);
+        return { ok, message: ok ? 'Muse is reading your screen…' : 'Soma could not take a snapshot. Try again.' };
+      }
+      if (payload?.mode === 'investigate' || payload?.mode === 'followup') {
+        if (payload.mode === 'followup' && !text) return { ok: false, message: 'Type a question first.' };
+        view.webContents.send('desktop:compact', { action: payload.mode === 'investigate' ? 'investigate' : 'ask', text });
+        return { ok: true, message: payload.mode === 'investigate' ? 'Muse is choosing what to test…' : 'Muse is answering…' };
+      }
+      throw new Error('Unknown ask mode.');
+    });
+    ipcMain.handle('compact:control', async (event, action) => {
+      if (!trustedBar(event)) throw new Error('Untrusted ask bar.');
+      if (['previous', 'next', 'play'].includes(action)) view.webContents.send('desktop:compact', { action });
+      else if (action === 'hide') bar?.hide();
+      else if (action === 'expand') leaveCompact();
+      else throw new Error('Unknown control.');
+      return true;
+    });
+    ipcMain.on('desktop:compact-state', (event, payload) => {
+      if (!trusted(event) || !bar || bar.isDestroyed() || !payload || typeof payload !== 'object') return;
+      bar.webContents.send('compact:state', {
+        busy: payload.busy === true,
+        visual: payload.visual === true,
+        step: Number.isInteger(payload.step) ? payload.step : null,
+        steps: Number.isInteger(payload.steps) ? payload.steps : null,
+        playing: payload.playing === true,
+        investigable: payload.investigable === true,
+        message: typeof payload.message === 'string' ? payload.message.slice(0, 240) : '',
+      });
+    });
     ipcMain.handle('desktop:action', async (event, action) => {
       if (!trusted(event, true)) throw new Error('Untrusted desktop control.');
       if (['point','capture','hide','reload'].includes(action)) computerControl?.stop('Computer task ended.');
@@ -312,6 +411,7 @@ else {
         pointAsk.stop('');
         await capture();
       } else if (action === 'hide') dismiss();
+      else if (action === 'compact') enterCompact();
       else if (action === 'reload') {
         pointAsk.stop('Point & ask cancelled.');
         revision++;
@@ -336,6 +436,16 @@ else {
         );
     });
     shortcutOK = globalShortcut.register('CommandOrControl+Shift+Space', () => void capture());
+    // Option-Space toggles the ask bar; fall back if another launcher already owns it.
+    const toggleBar = () => {
+      if (bar?.isVisible() && bar.isFocused()) bar.hide();
+      else enterCompact();
+    };
+    for (const accelerator of ['Alt+Space', 'CommandOrControl+Alt+Space'])
+      if (globalShortcut.register(accelerator, toggleBar)) {
+        compactShortcut = accelerator;
+        break;
+      }
     Menu.setApplicationMenu(
       Menu.buildFromTemplate([
         {
@@ -350,6 +460,10 @@ else {
             },
             { label: 'Apply to selected app (⌘⇧A)', click: () => void computerControl.start() },
             { label: 'Capture current display', click: () => void capture() },
+            {
+              label: `Compact ask bar${compactShortcut === 'Alt+Space' ? ' (⌥Space)' : compactShortcut ? ' (⌘⌥Space)' : ''}`,
+              click: () => enterCompact(),
+            },
             {
               label: 'Screen recording permission…',
               click: () =>

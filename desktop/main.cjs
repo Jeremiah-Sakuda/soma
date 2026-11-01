@@ -428,6 +428,7 @@ else {
             status(`Drawn on your screen. Ask a follow-up${compactState?.investigable ? ', ⌘↩ tests it' : ''}, Esc clears.`);
           else if (payload.dismissed) status('Cleared. Return asks with a new snapshot; Esc hides the bar.');
           else if (payload.reason === 'invalid') status('This answer can’t be drawn on your screen. Open it with ⤢.');
+          else if (payload.reason === 'changed') status('Your slide changed, so Soma took the drawing down. Press Return for a new snapshot.');
           else status('Your screen changed before Soma could draw. Press Return for a new snapshot.');
           sendCompactState();
         }

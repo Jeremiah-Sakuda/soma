@@ -8,7 +8,7 @@ const OVERLAY_RETENTION_MS = 20 * 60 * 1000;
 // With no update for this long the learner has likely moved on; stop drawing over the screen.
 const OVERLAY_IDLE_MS = 3 * 60 * 1000;
 // While lifted, how often the slide under the sheet is checked against the capture.
-const LIFT_CHECK_MS = 4000;
+const LIFT_CHECK_MS = 5000;
 /** Native coordination only. Remote content cannot request capture or inject locations. */
 function createPointAsk({
   BrowserWindow,
@@ -93,6 +93,18 @@ function createPointAsk({
     if (!graph?.verified || !graph.model.lift || !c || graph.id !== c.id || (id && id !== graph.id) || !overlay || overlay.isDestroyed()) return view;
     // Rapid toggles would resend the sheet each time.
     if (Date.now() - viewChanged < 350) return view;
+    if (next === '3d' && sheet?.id !== graph.id) {
+      // Without the slide's own region nothing can honestly cover the original: stay flat.
+      let data = null;
+      try {
+        const region = sheetRegion(graph.model);
+        data = { dataUrl: cropImage(c.snapshot.dataUrl, region), region };
+      } catch {
+        overlayResult({ id: graph.id, shown: true, view, reason: 'webgl' });
+        return view;
+      }
+      sheet = { id: graph.id, data };
+    }
     viewChanged = Date.now();
     view = next;
     clearInterval(liftWatch);
@@ -101,16 +113,6 @@ function createPointAsk({
     // slide underneath (focus need not move, e.g. scrolling), notice within a few seconds
     // and take the drawing down.
     if (view === '3d') liftWatch = setInterval(() => void watchLifted(c), LIFT_CHECK_MS);
-    if (view === '3d' && sheet?.id !== graph.id) {
-      let data = null;
-      try {
-        const region = sheetRegion(graph.model);
-        data = { dataUrl: cropImage(c.snapshot.dataUrl, region), region };
-      } catch {
-        data = null;
-      }
-      sheet = { id: graph.id, data };
-    }
     // Lifted, the drawing is not clickable; flat, its connections can be cut again.
     overlay.setIgnoreMouseEvents(true, view === '3d' ? undefined : { forward: true });
     drawGraph();
@@ -124,6 +126,8 @@ function createPointAsk({
     clearInterval(liftWatch);
     liftWatch = null;
     overlay.setIgnoreMouseEvents(true, { forward: true });
+    // A 3D draw may already be on its way; redraw flat so both sides agree.
+    drawGraph();
     overlayResult({ id: graph.id, shown: true, view, reason: 'webgl' });
   }
   // Set when the learner may have changed the screen by hand (Soma's panel lost focus).
@@ -652,11 +656,14 @@ function createPointAsk({
       verifying = false;
       lastCheck = Date.now();
     }
+    // A newer capture's first model arrived while this check ran; verify it now.
+    if (graph && !graph.verified && overlayCapture && graph.id === overlayCapture.id && graph.id !== c.id)
+      void screenOverlay({ id: graph.id, model: graph.model });
     if (overlayCapture !== c || graph?.id !== c.id) return false;
     if (!ok) {
       clearGraph();
       refused = c.id;
-      overlayResult({ id: c.id, shown: false });
+      overlayResult({ id: c.id, shown: false, reason: 'changed' });
     }
     return ok;
   }

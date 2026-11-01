@@ -223,7 +223,7 @@ test('after the learner uses another app, the next step re-checks the slide with
     await paged.controller.screenOverlay({ id, model: model() });
     paged.controller.markStale();
     await paged.controller.screenOverlay({ id, model: model({ caption: null }) });
-    assert.deepEqual(paged.results.at(-1), { id, shown: false });
+    assert.deepEqual(paged.results.at(-1), { id, shown: false, reason: 'changed' });
     assert.equal(paged.draws.at(-1).type, 'graph-clear');
     assert.equal(paged.draws.filter((d) => d.type === 'graph').length, 1);
   } finally {
@@ -350,12 +350,26 @@ test('without WebGL the drawing stays flat and says why', async () => {
   try {
     const id = await h.ready();
     await h.controller.screenOverlay({ id, model: model(LIFT) });
+    // Without its own slide region nothing could honestly cover the original: stay flat.
+    assert.equal(h.controller.setView('3d'), '2d', 'a failed crop does not lift');
+    assert.deepEqual(h.results.at(-1), { id, shown: true, view: '2d', reason: 'webgl' });
+    assert.ok(h.draws.every((d) => d.view !== '3d'));
+  } finally {
+    h.controller.dispose();
+  }
+});
+
+test('a lift the overlay cannot draw falls back flat on both sides', async () => {
+  const h = harness(['data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE'], { cropImage: () => 'data:image/jpeg;base64,SHEET' });
+  try {
+    const id = await h.ready();
+    await h.controller.screenOverlay({ id, model: model(LIFT) });
     assert.equal(h.controller.setView('3d'), '3d');
-    assert.equal(h.draws.at(-1).sheet, undefined, 'a failed crop lifts without a sheet');
     h.controller.liftFailed({ sender: {} });
     assert.equal(h.controller.view, '3d', 'only the overlay window can report a failure');
     h.controller.liftFailed({ sender: h.windows[0].webContents });
     assert.equal(h.controller.view, '2d');
+    assert.equal(h.draws.at(-1).view, '2d', 'redrawn flat, so the overlay agrees');
     assert.deepEqual(h.results.at(-1), { id, shown: true, view: '2d', reason: 'webgl' });
   } finally {
     h.controller.dispose();
@@ -377,14 +391,14 @@ test('while lifted, a slide changed underneath takes the drawing down within sec
     h.controller.setView('3d');
     regions.length = 0;
     // Checked even though no Soma window lost focus: scrolling a slide need not move it.
-    await wait(4300);
+    await wait(5300);
     assert.equal(h.controller.view, '3d', 'the slide is unchanged, so the drawing stays');
     const { sheetRegion } = require('../screen-overlay.cjs');
     assert.deepEqual(regions[0], sheetRegion(model(LIFT)), 'the whole covered region is compared');
-    await wait(4300);
+    await wait(5300);
     assert.equal(h.controller.hasDrawing(), false);
     assert.equal(h.controller.view, '2d');
-    assert.deepEqual(h.results.at(-1), { id, shown: false });
+    assert.deepEqual(h.results.at(-1), { id, shown: false, reason: 'changed' });
   } finally {
     h.controller.dispose();
   }

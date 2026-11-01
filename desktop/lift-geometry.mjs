@@ -54,7 +54,7 @@ export function liftLayout(model, frame) {
   const r = model.radius * frame.width;
   // The highest distance in the whole search rises about four fifths of the graph's own
   // height, so a difference of one is plainly visible as height.
-  const tallest = Math.max(r * 6, Math.min(frame.height * 0.42, Math.max(regionPx.height, regionPx.width * 0.5) * 0.8));
+  const tallest = Math.max(r * 6, Math.min(frame.height * 0.36, Math.max(regionPx.height, regionPx.width * 0.5) * 0.7));
   const scale = tallest / lift.maxDistance;
   // A node at distance 0 rests on the sheet; height above that is distance.
   const base = r * 0.78;
@@ -115,7 +115,7 @@ export function liftLayout(model, frame) {
     height: regionPx.height,
   };
   const hinge = { x: sheet.x, y: sheet.y - sheet.height / 2 };
-  return { nodes, edges, sheet, hinge, region, radius: r, scale, base, tallest, unit: lift.unit, source: lift.source };
+  return { nodes, edges, sheet, hinge, region, radius: r, scale, base, tallest, maxDistance: lift.maxDistance, unit: lift.unit, source: lift.source };
 }
 
 /** Vertical drop of a slack string's midpoint, proportional to its slack (at least `least`

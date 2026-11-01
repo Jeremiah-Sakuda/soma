@@ -115,11 +115,18 @@ function overlayRegion(m) {
  * Compares decoded pixels only inside the region, so a changing clock or a moved panel
  * elsewhere on the display does not block the overlay; a scrolled or changed slide does. */
 function regionMatches(nativeImage, originalDataUrl, freshDataUrl, region, tolerance = 6) {
-  const a = nativeImage.createFromDataURL(originalDataUrl),
-    b = nativeImage.createFromDataURL(freshDataUrl);
-  const sa = a.getSize(),
+  const a = nativeImage.createFromDataURL(originalDataUrl);
+  let b = nativeImage.createFromDataURL(freshDataUrl);
+  const sa = a.getSize();
+  let sb = b.getSize();
+  if (!sa.width || !sb.width) return false;
+  // A capture can land on the other side of the snapshot size limit and be scaled once more
+  // than the original; compare at the original's size if the shape is the same.
+  if ((sa.width !== sb.width || sa.height !== sb.height) && Math.abs(sa.width / sa.height - sb.width / sb.height) < 0.01) {
+    b = b.resize({ width: sa.width, height: sa.height });
     sb = b.getSize();
-  if (!sa.width || sa.width !== sb.width || sa.height !== sb.height) return false;
+  }
+  if (sa.width !== sb.width || sa.height !== sb.height) return false;
   const rect = {
     x: Math.floor(region.x * sa.width),
     y: Math.floor(region.y * sa.height),

@@ -53,8 +53,8 @@ const FOV = 28;
 // Steep enough that height on screen reads as height, not as depth into the slide: the
 // sheet foreshortens to about a third of its height while a node's rise keeps nearly all.
 const TILT = (70 * Math.PI) / 180;
-// Turned a little once lifted, so nodes that share a column on the slide separate.
-const BASE_YAW = -0.15;
+// Turned once lifted, so a near node does not hide one behind it on the slide.
+const BASE_YAW = -0.3;
 const ENTER_MS = 2400;
 const EXIT_MS = 1000;
 // A slow turn shows the depth, then stops so the scene can rest (and stop rendering).
@@ -73,8 +73,8 @@ const COLOR = {
   pull: 0xd63bd1,
   cut: 0xe03b2c,
   ruler: 0x6f685c,
-  ghost: 0x94a3b8,
-  removed: 0x9ca3af,
+  ghost: 0x64748b,
+  removed: 0xb45454,
 };
 // How long a changed distance keeps its old height on show.
 const CHANGE_S = 2.5;
@@ -140,7 +140,8 @@ function disposeObject(o) {
   o.parent?.remove(o);
   o.geometry?.dispose();
   if (o.material) {
-    o.material.map?.dispose();
+    // The shadow texture is shared by every node; it goes with the scene.
+    if (o.material.map !== s?.shadowTex) o.material.map?.dispose();
     o.material.alphaMap?.dispose();
     o.material.dispose();
   }
@@ -252,9 +253,11 @@ function placeSheet(layout, sheet) {
       },
     );
   } else {
+    // No capture to lift: a plain sheet, and nothing painted over the slide.
     paper.color = new Color(0xf7f3ea);
     s.sheetReady = true;
   }
+  s.hasCover = Boolean(sheet);
   const plane = new Mesh(new PlaneGeometry(w, h), paper);
   plane.position.set(x, y, 0);
   const edge = new LineLoop(
@@ -272,8 +275,10 @@ function placeSheet(layout, sheet) {
   const floor = new Mesh(new PlaneGeometry(w * 0.95, h * 0.45), new MeshBasicMaterial({ map: radialTexture('rgba(0,0,0,0.5)', 'rgba(0,0,0,0)'), transparent: true, opacity: 0, depthWrite: false }));
   floor.position.set(x + r * 0.4, y - h * 0.42, -1);
   floor.renderOrder = -1;
-  // A ruler at the back-left corner of the sheet reads off each node's height.
-  const rulerAt = { x: x - w / 2 + r * 1.2, y: y + h / 2 - r * 1.2 };
+  // A ruler at the front-left corner of the sheet reads off each node's height. At the
+  // front it stands lowest on screen, so even the tallest estimate keeps clear of the slide
+  // above the graph.
+  const rulerAt = { x: x - w / 2 + r * 1.2, y: y - h / 2 + r * 1.2 };
   const ruler = new Mesh(new CylinderGeometry(r * 0.05, r * 0.05, 1, 8), new MeshBasicMaterial({ color: COLOR.ruler, transparent: true, opacity: 0 }));
   ruler.rotation.x = Math.PI / 2;
   ruler.position.set(rulerAt.x, rulerAt.y, 0);
@@ -286,9 +291,17 @@ function placeSheet(layout, sheet) {
   s.content.position.set(-x, -(y - h / 2), 0);
 }
 
-/** Ticks on the ruler at each settled distance. */
+/** Even steps for the ruler (1, 2, 5, 10, …) giving at most about ten ticks. */
+function tickStep(top) {
+  const raw = Math.max(1, top) / 10, power = 10 ** Math.floor(Math.log10(raw));
+  return [1, 2, 5, 10].map((m) => m * power).find((step) => step >= raw);
+}
+/** Evenly spaced ticks from 0 up to the highest distance shown, estimates included, so the
+ * ruler reads as a scale; the shaft itself reaches the highest sphere. */
 function syncTicks(layout) {
-  const values = [...new Set(layout.nodes.filter((n) => n.distance !== null && !n.tentative).map((n) => n.distance))].sort((a, b) => a - b);
+  const shown = Math.max(0, ...layout.nodes.map((n) => n.distance ?? 0));
+  const step = tickStep(shown), values = [];
+  for (let value = 0; value <= shown + 1e-9; value += step) values.push(Number(value.toFixed(6)));
   const key = values.join(',');
   if (s.tickKey === key) return;
   s.tickKey = key;
@@ -317,7 +330,8 @@ function syncNodes(layout) {
     if (!v) {
       const sphere = new Mesh(new SphereGeometry(r * 0.78, 40, 24), material(nodeColor(n)));
       const halo = new Mesh(new TorusGeometry(r * 1.12, r * 0.09, 12, 48), new MeshBasicMaterial({ color: COLOR.current, transparent: true, opacity: 0 }));
-      const ghost = new Mesh(new SphereGeometry(r * 0.78, 24, 16), new MeshBasicMaterial({ color: COLOR.ghost, transparent: true, opacity: 0, depthWrite: false }));
+      // An outline where the node was, turned to face the viewer: "was here", not a second node.
+      const ghost = new Mesh(new TorusGeometry(r * 0.78, r * 0.05, 8, 40), new MeshBasicMaterial({ color: COLOR.ghost, transparent: true, opacity: 0, depthWrite: false }));
       // From the old height to the new while a distance changes.
       const trail = new Line(new BufferGeometry().setFromPoints([new Vector3(), new Vector3()]), new LineDashedMaterial({ color: COLOR.ghost, dashSize: r * 0.25, gapSize: r * 0.18, transparent: true, opacity: 0 }));
       const pillar = new Mesh(new CylinderGeometry(r * 0.055, r * 0.055, 1, 10), new MeshBasicMaterial({ color: nodeColor(n), transparent: true, opacity: 0.6 }));
@@ -326,13 +340,17 @@ function syncNodes(layout) {
       const shadow = new Mesh(new CircleGeometry(r * 1.2, 32), new MeshBasicMaterial({ map: s.shadowTex, transparent: true, opacity: 0, depthWrite: false }));
       for (const o of [shadow, foot, pillar, ghost, trail, sphere, halo]) s.content.add(o);
       sphere.renderOrder = pillar.renderOrder = halo.renderOrder = 3;
-      v = { sphere, halo, ghost, trail, pillar, foot, shadow, label: tag('is-node'), h: 0, target: 0, change: null, data: null };
+      v = { sphere, halo, ghost, trail, pillar, foot, shadow, label: tag('is-node'), h: 0, target: 0, change: null, pulseAt: -Infinity, data: null };
       s.nodes.set(n.id, v);
     }
     // A distance that changes (an estimate coming down, or a cut raising a route) leaves a
     // ghost at the old height, so the change reads.
     if (v.data && v.data.distance !== null && n.distance !== null && Math.abs(n.distance - v.data.distance) > 1e-9)
       v.change = { from: v.data.distance, sign: v.data.tentative ? '≤' : '=', height: v.h, at: now };
+    // Settled now: its label says so at once rather than replaying the last change.
+    else if (v.data?.tentative && !n.tentative) v.change = null;
+    // The node this step settles pulses once.
+    if (n.status === 'current' && v.data?.status !== 'current') v.pulseAt = now;
     v.data = n;
     v.target = n.height;
     const color = nodeColor(n);
@@ -365,7 +383,7 @@ function caption(model, layout) {
     box.setAttribute('aria-hidden', 'true');
     const legend = document.createElement('div');
     legend.className = 'lift-legend';
-    for (const [cls, text] of [['start', `start (${layout.nodes.find((n) => n.source)?.label ?? 'A'})`], ['path', 'shortest route'], ['taut', 'taut: also shortest'], ['slack', 'slack: longer by n'], ['estimate', 'estimate, may drop']]) {
+    for (const [cls, text] of [['start', `start (${layout.nodes.find((n) => n.source)?.label ?? 'A'})`], ['path', 'shortest route'], ['taut', 'taut: also shortest'], ['slack', 'slack: longer by n'], ['estimate', 'estimate, may drop'], ['ghost', 'old height']]) {
       const item = document.createElement('span');
       const swatch = document.createElement('i');
       swatch.className = `is-${cls}`;
@@ -383,7 +401,7 @@ function caption(model, layout) {
   // Anchored like the flat caption, by the edge it grows away from, so a longer caption
   // never makes the card jump between steps.
   const f = s.frame, c = model.caption;
-  box.style.left = Math.max(8, (c ? c.x * f.width : 24) + f.dx) + 'px';
+  box.style.left = Math.max(8, (c ? c.x * f.width : 24) + f.dx - 20) + 'px';
   if (c && c.anchor === 'top') {
     box.style.bottom = '';
     box.style.top = Math.max(8, Math.min(c.y * f.height + f.dy, innerHeight - box.offsetHeight - 12)) + 'px';
@@ -456,11 +474,24 @@ function edgeMaterial(kind, tone) {
   if (kind === 'taut') return material(COLOR.taut, { emissive: new Color(COLOR.taut), emissiveIntensity: 0.12 });
   return material(COLOR.slack, { roughness: 0.55, clearcoat: 0.3, opacity: 0.9 });
 }
-function tube(points, radius, mat) {
+function tubeGeometry(points, radius) {
   const curve = new CatmullRomCurve3(points.map((p) => new Vector3(p.x, p.y, p.z)));
-  const mesh = new Mesh(new TubeGeometry(curve, Math.max(8, points.length * 2), radius, 10, false), mat);
+  return new TubeGeometry(curve, Math.max(8, points.length * 2), radius, 10, false);
+}
+function tube(points, radius, mat) {
+  const mesh = new Mesh(tubeGeometry(points, radius), mat);
   mesh.renderOrder = 2;
   return mesh;
+}
+/** Reshapes a string's tube without reallocating its GPU buffers (same segment count). */
+function reshape(mesh, points, radius) {
+  const next = tubeGeometry(points, radius), geo = mesh.geometry;
+  for (const name of ['position', 'normal']) {
+    geo.attributes[name].array.set(next.attributes[name].array);
+    geo.attributes[name].needsUpdate = true;
+  }
+  geo.computeBoundingSphere();
+  next.dispose();
 }
 const coneGeometry = new Map();
 /** A small arrowhead near the end of a directed string, pointing along it. */
@@ -491,7 +522,8 @@ function drawEdges(rise, sheetT) {
       v.mat = edgeMaterial(e.kind, e.tone);
       v.baseOpacity = v.mat.opacity;
       v.key = key;
-      v.shape = '';
+      // Its meshes carry the old material: build them afresh.
+      clearMeshes(v);
       v.label.className = `lift-tag is-edge is-${e.kind}${e.tone === 'path' ? ' is-path' : ''}`;
     }
     const A = s.nodes.get(e.from), B = s.nodes.get(e.to);
@@ -511,10 +543,10 @@ function drawEdges(rise, sheetT) {
       if (v.shape !== 'cut') {
         clearMeshes(v);
         const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
-        const from = r * 1.2, to = len - r * 1.2, dash = r * 0.45, gap = r * 0.3;
+        const from = r * 0.95, to = len - r * 0.95, dash = r * 0.4, gap = r * 0.25;
         for (let d = from; d < to; d += dash + gap) {
           const e2 = Math.min(to, d + dash);
-          v.meshes.push(tube([{ x: a.x + (dx * d) / len, y: a.y + (dy * d) / len, z: 1 }, { x: a.x + (dx * e2) / len, y: a.y + (dy * e2) / len, z: 1 }], r * 0.05, v.mat));
+          v.meshes.push(tube([{ x: a.x + (dx * d) / len, y: a.y + (dy * d) / len, z: 1 }, { x: a.x + (dx * e2) / len, y: a.y + (dy * e2) / len, z: 1 }], r * 0.07, v.mat));
         }
         for (const m of v.meshes) s.content.add(m);
         v.shape = 'cut';
@@ -529,11 +561,16 @@ function drawEdges(rise, sheetT) {
       const points = stringPoints(a, b, sag, 24, r * 0.12);
       const shape = `${a.z.toFixed(1)}:${b.z.toFixed(1)}:${sag.toFixed(1)}`;
       if (shape !== v.shape) {
-        clearMeshes(v);
         const radius = r * (e.tone === 'path' ? 0.17 : e.kind === 'taut' || e.kind === 'pull' ? 0.11 : 0.042);
-        v.meshes.push(tube(points, radius, v.mat));
-        if (e.directed) v.meshes.push(arrow(points, radius, v.mat));
-        for (const m of v.meshes) s.content.add(m);
+        // While heights glide, the same tube is reshaped in place; a new kind rebuilds it.
+        if (v.meshes.length && v.radius === radius && !e.directed) reshape(v.meshes[0], points, radius);
+        else {
+          clearMeshes(v);
+          v.meshes.push(tube(points, radius, v.mat));
+          if (e.directed) v.meshes.push(arrow(points, radius, v.mat));
+          for (const m of v.meshes) s.content.add(m);
+        }
+        v.radius = radius;
         v.shape = shape;
       }
       // A string appears as its nodes leave the sheet, so the slide is untouched at first.
@@ -603,7 +640,7 @@ function renderFrame() {
     // Until the capture's texture is ready, nothing covers the slide.
     // Lifted, the printed graph fades back so the strings and spheres carry the reading.
     sh.paper.material.opacity = ready ? 1 - 0.55 * sheetT : 0;
-    sh.cover.material.opacity = ready ? clamp01(t / 0.06) : 0;
+    sh.cover.material.opacity = ready && s.hasCover ? clamp01(t / 0.06) : 0;
     sh.edge.material.opacity = 0.3 * sheetT;
     sh.floor.material.opacity = 0.3 * tilt;
   }
@@ -613,6 +650,9 @@ function renderFrame() {
   const rise = (id) => (quick ? t : clamp01(riseAt(t, rank.get(id) ?? 0, lifted.length)));
   const r = s.layout.radius;
   let moving = s.mode !== 'idle' || s.sway > 0.002;
+  // Content-space rotation that faces the camera, for outlines drawn flat to the viewer.
+  s.content.updateWorldMatrix(true, false);
+  const facing = s.content.getWorldQuaternion(new Quaternion()).invert().multiply(s.camera.quaternion);
   let current = null;
   for (const v of s.nodes.values()) {
     v.h = quick ? v.target : approach(v.h, v.target, dt, 0.5);
@@ -620,8 +660,11 @@ function renderFrame() {
     const k = v.data.distance === null ? 0 : rise(v.data.id);
     const z = Math.max(0, v.h * k);
     v.sphere.position.z = z;
-    // A node grows out of its printed circle as it rises.
-    v.sphere.scale.setScalar(Math.max(0.001, clamp01(k * 1.6)));
+    // A node grows out of its printed circle as it rises, and pulses once as it settles.
+    const pulseAge = (now - v.pulseAt) / 400;
+    const pulse = !quick && pulseAge >= 0 && pulseAge < 1 ? 0.15 * Math.sin(Math.PI * pulseAge) : 0;
+    if (pulse) moving = true;
+    v.sphere.scale.setScalar(Math.max(0.001, clamp01(k * 1.6)) * (1 + pulse));
     v.pillar.scale.y = Math.max(0.001, z);
     v.pillar.position.z = z / 2;
     v.foot.material.opacity = (v.data.distance === null ? 0.25 : 0.7) * sheetT;
@@ -638,6 +681,7 @@ function renderFrame() {
         moving = true;
         const fade = clamp01((CHANGE_S - age) / 0.5);
         v.ghost.position.z = v.change.height * k;
+        v.ghost.quaternion.copy(facing);
         v.ghost.material.opacity = 0.6 * fade;
         v.trail.geometry.setFromPoints([new Vector3(v.data.x, v.data.y, v.change.height * k), new Vector3(v.data.x, v.data.y, z)]);
         v.trail.computeLineDistances();
@@ -663,8 +707,8 @@ function renderFrame() {
   // line to the current node.
   if (sh) {
     const at = s.rulerAt;
-    // Just taller than its top tick (the highest settled distance), never an estimate's.
-    const top = s.layout.base + Math.max(0, ...s.ticks.map((tick) => tick.value)) * s.layout.scale + r * 0.6;
+    // Just taller than the highest sphere shown.
+    const top = s.layout.base + Math.max(0, ...s.layout.nodes.map((n) => Math.min(n.distance ?? 0, s.layout.maxDistance))) * s.layout.scale + r * 0.6;
     const rulerT = clamp01((t - 0.4) / 0.15);
     sh.ruler.material.opacity = 0.7 * rulerT;
     sh.ruler.scale.y = Math.max(0.001, top);
@@ -678,7 +722,7 @@ function renderFrame() {
     if (current && current.v.data.distance !== null) {
       sh.level.geometry.setFromPoints([new Vector3(current.v.data.x, current.v.data.y, current.z), new Vector3(at.x, at.y, current.z)]);
       sh.level.computeLineDistances();
-      sh.level.material.opacity = 0.8 * clamp01((t - 0.7) / 0.3);
+      sh.level.material.opacity = 0.95 * clamp01((t - 0.7) / 0.3);
     } else sh.level.material.opacity = 0;
   }
   drawEdges(rise, sheetT);
@@ -747,7 +791,7 @@ function dispose() {
     if (o.userData.shared) return;
     o.geometry?.dispose();
     if (o.material) {
-      o.material.map?.dispose();
+      if (o.material.map !== s.shadowTex) o.material.map?.dispose();
       o.material.alphaMap?.dispose();
       o.material.dispose();
     }

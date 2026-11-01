@@ -321,6 +321,8 @@ else {
     view.webContents.on('did-start-navigation', (details) => {
       if (!details.isMainFrame || details.isSameDocument) return;
       if (pointAsk?.compactActive()) pointAsk.stop('');
+      // The new page has no card behind the old drawing.
+      pointAsk?.clearScreenOverlay();
       clearTimeout(compactPending?.timer);
       compactPending = null;
       compactState = null;
@@ -389,6 +391,8 @@ else {
         // In compact mode the answer is drawn on screen and narrated; the panel stays closed.
         if (compactMode) {
           view.webContents.setAudioMuted(false);
+          // A hold gesture after the bar was hidden still needs somewhere to report.
+          if (bar && !bar.isDestroyed() && !bar.isVisible()) bar.showInactive();
           return;
         }
         if (bounds) win.setBounds(bounds);
@@ -405,7 +409,8 @@ else {
       overlayResult: (payload) => {
         view.webContents.send('desktop:screen-overlay-result', { id: payload.id, shown: payload.shown, ...(payload.dismissed ? { dismissed: true } : {}) });
         if (compactMode && bar?.isVisible()) {
-          if (payload.shown) status('Drawn on your screen. Ask a follow-up, ⌘↩ tests it, Esc clears.');
+          if (payload.shown)
+            status(`Drawn on your screen. Ask a follow-up${compactState?.investigable ? ', ⌘↩ tests it' : ''}, Esc clears.`);
           else if (payload.dismissed) status('Cleared. Return asks with a new snapshot; Esc hides the bar.');
           else if (payload.reason === 'invalid') status('This answer can’t be drawn on your screen. Open it with ⤢.');
           else status('Your screen changed before Soma could draw. Press Return for a new snapshot.');

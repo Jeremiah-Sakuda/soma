@@ -11,7 +11,10 @@ const form = document.getElementById('bar'),
 const IDLE = 'Return sends one snapshot of this screen with your question. Esc hides the bar.';
 // `step` is the zero-based index of the shown step; `steps` is how many there are.
 let state = { visual: false, busy: false, investigable: false, step: null, steps: null, playing: false, message: '' };
-let sending = false;
+let sending = false,
+  // A follow-up's text stays in the box until the page takes it, in case it is refused.
+  handedOver = null;
+const WORKING = /^Muse is (answering|choosing what to test)/;
 const say = (message) => {
   status.textContent = message || '';
 };
@@ -57,7 +60,8 @@ async function send(mode) {
   try {
     const result = await window.somaCompact.ask(text, kind);
     if (result?.ok) {
-      input.value = '';
+      if (kind === 'snapshot') input.value = '';
+      else handedOver = text;
       fresh.setAttribute('aria-pressed', 'false');
     }
     say(result?.message);
@@ -100,9 +104,19 @@ window.somaCompact.onStatus((message) => {
 window.somaCompact.onState((incoming) => {
   const was = state;
   state = { ...state, ...incoming };
-  // Report the page's error once, when it appears; when work ends cleanly with nothing drawn, return to the hint.
-  if (state.message && state.message !== was.message) say(state.message);
-  else if (was.busy && !state.busy && !state.visual && !state.message && !sending && !status.textContent) say(IDLE);
+  if (state.busy && handedOver !== null) {
+    if (input.value.trim() === handedOver) input.value = '';
+    handedOver = null;
+  }
+  // Report the page's error once, when it appears. When work ends cleanly, replace a
+  // "working" line with what to do next.
+  if (state.message && state.message !== was.message) {
+    handedOver = null;
+    say(state.message);
+  } else if (was.busy && !state.busy && !state.message && !sending) {
+    if (state.visual) say(`On your screen. Ask a follow-up${state.investigable ? ', ⌘↩ tests it' : ''}, Esc clears.`);
+    else if (WORKING.test(status.textContent) || !status.textContent) say(IDLE);
+  }
   render();
 });
 window.somaCompact.onFocus(() => {

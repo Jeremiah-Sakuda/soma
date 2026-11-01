@@ -59,8 +59,8 @@ function status(message) {
 function compactBar() {
   if (bar && !bar.isDestroyed()) return bar;
   bar = new BrowserWindow({
-    width: 680,
-    height: 86,
+    width: 700,
+    height: 104,
     frame: false,
     transparent: true,
     resizable: false,
@@ -124,8 +124,9 @@ function hideCompact() {
   pointAsk?.clearScreenOverlay();
   pause();
   bar?.hide();
-  // Hand the keyboard back to the app the learner was using.
-  if (process.platform === 'darwin' && !BrowserWindow.getAllWindows().some((w) => w !== bar && w.isVisible()))
+  // Hand the keyboard back to the app the learner was using. Not while Point & ask is on:
+  // a hidden app could not show its hold-gesture trail or drawing.
+  if (process.platform === 'darwin' && !pointAsk?.enabled && !BrowserWindow.getAllWindows().some((w) => w !== bar && w.isVisible()))
     app.hide();
 }
 function leaveCompact() {
@@ -316,6 +317,15 @@ else {
         if (safeExternal(url)) void shell.openExternal(url);
       }
     });
+    // A reload or navigation ends whatever the old page was doing for the ask bar.
+    view.webContents.on('did-start-navigation', (details) => {
+      if (!details.isMainFrame || details.isSameDocument) return;
+      if (pointAsk?.compactActive()) pointAsk.stop('');
+      clearTimeout(compactPending?.timer);
+      compactPending = null;
+      compactState = null;
+      sendCompactState();
+    });
     view.webContents.on('will-redirect', (event, url) => {
       if (new URL(url).origin !== origin) event.preventDefault();
     });
@@ -393,10 +403,12 @@ else {
       captureImage: snapshotDisplay,
       enabledChange: (value) => win.webContents.send('desktop:point-enabled', value),
       overlayResult: (payload) => {
-        view.webContents.send('desktop:screen-overlay-result', payload);
+        view.webContents.send('desktop:screen-overlay-result', { id: payload.id, shown: payload.shown, ...(payload.dismissed ? { dismissed: true } : {}) });
         if (compactMode && bar?.isVisible()) {
           if (payload.shown) status('Drawn on your screen. Ask a follow-up, ⌘↩ tests it, Esc clears.');
-          else if (!payload.dismissed) status('Your screen changed before Soma could draw. Press Return for a new snapshot.');
+          else if (payload.dismissed) status('Cleared. Return asks with a new snapshot; Esc hides the bar.');
+          else if (payload.reason === 'invalid') status('This answer can’t be drawn on your screen. Open it with ⤢.');
+          else status('Your screen changed before Soma could draw. Press Return for a new snapshot.');
           sendCompactState();
         }
       },
@@ -460,6 +472,8 @@ else {
           // The snapshot is of the display the bar is on, where the learner is looking.
           const display = bar && !bar.isDestroyed() ? screen.getDisplayMatching(bar.getBounds()) : undefined;
           const result = await pointAsk.askTyped(text, display);
+          // Hiding the bar cancelled it; nothing to report.
+          if (!result.ok && !bar?.isVisible()) return { ok: false, message: '' };
           // When the page refused the question, its own reason is the useful one.
           return result.message
             ? result
@@ -501,7 +515,8 @@ else {
           compactPending.started = true;
           clearTimeout(compactPending.timer);
           compactPending.timer = setTimeout(endPending, 300000);
-        } else if (compactPending.started) {
+        } else if (compactPending.started || (typeof payload.message === 'string' && payload.message)) {
+          // Finished, or refused with an error before it ever started.
           clearTimeout(compactPending.timer);
           compactPending = null;
         }

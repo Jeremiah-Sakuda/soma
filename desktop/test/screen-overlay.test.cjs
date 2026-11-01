@@ -285,3 +285,15 @@ test('a typed question the page refuses leaves the reason to the page, and a hun
     h.controller.dispose();
   }
 });
+
+test('a model that cannot be drawn is reported as such, not as a changed screen', async () => {
+  const h = harness(['data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE']);
+  try {
+    const id = await h.ready();
+    await h.controller.screenOverlay({ id, model: model({ nodes: [] }) });
+    assert.deepEqual(h.results.at(-1), { id, shown: false, reason: 'invalid' });
+    assert.equal(h.controller.hasDrawing(), false);
+  } finally {
+    h.controller.dispose();
+  }
+});

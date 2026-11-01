@@ -402,10 +402,18 @@ function createPointAsk({
       return;
     }
     if (event.state === 'ready') {
+      const answered = current;
       clearTimers();
       hideOverlay();
       current = null;
-      status('Visual ready. Explore it or ask a follow-up.');
+      if (answered.compact) {
+        // With the panel closed, an answer that is not drawn would otherwise go unseen.
+        status('Muse answered. Drawing it on your screen…');
+        setTimeout(() => {
+          if (overlayCapture?.id === answered.id && graph?.id !== answered.id && refused !== answered.id && !current)
+            status('This answer can’t be drawn on your screen. Open it with ⤢.');
+        }, 8000);
+      } else status('Visual ready. Explore it or ask a follow-up.');
     } else if (event.state === 'recording') {
       current.text = 'Listening · release to ask';
       status('Listening · release Control–Option–Space to ask.');
@@ -502,7 +510,7 @@ function createPointAsk({
     if (refused === c.id || current || highlightBusy) return;
     if (!validOverlayModel(event.model)) {
       if (graph?.id === c.id) clearGraph();
-      overlayResult({ id: c.id, shown: false });
+      overlayResult({ id: c.id, shown: false, reason: 'invalid' });
       return;
     }
     const verified = graph?.id === c.id && graph.verified;
@@ -534,11 +542,12 @@ function createPointAsk({
       if (verifying) return; // the latest model is drawn once verification finishes
       verifying = true;
       let ok = false;
-      // A compact-mode snapshot left Soma's windows out; check the same way, panel unopened.
+      // Snapshots leave Soma's windows out; check the same way. A compact-mode check keeps
+      // the panel unopened.
       if (!c.compact) hideForHighlight();
       try {
         await new Promise((r) => setTimeout(r, 120));
-        const fresh = c.compact ? await captureClean(c.display) : await captureImage(c.display);
+        const fresh = await captureClean(c.display);
         ok = compareRegion(c.snapshot.dataUrl, fresh.dataUrl, overlayRegion(graph.model));
       } catch {
         ok = false;

@@ -23,6 +23,7 @@ import {
 } from '../domain/exploration-application';
 import { probeEdgeCost, type CostProbe } from '../domain/cost-probe';
 import { applyGraphLayout } from '../domain/source-layout';
+import { snapNodesToDrawing } from './node-snap';
 import recordedExploration from '../fixtures/recorded-exploration.json';
 import recordedMechanism from '../fixtures/recorded-mechanism.json';
 import { comparisonExecution, explorationExecution } from '../domain/exploration-view';
@@ -1632,6 +1633,20 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
               });
             }
         }
+        if (extracted.graph && extracted.nodePositions?.length && request.source?.kind === 'screenshot' && request.source.dataUrl)
+          try {
+            const snapped = await snapNodesToDrawing(request.source.dataUrl, extracted.nodePositions);
+            if (snapped.moved) {
+              extracted.nodePositions = snapped.positions;
+              audit.push({
+                event: 'graph-located',
+                call: calls,
+                detail: `Snapped ${snapped.moved} node position(s) onto the drawn nodes in the same frozen screenshot; no model call.`,
+              });
+            }
+          } catch {
+            /* Positions are presentation only; keep the model's estimate. */
+          }
         source.layout = sourceGraphLayout(extracted);
         if (request.previousImage && previous && extracted.change) {
           source.change = {

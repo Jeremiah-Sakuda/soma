@@ -80,7 +80,13 @@ function createPointAsk({
     const o = overlay && !overlay.isDestroyed() ? overlay : null;
     if (shielding++ === 0) o?.setContentProtection?.(true);
     try {
-      return await excludePanel(() => captureImage(display));
+      // A capture that never returns must not leave Soma's windows protected or the bar busy.
+      return await excludePanel(() =>
+        Promise.race([
+          captureImage(display),
+          new Promise((_resolve, reject) => setTimeout(() => reject(Error('Capture timed out')), 15000)),
+        ]),
+      );
     } finally {
       if (--shielding === 0 && overlay && !overlay.isDestroyed()) overlay.setContentProtection?.(false);
     }
@@ -141,10 +147,8 @@ function createPointAsk({
     overlay.setBounds(display.bounds);
     overlay.showInactive();
   }
-  let lastStop = '';
   function stop(reason = 'Point & ask stopped.', show = false) {
     const previous = current;
-    lastStop = reason;
     current = null;
     lastCapture = null;
     if (previous) {
@@ -180,8 +184,9 @@ function createPointAsk({
     try {
       await new Promise((resolve) => setTimeout(resolve, 80));
       const snapshot = await captureClean(display);
-      // The page refused the question (not ready, or busy) or the learner cancelled it.
-      if (current !== s) return { ok: false, message: lastStop || 'That question was cancelled.' };
+      // The page refused the question (not ready, or busy) or something else cancelled it;
+      // the caller reports the page's own reason when it has one.
+      if (current !== s) return { ok: false, message: null };
       lastCapture = { id: s.id, snapshot, display, expires: Date.now() + 120000, compact: true };
       overlayCapture = { ...lastCapture, expires: Date.now() + OVERLAY_RETENTION_MS };
       const held = lastCapture;
@@ -281,7 +286,8 @@ function createPointAsk({
       s.points = [];
       await new Promise((resolve) => setTimeout(resolve, 120));
       if (current !== s) return;
-      const snapshot = await captureImage(s.display);
+      // Leaves the compact ask bar, if shown, out of the snapshot too.
+      const snapshot = await captureClean(s.display);
       if (current !== s) return;
       // Coordinates belong to this exact display snapshot, not to a later screen state.
       s.phase = 'preparing';
@@ -383,7 +389,11 @@ function createPointAsk({
   function feedback(event) {
     if (!current || event.id !== current.id) return;
     if (['error', 'cancelled'].includes(event.state)) {
-      stop(event.message || 'Point & ask stopped. Your previous visual is kept.', true);
+      stop(
+        event.message ||
+          (current.compact ? 'That question did not go through. Try again.' : 'Point & ask stopped. Your previous visual is kept.'),
+        true,
+      );
       return;
     }
     if (event.state === 'partial' && typeof event.text === 'string') {

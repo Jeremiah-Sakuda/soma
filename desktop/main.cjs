@@ -31,6 +31,8 @@ let bar = null,
   // True while the ask bar replaces the panel; nothing reopens the panel until it ends.
   compactMode = false,
   compactAsking = false,
+  // A follow-up or investigation handed to the page, until the page reports it busy then idle.
+  compactPending = null,
   // The page's last one-line state, kept so a newly shown bar starts in sync.
   compactState = null;
 let win,
@@ -92,7 +94,7 @@ function sendCompactState() {
   const s = compactState ?? { busy: false, visual: false, step: null, steps: null, playing: false, investigable: false, message: '' };
   bar.webContents.send('compact:state', {
     ...s,
-    busy: s.busy || compactAsking,
+    busy: s.busy || compactAsking || Boolean(compactPending) || Boolean(pointAsk?.compactActive()),
     visual: s.visual && Boolean(pointAsk?.hasDrawing()),
   });
 }
@@ -122,6 +124,9 @@ function hideCompact() {
   pointAsk?.clearScreenOverlay();
   pause();
   bar?.hide();
+  // Hand the keyboard back to the app the learner was using.
+  if (process.platform === 'darwin' && !BrowserWindow.getAllWindows().some((w) => w !== bar && w.isVisible()))
+    app.hide();
 }
 function leaveCompact() {
   compactMode = false;
@@ -138,13 +143,16 @@ function trustedBar(event) {
       event.senderFrame.url === compactURL,
   );
 }
-/** True when the hosted page is on the exploration route that handles compact questions. */
-function onExploration() {
+/** Why the hosted page cannot take a compact question right now, or null when it can. */
+function explorationUnavailable() {
   try {
+    if (view.webContents.isLoading()) return 'Soma is still loading. Try again in a moment.';
     const url = new URL(view.webContents.getURL());
-    return trustedPage(url.href, origin) && (url.pathname === '/explore' || url.pathname.startsWith('/explore/'));
+    if (!trustedPage(url.href, origin)) return 'Soma is still loading. Try again in a moment.';
+    if (url.pathname === '/explore' || url.pathname.startsWith('/explore/')) return null;
+    return 'Open the exploration page with ⤢, then ask again.';
   } catch {
-    return false;
+    return 'Soma is still loading. Try again in a moment.';
   }
 }
 // Content protection leaves Soma's windows out of a capture; overlapping captures share it,
@@ -218,15 +226,15 @@ async function snapshotDisplay(display) {
 async function capture() {
   computerControl?.stop('Computer task ended.');
   if (capturing) return;
+  if (!trustedPage(view.webContents.getURL(), origin)) {
+    status('Open the Soma exploration page before capturing.');
+    return;
+  }
   // Capturing the display opens its preview in the panel, so compact mode ends.
   compactMode = false;
   bar?.hide();
   // Never photograph Soma's own drawing as part of the next slide.
   pointAsk?.clearScreenOverlay();
-  if (!trustedPage(view.webContents.getURL(), origin)) {
-    status('Open the Soma exploration page before capturing.');
-    return;
-  }
   capturing = true;
   const ticket = ++revision;
   const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
@@ -436,10 +444,10 @@ else {
       const text = typeof payload?.text === 'string' ? payload.text.trim().slice(0, 1000) : '';
       const mode = payload?.mode;
       if (!['snapshot', 'followup', 'investigate'].includes(mode)) throw new Error('Unknown ask mode.');
-      if (!onExploration())
-        return { ok: false, message: 'Soma is still loading. Try again in a moment.' };
+      const unavailable = explorationUnavailable();
+      if (unavailable) return { ok: false, message: unavailable };
       // One question at a time: a second Return must not cancel or race the first.
-      if (compactAsking || compactState?.busy || pointAsk.compactActive())
+      if (compactAsking || compactPending || compactState?.busy || pointAsk.compactActive())
         return { ok: false, message: 'Muse is still working on your last question.' };
       if (mode !== 'investigate' && !text) return { ok: false, message: 'Type a question first.' };
       computerControl?.stop('Computer task ended.');
@@ -451,7 +459,11 @@ else {
         try {
           // The snapshot is of the display the bar is on, where the learner is looking.
           const display = bar && !bar.isDestroyed() ? screen.getDisplayMatching(bar.getBounds()) : undefined;
-          return await pointAsk.askTyped(text, display);
+          const result = await pointAsk.askTyped(text, display);
+          // When the page refused the question, its own reason is the useful one.
+          return result.message
+            ? result
+            : { ok: false, message: compactState?.message || 'That question did not go through. Try again.' };
         } finally {
           compactAsking = false;
           sendCompactState();
@@ -463,6 +475,9 @@ else {
       if (mode === 'investigate' && !compactState?.investigable)
         return { ok: false, message: 'Test it works on a checked shortest-path graph with a goal.' };
       view.webContents.send('desktop:compact', { action: mode === 'investigate' ? 'investigate' : 'ask', text });
+      // Until the page reports the request, a second Return is refused here.
+      compactPending = { started: false, timer: setTimeout(() => endPending(), 8000) };
+      sendCompactState();
       return { ok: true, message: mode === 'investigate' ? 'Muse is choosing what to test…' : 'Muse is answering…' };
     });
     ipcMain.handle('compact:control', async (event, action) => {
@@ -473,8 +488,24 @@ else {
       else throw new Error('Unknown control.');
       return true;
     });
+    const endPending = () => {
+      clearTimeout(compactPending?.timer);
+      compactPending = null;
+      sendCompactState();
+    };
     ipcMain.on('desktop:compact-state', (event, payload) => {
       if (!trusted(event) || !payload || typeof payload !== 'object') return;
+      if (compactPending) {
+        if (payload.busy === true) {
+          // The page took the request; its own busy state now guards it.
+          compactPending.started = true;
+          clearTimeout(compactPending.timer);
+          compactPending.timer = setTimeout(endPending, 300000);
+        } else if (compactPending.started) {
+          clearTimeout(compactPending.timer);
+          compactPending = null;
+        }
+      }
       compactState = {
         busy: payload.busy === true,
         visual: payload.visual === true,

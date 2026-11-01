@@ -266,7 +266,7 @@ test('a typed compact question sends one clean full-screen snapshot without open
   }
 });
 
-test('a typed question the page refuses reports why instead of a capture failure', async () => {
+test('a typed question the page refuses leaves the reason to the page, and a hung capture times out', async () => {
   let release;
   const h = harness([], {
     captureImage: () => new Promise((resolve) => (release = resolve)),
@@ -275,9 +275,10 @@ test('a typed question the page refuses reports why instead of a capture failure
     const asking = h.controller.askTyped('What changes if A–F costs 6?');
     await wait(100);
     const begin = h.sent.find((e) => e.type === 'begin');
-    h.controller.feedback({ id: begin.id, state: 'error', message: 'Soma is busy with another explanation.' });
+    // The page reports only the state; its error text reaches the bar through its own state.
+    h.controller.feedback({ id: begin.id, state: 'error' });
     release({ dataUrl: 'data:image/jpeg;base64,SLIDE', capturedAt: new Date().toISOString() });
-    assert.deepEqual(await asking, { ok: false, message: 'Soma is busy with another explanation.' });
+    assert.deepEqual(await asking, { ok: false, message: null });
     assert.equal(h.sent.some((e) => e.type === 'source'), false);
     assert.deepEqual(await h.controller.askTyped('   '), { ok: false, message: 'Type a question first.' });
   } finally {

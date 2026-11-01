@@ -53,6 +53,7 @@ function createComputerControl({
         ...extra,
       });
   }
+  let ownsEscape = false;
   function stop(message = "Computer task stopped.") {
     const run = task?.run;
     if (message && run && !run.done)
@@ -65,7 +66,9 @@ function createComputerControl({
     child?.kill();
     task = null;
     busy = false;
-    globalShortcut.unregister("Escape");
+    // Only release Escape if this task took it; a drawn overlay may own it otherwise.
+    if (ownsEscape) globalShortcut.unregister("Escape");
+    ownsEscape = false;
     state({ message });
     status(message);
   }
@@ -121,6 +124,7 @@ function createComputerControl({
       task = createTask(observed);
       if (!globalShortcut.register("Escape", () => stop()))
         throw Error("Escape unavailable; task control cannot start.");
+      ownsEscape = true;
       if (!window || window.isDestroyed()) {
         window = new BrowserWindow({
           width: 600,

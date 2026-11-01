@@ -35,9 +35,10 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
       if (ready) break;
       await wait(500);
     }
-    // A plain window showing the slide, like Preview would, covering the work area.
+    // A plain window showing the slide, like Preview would, covering the work area. The slide
+    // leaves a white strip at the bottom where the ask bar sits, for the exclusion check.
     const viewer = path.join(out, 'slide-view.html');
-    fs.writeFileSync(viewer, `<!doctype html><body style="margin:0;background:#fff;height:100vh;display:grid;place-items:center"><img src="${slide}" style="width:100%;height:100vh;object-fit:contain"></body>`);
+    fs.writeFileSync(viewer, `<!doctype html><body style="margin:0;background:#fff;height:100vh"><img src="${slide}" style="display:block;width:100%;height:calc(100vh - 150px);object-fit:contain;object-position:top"></body>`);
     await app.evaluate(({ BrowserWindow, screen }, url) => {
       const d = screen.getPrimaryDisplay();
       const w = new BrowserWindow({ ...d.workArea, frame: false, backgroundColor: '#ffffff', title: 'Slide', show: false });
@@ -112,6 +113,32 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
     const drawn = await until('first answer', (n, b) => n.overlay && !b.busy && b.step !== null, 180000);
     log('first answer drawn in', drawn.ms, 'ms');
     await shot('1-drawn');
+    // The snapshot Muse read must not contain the ask bar: where the bar sits, the slide's
+    // white margin shows through.
+    const barArea = await app.evaluate(async ({ BrowserWindow, nativeImage, screen }) => {
+      const all = BrowserWindow.getAllWindows();
+      const panel = all.find((w) => w.webContents.getURL().endsWith('toolbar.html'));
+      const askBar = all.find((w) => w.webContents.getURL().endsWith('compact.html'));
+      const src = await panel.contentView.children[0].webContents.executeJavaScript(
+        `[...document.querySelectorAll('img')].map(i => i.src).filter(s => s.startsWith('data:image/jpeg')).sort((a, b) => b.length - a.length)[0] || ''`,
+      );
+      if (!src) return null;
+      const image = nativeImage.createFromDataURL(src), size = image.getSize();
+      const b = askBar.getBounds(), d = screen.getDisplayMatching(b).bounds;
+      const sx = size.width / d.width, sy = size.height / d.height;
+      const rect = { x: Math.round((b.x - d.x + 20) * sx), y: Math.round((b.y - d.y + 8) * sy), width: Math.round((b.width - 40) * sx), height: Math.round(44 * sy) };
+      const px = image.crop(rect).toBitmap();
+      let sum = 0, dark = 0;
+      for (let i = 0; i < px.length; i += 4) {
+        const v = (px[i] + px[i + 1] + px[i + 2]) / 3;
+        sum += v;
+        if (v < 200) dark++;
+      }
+      return { mean: sum / (px.length / 4), darkShare: dark / (px.length / 4), rect };
+    });
+    log('bar area in snapshot', JSON.stringify(barArea));
+    assert.ok(barArea, 'the snapshot is available to the page');
+    assert.ok(barArea.mean > 235 && barArea.darkShare < 0.01, 'the ask bar is not in the snapshot Muse read');
     // 2. Step controls.
     const before = drawn.b.step;
     await bar.click('#previous');

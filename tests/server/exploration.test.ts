@@ -1185,6 +1185,60 @@ describe('targeted exploration Wonder review', () => {
 });
 
 describe('model-directed checked cost experiment', () => {
+  const copy = {
+    title: 'Move a cost across the tie',
+    objective: 'Test one connection against the checked alternative.',
+    steps: [{ traceIndex: 0, caption: 'Start with the captured graph.', narration: 'Change one cost.', highlightIds: ['ab'] }],
+    followups: [],
+  };
+  const investigate = async (question: string, choice: unknown) => {
+    const setup = harness();
+    await setup.service.initialize(principal());
+    const original = (await setup.service.example(principal(), true)).artifact;
+    const seen: any[] = [];
+    const request = vi.fn(async (args: any) => {
+      seen.push(args);
+      if (seen.length === 1) return result('choose_investigation', choice, 1);
+      if (!args.instructions.includes('Use compose_cost_experiment')) {
+        // A declined investigation is answered as an ordinary follow-up on the same graph.
+        const m = /Required spec id=([^ ]+) and version=(\d+)/.exec(args.instructions)!;
+        const spec = structuredClone(original.spec);
+        spec.id = m[1];
+        spec.version = Number(m[2]);
+        return result('compose_exploration', { spec }, seen.length);
+      }
+      return result('compose_cost_experiment', copy, seen.length);
+    });
+    const artifact = (
+      await harness(request as never).service.generate(principal(), {
+        action: 'generate',
+        requestId: randomUUID(),
+        artifactId: original.id,
+        baseVersion: 1,
+        intent: 'investigate',
+        state: original.state,
+        question,
+      })
+    ).artifact;
+    return { artifact, seen };
+  };
+  it('lets the learner question pick the connection, and computes the exact boundary for any connection', async () => {
+    const { artifact, seen } = await investigate('What would make the route stop going through a to b?', {
+      edgeId: 'ab',
+      reason: 'The question asks when the route would leave the a–b connection.',
+    });
+    expect(JSON.parse(seen[0].input[0].content).question).toBe('What would make the route stop going through a to b?');
+    expect(seen[0].instructions).not.toContain('Prefer a direct start-goal edge');
+    expect(artifact.experiment).toMatchObject({ edgeId: 'ab', criticalCost: 6, alternativeCost: 8 });
+    expect(artifact.experiment?.rationale).toBe('The question asks when the route would leave the a–b connection.');
+  });
+  it('runs no experiment when the question is not about one connection, and keeps numbers out of Muse’s reason', async () => {
+    const declined = await investigate('Why is Dijkstra greedy?', { edgeId: null, reason: 'This is about the algorithm, not one connection.' });
+    expect(declined.artifact.experiment).toBeUndefined();
+    expect(declined.artifact.generation.audit.some((e) => e.event === 'investigation-declined')).toBe(true);
+    const numbered = await investigate('When does the direct route win?', { edgeId: 'sg', reason: 'Below 3 it wins.' });
+    expect(numbered.artifact.experiment).toMatchObject({ edgeId: 'sg', criticalCost: 3, rationale: null });
+  });
   it('executes the chosen probe and persists a bounded experiment with checked graph bindings', async () => {
     const setup = harness();
     await setup.service.initialize(principal());
@@ -1205,7 +1259,7 @@ describe('model-directed checked cost experiment', () => {
     let calls = 0;
     const request = vi.fn(async (args: any) => {
       calls++;
-      if (calls === 1) return result('choose_cost_probe', { edgeId: 'sg' }, 1);
+      if (calls === 1) return result('choose_investigation', { edgeId: 'sg', reason: 'The question is about the direct connection.' }, 1);
       const c = JSON.parse(args.input[0].content);
       expect(c.experiment.criticalCost).toBe(3);
       return result(

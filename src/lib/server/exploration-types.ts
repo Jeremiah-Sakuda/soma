@@ -43,6 +43,7 @@ import type { ExplorationViewState } from '../domain/exploration-view';
 export type ExplorationAudit = {
   event:
     | 'cost-probed'
+    | 'investigation-declined'
     | 'cost-probe-unavailable'
     | 'review-approved'
     | 'review-rejected'

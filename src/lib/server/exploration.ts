@@ -1737,35 +1737,52 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
       if (request.intent === 'investigate') {
         if (!previous || previous.spec.mode !== 'checked-dijkstra' || !extracted.graph)
           throw new ExplorationError('invalid_request');
+        // Muse decides which connection the learner's own question is about; Soma computes the
+        // exact boundary for that connection. A question about something else gets no
+        // experiment, and the follow-up answers it normally.
+        const graph = extracted.graph;
         const choose = tool(
-          'choose_cost_probe',
-          'Choose one existing graph edge whose cost is useful to investigate. Application checks interventions; do not invent results.',
-          z.strictObject({ edgeId: z.string().min(1).max(48) }),
+          'choose_investigation',
+          'Choose the one existing connection whose cost or presence answers the learner question, or null. The application computes every result.',
+          z.strictObject({
+            edgeId: z.enum(graph.edges.map((e) => e.id) as [string, ...string[]]).nullable(),
+            reason: z.string().min(1).max(200),
+          }),
         );
         const decision = typedCall(
           await call(
             [
               {
                 role: 'user',
-                content: JSON.stringify({ ...context, graph: extracted.graph }),
+                content: JSON.stringify({ ...context, graph }),
               },
             ],
             [choose],
             genericInstructions +
-              ' Select the most useful existing edge to investigate the claim that fewest edges means lowest cost. Prefer a direct start-goal edge when present. Return only choose_cost_probe.',
+              ' Read the learner question and the current experiment. Soma can compute, for ANY single existing connection, the exact cost at which the cheapest route starts or stops using it, and the cheapest route without it. Choose the one connection whose cost or presence most directly answers this question, judged from the question and the graph, not from a default. Only choose a direct start-goal connection if the question is about it. If the question is not about how one connection changes the route, return edgeId null. reason: one short learner-facing sentence saying why this connection answers the question, with no numbers. Return only choose_investigation.',
           ),
-          'choose_cost_probe',
+          'choose_investigation',
         );
-        experiment = probeEdgeCost(
-          extracted.graph,
-          z.strictObject({ edgeId: z.string().min(1).max(48) }).parse(decision.parsedArguments)
-            .edgeId,
-        );
-        audit.push({
-          event: 'cost-probed',
-          call: calls,
-          detail: `Application checked ${experiment.cases.length} cost interventions on ${experiment.edgeId}; exact boundary ${experiment.criticalCost === null ? 'not established' : experiment.criticalCost}.`,
-        });
+        const choice = z
+          .strictObject({ edgeId: z.string().min(1).max(48).nullable(), reason: z.string().min(1).max(200) })
+          .parse(decision.parsedArguments);
+        // The reason is Muse's words; numbers belong to the solver alone.
+        const rationale = /\d/.test(choice.reason) ? null : choice.reason.trim();
+        if (choice.edgeId && graph.edges.some((e) => e.id === choice.edgeId)) {
+          experiment = probeEdgeCost(graph, choice.edgeId, rationale);
+          audit.push({
+            event: 'cost-probed',
+            call: calls,
+            detail: `Muse chose ${choice.edgeId} for this question${rationale ? `: ${rationale}` : ''}. Application checked ${experiment.cases.length} cost interventions; exact boundary ${experiment.criticalCost === null ? 'not established' : experiment.criticalCost}.`,
+          });
+        } else {
+          // Any earlier experiment stays as it was.
+          audit.push({
+            event: 'investigation-declined',
+            call: calls,
+            detail: `Muse found no single connection that answers this question${rationale ? `: ${rationale}` : ''}. Answered as a follow-up without an experiment.`,
+          });
+        }
       }
       stage = 'computation';
       const computed = extracted.graph ? runBfs(extracted.graph) : null;

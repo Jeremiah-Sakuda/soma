@@ -22,7 +22,8 @@ export function ExplorationCostProbe({
         Choose a goal and enable the selected edge to resume this cost experiment.
       </p>
     );
-  probe = probeEdgeCost(input, probe.edgeId);
+  const rationale = probe.rationale ?? null;
+  probe = probeEdgeCost(input, probe.edgeId, rationale);
   const changed = {
       ...input,
       edges: input.edges.map((e) => (e.id === edge.id ? { ...e, weight: value } : e)),
@@ -39,14 +40,22 @@ export function ExplorationCostProbe({
   const name = (id: string) => input.nodes.find((n) => n.id === id)?.label ?? id;
   return (
     <section className="exploration-cost-probe" aria-label="Checked cost experiment">
-      <span className="overline">Muse chose an experiment · checked by Soma</span>
-      <h3>Where does the cheapest route change?</h3>
+      <span className="overline">Muse chose the experiment · Soma computed it</span>
+      <h3>
+        When does the route change at {name(edge.from)}
+        {input.directed ? ' → ' : '–'}
+        {name(edge.to)}?
+      </h3>
+      {rationale && (
+        <p className="exploration-cost-probe-why">
+          <strong>Why this connection:</strong> {rationale}
+        </p>
+      )}
       <p>
-        Change only {name(edge.from)} → {name(edge.to)}. The graph and both searches recompute from
-        the same cost.
+        Change only this connection. The graph and both searches recompute from the same cost.
       </p>
       <label htmlFor="probe-cost">
-        Edge cost: <strong>{value}</strong>
+        Connection cost: <strong>{Number(value.toFixed(2))}</strong>
       </label>
       <input
         id="probe-cost"
@@ -130,7 +139,7 @@ export function ExplorationCostProbe({
           disabled={disabled}
           onClick={() => onChange(probe.criticalCost!)}
         >
-          Try the tie at {probe.criticalCost}
+          Try the tie at {Number(probe.criticalCost.toFixed(2))}
         </button>
       )}
       <p>{probe.note}</p>

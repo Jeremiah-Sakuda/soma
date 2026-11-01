@@ -23,14 +23,14 @@ test('chosen cost experiment updates both routes, survives UI resume and follows
  await page.getByRole('button',{name:'Find the tipping point',exact:true}).click();
  const probe=page.getByRole('region',{name:'Checked cost experiment'});
  await expect(probe).toBeVisible();expect(requests.find(r=>r.action==='generate')).toMatchObject({intent:'investigate',baseVersion:1});
- const slider=probe.getByRole('slider',{name:'Edge cost:'});
+ const slider=probe.getByRole('slider',{name:'Connection cost:'});
  await slider.focus();await page.keyboard.press('Home');for(let i=0;i<20;i++)await page.keyboard.press('ArrowRight');
  await expect(slider).toHaveValue('2');await expect(probe.getByRole('status')).toContainText('BFS route cost: 2');await expect(probe.getByRole('status')).toContainText('Dijkstra route cost: 2');
  await page.getByRole('button',{name:'Save exploration',exact:true}).click();expect(requests.find(r=>r.action==='save').state.edgeWeights).toEqual({sg:2});
  await expect(page.getByRole('status').filter({hasText:'Saved this version'})).toBeVisible();await page.reload();await page.locator('.exploration-library button').first().click();await expect(probe.getByRole('slider')).toHaveValue('2');
  await page.getByRole('combobox',{name:'Goal node',exact:true}).selectOption('a');
  await expect(probe.getByRole('button',{name:'Try the tie',exact:false})).toHaveCount(0);
- await expect(probe).toContainText('not a proof of a global tipping point');
+ await expect(probe).toContainText(/never (changes )?the route/);
  await page.setViewportSize({width:375,height:812});await page.emulateMedia({reducedMotion:'reduce'});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await probe.screenshot({path:'.local/pm061/probe-phone.png'});

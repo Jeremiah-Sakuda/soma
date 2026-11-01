@@ -1748,16 +1748,19 @@ export function ExplorationWorkspace() {
                             })
                           }
                         />
-                      ) : (
+                      ) : null}
+                      {(question.trim() || !artifact.experiment) && (
                         <button
                           type="button"
                           className="secondary-button"
                           title={
                             liveEnabled === false
-                              ? 'Finding the tipping point needs live generation, which is off here.'
+                              ? 'Investigating needs live generation, which is off here.'
                               : !state.goal
                                 ? 'Choose a goal to investigate route costs.'
-                                : undefined
+                                : question.trim()
+                                  ? 'Muse picks the connection your question is about; Soma computes exactly where the route changes.'
+                                  : undefined
                           }
                           disabled={
                             busy ||
@@ -1768,13 +1771,14 @@ export function ExplorationWorkspace() {
                           }
                           onClick={() =>
                             void ask(
-                              'Choose an informative edge and investigate where fewest edges and lowest cost agree or diverge. Use the checked intervention results to explain the boundary, preserve the original graph and expose a hypothetical cost control.',
+                              question.trim() ||
+                                'Choose an informative connection and investigate where fewest edges and lowest cost agree or diverge. Use the checked intervention results to explain the boundary, preserve the original graph and expose a hypothetical cost control.',
                               undefined,
                               true,
                             )
                           }
                         >
-                          Find the tipping point
+                          {question.trim() ? 'Investigate my question' : 'Find the tipping point'}
                         </button>
                       )}
                     </>

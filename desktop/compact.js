@@ -36,9 +36,9 @@ function render() {
   play.disabled = !hasSteps || busy();
   play.textContent = state.playing ? '❚❚' : '▶';
   play.setAttribute('aria-label', state.playing ? 'Pause the explanation' : 'Play the explanation');
-  lift.hidden = !state.visual;
+  // One constant name; the pressed state says whether it is lifted.
+  lift.hidden = !state.visual || !state.liftable;
   lift.setAttribute('aria-pressed', String(state.view === '3d'));
-  lift.textContent = state.view === '3d' ? 'Flat' : '3D';
   test.hidden = !(state.visual && state.investigable);
   test.disabled = busy();
   // With nothing drawn, every question needs a snapshot.

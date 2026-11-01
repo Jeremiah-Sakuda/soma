@@ -12,9 +12,11 @@
     "test:hosted": "node test/hosted.cjs",
     "release": "node release.cjs",
     "build:native": "node build-native.cjs",
-    "prestart": "node build-native.cjs",
-    "prepackage": "node build-native.cjs",
-    "test:compact-live": "node test/compact-live.cjs"
+    "prestart": "node build-native.cjs && node build-lift.cjs",
+    "prepackage": "node build-native.cjs && node build-lift.cjs",
+    "test:compact-live": "node test/compact-live.cjs",
+    "build:lift": "node build-lift.cjs",
+    "test:lift-visual": "node test/lift-harness.cjs"
   },
   "devDependencies": {
     "@electron/osx-sign": "2.7.2",

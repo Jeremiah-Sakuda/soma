@@ -98,6 +98,7 @@ function sendCompactState() {
     ...s,
     busy: s.busy || compactAsking || Boolean(compactPending) || Boolean(pointAsk?.compactActive()),
     view: pointAsk?.view ?? '2d',
+    liftable: Boolean(pointAsk?.liftable),
     // Whether the page itself is working, as distinct from a request still on its way.
     pageBusy: s.busy,
     visual: s.visual && Boolean(pointAsk?.hasDrawing()),

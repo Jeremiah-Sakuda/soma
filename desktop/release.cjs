@@ -11,6 +11,8 @@ async function release(){
  if(!identity||!available.includes(identity))throw new Error('Install a valid Developer ID Application certificate; set SOMA_SIGNING_IDENTITY if more than one is available.');
  if(!notarizeOnly){
   const helper=require('./build-native.cjs').buildNative();
+  // The 3D lift renderer ships as one generated script; rebuild it from source first.
+  run(process.execPath,[path.join(__dirname,'build-lift.cjs')]);
   const {packager}=await import('@electron/packager');
   await packager({dir:__dirname,name:'Soma',platform:'darwin',arch:'arm64',out:output,overwrite:true,asar:true,appBundleId:'app.soma.desktop',extendInfo:path.join(__dirname,'Info.plist'),extraResource:[helper,path.join(path.dirname(helper),'computer-control')],ignore:[/^\/test(?:\/|$)/,/^\/README\.md$/,/^\/node_modules\/\.cache(?:\/|$)/]});
   const {sign}=await import('@electron/osx-sign');

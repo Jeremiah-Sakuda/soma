@@ -614,7 +614,7 @@ export function ExplorationScene({
                       )
                     }
                   >
-                    {lifted ? 'Set it back on the slide' : 'Lift it into 3D'}
+                    Lift into 3D
                   </button>
                 )}
               </p>

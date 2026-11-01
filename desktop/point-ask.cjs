@@ -45,7 +45,9 @@ function createPointAsk({
     idleTimer = null,
     // The drawing as a flat sketch on the slide, or lifted off it in 3D.
     view = '2d',
-    sheet = null;
+    sheet = null,
+    viewChanged = 0,
+    liftWatch = null;
   let lastCapture = null,
     lastCaptureTimer = null,
     highlightBusy = false;
@@ -85,8 +87,16 @@ function createPointAsk({
   function setView(next, id) {
     if (!['2d', '3d'].includes(next) || next === view) return view;
     const c = overlayCapture;
-    if (!graph?.verified || !c || graph.id !== c.id || (id && id !== graph.id) || !overlay || overlay.isDestroyed()) return view;
+    if (!graph?.verified || !graph.model.lift || !c || graph.id !== c.id || (id && id !== graph.id) || !overlay || overlay.isDestroyed()) return view;
+    // Rapid toggles would resend the sheet each time.
+    if (Date.now() - viewChanged < 350) return view;
+    viewChanged = Date.now();
     view = next;
+    clearInterval(liftWatch);
+    liftWatch = null;
+    // Lifted, the copy of the capture covers the live slide; if the learner changes the
+    // slide underneath, notice within a few seconds and take the drawing down.
+    if (view === '3d') liftWatch = setInterval(() => void watchLifted(c), 2500);
     if (view === '3d' && sheet?.id !== graph.id) {
       let data = null;
       try {
@@ -155,6 +165,8 @@ function createPointAsk({
     graph = null;
     view = '2d';
     sheet = null;
+    clearInterval(liftWatch);
+    liftWatch = null;
     clearTimeout(idleTimer);
     if (overlay && !overlay.isDestroyed()) {
       overlay.setIgnoreMouseEvents(true);
@@ -572,27 +584,7 @@ function createPointAsk({
     graph = { id: c.id, model: event.model, verified };
     // After the learner used another app, check the slide is still the one drawn on before
     // drawing the next step. Soma's windows are left out of that capture, without hiding.
-    if (verified && stale && !verifying && Date.now() - lastCheck > 3000) {
-      verifying = true;
-      stale = false;
-      let ok = false;
-      try {
-        const fresh = await captureClean(c.display);
-        ok = compareRegion(c.snapshot.dataUrl, fresh.dataUrl, overlayRegion(graph.model));
-      } catch {
-        ok = false;
-      } finally {
-        verifying = false;
-        lastCheck = Date.now();
-      }
-      if (overlayCapture !== c || graph?.id !== c.id) return;
-      if (!ok) {
-        clearGraph();
-        refused = c.id;
-        overlayResult({ id: c.id, shown: false });
-        return;
-      }
-    }
+    if (verified && stale && !verifying && Date.now() - lastCheck > 3000 && !(await recheck(c))) return;
     if (!verified) {
       if (verifying) return; // the latest model is drawn once verification finishes
       verifying = true;
@@ -639,6 +631,33 @@ function createPointAsk({
     overlay.setIgnoreMouseEvents(true, view === '3d' ? undefined : { forward: true });
     drawGraph(false);
   }
+  /** Re-checks the slide behind a drawing after the learner may have changed it. Takes the
+   * drawing down and returns false if the graph's region no longer matches. */
+  async function recheck(c) {
+    verifying = true;
+    stale = false;
+    let ok = false;
+    try {
+      const fresh = await captureClean(c.display);
+      ok = compareRegion(c.snapshot.dataUrl, fresh.dataUrl, overlayRegion(graph.model));
+    } catch {
+      ok = false;
+    } finally {
+      verifying = false;
+      lastCheck = Date.now();
+    }
+    if (overlayCapture !== c || graph?.id !== c.id) return false;
+    if (!ok) {
+      clearGraph();
+      refused = c.id;
+      overlayResult({ id: c.id, shown: false });
+    }
+    return ok;
+  }
+  async function watchLifted(c) {
+    if (view !== '3d' || !stale || verifying || current || overlayCapture !== c || graph?.id !== c.id || !graph.verified) return;
+    await recheck(c);
+  }
   function fromOverlay(event) {
     return Boolean(overlay && !overlay.isDestroyed() && event?.sender === overlay.webContents);
   }
@@ -666,6 +685,10 @@ function createPointAsk({
     liftFailed,
     get view() {
       return view;
+    },
+    /** Whether the drawing on screen can lift into 3D (a checked graph search). */
+    get liftable() {
+      return Boolean(graph?.verified && graph.model.lift);
     },
     clearScreenOverlay,
     markStale,

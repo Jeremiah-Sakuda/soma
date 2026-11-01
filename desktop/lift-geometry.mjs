@@ -14,13 +14,15 @@ export function cameraDistance(height, fovDegrees) {
 /** Normalized capture point to world pixels: origin at the display centre, y up. */
 export const toWorld = (p, frame) => ({ x: p.x * frame.width - frame.width / 2, y: frame.height / 2 - p.y * frame.height });
 
-/** How much longer a connection is than the climb between its ends; 0 means taut. */
+// Distances arrive rounded to two places, so smaller differences are rounding, not slack.
+const TOLERANCE = 0.011;
+/** How much longer a connection is than the climb between its ends: 0 means taut. Negative
+ * only next to an estimate: the connection offers a shorter way and will lower it. */
 export function slackOf(weight, fromDistance, toDistance, directed) {
   if (!Number.isFinite(weight) || fromDistance === null || toDistance === null) return null;
   const climb = directed ? toDistance - fromDistance : Math.abs(toDistance - fromDistance);
   const slack = weight - climb;
-  // Tentative distances are upper bounds, so a string can never be shorter than its climb.
-  return Math.abs(slack) < 1e-9 * Math.max(1, weight) ? 0 : Math.max(0, slack);
+  return Math.abs(slack) < TOLERANCE ? 0 : Number(slack.toFixed(4));
 }
 
 /** Region of the graph on the slide, in normalized coordinates, padded to include the
@@ -53,7 +55,8 @@ export function liftLayout(model, frame) {
   // The tallest node rises about two thirds of the graph's own height above the sheet.
   const tallest = Math.max(r * 6, Math.min(frame.height * 0.34, Math.max(regionPx.height, regionPx.width * 0.5) * 0.62));
   const scale = tallest / lift.maxDistance;
-  const base = r * 1.6;
+  // A node at distance 0 rests on the sheet; height above that is distance.
+  const base = r * 0.78;
   const byId = new Map();
   const nodes = model.nodes.map((n) => {
     const known = n.distance !== null && n.status !== 'unreached';
@@ -62,7 +65,9 @@ export function liftLayout(model, frame) {
       label: n.label,
       status: n.status,
       distance: known ? n.distance : null,
-      tentative: n.status === 'waiting',
+      // The start is known exactly from the outset, and breadth-first distances are final
+      // when found; only Dijkstra's queued costs are estimates.
+      tentative: n.status === 'waiting' && lift.unit === 'cost' && !(n.id === lift.source && n.distance === 0),
       ...toWorld(n, frame),
       height: known ? base + n.distance * scale : 0,
       source: n.id === lift.source,
@@ -78,9 +83,28 @@ export function liftLayout(model, frame) {
     if (e.tone === 'cut') return [{ id: e.id, from: a.id, to: b.id, weight, slack: null, kind: 'cut', tone: e.tone, label: '' }];
     const slack = weight === null ? null : slackOf(weight, a.distance, b.distance, lift.directed);
     // A string to a tentative node holds it up at its current estimate; it may still change.
-    const kind = slack === null ? 'flat' : a.tentative || b.tentative ? 'tentative' : slack === 0 ? 'taut' : 'slack';
-    const label = kind === 'slack' ? `${fmt(weight)} · slack ${fmt(slack)}` : kind === 'taut' || (kind === 'tentative' && slack === 0) ? fmt(weight) : kind === 'tentative' ? `${fmt(weight)} · slack ${fmt(slack)}` : '';
-    return [{ id: e.id, from: a.id, to: b.id, weight, slack, kind, tone: e.tone, label }];
+    // Between two estimates nothing is settled yet, so it stays drawn on the sheet.
+    const kind =
+      slack === null || (a.tentative && b.tentative)
+        ? 'flat'
+        : slack < 0
+          ? 'pull'
+          : a.tentative || b.tentative
+            ? 'tentative'
+            : slack === 0
+              ? 'taut'
+              : 'slack';
+    // A shorter way to an estimate: the node it reaches will come down.
+    const lower = kind === 'pull' ? (a.tentative ? a : b) : null;
+    const label =
+      kind === 'slack'
+        ? `${fmt(weight)} · slack ${fmt(slack)}`
+        : kind === 'pull'
+          ? `${fmt(weight)} · lowers ${lower.label} by ${fmt(-slack)}`
+          : kind === 'taut' || kind === 'tentative'
+            ? fmt(weight)
+            : '';
+    return [{ id: e.id, from: a.id, to: b.id, weight, slack, kind, tone: e.tone, label, directed: lift.directed }];
   });
   // The sheet hinges on its bottom edge, so the graph's base stays on the slide.
   const sheet = {
@@ -97,6 +121,11 @@ export function liftLayout(model, frame) {
 export function sagDepth(slack, scale, tallest) {
   if (!slack) return 0;
   return Math.min(tallest * 0.55, slack * scale * 0.6);
+}
+
+/** A sag that never takes the string below the sheet between its two ends. */
+export function boundedSag(sag, za, zb, margin) {
+  return Math.max(0, Math.min(sag, Math.min(za, zb) - margin));
 }
 
 /** Points along a string from a to b (each {x, y, z}) sagging by `sag` at its middle. */

@@ -27,7 +27,8 @@ test('heights are checked distances and strings are taut exactly on shortest rou
   for (const id of ['AC', 'BC', 'BD', 'DF']) assert.equal(edge(id).kind, 'taut', id);
   assert.equal(edge('CE').kind, 'taut', 'C–E is the shortest way to E');
   assert.deepEqual([edge('AB').slack, edge('DE').slack, edge('EF').slack], [1, 1, 2]);
-  assert.equal(slackOf(3, 0, 5, true), 0, 'a directed string can never be shorter than its climb');
+  assert.equal(slackOf(3, 0, 5, true), -2, 'next to an estimate, a shorter way shows as negative slack');
+  assert.equal(slackOf(0.333, 0.34, 0.67, false), 0, 'rounded distances do not make a taut string sag');
   assert.equal(slackOf(5, null, 2, false), null);
 });
 

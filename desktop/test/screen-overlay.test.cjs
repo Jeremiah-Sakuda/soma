@@ -6,6 +6,7 @@ const { createPointAsk } = require('../point-ask.cjs');
 const { validOverlayModel, overlayRegion, regionMatches } = require('../screen-overlay.cjs');
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const LIFT = { lift: { directed: false, source: 'A', goal: 'F', maxDistance: 7, unit: 'cost' } };
 const model = (extra = {}) => ({
   final: false,
   radius: 0.02,
@@ -310,6 +311,8 @@ test('a verified drawing lifts into 3D with its own slide region as the sheet, o
     assert.equal(h.controller.setView('3d'), '2d', 'nothing drawn yet');
     const id = await h.ready();
     await h.controller.screenOverlay({ id, model: model() });
+    assert.equal(h.controller.setView('3d'), '2d', 'a drawing without lift data stays flat');
+    await h.controller.screenOverlay({ id, model: model(LIFT) });
     assert.equal(h.controller.setView('3d', 'another-capture'), '2d', 'only for the capture on screen');
     assert.equal(h.controller.setView('3d', id), '3d');
     const lifted = h.draws.at(-1);
@@ -320,14 +323,17 @@ test('a verified drawing lifts into 3D with its own slide region as the sheet, o
     assert.equal(h.windows[0].clickThrough, true);
     assert.equal(h.windows[0].forward, false, 'a lifted drawing is not clickable');
     // The next step redraws in 3D without sending the sheet again.
-    await h.controller.screenOverlay({ id, model: model({ caption: null }) });
+    await h.controller.screenOverlay({ id, model: model({ ...LIFT, caption: null }) });
     assert.equal(h.draws.at(-1).view, '3d');
     assert.equal(h.draws.at(-1).sheet, undefined);
     h.controller.overlayHover({ sender: h.windows[0].webContents }, true);
     assert.equal(h.windows[0].clickThrough, true, 'hovering cannot make the 3D drawing clickable');
+    assert.equal(h.controller.setView('2d'), '3d', 'toggles in quick succession are ignored');
+    await wait(360);
     assert.equal(h.controller.setView('2d'), '2d');
     assert.equal(h.draws.at(-1).view, '2d');
     assert.equal(h.windows[0].forward, true);
+    await wait(360);
     assert.equal(h.controller.setView('3d'), '3d');
     assert.equal(crops.length, 1, 'the same capture is cropped once');
     // Escape clears the drawing and the next one starts flat.
@@ -342,7 +348,7 @@ test('without WebGL the drawing stays flat and says why', async () => {
   const h = harness(['data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE'], { cropImage: () => { throw Error('no image'); } });
   try {
     const id = await h.ready();
-    await h.controller.screenOverlay({ id, model: model() });
+    await h.controller.screenOverlay({ id, model: model(LIFT) });
     assert.equal(h.controller.setView('3d'), '3d');
     assert.equal(h.draws.at(-1).sheet, undefined, 'a failed crop lifts without a sheet');
     h.controller.liftFailed({ sender: {} });
@@ -350,6 +356,24 @@ test('without WebGL the drawing stays flat and says why', async () => {
     h.controller.liftFailed({ sender: h.windows[0].webContents });
     assert.equal(h.controller.view, '2d');
     assert.deepEqual(h.results.at(-1), { id, shown: true, view: '2d', reason: 'webgl' });
+  } finally {
+    h.controller.dispose();
+  }
+});
+
+test('while lifted, a slide changed underneath takes the drawing down within seconds', async () => {
+  const h = harness(['data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,NEXT'], { cropImage: () => 'data:image/jpeg;base64,SHEET' });
+  try {
+    const id = await h.ready();
+    await h.controller.screenOverlay({ id, model: model(LIFT) });
+    h.controller.setView('3d');
+    await wait(2700);
+    assert.equal(h.controller.view, '3d', 'nothing changed, so no re-check');
+    h.controller.markStale();
+    await wait(2700);
+    assert.equal(h.controller.hasDrawing(), false);
+    assert.equal(h.controller.view, '2d');
+    assert.deepEqual(h.results.at(-1), { id, shown: false });
   } finally {
     h.controller.dispose();
   }

@@ -2,7 +2,8 @@
 // The graph's region of the learner's own capture peels up as a sheet hinged on its bottom
 // edge; each node rises on a pillar to its checked distance and each connection becomes a
 // string as long as its cost (taut on shortest routes, slack by the difference elsewhere).
-// Bundled into point-overlay-3d.js; exposes window.SomaLift.
+// A ruler at the back of the sheet reads off the heights. Bundled into point-overlay-3d.js;
+// exposes window.SomaLift.
 import {
   WebGLRenderer,
   Scene,
@@ -11,6 +12,8 @@ import {
   Mesh,
   SphereGeometry,
   CylinderGeometry,
+  ConeGeometry,
+  TorusGeometry,
   RingGeometry,
   CircleGeometry,
   PlaneGeometry,
@@ -18,6 +21,7 @@ import {
   BufferGeometry,
   CatmullRomCurve3,
   Vector3,
+  Quaternion,
   Color,
   MeshPhysicalMaterial,
   MeshBasicMaterial,
@@ -32,27 +36,43 @@ import {
   SRGBColorSpace,
   DoubleSide,
 } from 'three';
-import { cameraDistance, liftLayout, sagDepth, stringPoints, easeInOut, clamp01, riseAt, approach, fmt, separateLabels } from './lift-geometry.mjs';
+import {
+  cameraDistance,
+  liftLayout,
+  sagDepth,
+  boundedSag,
+  stringPoints,
+  easeInOut,
+  clamp01,
+  riseAt,
+  approach,
+  fmt,
+  separateLabels,
+} from './lift-geometry.mjs';
 
 const FOV = 28;
-const TILT = (48 * Math.PI) / 180;
+// Steep enough that height on screen reads as height, not as depth into the slide.
+const TILT = (58 * Math.PI) / 180;
 // Turned a little once lifted, so nodes that share a column on the slide separate.
-const BASE_YAW = -0.26;
+const BASE_YAW = -0.15;
+const ENTER_MS = 2400;
+const EXIT_MS = 1000;
+// A slow turn shows the depth, then stops so the scene can rest (and stop rendering).
+const SWAY_MS = 9000;
 // A test harness may drive the clock to capture exact frames.
 const clock = () => (typeof window.__liftNow === 'function' ? window.__liftNow() : performance.now());
-const ENTER_MS = 1700;
-const EXIT_MS = 950;
 const COLOR = {
   source: 0xf2b632,
   settled: 0x1f9e78,
   current: 0xff7a3d,
-  waiting: 0x8fb5a8,
+  waiting: 0x9fb4c4,
   path: 0xff5a3c,
   taut: 0xf2a93b,
   slack: 0x7f8c99,
-  tentative: 0xe7b86a,
-  flat: 0x9a968e,
+  tentative: 0xa9b8c6,
+  pull: 0xd63bd1,
   cut: 0xe03b2c,
+  ruler: 0x6f685c,
 };
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let s = null;
@@ -67,21 +87,21 @@ function radialTexture(inner, outer) {
   g.fillRect(0, 0, 128, 128);
   return new CanvasTexture(c);
 }
-/** Alpha map with softened edges, so the lifted sheet has no hard seam against the slide. */
-function vignette(inset = 18, blur = 10) {
+/** Alpha map with softened edges, so the lifted sheet has no hard seam. */
+function vignette() {
   const c = document.createElement('canvas');
   c.width = c.height = 256;
   const g = c.getContext('2d');
   g.fillStyle = '#000';
   g.fillRect(0, 0, 256, 256);
-  g.filter = `blur(${blur}px)`;
+  g.filter = 'blur(10px)';
   g.fillStyle = '#fff';
   g.beginPath();
-  g.roundRect(inset, inset, 256 - inset * 2, 256 - inset * 2, 26);
+  g.roundRect(18, 18, 220, 220, 26);
   g.fill();
   return new CanvasTexture(c);
 }
-/** The slide's paper colour, from the corners of the captured region. */
+/** The slide's paper colour, from the brightest corner of the captured region. */
 function paperColour(image) {
   try {
     const c = document.createElement('canvas');
@@ -89,7 +109,6 @@ function paperColour(image) {
     const g = c.getContext('2d', { willReadFrequently: true });
     g.drawImage(image, 0, 0, 16, 16);
     const data = g.getImageData(0, 0, 16, 16).data;
-    // The brightest corner pixels are the paper; marks near the edge are darker.
     const corners = [0, 15, 240, 255].map((i) => [data[i * 4], data[i * 4 + 1], data[i * 4 + 2], data[i * 4 + 3]]).filter((p) => p[3] > 200);
     if (!corners.length) return new Color(0xffffff);
     const best = corners.sort((a, b) => b[0] + b[1] + b[2] - (a[0] + a[1] + a[2]))[0];
@@ -107,41 +126,64 @@ function tag(className) {
 function material(color, extra = {}) {
   return new MeshPhysicalMaterial({ color, roughness: 0.3, metalness: 0.05, clearcoat: 0.85, clearcoatRoughness: 0.18, transparent: true, ...extra });
 }
+/** A node keeps its colour; being current is shown by a halo, not a recolour. */
 function nodeColor(n) {
-  if (n.status === 'current') return COLOR.current;
+  if (n.source) return COLOR.source;
   if (n.tentative) return COLOR.waiting;
-  return n.source ? COLOR.source : COLOR.settled;
+  return COLOR.settled;
+}
+function disposeObject(o) {
+  o.parent?.remove(o);
+  o.geometry?.dispose();
+  if (o.material) {
+    o.material.map?.dispose();
+    o.material.alphaMap?.dispose();
+    o.material.dispose();
+  }
 }
 
 function build(frame) {
   const canvas = document.createElement('canvas');
   canvas.id = 'lift-canvas';
-  document.body.appendChild(canvas);
   const labels = document.createElement('div');
   labels.id = 'lift-labels';
-  document.body.appendChild(labels);
-  const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true, premultipliedAlpha: true });
+  let renderer;
+  try {
+    // Full-display transparent canvas: skip multisampling where the pixel ratio already
+    // smooths edges, and cap very large surfaces.
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    const ratio = frame.width * frame.height * dpr * dpr > 9e6 ? Math.max(1, Math.sqrt(9e6 / (frame.width * frame.height))) : dpr;
+    renderer = new WebGLRenderer({ canvas, alpha: true, antialias: ratio < 1.75, premultipliedAlpha: true, powerPreference: 'low-power' });
+    renderer.setPixelRatio(ratio);
+  } catch (error) {
+    canvas.remove();
+    throw error;
+  }
+  document.body.append(canvas, labels);
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = SRGBColorSpace;
-  renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
   const scene = new Scene();
   const camera = new PerspectiveCamera(FOV, 1, 10, 100000);
   scene.add(new HemisphereLight(0xffffff, 0x6d6252, 1.5));
   const key = new DirectionalLight(0xffffff, 1.7);
-  scene.add(key);
   const rim = new DirectionalLight(0xffe2c4, 0.7);
-  scene.add(rim);
+  scene.add(key, rim);
   const hinge = new Group(), yaw = new Group(), content = new Group();
   hinge.add(yaw);
   yaw.add(content);
   scene.add(hinge);
   s = {
     canvas, labels, renderer, scene, camera, key, rim, hinge, yaw, content,
-    nodes: new Map(), edges: new Map(), flat: new Map(),
+    nodes: new Map(), edges: new Map(), ticks: [],
     shadowTex: radialTexture('rgba(0,0,0,0.55)', 'rgba(0,0,0,0)'),
-    t: 0, mode: 'enter', started: clock(), last: clock(), sway: 0, pending: [],
-    frame: null, layout: null, model: null, sheetMesh: null, sheetKey: null, onExit: null,
+    t: 0, mode: 'enter', started: clock(), last: clock(), idleSince: null, sway: 0, pending: [],
+    frame: null, layout: null, model: null, sheet: null, sheetKey: null, sheetReady: false, onExit: null, raf: 0, compiled: false,
   };
+  s.onLost = (event) => {
+    event.preventDefault();
+    fail();
+  };
+  canvas.addEventListener('webglcontextlost', s.onLost);
   resize(frame);
 }
 function resize(frame) {
@@ -157,107 +199,136 @@ function resize(frame) {
   s.camera.updateProjectionMatrix();
   s.key.position.set(-frame.width * 0.4, frame.height * 0.7, d);
   s.rim.position.set(frame.width * 0.5, -frame.height * 0.3, d * 0.3);
+  s.sheetKey = null;
 }
 
+/** The sheet, the paper-coloured cover where it came from, its shadow and the ruler. */
 function placeSheet(layout, sheet) {
-  const key = sheet ? `${sheet.dataUrl.length}:${sheet.dataUrl.slice(-48)}` : 'none';
-  if (s.sheetKey === key && s.sheetMesh) return;
-  if (s.sheetMesh) {
-    for (const o of [s.sheetMesh, s.sheetEdge, s.cover, s.floorShadow]) {
-      o.parent.remove(o);
-      o.geometry.dispose();
-      o.material.map?.dispose();
-      o.material.alphaMap?.dispose();
-      o.material.dispose();
-    }
+  const key = `${sheet ? `${sheet.dataUrl.length}:${sheet.dataUrl.slice(-48)}` : 'none'}:${s.frame.width}x${s.frame.height}`;
+  if (s.sheetKey === key) return;
+  if (s.sheet) for (const o of Object.values(s.sheet)) disposeObject(o);
+  for (const t of s.ticks) {
+    disposeObject(t.mesh);
+    t.label.remove();
   }
+  s.ticks = [];
   s.sheetKey = key;
-  // Place the sheet where the learner's slide shows this exact region, so a flat sheet is
-  // the slide itself and only reveals itself as it lifts.
+  s.sheetReady = false;
+  // Placed where the learner's slide shows this exact region, so a flat sheet is the slide
+  // itself and only reveals itself as it lifts.
   const region = sheet?.region ?? layout.region;
   const f = s.frame,
     w = region.width * f.width,
     h = region.height * f.height,
     x = region.x * f.width + w / 2 - f.width / 2,
     y = f.height / 2 - (region.y * f.height + h / 2);
-  const mat = new MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, side: DoubleSide, alphaMap: vignette() });
-  // Where the sheet came from, the slide shows blank paper of its own colour while lifted.
-  // The slide's own paper colour, so its hard edge does not show.
+  const paper = new MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, side: DoubleSide, alphaMap: vignette(), opacity: 0 });
   const coverMat = new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false });
   if (sheet) {
     new TextureLoader().load(sheet.dataUrl, (texture) => {
+      // Disposed or replaced while loading.
+      if (!s || s.sheet?.paper.material !== paper) return texture.dispose();
       texture.colorSpace = SRGBColorSpace;
-      mat.map = texture;
-      mat.needsUpdate = true;
+      paper.map = texture;
+      paper.needsUpdate = true;
       coverMat.color.copy(paperColour(texture.image));
+      s.sheetReady = true;
+      wake();
     });
-  } else {
-    mat.color = new Color(0xf7f3ea);
-    mat.opacity = 0;
-  }
-  s.sheetMesh = new Mesh(new PlaneGeometry(w, h), mat);
-  s.sheetMesh.position.set(x, y, 0);
-  s.sheetMesh.renderOrder = 0;
-  const edge = new BufferGeometry().setFromPoints([
-    new Vector3(x - w / 2, y - h / 2, 0.5), new Vector3(x + w / 2, y - h / 2, 0.5),
-    new Vector3(x + w / 2, y + h / 2, 0.5), new Vector3(x - w / 2, y + h / 2, 0.5),
-  ]);
-  s.sheetEdge = new LineLoop(edge, new LineBasicMaterial({ color: 0x8c8577, transparent: true, opacity: 0 }));
-  s.cover = new Mesh(new PlaneGeometry(w, h), coverMat);
-  s.cover.position.set(x, y, -2);
-  s.cover.renderOrder = -2;
-  // A soft shadow on the slide beneath the lifted sheet.
-  s.floorShadow = new Mesh(new PlaneGeometry(w * 1.15, h * 0.85), new MeshBasicMaterial({ map: radialTexture('rgba(0,0,0,0.45)', 'rgba(0,0,0,0)'), transparent: true, opacity: 0, depthWrite: false }));
-  s.floorShadow.position.set(x, y - h * 0.12, -1);
-  s.floorShadow.renderOrder = -1;
-  s.scene.add(s.cover, s.floorShadow);
-  s.content.add(s.sheetMesh, s.sheetEdge);
+  } else paper.color = new Color(0xf7f3ea);
+  const plane = new Mesh(new PlaneGeometry(w, h), paper);
+  plane.position.set(x, y, 0);
+  const edge = new LineLoop(
+    new BufferGeometry().setFromPoints([
+      new Vector3(x - w / 2, y - h / 2, 0.5), new Vector3(x + w / 2, y - h / 2, 0.5),
+      new Vector3(x + w / 2, y + h / 2, 0.5), new Vector3(x - w / 2, y + h / 2, 0.5),
+    ]),
+    new LineBasicMaterial({ color: 0x8c8577, transparent: true, opacity: 0 }),
+  );
+  // The cover hides the original graph only once the sheet carrying it is ready.
+  const cover = new Mesh(new PlaneGeometry(w, h), coverMat);
+  cover.position.set(x, y, -2);
+  cover.renderOrder = -2;
+  const floor = new Mesh(new PlaneGeometry(w * 1.15, h * 0.85), new MeshBasicMaterial({ map: radialTexture('rgba(0,0,0,0.45)', 'rgba(0,0,0,0)'), transparent: true, opacity: 0, depthWrite: false }));
+  floor.position.set(x, y - h * 0.12, -1);
+  floor.renderOrder = -1;
+  // A ruler at the back-left corner of the sheet reads off each node's height.
+  const r = layout.radius;
+  const rulerAt = { x: x - w / 2 + r * 1.2, y: y + h / 2 - r * 1.2 };
+  const ruler = new Mesh(new CylinderGeometry(r * 0.05, r * 0.05, 1, 8), new MeshBasicMaterial({ color: COLOR.ruler, transparent: true, opacity: 0 }));
+  ruler.rotation.x = Math.PI / 2;
+  ruler.position.set(rulerAt.x, rulerAt.y, 0);
+  const level = new Line(new BufferGeometry().setFromPoints([new Vector3(), new Vector3()]), new LineDashedMaterial({ color: COLOR.current, dashSize: r * 0.35, gapSize: r * 0.25, transparent: true, opacity: 0 }));
+  s.scene.add(cover, floor);
+  s.content.add(plane, edge, ruler, level);
+  s.sheet = { paper: plane, edge, cover, floor, ruler, level };
+  s.rulerAt = rulerAt;
   s.hinge.position.set(x, y - h / 2, 0);
   s.content.position.set(-x, -(y - h / 2), 0);
+}
+
+/** Ticks on the ruler at each settled distance. */
+function syncTicks(layout) {
+  const values = [...new Set(layout.nodes.filter((n) => n.distance !== null && !n.tentative).map((n) => n.distance))].sort((a, b) => a - b);
+  const key = values.join(',');
+  if (s.tickKey === key) return;
+  s.tickKey = key;
+  for (const t of s.ticks) {
+    disposeObject(t.mesh);
+    t.label.remove();
+  }
+  const r = layout.radius;
+  s.ticks = values.map((value) => {
+    const mesh = new Mesh(new CylinderGeometry(r * 0.04, r * 0.04, r * 0.7, 6), new MeshBasicMaterial({ color: COLOR.ruler, transparent: true, opacity: 0 }));
+    mesh.rotation.z = Math.PI / 2;
+    s.content.add(mesh);
+    const label = tag('is-tick');
+    label.textContent = fmt(value);
+    return { value, mesh, label };
+  });
 }
 
 function syncNodes(layout) {
   const r = layout.radius;
   const seen = new Set();
+  const now = clock();
   for (const n of layout.nodes) {
     seen.add(n.id);
     let v = s.nodes.get(n.id);
     if (!v) {
       const sphere = new Mesh(new SphereGeometry(r * 0.78, 40, 24), material(nodeColor(n)));
+      const halo = new Mesh(new TorusGeometry(r * 1.12, r * 0.09, 12, 48), new MeshBasicMaterial({ color: COLOR.current, transparent: true, opacity: 0 }));
+      const ghost = new Mesh(new SphereGeometry(r * 0.78, 24, 16), new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
       const pillar = new Mesh(new CylinderGeometry(r * 0.055, r * 0.055, 1, 10), new MeshBasicMaterial({ color: nodeColor(n), transparent: true, opacity: 0.6 }));
       pillar.rotation.x = Math.PI / 2;
       const foot = new Mesh(new RingGeometry(r * 0.95, r * 1.15, 48), new MeshBasicMaterial({ color: nodeColor(n), transparent: true, opacity: 0, side: DoubleSide, depthWrite: false }));
       const shadow = new Mesh(new CircleGeometry(r * 1.2, 32), new MeshBasicMaterial({ map: s.shadowTex, transparent: true, opacity: 0, depthWrite: false }));
-      for (const o of [shadow, foot, pillar, sphere]) s.content.add(o);
-      sphere.renderOrder = pillar.renderOrder = 3;
-      v = { sphere, pillar, foot, shadow, label: tag('is-node'), h: 0, target: 0 };
+      for (const o of [shadow, foot, pillar, ghost, sphere, halo]) s.content.add(o);
+      sphere.renderOrder = pillar.renderOrder = halo.renderOrder = 3;
+      v = { sphere, halo, ghost, pillar, foot, shadow, label: tag('is-node'), h: 0, target: 0, drop: null, data: null };
       s.nodes.set(n.id, v);
     }
+    // An estimate that comes down leaves a ghost where it was, so the drop reads.
+    if (v.data && v.data.distance !== null && n.distance !== null && n.distance < v.data.distance - 1e-9)
+      v.drop = { from: v.data.distance, height: v.h, at: now };
     v.data = n;
     v.target = n.height;
     const color = nodeColor(n);
     v.sphere.material.color.setHex(color);
-    v.sphere.material.emissive.setHex(n.status === 'current' ? color : 0x000000);
-    v.sphere.material.opacity = n.tentative ? 0.5 : 1;
+    v.sphere.material.opacity = n.tentative ? 0.55 : 1;
     v.pillar.material.color.setHex(color);
     v.pillar.material.opacity = n.tentative ? 0.3 : 0.6;
-    v.foot.material.color.setHex(color);
-    v.sphere.position.x = v.pillar.position.x = v.foot.position.x = v.shadow.position.x = n.x;
-    v.sphere.position.y = v.pillar.position.y = v.foot.position.y = v.shadow.position.y = n.y;
+    v.foot.material.color.setHex(n.status === 'current' ? COLOR.current : color);
+    for (const o of [v.sphere, v.halo, v.ghost, v.pillar, v.foot, v.shadow]) o.position.set(n.x, n.y, o.position.z);
     v.foot.position.z = 0.6;
     v.shadow.position.z = 0.3;
     const lifted = n.distance !== null;
     v.sphere.visible = v.pillar.visible = lifted;
-    v.label.textContent = lifted ? `${n.label} ${n.tentative ? '≤' : '='} ${fmt(n.distance)}` : '';
     v.label.className = `lift-tag is-node is-${n.status}${n.source ? ' is-source' : ''}${n.goal ? ' is-goal' : ''}`;
   }
   for (const [id, v] of s.nodes)
     if (!seen.has(id)) {
-      for (const o of [v.sphere, v.pillar, v.foot, v.shadow]) {
-        s.content.remove(o);
-        o.geometry.dispose();
-        o.material.dispose();
-      }
+      for (const o of [v.sphere, v.halo, v.ghost, v.pillar, v.foot, v.shadow]) disposeObject(o);
       v.label.remove();
       s.nodes.delete(id);
     }
@@ -268,19 +339,29 @@ function caption(model, layout) {
   if (!box) {
     box = document.createElement('div');
     box.id = 'lift-caption';
-    box.append(document.createElement('strong'), document.createElement('span'), document.createElement('small'));
+    const legend = document.createElement('div');
+    legend.className = 'lift-legend';
+    for (const [cls, text] of [['path', 'shortest route'], ['taut', 'taut: also shortest'], ['slack', 'slack: longer by n'], ['estimate', 'estimate']]) {
+      const item = document.createElement('span');
+      const swatch = document.createElement('i');
+      swatch.className = `is-${cls}`;
+      item.append(swatch, text);
+      legend.appendChild(item);
+    }
+    box.append(document.createElement('strong'), document.createElement('span'), document.createElement('small'), legend);
     document.body.appendChild(box);
   }
-  const [title, body, legend] = box.children;
+  const [title, body, note] = box.children;
   const source = layout.nodes.find((n) => n.source)?.label ?? 'the start';
   title.textContent = model.caption?.stepLabel ?? 'Lifted off your slide';
   body.textContent = model.caption?.text ?? '';
-  legend.textContent = `Height is the checked ${layout.unit === 'edges' ? 'number of edges' : 'distance'} from ${source}. Shortest routes pull their strings taut; a slack string is longer by the number shown.`;
+  note.textContent = `Height is the checked ${layout.unit === 'edges' ? 'number of edges' : 'distance'} from ${source}.`;
+  // Anchored like the flat caption, but kept wholly on screen.
   const f = s.frame, c = model.caption;
-  box.style.left = (c ? c.x * f.width : 24) + f.dx + 'px';
-  box.style.top = box.style.bottom = '';
-  if (!c || c.anchor === 'top') box.style.top = (c ? c.y * f.height : f.height * 0.7) + f.dy + 'px';
-  else box.style.bottom = innerHeight - (c.y * f.height + f.dy) + 'px';
+  box.style.left = Math.max(8, (c ? c.x * f.width : 24) + f.dx) + 'px';
+  box.style.bottom = '';
+  const top = (c && c.anchor === 'top' ? c.y * f.height : f.height * 0.7) + f.dy;
+  box.style.top = Math.max(8, Math.min(top, innerHeight - box.offsetHeight - 12)) + 'px';
 }
 
 function project(local, out = new Vector3()) {
@@ -290,17 +371,33 @@ function project(local, out = new Vector3()) {
   return { x: ((out.x + 1) / 2) * s.frame.width + s.frame.dx, y: ((1 - out.y) / 2) * s.frame.height + s.frame.dy, behind: out.z > 1 };
 }
 const scratch = new Vector3();
-function placeLabel(el, local, opacity, priority) {
+/** Queues a label: `bottom` sits above its point; `side` sits beside a string, off its line. */
+function placeLabel(el, local, opacity, priority, side = null) {
   const p = project(local, scratch);
-  s.pending.push({ el, x: p.x, y: p.y, opacity: p.behind ? 0 : opacity, priority });
+  let { x, y } = p;
+  if (side) {
+    const a = project(side[0], new Vector3()), b = project(side[1], new Vector3());
+    let nx = -(b.y - a.y), ny = b.x - a.x;
+    const len = Math.hypot(nx, ny) || 1;
+    nx /= len;
+    ny /= len;
+    if (ny > 0) {
+      nx = -nx;
+      ny = -ny;
+    }
+    x += nx * 14;
+    y += ny * 14 + 9;
+  }
+  s.pending.push({ el, x, y, opacity: p.behind ? 0 : opacity, priority });
 }
 /** Writes this frame's label positions, nudging overlapping ones apart. */
 function flushLabels() {
   const shown = s.pending.filter((l) => l.opacity > 0.05 && l.el.textContent);
   for (const l of s.pending) if (!shown.includes(l)) l.el.style.opacity = 0;
   for (const l of shown)
-    if (l.el._text !== l.el.textContent) {
+    if (l.el._text !== l.el.textContent || l.el._class !== l.el.className) {
       l.el._text = l.el.textContent;
+      l.el._class = l.el.className;
       l.el._w = l.el.offsetWidth;
       l.el._h = l.el.offsetHeight;
     }
@@ -314,8 +411,9 @@ function flushLabels() {
 
 function edgeMaterial(kind, tone) {
   if (kind === 'cut') return material(COLOR.cut, { roughness: 0.5, clearcoat: 0.2 });
+  if (kind === 'pull') return material(COLOR.pull, { emissive: new Color(COLOR.pull), emissiveIntensity: 0.3 });
   if (tone === 'path') return material(COLOR.path, { emissive: new Color(COLOR.path), emissiveIntensity: 0.35 });
-  if (kind === 'tentative') return material(COLOR.tentative, { roughness: 0.5, clearcoat: 0.3, opacity: 0.6 });
+  if (kind === 'tentative') return material(COLOR.tentative, { roughness: 0.6, clearcoat: 0.2, opacity: 0.45 });
   if (kind === 'taut') return material(COLOR.taut, { emissive: new Color(COLOR.taut), emissiveIntensity: 0.12 });
   return material(COLOR.slack, { roughness: 0.55, clearcoat: 0.3, opacity: 0.9 });
 }
@@ -325,16 +423,27 @@ function tube(points, radius, mat) {
   mesh.renderOrder = 2;
   return mesh;
 }
+const coneGeometry = new Map();
+/** A small arrowhead near the end of a directed string, pointing along it. */
+function arrow(points, radius, mat) {
+  const i = Math.floor(points.length * 0.82), p = points[i], q = points[Math.min(points.length - 1, i + 1)];
+  if (!coneGeometry.has(radius)) coneGeometry.set(radius, new ConeGeometry(radius * 2.6, radius * 6, 12));
+  const cone = new Mesh(coneGeometry.get(radius), mat);
+  cone.position.set(p.x, p.y, p.z);
+  cone.quaternion.copy(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(q.x - p.x, q.y - p.y, q.z - p.z).normalize()));
+  cone.userData.shared = true;
+  return cone;
+}
 
-/** Strings are rebuilt each frame from the animated node heights. */
-function drawEdges(rise) {
+/** Strings follow the animated node heights; each is rebuilt only when its shape changes. */
+function drawEdges(rise, sheetT) {
   const r = s.layout.radius;
   const keep = new Set();
   for (const e of s.layout.edges) {
     keep.add(e.id);
     let v = s.edges.get(e.id);
     if (!v) {
-      v = { meshes: [], label: tag('is-edge'), mat: null, key: '' };
+      v = { meshes: [], label: tag('is-edge'), mat: null, key: '', shape: '' };
       s.edges.set(e.id, v);
     }
     const key = `${e.kind}:${e.tone}`;
@@ -343,93 +452,131 @@ function drawEdges(rise) {
       v.mat = edgeMaterial(e.kind, e.tone);
       v.baseOpacity = v.mat.opacity;
       v.key = key;
+      v.shape = '';
       v.label.className = `lift-tag is-edge is-${e.kind}${e.tone === 'path' ? ' is-path' : ''}`;
     }
-    for (const m of v.meshes) {
-      s.content.remove(m);
-      m.geometry.dispose();
-    }
-    v.meshes = [];
     const A = s.nodes.get(e.from), B = s.nodes.get(e.to);
     const ra = A.data.distance === null ? 0 : rise(e.from), rb = B.data.distance === null ? 0 : rise(e.to);
     const a = { x: A.data.x, y: A.data.y, z: A.h * ra }, b = { x: B.data.x, y: B.data.y, z: B.h * rb };
-    let labelAt = null, opacity = 0;
-    // A string appears as its nodes leave the sheet, so the slide is untouched at first.
-    v.mat.opacity = v.baseOpacity * clamp01(Math.min(ra, rb) * 2.5);
+    const k = Math.min(ra, rb);
     if (e.kind === 'flat') {
-      // Not yet reached at both ends: the connection stays drawn on the sheet.
+      // Not settled at either end: the connection stays as printed on the sheet.
+      clearMeshes(v);
       v.label.textContent = '';
       v.label.style.opacity = 0;
       continue;
-    } else if (e.kind === 'cut') {
-      // A cut string: two ends dangling toward each other.
-      const k = Math.min(ra, rb);
-      for (const [p, q] of [[a, b], [b, a]]) {
-        const end = { x: p.x + (q.x - p.x) * 0.28, y: p.y + (q.y - p.y) * 0.28, z: Math.max(0, p.z - r * 3.5 * k) };
-        const mid = { x: (p.x + end.x) / 2, y: (p.y + end.y) / 2, z: (p.z + end.z) / 2 + r * 0.4 };
-        v.meshes.push(tube([p, mid, end], r * 0.08, v.mat));
+    }
+    let labelAt, side = null, opacity;
+    if (e.kind === 'cut') {
+      // Two ends dangling toward each other; drawn on the sheet if an end never rose.
+      const drop = r * 2.4 * k;
+      const shape = `cut:${a.z.toFixed(1)}:${b.z.toFixed(1)}:${drop.toFixed(1)}`;
+      if (shape !== v.shape) {
+        clearMeshes(v);
+        for (const [p, q] of [[a, b], [b, a]]) {
+          const end = { x: p.x + (q.x - p.x) * 0.3, y: p.y + (q.y - p.y) * 0.3, z: Math.max(0.6, p.z - drop) };
+          const mid = { x: (p.x * 2 + end.x) / 3, y: (p.y * 2 + end.y) / 3, z: Math.max(0.6, (p.z + end.z) / 2 + r * 0.5 * k) };
+          v.meshes.push(tube([{ ...p, z: Math.max(0.6, p.z) }, mid, end], r * 0.05, v.mat));
+        }
+        for (const m of v.meshes) s.content.add(m);
+        v.shape = shape;
       }
-      v.label.textContent = '✕ cut';
-      labelAt = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, z: Math.max(a.z, b.z) * 0.5 };
-      opacity = k;
+      v.mat.opacity = v.baseOpacity * sheetT;
+      v.label.textContent = `${A.data.label}–${B.data.label} cut`;
+      labelAt = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, z: Math.max(a.z, b.z) * 0.45 };
+      opacity = sheetT;
     } else {
-      const k = Math.min(ra, rb);
-      const sag = sagDepth(e.slack, s.layout.scale, s.layout.tallest) * k;
+      const margin = r * 0.9;
+      const sag = boundedSag(sagDepth(Math.max(0, e.slack ?? 0), s.layout.scale, s.layout.tallest) * k, a.z, b.z, margin);
       const points = stringPoints(a, b, sag, 24);
-      const radius = r * (e.tone === 'path' ? 0.17 : e.kind === 'taut' ? 0.11 : e.kind === 'tentative' ? 0.065 : 0.075);
-      v.meshes.push(tube(points, radius, v.mat));
+      const shape = `${a.z.toFixed(1)}:${b.z.toFixed(1)}:${sag.toFixed(1)}`;
+      if (shape !== v.shape) {
+        clearMeshes(v);
+        const radius = r * (e.tone === 'path' ? 0.17 : e.kind === 'taut' || e.kind === 'pull' ? 0.11 : e.kind === 'tentative' ? 0.045 : 0.075);
+        v.meshes.push(tube(points, radius, v.mat));
+        if (e.directed) v.meshes.push(arrow(points, radius, v.mat));
+        for (const m of v.meshes) s.content.add(m);
+        v.shape = shape;
+      }
+      // A string appears as its nodes leave the sheet, so the slide is untouched at first.
+      v.mat.opacity = v.baseOpacity * clamp01(k * 2.5);
       v.label.textContent = e.label;
       labelAt = points[12];
-      opacity = clamp01((k - 0.6) / 0.4);
+      side = [new Vector3(points[9].x, points[9].y, points[9].z), new Vector3(points[15].x, points[15].y, points[15].z)];
+      opacity = clamp01((k - 0.6) / 0.4) * (e.kind === 'tentative' ? 0.8 : 1);
     }
-    for (const m of v.meshes) s.content.add(m);
-    const priority = e.kind === 'cut' || e.tone === 'path' ? 2 : e.kind === 'slack' ? 1.5 : 1;
-    if (labelAt) placeLabel(v.label, new Vector3(labelAt.x, labelAt.y, labelAt.z - r * 0.4), opacity, priority);
+    const priority = e.kind === 'cut' || e.kind === 'pull' || e.tone === 'path' ? 2 : e.kind === 'slack' ? 1.5 : 1;
+    placeLabel(v.label, new Vector3(labelAt.x, labelAt.y, labelAt.z), opacity, priority, side);
   }
   for (const [id, v] of s.edges)
     if (!keep.has(id)) {
-      for (const m of v.meshes) {
-        s.content.remove(m);
-        m.geometry.dispose();
-      }
+      clearMeshes(v);
       v.mat?.dispose();
       v.label.remove();
       s.edges.delete(id);
     }
 }
+function clearMeshes(v) {
+  for (const m of v.meshes) {
+    s.content.remove(m);
+    if (!m.userData.shared) m.geometry.dispose();
+  }
+  v.meshes = [];
+  v.shape = '';
+}
 
 function frameLoop() {
-  if (!s) return;
+  s.raf = 0;
+  try {
+    if (renderFrame()) s.raf = requestAnimationFrame(frameLoop);
+  } catch (error) {
+    console.error('Soma 3D lift stopped:', error);
+    fail();
+  }
+}
+/** Draws one frame; returns whether anything is still moving. */
+function renderFrame() {
   const now = clock();
-  const dt = Math.min(0.05, (now - s.last) / 1000);
+  const dt = Math.min(0.05, Math.max(0, (now - s.last) / 1000));
   s.last = now;
   const quick = reducedMotion.matches;
-  if (s.mode === 'enter') s.t = clamp01((now - s.started) / (quick ? 300 : ENTER_MS));
-  else if (s.mode === 'exit') s.t = 1 - clamp01((now - s.started) / (quick ? 250 : EXIT_MS));
-  if (s.mode === 'enter' && s.t >= 1) s.mode = 'idle';
+  // Reduced motion: no tilt or rise to watch; the lifted scene simply appears.
+  if (s.mode === 'enter') s.t = quick ? 1 : clamp01((now - s.started) / ENTER_MS);
+  else if (s.mode === 'exit') s.t = quick ? 0 : 1 - clamp01((now - s.started) / EXIT_MS);
+  if (s.mode === 'enter' && s.t >= 1) {
+    s.mode = 'idle';
+    s.idleSince = now;
+  }
   const t = s.t;
-  const tilt = easeInOut(clamp01(t / 0.55));
+  // The sheet tilts back with a slight settle past its angle.
+  const tiltPhase = clamp01(t / 0.55);
+  const tilt = easeInOut(tiltPhase) + (s.mode === 'exit' ? 0 : 0.035 * Math.sin(Math.PI * clamp01((tiltPhase - 0.7) / 0.3)));
   s.hinge.rotation.x = -TILT * tilt;
   s.hinge.rotation.z = BASE_YAW * tilt;
   s.hinge.position.z = s.frame.height * 0.035 * tilt;
-  // A slow turn once lifted, so the depth reads without anyone touching it.
-  s.sway = approach(s.sway, s.mode === 'idle' && !quick ? 1 : 0, dt, 0.8);
-  s.yaw.rotation.z = Math.sin(now / 2600) * 0.08 * s.sway;
-  const sheetT = clamp01(t / 0.4);
-  if (s.sheetMesh) {
-    s.sheetMesh.material.opacity = s.sheetMesh.material.map ? 1 - 0.12 * sheetT : 0.5 * sheetT;
-    s.sheetMesh.material.color.lerpColors(new Color(0xffffff), new Color(0xf1ece1), sheetT);
-    s.sheetEdge.material.opacity = 0.75 * sheetT;
-    s.cover.material.opacity = sheetT;
-    s.floorShadow.material.opacity = 0.4 * tilt;
+  const swaying = s.mode === 'idle' && !quick && now - s.idleSince < SWAY_MS;
+  s.sway = approach(s.sway, swaying ? 1 : 0, dt, 0.9);
+  s.yaw.rotation.z = Math.sin((now - (s.idleSince ?? now)) / 2000) * 0.11 * s.sway;
+  const sheetT = clamp01(t / 0.35);
+  const sh = s.sheet;
+  if (sh) {
+    const ready = s.sheetReady;
+    // Until the capture's texture is ready, nothing covers the slide.
+    sh.paper.material.opacity = ready ? 1 - 0.38 * sheetT : 0.55 * sheetT;
+    sh.cover.material.opacity = ready ? clamp01(t / 0.06) : 0;
+    sh.edge.material.opacity = 0.3 * sheetT;
+    sh.floor.material.opacity = 0.4 * tilt;
   }
   // Nodes leave the sheet in order of distance; a change of distance glides.
   const lifted = [...s.nodes.values()].filter((v) => v.data.distance !== null).sort((x, y) => x.data.distance - y.data.distance);
   const rank = new Map(lifted.map((v, i) => [v.data.id, i]));
   const rise = (id) => (quick ? t : clamp01(riseAt(t, rank.get(id) ?? 0, lifted.length)));
   const r = s.layout.radius;
+  let moving = s.mode !== 'idle' || s.sway > 0.002;
+  let current = null;
   for (const v of s.nodes.values()) {
-    v.h = approach(v.h, v.target, dt, 0.28);
+    v.h = quick ? v.target : approach(v.h, v.target, dt, 0.5);
+    if (Math.abs(v.h - v.target) > 0.3) moving = true;
     const k = v.data.distance === null ? 0 : rise(v.data.id);
     const z = Math.max(0, v.h * k);
     v.sphere.position.z = z;
@@ -439,20 +586,67 @@ function frameLoop() {
     v.pillar.position.z = z / 2;
     v.foot.material.opacity = (v.data.distance === null ? 0.25 : 0.7) * sheetT;
     v.shadow.material.opacity = 0.5 * Math.min(1, k) * (1 - Math.min(0.6, z / (s.layout.tallest * 2)));
-    if (v.data.status === 'current') v.sphere.material.emissiveIntensity = 0.25 + 0.18 * Math.sin(now / 160);
-    const important = v.data.status === 'current' || v.data.goal ? 4 : 3;
-    placeLabel(v.label, new Vector3(v.data.x, v.data.y, z + r * 1.05), v.data.distance === null ? 0 : clamp01((k - 0.5) / 0.5), important);
+    const isCurrent = v.data.status === 'current';
+    v.halo.position.z = z;
+    v.halo.material.opacity = isCurrent ? clamp01(k * 1.6) * (quick ? 0.9 : 0.65 + 0.3 * Math.sin(now / 220) * s.sway + 0.2 * (1 - s.sway)) : 0;
+    if (isCurrent) current = { v, z };
+    let dropping = '';
+    if (v.drop) {
+      const age = (now - v.drop.at) / 1000;
+      v.ghost.position.z = v.drop.height;
+      v.ghost.material.opacity = 0.45 * clamp01(1 - age / 1.8);
+      if (age < 2.2) {
+        dropping = ` → ${fmt(v.data.distance)}`;
+        moving = true;
+      } else {
+        v.ghost.material.opacity = 0;
+        v.drop = null;
+      }
+    }
+    const n = v.data;
+    v.label.textContent = n.distance === null ? '' : dropping ? `${n.label} ≤ ${fmt(v.drop.from)}${dropping}` : `${n.label} ${n.tentative ? '≤' : '='} ${fmt(n.distance)}`;
+    v.label.classList.toggle('is-drop', Boolean(dropping));
+    const priority = isCurrent || n.goal || dropping ? 4 : 3;
+    placeLabel(v.label, new Vector3(n.x, n.y, z + r * 1.05), n.distance === null ? 0 : clamp01((k - 0.5) / 0.5), priority);
   }
-  drawEdges(rise);
+  // Ruler: rises with the sheet, ticks at settled heights, and a level line to the current node.
+  if (sh) {
+    const at = s.rulerAt;
+    // Just taller than the highest node shown, so it never reaches into the slide's title.
+    const top = s.layout.base + Math.max(0, ...s.layout.nodes.map((n) => n.distance ?? 0)) * s.layout.scale + r * 1.2;
+    sh.ruler.material.opacity = 0.7 * sheetT;
+    sh.ruler.scale.y = Math.max(0.001, top);
+    sh.ruler.position.set(at.x, at.y, top / 2);
+    for (const tick of s.ticks) {
+      const z = s.layout.base + tick.value * s.layout.scale;
+      tick.mesh.position.set(at.x - r * 0.35, at.y, z);
+      tick.mesh.material.opacity = 0.7 * sheetT;
+      placeLabel(tick.label, new Vector3(at.x - r * 0.9, at.y, z - r * 0.25), clamp01((t - 0.55) / 0.3), 0.5);
+    }
+    if (current && current.v.data.distance !== null) {
+      sh.level.geometry.setFromPoints([new Vector3(current.v.data.x, current.v.data.y, current.z), new Vector3(at.x, at.y, current.z)]);
+      sh.level.computeLineDistances();
+      sh.level.material.opacity = 0.55 * clamp01((t - 0.7) / 0.3);
+    } else sh.level.material.opacity = 0;
+  }
+  drawEdges(rise, sheetT);
   flushLabels();
+  if (!s.compiled) {
+    s.renderer.compile(s.scene, s.camera);
+    s.compiled = true;
+  }
   s.renderer.render(s.scene, s.camera);
   if (s.mode === 'exit' && s.t <= 0) {
     const done = s.onExit;
     dispose();
     done?.();
-    return;
+    return false;
   }
-  s.raf = requestAnimationFrame(frameLoop);
+  return moving;
+}
+/** Resumes drawing after a change; the loop stops by itself once the scene is still. */
+function wake() {
+  if (s && !s.raf) s.raf = requestAnimationFrame(frameLoop);
 }
 
 function show(model, sheet, frame) {
@@ -466,7 +660,6 @@ function show(model, sheet, frame) {
     s.onExit = null;
   }
   update(model, frame, sheet);
-  if (!s.raf) s.raf = requestAnimationFrame(frameLoop);
 }
 function update(model, frame, sheet) {
   if (!s) return;
@@ -474,9 +667,12 @@ function update(model, frame, sheet) {
   const layout = liftLayout(model, s.frame);
   s.layout = layout;
   s.model = model;
-  if (sheet || !s.sheetMesh) placeSheet(layout, sheet ?? null);
+  if (sheet || !s.sheet || !s.sheetKey) placeSheet(layout, sheet ?? s.lastSheet ?? null);
+  if (sheet) s.lastSheet = sheet;
   syncNodes(layout);
+  syncTicks(layout);
   caption(model, layout);
+  wake();
 }
 function hide(done) {
   if (!s) return done?.();
@@ -485,11 +681,18 @@ function hide(done) {
     s.started = clock() - (1 - s.t) * EXIT_MS;
   }
   s.onExit = done;
+  wake();
+}
+/** WebGL failed after starting (context lost, or an error mid-frame): stop and report. */
+function fail() {
+  dispose();
+  window.SomaLift.onFail?.();
 }
 function dispose() {
   if (!s) return;
-  cancelAnimationFrame(s.raf);
+  if (s.raf) cancelAnimationFrame(s.raf);
   s.scene.traverse((o) => {
+    if (o.userData.shared) return;
     o.geometry?.dispose();
     if (o.material) {
       o.material.map?.dispose();
@@ -497,7 +700,10 @@ function dispose() {
       o.material.dispose();
     }
   });
+  for (const v of s.edges.values()) v.mat?.dispose();
   s.shadowTex.dispose();
+  // Releasing the context on purpose is not a failure.
+  s.canvas.removeEventListener('webglcontextlost', s.onLost);
   s.renderer.dispose();
   s.renderer.forceContextLoss?.();
   s.canvas.remove();
@@ -511,6 +717,7 @@ window.SomaLift = {
   update,
   hide,
   dispose,
+  onFail: null,
   get active() {
     return Boolean(s);
   },

@@ -219,6 +219,13 @@ function applyFrame(event) {
 }
 // The 3D lift draws the same checked model over the 2D sketch, which waits underneath and
 // returns exactly where the sheet lands.
+// A lift that fails after starting (lost GPU context, an error mid-frame) drops back to the
+// flat sketch and tells the companion, which updates the controls.
+if (window.SomaLift)
+  window.SomaLift.onFail = () => {
+    document.body.classList.remove('lifted');
+    window.somaPointOverlay.liftFailed();
+  };
 function liftView(event) {
   const lift = window.SomaLift;
   if (event.view === '3d' && lift) {
@@ -226,7 +233,8 @@ function liftView(event) {
       if (lift.active) lift.update(event.model, frame, event.sheet);
       else lift.show(event.model, event.sheet, frame);
       document.body.classList.add('lifted');
-    } catch {
+    } catch (error) {
+      console.error('Soma 3D lift could not start:', error);
       lift.dispose();
       document.body.classList.remove('lifted');
       window.somaPointOverlay.liftFailed();

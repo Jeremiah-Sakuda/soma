@@ -1,5 +1,3 @@
-> Repository consolidation: `soma` is the sole canonical repository and is currently private. GitHub release downloads require repository access until publication. Existing installed companions and the hosted app continue to work.
-
 # Soma
 
 **Turn what you’re studying into something you can explore.**
@@ -9,6 +7,8 @@ Soma is a visual learning companion that turns selected material and a question 
 The opportunity: less setup between encountering a difficult idea and having a useful way to explore it. [Demo story](docs/STORY_AND_DEMO.md) · [Three-minute script](docs/DEMO_VIDEO_SCRIPT.md) · [Submission copy](docs/SUBMISSION.md)
 
 **[Try it in your browser](https://soma-woad-beta.vercel.app/explore)** (no account needed) · **[Download for macOS](https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.3.0)** (Apple Silicon, signed and notarized)
+
+**Try the demo slide in two minutes.** Download [the original Lecture 14 slide](public/examples/lecture-14-dijkstra.png), open [Soma](https://soma-woad-beta.vercel.app/explore), choose **Upload screenshot** and ask *“Why doesn’t it just take the direct A-to-F edge?”* Muse Spark reads the slide and Soma runs Dijkstra **on the slide itself**: rings, distances and the route are drawn over your own capture. Click a connection on the slide to cut it, or choose **Find the tipping point** and drag the cost. Every route and number comes from Soma’s solver, and Muse Wonder checks the explanation against it before you see it. The [Soma lab engine](https://soma-woad-beta.vercel.app/lab/engine/index.html) is a separate recorded Muse run.
 
 **Native interaction (0.3.0):** enable **Point & ask**, hold **Control–Option–Space**, point or circle while speaking, and release to ask about that region. The local trail responds immediately; Muse prepares the visual afterward. Step highlights now link back to the captured source. Compare a new capture with the prior one, or ask for a closer look at a formula. Native source references require an unchanged screen. The download above is Developer ID signed, Apple-notarized and stapled. Streaming speech is tested locally; its cloud relay awaits provisioning approval. [Details and verification](docs/POINT_AND_ASK.md).
 

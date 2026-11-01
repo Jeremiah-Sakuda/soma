@@ -1,5 +1,7 @@
 # Soma — plan for a compelling demo
 
+> **PM132 update (November 1).** The user lifted the October 31 freeze, raised the cumulative cap to $40 and chose an algorithms-course Dijkstra slide as the hero source, replacing the Intro AI S/M/N/T worksheet below. Since then: the live journey on the original Lecture 14 slide is verified; checked graphs always allow edge, start and goal changes; graphs lay out like the source; the checked search is drawn over the captured slide (PM138); the engine is a hosted Soma lab page; and the release is deployed to production. The current script is [DEMO_VIDEO_SCRIPT.md](DEMO_VIDEO_SCRIPT.md). The sequencing below is kept as the original PM130 plan.
+
 PM130 · November 1, 2026. Proposed working plan for today's polish and capture. This does not change the PRD, reopen the October31 feature freeze, authorize publication, or establish completed work. The [current script](DEMO_VIDEO_SCRIPT.md) remains the production baseline until the revised sequence is rehearsed.
 
 ## The experience to aim for

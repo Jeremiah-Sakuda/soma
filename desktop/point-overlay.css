@@ -14,7 +14,7 @@
 .graph-edge.is-cut .graph-stroke{stroke:#e03b2c;opacity:.35}
 .graph-cut{stroke:#e03b2c}
 .graph-hit{fill:none;stroke:transparent;stroke-width:38;pointer-events:stroke;cursor:pointer}
-.graph-hit:hover{stroke:#e03b2c2e}
+.graph-hit:hover{stroke:#e03b2c14}
 .graph-node.is-settled .graph-loop{stroke:#1f6f5c}
 .graph-node.is-current .graph-loop{stroke:#f06a2b}
 .graph-node.is-waiting .graph-loop{stroke:#1f6f5c;opacity:.45;stroke-dasharray:.04 .03}

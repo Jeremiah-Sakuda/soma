@@ -2330,7 +2330,7 @@
 .source-overlay-cut circle { fill: #c2412d; }
 .source-overlay-cut path { stroke: #fff; stroke-width: 4; stroke-linecap: round; }
 .source-overlay-hit { fill: none; stroke: transparent; stroke-width: 34; pointer-events: stroke; cursor: pointer; outline: none; }
-.source-overlay-hit:hover, .source-overlay-hit:focus-visible { stroke: #c2412d2e; }
+.source-overlay-hit:hover { stroke: #c2412d14; } .source-overlay-hit:focus-visible { stroke: #c2412d33; }
 .source-overlay-node { cursor: pointer; outline: none; }
 .source-overlay-ring { fill: transparent; stroke: transparent; stroke-width: 6; transition: fill .35s ease, stroke .35s ease; }
 .source-overlay-node.is-waiting .source-overlay-ring { stroke: var(--accent); stroke-dasharray: 9 7; fill: #ffffff00; }

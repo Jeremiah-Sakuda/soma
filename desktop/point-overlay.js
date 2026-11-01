@@ -188,7 +188,7 @@ window.somaPointOverlay.onDraw((event) => {
     selection.setAttribute('y', r.y * frame.height);
     selection.setAttribute('width', r.width * frame.width);
     selection.setAttribute('height', r.height * frame.height);
-    hint.style.left = Math.min(innerWidth - 270, Math.max(8, r.x * frame.width)) + 'px';
-    hint.style.top = Math.max(8, r.y * frame.height - 48) + 'px';
+    hint.style.left = Math.min(innerWidth - 270, Math.max(8, r.x * frame.width + frame.dx)) + 'px';
+    hint.style.top = Math.max(8, r.y * frame.height + frame.dy - 48) + 'px';
   }
 });

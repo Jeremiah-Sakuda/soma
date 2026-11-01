@@ -1566,7 +1566,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           extracted.graph &&
           request.source?.kind === 'screenshot' &&
           request.source.dataUrl &&
-          calls <= 3
+          // Leave room for composition and one repair within the per-turn call cap.
+          calls <= (deps.reviewEnabled() ? 6 : 4) - 3
         ) {
           const region = graphCropRegion(extracted);
           if (region)
@@ -1607,9 +1608,16 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                 x: crop.region.x + p.x * crop.region.width,
                 y: crop.region.y + p.y * crop.region.height,
               });
-              if (graph.nodes.every((n) => found.nodes.some((p) => p.nodeId === n.id))) {
-                extracted.nodePositions = found.nodes.map((p) => ({ nodeId: p.nodeId, ...toFull(p) }));
-                extracted.edgeLabels = found.edgeLabels.map((p) => ({ edgeId: p.edgeId, ...toFull(p) }));
+              const placed = graph.nodes.map((n) => found.nodes.find((p) => p.nodeId === n.id));
+              const full = placed.every(Boolean) ? placed.map((p) => ({ nodeId: p!.nodeId, ...toFull(p!) })) : null;
+              // Accept only distinguishable positions; keep the first reading otherwise.
+              const distinct =
+                full &&
+                full.every((a, i) => full.slice(i + 1).every((b) => Math.hypot(a.x - b.x, a.y - b.y) > 0.01));
+              if (full && distinct) {
+                extracted.nodePositions = full;
+                if (found.edgeLabels.length)
+                  extracted.edgeLabels = found.edgeLabels.map((p) => ({ edgeId: p.edgeId, ...toFull(p) }));
                 audit.push({
                   event: 'graph-located',
                   call: calls,

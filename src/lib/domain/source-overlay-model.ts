@@ -191,7 +191,8 @@ export function sourceOverlayModel({
     blocked.some((o) => Math.abs(o.x - b.x) < (o.w + b.w) / 2 + 3 && Math.abs(o.y - b.y) < (o.h + b.h) / 2 + 2);
   const inside = (b: Box) => b.x - b.w / 2 >= 2 && b.x + b.w / 2 <= W - 2 && b.y - b.h / 2 >= 2 && b.y + b.h / 2 <= H - 2;
   const tags: SourceOverlayModel['tags'] = [];
-  const place = (id: string, text: string, tone: OverlayTagTone, anchor: Point, curved: boolean) => {
+  const place = (id: string, label: string, tone: OverlayTagTone, anchor: Point, curved: boolean) => {
+    const text = label.length > 60 ? `${label.slice(0, 59)}…` : label;
     const { w, h } = tagBox(text, font);
     const base = Math.atan2(anchor.y - centre.y, anchor.x - centre.x || 0.001);
     const candidates: Point[] = [];
@@ -202,7 +203,15 @@ export function sourceOverlayModel({
       }
     const spot = candidates.find((c) => inside({ ...c, w, h }) && !hits({ ...c, w, h })) ?? candidates.find((c) => inside({ ...c, w, h })) ?? candidates[0];
     blocked.push({ ...spot, w, h });
-    tags.push({ id, text, tone, x: spot.x / W, y: spot.y / H, anchor: { x: anchor.x / W, y: anchor.y / H }, curved });
+    tags.push({
+      id,
+      text,
+      tone,
+      x: Math.min(1, Math.max(0, spot.x / W)),
+      y: Math.min(1, Math.max(0, spot.y / H)),
+      anchor: { x: anchor.x / W, y: anchor.y / H },
+      curved,
+    });
   };
 
   // The relaxation equation first, so it gets the clearest spot beside its edge.
@@ -242,7 +251,7 @@ export function sourceOverlayModel({
     tags: tags.slice(0, 12),
     callouts: [],
     caption: caption
-      ? underneath
+      ? (caption = caption.length > 380 ? `${caption.slice(0, 379)}…` : caption, underneath)
         ? { text: caption, stepLabel, x: left, y: Math.min(0.98, (bottom + font * 0.8) / H), anchor: 'top', font: font / W }
         : { text: caption, stepLabel, x: left, y: Math.max(0.02, (top - font * 0.8) / H), anchor: 'bottom', font: font / W }
       : null,

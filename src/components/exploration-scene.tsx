@@ -567,7 +567,8 @@ export function ExplorationScene({
             <>
             {onScreen && (
               <p className="source-overlay-onscreen" role="status">
-                Drawn on your screen, over the window you captured. Click a connection there to cut it; Esc hides it.
+                Drawn on your screen, over the window you captured.
+                {spec.mode !== 'explanation' && spec.controls.includes('toggle-edge') ? ' Click a connection there to cut it;' : ''} Esc hides it.
               </p>
             )}
             <SourceOverlay

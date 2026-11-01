@@ -398,6 +398,7 @@ function createPointAsk({
     // next gesture, so the page cannot trigger repeated captures.
     if (refused === c.id || current || highlightBusy) return;
     if (!validOverlayModel(event.model)) {
+      if (graph?.id === c.id) clearGraph();
       overlayResult({ id: c.id, shown: false });
       return;
     }

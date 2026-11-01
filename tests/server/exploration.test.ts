@@ -47,6 +47,8 @@ function script(
     foreignSource?: boolean;
     comparison?: boolean;
     clarify?: boolean;
+    partialNeighborOrder?: boolean;
+    narrowControls?: boolean;
   } = {},
 ) {
   let index = 0;
@@ -58,7 +60,11 @@ function script(
         {
           summary: 'A directed unweighted graph, with a disconnected node and cycle.',
           uncertainty: [],
-          graph: options.clarify ? null : exampleInput(),
+          graph: options.clarify
+            ? null
+            : options.partialNeighborOrder
+              ? { ...exampleInput(), neighborOrder: exampleInput().neighborOrder.slice(1) }
+              : exampleInput(),
         },
         index,
       );
@@ -110,6 +116,7 @@ function script(
         highlightIds: item.highlightIds.filter((id) => graphIds.has(id)),
       }));
     }
+    if (options.narrowControls && spec.mode === 'checked-bfs') spec.controls = ['step', 'replay'];
     if (options.foreignSource) spec.sources[0].observationId = 'foreign-source';
     if (options.invalidAlways || (options.invalidFirst && index === 2))
       (spec as unknown as { executions: unknown }).executions = { forged: true };
@@ -191,6 +198,24 @@ describe('bounded exploration provider and persistence pipeline', () => {
     const state = await explorationStore.read(owner);
     expect(state!.artifacts[0]).toEqual(first);
     expect(state!.artifacts).toHaveLength(2);
+  });
+  it('completes a partial neighbor order and keeps checked graph controls explorable', async () => {
+    const { service } = harness(script({ partialNeighborOrder: true, narrowControls: true }));
+    const owner = principal();
+    await service.initialize(owner);
+    const first = (await service.generate(owner, generate())).artifact;
+    const order = exampleInput().neighborOrder;
+    expect(first.generation.calls).toBe(2);
+    expect(first.generation.audit.map((item) => item.event)).toContain('neighbor-order-completed');
+    if (first.spec.mode !== 'checked-bfs') throw Error();
+    expect(first.spec.input.neighborOrder).toEqual([...order.slice(1), order[0]]);
+    expect(first.spec.controls).toEqual(
+      expect.arrayContaining(['step', 'replay', 'set-start', 'set-goal', 'toggle-edge']),
+    );
+    const edge = first.spec.input.edges[0].id;
+    await expect(
+      service.save(owner, first.id, first.version, { ...first.state, disabledEdgeIds: [edge] }),
+    ).resolves.toBeDefined();
   });
   it('keeps screenshot bytes transient and sends them only to the interpretation call', async () => {
     const { service, request } = harness();

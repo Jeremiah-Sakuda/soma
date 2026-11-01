@@ -177,6 +177,24 @@ const inspectSchema = z.strictObject({
   anchors: sourceAnchorsSchema.optional(),
   change: sourceChangeSchema.nullable().optional(),
 });
+const CHECKED_GRAPH_CONTROLS = ['set-start', 'set-goal', 'toggle-edge'] as const;
+/** Appends unlisted nodes, in node order, to an otherwise valid partial neighbor order.
+ * Duplicate or unknown entries are left for schema validation to reject. */
+export function completeNeighborOrder(graph: unknown): { graph: unknown; added: string[] } {
+  if (!graph || typeof graph !== 'object') return { graph, added: [] };
+  const { nodes, neighborOrder } = graph as { nodes?: unknown; neighborOrder?: unknown };
+  if (!Array.isArray(nodes) || !Array.isArray(neighborOrder)) return { graph, added: [] };
+  const ids = nodes.map((node) => (node as { id?: unknown } | null)?.id);
+  if (ids.some((id) => typeof id !== 'string') || new Set(ids).size !== ids.length)
+    return { graph, added: [] };
+  const listed = new Set(neighborOrder);
+  if (listed.size !== neighborOrder.length || neighborOrder.some((id) => !ids.includes(id)))
+    return { graph, added: [] };
+  const added = (ids as string[]).filter((id) => !listed.has(id));
+  return added.length
+    ? { graph: { ...graph, neighborOrder: [...neighborOrder, ...added] }, added }
+    : { graph, added };
+}
 const CONTEXT_SOURCE =
   'Original synthetic example: an unweighted DIRECTED graph with nodes s (S), a (A), b (B), c (C), g (Goal), x (Unconnected X). Directed edges sa:s->a, sb:s->b, ag:a->g, bg:b->g, ac:a->c, cs:c->s. Start s, goal g. Neighbor order s,a,b,c,g,x. Explain breadth-first search, FIFO, visited on enqueue, terminate when goal is dequeued. These are original example facts, not captured course material.';
 const genericInstructions =
@@ -1172,7 +1190,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         tools,
         deadlineMs: Math.min(30_000, deadline - Date.now()),
         signal,
-        maxOutputTokens: mechanismBudget ? 6144 : 4096,
+        maxOutputTokens: 6144,
         ...(mechanismBudget ? { reasoningEffort: 'minimal' as const } : {}),
         maxImages: 3,
         ...(structuredOutput ? { structuredOutput } : {}),
@@ -1417,10 +1435,19 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                 call: calls,
                 detail: `Omitted ${locations.omitted} optional source location(s) with invalid image bounds; no coordinates were clamped or invented.`,
               });
+            const order = normalizedNull
+              ? { graph: null, added: [] }
+              : completeNeighborOrder(extractedCall.parsedArguments.graph);
+            if (order.added.length)
+              audit.push({
+                event: 'neighbor-order-completed',
+                call: calls,
+                detail: `Neighbor order omitted ${order.added.join(', ')}; appended in listed node order. This is an assumption, not a source fact.`,
+              });
             extracted = inspectSchema.parse({
               ...extractedCall.parsedArguments,
               ...(locations ? { anchors: locations.anchors } : {}),
-              ...(normalizedNull ? { graph: null } : {}),
+              ...(normalizedNull ? { graph: null } : order.added.length ? { graph: order.graph } : {}),
               ...(normalizedChange ? { change: null } : {}),
             });
             break;
@@ -1773,6 +1800,9 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           progress('checking-visual');
           const checked = checkExploration(proposalSpec(proposal));
           const spec = checked.spec;
+          // Checked graphs stay explorable: the solver, not the model, answers start, goal and edge changes.
+          if (spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra')
+            spec.controls = [...new Set([...spec.controls, ...CHECKED_GRAPH_CONTROLS])];
           if (previousSpatial?.kind === 'spatial' && spec.mode === 'explanation') {
             const retained = spec.scene.panels.find((panel) => panel.id === previousSpatial.id && panel.kind === 'spatial');
             if (retained?.kind !== 'spatial' || previousSpatial.objects.some((object) => !retained.objects.some((next) => next.id === object.id)) || previousSpatial.connections.some((edge) => !retained.connections.some((next) => next.id === edge.id)))

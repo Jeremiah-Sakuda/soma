@@ -527,3 +527,15 @@ User requested three more independent review/fix rounds. Extend current-pose com
 ## PM129 — Frame the demo around potential, November1
 
 User emphasized potential rather than actualized benefit and requested demo/submission framing. Lead with a concrete possibility for students and independent learners: selected material becomes something they can investigate with less setup. Use the engine as a visual hook and recorded creative prototype, and the canonical checked graph manipulation→contextual revision→save/reopen workflow as implemented continuity proof. Preserve explicit recorded/local/canonical/future distinctions without making absent pilot metrics the pitch’s main story. Current narrative/script/copy live in STORY_AND_DEMO.md, DEMO_VIDEO_SCRIPT.md and SUBMISSION.md; production evidence is separate. This editorial direction adds no P0 feature, study requirement, inference allowance or publication authorization.
+
+## PM132 — First-place push: Dijkstra hero, open freeze, $40 cap, hosted engine, November 1
+
+The user set the goal of a clear first place in the Indie track and named the demo example as the main lever. Through the question tool the user chose:
+
+- **Hero example:** an algorithms-course Dijkstra lecture slide. The video follows one continuous live journey on an original slide, `docs/examples/hero-dijkstra/` (Lecture 14, vertices A–F). Soma's solver gives: cheapest path A→C→B→D→F, cost 7; BFS takes the direct A–F edge, cost 11; cutting D–F reroutes to A→C→E→F, cost 9; the exact A–F tipping point is 7. This replaces the S/M/N/T worksheet as the primary footage.
+- **Engine:** host the standalone recorded engine viewer as a judge-openable lab page and give it about 10 seconds of the video, labelled as a recorded Muse run.
+- **Freeze:** the October 31 feature freeze is lifted ("Open it up"). New features are allowed where they strengthen the demonstrated product. Correctness, honest labels and the November 4, 9 PM deadline are unchanged.
+- **Budget:** the cumulative application testing cap rises from $20 to $40. The $150 allocation and its 20 percent reserve are unchanged.
+- **Coordination:** this session drives the demo work. `DEMO_WOW_PLAN.md` from the concurrent PM130 session is the starting point and is updated with these decisions.
+
+Product consequences adopted with this decision: checked BFS/Dijkstra explorations always include start, goal and edge-toggle controls, because the application's solver answers those changes; a partial neighbor order made only of valid unique nodes is completed in node order and recorded as an assumption; scene authoring may use up to 6,144 output tokens.

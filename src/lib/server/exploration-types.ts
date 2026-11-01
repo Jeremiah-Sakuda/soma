@@ -45,6 +45,7 @@ export type ExplorationAudit = {
     | 'review-format-retried'
     | 'source-detail-requested'
     | 'source-locations-omitted'
+    | 'neighbor-order-completed'
     | 'source-compared'
     | 'source-reused'
     | 'source-interpreted'

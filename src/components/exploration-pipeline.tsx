@@ -29,6 +29,12 @@ export function ExplorationPipeline({
   return (
     <details className="exploration-pipeline">
       <summary>
+        {readingCheck?.event === 'reading-confirmed' || readingCheck?.event === 'reading-corrected' ? (
+          <>
+            Spark read <span aria-hidden="true">→</span> Wonder checked the reading{' '}
+            <span aria-hidden="true">→</span>{' '}
+          </>
+        ) : null}
         {replay ? 'Recorded run' : 'Muse Spark composed'} <span aria-hidden="true">→</span>{' '}
         {checked ? 'Soma computed' : 'Scene validated'} <span aria-hidden="true">→</span> {review}
       </summary>

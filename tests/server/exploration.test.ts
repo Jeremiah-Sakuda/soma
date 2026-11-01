@@ -1240,6 +1240,8 @@ describe('model-directed checked cost experiment', () => {
     expect(declined.artifact.generation.audit.some((e) => e.event === 'investigation-declined')).toBe(true);
     const numbered = await investigate('When does the direct route win?', { edgeId: 'sg', reason: 'Below 3 it wins.' });
     expect(numbered.artifact.experiment).toMatchObject({ edgeId: 'sg', criticalCost: 3, rationale: null });
+    const spelled = await investigate('When does the direct route win?', { edgeId: 'sg', reason: 'Below seven it wins.' });
+    expect(spelled.artifact.experiment?.rationale).toBeNull();
   });
   it('executes the chosen probe and persists a bounded experiment with checked graph bindings', async () => {
     const setup = harness();
@@ -1667,7 +1669,10 @@ describe('Muse Wonder checks the reading against the same image', () => {
       const name = args.tools?.[0]?.name;
       seen.push(`${name ?? 'structured'}:${args.model ?? 'muse-spark-1.3'}`);
       if (name === 'check_reading') return result('check_reading', check, 1);
-      if (name === 'recheck_weights') return result('recheck_weights', recheck, 1);
+      if (name === 'recheck_weights') {
+        if (recheck === 'FAIL') throw new Error('provider failure');
+        return result('recheck_weights', recheck, 1);
+      }
       if (!isWeighted) return base(args);
       if (!args.instructions.includes('Required spec id='))
         return result('inspect_source', { summary: 'A weighted graph.', uncertainty: [], graph: weighted().input }, 1);
@@ -1725,6 +1730,23 @@ describe('Muse Wonder checks the reading against the same image', () => {
     expect(artifact.source.readingCheck).toMatchObject({ status: 'corrected', corrections: [{ edgeId: edge.id, from: edge.weight ?? 1, to: 7 }] });
     if (artifact.spec.mode !== 'checked-dijkstra') throw Error();
     expect(artifact.spec.input.edges.find((e) => e.id === edge.id)!.weight).toBe(7);
+  });
+  it('keeps every dispute visible when Spark cannot look again', async () => {
+    const edge = weighted().input.edges[0];
+    const { artifact } = await run(
+      { verdict: 'disagree', issues: [{ edgeId: edge.id, kind: 'weight', seen: '7', note: '' }, { edgeId: null, kind: 'missing', seen: 'B to E', note: 'A drawn B–E line is missing.' }] },
+      'FAIL',
+      true,
+    );
+    expect(artifact.source.readingCheck?.status).toBe('disputed');
+    expect(artifact.source.readingCheck?.disputes.join(' ')).toContain(`= ${edge.weight} as Spark read it; Muse Wonder reads 7, and Spark could not look again`);
+    expect(artifact.source.uncertainty.join(' ')).toContain('B–E');
+  });
+  it('does not call a repeat of the reading a disagreement', async () => {
+    const edge = weighted().input.edges[0];
+    const { artifact, request } = await run({ verdict: 'disagree', issues: [{ edgeId: edge.id, kind: 'weight', seen: String(edge.weight), note: '' }] }, undefined, true);
+    expect(artifact.source.readingCheck?.status).toBe('confirmed');
+    expect(request.mock.calls.some((c: any) => c[0].tools?.[0]?.name === 'recheck_weights')).toBe(false);
   });
   it('keeps the reading and shows the dispute when the two models still disagree', async () => {
     const edge = weighted().input.edges[0];

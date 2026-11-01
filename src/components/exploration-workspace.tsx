@@ -94,6 +94,7 @@ type Artifact = {
     layout?: SourceGraphLayout;
     readingCheck?: {
       status: 'confirmed' | 'corrected' | 'disputed';
+      weighted?: boolean;
       nodes: number;
       edges: number;
       corrections: { edgeId: string; from: number; to: number }[];

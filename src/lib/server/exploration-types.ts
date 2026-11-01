@@ -34,6 +34,7 @@ export type ExplorationSource = {
   readingCheck?: {
     model: 'muse-wonder-1.0';
     status: 'confirmed' | 'corrected' | 'disputed';
+    weighted?: boolean;
     nodes: number;
     edges: number;
     corrections: { edgeId: string; from: number; to: number }[];

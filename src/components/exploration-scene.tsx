@@ -310,7 +310,7 @@ export function ExplorationScene({
     anchors?: SourceAnchor[];
     nativeId?: string;
     /** Muse Wonder's independent check of the reading drawn here. */
-    readingCheck?: { status: 'confirmed' | 'corrected' | 'disputed'; nodes: number; edges: number; corrections: { edgeId: string; from: number; to: number }[]; disputes: string[] };
+    readingCheck?: { status: 'confirmed' | 'corrected' | 'disputed'; weighted?: boolean; nodes: number; edges: number; corrections: { edgeId: string; from: number; to: number }[]; disputes: string[] };
   };
   experiment?: ReactNode;
   experimentInline?: boolean;
@@ -580,7 +580,7 @@ export function ExplorationScene({
             {overlay.readingCheck && (
               <p className={`source-reading-check is-${overlay.readingCheck.status}`} role="status">
                 {overlay.readingCheck.status === 'confirmed'
-                  ? `Muse Wonder read your slide independently and confirmed all ${overlay.readingCheck.nodes} nodes and ${overlay.readingCheck.edges} weights.`
+                  ? `Muse Wonder read your slide independently and confirmed all ${overlay.readingCheck.nodes} nodes and ${overlay.readingCheck.edges} ${overlay.readingCheck.weighted === false ? 'connections' : 'weights'}.`
                   : overlay.readingCheck.status === 'corrected'
                     ? `Muse Wonder caught ${overlay.readingCheck.corrections.length} misread weight${overlay.readingCheck.corrections.length === 1 ? '' : 's'}; Spark looked again and agreed: ${overlay.readingCheck.corrections
                         .map((c) => {

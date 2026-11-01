@@ -8,3 +8,17 @@ it('applies the same persistent intervention to both algorithms without mutating
 it('keeps a same-graph cost comparison on the current goal and enabled connections',()=>{const spec=createWeightedExample(source),state={...initialExplorationState(spec),goal:'a',disabledEdgeIds:['sg'],edgeWeights:{sg:2}};expect(comparisonExecution(spec,state)!.input.goal).toBe('a');expect(comparisonExecution(spec,state)!.input.edges.some(e=>e.id==='sg')).toBe(false);});
 
 it('labels the prepared weighted priority frontier separately from FIFO',()=>{const spec=createWeightedExample(source);if(spec.mode!=='checked-dijkstra')throw Error();const frontiers=spec.scene.panels.filter(p=>p.kind==='frontier');expect(frontiers.find(p=>p.kind==='frontier'&&p.execution==='primary')!.title).toContain('Priority');expect(frontiers.find(p=>p.kind==='frontier'&&p.execution==='comparison')!.title).toContain('FIFO');});
+
+it('describes a connection whose current cost is exactly the tie, a boundary past the control, and decimal noise',()=>{
+ const E=(id:string,from:string,to:string,weight:number)=>({id,from,to,weight});
+ const base={nodes:['s','a','b','g'].map(id=>({id,label:id.toUpperCase()})),directed:false,start:'s',goal:'g',neighborOrder:['s','a','b','g']};
+ const tie=probeEdgeCost({...base,edges:[E('sg','s','g',5),E('sa','s','a',2),E('ag','a','g',3)]},'sg');
+ expect(tie.criticalCost).toBe(5);expect(tie.note).toContain('At its current cost, a route through S–G ties the best route avoiding it; any cheaper');
+ const zero=probeEdgeCost({...base,edges:[E('sa','s','a',0),E('ag','a','g',5),E('sb','s','b',2),E('bg','b','g',3)]},'sa');
+ expect(zero.criticalCost).toBe(0);expect(zero.note).not.toContain('less than 0');
+ const far=probeEdgeCost({...base,edges:[E('sg','s','g',5),E('sa','s','a',1e6),E('ag','a','g',1e6)]},'sg');
+ expect(far.criticalCost).toBeNull();expect(far.note).toContain('at every cost up to 1,000,000');
+ const dec=probeEdgeCost({...base,edges:[E('sg','s','g',0.3),E('sa','s','a',0.1),E('ag','a','g',0.2)]},'sg');
+ expect(dec.criticalCost).toBe(0.3);expect(dec.alternativeCost).toBe(0.3);expect(JSON.stringify(dec.cases)).not.toMatch(/0000000/);
+});
+

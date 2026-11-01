@@ -36,7 +36,7 @@ export function ExplorationPipeline({
         {source}.{' '}
         {readingCheck ? `${readingCheck.detail} ` : ''}
         {has('cost-probed') ? 'Muse chose the connection your question is about; Soma computed its exact boundary. ' : ''}
-        {has('investigation-declined') ? 'Muse judged that no single connection answers this question, so no cost experiment was run. ' : ''}
+        {has('investigation-declined') ? 'Muse judged that no single connection answers this question, so no new cost experiment was run. ' : ''}
         {has('review-rejected')
           ? 'Wonder requested a correction before this version was accepted. '
           : ''}

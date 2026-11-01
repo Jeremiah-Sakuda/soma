@@ -33,3 +33,22 @@
 #graph-caption strong{display:block;font:700 1.35em/1.2 'Noteworthy','Bradley Hand',cursive;color:#1d1d1b}
 #graph-caption small{display:block;margin:2px 0 6px;font:600 .62em system-ui;letter-spacing:.08em;text-transform:uppercase;color:#8a8270}
 @media(prefers-reduced-motion:reduce){.ink-new,.graph-tag.ink-new .graph-leader{animation:none!important}}
+
+/* Round 2: restrained, like the references. Thin marks, small pastel tags, staggered ink. */
+.graph-edge.is-tree .graph-stroke{stroke:#f2c94c;opacity:.3}
+.graph-edge.is-relaxed .graph-stroke{stroke:#f2b632;opacity:.85}
+.graph-edge.is-path .graph-stroke{stroke:#f06a4a;opacity:.8}
+.graph-edge.is-struck .graph-stroke{stroke:#d93a2b;opacity:.7;stroke-dasharray:.03 .025}
+.ink-new.graph-loop{animation-delay:.25s}
+.graph-tag.ink-new{animation-delay:.65s}.graph-tag.ink-new .graph-leader{animation-delay:.5s}
+.graph-leader{stroke-width:1}
+.graph-tag rect{stroke-width:1;stroke-opacity:.5}
+.graph-tag.is-settled rect{fill:#d9f0e3;stroke:#2f7d5f}
+.graph-tag.is-current rect{fill:#ffe2c6;stroke:#d0702c}
+.graph-tag.is-equation rect{fill:#fff3b0;stroke:#a8860c}
+.graph-tag.is-route rect{fill:#fad4dc;stroke:#b0415d}
+.graph-tag.is-tentative rect{fill:#ffffffd9;stroke:#8a8780;stroke-dasharray:3 2}
+.graph-tag.is-tentative text{fill:#5f5d58;font-weight:400}
+.graph-hit:hover{stroke:transparent}
+#graph-caption{max-width:26em;padding:.55em .85em;border-radius:10px;font-size:15px}
+#graph-caption strong{font-size:20px}

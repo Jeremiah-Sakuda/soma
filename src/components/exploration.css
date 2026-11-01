@@ -2397,3 +2397,25 @@ a.exploration-example-button { text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   .source-overlay-stroke, .source-overlay-loop, .source-overlay-leader, .source-overlay-cut, .source-overlay-tag { animation: none; }
 }
+
+/* Round 2: restrained, like the references. Thin marks, small pastel tags, staggered ink. */
+.source-overlay-edge .source-overlay-stroke { animation-delay: 0s; }
+.source-overlay-edge.is-tree .source-overlay-stroke { stroke: #f2c94c; opacity: .3; }
+.source-overlay-edge.is-relaxed .source-overlay-stroke { stroke: #f2b632; opacity: .85; }
+.source-overlay-edge.is-path .source-overlay-stroke { stroke: #f06a4a; opacity: .8; }
+.source-overlay-edge.is-struck .source-overlay-stroke { stroke: #d93a2b; opacity: .7; stroke-dasharray: .03 .025; animation: none; }
+.source-overlay-loop { animation-delay: .25s; }
+.source-overlay-tag { animation-delay: .65s; }
+.source-overlay-tag .source-overlay-leader { animation-delay: .5s; stroke-width: 1; }
+.source-overlay-tag rect { stroke-width: 1; stroke-opacity: .5; }
+.source-overlay-tag text { font-weight: 700; }
+.source-overlay-tag.is-settled rect { fill: #d9f0e3; stroke: #2f7d5f; }
+.source-overlay-tag.is-current rect { fill: #ffe2c6; stroke: #d0702c; }
+.source-overlay-tag.is-equation rect { fill: #fff3b0; stroke: #a8860c; }
+.source-overlay-tag.is-route rect { fill: #fad4dc; stroke: #b0415d; }
+.source-overlay-tag.is-tentative rect { fill: #ffffffd9; stroke: #8a8780; stroke-dasharray: 3 2; }
+.source-overlay-tag.is-tentative text { fill: #5f5d58; font-weight: 400; }
+.source-overlay-hit:hover, .source-overlay-hit:focus-visible { stroke: transparent; }
+.source-overlay-hit:focus-visible { stroke: #c2412d33; }
+.source-overlay-caption { max-width: min(44%, 420px); padding: .6em .9em; border-radius: 10px; font-size: clamp(11px, 1.45cqw, 15px); }
+.source-overlay-caption-title { font-size: 1.3em; }

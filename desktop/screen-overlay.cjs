@@ -8,8 +8,8 @@ const control = (p) => p && [p.x, p.y].every((n) => Number.isFinite(n) && n >= -
 const text = (s, max) => typeof s === 'string' && s.length <= max;
 const id = (s) => typeof s === 'string' && /^[A-Za-z0-9_.:-]{1,48}$/.test(s);
 const STATUS = ['current', 'settled', 'waiting', 'unreached'];
-const TONE = ['path', 'tree', 'cut', 'idle'];
-const TAG_TONE = ['settled', 'current', 'change', 'route', 'warn'];
+const TONE = ['path', 'relaxed', 'tree', 'struck', 'cut', 'idle'];
+const TAG_TONE = ['settled', 'current', 'tentative', 'equation', 'route'];
 
 function validOverlayModel(m) {
   return Boolean(
@@ -48,7 +48,7 @@ function validOverlayModel(m) {
       m.weights.length <= 24 &&
       m.weights.every((w) => id(w?.edgeId) && point(w) && text(w.text, 24)) &&
       Array.isArray(m.tags) &&
-      m.tags.length <= 8 &&
+      m.tags.length <= 12 &&
       m.tags.every(
         (t) => text(t?.id, 60) && text(t.text, 200) && TAG_TONE.includes(t.tone) && point(t) && point(t.anchor) && typeof t.curved === 'boolean',
       ) &&

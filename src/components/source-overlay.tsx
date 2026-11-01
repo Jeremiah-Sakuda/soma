@@ -4,6 +4,7 @@ import type { BfsExecution, BfsInput } from '@/lib/domain/graph-search';
 import {
   loopPath,
   sourceOverlayModel,
+  tagBox,
   type SourceGraphLayout,
   type SourceOverlayModel,
 } from '@/lib/domain/source-overlay-model';
@@ -11,6 +12,16 @@ import {
 export type { SourceGraphLayout } from '@/lib/domain/source-overlay-model';
 const WIDTH = 1000;
 const STATUS_WORDS = { current: 'now', settled: 'settled', waiting: 'waiting', unreached: 'not reached' };
+let measureContext: CanvasRenderingContext2D | null | undefined;
+/** Real text width in the annotation hand, so tags fit their words. */
+function textWidth(text: string, font: number) {
+  if (measureContext === undefined)
+    measureContext = typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d');
+  if (!measureContext) return null;
+  const hand = getComputedStyle(document.documentElement).getPropertyValue('--font-journal-hand').trim();
+  measureContext.font = `700 ${font}px ${hand ? `${hand}, ` : ''}Noteworthy, cursive`;
+  return measureContext.measureText(text).width;
+}
 
 /** Draws the checked trace over the learner's own capture, in the annotated-sketch style of
  * the product references: inked edges, hand-drawn loops and pastel tags with leader lines.
@@ -38,7 +49,8 @@ export function SourceOverlay({
   selected: string | null;
   caption: string | null;
   stepLabel: string;
-  callouts?: { id: string; label: string; region: { x: number; y: number; width: number; height: number } }[];
+  /** Source text regions annotations should keep clear of. */
+  obstacles?: { x: number; y: number; width: number; height: number }[];
   onToggleEdge: (edgeId: string) => void;
   onSelect: (id: string) => void;
   /** Receives the same normalized model, e.g. to mirror it over the real display. */
@@ -83,17 +95,6 @@ export function SourceOverlay({
               <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
             </marker>
           </defs>
-          {model.callouts.map((c) => {
-            const p = at(c);
-            return (
-              <g key={`c-${c.id}`} className="source-overlay-callout">
-                <rect x={p.x} y={p.y} width={c.width * WIDTH} height={c.height * height} rx={6} />
-                <text x={p.x} y={Math.max(font, p.y - font * 0.4)} fontSize={font * 0.9}>
-                  {c.label}
-                </text>
-              </g>
-            );
-          })}
           {model.edges.map((edge) => {
             const a = at(edge.from),
               c = at(edge.control),
@@ -103,7 +104,10 @@ export function SourceOverlay({
             return (
               <g key={edge.id} className={`source-overlay-edge is-${edge.tone}`}>
                 {edge.tone !== 'idle' && (
-                  <path key={edge.tone} d={d} className="source-overlay-stroke" pathLength={1} strokeWidth={r * (edge.tone === 'path' ? 0.62 : 0.5)} />
+                  <path key={edge.tone} d={d} className="source-overlay-stroke" pathLength={1} strokeWidth={r * (edge.tone === 'struck' ? 0.14 : edge.tone === 'path' ? 0.36 : 0.28)} />
+                )}
+                {edge.tone === 'struck' && (
+                  <path className="source-overlay-cut" pathLength={1} strokeWidth={r * 0.16} d={`M ${m.x - r * 0.45} ${m.y + r * 0.45} L ${m.x + r * 0.45} ${m.y - r * 0.45}`} />
                 )}
                 {edge.tone === 'cut' && (
                   <path
@@ -145,11 +149,6 @@ export function SourceOverlay({
                 {node.status !== 'unreached' && (
                   <path key={node.status} d={loopPath(p.x, p.y, r * 1.22, node.id)} className="source-overlay-loop" pathLength={1} strokeWidth={r * (node.status === 'current' ? 0.2 : 0.13)} />
                 )}
-                {node.status === 'waiting' && node.distance !== null && (
-                  <text x={p.x + r * 1.45} y={p.y - r * 1.2} className="source-overlay-pencil" fontSize={font}>
-                    {node.distance}
-                  </text>
-                )}
               </g>
             );
           })}
@@ -167,8 +166,9 @@ export function SourceOverlay({
           {model.tags.map((tag) => {
             const p = at(tag),
               anchor = at(tag.anchor),
-              w = tag.text.length * font * 0.52 + font * 1.3,
-              h = font * 1.8;
+              measured = textWidth(tag.text, font),
+              w = measured === null ? tagBox(tag.text, font).w : measured + font * 1.1,
+              h = tagBox(tag.text, font).h;
             const dx = p.x - anchor.x,
               dy = p.y - anchor.y,
               dist = Math.hypot(dx, dy) || 1;
@@ -188,7 +188,7 @@ export function SourceOverlay({
               <g key={tag.id} className={`source-overlay-tag is-${tag.tone}`}>
                 <path d={lead} className="source-overlay-leader" pathLength={1} markerEnd={tag.curved ? 'url(#source-overlay-arrow)' : undefined} />
                 {!tag.curved && <circle cx={end.x} cy={end.y} r={3.2} className="source-overlay-dot" />}
-                <rect x={p.x - w / 2} y={p.y - h / 2} width={w} height={h} rx={4} />
+                <rect x={p.x - w / 2} y={p.y - h / 2} width={w} height={h} rx={3} />
                 <text x={p.x} y={p.y + 1} textAnchor="middle" dominantBaseline="central" fontSize={font}>
                   {tag.text}
                 </text>
@@ -208,6 +208,7 @@ export function SourceOverlay({
           aria-live="polite"
         >
           <span className="source-overlay-caption-title">{model.caption.stepLabel}</span>
+          {' '}
           {model.caption.text}
         </figcaption>
       )}

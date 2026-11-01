@@ -586,11 +586,7 @@ export function ExplorationScene({
                   ? 'Your experiment'
                   : `Step ${Math.min(state.step, finalStep) + 1} of ${finalStep + 1}`
               }
-              callouts={
-                experimentCaption
-                  ? []
-                  : (overlay.anchors ?? []).filter((a) => overlayStep?.sourceHighlightIds?.includes(a.id))
-              }
+              obstacles={(overlay.anchors ?? []).map((a) => a.region)}
               onModel={mirror}
               onToggleEdge={toggleEdge}
               onSelect={select}

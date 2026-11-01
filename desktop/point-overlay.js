@@ -40,17 +40,16 @@ function renderGraph(m) {
     at = (p) => ({ x: p.x * W, y: p.y * H });
   const now = new Set(), fresh = (key) => { now.add(key); return seen.has(key) ? '' : ' ink-new'; };
   const layer = el('g', { id: 'graph-layer' }, svg);
-  for (const c of m.callouts) {
-    const g = el('g', { class: 'graph-callout' }, layer);
-    el('rect', { x: c.x * W, y: c.y * H, width: c.width * W, height: c.height * H, rx: 8 }, g);
-    el('text', { x: c.x * W, y: Math.max(20, c.y * H - 10) }, g).textContent = c.label;
-  }
   for (const e of m.edges) {
     const a = at(e.from), c = at(e.control), b = at(e.to), mid = at(e.center);
     const d = `M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`;
     const g = el('g', { class: `graph-edge is-${e.tone}` }, layer);
     if (e.tone !== 'idle')
-      el('path', { d, class: 'graph-stroke' + fresh(`e-${e.id}-${e.tone}`), pathLength: 1, 'stroke-width': r * (e.tone === 'path' ? 0.62 : 0.5) }, g);
+      el('path', { d, class: 'graph-stroke' + fresh(`e-${e.id}-${e.tone}`), pathLength: 1, 'stroke-width': r * (e.tone === 'struck' ? 0.14 : e.tone === 'path' ? 0.36 : 0.28) }, g);
+    if (e.tone === 'struck') {
+      const k = r * 0.45;
+      el('path', { class: 'graph-cut' + fresh(`s-${e.id}`), pathLength: 1, 'stroke-width': r * 0.16, d: `M ${mid.x - k} ${mid.y + k} L ${mid.x + k} ${mid.y - k}` }, g);
+    }
     if (e.tone === 'cut') {
       const k = r * 0.5;
       el('path', { class: 'graph-cut' + fresh(`x-${e.id}`), pathLength: 1, 'stroke-width': r * 0.18,
@@ -64,8 +63,6 @@ function renderGraph(m) {
     const p = at(n);
     const g = el('g', { class: `graph-node is-${n.status}` }, layer);
     el('path', { d: loopPath(p.x, p.y, r * 1.22, n.id), class: 'graph-loop' + (n.status === 'waiting' ? '' : fresh(`n-${n.id}-${n.status}`)), pathLength: 1, 'stroke-width': r * (n.status === 'current' ? 0.2 : 0.13) }, g);
-    if (n.status === 'waiting' && n.distance !== null)
-      el('text', { x: p.x + r * 1.45, y: p.y - r * 1.2, class: 'graph-pencil', 'font-size': font }, g).textContent = String(n.distance);
   }
   for (const w of m.weights) {
     const p = at(w);
@@ -74,7 +71,8 @@ function renderGraph(m) {
     el('text', { 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': font }, g).textContent = w.text;
   }
   for (const t of m.tags) {
-    const p = at(t), anchor = at(t.anchor), w = t.text.length * font * 0.52 + font * 1.3, h = font * 1.8;
+    const p = at(t), anchor = at(t.anchor), h = font * 1.65;
+    let w = t.text.length * font * 0.56 + font * 1.1;
     const dx = p.x - anchor.x, dy = p.y - anchor.y, dist = Math.hypot(dx, dy) || 1;
     const end = { x: anchor.x + (dx / dist) * r * 1.3, y: anchor.y + (dy / dist) * r * 1.3 };
     const start = { x: Math.max(p.x - w / 2, Math.min(p.x + w / 2, end.x)), y: end.y < p.y ? p.y - h / 2 : p.y + h / 2 };
@@ -85,8 +83,16 @@ function renderGraph(m) {
       d: t.curved ? `M ${start.x} ${start.y} Q ${bend.x} ${bend.y} ${end.x} ${end.y}` : `M ${start.x} ${start.y} L ${end.x} ${end.y}`,
       ...(t.curved ? { 'marker-end': 'url(#graph-arrow)' } : {}) }, g);
     if (!t.curved) el('circle', { cx: end.x, cy: end.y, r: 3.5, class: 'graph-dot' }, g);
-    el('rect', { x: p.x - w / 2, y: p.y - h / 2, width: w, height: h, rx: 4 }, g);
-    el('text', { x: p.x, y: p.y + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': font }, g).textContent = t.text;
+    const box = el('rect', { x: p.x - w / 2, y: p.y - h / 2, width: w, height: h, rx: 3 }, g);
+    const label = el('text', { x: p.x, y: p.y + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': font }, g);
+    label.textContent = t.text;
+    // Fit the tag to its real text width.
+    const measured = label.getComputedTextLength?.();
+    if (measured) {
+      w = measured + font * 1.1;
+      box.setAttribute('x', p.x - w / 2);
+      box.setAttribute('width', w);
+    }
   }
   seen = now;
   if (m.caption) {
@@ -94,10 +100,7 @@ function renderGraph(m) {
     box.id = 'graph-caption';
     const title = document.createElement('strong');
     title.textContent = m.caption.stepLabel;
-    const note = document.createElement('small');
-    note.textContent = 'Esc hides';
-    box.append(title, note, document.createTextNode(m.caption.text));
-    box.style.fontSize = Math.max(12, m.caption.font * W) + 'px';
+    box.append(title, document.createTextNode(m.caption.text));
     box.style.left = m.caption.x * W + frame.dx + 'px';
     if (m.caption.anchor === 'top') box.style.top = m.caption.y * H + frame.dy + 'px';
     else box.style.bottom = innerHeight - (m.caption.y * H + frame.dy) + 'px';

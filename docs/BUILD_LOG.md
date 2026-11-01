@@ -3020,3 +3020,21 @@ One user instruction this session was intentionally not archived, at the user's 
    - Release manifest `soma-pm151-overlay-2026-11-01`; `main` fast-forwarded and pushed for production deployment.
    - The macOS companion v0.4.0 is Developer ID signed (valid on disk, satisfies its designated requirement), and notarization has been submitted.
    - Code review round 3 is running.
+
+## PM153 — Code review round 4 fixes and the on-camera script (November 1)
+
+1. **Round 4 fixes.**
+   - Round 3's fixes shipped as release `soma-pm152-review-2026-11-01`, with the companion re-notarized.
+   - Code review round 4 scored 6/10. Every finding is now fixed and tested:
+     - A cut connection keeps its real cost in its label, instead of "cost 1".
+     - A long route shrinks its names but never its total. If it still won't fit, the route leads the caption.
+     - The snap now accepts a ring only when no other strong ring is within reach, and only when the ring lies near the estimate. It also searches a wider range of node sizes. Across sizes from 0.07 to 0.34 of the node gap, and with a letter "O" placed within reach, every node either lands within 3 px or keeps its estimate. Before, errors reached 52, 96 and 120 px.
+     - Edited costs and node distances are rounded. Rounded equations still add up. Very large costs no longer break the companion's validator.
+     - The locate pass now runs only when composition, a repair and a rejected review with its re-review all still fit within the call cap (`locateFits`).
+     - More send and grant labels need their own approval: Reply, Forward, Authorize, Grant, I Agree, Subscribe, Sign In, Log In, Join, Move to Bin and Comment.
+     - The overlay caption stays on screen.
+2. **Script.** `DEMO_VIDEO_SCRIPT.md` and the voiceover copy now cover the on-camera open and close, the burned-in caption style and the native overlay drawing on Preview.
+3. **Release.**
+   - Tests: 1,758 offline passed / 103 skipped; 44 desktop tests passed; typecheck passed.
+   - Release manifest `soma-pm153-review-2026-11-01`, now served in production.
+   - Code review round 5 is running.

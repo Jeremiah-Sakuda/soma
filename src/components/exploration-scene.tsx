@@ -6,6 +6,7 @@ import { supportsSpatial } from '@/lib/domain/spatial-exploration';
 import { defaultSpatialView } from '@/lib/domain/spatial-schema';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ExplorationSearchStage } from './exploration-search-stage';
+import { SourceOverlay, type SourceGraphLayout } from './source-overlay';
 import { useExplorationMotion } from './exploration-motion';
 import { diagramRoutes, pointOnDiagramRoute } from '@/lib/domain/diagram-routing';
 import { diagramLayout, diagramEdgeLabels } from '@/lib/domain/exploration-layout';
@@ -297,7 +298,10 @@ export function ExplorationScene({
   spokenProgress = null,
   experiment,
   experimentInline = false,
+  overlay,
 }: {
+  /** The learner's capture and where it drew the graph; present only while the pixels are in memory. */
+  overlay?: { image: string; layout: SourceGraphLayout };
   experiment?: ReactNode;
   experimentInline?: boolean;
   spec: ExplorationSpec;
@@ -306,6 +310,7 @@ export function ExplorationScene({
   playing?: boolean;
   spokenProgress?: number | null;
 }) {
+  const [overlayView, setOverlayView] = useState<'source' | 'diagram'>('source');
   const [compact, setCompact] = useState(false),
     [activeGraph, setActiveGraph] = useState<'primary' | 'comparison'>('primary');
   const sceneElement = useRef<HTMLDivElement>(null), revealScene = useRef(false);
@@ -347,7 +352,41 @@ export function ExplorationScene({
       )
     : undefined;
   const finalStep = Math.max(execution?.steps.length ?? 1, comparison?.steps.length ?? 1) - 1;
+  // The overlay follows the visible trace: the latest authored step at or before it.
+  const overlayStep =
+    spec.mode === 'explanation'
+      ? explanation
+      : ([...spec.steps]
+          .reverse()
+          .find((item) => item.execution === 'primary' && item.executionStep !== null && item.executionStep <= state.step) ??
+        spec.steps[0]);
   const select = (selectedObjectId: string) => onChange({ ...state, selectedObjectId });
+  const graphInput =
+    spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra' ? spec.input : null;
+  const toggleEdge = (edgeId: string) => {
+    const next = {
+      ...state,
+      selectedObjectId: edgeId,
+      disabledEdgeIds: state.disabledEdgeIds.includes(edgeId)
+        ? state.disabledEdgeIds.filter((id) => id !== edgeId)
+        : [...state.disabledEdgeIds, edgeId],
+    };
+    // Show the checked consequence at once: jump to the completed search.
+    const run = explorationExecution(spec, next);
+    onChange({ ...next, step: run ? run.steps.length - 1 : 0 });
+  };
+  // After a learner change, the authored captions describe the original graph; say only what was computed.
+  const experimentCaption = (() => {
+    if (!changed || !execution || !graphInput) return null;
+    const names = (ids: readonly string[]) => ids.map((id) => nodeName(graphInput, id)).join(' → ');
+    const cut = graphInput.edges
+      .filter((edge) => state.disabledEdgeIds.includes(edge.id))
+      .map((edge) => `${nodeName(graphInput, edge.from)}–${nodeName(graphInput, edge.to)}`);
+    const lead = cut.length ? `You cut ${cut.join(', ')}. ` : '';
+    return execution.path
+      ? `${lead}Checked route: ${names(execution.path)}, cost ${routeCost(execution.input, execution.path)}.`
+      : `${lead}No route reaches ${state.goal ? nodeName(graphInput, state.goal) : 'the goal'} now.`;
+  })();
   const panels = spec.scene.panels;
   const heroDiagram =
     spec.mode === 'explanation' ? panels.find((panel) => panel.kind === 'diagram') : undefined;
@@ -464,17 +503,48 @@ export function ExplorationScene({
             <p>{panel.text}</p>
           </aside>
         )}
-        {panel.kind === 'graph' && computation && (
-          <ExplorationSearchStage
-            progress={state.step >= computation.steps.length ? 1 : progress}
-            panel={panel}
-            execution={computation}
-            index={state.step}
-            selected={state.selectedObjectId}
-            onSelect={select}
-            highlights={highlights}
-          />
+        {panel.kind === 'graph' && overlay && graphInput && panel.execution === 'primary' && (
+          <div className="source-overlay-switch" role="group" aria-label="Where to draw the search">
+            <button type="button" aria-pressed={overlayView === 'source'} onClick={() => setOverlayView('source')}>
+              On your source
+            </button>
+            <button type="button" aria-pressed={overlayView === 'diagram'} onClick={() => setOverlayView('diagram')}>
+              Diagram
+            </button>
+          </div>
         )}
+        {panel.kind === 'graph' &&
+          computation &&
+          (overlay && graphInput && overlayView === 'source' && panel.execution === 'primary' ? (
+            <SourceOverlay
+              image={overlay.image}
+              layout={overlay.layout}
+              graph={graphInput}
+              execution={computation}
+              index={state.step}
+              disabledEdgeIds={state.disabledEdgeIds}
+              canToggle={spec.mode !== 'explanation' && spec.controls.includes('toggle-edge')}
+              selected={state.selectedObjectId}
+              caption={experimentCaption ?? overlayStep?.caption ?? null}
+              stepLabel={
+                experimentCaption
+                  ? 'Your experiment · computed by Soma'
+                  : `Step ${Math.max(0, spec.steps.findIndex((item) => item.id === overlayStep?.id)) + 1} of ${spec.steps.length}`
+              }
+              onToggleEdge={toggleEdge}
+              onSelect={select}
+            />
+          ) : (
+            <ExplorationSearchStage
+              progress={state.step >= computation.steps.length ? 1 : progress}
+              panel={panel}
+              execution={computation}
+              index={state.step}
+              selected={state.selectedObjectId}
+              onSelect={select}
+              highlights={highlights}
+            />
+          ))}
         {panel.kind === 'diagram' && (
           <DiagramPanel
             progress={progress}

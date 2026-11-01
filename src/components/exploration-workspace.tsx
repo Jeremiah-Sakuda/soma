@@ -43,6 +43,7 @@ import { useExplorationPointAsk } from './exploration-point-ask';
 import type { PointFocus } from '@/lib/domain/point-context';
 import { ExplorationVoice } from './exploration-voice';
 import { useExplorationCapture, type ExplorationCapture } from './exploration-capture';
+import type { SourceGraphLayout } from './source-overlay';
 import { JournalMenu } from './journal-menu';
 import { ExplorationJournalLog } from './exploration-journal-log';
 import './exploration.css';
@@ -89,6 +90,7 @@ type Artifact = {
     focus?: PointFocus;
     observationId?: string;
     anchors?: SourceAnchor[];
+    layout?: SourceGraphLayout;
     change?: SourceChange;
     kind: 'screenshot' | 'example';
     summary: string;
@@ -802,6 +804,14 @@ export function ExplorationWorkspace() {
     state?.selectedObjectId &&
     (artifact?.spec.mode === 'checked-bfs' || artifact?.spec.mode === 'checked-dijkstra')
       ? (artifact.spec.input.nodes.find((node) => node.id === state.selectedObjectId)?.label ??
+        (() => {
+          const edge = artifact.spec.input.edges.find((e) => e.id === state.selectedObjectId);
+          const name = (id: string) =>
+            artifact.spec.mode === 'checked-bfs' || artifact.spec.mode === 'checked-dijkstra'
+              ? (artifact.spec.input.nodes.find((node) => node.id === id)?.label ?? id)
+              : id;
+          return edge ? `${name(edge.from)}–${name(edge.to)} connection` : null;
+        })() ??
         state.selectedObjectId)
       : artifact?.spec.mode === 'explanation' ? artifact.spec.scene.panels.flatMap((panel) =>
           panel.kind === 'spatial' ? panel.objects.map((o) => ({ id: o.id, label: o.label })) : []
@@ -1646,6 +1656,14 @@ export function ExplorationWorkspace() {
                 spec={artifact.spec}
                 state={state}
                 onChange={updateState}
+                overlay={
+                  !newContext &&
+                  artifact.source.layout &&
+                  sourceMemory.current?.id === artifact.id &&
+                  sourceMemory.current.capture.capturedAt === artifact.source.capturedAt
+                    ? { image: sourceMemory.current.capture.dataUrl, layout: artifact.source.layout }
+                    : undefined
+                }
                 experiment={
                   !newContext &&
                   artifact.spec.mode === 'checked-dijkstra' && (

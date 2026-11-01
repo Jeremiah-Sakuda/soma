@@ -24,6 +24,11 @@ export type ExplorationSource = {
   focus?: PointFocus;
   imageSha256?: string;
   anchors?: SourceAnchor[];
+  /** Normalized image coordinates of the interpreted graph, for drawing over the capture. */
+  layout?: {
+    nodes: { nodeId: string; x: number; y: number }[];
+    edgeLabels: { edgeId: string; x: number; y: number }[];
+  };
   detailRegion?: ImageRegion;
   change?: SourceChange & {
     fromObservationId: string;
@@ -46,6 +51,7 @@ export type ExplorationAudit = {
     | 'source-detail-requested'
     | 'source-locations-omitted'
     | 'neighbor-order-completed'
+    | 'graph-layout-from-source'
     | 'source-compared'
     | 'source-reused'
     | 'source-interpreted'

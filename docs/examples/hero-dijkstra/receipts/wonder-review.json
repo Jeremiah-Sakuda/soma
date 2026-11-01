@@ -1,0 +1,27 @@
+{
+  "description": "Retained Muse Wonder review from the PM132 live hero run on the original Lecture 14 slide (November 1, 2026). Wonder compared Spark's step captions with Soma's computed Dijkstra trace and asked for a revision; Spark repaired the steps and the next review approved. Model output only; no credentials or learner data.",
+  "model": "muse-wonder-1.0",
+  "verdict": "revise",
+  "findings": [
+    "Step s2 (executionStep 2) says 'Settle C then B', but the checked trace at index 2 settles only C (expanded A,C; B=3, E=6); B is settled at index 3. Change s2 to 'Settle C: B improves to 3 and E=6', and let s3 cover B's settlement.",
+    "Step s3 duplicates B's settlement after s2 and compresses two checked steps into executionStep 4: B is settled at index 3 (D=4), then D is settled at index 4 (F relaxes 11 to 7). Split or reword s3 to match those separate indices."
+  ],
+  "usage": {
+    "input_tokens": 3170,
+    "output_tokens": 485
+  },
+  "repairedSteps": [
+    "Settle A: dist A=0, tentative B=4, C=1, F=11 via direct edge.",
+    "Settle C: B improves to 3 via A-C-B and E becomes 6.",
+    "Settle B: D becomes 4 via B-D.",
+    "Settle D: D-F relaxes F from 11 down to 7.",
+    "Settle F at 7: cheapest path is A-C-B-D-F with cost 1+2+1+3=7."
+  ],
+  "auditEvents": [
+    "source-interpreted",
+    "model-computed",
+    "review-rejected",
+    "review-approved",
+    "scene-validated"
+  ]
+}

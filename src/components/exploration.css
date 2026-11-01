@@ -2355,3 +2355,5 @@
 }
 .source-overlay-weight rect { fill: #d98a1c; }
 .source-overlay-weight text { fill: #fff; font-family: var(--font-geist-mono), ui-monospace, monospace; font-weight: 700; }
+
+a.exploration-example-button { text-decoration: none; }

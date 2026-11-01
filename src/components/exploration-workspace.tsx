@@ -1029,6 +1029,9 @@ export function ExplorationWorkspace() {
       >
         Watch a recorded Muse run <ArrowUpRight size={16} aria-hidden="true" />
       </button>
+      <a className="exploration-example-button" href="/lab/engine/index.html">
+        Lab: a Muse-drawn engine you can turn <ArrowUpRight size={16} aria-hidden="true" />
+      </a>
     </div>
   );
   const library = artifacts.length > 0 && (

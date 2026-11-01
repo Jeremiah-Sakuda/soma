@@ -1,6 +1,6 @@
 {
   "releaseId": "soma-pm132-hero-2026-11-01",
-  "sourceTreeSha256": "5e2c2ca80c4d953f65f5a1cc959fb5a4f38e64fd357be10acd18c9309789c888",
+  "sourceTreeSha256": "4ef40e7e9c0379114f6d413494ca78b1673170b26d024e9913324d4bdb59ba22",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
     "desktop/Info.plist": "a7566833b9abda71d595bb76ba892daf8c33cccb10413e3a510a1a502c0db050",
@@ -134,8 +134,8 @@
     "src/components/exploration-source-grounding.tsx": "78ffe559465b2c47d26db990c87c94bd66216aa95e6173f22a57c5e33a5ec159",
     "src/components/exploration-voice.tsx": "87e4e2a5d3094836ceb0c53fd9a21798aa9b89c4523f81cd74c3ecd3851b4c2d",
     "src/components/exploration-weighted-stage.tsx": "c2eb557f0ac00c78cf3a24f60fbd29b31b4703a447567e14e0c7dc0e35abcc03",
-    "src/components/exploration-workspace.tsx": "59f65e7d413d23c006fc759c4aab0ab77f4392740f40059628afb86b9f976aab",
-    "src/components/exploration.css": "b145dabd328917e5c792bbab832bf43a3bdffa03580d00a69cf0c7e3070cbeab",
+    "src/components/exploration-workspace.tsx": "b3f74233a40400ed7e347a9abc52c0276d7779f9b596fe6795e9afe65e3dc4c7",
+    "src/components/exploration.css": "fec71171d6433cd40d23b3358a1cb6f766bcc3ad396e9354ec898acc86b281b1",
     "src/components/investigation-panel.tsx": "451be06ce455d37eb296af6a3b8be78d46220334c50d44f2733ff0982b75c2a7",
     "src/components/journal-menu.tsx": "936e6fa6a05c07350912aa306f20feaa21982e9cfbee991a0e5ae0f42dfce2c4",
     "src/components/learning-inspection.tsx": "24548c3e1c79953da4a4a0034d93887052b83c3e9c320f8b559d119ef49113f9",

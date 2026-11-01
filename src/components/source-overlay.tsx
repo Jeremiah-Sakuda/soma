@@ -86,7 +86,7 @@ export function SourceOverlay({
       {model && (
         <svg
           viewBox={`0 0 ${WIDTH} ${height}`}
-          className="source-overlay-layer"
+          className={`source-overlay-layer${model.final ? ' is-final' : ''}`}
           role="group"
           aria-label={`Checked search over your source. ${input.stepLabel}`}
         >
@@ -103,12 +103,16 @@ export function SourceOverlay({
               d = `M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`;
             return (
               <g key={edge.id} className={`source-overlay-edge is-${edge.tone}`}>
-                {edge.tone !== 'idle' && (
-                  <path key={edge.tone} d={d} className="source-overlay-stroke" pathLength={1} strokeWidth={r * (edge.tone === 'struck' ? 0.14 : edge.tone === 'path' ? 0.36 : 0.28)} />
+                {edge.tone !== 'idle' && edge.tone !== 'struck' && (
+                  <path key={edge.tone} d={d} className="source-overlay-stroke" pathLength={1} strokeWidth={r * (edge.tone === 'path' ? 0.22 : 0.18)} />
                 )}
-                {edge.tone === 'struck' && (
-                  <path className="source-overlay-cut" pathLength={1} strokeWidth={r * 0.16} d={`M ${m.x - r * 0.45} ${m.y + r * 0.45} L ${m.x + r * 0.45} ${m.y - r * 0.45}`} />
-                )}
+                {edge.tone === 'struck' && (() => {
+                  // One slash on the source's own line, a third of the way along, clear of its label.
+                  const t = 0.3,
+                    sx = (1 - t) ** 2 * a.x + 2 * (1 - t) * t * c.x + t * t * b.x,
+                    sy = (1 - t) ** 2 * a.y + 2 * (1 - t) * t * c.y + t * t * b.y;
+                  return <path className="source-overlay-cut" pathLength={1} strokeWidth={r * 0.16} d={`M ${sx - r * 0.5} ${sy + r * 0.5} L ${sx + r * 0.5} ${sy - r * 0.5}`} />;
+                })()}
                 {edge.tone === 'cut' && (
                   <path
                     className="source-overlay-cut"
@@ -147,7 +151,7 @@ export function SourceOverlay({
               >
                 <circle cx={p.x} cy={p.y} r={r * 1.25} className="source-overlay-target" />
                 {node.status !== 'unreached' && (
-                  <path key={node.status} d={loopPath(p.x, p.y, r * 1.22, node.id)} className="source-overlay-loop" pathLength={1} strokeWidth={r * (node.status === 'current' ? 0.2 : 0.13)} />
+                  <path key={node.status} d={loopPath(p.x, p.y, r * 1.22, node.id)} className="source-overlay-loop" pathLength={1} strokeWidth={r * (node.status === 'current' ? 0.12 : 0.08)} />
                 )}
               </g>
             );
@@ -172,7 +176,7 @@ export function SourceOverlay({
             const dx = p.x - anchor.x,
               dy = p.y - anchor.y,
               dist = Math.hypot(dx, dy) || 1;
-            const end = { x: anchor.x + (dx / dist) * r * 1.3, y: anchor.y + (dy / dist) * r * 1.3 };
+            const end = { x: anchor.x + (dx / dist) * r * 1.05, y: anchor.y + (dy / dist) * r * 1.05 };
             const start = {
               x: Math.max(p.x - w / 2, Math.min(p.x + w / 2, end.x)),
               y: end.y < p.y ? p.y - h / 2 : p.y + h / 2,

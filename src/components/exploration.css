@@ -2419,3 +2419,7 @@ a.exploration-example-button { text-decoration: none; }
 .source-overlay-hit:focus-visible { stroke: #c2412d33; }
 .source-overlay-caption { max-width: min(44%, 420px); padding: .6em .9em; border-radius: 10px; font-size: clamp(11px, 1.45cqw, 15px); }
 .source-overlay-caption-title { font-size: 1.3em; }
+
+/* The completed search shows only its result. */
+.source-overlay-layer.is-final .source-overlay-node.is-settled .source-overlay-loop { opacity: .3; }
+.source-overlay-caption { max-width: min(40%, 22em); }

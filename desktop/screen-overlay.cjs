@@ -15,6 +15,7 @@ function validOverlayModel(m) {
   return Boolean(
     m &&
       typeof m === 'object' &&
+      typeof m.final === 'boolean' &&
       Number.isFinite(m.radius) &&
       m.radius > 0 &&
       m.radius <= 0.06 &&

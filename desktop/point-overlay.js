@@ -39,16 +39,19 @@ function renderGraph(m) {
   const W = frame.width, H = frame.height, r = m.radius * W, font = m.font * W,
     at = (p) => ({ x: p.x * W, y: p.y * H });
   const now = new Set(), fresh = (key) => { now.add(key); return seen.has(key) ? '' : ' ink-new'; };
-  const layer = el('g', { id: 'graph-layer' }, svg);
+  const layer = el('g', { id: 'graph-layer', class: m.final ? 'is-final' : '' }, svg);
   for (const e of m.edges) {
     const a = at(e.from), c = at(e.control), b = at(e.to), mid = at(e.center);
     const d = `M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`;
     const g = el('g', { class: `graph-edge is-${e.tone}` }, layer);
-    if (e.tone !== 'idle')
-      el('path', { d, class: 'graph-stroke' + fresh(`e-${e.id}-${e.tone}`), pathLength: 1, 'stroke-width': r * (e.tone === 'struck' ? 0.14 : e.tone === 'path' ? 0.36 : 0.28) }, g);
+    if (e.tone !== 'idle' && e.tone !== 'struck')
+      el('path', { d, class: 'graph-stroke' + fresh(`e-${e.id}-${e.tone}`), pathLength: 1, 'stroke-width': r * (e.tone === 'path' ? 0.22 : 0.18) }, g);
     if (e.tone === 'struck') {
-      const k = r * 0.45;
-      el('path', { class: 'graph-cut' + fresh(`s-${e.id}`), pathLength: 1, 'stroke-width': r * 0.16, d: `M ${mid.x - k} ${mid.y + k} L ${mid.x + k} ${mid.y - k}` }, g);
+      // One slash on the source's own line, a third of the way along, clear of its label.
+      const t = 0.3, k = r * 0.5,
+        sx = (1 - t) ** 2 * a.x + 2 * (1 - t) * t * c.x + t * t * b.x,
+        sy = (1 - t) ** 2 * a.y + 2 * (1 - t) * t * c.y + t * t * b.y;
+      el('path', { class: 'graph-cut' + fresh(`s-${e.id}`), pathLength: 1, 'stroke-width': r * 0.16, d: `M ${sx - k} ${sy + k} L ${sx + k} ${sy - k}` }, g);
     }
     if (e.tone === 'cut') {
       const k = r * 0.5;
@@ -62,7 +65,7 @@ function renderGraph(m) {
     if (n.status === 'unreached') continue;
     const p = at(n);
     const g = el('g', { class: `graph-node is-${n.status}` }, layer);
-    el('path', { d: loopPath(p.x, p.y, r * 1.22, n.id), class: 'graph-loop' + (n.status === 'waiting' ? '' : fresh(`n-${n.id}-${n.status}`)), pathLength: 1, 'stroke-width': r * (n.status === 'current' ? 0.2 : 0.13) }, g);
+    el('path', { d: loopPath(p.x, p.y, r * 1.22, n.id), class: 'graph-loop' + (n.status === 'waiting' ? '' : fresh(`n-${n.id}-${n.status}`)), pathLength: 1, 'stroke-width': r * (n.status === 'current' ? 0.12 : 0.08) }, g);
   }
   for (const w of m.weights) {
     const p = at(w);
@@ -74,7 +77,7 @@ function renderGraph(m) {
     const p = at(t), anchor = at(t.anchor), h = font * 1.65;
     let w = t.text.length * font * 0.56 + font * 1.1;
     const dx = p.x - anchor.x, dy = p.y - anchor.y, dist = Math.hypot(dx, dy) || 1;
-    const end = { x: anchor.x + (dx / dist) * r * 1.3, y: anchor.y + (dy / dist) * r * 1.3 };
+    const end = { x: anchor.x + (dx / dist) * r * 1.05, y: anchor.y + (dy / dist) * r * 1.05 };
     const start = { x: Math.max(p.x - w / 2, Math.min(p.x + w / 2, end.x)), y: end.y < p.y ? p.y - h / 2 : p.y + h / 2 };
     const bend = { x: (start.x + end.x) / 2 + (end.y - start.y) * 0.25, y: (start.y + end.y) / 2 - (end.x - start.x) * 0.25 };
     const isNew = fresh(`t-${t.id}-${t.text}`);

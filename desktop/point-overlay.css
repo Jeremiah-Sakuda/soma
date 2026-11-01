@@ -52,3 +52,6 @@
 .graph-hit:hover{stroke:transparent}
 #graph-caption{max-width:26em;padding:.55em .85em;border-radius:10px;font-size:15px}
 #graph-caption strong{font-size:20px}
+
+#graph-layer.is-final .graph-node.is-settled .graph-loop{opacity:.3}
+#graph-caption{max-width:22em}

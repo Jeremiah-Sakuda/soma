@@ -7,6 +7,7 @@ const { validOverlayModel, overlayRegion, regionMatches } = require('../screen-o
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const model = (extra = {}) => ({
+  final: false,
   radius: 0.02,
   font: 0.017,
   tags: [{ id: 'settled-A', text: '1 · A = 0', tone: 'settled', x: 0.08, y: 0.4, anchor: { x: 0.1, y: 0.5 }, curved: false }],

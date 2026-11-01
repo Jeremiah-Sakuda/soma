@@ -14,6 +14,8 @@ export type OverlayTagTone = 'settled' | 'current' | 'tentative' | 'equation' | 
 /** Normalized to the captured image (0–1 on each axis), so the same model can be drawn
  * over an in-page copy of the capture or over the real display it came from. */
 export type SourceOverlayModel = {
+  /** The completed search: draw only the result. */
+  final: boolean;
   radius: number;
   /** Tag font size as a fraction of the capture width. */
   font: number;
@@ -156,9 +158,9 @@ export function sourceOverlayModel({
           ? 'path'
           : struck.has(key)
             ? 'struck'
-            : relaxed.has(key)
+            : relaxed.has(key) && !finished
               ? 'relaxed'
-              : treeEdges.has(key)
+              : treeEdges.has(key) && !finished
                 ? 'tree'
                 : 'idle',
     });
@@ -195,7 +197,7 @@ export function sourceOverlayModel({
     }, 0);
   const inside = (b: Box) => b.x - b.w / 2 >= 2 && b.x + b.w / 2 <= W - 2 && b.y - b.h / 2 >= 2 && b.y + b.h / 2 <= H - 2;
   const tags: SourceOverlayModel['tags'] = [];
-  const place = (id: string, label: string, tone: OverlayTagTone, anchor: Point, curved: boolean) => {
+  const place = (id: string, label: string, tone: OverlayTagTone, anchor: Point, curved: boolean, optional = false) => {
     const text = label.length > 60 ? `${label.slice(0, 59)}…` : label;
     const { w, h } = tagBox(text, font);
     const base = Math.atan2(anchor.y - centre.y, anchor.x - centre.x || 0.001);
@@ -207,8 +209,10 @@ export function sourceOverlayModel({
       }
     // The first clear spot, else the one that covers the least of the source.
     const fits = candidates.filter((c) => inside({ ...c, w, h }));
+    const clear = fits.find((c) => overlap({ ...c, w, h }) === 0);
+    if (!clear && optional) return false;
     const spot =
-      fits.find((c) => overlap({ ...c, w, h }) === 0) ??
+      clear ??
       fits.reduce<Point | null>((best, c) => (!best || overlap({ ...c, w, h }) < overlap({ ...best, w, h }) ? c : best), null) ??
       candidates[0];
     blocked.push({ ...spot, w, h });
@@ -221,6 +225,7 @@ export function sourceOverlayModel({
       anchor: { x: anchor.x / W, y: anchor.y / H },
       curved,
     });
+    return true;
   };
 
   // The relaxation equation first, so it gets the clearest spot beside its edge.
@@ -240,11 +245,15 @@ export function sourceOverlayModel({
       if (p && !step.expanded.includes(id) && step.distances[id] !== undefined)
         place(`tentative-${id}`, `${name(id)} ≤ ${step.distances[id]}`, 'tentative', p, false);
     }
+  // The route gets a tag only where it covers nothing; otherwise it leads the caption.
+  let routeLine: string | null = null;
   if (finished && execution.path && execution.path.length > 1) {
     const goal = nodes.get(execution.path.at(-1)!);
     const cost = execution.path.slice(1).reduce((sum, to, i) => sum + weightOf(execution.path![i], to), 0);
-    if (goal) place('route', `${execution.path.map(name).join(' → ')} = ${cost}`, 'route', goal, true);
+    const text = `${execution.path.map(name).join(' → ')} = ${cost}`;
+    if (!goal || !place('route', text, 'route', goal, true, true)) routeLine = text;
   }
+  if (routeLine && caption) caption = `${routeLine}. ${caption}`;
 
   // The caption sits below everything drawn and printed near the graph, or above it.
   const bottom = Math.max(...blocked.map((b) => b.y + b.h / 2)),
@@ -252,6 +261,7 @@ export function sourceOverlayModel({
   const left = Math.max(0.01, (Math.min(...points.map((p) => p.x)) - r * 2) / W);
   const underneath = H - bottom > font * 5 || H - bottom > top;
   return {
+    final: finished,
     radius: r / W,
     font: font / W,
     nodes: modelNodes,

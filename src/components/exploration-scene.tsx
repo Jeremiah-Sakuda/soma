@@ -323,6 +323,17 @@ export function ExplorationScene({
     [nativeId],
   );
   const toggleRef = useRef<(edgeId: string) => void>(() => {});
+  const [onScreen, setOnScreen] = useState(false);
+  useEffect(() => {
+    setOnScreen(false);
+    if (!nativeId) return;
+    const listen = (event: Event) => {
+      const d = (event as CustomEvent).detail;
+      if (d?.id === nativeId) setOnScreen(d.shown === true);
+    };
+    window.addEventListener('soma:screen-overlay-result', listen);
+    return () => window.removeEventListener('soma:screen-overlay-result', listen);
+  }, [nativeId]);
   useEffect(() => {
     if (!nativeId) return;
     const listen = (event: Event) => {
@@ -373,14 +384,13 @@ export function ExplorationScene({
       )
     : undefined;
   const finalStep = Math.max(execution?.steps.length ?? 1, comparison?.steps.length ?? 1) - 1;
-  // The overlay follows the visible trace: the latest authored step at or before it.
+  // The overlay follows the visible trace: use Muse's caption only when it was written for
+  // exactly this snapshot; otherwise the computed caption describes what is drawn.
   const overlayStep =
     spec.mode === 'explanation'
       ? explanation
-      : ([...spec.steps]
-          .reverse()
-          .find((item) => item.execution === 'primary' && item.executionStep !== null && item.executionStep <= state.step) ??
-        spec.steps[0]);
+      : spec.steps.find((item) => item.execution === 'primary' && item.executionStep === state.step);
+  const overlayCaption = overlayStep?.caption ?? explorationVisibleCaption(spec, state);
   const select = (selectedObjectId: string) => onChange({ ...state, selectedObjectId });
   const graphInput =
     spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra' ? spec.input : null;
@@ -420,9 +430,10 @@ export function ExplorationScene({
       .filter(Boolean)
       .map((part) => part + ' ')
       .join('');
+    if (!state.goal) return `${lead}The search now reaches ${execution.visitOrder.length} of ${graphInput.nodes.length} nodes.`;
     return execution.path
       ? `${lead}Checked route: ${names(execution.path)}, cost ${routeCost(execution.input, execution.path)}.`
-      : `${lead}No route reaches ${state.goal ? nodeName(graphInput, state.goal) : 'the goal'} now.`;
+      : `${lead}No route reaches ${nodeName(graphInput, state.goal)} now.`;
   })();
   const panels = spec.scene.panels;
   const heroDiagram =
@@ -553,6 +564,12 @@ export function ExplorationScene({
         {panel.kind === 'graph' &&
           computation &&
           (overlay && graphInput && overlayView === 'source' && panel.execution === 'primary' ? (
+            <>
+            {onScreen && (
+              <p className="source-overlay-onscreen" role="status">
+                Drawn on your screen, over the window you captured. Click a connection there to cut it; Esc hides it.
+              </p>
+            )}
             <SourceOverlay
               image={overlay.image}
               layout={overlay.layout}
@@ -563,11 +580,11 @@ export function ExplorationScene({
               weights={state.edgeWeights}
               canToggle={spec.mode !== 'explanation' && spec.controls.includes('toggle-edge')}
               selected={state.selectedObjectId}
-              caption={experimentCaption ?? overlayStep?.caption ?? null}
+              caption={experimentCaption ?? overlayCaption}
               stepLabel={
                 experimentCaption
-                  ? 'Your experiment · computed by Soma'
-                  : `Step ${Math.max(0, spec.steps.findIndex((item) => item.id === overlayStep?.id)) + 1} of ${spec.steps.length}`
+                  ? 'Your experiment'
+                  : `Step ${Math.min(state.step, finalStep) + 1} of ${finalStep + 1}`
               }
               callouts={
                 experimentCaption
@@ -577,7 +594,9 @@ export function ExplorationScene({
               onModel={mirror}
               onToggleEdge={toggleEdge}
               onSelect={select}
+              compact={onScreen}
             />
+            </>
           ) : (
             <ExplorationSearchStage
               progress={state.step >= computation.steps.length ? 1 : progress}

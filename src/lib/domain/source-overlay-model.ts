@@ -7,10 +7,13 @@ export type SourceGraphLayout = {
 type Point = { x: number; y: number };
 export type OverlayStatus = 'current' | 'settled' | 'waiting' | 'unreached';
 export type OverlayTone = 'path' | 'tree' | 'cut' | 'idle';
+export type OverlayTagTone = 'settled' | 'current' | 'change' | 'route' | 'warn';
 /** Normalized to the captured image (0–1 on each axis), so the same model can be drawn
  * over an in-page copy of the capture or over the real display it came from. */
 export type SourceOverlayModel = {
   radius: number;
+  /** Tag font size as a fraction of the capture width. */
+  font: number;
   nodes: { id: string; label: string; x: number; y: number; status: OverlayStatus; distance: number | null }[];
   edges: {
     id: string;
@@ -22,6 +25,9 @@ export type SourceOverlayModel = {
     tone: OverlayTone;
   }[];
   weights: { edgeId: string; x: number; y: number; text: string }[];
+  /** Pastel tags with leader lines, in the reference style. Text is computed from the trace:
+   * settle order and distances, cost improvements at this step, and the final route. */
+  tags: { id: string; text: string; tone: OverlayTagTone; x: number; y: number; anchor: Point; curved: boolean }[];
   /** Source regions Muse tied to the visible step, outlined in place with their labels. */
   callouts: { id: string; label: string; x: number; y: number; width: number; height: number }[];
   caption: { text: string; stepLabel: string; x: number; y: number; anchor: 'top' | 'bottom' } | null;
@@ -73,7 +79,8 @@ export function sourceOverlayModel({
   const minGap = Math.min(
     ...points.flatMap((a, i) => points.slice(i + 1).map((b) => Math.hypot(a.x - b.x, a.y - b.y))),
   );
-  const r = Math.max(14, Math.min(34, minGap * 0.3));
+  // Hug the source's own node circles, which slides draw at roughly a fifth of the spacing.
+  const r = Math.max(9, Math.min(30, minGap * 0.2));
   const name = (id: string) => graph.nodes.find((n) => n.id === id)?.label ?? id;
 
   const edges: SourceOverlayModel['edges'] = [];
@@ -125,6 +132,7 @@ export function sourceOverlayModel({
             : 'unreached';
     return [{ id: node.id, label: node.label, x: p.x, y: p.y, status, distance: step.distances[node.id] ?? null }];
   });
+  const tags = overlayTags({ graph, execution, index, nodes, labels, r, W, H, pathEdges, name });
   // Slides keep titles at the top, so prefer the space under the graph when there is room.
   const ys = points.map((p) => p.y),
     xs = points.map((p) => p.x);
@@ -133,14 +141,174 @@ export function sourceOverlayModel({
   const left = Math.max(0.02, (Math.min(...xs) - r) / W);
   return {
     radius: r / W,
+    font: TAG_FONT / W,
     nodes: modelNodes,
     edges,
     weights: weightLabels,
-    callouts: callouts.slice(0, 6).map((c) => ({ id: c.id, label: c.label.slice(0, 100), ...c.region })),
+    tags,
+    // Rings and labels already mark nodes and weights; callouts point at the surrounding text
+    // (pseudocode, stated results) and never cover a node or a printed weight.
+    callouts: callouts
+      .filter((c) => {
+        const box = { x: c.region.x * W - r, y: c.region.y * H - r, w: c.region.width * W + 2 * r, h: c.region.height * H + 2 * r };
+        const inside = (p: Point) => p.x >= box.x && p.x <= box.x + box.w && p.y >= box.y && p.y <= box.y + box.h;
+        return ![...nodes.values(), ...labels.values()].some(inside);
+      })
+      .slice(0, 6)
+      .map((c) => ({ id: c.id, label: c.label.slice(0, 100), ...c.region })),
     caption: caption
       ? underneath
         ? { text: caption, stepLabel, x: left, y: (Math.max(...ys) + r * 1.6) / H, anchor: 'top' }
         : { text: caption, stepLabel, x: left, y: (Math.min(...ys) - r * 1.6) / H, anchor: 'bottom' }
       : null,
   };
+}
+
+const TAG_FONT = 17;
+const tagSize = (text: string) => ({ w: text.length * TAG_FONT * 0.52 + 22, h: TAG_FONT + 14 });
+
+function overlayTags({
+  graph,
+  execution,
+  index,
+  nodes,
+  labels,
+  r,
+  W,
+  H,
+  pathEdges,
+  name,
+}: {
+  graph: BfsInput;
+  execution: BfsExecution;
+  index: number;
+  nodes: Map<string, Point>;
+  labels: Map<string, Point>;
+  r: number;
+  W: number;
+  H: number;
+  pathEdges: Set<string>;
+  name: (id: string) => string;
+}): SourceOverlayModel['tags'] {
+  const at = Math.min(index, execution.steps.length - 1),
+    step = execution.steps[at],
+    before = at > 0 ? execution.steps[at - 1] : null,
+    finished = index >= execution.steps.length - 1;
+  const points = [...nodes.values()],
+    centre = {
+      x: points.reduce((sum, p) => sum + p.x, 0) / points.length,
+      y: points.reduce((sum, p) => sum + p.y, 0) / points.length,
+    };
+  const raw: { id: string; text: string; tone: OverlayTagTone; anchor: Point; toward: Point; curved: boolean }[] = [];
+  const outward = (p: Point, distance: number) => {
+    const dx = p.x - centre.x,
+      dy = p.y - centre.y,
+      d = Math.hypot(dx, dy) || 1;
+    return { x: p.x + (dx / d) * distance, y: p.y + (dy / d) * distance };
+  };
+  step.expanded.forEach((id, k) => {
+    const p = nodes.get(id);
+    if (!p) return;
+    const distance = step.distances[id];
+    raw.push({
+      id: `settled-${id}`,
+      text: `${k + 1} · ${name(id)}${distance === undefined ? '' : ` = ${distance}`}`,
+      tone: id === step.current ? 'current' : 'settled',
+      anchor: p,
+      toward: outward(p, r * 3.1),
+      curved: false,
+    });
+  });
+  if (before)
+    for (const [id, distance] of Object.entries(step.distances)) {
+      const old = before.distances[id],
+        p = nodes.get(id);
+      if (!p || step.expanded.includes(id) || old === undefined || distance >= old) continue;
+      const via = step.parents[id];
+      raw.push({
+        id: `change-${id}`,
+        text: `${name(id)}: ${old} → ${distance}${via ? `, cheaper via ${name(via)}` : ''}`,
+        tone: 'change',
+        anchor: p,
+        toward: outward(p, r * 4.2),
+        curved: true,
+      });
+    }
+  if (finished && execution.path && execution.path.length > 1) {
+    const goal = nodes.get(execution.path.at(-1)!);
+    const cost = execution.path
+      .slice(1)
+      .reduce((sum, to, i) => {
+        const from = execution.path![i];
+        const edge = execution.input.edges.find(
+          (e) => (e.from === from && e.to === to) || (!execution.input.directed && e.from === to && e.to === from),
+        );
+        return sum + (edge?.weight ?? 1);
+      }, 0);
+    if (goal)
+      raw.push({
+        id: 'route',
+        text: `Route ${execution.path.map(name).join('→')} = ${cost}`,
+        tone: 'route',
+        anchor: goal,
+        toward: { x: goal.x, y: goal.y + r * 4.4 },
+        curved: true,
+      });
+    const start = execution.path[0],
+      end = execution.path.at(-1)!;
+    const direct = graph.edges.find(
+      (e) => (e.from === start && e.to === end) || (!graph.directed && e.from === end && e.to === start),
+    );
+    const key = direct && (graph.directed ? `${direct.from}>${direct.to}` : [direct.from, direct.to].sort().join('|'));
+    const label = direct && labels.get(direct.id);
+    if (direct && label && key && !pathEdges.has(key))
+      raw.push({
+        id: 'direct',
+        text: `${direct.weight ?? 1} · costs more`,
+        tone: 'warn',
+        anchor: label,
+        toward: { x: label.x + r * 3.4, y: label.y - r * 1.6 },
+        curved: false,
+      });
+  }
+  // Keep tags inside the capture and off each other; the newest stay where they were placed.
+  const placed: { x: number; y: number; w: number; h: number }[] = [];
+  const out: SourceOverlayModel['tags'] = [];
+  for (const tag of raw.slice(-8)) {
+    const { w, h } = tagSize(tag.text);
+    let x = Math.min(W - w / 2 - 4, Math.max(w / 2 + 4, tag.toward.x)),
+      y = Math.min(H - h / 2 - 4, Math.max(h / 2 + 4, tag.toward.y));
+    for (let tries = 0; tries < 12; tries++) {
+      const hit = placed.find((b) => Math.abs(b.x - x) < (b.w + w) / 2 + 6 && Math.abs(b.y - y) < (b.h + h) / 2 + 4);
+      if (!hit) break;
+      y = y >= hit.y ? hit.y + (hit.h + h) / 2 + 6 : hit.y - (hit.h + h) / 2 - 6;
+      y = Math.min(H - h / 2 - 4, Math.max(h / 2 + 4, y));
+    }
+    placed.push({ x, y, w, h });
+    out.push({
+      id: tag.id,
+      text: tag.text,
+      tone: tag.tone,
+      x: x / W,
+      y: y / H,
+      anchor: { x: tag.anchor.x / W, y: tag.anchor.y / H },
+      curved: tag.curved,
+    });
+  }
+  return out;
+}
+
+/** A hand-drawn loop around a point, deterministic per id so redraws don't jitter. */
+export function loopPath(x: number, y: number, r: number, id: string): string {
+  let seed = 0;
+  for (const ch of id) seed = (seed * 31 + ch.charCodeAt(0)) % 997;
+  const start = (seed % 360) * (Math.PI / 180),
+    parts: string[] = [];
+  for (let k = 0; k <= 28; k++) {
+    const t = start + (k / 24) * Math.PI * 2,
+      wobble = Math.sin(t * 3 + seed) * r * 0.06 + (k > 24 ? (k - 24) * r * 0.035 : 0),
+      rr = r + wobble;
+    parts.push(`${k ? 'L' : 'M'}${(x + Math.cos(t) * rr).toFixed(1)} ${(y + Math.sin(t) * rr * 0.94).toFixed(1)}`);
+  }
+  return parts.join(' ');
 }

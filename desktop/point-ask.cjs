@@ -5,6 +5,8 @@ const { randomUUID } = require('node:crypto');
 const { selectFocus, pointPanelBounds } = require('./point-geometry.cjs');
 const { validOverlayModel, overlayRegion, regionMatches } = require('./screen-overlay.cjs');
 const OVERLAY_RETENTION_MS = 20 * 60 * 1000;
+// With no update for this long the learner has likely moved on; stop drawing over the screen.
+const OVERLAY_IDLE_MS = 3 * 60 * 1000;
 /** Native coordination only. Remote content cannot request capture or inject locations. */
 function createPointAsk({
   BrowserWindow,
@@ -32,7 +34,9 @@ function createPointAsk({
   // shown only after its region still matches, cleared by Escape or the next gesture.
   let overlayCapture = null,
     graph = null,
-    verifying = false;
+    verifying = false,
+    refused = null,
+    idleTimer = null;
   let lastCapture = null,
     lastCaptureTimer = null,
     highlightBusy = false;
@@ -60,6 +64,7 @@ function createPointAsk({
   function clearGraph() {
     const had = graph?.verified;
     graph = null;
+    clearTimeout(idleTimer);
     if (overlay && !overlay.isDestroyed()) {
       overlay.setIgnoreMouseEvents(true);
       draw({ type: 'graph-clear' });
@@ -140,6 +145,7 @@ function createPointAsk({
     if (current?.phase === 'holding') return;
     stop('', false);
     overlayCapture = null;
+    refused = null;
     clearGraph();
     const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
     const s = { id: randomUUID(), display, phase: 'holding', points: [] };
@@ -262,6 +268,9 @@ function createPointAsk({
   function disable() {
     enabled = false;
     enabledChange(false);
+    overlayCapture = null;
+    refused = null;
+    clearGraph();
     const previous = child;
     child = null;
     previous?.kill();
@@ -292,6 +301,11 @@ function createPointAsk({
   }
   async function highlight(event) {
     const c = lastCapture;
+    // The drawn search would appear in the comparison capture and own Escape; skip.
+    if (graph?.verified) {
+      highlightResult({ id: event?.id, shown: false });
+      return;
+    }
     const valid =
       event &&
       typeof event.id === 'string' &&
@@ -369,7 +383,13 @@ function createPointAsk({
       if (graph?.id === c.id) clearGraph();
       return;
     }
-    if (!validOverlayModel(event.model) || current || highlightBusy) return;
+    // A capture whose screen changed, or that the learner dismissed, stays down until the
+    // next gesture, so the page cannot trigger repeated captures.
+    if (refused === c.id || current || highlightBusy) return;
+    if (!validOverlayModel(event.model)) {
+      overlayResult({ id: c.id, shown: false });
+      return;
+    }
     const verified = graph?.id === c.id && graph.verified;
     graph = { id: c.id, model: event.model, verified };
     if (!verified) {
@@ -385,11 +405,12 @@ function createPointAsk({
         ok = false;
       } finally {
         verifying = false;
-        showPanel();
+        if (overlayCapture === c && !current) showPanel();
       }
       if (overlayCapture !== c || graph?.id !== c.id) return;
       if (!ok) {
         graph = null;
+        refused = c.id;
         overlayResult({ id: c.id, shown: false });
         return;
       }
@@ -398,9 +419,18 @@ function createPointAsk({
       globalShortcut.register('Escape', () => {
         const hidden = graph?.id;
         clearGraph();
-        if (hidden) overlayResult({ id: hidden, shown: false, dismissed: true });
+        if (hidden) {
+          refused = hidden;
+          overlayResult({ id: hidden, shown: false, dismissed: true });
+        }
       });
     }
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      if (graph?.id !== c.id) return;
+      clearGraph();
+      overlayResult({ id: c.id, shown: false, dismissed: true });
+    }, Math.min(OVERLAY_IDLE_MS, c.expires - Date.now()));
     clearTimeout(hideTimer);
     overlayFor(c.display);
     overlay.setIgnoreMouseEvents(true, { forward: true });

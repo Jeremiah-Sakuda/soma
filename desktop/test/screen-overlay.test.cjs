@@ -8,6 +8,8 @@ const { validOverlayModel, overlayRegion, regionMatches } = require('../screen-o
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const model = (extra = {}) => ({
   radius: 0.02,
+  font: 0.017,
+  tags: [{ id: 'settled-A', text: '1 · A = 0', tone: 'settled', x: 0.08, y: 0.4, anchor: { x: 0.1, y: 0.5 }, curved: false }],
   nodes: [
     { id: 'A', label: 'A', x: 0.1, y: 0.5, status: 'settled', distance: 0 },
     { id: 'F', label: 'F', x: 0.6, y: 0.5, status: 'current', distance: 7 },
@@ -82,6 +84,8 @@ test('overlay models are bounded to normalized shapes and known statuses', () =>
   assert.equal(validOverlayModel(model()), true);
   assert.equal(validOverlayModel(model({ nodes: [] })), false);
   assert.equal(validOverlayModel(model({ radius: 2 })), false);
+  assert.equal(validOverlayModel(model({ tags: [{ ...model().tags[0], tone: 'script' }] })), false);
+  assert.equal(validOverlayModel(model({ edges: [{ ...model().edges[0], control: { x: 0.5, y: -0.4 } }] })), true);
   assert.equal(validOverlayModel(model({ caption: { ...model().caption, x: 4 } })), false);
   assert.equal(validOverlayModel({ ...model(), edges: [{ ...model().edges[0], tone: 'script' }] }), false);
   assert.equal(validOverlayModel(model({ callouts: [{ id: 'graph', label: 'Graph', x: 0.1, y: 0.2, width: 0.5, height: 0.4 }] })), true);
@@ -124,6 +128,9 @@ test('the overlay is drawn only for the latest capture and only after its region
     h.shortcuts.get('Escape')();
     assert.equal(h.draws.at(-1).type, 'graph-clear');
     assert.deepEqual(h.results.at(-1), { id, shown: false, dismissed: true });
+    const drawn = h.draws.filter((d) => d.type === 'graph').length;
+    await h.controller.screenOverlay({ id, model: model() });
+    assert.equal(h.draws.filter((d) => d.type === 'graph').length, drawn, 'a dismissed capture stays down');
   } finally {
     h.controller.dispose();
   }
@@ -136,6 +143,9 @@ test('a changed screen gets no overlay, and clicks are accepted only from the ov
     await changed.controller.screenOverlay({ id, model: model() });
     assert.deepEqual(changed.results.at(-1), { id, shown: false });
     assert.equal(changed.draws.filter((d) => d.type === 'graph').length, 0);
+    const results = changed.results.length;
+    await changed.controller.screenOverlay({ id, model: model() });
+    assert.equal(changed.results.length, results, 'no repeated capture after a refusal');
   } finally {
     changed.controller.dispose();
   }
@@ -153,6 +163,21 @@ test('a changed screen gets no overlay, and clicks are accepted only from the ov
     assert.equal(overlay.clickThrough, false);
     h.controller.overlayHover({ sender: overlay.webContents }, false);
     assert.equal(overlay.clickThrough, true);
+  } finally {
+    h.controller.dispose();
+  }
+});
+
+test('turning Point & ask off clears a drawn overlay', async () => {
+  const h = harness(['data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE']);
+  try {
+    const id = await h.ready();
+    await h.controller.screenOverlay({ id, model: model() });
+    assert.equal(h.draws.filter((d) => d.type === 'graph').length, 1);
+    h.controller.disable();
+    assert.equal(h.draws.at(-1).type, 'graph-clear');
+    await h.controller.screenOverlay({ id, model: model() });
+    assert.equal(h.draws.filter((d) => d.type === 'graph').length, 1);
   } finally {
     h.controller.dispose();
   }

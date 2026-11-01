@@ -16,58 +16,87 @@ function clearGraph() {
   document.getElementById('graph-caption')?.remove();
 }
 // Shapes arrive in normalized capture coordinates; the window covers that display exactly.
+// Drawn as an annotated sketch: inked edges, hand loops and pastel tags with leader lines.
+// Only elements new since the last draw ink in, so stepping doesn't redraw everything.
+let seen = new Set();
+function loopPath(x, y, r, id) {
+  let seed = 0;
+  for (const ch of id) seed = (seed * 31 + ch.charCodeAt(0)) % 997;
+  const start = (seed % 360) * (Math.PI / 180), parts = [];
+  for (let k = 0; k <= 28; k++) {
+    const t = start + (k / 24) * Math.PI * 2,
+      rr = r + Math.sin(t * 3 + seed) * r * 0.06 + (k > 24 ? (k - 24) * r * 0.035 : 0);
+    parts.push(`${k ? 'L' : 'M'}${(x + Math.cos(t) * rr).toFixed(1)} ${(y + Math.sin(t) * rr * 0.94).toFixed(1)}`);
+  }
+  return parts.join(' ');
+}
 function renderGraph(m) {
   clearGraph();
   hint.style.display = 'none';
   pointer.style.display = 'none';
   selection.style.display = 'none';
   trail.setAttribute('d', '');
-  const W = innerWidth,
-    H = innerHeight,
-    r = m.radius * W,
+  const W = innerWidth, H = innerHeight, r = m.radius * W, font = m.font * W,
     at = (p) => ({ x: p.x * W, y: p.y * H });
+  const now = new Set(), fresh = (key) => { now.add(key); return seen.has(key) ? '' : ' ink-new'; };
   const layer = el('g', { id: 'graph-layer' }, svg);
   for (const c of m.callouts) {
     const g = el('g', { class: 'graph-callout' }, layer);
-    el('rect', { x: c.x * W, y: c.y * H, width: c.width * W, height: c.height * H, rx: 10 }, g);
+    el('rect', { x: c.x * W, y: c.y * H, width: c.width * W, height: c.height * H, rx: 8 }, g);
     el('text', { x: c.x * W, y: Math.max(20, c.y * H - 10) }, g).textContent = c.label;
   }
   for (const e of m.edges) {
     const a = at(e.from), c = at(e.control), b = at(e.to), mid = at(e.center);
     const d = `M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`;
     const g = el('g', { class: `graph-edge is-${e.tone}` }, layer);
-    el('path', { d, class: 'graph-stroke' }, g);
+    if (e.tone !== 'idle')
+      el('path', { d, class: 'graph-stroke' + fresh(`e-${e.id}-${e.tone}`), pathLength: 1, 'stroke-width': r * (e.tone === 'path' ? 0.62 : 0.5) }, g);
     if (e.tone === 'cut') {
-      const x = el('g', { class: 'graph-cut', transform: `translate(${mid.x} ${mid.y})` }, g);
-      el('circle', { r: r * 0.55 }, x);
-      const k = r * 0.22;
-      el('path', { d: `M ${-k} ${-k} L ${k} ${k} M ${k} ${-k} L ${-k} ${k}` }, x);
+      const k = r * 0.5;
+      el('path', { class: 'graph-cut' + fresh(`x-${e.id}`), pathLength: 1, 'stroke-width': r * 0.18,
+        d: `M ${mid.x - k} ${mid.y - k} L ${mid.x + k} ${mid.y + k} M ${mid.x + k} ${mid.y - k} L ${mid.x - k * 0.96} ${mid.y + k * 1.04}` }, g);
     }
     const hit = el('path', { d, class: 'graph-hit', 'data-edge': e.id }, g);
     el('title', {}, hit).textContent = e.label;
   }
+  for (const n of m.nodes) {
+    if (n.status === 'unreached') continue;
+    const p = at(n);
+    const g = el('g', { class: `graph-node is-${n.status}` }, layer);
+    el('path', { d: loopPath(p.x, p.y, r * 1.22, n.id), class: 'graph-loop' + (n.status === 'waiting' ? '' : fresh(`n-${n.id}-${n.status}`)), pathLength: 1, 'stroke-width': r * (n.status === 'current' ? 0.2 : 0.13) }, g);
+    if (n.status === 'waiting' && n.distance !== null)
+      el('text', { x: p.x + r * 1.45, y: p.y - r * 1.2, class: 'graph-pencil', 'font-size': font }, g).textContent = String(n.distance);
+  }
   for (const w of m.weights) {
     const p = at(w);
     const g = el('g', { class: 'graph-weight', transform: `translate(${p.x} ${p.y})` }, layer);
-    el('rect', { x: -r * 1.25, y: -r * 0.55, width: r * 2.5, height: r * 1.1, rx: r * 0.55 }, g);
-    el('text', { 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': r * 0.62 }, g).textContent = w.text;
+    el('rect', { x: -font * 2.2, y: -font * 0.85, width: font * 4.4, height: font * 1.7, rx: 4 }, g);
+    el('text', { 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': font }, g).textContent = w.text;
   }
-  for (const n of m.nodes) {
-    const p = at(n);
-    const g = el('g', { class: `graph-node is-${n.status}`, transform: `translate(${p.x} ${p.y})` }, layer);
-    el('circle', { r, class: 'graph-ring' }, g);
-    if (n.distance !== null) {
-      const b = el('g', { class: 'graph-badge', transform: `translate(${r * 0.95} ${-r * 0.95})` }, g);
-      el('rect', { x: -r * 0.55, y: -r * 0.42, width: r * 1.1, height: r * 0.84, rx: r * 0.42 }, b);
-      el('text', { 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': r * 0.56 }, b).textContent = String(n.distance);
-    }
+  for (const t of m.tags) {
+    const p = at(t), anchor = at(t.anchor), w = t.text.length * font * 0.52 + 22, h = font + 14;
+    const dx = p.x - anchor.x, dy = p.y - anchor.y, dist = Math.hypot(dx, dy) || 1;
+    const end = { x: anchor.x + (dx / dist) * r * 1.3, y: anchor.y + (dy / dist) * r * 1.3 };
+    const start = { x: Math.max(p.x - w / 2, Math.min(p.x + w / 2, end.x)), y: end.y < p.y ? p.y - h / 2 : p.y + h / 2 };
+    const bend = { x: (start.x + end.x) / 2 + (end.y - start.y) * 0.25, y: (start.y + end.y) / 2 - (end.x - start.x) * 0.25 };
+    const isNew = fresh(`t-${t.id}-${t.text}`);
+    const g = el('g', { class: `graph-tag is-${t.tone}${isNew}` }, layer);
+    el('path', { class: 'graph-leader', pathLength: 1,
+      d: t.curved ? `M ${start.x} ${start.y} Q ${bend.x} ${bend.y} ${end.x} ${end.y}` : `M ${start.x} ${start.y} L ${end.x} ${end.y}`,
+      ...(t.curved ? { 'marker-end': 'url(#graph-arrow)' } : {}) }, g);
+    if (!t.curved) el('circle', { cx: end.x, cy: end.y, r: 3.5, class: 'graph-dot' }, g);
+    el('rect', { x: p.x - w / 2, y: p.y - h / 2, width: w, height: h, rx: 4 }, g);
+    el('text', { x: p.x, y: p.y + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': font }, g).textContent = t.text;
   }
+  seen = now;
   if (m.caption) {
     const box = document.createElement('div');
     box.id = 'graph-caption';
-    const label = document.createElement('span');
-    label.textContent = m.caption.stepLabel + ' · Esc hides';
-    box.append(label, document.createTextNode(m.caption.text));
+    const title = document.createElement('strong');
+    title.textContent = m.caption.stepLabel;
+    const note = document.createElement('small');
+    note.textContent = 'Esc hides';
+    box.append(title, note, document.createTextNode(m.caption.text));
     box.style.left = m.caption.x * W + 'px';
     if (m.caption.anchor === 'top') box.style.top = m.caption.y * H + 'px';
     else box.style.bottom = (1 - m.caption.y) * H + 'px';
@@ -90,6 +119,7 @@ window.somaPointOverlay.onDraw((event) => {
   if (event.type === 'graph') return renderGraph(event.model);
   if (event.type === 'graph-clear') {
     clearGraph();
+    seen = new Set();
     if (graphHover) window.somaPointOverlay.hover((graphHover = false));
     return;
   }

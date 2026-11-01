@@ -1,13 +1,20 @@
 'use client';
 import { useEffect, useState, type KeyboardEvent } from 'react';
 import type { BfsExecution, BfsInput } from '@/lib/domain/graph-search';
-import { sourceOverlayModel, type SourceGraphLayout, type SourceOverlayModel } from '@/lib/domain/source-overlay-model';
+import {
+  loopPath,
+  sourceOverlayModel,
+  type SourceGraphLayout,
+  type SourceOverlayModel,
+} from '@/lib/domain/source-overlay-model';
 
 export type { SourceGraphLayout } from '@/lib/domain/source-overlay-model';
 const WIDTH = 1000;
 const STATUS_WORDS = { current: 'now', settled: 'settled', waiting: 'waiting', unreached: 'not reached' };
 
-/** Draws the checked trace over the learner's own capture. Presentation only. */
+/** Draws the checked trace over the learner's own capture, in the annotated-sketch style of
+ * the product references: inked edges, hand-drawn loops and pastel tags with leader lines.
+ * Presentation only; every word and number comes from the supplied execution. */
 export function SourceOverlay({
   image,
   canToggle,
@@ -15,8 +22,11 @@ export function SourceOverlay({
   onToggleEdge,
   onSelect,
   onModel,
+  compact = false,
   ...input
 }: {
+  /** The same overlay is on the learner's screen; keep this copy small. */
+  compact?: boolean;
   image: string;
   layout: SourceGraphLayout;
   graph: BfsInput;
@@ -43,7 +53,8 @@ export function SourceOverlay({
   useEffect(() => () => onModel?.(null), [onModel]);
   const height = WIDTH * (aspect ?? 0.5625);
   const at = (p: { x: number; y: number }) => ({ x: p.x * WIDTH, y: p.y * height });
-  const r = (model?.radius ?? 0) * WIDTH;
+  const r = (model?.radius ?? 0) * WIDTH,
+    font = (model?.font ?? 0.017) * WIDTH;
   const keyActivate = (event: KeyboardEvent, action: () => void) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -51,7 +62,7 @@ export function SourceOverlay({
     }
   };
   return (
-    <figure className="source-overlay">
+    <figure className={`source-overlay${compact ? ' is-compact' : ''}`}>
       <img
         src={image}
         alt="Your captured source, with Soma's checked search drawn over it"
@@ -61,16 +72,23 @@ export function SourceOverlay({
         }}
       />
       {model && (
-        <svg viewBox={`0 0 ${WIDTH} ${height}`} className="source-overlay-layer" role="group" aria-label={`Checked search over your source. ${input.stepLabel}`}>
+        <svg
+          viewBox={`0 0 ${WIDTH} ${height}`}
+          className="source-overlay-layer"
+          role="group"
+          aria-label={`Checked search over your source. ${input.stepLabel}`}
+        >
+          <defs>
+            <marker id="source-overlay-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </marker>
+          </defs>
           {model.callouts.map((c) => {
-            const p = at(c),
-              w = c.width * WIDTH,
-              h = c.height * height,
-              tag = Math.max(r * 0.6, 12);
+            const p = at(c);
             return (
               <g key={`c-${c.id}`} className="source-overlay-callout">
-                <rect x={p.x} y={p.y} width={w} height={h} rx={8} />
-                <text x={p.x} y={Math.max(tag, p.y - tag * 0.45)} fontSize={tag}>
+                <rect x={p.x} y={p.y} width={c.width * WIDTH} height={c.height * height} rx={6} />
+                <text x={p.x} y={Math.max(font, p.y - font * 0.4)} fontSize={font * 0.9}>
                   {c.label}
                 </text>
               </g>
@@ -84,12 +102,16 @@ export function SourceOverlay({
               d = `M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`;
             return (
               <g key={edge.id} className={`source-overlay-edge is-${edge.tone}`}>
-                <path d={d} className="source-overlay-stroke" />
+                {edge.tone !== 'idle' && (
+                  <path key={edge.tone} d={d} className="source-overlay-stroke" pathLength={1} strokeWidth={r * (edge.tone === 'path' ? 0.62 : 0.5)} />
+                )}
                 {edge.tone === 'cut' && (
-                  <g transform={`translate(${m.x} ${m.y})`} className="source-overlay-cut">
-                    <circle r={r * 0.55} />
-                    <path d={`M ${-r * 0.22} ${-r * 0.22} L ${r * 0.22} ${r * 0.22} M ${r * 0.22} ${-r * 0.22} L ${-r * 0.22} ${r * 0.22}`} />
-                  </g>
+                  <path
+                    className="source-overlay-cut"
+                    pathLength={1}
+                    d={`M ${m.x - r * 0.5} ${m.y - r * 0.5} L ${m.x + r * 0.5} ${m.y + r * 0.5} M ${m.x + r * 0.5} ${m.y - r * 0.5} L ${m.x - r * 0.48} ${m.y + r * 0.52}`}
+                    strokeWidth={r * 0.18}
+                  />
                 )}
                 {canToggle && (
                   <path
@@ -107,39 +129,69 @@ export function SourceOverlay({
               </g>
             );
           })}
-          {model.weights.map((w) => {
-            const p = at(w);
-            return (
-              <g key={`w-${w.edgeId}`} className="source-overlay-weight" transform={`translate(${p.x} ${p.y})`}>
-                <rect x={-r * 1.25} y={-r * 0.55} width={r * 2.5} height={r * 1.1} rx={r * 0.55} />
-                <text textAnchor="middle" dominantBaseline="central" fontSize={r * 0.62}>
-                  {w.text}
-                </text>
-              </g>
-            );
-          })}
           {model.nodes.map((node) => {
             const p = at(node);
             return (
               <g
                 key={node.id}
                 className={`source-overlay-node is-${node.status} ${selected === node.id ? 'is-selected' : ''}`}
-                transform={`translate(${p.x} ${p.y})`}
                 role="button"
                 tabIndex={0}
                 aria-label={`${node.label}: ${STATUS_WORDS[node.status]}${node.distance === null ? '' : `, distance ${node.distance}`}`}
                 onClick={() => onSelect(node.id)}
                 onKeyDown={(event) => keyActivate(event, () => onSelect(node.id))}
               >
-                <circle r={r} className="source-overlay-ring" />
-                {node.distance !== null && (
-                  <g transform={`translate(${r * 0.95} ${-r * 0.95})`} className="source-overlay-badge">
-                    <rect x={-r * 0.55} y={-r * 0.42} width={r * 1.1} height={r * 0.84} rx={r * 0.42} />
-                    <text textAnchor="middle" dominantBaseline="central" fontSize={r * 0.56}>
-                      {node.distance}
-                    </text>
-                  </g>
+                <circle cx={p.x} cy={p.y} r={r * 1.25} className="source-overlay-target" />
+                {node.status !== 'unreached' && (
+                  <path key={node.status} d={loopPath(p.x, p.y, r * 1.22, node.id)} className="source-overlay-loop" pathLength={1} strokeWidth={r * (node.status === 'current' ? 0.2 : 0.13)} />
                 )}
+                {node.status === 'waiting' && node.distance !== null && (
+                  <text x={p.x + r * 1.45} y={p.y - r * 1.2} className="source-overlay-pencil" fontSize={font}>
+                    {node.distance}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+          {model.weights.map((w) => {
+            const p = at(w);
+            return (
+              <g key={`w-${w.edgeId}`} className="source-overlay-weight" transform={`translate(${p.x} ${p.y})`}>
+                <rect x={-font * 2.2} y={-font * 0.85} width={font * 4.4} height={font * 1.7} rx={4} />
+                <text textAnchor="middle" dominantBaseline="central" fontSize={font}>
+                  {w.text}
+                </text>
+              </g>
+            );
+          })}
+          {model.tags.map((tag) => {
+            const p = at(tag),
+              anchor = at(tag.anchor),
+              w = tag.text.length * font * 0.52 + 22,
+              h = font + 14;
+            const dx = p.x - anchor.x,
+              dy = p.y - anchor.y,
+              dist = Math.hypot(dx, dy) || 1;
+            const end = { x: anchor.x + (dx / dist) * r * 1.3, y: anchor.y + (dy / dist) * r * 1.3 };
+            const start = {
+              x: Math.max(p.x - w / 2, Math.min(p.x + w / 2, end.x)),
+              y: end.y < p.y ? p.y - h / 2 : p.y + h / 2,
+            };
+            const bend = {
+              x: (start.x + end.x) / 2 + (end.y - start.y) * 0.25,
+              y: (start.y + end.y) / 2 - (end.x - start.x) * 0.25,
+            };
+            const lead = tag.curved
+              ? `M ${start.x} ${start.y} Q ${bend.x} ${bend.y} ${end.x} ${end.y}`
+              : `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+            return (
+              <g key={tag.id} className={`source-overlay-tag is-${tag.tone}`}>
+                <path d={lead} className="source-overlay-leader" pathLength={1} markerEnd={tag.curved ? 'url(#source-overlay-arrow)' : undefined} />
+                {!tag.curved && <circle cx={end.x} cy={end.y} r={3.2} className="source-overlay-dot" />}
+                <rect x={p.x - w / 2} y={p.y - h / 2} width={w} height={h} rx={4} />
+                <text x={p.x} y={p.y + 1} textAnchor="middle" dominantBaseline="central" fontSize={font}>
+                  {tag.text}
+                </text>
               </g>
             );
           })}
@@ -155,7 +207,7 @@ export function SourceOverlay({
           }
           aria-live="polite"
         >
-          <span className="overline">{model.caption.stepLabel}</span>
+          <span className="source-overlay-caption-title">{model.caption.stepLabel}</span>
           {model.caption.text}
         </figcaption>
       )}

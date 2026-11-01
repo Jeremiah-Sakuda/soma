@@ -3,10 +3,13 @@
  * windows or address another display. */
 const unit = (n) => Number.isFinite(n) && n >= -0.05 && n <= 1.05;
 const point = (p) => p && unit(p.x) && unit(p.y);
+// An arc's control point can sit well outside the capture when its label is near an edge.
+const control = (p) => p && [p.x, p.y].every((n) => Number.isFinite(n) && n >= -1 && n <= 2);
 const text = (s, max) => typeof s === 'string' && s.length <= max;
 const id = (s) => typeof s === 'string' && /^[A-Za-z0-9_.:-]{1,48}$/.test(s);
 const STATUS = ['current', 'settled', 'waiting', 'unreached'];
 const TONE = ['path', 'tree', 'cut', 'idle'];
+const TAG_TONE = ['settled', 'current', 'change', 'route', 'warn'];
 
 function validOverlayModel(m) {
   return Boolean(
@@ -15,13 +18,16 @@ function validOverlayModel(m) {
       Number.isFinite(m.radius) &&
       m.radius > 0 &&
       m.radius <= 0.06 &&
+      Number.isFinite(m.font) &&
+      m.font > 0 &&
+      m.font <= 0.05 &&
       Array.isArray(m.nodes) &&
       m.nodes.length >= 2 &&
       m.nodes.length <= 12 &&
       m.nodes.every(
         (n) =>
           id(n?.id) &&
-          text(n.label, 40) &&
+          text(n.label, 80) &&
           point(n) &&
           STATUS.includes(n.status) &&
           (n.distance === null || (Number.isFinite(n.distance) && Math.abs(n.distance) <= 1e7)),
@@ -31,9 +37,9 @@ function validOverlayModel(m) {
       m.edges.every(
         (e) =>
           id(e?.id) &&
-          text(e.label, 120) &&
+          text(e.label, 220) &&
           point(e.from) &&
-          point(e.control) &&
+          control(e.control) &&
           point(e.to) &&
           point(e.center) &&
           TONE.includes(e.tone),
@@ -41,6 +47,11 @@ function validOverlayModel(m) {
       Array.isArray(m.weights) &&
       m.weights.length <= 24 &&
       m.weights.every((w) => id(w?.edgeId) && point(w) && text(w.text, 24)) &&
+      Array.isArray(m.tags) &&
+      m.tags.length <= 8 &&
+      m.tags.every(
+        (t) => text(t?.id, 60) && text(t.text, 200) && TAG_TONE.includes(t.tone) && point(t) && point(t.anchor) && typeof t.curved === 'boolean',
+      ) &&
       Array.isArray(m.callouts) &&
       m.callouts.length <= 6 &&
       m.callouts.every(

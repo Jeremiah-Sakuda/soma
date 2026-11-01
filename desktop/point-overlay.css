@@ -2,24 +2,34 @@
 
 .source-reference{fill:#6755ed18;stroke:#6755ed;stroke-width:3;rx:10}#source-annotations text{font:600 15px system-ui;fill:#201b46;stroke:#fff;stroke-width:4;paint-order:stroke;stroke-linejoin:round}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-/* Soma's checked search drawn over the real display. */
-#graph-layer .graph-stroke{fill:none;stroke-linecap:round;transition:stroke .35s,stroke-width .35s,opacity .35s}
-.graph-edge.is-idle .graph-stroke{stroke:transparent}
-.graph-edge.is-tree .graph-stroke{stroke:#2f7a6d;stroke-width:8;opacity:.38}
-.graph-edge.is-path .graph-stroke{stroke:#2f7a6d;stroke-width:12;opacity:.8}
-.graph-edge.is-cut .graph-stroke{stroke:#c2412d;stroke-width:8;stroke-dasharray:14 11;opacity:.92}
-.graph-cut circle{fill:#c2412d}.graph-cut path{stroke:#fff;stroke-width:4;stroke-linecap:round}
+/* Soma's checked search drawn over the real display, as an annotated sketch. */
+#graph-layer{--ink:#1d1d1b;--hand:'Noteworthy','Bradley Hand','Marker Felt',cursive}
+@keyframes ink{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes pop{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.graph-stroke,.graph-loop,.graph-leader,.graph-cut{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1}
+.ink-new.graph-stroke,.ink-new.graph-loop,.ink-new.graph-cut{animation:ink .7s ease-out both}
+.graph-tag.ink-new{animation:pop .35s ease-out both}.graph-tag.ink-new .graph-leader{animation:ink .45s ease-out both}
+.graph-edge.is-tree .graph-stroke{stroke:#f2c94c;opacity:.55}
+.graph-edge.is-path .graph-stroke{stroke:#ff6b4a;opacity:.7}
+.graph-edge.is-cut .graph-stroke{stroke:#e03b2c;opacity:.35}
+.graph-cut{stroke:#e03b2c}
 .graph-hit{fill:none;stroke:transparent;stroke-width:38;pointer-events:stroke;cursor:pointer}
-.graph-hit:hover{stroke:#c2412d30}
-.graph-ring{fill:transparent;stroke:transparent;stroke-width:6}
-.graph-node.is-waiting .graph-ring{stroke:#2f7a6d;stroke-dasharray:10 8}
-.graph-node.is-settled .graph-ring{stroke:#2f7a6d;fill:#2f7a6d38}
-.graph-node.is-current .graph-ring{stroke:#d98a1c;stroke-width:9;fill:#f4b24026;animation:graph-pulse 1.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
-.graph-badge rect{fill:#2f7a6d}.graph-node.is-current .graph-badge rect{fill:#d98a1c}
-.graph-badge text,.graph-weight text{fill:#fff;font-weight:700;font-family:ui-monospace,SFMono-Regular,monospace}
-.graph-weight rect{fill:#d98a1c}
-#graph-caption{position:absolute;max-width:min(560px,46vw);padding:14px 18px;border-radius:16px;background:#1d2a27e0;color:#f7f3ea;font:500 17px/1.45 system-ui;box-shadow:0 12px 36px #0004;border:1px solid #ffffff2a}
-#graph-caption span{display:block;margin-bottom:4px;font:600 11px system-ui;letter-spacing:.08em;text-transform:uppercase;color:#bfe3da}
-@keyframes graph-pulse{50%{transform:scale(1.12)}}
-@media(prefers-reduced-motion:reduce){.graph-node.is-current .graph-ring{animation:none}}
-.graph-callout rect{fill:#2f7a6d14;stroke:#2f7a6d;stroke-width:3}.graph-callout text{font:650 15px system-ui;fill:#17221f;stroke:#fff;stroke-width:5;paint-order:stroke;stroke-linejoin:round}
+.graph-hit:hover{stroke:#e03b2c2e}
+.graph-node.is-settled .graph-loop{stroke:#1f6f5c}
+.graph-node.is-current .graph-loop{stroke:#f06a2b}
+.graph-node.is-waiting .graph-loop{stroke:#1f6f5c;opacity:.45;stroke-dasharray:.04 .03}
+.graph-pencil{font-family:var(--hand);fill:#5b5b57}
+.graph-tag rect{stroke-width:1.3}
+.graph-tag text,.graph-weight text{font-family:var(--hand);font-weight:700;fill:var(--ink)}
+.graph-tag.is-settled rect{fill:#d6f2e4;stroke:#1f6f5c}
+.graph-tag.is-current rect{fill:#ffe0c4;stroke:#f06a2b}
+.graph-tag.is-change rect{fill:#fff1a6;stroke:#b88a00}
+.graph-tag.is-route rect{fill:#ffd3e4;stroke:#c2185b}
+.graph-tag.is-warn rect{fill:#ffe1de;stroke:#c62828}
+.graph-leader{stroke:var(--ink);stroke-width:1.5}.graph-dot{fill:var(--ink)}
+.graph-weight rect{fill:#fff1a6;stroke:#b88a00;stroke-width:1.3}
+.graph-callout rect{fill:none;stroke:#1f6f5c;stroke-width:2.5;stroke-dasharray:8 6}.graph-callout text{font:700 17px 'Noteworthy',cursive;fill:#17221f;stroke:#fff;stroke-width:5;paint-order:stroke;stroke-linejoin:round}
+#graph-caption{position:absolute;max-width:min(520px,44vw);padding:14px 18px;border-radius:14px;background:#fbf7ec;color:#2b2a26;font:400 16px/1.45 system-ui;box-shadow:0 14px 40px #0003;border:1px solid #e7dfcc}
+#graph-caption strong{display:block;font:700 22px/1.2 'Noteworthy','Bradley Hand',cursive;color:#1d1d1b}
+#graph-caption small{display:block;margin:2px 0 6px;font:600 10px system-ui;letter-spacing:.08em;text-transform:uppercase;color:#8a8270}
+@media(prefers-reduced-motion:reduce){.ink-new,.graph-tag.ink-new .graph-leader{animation:none!important}}

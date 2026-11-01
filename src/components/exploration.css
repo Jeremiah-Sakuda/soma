@@ -2338,7 +2338,7 @@
 .source-overlay-node.is-current .source-overlay-ring { stroke: #d98a1c; stroke-width: 8; fill: #f4b2401f; animation: source-overlay-pulse 1.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 .source-overlay-node.is-selected .source-overlay-ring { stroke-width: 9; }
 .source-overlay-node:focus-visible .source-overlay-ring { stroke: var(--ink); stroke-width: 6; }
-.source-overlay-badge rect { fill: var(--accent); }
+.source-overlay-badge rect { fill: var(--accent); stroke: #fff; stroke-width: 2; }
 .source-overlay-node.is-current .source-overlay-badge rect { fill: #d98a1c; }
 .source-overlay-badge text { fill: #fff; font-family: var(--font-geist-mono), ui-monospace, monospace; font-weight: 700; }
 .source-overlay { container-type: inline-size; }
@@ -2358,5 +2358,42 @@
 
 a.exploration-example-button { text-decoration: none; }
 
-.source-overlay-callout rect { fill: color-mix(in srgb, var(--accent) 10%, transparent); stroke: var(--accent); stroke-width: 3; stroke-dasharray: 2 0; }
+.source-overlay-callout rect { fill: none; stroke: var(--accent); stroke-width: 3; stroke-dasharray: 8 6; }
 .source-overlay-callout text { fill: var(--ink); font-weight: 650; stroke: #fff; stroke-width: 5; paint-order: stroke; stroke-linejoin: round; }
+
+.source-overlay.is-compact { max-width: 280px; opacity: .85; }
+.source-overlay.is-compact .source-overlay-caption { display: none; }
+.source-overlay-onscreen { margin: 0 0 10px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); color: var(--ink); font-size: 14px; }
+
+/* Reference style: a learner's annotated sketch over their own source. Ink draws on once. */
+.source-overlay-layer { --ink: #1d1d1b; --hand: var(--font-journal-hand), 'Noteworthy', 'Bradley Hand', cursive; }
+@keyframes source-overlay-ink { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes source-overlay-pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.source-overlay-stroke, .source-overlay-loop, .source-overlay-leader, .source-overlay-cut { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; animation: source-overlay-ink .7s ease-out both; }
+.source-overlay-edge.is-tree .source-overlay-stroke { stroke: #f2c94c; opacity: .55; }
+.source-overlay-edge.is-path .source-overlay-stroke { stroke: #ff6b4a; opacity: .7; animation-duration: 1.1s; }
+.source-overlay-edge.is-cut .source-overlay-stroke { stroke: #e03b2c; opacity: .35; }
+.source-overlay-cut { stroke: #e03b2c; }
+.source-overlay-target { fill: transparent; }
+.source-overlay-node.is-settled .source-overlay-loop { stroke: #1f6f5c; }
+.source-overlay-node.is-current .source-overlay-loop { stroke: #f06a2b; }
+.source-overlay-node.is-waiting .source-overlay-loop { stroke: #1f6f5c; opacity: .45; stroke-dasharray: .04 .03; animation: none; }
+.source-overlay-node.is-selected .source-overlay-loop { stroke: var(--ink); }
+.source-overlay-pencil { font-family: var(--hand); fill: #5b5b57; }
+.source-overlay-tag { animation: source-overlay-pop .35s ease-out both; }
+.source-overlay-tag rect { stroke-width: 1.2; }
+.source-overlay-tag text { font-family: var(--hand); fill: var(--ink); font-weight: 700; }
+.source-overlay-tag.is-settled rect { fill: #d6f2e4; stroke: #1f6f5c; }
+.source-overlay-tag.is-current rect { fill: #ffe0c4; stroke: #f06a2b; }
+.source-overlay-tag.is-change rect { fill: #fff1a6; stroke: #b88a00; }
+.source-overlay-tag.is-route rect { fill: #ffd3e4; stroke: #c2185b; }
+.source-overlay-tag.is-warn rect { fill: #ffe1de; stroke: #c62828; }
+.source-overlay-leader { stroke: var(--ink); stroke-width: 1.4; animation-duration: .45s; }
+.source-overlay-dot { fill: var(--ink); }
+.source-overlay-weight rect { fill: #fff1a6; stroke: #b88a00; stroke-width: 1.2; }
+.source-overlay-weight text { font-family: var(--hand); font-weight: 700; fill: var(--ink); }
+.source-overlay-caption { background: #fbf7ec; border-color: #e7dfcc; color: #2b2a26; }
+.source-overlay-caption-title { display: block; margin-bottom: 2px; font-family: var(--font-journal-hand), 'Noteworthy', cursive; font-size: 1.25em; font-weight: 700; color: #1d1d1b; }
+@media (prefers-reduced-motion: reduce) {
+  .source-overlay-stroke, .source-overlay-loop, .source-overlay-leader, .source-overlay-cut, .source-overlay-tag { animation: none; }
+}

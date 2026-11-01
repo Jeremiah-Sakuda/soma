@@ -16,7 +16,7 @@ Soma uses Meta's Muse models to turn the slide you're studying into a live, chec
 
 ## Short description
 
-Point Soma at a lecture slide and ask a question. Muse Spark reads every node and weight, and Soma runs the real algorithm directly on your captured slide, drawing each step, distance and route over it. Cut a connection on the slide and the route changes instantly. Ask for the tipping point and Muse picks the experiment while Soma proves the exact answer. Muse Wonder checks every explanation against the computed result before you see it.
+Point Soma at a lecture slide and ask a question. Muse Spark reads every node and weight, and Soma runs the real algorithm directly on your captured slide, drawing each step, distance and route over it. Cut a connection on the slide and the route changes instantly. Ask for the tipping point and Muse picks the connection to test while Soma computes the exact answer. Before a weighted-graph explanation reaches you, Muse Wonder checks it against the computed result.
 
 ## Main description
 
@@ -24,7 +24,7 @@ Every student knows the moment: a slide shows one worked example, and your real 
 
 Soma makes the slide itself the experiment. Capture your screen or upload a screenshot and ask. Muse Spark reads the source into a typed graph, including where each node and printed weight sits. Soma's own solver runs Dijkstra or BFS, and the result is drawn over your capture: settled and waiting vertices, tentative distances, the route along the slide's own edges.
 
-Then you experiment. Click a connection on the slide to cut it and Soma recomputes at once, with no model call. Choose **Find the tipping point** and Muse decides which connection is most revealing to test; Soma establishes exactly where the answer flips, and dragging the cost moves the route on the slide. Ask why, by voice or text, and the answer addresses the experiment you're running. Before any explanation reaches you, Muse Wonder reviews it against Soma's computed trace and sends mistakes back for repair. Explorations save and reopen, and Soma can generate a fresh problem from the same idea with the answer hidden.
+Then you experiment. Click a connection on the slide to cut it and Soma recomputes at once, with no model call. Choose **Find the tipping point** and Muse picks a connection to test (Soma steers it toward a direct shortcut when the slide has one); Soma computes exactly where the answer flips, and dragging the cost moves the route on the slide. Ask why, by voice or text, and the answer addresses the experiment you're running. Before a weighted-graph explanation reaches you, Muse Wonder reviews it against Soma's computed trace and sends mistakes back for repair. Explorations save and reopen, and Soma can generate a fresh problem from the same idea with the answer hidden.
 
 The model chooses how to read, explain and investigate. The code proves the answer.
 
@@ -36,7 +36,7 @@ The model chooses how to read, explain and investigate. The code proves the answ
 
 **Why it matters:** the questions that build understanding are "what if" questions, and static slides can't answer them. Soma removes the reconstruction step between a slide and an experiment, and it gives answers a learner can trust because the numbers are computed rather than generated.
 
-**Why it's credible:** the demo is one continuous live run on an original slide. The source becomes a controllable experiment, each change has a computed consequence, the model makes a visible decision, and the result can be kept and practiced. No study or adoption figures are claimed; the potential is shown through a working capability.
+**Why it's credible:** the core journey is one live run on an original slide; waits are shortened and labelled. The source becomes a controllable experiment, each change has a computed consequence, the model makes a visible decision, and the result can be kept and practiced. No study or adoption figures are claimed; the potential is shown through a working capability.
 
 ## Creative use of Meta tooling
 

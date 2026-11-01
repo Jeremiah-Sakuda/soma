@@ -2,7 +2,7 @@
 
 **Turn what you’re studying into something you can explore.**
 
-Soma is a visual learning companion that turns selected material and a question into an interactive explanation. Meta’s Muse models interpret the source, compose the visual and help choose what to investigate. Change a connection, inspect a mechanism or ask about the consequence. Supported graph paths and costs are computed by Soma’s own solver.
+Soma turns the slide or diagram you're studying into a computed experiment drawn right on top of it: the model reads and chooses, the code computes. Meta’s Muse models interpret the source, compose the visual and help choose what to investigate. Change a connection, inspect a mechanism or ask about the consequence. Supported graph paths and costs are computed by Soma’s own solver.
 
 The opportunity: less setup between encountering a difficult idea and having a useful way to explore it. [Demo story](docs/STORY_AND_DEMO.md) · [Three-minute script](docs/DEMO_VIDEO_SCRIPT.md) · [Submission copy](docs/SUBMISSION.md)
 
@@ -98,7 +98,7 @@ Details and method: [verification record](docs/VERIFICATION.md) · [general scre
 
 ## Built during the hackathon
 
-Everything in this repository is original work written for the Meta Global AI Developer Hackathon. Work began at kickoff on October 26, 2026, after the organizers opened building. Third-party packages are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). This is the original Soma development repository. Both development histories are preserved in main. The repository remains private during the build; publication is planned for the end of the hackathon after review. Historical CI identifiers are retained as records, and new verification runs in this repository.
+All code was written for the Meta Global AI Developer Hackathon, from kickoff on October 26 to November 4, 2026. The first commit (October 26, 11:10 ET) holds only pre-event planning documents. A second history root (October 29) comes from this project's own companion repository, also built during the event, and was merged here so the full build log stays in one place. Third-party packages are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The dated build log (`docs/BUILD_LOG.md`) and verbatim prompt archive (`docs/build-log/prompts.json`) record each step.
 
 - **The visual exploration engine** (`/explore`): capture or upload, Spark interpretation, the checked solver, generated scenes, manipulation, contextual follow-ups and versioned saves.
 - **Checked BFS and Dijkstra engines**, the model-chosen cost experiment, and weighted animation that replays the solver's own settlement and relaxation steps.
@@ -150,6 +150,6 @@ npm test --prefix desktop
 Default tests are offline and use original synthetic material. Tests that call real providers are opt-in.
 
 
-## Personal continuity and optional actions
+## Also in the repository
 
-Soma can now remember explicit goals, connect saved explorations into an evidence-linked understanding map, and use that context in later visual explanations. Concepts remain revisable interpretations, with source/version links and assistance visible. [Use and verification](docs/PERSONAL_COMPANION.md). The new native source also includes separately approved, bounded app controls; [native setup and remaining device checks](docs/COMPUTER_ACTIONS.md). These source changes require the corresponding web deployment and new native build; the existing 0.3.0 download does not include computer actions.
+Earlier work from the same build (an understanding map across saved explorations, course-source connectors and approved computer actions) remains in the code and is documented under `docs/`. It is not part of the demo.

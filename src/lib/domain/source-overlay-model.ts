@@ -134,7 +134,7 @@ export function sourceOverlayModel({
       length = Math.hypot(b.x - a.x, b.y - a.y);
     // A printed label far from the straight midpoint means the source drew an arc.
     const control =
-      label && Math.hypot(label.x - mid.x, label.y - mid.y) > length * 0.25 ? { x: 2 * label.x - mid.x, y: 2 * label.y - mid.y } : mid;
+      label && Math.hypot(label.x - mid.x, label.y - mid.y) > length * 0.4 ? { x: 2 * label.x - mid.x, y: 2 * label.y - mid.y } : mid;
     const trim = (p: Point, toward: Point) => {
       const d = Math.hypot(toward.x - p.x, toward.y - p.y) || 1;
       return { x: p.x + ((toward.x - p.x) / d) * r * 1.1, y: p.y + ((toward.y - p.y) / d) * r * 1.1 };
@@ -187,8 +187,12 @@ export function sourceOverlayModel({
       .map((o) => ({ x: (o.x + o.width / 2) * W, y: (o.y + o.height / 2) * H, w: o.width * W, h: o.height * H })),
   ];
   const centre = { x: points.reduce((s, p) => s + p.x, 0) / points.length, y: points.reduce((s, p) => s + p.y, 0) / points.length };
-  const hits = (b: Box) =>
-    blocked.some((o) => Math.abs(o.x - b.x) < (o.w + b.w) / 2 + 3 && Math.abs(o.y - b.y) < (o.h + b.h) / 2 + 2);
+  const overlap = (b: Box) =>
+    blocked.reduce((sum, o) => {
+      const ox = Math.min(o.x + o.w / 2, b.x + b.w / 2 + 3) - Math.max(o.x - o.w / 2, b.x - b.w / 2 - 3),
+        oy = Math.min(o.y + o.h / 2, b.y + b.h / 2 + 2) - Math.max(o.y - o.h / 2, b.y - b.h / 2 - 2);
+      return ox > 0 && oy > 0 ? sum + ox * oy : sum;
+    }, 0);
   const inside = (b: Box) => b.x - b.w / 2 >= 2 && b.x + b.w / 2 <= W - 2 && b.y - b.h / 2 >= 2 && b.y + b.h / 2 <= H - 2;
   const tags: SourceOverlayModel['tags'] = [];
   const place = (id: string, label: string, tone: OverlayTagTone, anchor: Point, curved: boolean) => {
@@ -196,12 +200,17 @@ export function sourceOverlayModel({
     const { w, h } = tagBox(text, font);
     const base = Math.atan2(anchor.y - centre.y, anchor.x - centre.x || 0.001);
     const candidates: Point[] = [];
-    for (const distance of [r * 2.2 + h / 2, r * 3.1 + h / 2, r * 4.3 + h / 2])
+    for (const distance of [r * 2.2 + h / 2, r * 3.1 + h / 2, r * 4.3 + h / 2, r * 6 + h / 2])
       for (const turn of [0, 0.6, -0.6, 1.2, -1.2, 1.8, -1.8, Math.PI]) {
         const angle = base + turn;
         candidates.push({ x: anchor.x + Math.cos(angle) * (distance + w * 0.3 * Math.abs(Math.cos(angle))), y: anchor.y + Math.sin(angle) * distance });
       }
-    const spot = candidates.find((c) => inside({ ...c, w, h }) && !hits({ ...c, w, h })) ?? candidates.find((c) => inside({ ...c, w, h })) ?? candidates[0];
+    // The first clear spot, else the one that covers the least of the source.
+    const fits = candidates.filter((c) => inside({ ...c, w, h }));
+    const spot =
+      fits.find((c) => overlap({ ...c, w, h }) === 0) ??
+      fits.reduce<Point | null>((best, c) => (!best || overlap({ ...c, w, h }) < overlap({ ...best, w, h }) ? c : best), null) ??
+      candidates[0];
     blocked.push({ ...spot, w, h });
     tags.push({
       id,

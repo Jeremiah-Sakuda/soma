@@ -59,7 +59,7 @@ Stage One is pass/fail viability, reasonable theme fit, and reasonable Meta API/
 
 | Criterion | Weight | Soma evidence |
 | --- | --- | --- |
-| Impact | 30% | Firsthand workflow, useful learning activity, observed recurring effort saved and honest pilot limitations |
+| Impact | 30% | Real-world potential, identifiable beneficiaries, significance, likelihood of use and problem-statement fit. Observed outcomes can support claims but are not required. |
 | Meta tooling | 25% | Meaningful source investigation, multimodal interpretation, graph decisions and actual adaptive output |
 | Technical depth and execution | 20% | Checked models, versioned evidence, isolation, recovery and measured generation reliability |
 | Demo | 25% | Immediate manipulable lesson, real consequence of a source event, live judge interaction and clear evidence |
@@ -84,3 +84,7 @@ The guide also lists Best Agentic Use-Case ($5k), Best Build on Meta Open Weight
 
 The viral award involves an X demo post and submission of its link, with engagement counted through November 8 EOD. This is information, not authorization to post. Open-weight entries require an eligible deployment and verification. Community voting opens after the closing ceremony; the result is November 16.
 
+
+### PM128 — Impact calibration correction, November1
+
+The participant guide asks about real-world potential, beneficiaries, significance, likelihood of use and problem-statement fit. It does not require a learner study, measured learning improvement, adoption or quantified time savings. Earlier simulated judges over-weighted missing empirical outcomes and treated a possible source of supporting evidence as a scoring prerequisite. For a hackathon, assess the concrete problem, credible benefit, distinctive capability and working demonstration; distinguish that plausible impact from any claimed measured results. Preserve truthful limitations without imposing a startup-validation or research-study gate.

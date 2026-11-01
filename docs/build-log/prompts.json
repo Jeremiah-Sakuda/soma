@@ -1435,6 +1435,13 @@
       "kind": "message",
       "prompt": "Have the judges score the project as is",
       "timestamp_note": "Exact received timestamp unavailable; recorded November1,2026 America/New_York. As-is scoring only; no product iteration requested."
+    },
+    {
+      "id": "PM128",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "no demonstrated learner benefit or recurring time saved. Why do I need to demonstrate learner benefit for a hackathon project??",
+      "timestamp_note": "Exact received timestamp unavailable; recorded November1,2026 America/New_York."
     }
   ]
 }

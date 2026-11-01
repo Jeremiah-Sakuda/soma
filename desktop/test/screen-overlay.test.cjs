@@ -19,7 +19,7 @@ const model = (extra = {}) => ({
   ],
   weights: [],
   callouts: [],
-  caption: { text: 'Checked route: A → F, cost 7.', stepLabel: 'Step 1 of 4', x: 0.1, y: 0.7, anchor: 'top' },
+  caption: { text: 'Checked route: A → F, cost 7.', stepLabel: 'Step 1 of 4', x: 0.1, y: 0.7, anchor: 'top', font: 0.015 },
   ...extra,
 });
 

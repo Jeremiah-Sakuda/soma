@@ -71,6 +71,9 @@ function validOverlayModel(m) {
           text(m.caption.text, 400) &&
           text(m.caption.stepLabel, 60) &&
           point(m.caption) &&
+          Number.isFinite(m.caption.font) &&
+          m.caption.font > 0 &&
+          m.caption.font <= 0.05 &&
           ['top', 'bottom'].includes(m.caption.anchor))),
   );
 }

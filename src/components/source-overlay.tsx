@@ -167,8 +167,8 @@ export function SourceOverlay({
           {model.tags.map((tag) => {
             const p = at(tag),
               anchor = at(tag.anchor),
-              w = tag.text.length * font * 0.52 + 22,
-              h = font + 14;
+              w = tag.text.length * font * 0.52 + font * 1.3,
+              h = font * 1.8;
             const dx = p.x - anchor.x,
               dy = p.y - anchor.y,
               dist = Math.hypot(dx, dy) || 1;

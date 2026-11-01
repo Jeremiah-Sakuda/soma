@@ -74,7 +74,7 @@ function renderGraph(m) {
     el('text', { 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': font }, g).textContent = w.text;
   }
   for (const t of m.tags) {
-    const p = at(t), anchor = at(t.anchor), w = t.text.length * font * 0.52 + 22, h = font + 14;
+    const p = at(t), anchor = at(t.anchor), w = t.text.length * font * 0.52 + font * 1.3, h = font * 1.8;
     const dx = p.x - anchor.x, dy = p.y - anchor.y, dist = Math.hypot(dx, dy) || 1;
     const end = { x: anchor.x + (dx / dist) * r * 1.3, y: anchor.y + (dy / dist) * r * 1.3 };
     const start = { x: Math.max(p.x - w / 2, Math.min(p.x + w / 2, end.x)), y: end.y < p.y ? p.y - h / 2 : p.y + h / 2 };
@@ -97,6 +97,7 @@ function renderGraph(m) {
     const note = document.createElement('small');
     note.textContent = 'Esc hides';
     box.append(title, note, document.createTextNode(m.caption.text));
+    box.style.fontSize = Math.max(12, m.caption.font * W) + 'px';
     box.style.left = m.caption.x * W + 'px';
     if (m.caption.anchor === 'top') box.style.top = m.caption.y * H + 'px';
     else box.style.bottom = (1 - m.caption.y) * H + 'px';

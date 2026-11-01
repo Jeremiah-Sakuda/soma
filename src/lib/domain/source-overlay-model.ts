@@ -30,7 +30,7 @@ export type SourceOverlayModel = {
   tags: { id: string; text: string; tone: OverlayTagTone; x: number; y: number; anchor: Point; curved: boolean }[];
   /** Source regions Muse tied to the visible step, outlined in place with their labels. */
   callouts: { id: string; label: string; x: number; y: number; width: number; height: number }[];
-  caption: { text: string; stepLabel: string; x: number; y: number; anchor: 'top' | 'bottom' } | null;
+  caption: { text: string; stepLabel: string; x: number; y: number; anchor: 'top' | 'bottom'; font: number } | null;
 };
 
 /** Presentation only: every ring, distance and route comes from the supplied execution. */
@@ -132,16 +132,20 @@ export function sourceOverlayModel({
             : 'unreached';
     return [{ id: node.id, label: node.label, x: p.x, y: p.y, status, distance: step.distances[node.id] ?? null }];
   });
-  const tags = overlayTags({ graph, execution, index, nodes, labels, r, W, H, pathEdges, name });
+  // Annotation type follows the source's own scale, so a half-screen slide gets small tags.
+  const font = Math.max(8, Math.min(TAG_FONT, r * 0.9));
+  const tags = overlayTags({ graph, execution, index, nodes, labels, r, W, H, pathEdges, name, font });
   // Slides keep titles at the top, so prefer the space under the graph when there is room.
   const ys = points.map((p) => p.y),
     xs = points.map((p) => p.x);
-  const below = H - Math.max(...ys) - r * 1.6;
-  const underneath = below > H * 0.14 || below > Math.min(...ys) - r * 1.6;
+  const tagBottom = Math.max(...ys, ...tags.map((t) => t.y * H + (font + 14) / 2));
+  const tagTop = Math.min(...ys, ...tags.map((t) => t.y * H - (font + 14) / 2));
+  const below = H - tagBottom - r;
+  const underneath = below > H * 0.1 || below > tagTop - r;
   const left = Math.max(0.02, (Math.min(...xs) - r) / W);
   return {
     radius: r / W,
-    font: TAG_FONT / W,
+    font: font / W,
     nodes: modelNodes,
     edges,
     weights: weightLabels,
@@ -158,14 +162,14 @@ export function sourceOverlayModel({
       .map((c) => ({ id: c.id, label: c.label.slice(0, 100), ...c.region })),
     caption: caption
       ? underneath
-        ? { text: caption, stepLabel, x: left, y: (Math.max(...ys) + r * 1.6) / H, anchor: 'top' }
-        : { text: caption, stepLabel, x: left, y: (Math.min(...ys) - r * 1.6) / H, anchor: 'bottom' }
+        ? { text: caption, stepLabel, x: left, y: (tagBottom + r * 0.8) / H, anchor: 'top', font: font / W }
+        : { text: caption, stepLabel, x: left, y: (tagTop - r * 0.8) / H, anchor: 'bottom', font: font / W }
       : null,
   };
 }
 
 const TAG_FONT = 17;
-const tagSize = (text: string) => ({ w: text.length * TAG_FONT * 0.52 + 22, h: TAG_FONT + 14 });
+const tagSize = (text: string, font: number) => ({ w: text.length * font * 0.52 + font * 1.3, h: font * 1.8 });
 
 function overlayTags({
   graph,
@@ -178,7 +182,9 @@ function overlayTags({
   H,
   pathEdges,
   name,
+  font,
 }: {
+  font: number;
   graph: BfsInput;
   execution: BfsExecution;
   index: number;
@@ -271,14 +277,19 @@ function overlayTags({
         curved: false,
       });
   }
-  // Keep tags inside the capture and off each other; the newest stay where they were placed.
-  const placed: { x: number; y: number; w: number; h: number }[] = [];
+  // Keep tags inside the capture, off the nodes and off each other.
+  const placed: { x: number; y: number; w: number; h: number }[] = points.map((p) => ({
+    x: p.x,
+    y: p.y,
+    w: r * 2.6,
+    h: r * 2.6,
+  }));
   const out: SourceOverlayModel['tags'] = [];
   for (const tag of raw.slice(-8)) {
-    const { w, h } = tagSize(tag.text);
+    const { w, h } = tagSize(tag.text, font);
     let x = Math.min(W - w / 2 - 4, Math.max(w / 2 + 4, tag.toward.x)),
       y = Math.min(H - h / 2 - 4, Math.max(h / 2 + 4, tag.toward.y));
-    for (let tries = 0; tries < 12; tries++) {
+    for (let tries = 0; tries < 16; tries++) {
       const hit = placed.find((b) => Math.abs(b.x - x) < (b.w + w) / 2 + 6 && Math.abs(b.y - y) < (b.h + h) / 2 + 4);
       if (!hit) break;
       y = y >= hit.y ? hit.y + (hit.h + h) / 2 + 6 : hit.y - (hit.h + h) / 2 - 6;

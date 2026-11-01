@@ -37,8 +37,10 @@ function typeCaption(node, text) {
 }
 // A companion pointer flies to the node being settled at each step: a lifted arc, a slight
 // swell mid-flight, facing its direction of travel, landing just beside the node.
+const trailPath = el('path', { id: 'buddy-trail' }, svg);
 const buddy = el('g', { id: 'buddy', opacity: 0 }, svg);
-el('path', { d: 'M0 0 L14 7 L7 9 L4 16 Z', class: 'buddy-shape' }, buddy);
+el('path', { d: 'M0 0 L20 10 L10 13 L6 22 Z', class: 'buddy-shape' }, buddy);
+let trailPoints = [];
 let buddyAt = null, buddyTarget = null, flight = 0;
 function placeBuddy(p, angle, scale) {
   buddy.setAttribute('transform', `translate(${p.x} ${p.y}) rotate(${angle}) scale(${scale})`);
@@ -69,12 +71,18 @@ function flyBuddy(target) {
     const heading = t < 1 ? (Math.atan2(ty, tx) * 180) / Math.PI - 25 : -35;
     placeBuddy(p, heading, 1 + 0.3 * Math.sin(Math.PI * t));
     buddyAt = p;
+    trailPoints = [...trailPoints, p].slice(-14);
+    trailPath.setAttribute('d', trailPoints.map((q, i) => `${i ? 'L' : 'M'}${q.x} ${q.y}`).join(' '));
+    trailPath.style.opacity = t < 1 ? 0.5 : 0;
+    if (t >= 1) trailPoints = [];
     if (t < 1) requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
 }
 function hideBuddy() {
   flight++;
+  trailPoints = [];
+  trailPath.setAttribute('d', '');
   buddyAt = buddyTarget = null;
   buddy.setAttribute('opacity', 0);
 }
@@ -108,12 +116,11 @@ function renderGraph(m) {
     const d = `M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`;
     const g = el('g', { class: `graph-edge is-${e.tone}` }, layer);
     if (e.tone !== 'idle' && e.tone !== 'struck')
-      el('path', { d, class: 'graph-stroke' + fresh(`e-${e.id}-${e.tone}`), pathLength: 1, 'stroke-width': r * (e.tone === 'path' ? 0.22 : 0.18) }, g);
+      // An edge inks once; later steps only change its tone. The final route inks again.
+      el('path', { d, class: 'graph-stroke' + fresh(`e-${e.id}-${e.tone === 'path' ? 'path' : 'drawn'}`), pathLength: 1, 'stroke-width': r * (e.tone === 'path' ? 0.22 : 0.18) }, g);
     if (e.tone === 'struck') {
       // One slash on the source's own line, a third of the way along, clear of its label.
-      const t = 0.3, k = r * 0.5,
-        sx = (1 - t) ** 2 * a.x + 2 * (1 - t) * t * c.x + t * t * b.x,
-        sy = (1 - t) ** 2 * a.y + 2 * (1 - t) * t * c.y + t * t * b.y;
+      const k = r * 0.5, sp = e.strike ? at(e.strike) : mid, sx = sp.x, sy = sp.y;
       el('path', { class: 'graph-cut' + fresh(`s-${e.id}`), pathLength: 1, 'stroke-width': r * 0.16, d: `M ${sx - k} ${sy + k} L ${sx + k} ${sy - k}` }, g);
     }
     if (e.tone === 'cut') {
@@ -125,10 +132,11 @@ function renderGraph(m) {
     el('title', {}, hit).textContent = e.label;
   }
   for (const n of m.nodes) {
-    if (n.status === 'unreached') continue;
+    // Waiting nodes are told by their tags; only reached nodes get a loop.
+    if (n.status === 'unreached' || n.status === 'waiting') continue;
     const p = at(n);
     const g = el('g', { class: `graph-node is-${n.status}` }, layer);
-    el('path', { d: loopPath(p.x, p.y, r * 1.22, n.id), class: 'graph-loop' + (n.status === 'waiting' ? '' : fresh(`n-${n.id}-${n.status}`)), pathLength: 1, 'stroke-width': r * (n.status === 'current' ? 0.12 : 0.08) }, g);
+    el('path', { d: loopPath(p.x, p.y, r * 1.22, n.id), class: 'graph-loop' + (n.status === 'waiting' ? '' : fresh(`n-${n.id}-solid`)), pathLength: 1, 'stroke-width': r * (n.status === 'current' ? 0.12 : 0.08) }, g);
   }
   for (const w of m.weights) {
     const p = at(w);
@@ -144,7 +152,7 @@ function renderGraph(m) {
     const start = { x: Math.max(p.x - w / 2, Math.min(p.x + w / 2, end.x)), y: end.y < p.y ? p.y - h / 2 : p.y + h / 2 };
     const bend = { x: (start.x + end.x) / 2 + (end.y - start.y) * 0.25, y: (start.y + end.y) / 2 - (end.x - start.x) * 0.25 };
     const isNew = fresh(`t-${t.id}-${t.text}`);
-    const g = el('g', { class: `graph-tag is-${t.tone}${isNew}` }, layer);
+    const g = el('g', { class: `graph-tag is-${t.tone}${t.quiet ? ' is-quiet' : ''}${isNew}` }, layer);
     el('path', { class: 'graph-leader', pathLength: 1,
       d: t.curved ? `M ${start.x} ${start.y} Q ${bend.x} ${bend.y} ${end.x} ${end.y}` : `M ${start.x} ${start.y} L ${end.x} ${end.y}`,
       ...(t.curved ? { 'marker-end': 'url(#graph-arrow)' } : {}) }, g);
@@ -166,6 +174,7 @@ function renderGraph(m) {
     const p = at(focus);
     flyBuddy({ x: p.x + r * 0.95, y: p.y + r * 0.95 });
   } else hideBuddy();
+  svg.appendChild(trailPath);
   svg.appendChild(buddy);
   if (m.caption) {
     const box = document.createElement('div');
@@ -174,6 +183,11 @@ function renderGraph(m) {
     title.textContent = m.caption.stepLabel;
     const body = document.createElement('span');
     box.append(title, body);
+    // Size the card for the finished text first so it does not grow while typing.
+    body.textContent = m.caption.text;
+    document.body.appendChild(box);
+    box.style.width = Math.ceil(box.getBoundingClientRect().width) + 'px';
+    body.textContent = '';
     typeCaption(body, m.caption.text);
     box.style.left = m.caption.x * W + frame.dx + 'px';
     if (m.caption.anchor === 'top') box.style.top = m.caption.y * H + frame.dy + 'px';

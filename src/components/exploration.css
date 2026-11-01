@@ -2426,3 +2426,7 @@ a.exploration-example-button { text-decoration: none; }
 @keyframes source-overlay-settle { 0% { opacity: 0; transform: scale(.5); } 70% { opacity: 1; transform: scale(1.06); } 100% { opacity: 1; transform: scale(1); } }
 .source-overlay-tag { animation: source-overlay-settle .42s cubic-bezier(.2, .8, .2, 1) .65s both; transform-box: fill-box; transform-origin: center; }
 @media (prefers-reduced-motion: reduce) { .source-overlay-tag { animation: none; } }
+
+/* Persistent marks change colour instead of redrawing. */
+.source-overlay-loop, .source-overlay-stroke { transition: stroke .45s ease, opacity .45s ease, stroke-width .45s ease; }
+.source-overlay-tag.is-quiet { opacity: .45; }

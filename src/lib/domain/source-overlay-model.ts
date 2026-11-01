@@ -28,10 +28,12 @@ export type SourceOverlayModel = {
     to: Point;
     center: Point;
     tone: OverlayTone;
+    /** Where a struck edge's slash goes: on the line, clear of printed labels. */
+    strike?: Point;
   }[];
   weights: { edgeId: string; x: number; y: number; text: string }[];
   /** Small tags with leader lines, in the reference style. Text is computed from the trace. */
-  tags: { id: string; text: string; tone: OverlayTagTone; x: number; y: number; anchor: Point; curved: boolean }[];
+  tags: { id: string; text: string; tone: OverlayTagTone; x: number; y: number; anchor: Point; curved: boolean; quiet?: boolean }[];
   /** Kept for compatibility; the overlay no longer outlines source regions. */
   callouts: { id: string; label: string; x: number; y: number; width: number; height: number }[];
   caption: { text: string; stepLabel: string; x: number; y: number; anchor: 'top' | 'bottom'; font: number } | null;
@@ -147,6 +149,12 @@ export function sourceOverlayModel({
       key = pairKey(edge.from, edge.to),
       centre = { x: 0.25 * a.x + 0.5 * control.x + 0.25 * b.x, y: 0.25 * a.y + 0.5 * control.y + 0.25 * b.y };
     edgeCentre.set(key, centre);
+    let strike: Point | undefined;
+    if (struck.has(key) && !cut) {
+      const along = (t: number) => ({ x: (1 - t) ** 2 * a.x + 2 * (1 - t) * t * control.x + t * t * b.x, y: (1 - t) ** 2 * a.y + 2 * (1 - t) * t * control.y + t * t * b.y });
+      const clearOf = (p: Point) => [...labels.values()].every((l) => Math.hypot(l.x - p.x, l.y - p.y) > Math.max(r * 1.6, 18));
+      strike = norm([0.32, 0.4, 0.25, 0.6, 0.68, 0.5].map(along).find(clearOf) ?? along(0.32));
+    }
     edges.push({
       id: edge.id,
       label: `${cut ? 'Restore' : 'Cut'} connection ${name(edge.from)}–${name(edge.to)}, cost ${edge.weight ?? 1}`,
@@ -154,6 +162,7 @@ export function sourceOverlayModel({
       control: norm(control),
       to: norm(trim(b, control)),
       center: norm(centre),
+      ...(strike ? { strike } : {}),
       tone: cut
         ? 'cut'
         : pathEdges.has(key)
@@ -162,9 +171,7 @@ export function sourceOverlayModel({
             ? 'struck'
             : relaxed.has(key) && !finished
               ? 'relaxed'
-              : treeEdges.has(key) && !finished
-                ? 'tree'
-                : 'idle',
+              : 'idle',
     });
   }
   const weightLabels: SourceOverlayModel['weights'] = graph.edges.flatMap((edge) => {
@@ -232,8 +239,8 @@ export function sourceOverlayModel({
 
   // The relaxation equation first, so it gets the clearest spot beside its edge.
   for (const x of relaxations) {
-    const anchor = edgeCentre.get(pairKey(x.parent, x.node));
-    if (!anchor) continue;
+    const anchor = nodes.get(x.node);
+    if (!anchor || !edgeCentre.has(pairKey(x.parent, x.node))) continue;
     const w = weightOf(x.parent, x.node);
     place(`equation-${x.node}`, `${x.value - w} + ${w} = ${x.value} < ${x.old}`, 'equation', anchor, true);
   }
@@ -241,12 +248,16 @@ export function sourceOverlayModel({
     const p = nodes.get(id);
     if (p) place(`settled-${id}`, `${CIRCLED[k] ?? k + 1} ${name(id)} = ${step.distances[id]}`, id === step.current ? 'current' : 'settled', p, false);
   });
-  if (!finished)
+  if (!finished) {
+    const before = at > 0 ? execution.steps[at - 1] : null;
     for (const id of step.queue) {
       const p = nodes.get(id);
-      if (p && !step.expanded.includes(id) && step.distances[id] !== undefined)
+      if (p && !step.expanded.includes(id) && step.distances[id] !== undefined && !relaxations.some((x) => x.node === id)) {
         place(`tentative-${id}`, `${name(id)} ≤ ${step.distances[id]}`, 'tentative', p, false);
+        if (before && before.distances[id] === step.distances[id]) tags[tags.length - 1].quiet = true;
+      }
     }
+  }
   // The route gets a tag only where it covers nothing; otherwise it leads the caption.
   let routeLine: string | null = null;
   if (finished && execution.path && execution.path.length > 1) {

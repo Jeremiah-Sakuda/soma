@@ -585,7 +585,7 @@ export function ExplorationScene({
               stepLabel={
                 experimentCaption
                   ? 'Your experiment'
-                  : `Step ${Math.min(state.step, finalStep) + 1} of ${finalStep + 1}`
+                  : `Round ${Math.min(state.step, finalStep) + 1} of ${finalStep + 1}`
               }
               obstacles={(overlay.anchors ?? []).map((a) => a.region)}
               onModel={mirror}

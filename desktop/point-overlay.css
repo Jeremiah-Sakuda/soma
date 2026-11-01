@@ -62,3 +62,10 @@
 @keyframes settle{0%{opacity:0;transform:scale(.5)}70%{opacity:1;transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
 .graph-tag.ink-new{animation:settle .42s cubic-bezier(.2,.8,.2,1) .65s both;transform-box:fill-box;transform-origin:center}
 @media(prefers-reduced-motion:reduce){.graph-tag.ink-new{animation:none}}
+
+/* Persistent marks change colour instead of redrawing. */
+.graph-loop,.graph-stroke{transition:stroke .45s ease,opacity .45s ease,stroke-width .45s ease}
+
+.graph-tag.is-quiet{opacity:.45}
+.buddy-shape{fill:#ff7a3d;stroke:#fff;stroke-width:1.8;filter:drop-shadow(0 0 7px #ff7a3d99)}
+#buddy-trail{fill:none;stroke:#ff7a3d;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .3s ease}

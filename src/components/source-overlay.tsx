@@ -104,13 +104,13 @@ export function SourceOverlay({
             return (
               <g key={edge.id} className={`source-overlay-edge is-${edge.tone}`}>
                 {edge.tone !== 'idle' && edge.tone !== 'struck' && (
-                  <path key={edge.tone} d={d} className="source-overlay-stroke" pathLength={1} strokeWidth={r * (edge.tone === 'path' ? 0.22 : 0.18)} />
+                  <path key={edge.tone === 'path' ? 'path' : 'drawn'} d={d} className="source-overlay-stroke" pathLength={1} strokeWidth={r * (edge.tone === 'path' ? 0.22 : 0.18)} />
                 )}
                 {edge.tone === 'struck' && (() => {
-                  // One slash on the source's own line, a third of the way along, clear of its label.
-                  const t = 0.3,
-                    sx = (1 - t) ** 2 * a.x + 2 * (1 - t) * t * c.x + t * t * b.x,
-                    sy = (1 - t) ** 2 * a.y + 2 * (1 - t) * t * c.y + t * t * b.y;
+                  // One slash on the source's own line, clear of its printed labels.
+                  const point = edge.strike ? at(edge.strike) : m,
+                    sx = point.x,
+                    sy = point.y;
                   return <path className="source-overlay-cut" pathLength={1} strokeWidth={r * 0.16} d={`M ${sx - r * 0.5} ${sy + r * 0.5} L ${sx + r * 0.5} ${sy - r * 0.5}`} />;
                 })()}
                 {edge.tone === 'cut' && (
@@ -150,8 +150,8 @@ export function SourceOverlay({
                 onKeyDown={(event) => keyActivate(event, () => onSelect(node.id))}
               >
                 <circle cx={p.x} cy={p.y} r={r * 1.25} className="source-overlay-target" />
-                {node.status !== 'unreached' && (
-                  <path key={node.status} d={loopPath(p.x, p.y, r * 1.22, node.id)} className="source-overlay-loop" pathLength={1} strokeWidth={r * (node.status === 'current' ? 0.12 : 0.08)} />
+                {node.status !== 'unreached' && node.status !== 'waiting' && (
+                  <path key="solid" d={loopPath(p.x, p.y, r * 1.22, node.id)} className="source-overlay-loop" pathLength={1} strokeWidth={r * (node.status === 'current' ? 0.12 : 0.08)} />
                 )}
               </g>
             );
@@ -189,7 +189,7 @@ export function SourceOverlay({
               ? `M ${start.x} ${start.y} Q ${bend.x} ${bend.y} ${end.x} ${end.y}`
               : `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
             return (
-              <g key={tag.id} className={`source-overlay-tag is-${tag.tone}`}>
+              <g key={tag.id} className={`source-overlay-tag is-${tag.tone}${tag.quiet ? ' is-quiet' : ''}`}>
                 <path d={lead} className="source-overlay-leader" pathLength={1} markerEnd={tag.curved ? 'url(#source-overlay-arrow)' : undefined} />
                 {!tag.curved && <circle cx={end.x} cy={end.y} r={3.2} className="source-overlay-dot" />}
                 <rect x={p.x - w / 2} y={p.y - h / 2} width={w} height={h} rx={3} />

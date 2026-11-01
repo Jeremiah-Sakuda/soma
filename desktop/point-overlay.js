@@ -144,9 +144,14 @@ function renderGraph(m) {
     el('rect', { x: -font * 2.2, y: -font * 0.85, width: font * 4.4, height: font * 1.7, rx: 4 }, g);
     el('text', { 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': font }, g).textContent = w.text;
   }
+  // Measures text in the overlay's own hand, so leaders start on the box as drawn.
+  const probeGroup = el('g', { class: 'graph-tag', visibility: 'hidden' }, layer);
+  const probe = el('text', { 'font-size': font }, probeGroup);
   for (const t of m.tags) {
     const p = at(t), anchor = at(t.anchor), h = font * 1.65;
-    let w = t.text.length * font * 0.56 + font * 1.1;
+    probe.textContent = t.text;
+    const measured = probe.getComputedTextLength?.();
+    const w = measured ? measured + font * 1.1 : t.text.length * font * 0.56 + font * 1.1;
     const dx = p.x - anchor.x, dy = p.y - anchor.y, dist = Math.hypot(dx, dy) || 1;
     const end = { x: anchor.x + (dx / dist) * r * 1.05, y: anchor.y + (dy / dist) * r * 1.05 };
     const start = { x: Math.max(p.x - w / 2, Math.min(p.x + w / 2, end.x)), y: end.y < p.y ? p.y - h / 2 : p.y + h / 2 };
@@ -157,17 +162,10 @@ function renderGraph(m) {
       d: t.curved ? `M ${start.x} ${start.y} Q ${bend.x} ${bend.y} ${end.x} ${end.y}` : `M ${start.x} ${start.y} L ${end.x} ${end.y}`,
       ...(t.curved ? { 'marker-end': 'url(#graph-arrow)' } : {}) }, g);
     if (!t.curved) el('circle', { cx: end.x, cy: end.y, r: 3.5, class: 'graph-dot' }, g);
-    const box = el('rect', { x: p.x - w / 2, y: p.y - h / 2, width: w, height: h, rx: 3 }, g);
-    const label = el('text', { x: p.x, y: p.y + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': font }, g);
-    label.textContent = t.text;
-    // Fit the tag to its real text width.
-    const measured = label.getComputedTextLength?.();
-    if (measured) {
-      w = measured + font * 1.1;
-      box.setAttribute('x', p.x - w / 2);
-      box.setAttribute('width', w);
-    }
+    el('rect', { x: p.x - w / 2, y: p.y - h / 2, width: w, height: h, rx: 3 }, g);
+    el('text', { x: p.x, y: p.y + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': font }, g).textContent = t.text;
   }
+  probeGroup.remove();
   seen = now;
   const focus = m.nodes.find((n) => n.status === 'current');
   if (focus) {

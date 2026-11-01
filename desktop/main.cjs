@@ -91,6 +91,8 @@ async function snapshotDisplay(display) {
 async function capture() {
   computerControl?.stop('Computer task ended.');
   if (capturing) return;
+  // Never photograph Soma's own drawing as part of the next slide.
+  pointAsk?.clearScreenOverlay();
   if (!trustedPage(view.webContents.getURL(), origin)) {
     status('Open the Soma exploration page before capturing.');
     return;
@@ -213,6 +215,8 @@ else {
       view.webContents.setAudioMuted(true);
     });
     win.on('restore', () => view.webContents.setAudioMuted(false));
+    // The learner may now change the slide by hand; the next drawn step re-checks it.
+    win.on('blur', () => pointAsk?.markStale());
     pointAsk = createPointAsk({
       BrowserWindow,
       screen,
@@ -235,6 +239,15 @@ else {
         view.webContents.setAudioMuted(false);
       },
       hideForHighlight: () => win.hide(),
+      // Leaves the panel out of a check's capture without hiding it from the learner.
+      excludePanel: async (fn) => {
+        win.setContentProtection(true);
+        try {
+          return await fn();
+        } finally {
+          if (!win.isDestroyed()) win.setContentProtection(false);
+        }
+      },
       highlightResult: (payload) =>
         view.webContents.send('desktop:source-highlight-result', payload),
       captureImage: snapshotDisplay,

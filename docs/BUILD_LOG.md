@@ -3038,3 +3038,10 @@ One user instruction this session was intentionally not archived, at the user's 
    - Tests: 1,758 offline passed / 103 skipped; 44 desktop tests passed; typecheck passed.
    - Release manifest `soma-pm153-review-2026-11-01`, now served in production.
    - Code review round 5 is running.
+
+
+## RUBRIC-20261101-01 — Muse ambition and competitive gaps (November1)
+
+1. Read the full user-supplied participant guide/request, inspected current checkout0ec9128 and PM131–PM153 evidence, and compared with the previously inspected reference frames. Corrected the earlier PM130 baseline: source-aligned native overlay, live edge selection/checked tipping point, physical rehearsals and later releases now exist; freeze/cap were explicitly superseded by PM132. No fresh hosted/native acceptance or model benchmark claimed.
+2. Delivered [Muse ambition review](MUSE_AMBITION_REVIEW_2026_11_01.md), mapping real-world potential30%, tooling25%, technical craft20%, demo25% to strengths and specific gaps. Code confirms narrow direct-edge-biased choice, application-owned overlay choreography, and Wonder review of extracted summary/trace without original pixels. Prioritized question-directed bounded investigations, consequential source re-inspection and unfamiliar-input evidence over model-count additions. Retained actual review catch and source/latency/recorded-engine limitations.
+3. Archived the attached request verbatim, checked JSON and report links/whitespace. Recommendations only: no code/script edits, inference, new tests, budget reset, merge, deployment or publication. Existing concurrent work remains untouched. No placement prediction or invented learner-study requirement.

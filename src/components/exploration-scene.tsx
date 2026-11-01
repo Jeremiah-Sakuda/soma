@@ -31,6 +31,7 @@ export {
   type ExplorationViewState,
 } from '@/lib/domain/exploration-view';
 import {
+  captionIsGrounded,
   comparisonExecution,
   explorationExecution,
   explorationInputsChanged,
@@ -390,7 +391,11 @@ export function ExplorationScene({
     spec.mode === 'explanation'
       ? explanation
       : spec.steps.find((item) => item.execution === 'primary' && item.executionStep === state.step);
-  const overlayCaption = overlayStep?.caption ?? explorationVisibleCaption(spec, state);
+  const overlayCaption =
+    overlayStep?.caption &&
+    (spec.mode === 'explanation' || captionIsGrounded(overlayStep.caption, [execution, comparison]))
+      ? overlayStep.caption
+      : explorationVisibleCaption(spec, state);
   const select = (selectedObjectId: string) => onChange({ ...state, selectedObjectId });
   const graphInput =
     spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra' ? spec.input : null;

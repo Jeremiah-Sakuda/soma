@@ -25,10 +25,10 @@ const sensitive =
 /** Labels whose press would send, submit, delete, purchase or publish. Such a
  * step always needs its own approval at execution time, whatever the model says. */
 export const consequentialLabel =
-  /send|submit|delete|remove|erase|trash|discard|don.?t.?save|replace|overwrite|clear|reset|empty|allow|accept|approve|install|quit|restart|shut.?down|revert|reply|forward|authori[sz]e|grant|agree|subscribe|sign.?in|log.?in|join|move.?to.?bin|comment|purchase|buy|pay|order|checkout|check.?out|place|transfer|post|publish|share|upload|confirm|sign.?out|log.?out|unsubscribe|cancel.?(?:subscription|account|order)/i;
+  /send|submit|delete|remove|erase|trash|discard|don.?t.?save|replace|overwrite|clear|reset|empty|allow|accept|approve|install|quit|restart|shut.?down|revert|reply|forward|authori[sz]e|grant|agree|subscribe|sign.?in|log.?in|join|move.?to.?bin|comment|purchase|buy|pay|order|checkout|check.?out|place|transfer|post|publish|share|upload|confirm|sign.?out|log.?out|unsubscribe|cancel.?(?:subscription|account|order)|\b(?:save|ok|okay|yes|archive|block|leave|report|continue)\b/i;
 /** Coursework hand-in controls are refused outright: Soma never submits coursework. */
 const courseworkSubmit =
-  /turn.?in|hand.?in|submit.?(?:assignment|homework|quiz|test|exam|attempt|answers?|work|essay|lab|project)|(?:assignment|homework|quiz|exam|attempt)\s+submi/i;
+  /turn.?in|hand.?in|submit.?(?:assignment|homework|quiz|test|exam|attempt|answers?|work|essay|lab|project)|(?:assignment|homework|quiz|exam|attempt)\s+submi|^\s*submit\s*$/i;
 /** Navigation keys only: no modifiers, characters, Return, Tab, Escape or Space
  * (Space activates the focused control on macOS). Sent to the selected app only. */
 export const NAVIGATION_KEYS = [

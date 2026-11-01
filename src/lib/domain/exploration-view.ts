@@ -98,6 +98,23 @@ export function explorationVisibleCaption(
   return executionCaption(execution, state.step);
 }
 
+/** True when every number in an authored caption is one the solver produced for this run:
+ * a distance at any step, an edge cost, the route's cost or length, or a step count. A
+ * caption with any other number is replaced by the computed caption where it is drawn. */
+export function captionIsGrounded(caption: string, executions: (BfsExecution | null)[]) {
+  const allowed = new Set<string>();
+  const add = (n: number) => allowed.add(String(Number(n.toFixed(2))));
+  for (const run of executions) {
+    if (!run) continue;
+    for (const step of run.steps) Object.values(step.distances).forEach(add);
+    run.input.edges.forEach((edge) => add(edge.weight ?? 1));
+    for (let i = 0; i <= run.steps.length; i++) add(i);
+    add(run.input.nodes.length);
+    add(run.input.edges.length);
+  }
+  return (caption.match(/\d+(?:\.\d+)?/g) ?? []).every((n) => allowed.has(String(Number(Number(n).toFixed(2)))));
+}
+
 const nodeName = (input: BfsInput, id: string | null) =>
   input.nodes.find((node) => node.id === id)?.label ?? 'None';
 

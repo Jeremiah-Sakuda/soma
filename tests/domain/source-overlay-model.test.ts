@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createRequire } from 'node:module';
 import { runBfs, runDijkstra } from '../../src/lib/domain/graph-search';
 import { sourceOverlayModel } from '../../src/lib/domain/source-overlay-model';
+import { captionIsGrounded } from '../../src/lib/domain/exploration-view';
 
 const require = createRequire(import.meta.url);
 const { validOverlayModel } = require('../../desktop/screen-overlay.cjs') as { validOverlayModel: (m: unknown) => boolean };
@@ -161,3 +162,14 @@ describe('companion overlay validator', () => {
     expect(validOverlayModel(quiet)).toBe(false);
   });
 });
+
+describe('captions drawn over the screen', () => {
+  it('keep a model caption only when every number in it came from the solver', () => {
+    const execution = runDijkstra({ ...hero, algorithm: 'dijkstra' });
+    expect(captionIsGrounded('Through D, F costs 4 + 3 = 7, beating the direct 11.', [execution])).toBe(true);
+    expect(captionIsGrounded('B drops from 4 to 3 once C settles.', [execution])).toBe(true);
+    expect(captionIsGrounded('D lowers F to 8.', [execution])).toBe(false);
+    expect(captionIsGrounded('No numbers here.', [execution, null])).toBe(true);
+  });
+});
+

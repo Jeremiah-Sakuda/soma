@@ -40,6 +40,7 @@ function harness(images) {
     setBounds(b) { this.bounds = b; }
     showInactive() { this.visible = true; }
     hide() { this.visible = false; }
+    setContentProtection(v) { this.protectedDuring = this.protectedDuring || v; }
     isDestroyed() { return false; }
     destroy() {}
   }
@@ -183,3 +184,48 @@ test('turning Point & ask off clears a drawn overlay', async () => {
     h.controller.dispose();
   }
 });
+
+test('a new snapshot clears the drawing first, so Soma never photographs its own marks', async () => {
+  const h = harness(['data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE']);
+  try {
+    const id = await h.ready();
+    await h.controller.screenOverlay({ id, model: model() });
+    assert.equal(h.windows[0].visible, true);
+    h.controller.clearScreenOverlay();
+    assert.equal(h.windows[0].visible, false);
+    assert.equal(h.draws.at(-1).type, 'graph-clear');
+    assert.deepEqual(h.results.at(-1), { id, shown: false, dismissed: true });
+    const drawn = h.draws.filter((d) => d.type === 'graph').length;
+    await h.controller.screenOverlay({ id, model: model() });
+    assert.equal(h.draws.filter((d) => d.type === 'graph').length, drawn, 'the old capture cannot redraw');
+  } finally {
+    h.controller.dispose();
+  }
+});
+
+test('after the learner uses another app, the next step re-checks the slide without hiding the drawing', async () => {
+  const same = harness(['data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE']);
+  try {
+    const id = await same.ready();
+    await same.controller.screenOverlay({ id, model: model() });
+    same.controller.markStale();
+    await same.controller.screenOverlay({ id, model: model({ caption: null }) });
+    assert.equal(same.windows[0].protectedDuring, true, 'the overlay is left out of the check, not hidden');
+    assert.equal(same.draws.filter((d) => d.type === 'graph').length, 2);
+  } finally {
+    same.controller.dispose();
+  }
+  const paged = harness(['data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,NEXT']);
+  try {
+    const id = await paged.ready();
+    await paged.controller.screenOverlay({ id, model: model() });
+    paged.controller.markStale();
+    await paged.controller.screenOverlay({ id, model: model({ caption: null }) });
+    assert.deepEqual(paged.results.at(-1), { id, shown: false });
+    assert.equal(paged.draws.at(-1).type, 'graph-clear');
+    assert.equal(paged.draws.filter((d) => d.type === 'graph').length, 1);
+  } finally {
+    paged.controller.dispose();
+  }
+});
+

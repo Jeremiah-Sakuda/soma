@@ -27,6 +27,11 @@ function createPointAsk({
   platform = process.platform,
   overlayResult = () => {},
   overlayAction = () => {},
+  // Runs a capture with Soma's panel left out of it; the default hides the panel.
+  excludePanel = async (fn) => {
+    hidePanel();
+    return fn();
+  },
   compareRegion = (original, fresh, region) =>
     regionMatches(require('electron').nativeImage, original, fresh, region),
 }) {
@@ -60,6 +65,31 @@ function createPointAsk({
       return;
     }
     overlay?.hide();
+  }
+  // Set when the learner may have changed the screen by hand (Soma's panel lost focus).
+  let stale = false,
+    lastCheck = 0;
+  function markStale() {
+    if (graph?.verified) stale = true;
+  }
+  /** Captures the display without Soma's own windows in it, so a check or a new snapshot
+   * never reads Soma's drawing as slide content. */
+  async function captureClean(display) {
+    const o = overlay && !overlay.isDestroyed() ? overlay : null;
+    o?.setContentProtection?.(true);
+    try {
+      return await excludePanel(() => captureImage(display));
+    } finally {
+      if (o && !o.isDestroyed()) o.setContentProtection?.(false);
+    }
+  }
+  /** A new snapshot is about to be taken: the drawing belongs to the previous one. */
+  function clearScreenOverlay() {
+    const id = graph?.id;
+    overlayCapture = null;
+    clearGraph();
+    overlay?.hide();
+    if (id) overlayResult({ id, shown: false, dismissed: true });
   }
   function clearGraph() {
     const had = graph?.verified;
@@ -404,6 +434,29 @@ function createPointAsk({
     }
     const verified = graph?.id === c.id && graph.verified;
     graph = { id: c.id, model: event.model, verified };
+    // After the learner used another app, check the slide is still the one drawn on before
+    // drawing the next step. Soma's windows are left out of that capture, without hiding.
+    if (verified && stale && !verifying && Date.now() - lastCheck > 3000) {
+      verifying = true;
+      stale = false;
+      let ok = false;
+      try {
+        const fresh = await captureClean(c.display);
+        ok = compareRegion(c.snapshot.dataUrl, fresh.dataUrl, overlayRegion(graph.model));
+      } catch {
+        ok = false;
+      } finally {
+        verifying = false;
+        lastCheck = Date.now();
+      }
+      if (overlayCapture !== c || graph?.id !== c.id) return;
+      if (!ok) {
+        clearGraph();
+        refused = c.id;
+        overlayResult({ id: c.id, shown: false });
+        return;
+      }
+    }
     if (!verified) {
       if (verifying) return; // the latest model is drawn once verification finishes
       verifying = true;
@@ -468,6 +521,8 @@ function createPointAsk({
   return {
     enable,
     disable,
+    clearScreenOverlay,
+    markStale,
     stop,
     feedback,
     highlight,

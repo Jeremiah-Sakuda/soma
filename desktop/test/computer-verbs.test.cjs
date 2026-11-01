@@ -5,9 +5,9 @@ const path = require('node:path');
 const { consequentialLabel } = require('../computer-policy.cjs');
 
 test('dialog and destructive verbs always need their own approval', () => {
-  for (const label of ["Don't Save", 'Replace', 'Clear All', 'Reset', 'Empty Trash', 'Allow', 'Accept', 'Approve', 'Install', 'Restart', 'Shut Down', 'Revert', 'Send', 'Delete', 'Reply', 'Forward', 'Authorize', 'Grant access', 'I Agree', 'Subscribe', 'Sign In', 'Log in', 'Join', 'Move to Bin', 'Comment'])
+  for (const label of ["Don't Save", 'Replace', 'Clear All', 'Reset', 'Empty Trash', 'Allow', 'Accept', 'Approve', 'Install', 'Restart', 'Shut Down', 'Revert', 'Send', 'Delete', 'Reply', 'Forward', 'Authorize', 'Grant access', 'I Agree', 'Subscribe', 'Sign In', 'Log in', 'Join', 'Move to Bin', 'Comment', 'Save', 'OK', 'Yes', 'Archive', 'Block', 'Leave', 'Report', 'Continue'])
     assert.ok(consequentialLabel.test(label), label);
-  for (const label of ['Next', 'Previous', 'Zoom In', 'Open'])
+  for (const label of ['Next', 'Previous', 'Zoom In', 'Open', 'Notebook', 'Facebook', 'Bookmarks'])
     assert.ok(!consequentialLabel.test(label), label);
 });
 

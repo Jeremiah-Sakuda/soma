@@ -55,3 +55,10 @@
 
 #graph-layer.is-final .graph-node.is-settled .graph-loop{opacity:.3}
 #graph-caption{max-width:22em}
+
+/* Companion pointer and settling pop-in. */
+#buddy{transition:opacity .25s ease}
+.buddy-shape{fill:#1f6f5c;stroke:#fff;stroke-width:1.5;stroke-linejoin:round;filter:drop-shadow(0 0 6px #1f6f5c88)}
+@keyframes settle{0%{opacity:0;transform:scale(.5)}70%{opacity:1;transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
+.graph-tag.ink-new{animation:settle .42s cubic-bezier(.2,.8,.2,1) .65s both;transform-box:fill-box;transform-origin:center}
+@media(prefers-reduced-motion:reduce){.graph-tag.ink-new{animation:none}}

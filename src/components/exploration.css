@@ -2423,3 +2423,6 @@ a.exploration-example-button { text-decoration: none; }
 /* The completed search shows only its result. */
 .source-overlay-layer.is-final .source-overlay-node.is-settled .source-overlay-loop { opacity: .3; }
 .source-overlay-caption { max-width: min(40%, 22em); }
+@keyframes source-overlay-settle { 0% { opacity: 0; transform: scale(.5); } 70% { opacity: 1; transform: scale(1.06); } 100% { opacity: 1; transform: scale(1); } }
+.source-overlay-tag { animation: source-overlay-settle .42s cubic-bezier(.2, .8, .2, 1) .65s both; transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: reduce) { .source-overlay-tag { animation: none; } }

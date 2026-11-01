@@ -15,6 +15,69 @@ function clearGraph() {
   document.getElementById('graph-layer')?.remove();
   document.getElementById('graph-caption')?.remove();
 }
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+// A new caption types itself in with an uneven rhythm; an unchanged one appears at once.
+let typedText = '', typing = 0;
+function typeCaption(node, text) {
+  const token = ++typing;
+  if (text === typedText || reducedMotion.matches) {
+    node.textContent = text;
+    typedText = text;
+    return;
+  }
+  typedText = text;
+  let i = 0;
+  const next = () => {
+    if (token !== typing) return;
+    i = Math.min(text.length, i + 1 + (Math.random() < 0.3 ? 1 : 0));
+    node.textContent = text.slice(0, i);
+    if (i < text.length) setTimeout(next, 18 + Math.random() * 28);
+  };
+  next();
+}
+// A companion pointer flies to the node being settled at each step: a lifted arc, a slight
+// swell mid-flight, facing its direction of travel, landing just beside the node.
+const buddy = el('g', { id: 'buddy', opacity: 0 }, svg);
+el('path', { d: 'M0 0 L14 7 L7 9 L4 16 Z', class: 'buddy-shape' }, buddy);
+let buddyAt = null, buddyTarget = null, flight = 0;
+function placeBuddy(p, angle, scale) {
+  buddy.setAttribute('transform', `translate(${p.x} ${p.y}) rotate(${angle}) scale(${scale})`);
+}
+function flyBuddy(target) {
+  if (buddyTarget && Math.hypot(buddyTarget.x - target.x, buddyTarget.y - target.y) < 1) return;
+  buddyTarget = target;
+  const token = ++flight;
+  buddy.setAttribute('opacity', 1);
+  if (!buddyAt || reducedMotion.matches) {
+    buddyAt = target;
+    placeBuddy(target, -35, 1);
+    return;
+  }
+  const from = buddyAt, dx = target.x - from.x, dy = target.y - from.y, dist = Math.hypot(dx, dy);
+  const lift = Math.min(80, dist * 0.2),
+    control = { x: from.x + dx / 2, y: from.y + dy / 2 - lift },
+    duration = Math.min(1400, Math.max(600, (dist / 800) * 1000)),
+    start = performance.now();
+  const frame = (now) => {
+    if (token !== flight) return;
+    const t = Math.min(1, (now - start) / duration),
+      e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+    const q = (a, c, b) => (1 - e) ** 2 * a + 2 * (1 - e) * e * c + e * e * b;
+    const p = { x: q(from.x, control.x, target.x), y: q(from.y, control.y, target.y) };
+    const tx = 2 * (1 - e) * (control.x - from.x) + 2 * e * (target.x - control.x),
+      ty = 2 * (1 - e) * (control.y - from.y) + 2 * e * (target.y - control.y);
+    const heading = t < 1 ? (Math.atan2(ty, tx) * 180) / Math.PI - 25 : -35;
+    placeBuddy(p, heading, 1 + 0.3 * Math.sin(Math.PI * t));
+    buddyAt = p;
+    if (t < 1) requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+function hideBuddy() {
+  flight++;
+  buddyAt = buddyTarget = null;
+  buddy.setAttribute('opacity', 0);
+}
 // Shapes arrive in normalized capture coordinates; the window covers that display exactly.
 // Drawn as an annotated sketch: inked edges, hand loops and pastel tags with leader lines.
 // Only elements new since the last draw ink in, so stepping doesn't redraw everything.
@@ -98,12 +161,20 @@ function renderGraph(m) {
     }
   }
   seen = now;
+  const focus = m.nodes.find((n) => n.status === 'current');
+  if (focus) {
+    const p = at(focus);
+    flyBuddy({ x: p.x + r * 0.95, y: p.y + r * 0.95 });
+  } else hideBuddy();
+  svg.appendChild(buddy);
   if (m.caption) {
     const box = document.createElement('div');
     box.id = 'graph-caption';
     const title = document.createElement('strong');
     title.textContent = m.caption.stepLabel;
-    box.append(title, document.createTextNode(m.caption.text));
+    const body = document.createElement('span');
+    box.append(title, body);
+    typeCaption(body, m.caption.text);
     box.style.left = m.caption.x * W + frame.dx + 'px';
     if (m.caption.anchor === 'top') box.style.top = m.caption.y * H + frame.dy + 'px';
     else box.style.bottom = innerHeight - (m.caption.y * H + frame.dy) + 'px';
@@ -139,6 +210,8 @@ window.somaPointOverlay.onDraw((event) => {
   if (event.type === 'graph') return renderGraph(event.model);
   if (event.type === 'graph-clear') {
     clearGraph();
+    hideBuddy();
+    typedText = '';
     seen = new Set();
     if (graphHover) window.somaPointOverlay.hover((graphHover = false));
     return;

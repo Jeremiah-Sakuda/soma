@@ -121,11 +121,17 @@ describe.skipIf(process.env.SOMA_COMPANION_LIVE !== "true")(
           ],
         });
         evidence.action = action;
-        expect(action.plan).toMatchObject({
+        expect(action.plan.kind).toBe("plan");
+        expect(action.plan.steps[0]).toMatchObject({
           kind: "type",
           target: 0,
           text: "Ada",
         });
+        expect(
+          action.plan.steps.every(
+            (step) => step.kind !== "click" || step.target !== 1,
+          ),
+        ).toBe(true);
         expect(action.audit.executed).toBe(false);
       } catch (error) {
         evidence.failure = {

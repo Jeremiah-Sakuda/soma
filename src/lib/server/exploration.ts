@@ -1567,8 +1567,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           extracted.graph &&
           request.source?.kind === 'screenshot' &&
           request.source.dataUrl &&
-          // Leave room for composition and one repair within the per-turn call cap.
-          calls <= (deps.reviewEnabled() ? 6 : 4) - 3
+          // Leave room for composition, one repair and, when on, review within the call cap.
+          calls <= (deps.reviewEnabled() ? 6 - 4 : 4 - 3)
         ) {
           const region = graphCropRegion(extracted);
           if (region)

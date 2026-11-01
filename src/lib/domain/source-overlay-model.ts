@@ -82,7 +82,14 @@ export function sourceOverlayModel({
     finished = index >= execution.steps.length - 1;
   const input = execution.input;
   const pairKey = (a: string, b: string) => (input.directed ? `${a}>${b}` : [a, b].sort().join('|'));
-  const name = (id: string) => graph.nodes.find((n) => n.id === id)?.label ?? id;
+  const fullName = (id: string) => graph.nodes.find((n) => n.id === id)?.label ?? id;
+  // Tags shorten names, never numbers.
+  const name = (id: string) => {
+    const label = fullName(id);
+    return label.length > 14 ? `${label.slice(0, 13)}…` : label;
+  };
+  const fmt = (n: number) => (Number.isInteger(n) ? String(n) : String(Number(n.toFixed(2))));
+  const dijkstra = execution.modelId === 'dijkstra-nonnegative';
   const weightOf = (a: string, b: string) => input.edges.find((e) => pairKey(e.from, e.to) === pairKey(a, b))?.weight ?? 1;
 
   // The moment that explains Dijkstra: a known distance plus one edge beats the old estimate.
@@ -113,8 +120,6 @@ export function sourceOverlayModel({
   const pathEdges = new Set<string>();
   if (finished && execution.path)
     for (let i = 1; i < execution.path.length; i++) pathEdges.add(pairKey(execution.path[i - 1], execution.path[i]));
-  const treeEdges = new Set<string>();
-  for (const [node, parent] of Object.entries(step.parents)) if (parent) treeEdges.add(pairKey(parent, node));
   const relaxed = new Set(relaxations.map((x) => pairKey(x.parent, x.node)));
   const struck = new Set(
     relaxations.filter((x) => x.oldParent && x.oldParent !== x.parent).map((x) => pairKey(x.oldParent!, x.node)),
@@ -157,7 +162,7 @@ export function sourceOverlayModel({
     }
     edges.push({
       id: edge.id,
-      label: `${cut ? 'Restore' : 'Cut'} connection ${name(edge.from)}–${name(edge.to)}, cost ${edge.weight ?? 1}`,
+      label: `${cut ? 'Restore' : 'Cut'} connection ${name(edge.from)}–${name(edge.to)}, cost ${fmt(weightOf(edge.from, edge.to))}`,
       from: norm(trim(a, control)),
       control: norm(control),
       to: norm(trim(b, control)),
@@ -241,32 +246,38 @@ export function sourceOverlayModel({
   for (const x of relaxations) {
     const anchor = nodes.get(x.node);
     if (!anchor || !edgeCentre.has(pairKey(x.parent, x.node))) continue;
-    const w = weightOf(x.parent, x.node);
-    place(`equation-${x.node}`, `${x.value - w} + ${w} = ${x.value} < ${x.old}`, 'equation', anchor, true);
+    const w = weightOf(x.parent, x.node),
+      from = execution.steps.find((s2) => s2.parents[x.node] === x.parent && s2.distances[x.node] === x.value)?.distances[x.parent] ?? x.value - w;
+    place(`equation-${x.node}`, `${fmt(from)} + ${fmt(w)} = ${fmt(x.value)} < ${fmt(x.old)}`, 'equation', anchor, true);
   }
-  step.expanded.forEach((id, k) => {
-    const p = nodes.get(id);
-    if (p) place(`settled-${id}`, `${CIRCLED[k] ?? k + 1} ${name(id)} = ${step.distances[id]}`, id === step.current ? 'current' : 'settled', p, false);
-  });
+  // The route and the goal's own tag claim their places first on the final frame.
+  let routeLine: string | null = null;
+  const goalId = finished && execution.path && execution.path.length > 1 ? execution.path.at(-1)! : null;
+  if (goalId) {
+    const goal = nodes.get(goalId);
+    const unit = dijkstra ? '' : execution.path!.length - 1 === 1 ? ' edge' : ' edges';
+    const total = dijkstra ? step.distances[goalId] ?? execution.path!.slice(1).reduce((sum, to, i) => sum + weightOf(execution.path![i], to), 0) : execution.path!.length - 1;
+    const text = `${execution.path!.map(name).join(' → ')} = ${fmt(total)}${unit}`;
+    if (!goal || !place('route', text, 'route', goal, true, true)) routeLine = text;
+  }
+  const order = goalId ? [goalId, ...step.expanded.filter((id) => id !== goalId)] : step.expanded;
+  for (const id of order) {
+    const p = nodes.get(id),
+      k = step.expanded.indexOf(id);
+    if (p && k >= 0 && tags.length < 12)
+      place(`settled-${id}`, `${CIRCLED[k] ?? k + 1} ${name(id)} = ${fmt(step.distances[id])}`, id === step.current ? 'current' : 'settled', p, false);
+  }
   if (!finished) {
     const before = at > 0 ? execution.steps[at - 1] : null;
     for (const id of step.queue) {
       const p = nodes.get(id);
-      if (p && !step.expanded.includes(id) && step.distances[id] !== undefined && !relaxations.some((x) => x.node === id)) {
-        place(`tentative-${id}`, `${name(id)} ≤ ${step.distances[id]}`, 'tentative', p, false);
+      if (p && tags.length < 12 && !step.expanded.includes(id) && step.distances[id] !== undefined && !relaxations.some((x) => x.node === id)) {
+        place(`tentative-${id}`, `${name(id)} ≤ ${fmt(step.distances[id])}`, 'tentative', p, false);
         if (before && before.distances[id] === step.distances[id]) tags[tags.length - 1].quiet = true;
       }
     }
   }
-  // The route gets a tag only where it covers nothing; otherwise it leads the caption.
-  let routeLine: string | null = null;
-  if (finished && execution.path && execution.path.length > 1) {
-    const goal = nodes.get(execution.path.at(-1)!);
-    const cost = execution.path.slice(1).reduce((sum, to, i) => sum + weightOf(execution.path![i], to), 0);
-    const text = `${execution.path.map(name).join(' → ')} = ${cost}`;
-    if (!goal || !place('route', text, 'route', goal, true, true)) routeLine = text;
-  }
-  if (routeLine && caption) caption = `${routeLine}. ${caption}`;
+  if (routeLine && caption && !caption.includes(routeLine)) caption = `${routeLine}. ${caption}`;
 
   // The caption sits below everything drawn and printed near the graph, or above it.
   const bottom = Math.max(...blocked.map((b) => b.y + b.h / 2)),

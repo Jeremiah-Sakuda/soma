@@ -43,6 +43,7 @@ function validOverlayModel(m) {
           control(e.control) &&
           point(e.to) &&
           point(e.center) &&
+          (e.strike === undefined || point(e.strike)) &&
           TONE.includes(e.tone),
       ) &&
       Array.isArray(m.weights) &&
@@ -51,7 +52,7 @@ function validOverlayModel(m) {
       Array.isArray(m.tags) &&
       m.tags.length <= 12 &&
       m.tags.every(
-        (t) => text(t?.id, 60) && text(t.text, 200) && TAG_TONE.includes(t.tone) && point(t) && point(t.anchor) && typeof t.curved === 'boolean',
+        (t) => text(t?.id, 60) && text(t.text, 200) && TAG_TONE.includes(t.tone) && point(t) && point(t.anchor) && typeof t.curved === 'boolean' && (t.quiet === undefined || typeof t.quiet === 'boolean'),
       ) &&
       Array.isArray(m.callouts) &&
       m.callouts.length <= 6 &&

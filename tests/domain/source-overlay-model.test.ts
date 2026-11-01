@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createRequire } from 'node:module';
-import { runDijkstra } from '../../src/lib/domain/graph-search';
+import { runBfs, runDijkstra } from '../../src/lib/domain/graph-search';
 import { sourceOverlayModel } from '../../src/lib/domain/source-overlay-model';
 
 const require = createRequire(import.meta.url);
@@ -75,5 +75,33 @@ describe('source overlay model', () => {
       const m = sourceOverlayModel({ layout: spread, graph: big, execution, index, disabledEdgeIds: [], caption: 'c'.repeat(900), stepLabel: 'Step', aspect: 0.5625 });
       expect(validOverlayModel(m)).toBe(true);
     }
+  });
+});
+
+describe('source overlay model edge cases', () => {
+  it('keeps the route and the goal on a crowded final frame', () => {
+    const ids = Array.from({ length: 12 }, (_, i) => `n${i}`);
+    const chain = { nodes: ids.map((id) => ({ id, label: id })), edges: ids.slice(1).map((id, i) => E(`e${i}`, ids[i], id, 1)), directed: false, start: 'n0', goal: 'n11', neighborOrder: ids };
+    const execution = runDijkstra({ ...chain, algorithm: 'dijkstra' });
+    const spread = { nodes: ids.map((nodeId, i) => ({ nodeId, x: 0.05 + (i % 6) * 0.17, y: 0.25 + Math.floor(i / 6) * 0.45 })), edgeLabels: [] };
+    const m = sourceOverlayModel({ layout: spread, graph: chain, execution, index: 99, disabledEdgeIds: [], caption: 'cap', stepLabel: 'Round', aspect: 0.5625 });
+    const route = m.tags.some((t) => t.tone === 'route') || m.caption!.text.includes('n0 → n1');
+    expect(route).toBe(true);
+    expect(m.tags.some((t) => t.id === 'settled-n11')).toBe(true);
+  });
+  it('rounds decimal costs in equations and tags', () => {
+    const g = { nodes: ['A', 'B', 'C'].map((id) => ({ id, label: id })), edges: [E('AB', 'A', 'B', 0.1), E('BC', 'B', 'C', 0.2), E('AC', 'A', 'C', 0.5)], directed: false, start: 'A', goal: 'C', neighborOrder: ['A', 'B', 'C'] };
+    const execution = runDijkstra({ ...g, algorithm: 'dijkstra' });
+    const lay = { nodes: [{ nodeId: 'A', x: 0.1, y: 0.5 }, { nodeId: 'B', x: 0.4, y: 0.3 }, { nodeId: 'C', x: 0.7, y: 0.5 }], edgeLabels: [] };
+    const texts = execution.steps.flatMap((_, i) => sourceOverlayModel({ layout: lay, graph: g, execution, index: i, disabledEdgeIds: [], caption: 'c', stepLabel: 'Round', aspect: 0.5625 }).tags.map((t) => t.text));
+    expect(texts.join(' ')).not.toMatch(/\d\.\d{3,}/);
+    expect(texts).toContain('0.1 + 0.2 = 0.3 < 0.5');
+  });
+  it('counts edges, not weights, for a breadth-first route', () => {
+    const g = { ...hero, edges: hero.edges.map((e) => ({ ...e, weight: 1 })) };
+    const execution = runBfs({ ...g, algorithm: 'bfs' });
+    const m = sourceOverlayModel({ layout, graph: g, execution, index: 99, disabledEdgeIds: [], caption: 'c', stepLabel: 'Round', aspect: 0.5625 });
+    const text = m.tags.find((t) => t.tone === 'route')?.text ?? m.caption!.text;
+    expect(text).toContain('A → F = 1 edge');
   });
 });

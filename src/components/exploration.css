@@ -2429,4 +2429,4 @@ a.exploration-example-button { text-decoration: none; }
 
 /* Persistent marks change colour instead of redrawing. */
 .source-overlay-loop, .source-overlay-stroke { transition: stroke .45s ease, opacity .45s ease, stroke-width .45s ease; }
-.source-overlay-tag.is-quiet { opacity: .45; }
+.source-overlay-tag.is-quiet rect, .source-overlay-tag.is-quiet text, .source-overlay-tag.is-quiet path, .source-overlay-tag.is-quiet circle { opacity: .45; }

@@ -225,7 +225,7 @@ function graphCropRegion(extracted: z.infer<typeof inspectSchema>) {
     maxY = Math.max(...points.map((p) => p.y));
   const w = maxX - minX,
     h = maxY - minY;
-  if (w > 0.6 && h > 0.6) return null;
+  if (w > 0.85 && h > 0.85) return null;
   const padX = Math.max(0.06, w * 0.35),
     padY = Math.max(0.06, h * 0.35);
   const x = Math.max(0, minX - padX),
@@ -1566,7 +1566,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           extracted.graph &&
           request.source?.kind === 'screenshot' &&
           request.source.dataUrl &&
-          calls <= 2
+          calls <= 3
         ) {
           const region = graphCropRegion(extracted);
           if (region)

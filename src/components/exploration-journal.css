@@ -1178,3 +1178,17 @@
     justify-content: center;
   }
 }
+
+/* Inside the Mac companion the journal floats over the learner's own screen: the window
+ * supplies macOS vibrancy, and these surfaces let it show through. */
+html[data-soma-desktop] body {
+  background: transparent;
+}
+html[data-soma-desktop] .exploration-app {
+  --desk: transparent;
+  --paper: rgb(247 242 232 / 0.8);
+  --paper-dot: rgb(160 146 120 / 0.42);
+  --gutter: rgb(230 220 201 / 0.55);
+  --sidebar: rgb(234 223 203 / 0.72);
+  --surface-muted: rgb(241 233 218 / 0.72);
+}

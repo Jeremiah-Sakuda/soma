@@ -141,7 +141,10 @@ else {
       minWidth: 420,
       minHeight: 500,
       title: 'Soma',
-      backgroundColor: '#f5f0e5',
+      // Translucent: macOS vibrancy shows the learner's screen through the journal.
+      backgroundColor: '#00000000',
+      vibrancy: 'under-window',
+      visualEffectState: 'active',
       alwaysOnTop: true,
       show: false,
       webPreferences: { ...locked, preload: path.join(__dirname, 'toolbar-preload.cjs') },
@@ -154,6 +157,7 @@ else {
         partition: 'persist:soma-desktop',
       },
     });
+    view.setBackgroundColor('#00000000');
     win.contentView.addChildView(view);
     const layout = () => {
       const [width, height] = win.getContentSize();

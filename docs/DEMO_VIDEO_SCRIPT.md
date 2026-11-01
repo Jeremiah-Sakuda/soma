@@ -1,52 +1,56 @@
 # Soma — three-minute demo script
 
-PM129 · November 1, 2026. Production script, not a claim that these shots have been captured. Target runtime 3:00. Lead with the engine as the visual hook, prove the existing graph exploration loop, then show Muse’s deeper creative role and the opportunity it opens.
+PM132 · November 1, 2026. Supersedes the PM129 engine-led script (kept in git history). This is a production script, not a record of captured footage. One continuous live journey on the original Lecture 14 slide (`docs/examples/hero-dijkstra/Lecture-14-Dijkstra.pdf`), then about 20 seconds of range.
 
-**End-card line:** Turn what you’re studying into something you can explore.
+**The promise:** your own slide becomes the explorable thing. Soma draws the checked search directly on the screen you captured.
 
-**Voice:** Jeremy, conversational and curious. Let the viewer see each change before explaining the architecture. Mute product narration under the voiceover. No learning-study results, user testimonials or quantified savings are needed to tell this story.
+**End-card line:** Turn what you're studying into something you can explore.
+
+**Voice:** Jeremy, first person, conversational. Say the experience, not the architecture. Honest scope goes in the small on-screen labels, not in the voiceover.
+
+## Checked facts the footage must match
+
+Computed by Soma's solver and confirmed in live runs (`.local/pm132/hero-live`):
+
+- Cheapest route A → C → B → D → F, cost 7. B improves from 4 to 3 when C settles.
+- BFS (fewest edges) takes A–F directly, cost 11.
+- Cut D–F: A → C → E → F, cost 9.
+- Tipping point on A–F: exactly 7. At 7 the routes tie; below 7 the direct edge wins.
+
+If a take shows anything else, stop and retake. Never narrate a value that is not on screen.
 
 ## Script and shot plan
 
 | Time | On screen | Voiceover | Small on-screen label |
 | --- | --- | --- | --- |
-| 0:00–0:13 | Engine comparison90°/450°. Move the shared crank slowly, then return to the matching mid-stroke poses. | These pistons are in the same position. One is taking in fresh mixture; the other is on its power stroke. Change their angle together, and you can explore why. | Recorded engine prototype · original synthetic source |
-| 0:13–0:31 | Source beside the interactive explanation; Soma name appears. Then show the original graph worksheet. | Soma turns what you’re trying to understand into something you can explore. A slide gives you one example. When you want to ask “what if?”, getting from that example to a useful experiment still takes work. | Selected source → interactive explanation |
-| 0:31–0:57 | Review/upload the original S/M/N/T worksheet, ask for an explanation, then show the resulting graph and frontier. Keep one source and one result in view. | Start with the material already in front of you. Here, I select an original graph worksheet and ask Soma to explain it. Muse Spark reads the source and builds the visual explanation. For supported graph search, Soma computes the actual result. | Original synthetic worksheet; live/recorded label matching the take |
-| 0:57–1:23 | Show initial path S→M→T. Disable M–T; show path S→N→T. Pause long enough to see the changed connection and route. | Now I switch off this connection. The route changes from S through M to T, to S through N to T. Every highlighted step comes from the solver. I can explore the consequence immediately, without another model call. | Checked graph computation |
-| 1:23–1:44 | Ask why the route changed. Show the source-bound revised explanation, then save and reopen its actual version. | Then I ask why the route changed. Soma carries the current experiment into its answer. I save it, reopen it, and continue from that state. The explanation stays connected to the source and the question I was actually exploring. | Follow-up → saved revision |
-| 1:44–2:08 | Cut explicitly to the engine prototype. Briefly show source/Muse contour, then the prepared question and “What Muse chose.” Reveal90°/450° and the rod inspection. | We also pushed Muse into the visual design itself. In this recorded engine prototype, Spark authored the vector shapes and teaching copy. It chose the two poses to compare and a rod to inspect. Soma supplies the constrained motion. | Recorded engine prototype · Muse-authored art and investigation |
-| 2:08–2:28 | One brief source/action/review view, then Save Muse investigation. Open the actual downloaded study file with its question, diagrams and answer. | Muse’s contribution is inspectable: the original source, its chosen action, and the explanation behind that choice. Wonder provides advisory review; the application validates the data. I can keep this investigation as a local study file. | Local study export |
-| 2:28–2:48 | Source → graph experiment → engine comparison, with the source remaining recognizable. Keep the visual rather than a list of future features. | The potential is to remove the work between encountering a difficult idea and having a useful way to investigate it. For students and independent learners, that could make a moment of confusion the starting point for exploration. | Less setup between a question and exploration |
-| 2:48–3:00 | End on the mechanism beside its source, then clean Soma end card with the release’s verified project links. | Soma brings interactive explanations to the material you’re already working on. We’re starting with checked graph search and exploring richer visual subjects. Turn what you’re studying into something you can explore. | Soma · Muse Spark · Muse Wonder · verified project URL |
-
-The script leaves room inside each beat for the interaction and readable result. Verify the spoken take fits the slots; word count is a pacing aid, not an audio-duration measurement.
+| 0:00–0:12 | Lecture 14 PDF full screen in Preview. Cursor circles the graph (Point & ask: hold ⌃⌥Space, circle, speak; or Share a window). | This is the moment I built Soma for. A slide with one example of Dijkstra… and a question it doesn't answer. *(spoken to Soma)* "Why doesn't it just take the direct A-to-F edge?" | Original demo slide · live run |
+| 0:12–0:36 | Soma opens with the slide itself as the stage. A is ringed. Step forward: C settles, B's badge drops 4 → 3, D, then F settles at 7 along A–C–B–D–F. Caption card follows each step. | Muse Spark reads my slide, every node and every weight, and Soma runs the real algorithm on top of it. That's the moment the lecture glossed over: B drops from four to three. Each ring and number here is computed, not drawn by a model. | Read by Muse Spark · computed by Soma · wait shortened, actual [n] s |
+| 0:36–0:58 | Click the D–F line on the slide. Red ✕; route jumps to A–C–E–F; F's badge reads 9. Caption: "You cut D–F. Checked route: A → C → E → F, cost 9." Hold. | Now my own question. What if D-to-F weren't there? I cut it, right on the slide. New route, cost nine. Instantly, with no model call. The solver answers that. | Your experiment · 0 model calls |
+| 0:58–1:30 | Click D–F to restore. Click **Find the tipping point**. Result: Muse chose A–F; boundary 7. Drag the slider 11 → 8 → 7 → 6, slowly. At 7 or below the route jumps onto the slide's A–F arc; the label over the printed 11 reads "11 → 6". | Then I ask Soma for the tipping point. Muse decides which connection is worth testing, the direct edge, and Soma proves exactly where the answer flips. At seven the two routes tie. Below seven, the direct edge wins. The model chose the experiment. The code proved the answer. | Muse Spark chose A–F · Soma computed the boundary |
+| 1:30–1:52 | Record question aloud: "Why does it only win once it costs seven or less?" Answer appears on the same slide, about the current experiment. Open **How Muse made this** for 3 seconds: Wonder review line. | When I ask why, the answer is about the experiment I'm running, not a textbook definition. And before an explanation reaches me, Muse Wonder checks it against Soma's computed trace. In one run it caught Spark settling two vertices in one step and sent it back to be fixed. | Muse Voice Transcribe · Spark · Wonder review |
+| 1:52–2:12 | **Save exploration**, reopen from the library, same state. Then **Try a fresh example**: a new graph in the same family, answer hidden. | Understanding means doing it again. Everything I explored is saved, and Soma can make a fresh problem from the same idea, hiding the answer until I try it myself. | Saved revision · fresh practice |
+| 2:12–2:34 | Toggle **3D workspace** on the same graph (3 s). Cut to the engine lab: turn the crank, open the 90° / 450° comparison (8 s). | The same idea reaches past graphs: the same checked search in 3D, and in our lab, an engine Muse drew and explains. Turn the crank and see why two pistons in the same spot are doing different jobs. | 3D view of the same search · Soma lab · recorded Muse run |
+| 2:34–3:00 | Back to the slide with the route drawn on it. End card. | Every student has sat with a slide that shows one example and leaves the real question open. Soma turns that slide into something you can test. Built this week with Muse Spark, Muse Wonder and Muse Voice Transcribe. Turn what you're studying into something you can explore. | Soma · live app URL · github.com/Jeremiah-Sakuda/soma · Built during the Meta Global AI Developer Hackathon, Oct 26–Nov 4 |
 
 [Voiceover-only recording copy](DEMO_VOICEOVER.txt).
 
-## Lock the footage mode before recording
+## Capture setup
 
-The primary script assumes a genuinely captured graph interaction. Use the original PM126 worksheet and the actual app; do not turn a service log into simulated UI footage. The successful service run establishes the scenario, not the existence of these shots.
+- **Release:** the deployed production app at the release recorded in `public/release.json`. Record the release ID with the take.
+- **Screen:** 1920×1080, browser zoom 100%, Soma in a full-screen window. Close other tabs; hide bookmarks and notifications.
+- **Source:** open `docs/examples/hero-dijkstra/Lecture-14-Dijkstra.pdf` in Preview, full screen. For Point & ask, use the signed Mac companion (it loads the hosted app, so the overlay is included). Fallback: **Share a window** on the Preview window, or **Upload screenshot** with `lecture-14-dijkstra.png`. Say which path the take used in its label.
+- **Question:** speak or type exactly "Why doesn't it just take the direct A-to-F edge?" The follow-up is "Why does it only win once it costs seven or less?"
+- **Takes:** each full take costs about $0.15–0.25 of live inference. Record at least three, keep every raw file, and pick the cleanest. Note each take's actual generation time for the "wait shortened" label.
 
-If using a genuine recorded graph run instead of a fresh generation, keep its recorded label visible and replace the 0:31 voiceover with:
+## Edit rules
 
-> Here is a recorded Muse run on an original graph worksheet. Spark read the source and built the visual explanation. Soma computed the graph’s result. I can now change the experiment, ask a follow-up and keep a saved revision.
+- Keep the slide recognizable at all times. The overlay is the hero; don't cut to the diagram view.
+- Hold for about a second after every change (cut, slider stop, answer) so the consequence reads in a silent clip.
+- Shorten only generation waits, and label them with the measured duration from that take.
+- Show the Wonder catch only from an actual run. If the recorded take's audit has no review rejection, say "In one run…" (as scripted) and show the retained receipt from `.local/pm132/hero-live/review-3.json`, labelled "earlier live run, same slide".
+- The engine segment is a recorded Muse run in the Soma lab. Keep its label on screen and never splice it after source capture as if it were generated live.
+- Product narration is muted under the voiceover. If product audio is heard, credit the configured speech provider; Muse writes the words, not the voice.
 
-Use that line only when the footage actually supports those actions. If the chosen recording has different node names or routes, change the 0:57 narration to the values shown. A prepared hand-authored example must be called a prepared example; it is not recorded model generation. A newly generated follow-up is a separate live operation.
+## Status
 
-## Edit instructions
-
-- Start with the visible relationship. Avoid an opening architecture slide, test-count montage or model-name roll call.
-- Keep the shared crank, changed edge, model-selected action and reopened state large enough to read. Use a cursor hold after each meaningful action.
-- Compress a real generation wait only with “Wait shortened · actual [measured duration]”. Obtain that number from this take. PM126’s service timings are not UI footage timings.
-- Keep the switch between the checked graph product and recorded engine prototype explicit. Do not edit source selection directly into an engine result as if generic engine generation were integrated.
-- In the graph segment, source facts remain unchanged; the disabled edge is a hypothetical experiment. The follow-up may materialize that intervention into its revised checked input while preserving the original source/version.
-- Keep raw JSON, repair history and detailed receipts available for questions. One short authorship/review glimpse is enough in the main cut.
-- Prefer Jeremy’s voiceover. If product audio is heard, credit its actual provider: prepared Mac Samantha for the engine; the configured provider for canonical narration. Muse authored words do not imply Muse synthesized speech.
-- A native Point & ask insert is optional after an actual device check. The browser upload flow can carry the whole story without a native permission sequence.
-
-## Current production status
-
-The engine MP4 and final screenshots exist. Actual engine interaction/export and one tool-mediated local rehearsal are recorded in PM126. The canonical graph scenario has successful real-provider service evidence, with earlier failed attempts retained. A fresh screen recording of the complete graph sequence, the narrated three-minute edit and clean public judge-link verification remain to be completed. No final-video URL is established.
-
-[Assets, evidence and capture list](SUBMISSION_EVIDENCE.md) · [Submission text](SUBMISSION.md)
+Hero journey verified live through the service (PM132 test) and in the local UI with the overlay (upload → generation with Wonder review → cut → tipping point → slider). Not yet verified: the hosted UI after deployment, native Point & ask with the overlay, Try a fresh example on the hero exploration, and the narrated edit. No final video URL exists yet.

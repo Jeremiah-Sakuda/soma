@@ -553,3 +553,7 @@ Adopted rule: printed type is checked computation and certain application facts;
 
 Weighted costs sit on their own connection or fall back to the keyed legend. BFS nodes show full names. Secondary content lives in menus. Saving stays explicit. No change to models, budgets, evidence semantics, source handling or course routes. Layout and limits: UI_DOT_JOURNAL.md.
 
+
+## Approved multi-step computer plans, November 1
+
+The user chose "multi-step, still approved" for optional computer actions. Muse now proposes a plan of at most five typed steps (click, type or an allowlisted navigation key) with a per-step effect; the user approves the whole plan once in the trusted local control window, and any send/submit/delete/purchase step pauses for its own approval and may only be the single final step. Soma re-observes the selected app before each step and stops at the first mismatch. The two-minute/five-executed-step task bounds, one bounded call per proposal, existing reservation and refusals are unchanged; coursework hand-in controls are now refused outright. A navigation-key step (arrows, Page Up/Down; no Space, Return, Tab, Escape, characters or modifiers) was added because slide and PDF viewers often expose no Accessibility button for the next page. A completed plan can hand off to the existing single-snapshot capture path. Design, boundaries and verification: COMPUTER_ACTIONS.md. Real Accessibility execution remains unverified.

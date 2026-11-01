@@ -238,7 +238,10 @@ else {
     });
     computerControl = createComputerControl({BrowserWindow,ipcMain,globalShortcut,session:ses,origin,
       helperPath: app.isPackaged ? path.join(process.resourcesPath,'computer-control') : path.join(__dirname,'node_modules/.cache/soma/computer-control'),
-      stopPoint:()=>pointAsk.disable(),status,accessibility:()=>process.platform==='darwin'&&systemPreferences.isTrustedAccessibilityClient(true)});
+      stopPoint:()=>pointAsk.disable(),status,accessibility:()=>process.platform==='darwin'&&systemPreferences.isTrustedAccessibilityClient(true),
+      // After a completed plan the local control page may request the existing
+      // single-snapshot capture; hosted content gets no capture or execution bridge.
+      capture:()=>{pointAsk.stop('');return capture();}});
     ipcMain.on('desktop:source-highlight', (event, payload) => {
       if (trusted(event)) void pointAsk.highlight(payload);
     });

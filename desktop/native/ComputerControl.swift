@@ -1,4 +1,5 @@
 // One-shot, bounded Accessibility helper. No shell, key chords, screen pixels or field values.
+// The only keys it can post are six unmodified navigation keys, to the selected app's process.
 import AppKit
 import ApplicationServices
 import CryptoKit
@@ -40,6 +41,13 @@ func walk(_ e: AXUIElement, _ depth: Int) {
 }
 walk(window, 0)
 let title = string(window, kAXTitleAttribute)
+// Focus is part of the state: a navigation key acts on whatever is focused.
+var focus = ""
+if let raw = attr(root, kAXFocusedUIElementAttribute), CFGetTypeID(raw) == AXUIElementGetTypeID() {
+    let f = unsafeBitCast(raw, to: AXUIElement.self)
+    focus = string(f, kAXRoleAttribute) + "|" + string(f, kAXSubroleAttribute) + "|" + String((string(f, kAXTitleAttribute) + " " + string(f, kAXDescriptionAttribute)).prefix(120))
+}
+func digest(_ data: Data) -> String { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() }
 func stateValue(_ element: AXUIElement) -> String {
     let value = attr(element,kAXValueAttribute)
     return (value as? String) ?? (value as? NSNumber)?.stringValue ?? ""
@@ -51,12 +59,33 @@ for element in elements {
     if let raw = attr(element, kAXSizeAttribute), CFGetTypeID(raw) == AXValueGetTypeID() { _ = AXValueGetValue(unsafeBitCast(raw, to: AXValue.self), .cgSize, &size) }
     geometry.append(["x":point.x,"y":point.y,"width":size.width,"height":size.height,"valueDigest":SHA256.hash(data:Data(stateValue(element).utf8)).map { String(format:"%02x",$0) }.joined()])
 }
-let canonical = try! JSONSerialization.data(withJSONObject: ["pid": Int(app.processIdentifier), "window": title, "bundle": app.bundleIdentifier ?? "", "launched": app.launchDate?.timeIntervalSince1970 ?? 0, "controls": nodes, "geometry": geometry], options: [.sortedKeys])
-let fingerprint = SHA256.hash(data: canonical).map { String(format: "%02x", $0) }.joined()
+let canonical = try! JSONSerialization.data(withJSONObject: ["pid": Int(app.processIdentifier), "window": title, "bundle": app.bundleIdentifier ?? "", "launched": app.launchDate?.timeIntervalSince1970 ?? 0, "controls": nodes, "geometry": geometry, "focus": digest(Data(focus.utf8))], options: [.sortedKeys])
+let fingerprint = digest(canonical)
+// Window identity without controls: process, launch and focused-window title. Never returned in clear.
+let windowIdentity = digest(try! JSONSerialization.data(withJSONObject: ["pid": Int(app.processIdentifier), "bundle": app.bundleIdentifier ?? "", "launched": app.launchDate?.timeIntervalSince1970 ?? 0, "window": title], options: [.sortedKeys]))
+// Unmodified navigation keys only (macOS virtual key codes). No characters, Return, Tab, Escape or Space.
+let navigationKeys: [String: CGKeyCode] = ["right": 124, "left": 123, "down": 125, "up": 126, "page_down": 121, "page_up": 116]
 let command = request["command"] as? String ?? "observe"
 if command == "execute" {
     guard request["fingerprint"] as? String == fingerprint else { fail("screen_changed") }
-    guard let id = request["target"] as? Int, id >= 0, id < elements.count, let kind = request["kind"] as? String else { fail("invalid_action") }
+    guard let kind = request["kind"] as? String else { fail("invalid_action") }
+    if kind == "key" {
+        guard request["target"] as? Int == -1, (request["text"] as? String ?? "") == "", let name = request["key"] as? String, let code = navigationKeys[name] else { fail("invalid_key") }
+        guard NSWorkspace.shared.frontmostApplication?.processIdentifier == app.processIdentifier else { fail("focus_changed") }
+        // Refuse if the user is holding a modifier: the app must receive a bare navigation key.
+        let held = CGEventSource.flagsState(.combinedSessionState).intersection([.maskCommand, .maskShift, .maskAlternate, .maskControl])
+        guard held.isEmpty else { fail("modifier_keys_held") }
+        let source = CGEventSource(stateID: .privateState)
+        guard let down = CGEvent(keyboardEventSource: source, virtualKey: code, keyDown: true), let up = CGEvent(keyboardEventSource: source, virtualKey: code, keyDown: false) else { fail("action_failed") }
+        down.flags = []; up.flags = []
+        // Delivered to the selected process only, never to the global event stream.
+        down.postToPid(app.processIdentifier); up.postToPid(app.processIdentifier)
+        print("{\"executed\":true,\"valueConfirmed\":false,\"keyPosted\":true}")
+        exit(0)
+    }
+    guard let id = request["target"] as? Int, id >= 0, id < elements.count else { fail("invalid_action") }
+    // The broker re-resolves the reviewed control by role and label; confirm the ID still names it.
+    guard let role = request["role"] as? String, let label = request["label"] as? String, nodes[id]["role"] as? String == role, nodes[id]["label"] as? String == label else { fail("target_changed") }
     guard nodes.filter({ ($0["role"] as? String) == (nodes[id]["role"] as? String) && ($0["label"] as? String) == (nodes[id]["label"] as? String) }).count == 1 else { fail("ambiguous_target") }
     let e = elements[id]
     guard NSWorkspace.shared.frontmostApplication?.processIdentifier == app.processIdentifier else { fail("focus_changed") }
@@ -77,6 +106,6 @@ if command == "execute" {
     } else { fail("invalid_action") }
     print("{\"executed\":true,\"valueConfirmed\":\(kind == "type" ? "true" : "false")}")
 } else if command == "observe" {
-    let result: [String: Any] = ["pid": Int(app.processIdentifier), "app": app.localizedName ?? "Selected app", "bundle": app.bundleIdentifier ?? "", "fingerprint": fingerprint, "controls": nodes]
+    let result: [String: Any] = ["pid": Int(app.processIdentifier), "app": app.localizedName ?? "Selected app", "bundle": app.bundleIdentifier ?? "", "fingerprint": fingerprint, "window": windowIdentity, "controls": nodes]
     print(String(data: try! JSONSerialization.data(withJSONObject: result, options: [.sortedKeys]), encoding: .utf8)!)
 } else { fail("invalid_command") }

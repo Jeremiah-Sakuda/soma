@@ -2,9 +2,11 @@
 
 # Soma
 
-**Point at a diagram. Change it. See what actually happens.**
+**Turn what you’re studying into something you can explore.**
 
-Soma is a macOS study companion that turns what is on your screen into an experiment you can run. Meta's Muse models read the screen, decide what is worth testing and explain the result. On supported graphs, every path, cost and search state you see is computed by Soma's own solver, not written by a model. **The model proposes; the code proves.**
+Soma is a visual learning companion that turns selected material and a question into an interactive explanation. Meta’s Muse models interpret the source, compose the visual and help choose what to investigate. Change a connection, inspect a mechanism or ask about the consequence. Supported graph paths and costs are computed by Soma’s own solver.
+
+The opportunity: less setup between encountering a difficult idea and having a useful way to explore it. [Demo story](docs/STORY_AND_DEMO.md) · [Three-minute script](docs/DEMO_VIDEO_SCRIPT.md) · [Submission copy](docs/SUBMISSION.md)
 
 **[Try it in your browser](https://soma-woad-beta.vercel.app/explore)** (no account needed) · **[Download for macOS](https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.3.0)** (Apple Silicon, signed and notarized)
 
@@ -18,16 +20,13 @@ In the browser, **Watch a recorded Muse run** opens a real completed Spark and W
 
 ## Why Soma exists
 
-Lecture slides are frozen. A slide shows one graph, one route and one answer. Understanding comes from the questions the slide cannot answer: what if this edge cost more? What if I start somewhere else? Why didn't it take the direct route?
+A lecture diagram gives you one example. The question you want to ask is often more specific: what if I change this connection, start somewhere else, or compare these two states?
 
-Today a student has two options, and neither fits the moment:
+Making that example interactive can require translating it into another tool or finding a demonstration that matches. Soma starts from the selected source and question, so the explanation can stay connected to what you are already working on.
 
-- **An AI chat** explains the slide in paragraphs or draws a new picture. Nothing in the answer can be changed, and nothing in it is checked.
-- **An algorithm visualizer** lets you experiment, but first you have to find one and re-enter your slide's example by hand.
+For students and independent learners, the potential is a shorter path from a moment of confusion to a useful investigation. The graph workflow makes that idea concrete: change a connection or cost, see the checked consequence, ask about it, and keep the revised exploration.
 
-Soma closes that gap. Press **⌘⇧Space** over the slide and ask your question. Soma rebuilds that diagram beside your work as a live experiment. Switch off a connection, move the start or goal, or test a different cost, and the checked result updates.
-
-Soma grew out of its builder's own study routine, which already runs through Meta's assistant for checking Blackboard, Gradescope and email. The missing piece was the moment of understanding itself: turning the material on screen into something you can poke.
+Soma grew out of its builder’s study workflow with Meta’s assistant. Its focus is the moment of understanding: giving the material in front of you something you can manipulate and investigate.
 
 ## What happens when you ask
 
@@ -46,23 +45,25 @@ flowchart LR
 ```
 
 1. **Capture.** ⌘⇧Space snapshots the display under your cursor. You review the snapshot, and it is not sent until you ask.
-2. **Read.** Muse Spark reads the pixels and returns the graph as typed data: nodes, edges, direction, costs, start and goal. If the screenshot is ambiguous or unreadable, Soma asks a clarifying question or declines to publish rather than guessing.
+2. **Read.** Muse Spark reads the pixels and returns the graph as typed data: nodes, edges, direction, costs, start and goal. Its reading is inspectable in Source & assumptions; unsupported or invalid output may prompt clarification or be declined.
 3. **Compute.** Soma runs breadth-first search and Dijkstra's algorithm on that graph. Every highlighted path, queue state and route cost on screen comes from this computation.
 4. **Experiment.** On a weighted graph, click **Find the tipping point** and Spark picks the edge most worth investigating. Soma computes how both routes change as that edge's cost changes. When the edge runs directly from start to goal, that includes the exact cost where the two routes tie. The cost slider then re-runs both searches in your browser at any value, with no further model call.
 5. **Explain.** Spark writes the explanation, steps and narration around the checked results. For weighted and prediction-informed cards, Muse Wonder reviews the finished card against those results as an advisory critic and can send it back for one repair.
 6. **Follow up and save.** Ask about any node or edge, and your changes carry into the answer instead of resetting. Versions are saved and can be reopened.
 
-## Why it matters
+## Why it could matter
 
-**It meets students at the moment they are stuck.** There are no course uploads and no setup, and you don't need an account to try it. Soma works on whatever is on screen: slides, documentation, code, spreadsheets and worksheets. Graph search, a core topic in intro AI and algorithms courses, is the first fully checked subject. Other material gets a step-by-step explanatory visual.
+**Bring the experiment to the example.** A student could explore the diagram they are studying without reconstructing it by hand in a separate visualizer.
 
-**It turns reading into doing.** Algorithm-visualization research found that what learners *do* with a visualization matters more than what it shows ([Hundhausen, Douglas & Stasko, 2002](https://doi.org/10.1006/jvlc.2002.0237)). The same research community describes changing a visualization's inputs as deeper engagement than viewing it ([Naps et al., 2002](https://doi.org/10.1145/960568.782998)). Soma brings that kind of engagement to the exact example a student is studying, straight from the screen.
+**Make a question actionable.** Instead of stopping at a fixed explanation, the user can change a meaningful input and inspect the consequence. On supported graphs, those consequences come from a checked computation.
 
-**It keeps the student doing the thinking.** In a field experiment with nearly a thousand high-school students, those who leaned on unrestricted GPT-4 during practice did worse when later tested on their own, and a tutor with learning safeguards largely avoided that harm ([Bastani et al., PNAS 2025](https://doi.org/10.1073/pnas.2422633122)). Soma is built around that finding:
+**Keep the investigation connected.** Contextual follow-ups and saved revisions let the user continue from the current experiment. The opportunity is less setup and more direct exploration; no quantified time-saving or learning-gain result is claimed.
 
-- You can predict the next step before Soma reveals it.
-- Your prediction is checked and kept.
-- Exploring and practice with the diagram visible never count as proof you understand.
+## Exploring a richer visual language
+
+On the experimental spatial branch, a recorded engine study shows actual Muse-authored vector artwork, teaching copy and visual investigation choices. Compare matching piston positions across different strokes, inspect the connecting rod and export the question/action/explanation as a standalone study file. Soma supplies constrained motion and source/artifact checks.
+
+This is a recorded local prototype alongside the canonical graph product. It is not integrated generic engine generation or cloud saving. [Engine investigations and actual evidence](docs/examples/pm126/README.md).
 
 ## How Soma uses Meta's models
 
@@ -90,8 +91,8 @@ These are small development samples, frozen before any model call, with the answ
 | The full frozen set of 13 original sources | **12 of 13 intended outcomes.** Process diagrams became explanatory visuals, blank material got a clarifying question, and negative costs were correctly refused by the solver. The miss was a graph with missing costs, which was rejected safely instead of prompting a clarifying question. |
 | Nine screenshots: three real public pages (MDN, Google's ML course, OpenStax) and six original test images (two code variants, spreadsheet, circuit, cache diagram, unreadable crop) | **8 of 9 first requests** produced a source-specific explanation or a clarifying question. The code example changed correctly when the values on screen changed. The OpenStax page was rejected safely. |
 | Solver correctness | Dijkstra matches exhaustive simple-path costs, and BFS matches independent reference traces ([tests/domain](tests/domain)). |
-| Engineering | More than 1,300 offline tests and over 100 browser journeys, run by public CI on every push. Signed and notarized macOS app. |
-| A typical live turn | 3 Meta calls in roughly 10–20 seconds, about $0.04. A follow-up with a Wonder revision used 4 calls, 22 seconds and $0.09. |
+| Engineering | Latest local spatial-branch checks: 1,709 offline passed / 102 opt-in skipped and 49 engine browser journeys, plus typecheck/build/export. Canonical runtime fingerprint unchanged; native release status is separate ([PM126](docs/examples/pm126/JUDGING.md)). |
+| One recent original-synthetic service journey | Generation, changed-edge revision and exact save/reopen passed in 27.608 seconds including application work, after retained earlier outcomes. This is an example, not a typical-latency or reliability claim ([receipts](docs/examples/pm126/recorded/canonical-service-checks.json)). |
 
 Details and method: [verification record](docs/VERIFICATION.md) · [general screenshots](docs/GENERAL_SCREENSHOTS.md) · [architecture](docs/ARCHITECTURE.md)
 
@@ -118,7 +119,7 @@ Everything in this repository is original work written for the Meta Global AI De
 - Checked computation covers BFS and Dijkstra with nonnegative costs, up to 12 nodes and 24 edges. Everything else is an explanatory visual, labeled that way in the app. It is not a simulation.
 - Reading a screenshot can go wrong. The **Source & assumptions** panel shows Spark's reading of the source and the uncertainty it reported. That reading is shown for inspection; it is not independently re-checked.
 - Browser upload is the fully verified capture path. The desktop shortcut passes automated policy and synthetic capture checks. Real Screen Recording permission, multi-display capture and clean-Mac installation are being tested by hand.
-- Learning gains and use in real courses have not been measured yet.
+- Impact is framed as the potential for easier exploration of a learner’s own material; quantified time savings and classroom outcomes are not claimed.
 - Soma takes one snapshot when you ask. It does not record your screen, and screenshots are not stored.
 - Guest explorations last 24 hours. Live generation runs under a spend cap; the prepared examples need no model call.
 

@@ -208,3 +208,7 @@ Three independent subagent review→fix→verify rounds on the same private loca
 ### October31 — PM126 three further review rounds
 
 User authorized rounds4–6 on the same private branch. Implement current-pose investigations, exact portable local output and actual bounded recorded Muse action selection, then verify provenance, interaction/recovery and a separate original-synthetic canonical service journey. Preserve unsuccessful live attempts, all settled spending and unresolved impact/hosted/native/publication gates. [Executed record](examples/pm126/JUDGING.md). No new release feature dependency or default renderer adoption.
+
+### November1 — PM129 demo and submission framing
+
+Prepare a coherent engine-led three-minute script and ready-to-edit submission copy centered on real-world potential and a concrete working exploration. Reconcile active README/demo links and preserve earlier narratives as historical. Separate actual source/model/solver/persistence evidence from footage still needing capture; no final-video completion, new features or publication implied. Current production handoff: [SUBMISSION_EVIDENCE.md](SUBMISSION_EVIDENCE.md).

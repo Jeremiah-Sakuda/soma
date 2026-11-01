@@ -1,3 +1,7 @@
+## PM129 — Potential-led demo and submission framing, November1
+
+Current [story](docs/STORY_AND_DEMO.md), [three-minute script/shot plan](docs/DEMO_VIDEO_SCRIPT.md), [submission copy](docs/SUBMISSION.md) and [evidence/production handoff](docs/SUBMISSION_EVIDENCE.md) use “Turn what you’re studying into something you can explore.” Engine hook → canonical graph manipulation/revision/save proof → actual recorded Muse investigations → plausible benefit. Impact is potential, not a learner-study prerequisite. Active docs use the canonical soma repository; PM070 narrative is archived. This is a documentation/framing change: no new product features, inference, final narrated video, upload, deployment or publication.
+
 ## PM126 — Three more judging iterations, October31
 
 Review **http://localhost:41914**: current-pose paired crank experiment, standalone local study snapshots and actual recorded Muse-selected visual investigations with optional question/action/answer export. Six review/fix rounds total. [New nine scorecards, actual receipts, retained failures and verification](docs/examples/pm126/JUDGING.md). Final49browser/1709offline passed,102opt-in skipped; typecheck/build/full-HD export and unchanged PM118 manifest. One fresh original-synthetic canonical service revision/reopen passed after retained earlier outcomes; no hosted/native or engine-integration claim. Newly settled$0.25205725; last ledger$16.70605750/$20. Private branch, no merge/push/publication.

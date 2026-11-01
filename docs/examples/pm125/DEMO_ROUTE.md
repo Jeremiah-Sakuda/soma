@@ -1,3 +1,5 @@
+> PM129: this is the local engine inspection/rehearsal record. The current three-minute story and capture order are in [DEMO_VIDEO_SCRIPT.md](../../DEMO_VIDEO_SCRIPT.md) and [DEMO.md](../../DEMO.md).
+
 # A reproducible judge walkthrough
 
 This is an internal development route, not a submitted video or proof of user impact. Keep the canonical repository private and obtain publication authorization separately.

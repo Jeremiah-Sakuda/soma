@@ -1,38 +1,45 @@
-# Soma demo and evaluation
+# Soma demo operation
 
-## New native opening
+PM129 · November 1, 2026. The current story is potential-led and engine-led, with the working graph workflow as the continuity proof. [Narrative](STORY_AND_DEMO.md) · [Three-minute script](DEMO_VIDEO_SCRIPT.md) · [Submission copy](SUBMISSION.md) · [Evidence/footage](SUBMISSION_EVIDENCE.md).
 
-Use Point & ask over permitted Intro AI material: enable mode, hold Control–Option–Space, circle the relevant connection while asking a question, then release. Show the actual selection and resulting source focus. Compress any generation wait only with a visible disclosure; immediate cursor motion is local feedback, not instantaneous model generation. Continue with the existing manipulation/follow-up/save story below. New physical-input and OS-permission footage remains to be recorded. [Interaction and test boundaries](POINT_AND_ASK.md).
+## The take
 
-## Current demo story
+1. Open the recorded engine comparison at 90°/450°. Move both cranks together; let the viewer notice identical linkage positions and different valve roles. Keep the recorded prototype/source label visible.
+2. Show an actual graph source becoming a visual. For the PM126 worksheet, change M–T and show route S→M→T become S→N→T. The code computes those graph results.
+3. Ask about the consequence, save the actual revision and reopen it. Keep its current experiment and source identity visible.
+4. Return explicitly to the engine prototype. Show the exact prepared Muse question, its chosen action and the mechanism consequence. Download and open the local investigation file.
+5. Close on the opportunity: bring explorable explanations to the material someone is already studying, with less setup between question and investigation.
 
-This is the plan for the three-minute `/explore` video. Soma is a desktop visual companion: capture what you are working on, get a source-specific explanation, change a meaningful assumption, and revisit the same experiment. Do not claim autonomous course monitoring in this journey.
+The main cut shows one user journey and one expressive prototype. Keep additional memory, practice, course workspace, architecture and repair-history tours out of the three-minute story. They remain available for questions.
 
-| Time | Show | Evidence |
-| --- | --- | --- |
-| 0:00–0:12 | An Intro AI slide in another application; invoke Soma and review the screenshot | Actual desktop capture, with permission; no continuous recording claim |
-| 0:12–0:40 | Ask a focused question; show Spark’s actual resulting visual and the concise preparation facts | Actual source interpretation and typed composition. Disclose any edit compressing generation wait; do not animate fictional model stages |
-| 0:40–1:15 | Spark selects a cost experiment; move the slider and compare BFS with Dijkstra | Solver-computed outcomes on the same graph. Use actual source values; “3 vs 10” only when that source supports it |
-| 1:15–1:40 | Replay settlement/relaxation and ask why the result changed | Preserved current costs, goal, enabled edges and source. Narration drives step progress; no word-level synchronization claim |
-| 1:40–2:05 | Expand the Spark/computation/Wonder record briefly | Show only actual review. If a genuine review requested a correction, show it; otherwise say approved or not run. Model review is advisory |
-| 2:05–2:25 | Save, close/reopen and resume the experiment | Real persistence of current state and source/version lineage |
-| 2:25–2:45 | A second fresh screenshot or a student observation, if available | Demonstrate source specificity without claiming all subjects have checked simulations; quote only actual participants |
-| 2:45–3:00 | Close on the source beside its manipulable explanation | “Understand what is in front of you, without leaving what you are doing.” |
+## Entry paths
 
-The source must drive the behavior. Prefer a real permitted lecture slide; an original synthetic slide remains a clearly labeled alternative. Keep the capture/experiment/continuity story intact rather than presenting a model lineup or dashboard tour. Students can explore without compulsory assessment.
+**Canonical product:** the existing[Explore route](https://soma-woad-beta.vercel.app/explore), or the configured local product. Choose the actual final release before recording. Source capture/upload, checked graph manipulation, contextual follow-up and save/reopen belong here.
 
-## Judge access and honest fallbacks
+**Engine:** build the standalone viewer, then serve it locally:
 
-- At submission, use only the original `soma` repository after its end-of-hackathon publication, the current hosted `/explore` URL, and its signed Mac release. The separate repository is deleted. Keep soma private during the build.
-- The original examples are authored material and make no model call. “Watch a recorded Muse run” is a genuine completed Spark/Wonder run on an original synthetic screenshot. Its cost/time/audit are from the original generation; opening the replay uses no inference. New follow-ups and narration may use their respective live services.
-- A replay must remain labeled throughout recording, playback, saving and resume. It does not prove fresh generation is available. Test one fresh upload separately before submission.
-- Verify production budget remaining, reserve and concurrency before judging; do not reset the lifetime ledger or raise the $15 test allowance. Keep saved/recorded material usable at capacity.
-- General diagrams are source-specific explanations. Only supported BFS/Dijkstra computations are checked; review approval, exploration and assisted predictions are not independent understanding evidence.
+```sh
+node node_modules/vite/bin/vite.js build --config docs/examples/pm121/viewer/vite.config.mjs
+node scripts/serve-engine-demo.mjs
+```
 
-## Current evaluation and remaining evidence
+Open http://localhost:41914. Use **Why two turns?**, **How Muse made this**, **Explore recorded Muse investigations**, **Show Muse’s investigation** and **Save Muse investigation**. These are actual recorded source/model cases, with no runtime inference. The engine is not a public hosted canonical generation/save flow.
 
-Use [GENERAL_SCREENSHOTS.md](GENERAL_SCREENSHOTS.md) for executed general-source tests and retained failures. The latest experience checks are recorded in [VERIFICATION.md](VERIFICATION.md). Use [STUDENT_TRIAL.md](STUDENT_TRIAL.md) for a small observational trial. No pilot, learning gain, fresh-course outcome, complete new video or final native audio test is established by this script.
+**Native companion:** optional if the current binary/device route has been verified. Point & ask uses Control–Option–Space after the mode is enabled. Do not make an unrecorded OS permission interaction the opening dependency.
 
-## Optional continuity ending
+## Recording modes
 
-After saving a checked exploration, choose **Try a fresh example**. Predict its cost or connection count before checking; the new problem's solution is not displayed first. Show the preserved answer/hint status, then open **Explore this example** or explicitly request **Explain my answer with Muse**. The first action is application-generated and solver-checked; only the explanation request uses live models. Do not describe a same-session attempt as delayed learning or reference-available practice as independent understanding. Keep this within the existing ending rather than adding a dashboard tour.
+- Fresh source generation: capture the actual result and wait. Shortened waits need actual elapsed-time labels.
+- Genuine recorded Muse generation: retain its recorded label and original attribution. New follow-ups may still be live operations.
+- Prepared examples: identify them as prepared, rather than recorded model output.
+- Engine illustrations: identify recorded prototype and original synthetic source. Its local study file is distinct from a saved canonical revision.
+
+Use original synthetic material or a source with explicit sharing permission. Review source interpretation visibly when it matters; graph computation checks the interpreted input, not every pixel-reading claim. Preserve the earlier valid artifact on generation failure and use the documented recorded/prepared path honestly.
+
+The lifetime testing allowance is $20 cumulative, with prior consumption/reservations retained. Check available budget and admission before another live take; there is no fixed per-take cost promise.
+
+## Submission framing
+
+Impact means plausible real-world potential, beneficiaries and significance. A working source→change→consequence→kept-result demonstration supports that story. Learner studies, adoption and quantified savings are optional additional evidence, not hackathon prerequisites.
+
+Recording, final video upload, clean public judge access and publication remain separate completion steps. Use only[Jeremiah-Sakuda/soma](https://github.com/Jeremiah-Sakuda/soma) as the source repository; keep it private until authorized. No new hosted/native acceptance or final-video claim follows from this document.

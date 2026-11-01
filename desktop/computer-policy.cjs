@@ -6,7 +6,7 @@ const forbiddenApp =
 // Mirrors src/lib/server/computer-actions.ts. A press matching this always pauses
 // for its own approval at execution time, whatever the model reported.
 const consequentialLabel =
-  /send|submit|delete|remove|erase|trash|discard|don.?t.?save|replace|overwrite|clear|reset|empty|allow|accept|approve|install|quit|restart|shut.?down|revert|purchase|buy|pay|order|checkout|check.?out|place|transfer|post|publish|share|upload|confirm|sign.?out|log.?out|unsubscribe|cancel.?(?:subscription|account|order)/i;
+  /send|submit|delete|remove|erase|trash|discard|don.?t.?save|replace|overwrite|clear|reset|empty|allow|accept|approve|install|quit|restart|shut.?down|revert|reply|forward|authori[sz]e|grant|agree|subscribe|sign.?in|log.?in|join|move.?to.?bin|comment|purchase|buy|pay|order|checkout|check.?out|place|transfer|post|publish|share|upload|confirm|sign.?out|log.?out|unsubscribe|cancel.?(?:subscription|account|order)/i;
 const courseworkSubmit =
   /turn.?in|hand.?in|submit.?(?:assignment|homework|quiz|test|exam|attempt|answers?|work|essay|lab|project)|(?:assignment|homework|quiz|exam|attempt)\s+submi/i;
 // Navigation keys only; no modifiers, characters, Return, Tab, Escape or Space.

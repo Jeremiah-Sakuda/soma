@@ -10,7 +10,7 @@ const SIN = Array.from({ length: SAMPLES }, (_, k) => Math.sin((k / SAMPLES) * M
  * itself: the centre and radius whose ring stands out from both its inside and its outside.
  * Text, lines and flat areas do not form such rings. Works on light or dark slides.
  * Deterministic, no model call. A node without a ring that clearly beats its estimate keeps
- * the estimate. */
+ * the estimate, as does one with a second strong ring within reach. */
 export async function snapNodesToDrawing(dataUrl: string, positions: Position[]) {
   if (positions.length < 2) return { positions, moved: 0 };
   const { data, info } = await sharp(Buffer.from(dataUrl.split(',')[1], 'base64'), {
@@ -53,20 +53,28 @@ export async function snapNodesToDrawing(dataUrl: string, positions: Position[])
   };
   const score = (x: number, y: number, r: number) => ring(x, y, r) - Math.max(ring(x, y, r * 0.55), ring(x, y, r * 1.45));
   const reach = Math.min(gap * 0.45, 90);
-  const radii = [0.12, 0.15, 0.18, 0.21, 0.24].map((f) => Math.min(60, gap * f)).filter((r, i, all) => r >= 5 && all.indexOf(r) === i);
+  const radii = [0.08, 0.1, 0.12, 0.15, 0.18, 0.21, 0.24, 0.28, 0.32]
+    .map((f) => Math.min(80, gap * f))
+    .filter((r, i, all) => r >= 5 && all.indexOf(r) === i);
   let moved = 0;
   const out = pts.map((p) => {
     const atEstimate = Math.max(...radii.map((r) => score(p.px, p.py, r)));
     let best = { value: -Infinity, x: p.px, y: p.py, r: radii[0] };
     const step = Math.max(2, reach / 12);
+    const grid: { value: number; x: number; y: number }[] = [];
     for (let dy = -reach; dy <= reach; dy += step)
       for (let dx = -reach; dx <= reach; dx += step) {
         if (dx * dx + dy * dy > reach * reach) continue;
+        let here = -Infinity;
         for (const r of radii) {
           const value = score(p.px + dx, p.py + dy, r);
+          here = Math.max(here, value);
           if (value > best.value) best = { value, x: p.px + dx, y: p.py + dy, r };
         }
+        grid.push({ value: here, x: p.px + dx, y: p.py + dy });
       }
+    // Another strong ring within reach (a letter O, a neighbouring node) makes the match ambiguous.
+    const rival = Math.max(-Infinity, ...grid.filter((g) => Math.hypot(g.x - best.x, g.y - best.y) > best.r).map((g) => g.value));
     // Refine within the coarse step, at the best radius only.
     const span = Math.min(6, Math.ceil(step));
     const coarse = best;
@@ -75,7 +83,12 @@ export async function snapNodesToDrawing(dataUrl: string, positions: Position[])
         const value = score(coarse.x + dx, coarse.y + dy, coarse.r);
         if (value > best.value) best = { ...best, value, x: coarse.x + dx, y: coarse.y + dy };
       }
-    const convincing = best.value >= 0.25 && best.value > atEstimate + 0.08;
+    const convincing =
+      best.value >= 0.25 &&
+      best.value > atEstimate + 0.08 &&
+      !(rival >= 0.25 && rival > best.value - 0.12) &&
+      // The estimate should fall on or near the drawn node it is moved onto.
+      Math.hypot(best.x - p.px, best.y - p.py) <= best.r * 1.8;
     if (!convincing) return { nodeId: p.nodeId, x: p.x, y: p.y };
     if (Math.hypot(best.x - p.px, best.y - p.py) >= 1) moved++;
     return { nodeId: p.nodeId, x: best.x / W, y: best.y / H };

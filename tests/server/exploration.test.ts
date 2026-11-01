@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { createExampleExploration } from '../../src/lib/domain/exploration';
 import {
   createExplorationService,
+  locateFits,
   validateExplorationViewState,
 } from '../../src/lib/server/exploration';
 import { closeExplorationStore, explorationStore } from '../../src/lib/server/exploration-store';
@@ -1585,5 +1586,14 @@ describe('general screenshot contract without prepared-example fallback', () => 
     expect((await service.generate(principal(), generate())).artifact.validation.assurance).toBe(
       'checked-bfs',
     );
+  });
+});
+
+describe('locate pass budget', () => {
+  it('runs only when composition, a repair and any review round still fit', () => {
+    expect(locateFits(1, true)).toBe(true);
+    expect(locateFits(2, true)).toBe(false);
+    expect(locateFits(1, false)).toBe(true);
+    expect(locateFits(2, false)).toBe(false);
   });
 });

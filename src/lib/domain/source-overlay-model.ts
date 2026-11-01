@@ -88,9 +88,19 @@ export function sourceOverlayModel({
     const label = fullName(id);
     return label.length > 14 ? `${label.slice(0, 13)}…` : label;
   };
-  const fmt = (n: number) => (Number.isInteger(n) ? String(n) : String(Number(n.toFixed(2))));
+  const fmt = (n: number, places = 2) => (Number.isInteger(n) ? String(n) : String(Number(n.toFixed(places))));
+  // An equation must still add up after rounding.
+  const sum = (a: number, b: number, total: number) => {
+    for (const places of [2, 3, 4]) {
+      const [x, y, z] = [a, b, total].map((n) => Number(fmt(n, places)));
+      if (Number(fmt(x + y, places)) === z) return [a, b, total].map((n) => fmt(n, places));
+    }
+    return [a, b, total].map((n) => fmt(n, 4));
+  };
   const dijkstra = execution.modelId === 'dijkstra-nonnegative';
-  const weightOf = (a: string, b: string) => input.edges.find((e) => pairKey(e.from, e.to) === pairKey(a, b))?.weight ?? 1;
+  // Cut connections are absent from the executed input; their printed cost comes from the graph.
+  const weightOf = (a: string, b: string) =>
+    (input.edges.find((e) => pairKey(e.from, e.to) === pairKey(a, b)) ?? graph.edges.find((e) => pairKey(e.from, e.to) === pairKey(a, b)))?.weight ?? 1;
 
   // The moment that explains Dijkstra: a known distance plus one edge beats the old estimate.
   // At the end, replay the relaxation that gave the goal its final cost.
@@ -184,14 +194,15 @@ export function sourceOverlayModel({
       spot = layout.edgeLabels.find((l) => l.edgeId === edge.id);
     return value === undefined || value === (edge.weight ?? 1) || !spot
       ? []
-      : [{ edgeId: edge.id, x: spot.x, y: spot.y, text: `${edge.weight ?? 1} → ${value}` }];
+      : [{ edgeId: edge.id, x: spot.x, y: spot.y, text: `${fmt(edge.weight ?? 1)} → ${fmt(value)}`.slice(0, 24) }];
   });
   const modelNodes: SourceOverlayModel['nodes'] = input.nodes.flatMap((node) => {
     const p = layout.nodes.find((n) => n.nodeId === node.id);
     if (!p) return [];
     const status: OverlayStatus =
       step.current === node.id ? 'current' : step.expanded.includes(node.id) ? 'settled' : step.queue.includes(node.id) ? 'waiting' : 'unreached';
-    return [{ id: node.id, label: node.label, x: p.x, y: p.y, status, distance: step.distances[node.id] ?? null }];
+    const distance = step.distances[node.id];
+    return [{ id: node.id, label: node.label, x: p.x, y: p.y, status, distance: distance === undefined ? null : Number(fmt(distance)) }];
   });
 
   // Annotations avoid the source's own marks: nodes, printed weights and text regions.
@@ -248,7 +259,8 @@ export function sourceOverlayModel({
     if (!anchor || !edgeCentre.has(pairKey(x.parent, x.node))) continue;
     const w = weightOf(x.parent, x.node),
       from = execution.steps.find((s2) => s2.parents[x.node] === x.parent && s2.distances[x.node] === x.value)?.distances[x.parent] ?? x.value - w;
-    place(`equation-${x.node}`, `${fmt(from)} + ${fmt(w)} = ${fmt(x.value)} < ${fmt(x.old)}`, 'equation', anchor, true);
+    const [fa, fw, fv] = sum(from, w, x.value);
+    place(`equation-${x.node}`, `${fa} + ${fw} = ${fv} < ${fmt(x.old)}`, 'equation', anchor, true);
   }
   // The route and the goal's own tag claim their places first on the final frame.
   let routeLine: string | null = null;
@@ -257,8 +269,12 @@ export function sourceOverlayModel({
     const goal = nodes.get(goalId);
     const unit = dijkstra ? '' : execution.path!.length - 1 === 1 ? ' edge' : ' edges';
     const total = dijkstra ? step.distances[goalId] ?? execution.path!.slice(1).reduce((sum, to, i) => sum + weightOf(execution.path![i], to), 0) : execution.path!.length - 1;
-    const text = `${execution.path!.map(name).join(' → ')} = ${fmt(total)}${unit}`;
-    if (!goal || !place('route', text, 'route', goal, true, true)) routeLine = text;
+    const tail = ` = ${fmt(total)}${unit}`;
+    // Shrink names, never the total; a route that still will not fit leads the caption.
+    let text = `${execution.path!.map(name).join(' → ')}${tail}`;
+    for (let limit = 10; text.length > 60 && limit >= 2; limit -= 2)
+      text = `${execution.path!.map((id) => (fullName(id).length > limit ? `${fullName(id).slice(0, limit - 1)}…` : fullName(id))).join(' → ')}${tail}`;
+    if (text.length > 60 || !goal || !place('route', text, 'route', goal, true, true)) routeLine = `${execution.path!.map(fullName).join(' → ')}${tail}`;
   }
   const order = goalId ? [goalId, ...step.expanded.filter((id) => id !== goalId)] : step.expanded;
   for (const id of order) {
@@ -266,6 +282,8 @@ export function sourceOverlayModel({
       k = step.expanded.indexOf(id);
     if (p && k >= 0 && tags.length < 12)
       place(`settled-${id}`, `${CIRCLED[k] ?? k + 1} ${name(id)} = ${fmt(step.distances[id])}`, id === step.current ? 'current' : 'settled', p, false);
+    else if (p && id === goalId && step.distances[id] !== undefined && tags.length < 12)
+      place(`settled-${id}`, `${name(id)} = ${fmt(step.distances[id])}`, 'current', p, false);
   }
   if (!finished) {
     const before = at > 0 ? execution.steps[at - 1] : null;
@@ -295,7 +313,7 @@ export function sourceOverlayModel({
     callouts: [],
     caption: caption
       ? (caption = caption.length > 380 ? `${caption.slice(0, 379)}…` : caption, underneath)
-        ? { text: caption, stepLabel, x: left, y: Math.min(0.98, (bottom + font * 0.8) / H), anchor: 'top', font: font / W }
+        ? { text: caption, stepLabel, x: left, y: Math.min(0.86, (bottom + font * 0.8) / H), anchor: 'top', font: font / W }
         : { text: caption, stepLabel, x: left, y: Math.max(0.02, (top - font * 0.8) / H), anchor: 'bottom', font: font / W }
       : null,
   };

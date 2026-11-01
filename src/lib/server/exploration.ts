@@ -209,6 +209,14 @@ const locateSchema = z.strictObject({
   edgeLabels: z.array(z.strictObject({ edgeId: z.string().min(1).max(48), ...locatedPoint })).max(24),
 });
 /** The part of the capture holding the graph, padded, or null when it already fills most of it. */
+/** The optional locate pass runs only when composition, a repair and, when review is on, a
+ * rejected review with its re-review all still fit within the call cap. */
+export function locateFits(callsSoFar: number, reviewEnabled: boolean) {
+  const cap = reviewEnabled ? 6 : 4,
+    reserved = reviewEnabled ? 4 : 2;
+  return callsSoFar + 1 + reserved <= cap;
+}
+
 function graphCropRegion(extracted: z.infer<typeof inspectSchema>) {
   const points = [
     ...(extracted.nodePositions ?? []),
@@ -1567,8 +1575,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           extracted.graph &&
           request.source?.kind === 'screenshot' &&
           request.source.dataUrl &&
-          // Leave room for composition, one repair and, when on, review within the call cap.
-          calls <= (deps.reviewEnabled() ? 6 - 4 : 4 - 3)
+          locateFits(calls, deps.reviewEnabled())
         ) {
           const region = graphCropRegion(extracted);
           if (region)

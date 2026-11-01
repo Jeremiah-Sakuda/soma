@@ -104,4 +104,60 @@ describe('source overlay model edge cases', () => {
     const text = m.tags.find((t) => t.tone === 'route')?.text ?? m.caption!.text;
     expect(text).toContain('A → F = 1 edge');
   });
+  it('labels a cut connection with its real cost', () => {
+    const graph = hero;
+    const execution = runDijkstra({ ...hero, edges: hero.edges.filter((e) => e.id !== 'DF'), algorithm: 'dijkstra' });
+    const m = sourceOverlayModel({ layout, graph, execution, index: 99, disabledEdgeIds: ['DF'], caption: 'c', stepLabel: 'Round', aspect: 0.5625 });
+    expect(m.edges.find((e) => e.id === 'DF')?.label).toMatch(/cost 3/);
+  });
+  it('keeps the total of a long route whole', () => {
+    const names = ['Central Depot', 'Riverside Market', 'Old Town Hall', 'University', 'Harbor Station', 'Public Library', 'Airport Terminal'];
+    const ids = names.map((_, i) => `n${i}`);
+    const g = { nodes: ids.map((id, i) => ({ id, label: names[i] })), edges: ids.slice(1).map((id, i) => E(`e${i}`, ids[i], id, 13)), directed: false, start: 'n0', goal: 'n6', neighborOrder: ids };
+    const execution = runDijkstra({ ...g, algorithm: 'dijkstra' });
+    const lay = { nodes: ids.map((nodeId, i) => ({ nodeId, x: 0.08 + i * 0.13, y: i % 2 ? 0.35 : 0.6 })), edgeLabels: [] };
+    const m = sourceOverlayModel({ layout: lay, graph: g, execution, index: 99, disabledEdgeIds: [], caption: 'c', stepLabel: 'Round', aspect: 0.5625 });
+    const text = m.tags.find((t) => t.tone === 'route')?.text ?? m.caption!.text;
+    expect(text).toContain('= 78');
+    expect(validOverlayModel(m)).toBe(true);
+  });
+  it('rounds edited costs and node distances, and keeps huge costs valid', () => {
+    const m = model(99, { weights: { AF: 134.6153846153846 } });
+    expect(m.weights.find((w) => w.edgeId === 'AF')?.text).toBe('11 → 134.62');
+    const big = model(99, { weights: { AF: 123456789.123 } });
+    expect(validOverlayModel(big)).toBe(true);
+  });
+  it('makes a rounded equation add up', () => {
+    const g = { nodes: ['A', 'B', 'C'].map((id) => ({ id, label: id })), edges: [E('AB', 'A', 'B', 0.004), E('BC', 'B', 'C', 0.004), E('AC', 'A', 'C', 1)], directed: false, start: 'A', goal: 'C', neighborOrder: ['A', 'B', 'C'] };
+    const execution = runDijkstra({ ...g, algorithm: 'dijkstra' });
+    const lay = { nodes: [{ nodeId: 'A', x: 0.1, y: 0.5 }, { nodeId: 'B', x: 0.4, y: 0.3 }, { nodeId: 'C', x: 0.7, y: 0.5 }], edgeLabels: [] };
+    const eq = sourceOverlayModel({ layout: lay, graph: g, execution, index: 99, disabledEdgeIds: [], caption: 'c', stepLabel: 'Round', aspect: 0.5625 }).tags.find((t) => t.tone === 'equation')!.text;
+    const [a, b, total] = eq.split(/[+=<]/).map((x) => Number(x.trim()));
+    expect(Number((a + b).toFixed(4))).toBe(total);
+  });
+  it('labels the goal on a breadth-first final frame and stays valid', () => {
+    const g = { ...hero, edges: hero.edges.map((e) => ({ ...e, weight: 1 })) };
+    const execution = runBfs({ ...g, algorithm: 'bfs' });
+    const m = sourceOverlayModel({ layout, graph: g, execution, index: 99, disabledEdgeIds: [], caption: 'c', stepLabel: 'Round', aspect: 0.5625 });
+    expect(m.tags.some((t) => t.id === 'settled-F')).toBe(true);
+    expect(validOverlayModel(m)).toBe(true);
+  });
+  it('keeps the caption on screen', () => {
+    const low = { ...layout, nodes: layout.nodes.map((n) => ({ ...n, y: Math.min(0.95, n.y + 0.3) })) };
+    const m = model(3, { layout: low });
+    expect(m.caption!.y).toBeLessThanOrEqual(0.86);
+  });
+});
+
+describe('companion overlay validator', () => {
+  it('checks the optional strike point and quiet flag', () => {
+    const m = model(99);
+    expect(validOverlayModel(m)).toBe(true);
+    const struck = structuredClone(m);
+    struck.edges[0].strike = { x: 9, y: 9 };
+    expect(validOverlayModel(struck)).toBe(false);
+    const quiet = structuredClone(m);
+    (quiet.tags[0] as { quiet?: unknown }).quiet = 'yes';
+    expect(validOverlayModel(quiet)).toBe(false);
+  });
 });

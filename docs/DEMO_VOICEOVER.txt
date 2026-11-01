@@ -2,11 +2,11 @@
 
 [To Soma] "Why doesn't it just take the direct A-to-F edge?"
 
-Muse Spark reads my slide, every node and every weight, and Soma runs the real algorithm right on top of it. There's the moment the lecture skipped: going through D costs seven, so the direct edge loses. Every loop and number here is computed, not drawn by a model.
+Muse Spark reads my slide, and Muse Wonder reads it again on its own to check every weight before Soma runs the real algorithm right on top of it. There's the moment the lecture skipped: going through D costs seven, so the direct edge loses. Every loop and number here is computed, not drawn by a model.
 
 Now my own question. What if D-to-F weren't there? I cut it, right on the slide. New route, cost nine. Instantly, with no model call.
 
-Then I ask for the tipping point. Muse picks which connection is worth testing, and Soma proves exactly where the answer flips. At seven the two routes cost the same. Below seven, the direct edge wins outright. The model chose the experiment; the code proved the answer.
+Then I ask Soma to test my question. Muse picks the connection my question is about, and Soma proves exactly where the answer flips. At seven the two routes cost the same; below seven, the direct edge wins outright. A different question, and Muse picks a different connection. The model chose the experiment; the code proved the answer.
 
 When I ask why, the answer is about the experiment I'm running. And before this explanation reached me, Muse Wonder checked it against Soma's computed trace. In one run it caught Spark settling two vertices at once and sent it back.
 

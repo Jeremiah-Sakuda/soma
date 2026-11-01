@@ -119,7 +119,11 @@ document.addEventListener('click', (event) => {
 // Coordinates are relative to the captured display; the window may sit offset from it.
 let frame = { dx: 0, dy: 0, width: innerWidth, height: innerHeight };
 function applyFrame(event) {
-  frame = event.frame ?? { dx: 0, dy: 0, width: innerWidth, height: innerHeight };
+  // Measured here, at draw time: the window's own screen position is always current.
+  const d = event.display;
+  frame = d
+    ? { dx: d.x - window.screenX, dy: d.y - window.screenY, width: d.width, height: d.height }
+    : { dx: 0, dy: 0, width: innerWidth, height: innerHeight };
   svg.style.transform = `translate(${frame.dx}px, ${frame.dy}px)`;
   svg.style.width = frame.width + 'px';
   svg.style.height = frame.height + 'px';

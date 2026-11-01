@@ -79,10 +79,11 @@ function createPointAsk({
     if (!overlay || overlay.isDestroyed()) return;
     // macOS may keep the window off the menu bar or otherwise clamp it, so report where it
     // actually sits relative to the captured display; the renderer compensates.
-    const d = overlayDisplay?.bounds,
-      b = overlay.getBounds?.();
-    const frame = d && b ? { dx: d.x - b.x, dy: d.y - b.y, width: d.width, height: d.height } : null;
-    overlay.webContents.send('point:draw', frame ? { ...payload, frame } : payload);
+    const d = overlayDisplay?.bounds;
+    overlay.webContents.send(
+      'point:draw',
+      d ? { ...payload, display: { x: d.x, y: d.y, width: d.width, height: d.height } } : payload,
+    );
   }
   function overlayFor(display) {
     if (!overlay) {

@@ -3002,3 +3002,21 @@ Prompts PM139–PM150 are archived verbatim. Decisions: [DECISIONS.md PM139–PM
    - Tests: 1,740 offline passed / 103 skipped, 42 desktop, typecheck passed. Live Meta spend for today's rehearsals is within the $40 cap.
 
 Not yet done: a third review round against the latest frames, production deployment of these changes, a signed companion build, the script update for on-camera beats and the final video.
+
+## PM151–PM152 — Final-frame focus, companion pointer, persistence, deploy and signed build (November 1)
+
+One user instruction this session was intentionally not archived, at the user's request.
+
+1. **Review rounds and drawing.**
+   - Experience rounds 3 and 4 scored 6.5/10 and 7/10. Round 4 said the overlay can be the hero once one node's placement was fixed; it is now fixed.
+   - The final frame shows only the result. A struck edge is one slash on the source line, clear of printed weights. Arcs are detected by the label's absolute offset.
+   - Each round shows one main thing: its relaxation equation beside the node it explains, its settle tag and quiet unchanged tentatives, with no tree edges or waiting rings.
+   - A warm companion pointer flies along an arc to each settled node and leaves a short trail. Tags settle in, and the caption types in at a width set before typing starts.
+   - Rounds are labelled "Round n of m". Marks are persistent (PM152): each circle and edge inks once and then changes colour.
+2. **Placement precision.** `node-snap.ts` now searches for the drawn ring (dark ring, light inside) near each estimate, so nearby text cannot pull a node. This is tested with a node pushed 55 px toward a text column. Live over Preview, rounds 2, 5 and 7 aligned on every node.
+3. **Narration (PM152).** Gemini narration advances steps on each step's audio end and preloads the next. In this session's rehearsals it hit the provider rate limit (429) after many requests; playback then stops with captions and manual steps intact.
+4. **Release.**
+   - Offline 1,743 passed / 103 skipped, desktop 42 passed, typecheck and production build passed.
+   - Release manifest `soma-pm151-overlay-2026-11-01`; `main` fast-forwarded and pushed for production deployment.
+   - The macOS companion v0.4.0 is Developer ID signed (valid on disk, satisfies its designated requirement), and notarization has been submitted.
+   - Code review round 3 is running.

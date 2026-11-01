@@ -6,14 +6,14 @@ Muse Spark reads my slide, every node and every weight, and Soma runs the real a
 
 Now my own question. What if D-to-F weren't there? I cut it, right on the slide. New route, cost nine. Instantly, with no model call.
 
-Then I ask for the tipping point. Muse picks which connection is worth testing, and Soma proves exactly where the answer flips. At seven the routes tie. Below seven, the direct edge wins. The model chose the experiment; the code proved the answer.
+Then I ask for the tipping point. Muse picks which connection is worth testing, and Soma proves exactly where the answer flips. At seven the two routes cost the same. Below seven, the direct edge wins outright. The model chose the experiment; the code proved the answer.
 
-When I ask why, the answer is about the experiment I'm running. And before any explanation reaches me, Muse Wonder checks it against Soma's computed trace. In one run it caught Spark settling two vertices at once and sent it back.
+When I ask why, the answer is about the experiment I'm running. And before this explanation reached me, Muse Wonder checked it against Soma's computed trace. In one run it caught Spark settling two vertices at once and sent it back.
 
 Everything I explored is saved, and Soma can make a fresh problem from the same idea, hiding the answer until I try it.
 
 The same approach reaches past graphs: the checked search in 3D, and in our lab, an engine Muse drew and explains.
 
-[On camera] The slide didn't change. What changed is that I could finally ask it my question and get an answer I can trust.
+[On camera] The slide didn't change. What changed is that I could finally ask it my question, and see why the answer is what it is, with the calculation checked.
 
 Built this week with Muse Spark, Muse Wonder and Muse Voice Transcribe. Turn what you're studying into something you can explore.

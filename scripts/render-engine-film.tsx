@@ -10,7 +10,7 @@ import { validateEngine } from '../docs/examples/pm121/lib/engine';
 export async function renderEngineFilm() {
   const base=validateEngine(JSON.parse(readFileSync('docs/examples/pm121/film.json','utf8')));
   const presentation=validatePresentation(JSON.parse(readFileSync('docs/examples/pm123/presentation.json','utf8')),base);
-  const film = validateEngine(presentFilm(base,presentation)), folder = resolve('.local/pm123/render'), output = resolve('docs/examples/pm121/public');
+  const film = validateEngine(presentFilm(base,presentation)), folder = resolve('.local/pm124/render'), output = resolve('docs/examples/pm121/public');
   mkdirSync(folder, { recursive: true }); mkdirSync(`${folder}/frames`, { recursive: true });
   const run = (bin: string, args: string[]) => {
     const r = spawnSync(bin, args, { encoding: 'utf8', timeout: 90000, maxBuffer: 2_000_000 });
@@ -37,6 +37,6 @@ export async function renderEngineFilm() {
   const probe = JSON.parse(run('/opt/homebrew/bin/ffprobe', ['-v', 'error', '-show_streams', '-show_format', '-of', 'json', `${output}/engine-film.mp4`]));
   delete probe.format.filename;
   const receipt = { renderer: 'Same React/SVG EngineScene in a1920×1080 branded EngineFilmFrame, rasterized with sharp and encoded locally with FFmpeg; no video model', voice: 'macOS Samantha, prepared locally; Muse authored the script', filmSha256: createHash('sha256').update(JSON.stringify(film)).digest('hex'), videoSha256: createHash('sha256').update(readFileSync(`${output}/engine-film.mp4`)).digest('hex'), fps, frameCount: count, duration: 24, chapters, probe };
-  writeFileSync('docs/examples/pm123/render-receipt.json', JSON.stringify(receipt, null, 2)+'\n');
+  writeFileSync('docs/examples/pm124/render-receipt.json', JSON.stringify(receipt, null, 2)+'\n');
   return receipt;
 }

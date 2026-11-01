@@ -511,3 +511,7 @@ User requested refinement/polish and selected a single-cylinder four-stroke engi
 ## PM123 — Refine the engine presentation, October31
 
 User asked to keep iterating toward startup-demo quality. Adopt direct crank manipulation and optional part inspection in the same local replay, plus recorded Muse copy/path refinements and application-owned SVG material finishing. Export the same scene in a1920×1080 composition. Preserve the original base/art lineage, checked-physics boundaries and unchanged canonical runtime. Retain all spending under existing$20 cap and distinguish replay/material finish from live generated output. This is a local demonstration-quality iteration, not a production-readiness or general engine-generation claim. See [verification and limitations](examples/pm123/README.md).
+
+## PM124 — Presentation and patient playback, October31
+
+Adopt an expanded local presentation view,0.5×/normal playback and explicit repeat in the existing recorded engine demo. Derive piston travel/forward-stroke direction and crank phase guides from the current constrained geometry; clarify that direction is the forward cycle, not measured velocity during reverse manipulation. Preserve actual Muse art/script and attribute runtime finishes/cues to Soma. No new inference or quantitative family, budget reset, main merge or publication. See [PM124 verification](examples/pm124/README.md).

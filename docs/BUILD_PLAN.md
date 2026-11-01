@@ -196,3 +196,7 @@ Refine the experimental motion presentation into one single-cylinder four-stroke
 ### October31 — PM123 authorized startup-demo refinement
 
 Iterate on the same local engine: actual Muse art/copy refinement, application material finish, direct crank and part inspection, compact responsive controls and full-HD film. Preserve original model lineage, deterministic constraints, existing cumulative$20 cap and private spatial branch. Executed checks/limits: [PM123 record](examples/pm123/README.md). No new release gate, canonical integration or publication.
+
+### October31 — PM124 continued engine refinement
+
+User requested another iteration. Refine presentation framing, controlled slow/repeat playback and source-consistent forward-motion cues on the same local replay. Reuse recorded Muse outputs; preserve deterministic geometry and budget boundaries. [Executed verification](examples/pm124/README.md). No new release gate, main integration or publication.

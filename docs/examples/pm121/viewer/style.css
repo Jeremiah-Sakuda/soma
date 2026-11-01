@@ -128,3 +128,21 @@ footer>span { font-size: 17px; font-weight: 650; letter-spacing: -.8px; color: #
 /* Optical composition pass: bring the cutaway forward without hiding the controls. */
 @media(min-width:681px){.site-header{height:56px}.intro{padding:18px 0 18px}h1{font-size:36px}.intro .eyebrow{font-size:9px}.drawing>svg{height:clamp(375px,calc(100svh - 390px),470px)}.drawing-top{min-height:44px;padding-top:2px}.drawing-bottom{padding-bottom:10px}.scrub{padding-top:12px;padding-bottom:6px}}
 @media(max-width:680px){.scrub{grid-row:2}.story{grid-row:3}.drawing>svg{height:310px}}
+/* PM124: presentation and patient, directly controlled playback. */
+.drawing-tools { display:flex;align-items:center;gap:2px; }
+.presentation-toggle { display:grid;place-items:center;min-width:44px;min-height:44px;background:transparent;border:1px solid transparent;border-radius:8px;color:var(--muted); }
+.presentation-toggle:hover { background:#edf0e8; }
+.presentation-toggle svg { width:15px;height:15px; }
+.present-recording { display:none; }
+.playback-options { display:flex;align-items:center;gap:3px; }
+.playback-options select { min-height:44px;min-width:48px;padding:0 2px;border:0;background:transparent;color:var(--muted);font:inherit;font-size:11px;cursor:pointer; }
+.playback-options button { display:grid;place-items:center;min-width:44px;min-height:44px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted); }
+.playback-options button:hover { background:#f0f3eb; }
+.playback-options button[aria-pressed=true] { color:#315642;background:#edf2e6;border-color:#d4dfc9; }
+main[data-presenting=true] { position:fixed;inset:0;z-index:30;max-width:none;padding:18px;background:#f7f6f2;overflow:auto; }
+main[data-presenting=true] :is(.site-header,.intro,.below,.provenance,footer) { display:none; }
+main[data-presenting=true] .demo { min-height:calc(100dvh - 36px);grid-template-columns:minmax(0,1fr) 320px; }
+main[data-presenting=true] .drawing>svg { height:clamp(350px,calc(100dvh - 274px),820px); }
+main[data-presenting=true] .present-recording { display:inline;font-size:10px;color:var(--muted); }
+main[data-presenting=true] .notice { margin:8px 0 0; }
+@media(max-width:680px) { main[data-presenting=true] { padding:8px; }main[data-presenting=true] .demo { grid-template-columns:1fr;min-height:calc(100dvh - 16px); }main[data-presenting=true] .drawing>svg { height:360px; }.playback-options select { font-size:12px; } }

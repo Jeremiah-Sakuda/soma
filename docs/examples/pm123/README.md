@@ -1,5 +1,7 @@
 # PM123 — Engine presentation refinement
 
+**Historical PM123 verification record.** [PM124](../pm124/README.md) adds presentation, slow/repeat playback and forward-motion cues at the same URL; the original recorded Muse presentation and lineage remain unchanged.
+
 **Review http://localhost:41914.** This supersedes the PM121 presentation on the same private `codex/spatial-exploration` branch. The original PM121 Muse specification and its accepted geometry lineage remain unchanged; the recorded refinement is additive. Earlier Anatomy/piston comparison remains41912.
 
 The user requested repeated refinement toward startup-demo quality. This is a more finished **local recorded prototype**, not a production-readiness, user-acceptance or learning-effectiveness claim.

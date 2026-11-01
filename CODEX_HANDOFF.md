@@ -1,3 +1,7 @@
+## PM124 — Presentation and motion refinement, October31
+
+Review **http://localhost:41914**: expanded presentation view,0.5× narration and silent playback, optional cycle repeat, direct forward-stroke guides and richer fin/rod finishes. [Authorship and checks](docs/examples/pm124/README.md). Twenty-two browser journeys,1696offline/100opt-in skipped, typecheck/build/full-HD export and unchanged PM118 manifest passed. No new inference calls/spend; recorded Muse art/script retained. Local private spatial branch only; no merge/push/publication or canonical engine integration.
+
 ## PM123 — Engine demo presentation refinement, October31
 
 Review **http://localhost:41914**: actual Muse art/copy refinements with machined material finishes, direct two-turn crank dragging, selectable part explanations, tighter desktop/phone controls and a1920×1080 narrated film. [Authorship, retained failures and checks](docs/examples/pm123/README.md). Sixteen browser journeys,1690offline/100opt-in skipped, typecheck/build/export and unchanged PM118 manifest passed. Eight actual calls added$0.1686385; latest shared ledger$16.45400025/$20. Native Mac remained locked; final in-app playback, direct dragging and part/focus review passed. Local spatial branch only, no merge/push/publication or canonical engine save/follow-up integration.

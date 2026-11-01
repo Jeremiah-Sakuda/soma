@@ -1665,7 +1665,12 @@ export function ExplorationWorkspace() {
                   artifact.source.layout &&
                   sourceMemory.current?.id === artifact.id &&
                   sourceMemory.current.capture.capturedAt === artifact.source.capturedAt
-                    ? { image: sourceMemory.current.capture.dataUrl, layout: artifact.source.layout }
+                    ? {
+                        image: sourceMemory.current.capture.dataUrl,
+                        layout: artifact.source.layout,
+                        anchors: artifact.source.anchors,
+                        nativeId: sourceMemory.current.capture.nativeId,
+                      }
                     : undefined
                 }
                 experiment={

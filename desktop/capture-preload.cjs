@@ -115,3 +115,32 @@ ipcRenderer.on('desktop:source-highlight-result', (_event, d) => {
       }),
     );
 });
+
+// Mirror of Soma's checked search over the real display. Only the latest Point & ask
+// source may be drawn; the native side validates shapes and re-checks the screen.
+window.addEventListener('soma:screen-overlay', (event) => {
+  const d = event.detail;
+  if (!isExploration() || !d || d.id !== sourceInteraction) return;
+  if (d.model !== null && (typeof d.model !== 'object' || JSON.stringify(d.model).length > 60000)) return;
+  ipcRenderer.send('desktop:screen-overlay', { id: d.id, model: d.model });
+});
+ipcRenderer.on('desktop:screen-overlay-action', (_event, d) => {
+  if (isExploration() && d?.id === sourceInteraction && d.type === 'toggle-edge' && typeof d.edgeId === 'string')
+    window.dispatchEvent(
+      new CustomEvent('soma:screen-overlay-action', {
+        detail: { id: d.id, type: 'toggle-edge', edgeId: d.edgeId.slice(0, 48) },
+      }),
+    );
+});
+ipcRenderer.on('desktop:screen-overlay-result', (_event, d) => {
+  if (isExploration() && d?.id === sourceInteraction)
+    window.dispatchEvent(
+      new CustomEvent('soma:screen-overlay-result', {
+        detail: { id: d.id, shown: d.shown === true, dismissed: d.dismissed === true },
+      }),
+    );
+});
+// Lets the hosted page adopt its translucent companion styling.
+window.addEventListener('DOMContentLoaded', () => {
+  document.documentElement.dataset.somaDesktop = 'true';
+});

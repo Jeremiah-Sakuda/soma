@@ -2357,3 +2357,6 @@
 .source-overlay-weight text { fill: #fff; font-family: var(--font-geist-mono), ui-monospace, monospace; font-weight: 700; }
 
 a.exploration-example-button { text-decoration: none; }
+
+.source-overlay-callout rect { fill: color-mix(in srgb, var(--accent) 10%, transparent); stroke: var(--accent); stroke-width: 3; stroke-dasharray: 2 0; }
+.source-overlay-callout text { fill: var(--ink); font-weight: 650; stroke: #fff; stroke-width: 5; paint-order: stroke; stroke-linejoin: round; }

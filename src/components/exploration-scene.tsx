@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import SpatialWorkspace from './spatial-workspace';
 import { supportsSpatial } from '@/lib/domain/spatial-exploration';
 import { defaultSpatialView } from '@/lib/domain/spatial-schema';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ExplorationSearchStage } from './exploration-search-stage';
 import { SourceOverlay, type SourceGraphLayout } from './source-overlay';
+import type { SourceOverlayModel } from '@/lib/domain/source-overlay-model';
+import type { SourceAnchor } from '@/lib/domain/source-grounding';
 import { useExplorationMotion } from './exploration-motion';
 import { diagramRoutes, pointOnDiagramRoute } from '@/lib/domain/diagram-routing';
 import { diagramLayout, diagramEdgeLabels } from '@/lib/domain/exploration-layout';
@@ -301,7 +303,7 @@ export function ExplorationScene({
   overlay,
 }: {
   /** The learner's capture and where it drew the graph; present only while the pixels are in memory. */
-  overlay?: { image: string; layout: SourceGraphLayout };
+  overlay?: { image: string; layout: SourceGraphLayout; anchors?: SourceAnchor[]; nativeId?: string };
   experiment?: ReactNode;
   experimentInline?: boolean;
   spec: ExplorationSpec;
@@ -311,6 +313,25 @@ export function ExplorationScene({
   spokenProgress?: number | null;
 }) {
   const [overlayView, setOverlayView] = useState<'source' | 'diagram'>('source');
+  // In the Mac companion, mirror the same overlay over the real display it was captured from.
+  const nativeId = overlay?.nativeId;
+  const mirror = useCallback(
+    (model: SourceOverlayModel | null) => {
+      if (nativeId)
+        window.dispatchEvent(new CustomEvent('soma:screen-overlay', { detail: { id: nativeId, model } }));
+    },
+    [nativeId],
+  );
+  const toggleRef = useRef<(edgeId: string) => void>(() => {});
+  useEffect(() => {
+    if (!nativeId) return;
+    const listen = (event: Event) => {
+      const d = (event as CustomEvent).detail;
+      if (d?.id === nativeId && d.type === 'toggle-edge' && typeof d.edgeId === 'string') toggleRef.current(d.edgeId);
+    };
+    window.addEventListener('soma:screen-overlay-action', listen);
+    return () => window.removeEventListener('soma:screen-overlay-action', listen);
+  }, [nativeId]);
   const [compact, setCompact] = useState(false),
     [activeGraph, setActiveGraph] = useState<'primary' | 'comparison'>('primary');
   const sceneElement = useRef<HTMLDivElement>(null), revealScene = useRef(false);
@@ -374,6 +395,10 @@ export function ExplorationScene({
     // Show the checked consequence at once: jump to the completed search.
     const run = explorationExecution(spec, next);
     onChange({ ...next, step: run ? run.steps.length - 1 : 0 });
+  };
+  toggleRef.current = (edgeId: string) => {
+    if (spec.mode !== 'explanation' && spec.controls.includes('toggle-edge') && graphInput?.edges.some((e) => e.id === edgeId))
+      toggleEdge(edgeId);
   };
   // After a learner change, the authored captions describe the original graph; say only what was computed.
   const experimentCaption = (() => {
@@ -544,6 +569,12 @@ export function ExplorationScene({
                   ? 'Your experiment · computed by Soma'
                   : `Step ${Math.max(0, spec.steps.findIndex((item) => item.id === overlayStep?.id)) + 1} of ${spec.steps.length}`
               }
+              callouts={
+                experimentCaption
+                  ? []
+                  : (overlay.anchors ?? []).filter((a) => overlayStep?.sourceHighlightIds?.includes(a.id))
+              }
+              onModel={mirror}
               onToggleEdge={toggleEdge}
               onSelect={select}
             />

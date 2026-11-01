@@ -235,7 +235,14 @@ else {
         view.webContents.send('desktop:source-highlight-result', payload),
       captureImage: snapshotDisplay,
       enabledChange: (value) => win.webContents.send('desktop:point-enabled', value),
+      overlayResult: (payload) => view.webContents.send('desktop:screen-overlay-result', payload),
+      overlayAction: (payload) => view.webContents.send('desktop:screen-overlay-action', payload),
     });
+    ipcMain.on('desktop:screen-overlay', (event, payload) => {
+      if (trusted(event)) void pointAsk.screenOverlay(payload);
+    });
+    ipcMain.on('overlay:hover', (event, active) => pointAsk.overlayHover(event, active));
+    ipcMain.on('overlay:toggle-edge', (event, edgeId) => pointAsk.overlayToggle(event, edgeId));
     computerControl = createComputerControl({BrowserWindow,ipcMain,globalShortcut,session:ses,origin,
       helperPath: app.isPackaged ? path.join(process.resourcesPath,'computer-control') : path.join(__dirname,'node_modules/.cache/soma/computer-control'),
       stopPoint:()=>pointAsk.disable(),status,accessibility:()=>process.platform==='darwin'&&systemPreferences.isTrustedAccessibilityClient(true)});

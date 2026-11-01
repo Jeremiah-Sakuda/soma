@@ -37,7 +37,7 @@ The smoke script launches real Electron with an original local HTML fixture; it 
 - **One question at a time.** While Muse works, Return keeps your text and says so instead of starting another request.
 - **Esc** first clears the drawing (it owns Esc while shown), then hides the bar. Hiding the bar also cancels a question in flight and pauses narration. ⤢ opens the full panel and ends compact mode; **Capture display** and **Show Soma** end it too.
 
-A drag moves the bar; it stays where you put it on that display.
+A drag moves the bar; it stays where you put it on that display. While Soma runs, Option+Space belongs to the bar, so it no longer types a non-breaking space in other apps; if another launcher already owns it, Soma uses Command+Option+Space.
 
 ## Developer ID release phases
 

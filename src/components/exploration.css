@@ -2341,9 +2341,9 @@
 .source-overlay-badge rect { fill: var(--accent); }
 .source-overlay-node.is-current .source-overlay-badge rect { fill: #d98a1c; }
 .source-overlay-badge text { fill: #fff; font-family: var(--font-geist-mono), ui-monospace, monospace; font-weight: 700; }
-.source-overlay-caption { position: absolute; left: 3%; max-width: min(54%, 560px); padding: 12px 16px; border-radius: 12px; background: #fffdf8f2; border: 1px solid var(--border); box-shadow: 0 8px 24px #2a231a1f; color: var(--ink); font-size: 15px; line-height: 1.45; backdrop-filter: blur(6px); }
-.source-overlay-caption.is-below { bottom: 4%; }
-.source-overlay-caption.is-above { top: 4%; }
+.source-overlay { container-type: inline-size; }
+.source-overlay-caption { position: absolute; left: 3%; bottom: 4%; max-width: min(56%, 560px); padding: 1cqw 1.4cqw; border-radius: 12px; background: #fffdf8f2; border: 1px solid var(--border); box-shadow: 0 8px 24px #2a231a1f; color: var(--ink); font-size: clamp(11px, 1.75cqw, 16px); line-height: 1.4; backdrop-filter: blur(6px); }
+.source-overlay-caption .overline { font-size: clamp(9px, 1.2cqw, 12px); }
 .source-overlay-caption .overline { display: block; margin-bottom: 4px; color: var(--muted); }
 @keyframes source-overlay-pulse { 50% { transform: scale(1.12); } }
 @media (prefers-reduced-motion: reduce) {
@@ -2353,3 +2353,5 @@
 @media (max-width: 640px) {
   .source-overlay-caption { position: static; max-width: none; border-radius: 0; border-width: 1px 0 0; box-shadow: none; font-size: 14px; }
 }
+.source-overlay-weight rect { fill: #d98a1c; }
+.source-overlay-weight text { fill: #fff; font-family: var(--font-geist-mono), ui-monospace, monospace; font-weight: 700; }

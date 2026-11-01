@@ -18,6 +18,7 @@ export function SourceOverlay({
   execution,
   index,
   disabledEdgeIds,
+  weights,
   canToggle,
   selected,
   caption,
@@ -32,6 +33,8 @@ export function SourceOverlay({
   execution: BfsExecution;
   index: number;
   disabledEdgeIds: readonly string[];
+  /** Hypothetical costs the learner set; drawn over the source's printed weights. */
+  weights?: Record<string, number>;
   canToggle: boolean;
   selected: string | null;
   caption: string | null;
@@ -95,7 +98,12 @@ export function SourceOverlay({
   };
   const ys = [...nodes.values()].map((p) => p.y);
   // Slides keep titles at the top, so prefer the space under the graph when there is room.
-  const captionBelow = height - Math.max(...ys) - radius > height * 0.16 || height - Math.max(...ys) > Math.min(...ys);
+  const below = height - Math.max(...ys) - radius * 1.6,
+    captionBelow = below > height * 0.14 || below > Math.min(...ys) - radius * 1.6;
+  const xs = [...nodes.values()].map((p) => p.x);
+  const captionStyle = captionBelow
+    ? { top: `${((Math.max(...ys) + radius * 1.6) / height) * 100}%`, left: `${Math.max(2, ((Math.min(...xs) - radius) / WIDTH) * 100)}%` }
+    : { bottom: `${((height - Math.min(...ys) + radius * 1.6) / height) * 100}%`, left: `${Math.max(2, ((Math.min(...xs) - radius) / WIDTH) * 100)}%` };
 
   return (
     <figure className="source-overlay">
@@ -152,6 +160,20 @@ export function SourceOverlay({
               </g>
             );
           })}
+          {graph.edges.map((edge) => {
+            const value = weights?.[edge.id],
+              label = labels.get(edge.id);
+            if (value === undefined || value === (edge.weight ?? 1) || !label) return null;
+            const text = `${edge.weight ?? 1} → ${value}`;
+            return (
+              <g key={`w-${edge.id}`} className="source-overlay-weight" transform={`translate(${label.x} ${label.y})`}>
+                <rect x={-radius * 1.25} y={-radius * 0.55} width={radius * 2.5} height={radius * 1.1} rx={radius * 0.55} />
+                <text textAnchor="middle" dominantBaseline="central" fontSize={radius * 0.62}>
+                  {text}
+                </text>
+              </g>
+            );
+          })}
           {input.nodes.map((node) => {
             const p = nodes.get(node.id);
             if (!p) return null;
@@ -191,7 +213,11 @@ export function SourceOverlay({
         </svg>
       )}
       {caption && (
-        <figcaption className={`source-overlay-caption ${captionBelow ? 'is-below' : 'is-above'}`} aria-live="polite">
+        <figcaption
+          className={`source-overlay-caption ${captionBelow ? 'is-below' : 'is-above'}`}
+          style={aspect ? captionStyle : undefined}
+          aria-live="polite"
+        >
           <span className="overline">{stepLabel}</span>
           {caption}
         </figcaption>

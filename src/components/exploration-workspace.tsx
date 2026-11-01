@@ -28,6 +28,7 @@ import {
 import { checkExploration, type ExplorationSpec } from '@/lib/domain/exploration';
 import {
   ExplorationScene,
+  explorationExecution,
   initialExplorationState,
   type ExplorationViewState,
 } from './exploration-scene';
@@ -1698,7 +1699,17 @@ export function ExplorationWorkspace() {
                           onChange={(value) =>
                             updateState({
                               ...state,
-                              step: 0,
+                              // Show the checked consequence at once: the completed search.
+                              step: Math.max(
+                                0,
+                                (explorationExecution(artifact.spec, {
+                                  ...state,
+                                  edgeWeights: {
+                                    ...(state.edgeWeights ?? {}),
+                                    [artifact.experiment!.edgeId]: value,
+                                  },
+                                })?.steps.length ?? 1) - 1,
+                              ),
                               explanationStep: 0,
                               edgeWeights: {
                                 ...(state.edgeWeights ?? {}),

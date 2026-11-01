@@ -382,7 +382,19 @@ export function ExplorationScene({
     const cut = graphInput.edges
       .filter((edge) => state.disabledEdgeIds.includes(edge.id))
       .map((edge) => `${nodeName(graphInput, edge.from)}–${nodeName(graphInput, edge.to)}`);
-    const lead = cut.length ? `You cut ${cut.join(', ')}. ` : '';
+    const costs = graphInput.edges
+      .filter((edge) => {
+        const value = state.edgeWeights?.[edge.id];
+        return value !== undefined && value !== (edge.weight ?? 1);
+      })
+      .map(
+        (edge) =>
+          `${nodeName(graphInput, edge.from)}–${nodeName(graphInput, edge.to)} now costs ${state.edgeWeights![edge.id]} (was ${edge.weight ?? 1})`,
+      );
+    const lead = [cut.length ? `You cut ${cut.join(', ')}.` : '', costs.length ? `${costs.join('; ')}.` : '']
+      .filter(Boolean)
+      .map((part) => part + ' ')
+      .join('');
     return execution.path
       ? `${lead}Checked route: ${names(execution.path)}, cost ${routeCost(execution.input, execution.path)}.`
       : `${lead}No route reaches ${state.goal ? nodeName(graphInput, state.goal) : 'the goal'} now.`;
@@ -523,6 +535,7 @@ export function ExplorationScene({
               execution={computation}
               index={state.step}
               disabledEdgeIds={state.disabledEdgeIds}
+              weights={state.edgeWeights}
               canToggle={spec.mode !== 'explanation' && spec.controls.includes('toggle-edge')}
               selected={state.selectedObjectId}
               caption={experimentCaption ?? overlayStep?.caption ?? null}

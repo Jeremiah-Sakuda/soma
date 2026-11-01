@@ -2640,6 +2640,11 @@ Deviations: evaluation only; no product, deployment, permission, spending or rel
 Deviation: clarification of assessment emphasis only; no product-scope change. Prior build-log content and other assessments were not consulted.
 
 
+## PM100 — Preserve quality while reducing latency
+
+Quality is a release condition. Keep source/evidence/current-state/ownership checks, independent deterministic computation, existing review policy, reasoning effort and failure bounds. Compact output may reuse an adequate visual; full authoring/clarification must remain available for new content, correction or uncertainty. Inspect actual explanations and expand fallback/negative coverage before release. Outcomes pending.
+
+
 ## PM101 — Native Mac computer-control acceptance
 
 1. Used native computer control in installed Chrome on the Mac, with a guest window and isolated local synthetic database. Firefox exposed stale screenshots, so no Firefox pass. Inspected revised rendering and exercised pointer orbit, perspective/side presets, part selection, isolation, keyboard sliders and 2D/3D switching.
@@ -2654,6 +2659,37 @@ Deviation: clarification of assessment emphasis only; no product-scope change. P
 3. Fresh live test was blocked before inference by the Firestore daily guest-creation cap; no cost, bypass or reset. Ledger unchanged$13.848943/$15. New-style live authoring remains unverified; earlier live-output replay is rendering evidence only. Final252-file manifest2c7eb5049a9b574e24e2b30ffcd1b8d23be7f7c2511e38db1a1275b0e70b1c94. Report:docs/SPATIAL_EXPLORATION.md; private receipts:.local/pm101.
 
 Status: implementation and local checks complete; user visual acceptance and any feature merge remain pending. Existing fixed-composer/small-screen scrolling and broad asset-generation limits remain. Concurrent PM100/PM104 documents are preserved outside this commit.
+
+## PM104 — From-scratch polish audit: UI, diagrams and 3D (October 30)
+
+This was an audit only. No product code, scope decision, deployment, commit or provider call was made, and there was no spend. The audit ran on the spatial branch at `e521e7d` (main's PM097 UI plus 3D). It used an isolated, credential-free snapshot with live inference off, driven in a real browser at 1440×900, 620×704 and 375×812. Report: `docs/UI_POLISH_AUDIT_2026_10_30.md`.
+
+1. **Measured clutter.**
+   - A loaded exploration shows 375–515 words and 35–66 controls, and spans 2.3–2.9 desktop screens and about 4 companion or phone screens.
+   - At 620×704 the graph gets 200 px of height.
+   - The current step is narrated three to five times.
+   - Four overlapping step navigations sit alongside more than a dozen provenance and mode labels.
+   - Root cause: amendments accreted from PM040 to PM097, each adding a feature, a label and a disclosure, and none removing one. The UI guide is a v1 guide with thirteen stacked amendments.
+2. **Defects found** (seen in the browser; none fixed):
+   - The S→C cost label sits beside the A→B arrow on desktop.
+   - Weight badges float on leader lines and overlap at narrow widths.
+   - "Unconnected X" is truncated to "Unco…".
+   - The "First in, first out" and "Primary/Comparison" text is duplicated.
+   - A network failure shows the raw "Failed to fetch".
+   - "Find the tipping point" is disabled with no reason given when live generation is off.
+   - The composer dock covers the graph and queue at 620 and 375.
+   - 3D labels overlap, and separating parts shrinks the model to about a tenth of the canvas without reframing.
+   - Checked graphs in 3D add controls but no information at step 0.
+3. **Proposed direction, not adopted.**
+   - A from-scratch "one stage" layout: a large diagram with direct manipulation, one transport row with one sentence per step, a docked composer, and one provenance mark that opens a popover. The library, memory and source move to menus or a sheet. Prediction becomes a toggle. Autosave replaces explicit save.
+   - Diagram and 3D rules: one node style, labels on their own edges, auto-framing, contextual labels.
+   - The redesign removes and relocates features without adding any.
+   - Sequencing: the concurrent PM102/PM103 3D revision and PM099/PM100 latency work touch the same modules; the PM074 architecture candidates reduce rewrite risk.
+
+Deviations and limits:
+- Not checked: voice playback, live generation and its waiting states, native window chrome, and PM102/PM103 changes after `e521e7d`.
+- The other session's port-41898 server stopped mid-walkthrough, which produced the "Failed to fetch" observation.
+- No other session's server was stopped. A temporary `.claude/launch.json` entry and webpack dev server were used and then removed.
 
 
 ## PM105 — Clarify Muse authoring versus rendering (October 30)
@@ -2670,6 +2706,7 @@ Status: implementation and local checks complete; user visual acceptance and any
 
 Retained failures: expanded instructions initially exceeded the real provider cap; condensed guidance passed with <7,800 tested follow-up characters. Sandbox denied sockets to 48 unit checks; local-access rerun passed. Initial browser build omitted its synthetic public auth key, causing three expected sign-in refusals; configured test build passed. Sandboxed build stalled and was restarted with local worker access. No limits bypassed, provider calls, spend, feature merge, push or publication. Fresh Muse selection of the expanded vocabulary remains unverified (last live attempt:PM103 daily guest cap). Broader UI redesign remains separate; concurrent PM100/PM104 records are preserved.
 
+
 ## PM107 — Evaluate Anatomy as an alternative visual toolkit (October 30)
 
 1. Inspected the public wheresryan22/anatomy README, skill, MIT license, React integration guide, isometric TypeScript kit and moving-3D guide. It is an agent authoring skill and drawing toolkit with SVG, optional WebGL effects and beta moving-3D support; it is not a mesh-generation API. Source: https://github.com/wheresryan22/anatomy.
@@ -2677,6 +2714,7 @@ Retained failures: expanded instructions initially exceeded the real provider ca
 3. Clarified the integration boundary: Muse would author validated structured content and bounded assembly/motion choices through a new adapter; installing the coding skill alone does not change live Muse authoring. Keep deterministic lesson checks and prohibit arbitrary generated executable code. MIT notice retention is required if vendored. No installation, implementation, tests, provider calls, spending, merge or publication performed.
 
 Deviation/status: research and recommendation only, not an adopted architecture or scope change. Preserve the existing spatial branch and current renderer for comparison until an authorized prototype is evaluated. Concurrent PM100/PM104 documentation remains untouched.
+
 
 ## PM108 — Anatomy comparison implementation and authorized $20 cap (October 30)
 
@@ -2688,6 +2726,45 @@ Retained failures: sandbox socket restrictions affected48 offline cases before t
 
 Implementation commit: [3ee1edf](https://github.com/Jeremiah-Sakuda/soma/commit/3ee1edf).
 
+## PM109 — Four UI directions with personality (October 30)
+
+This was design exploration only. No product code, scope decision, deployment, commit or provider call was made, and there was no spend.
+
+1. **Built a private four-board design canvas**: https://claude.ai/artifact/RSWJTD3Hvd5r1xkzYjYk2E.
+   - The directions: A · Light table (Soma lifts the idea off your screen), B · Instrument (a playable device with readouts, a sequencer and an edge-cost fader), C · Observatory (understanding spreads like light) and D · Riso zine (a two-ink study zine).
+   - Each board applies the PM104 one-stage layout to the same checked weighted-example moment, step 3 of 5, where Goal drops from 10 to 3 through B.
+   - Every cost label sits on its own edge.
+   - The source is copied to `design-system/soma/directions/2026-10-30-personality-directions/` with a README.
+2. **Chose deliberately new ground.**
+   - It avoids the October 27 explorations: Casebook, Bench, Plate, Studio, Neuron, Margin notes, Specimen, Playground (the current look), and the earlier Fieldnotes, Notebook, Daylight, Focus and Agenda.
+   - It keeps the honesty rules: a "checked by Soma" provenance mark, an unreached node shown honestly, and the optional prediction left out of view.
+   - One drafted claim was corrected before publishing. The fader note now says the route through B ties the route through C at a B→Goal cost of 6, not 5.
+3. **Unverified and pending.**
+   - Following the canvas tool's guidance, the boards were not rendered or checked for contrast or keyboard use.
+   - No direction is adopted. A selection needs a DECISIONS entry and a rewrite of the UI guide.
+
+Deviation: none from documented scope. Light table's "Lecture slide · captured just now" is mockup copy, not a real capture.
+
+## PM110 — Notebook and notepad variations (October 30)
+
+This was design exploration only. No product code, scope decision, deployment, commit or provider call was made.
+
+1. **Added a notebook row of three boards to the private canvas** (https://claude.ai/artifact/RSWJTD3Hvd5r1xkzYjYk2E): N1 · Engineering pad, N2 · Spiral notepad and N3 · Dot journal.
+   - Each shows the same checked weighted-example moment as A–D.
+   - The source is copied to `design-system/soma/directions/2026-10-30-personality-directions/`, and the README is extended.
+2. **One shared rule gives the style a job.** Printed type is solver-checked, and handwriting in one reserved ink is Muse's explanation. Notebook conventions then carry function:
+   - the engineering title block's "Checked by" and sheet number
+   - divider tabs as saved explorations
+   - a sticky-note narration
+   - bullet-journal signifiers as search states
+   - page numbers as steps
+   The earlier October 27 "Notebook" and "Fieldnotes" boards only borrowed the name, with no paper, ink or handwriting. They were reviewed first.
+3. **Unverified and pending.**
+   - The handwriting fonts were chosen for legibility at 15–28 px, but nothing was rendered, measured for contrast or checked by keyboard.
+   - The journal spread needs a separate narrow-width layout.
+   - No direction is adopted.
+
+
 ## PM111 — Clarify Anatomy authorship (October 30)
 
 1. Clarified that Muse authors validated scene specifications: part choices, positions, connections, explanation steps and bounded poses.
@@ -2696,6 +2773,7 @@ Implementation commit: [3ee1edf](https://github.com/Jeremiah-Sakuda/soma/commit/
 
 Deviation: none; authorship clarification only.
 
+
 ## PM112 — Compare Muse involvement across renderers (October 30)
 
 1. Clarified that current Three.js and Anatomy views consume the same validated scene specification; neither currently gives Muse more authorship.
@@ -2703,6 +2781,7 @@ Deviation: none; authorship clarification only.
 3. Identified richer bounded mechanism/geometry/motion authoring as the way to expand Muse involvement; this remains proposed, not implemented or verified by the comparison. No code, calls, spending or release change.
 
 Deviation: none; clarification only.
+
 
 ## PM113 — Muse mechanism authoring (October 30)
 
@@ -2724,6 +2803,11 @@ Deviation: no product scope change. The first rotor After generation required a 
 
 Artifact commit: [b2430c8](https://github.com/Jeremiah-Sakuda/soma/commit/b2430c8).
 
+## PM114–PM116 — Dot journal shipped to main (pointer)
+
+Implemented in worktree `.local/journal/ui` (branch `codex/dot-journal`) and fast-forwarded to main as `94e583d..ec4ba0f`. The full entry, verification (1,543 offline / 137 of 137 browser journeys) and limits are in main's `docs/BUILD_LOG.md` and `docs/UI_DOT_JOURNAL.md`. Prompt IDs PM114–PM116 are reserved here. The spatial and capture-first branches are untouched and need to adopt the journal stylesheet when integrated.
+
+
 ## PM118 — Direct Anatomy slider manipulation (October 31)
 
 1. Reproduced all three normal-motion slider regressions. Manual overrides now render exact poses immediately and cancel explanation easing; authored steps retain bounded animation and exact final values. Cached immutable swept bounds, stopped the gallery's unchanged Before plate from recomputing, and moved numbered markers with current geometry while preserving stable camera framing. Six held-drag/reversal/exact-pose browser checks passed.
@@ -2732,6 +2816,7 @@ Artifact commit: [b2430c8](https://github.com/Jeremiah-Sakuda/soma/commit/b2430c
 
 Retained failures and limits: previous single-fill/reduced-motion checks missed continuous-drag lag. Initial repair question exceeded the unchanged input limit and was rejected with zero inference/spend; the bounded retry succeeded. The first credential-free production build omitted the synthetic public Firebase key needed at compile time for three account fixtures; rebuilt with that test-only setting. The initial combined idle assertion counted the separate2.4s explanation clock; corrected to assert immediate geometry stability and idle work after that existing clock settles. Both subsequent full browser runs passed166/166, including the final marker-corrected runtime. Original in-app tab had stale connection-error state; a fresh tab loaded the running loopback gallery. No general collision solver, checked physics, user visual acceptance, main merge, push, deployment or publication. Concurrent design/polish records and artifacts remain outside this change.
 
+
 ## PM119 — Web-authored motion explanations (October 31)
 
 1. Inspected the implemented mechanism authoring contract: custom bounded 3D geometry still has application-owned projection/palette and no generated HTML/JavaScript. Identified a proposed alternative in which Muse authors custom vector composition, story beats and timed motion through a controlled scene/timeline renderer.
@@ -2739,6 +2824,7 @@ Retained failures and limits: previous single-fill/reduced-motion checks missed 
 3. Discussion/recommendation only: no implementation, dependencies, model calls, spending, tests, scope adoption, main merge, push or publication. Shared cap remains$20; latest observed consumption$15.30956725 from PM118 is historical, not a newly fetched ledger observation.
 
 Status: proposed direction, not adopted architecture. Preserve typed output validation and application-owned checks; free-form executable model code would require a different runtime boundary and is not implied by this discussion. Sources:https://support.anthropic.com/en/articles/9487310-what-are-artifacts-and-how-do-i-use-them and https://www.remotion.dev/docs/idea and https://www.remotion.dev/docs/player.
+
 
 ## PM120 — Muse motion film comparison (October31)
 
@@ -2795,3 +2881,33 @@ Retained failures: initial harness launched before its test directory existed (z
 1. Reframed the active story/README around “Turn what you’re studying into something you can explore”: credible potential to reduce setup between a question and investigation, with the engine as visual hook and the canonical graph manipulation→contextual revision→save loop as working proof. No learner-study/adoption/quantified-savings prerequisite or fabricated benefit claim.
 2. Delivered a325-word nine-beat three-minute script/shot plan, matching voiceover-only text,49-word short and236-word main submission descriptions, Meta/technical/impact answers and a separate evidence/footage handoff. Reconciled active demo documents and canonical soma links, archived the PM070 story and preserved historical evidence. Recorded/local/canonical/future capabilities and actual model/solver/speech roles stay distinct.
 3. Documentation checks passed: no missing local links across active/new/archived narrative documents, exact voiceover/script match, pacing/description word counts, no retired-repository links in active copy and git diff whitespace checks. No new product code, runtime tests, inference/spending, final narrated video, external-link acceptance, upload, merge/deployment/publication or new release gate. Capture/edit and final judge-link verification remain honestly pending; concurrent artifacts/log entries preserved.
+
+
+### DEMO-REFERENCE-20261101-01 · November 1, 2026
+
+Prompt archived verbatim in `docs/build-log/prompts.json`; exact receipt timestamp unavailable.
+
+1. Located current demo script and shot plan in `docs/DEMO_VIDEO_SCRIPT.md`, with operation guidance in `docs/DEMO.md`.
+2. Found an existing mention of an external reference video in `docs/POLISH_AUDIT.md`, but no identifiable URL or attached video in the searched project documentation/attachments.
+3. Final narrated submission video remains documented as pending; distinguished this from the requested reference. No product changes or tests needed.
+
+Deviations: none. Existing concurrent edits preserved; no commit made.
+
+
+## PM130 — Plan for a compelling demo (November1)
+
+1. Located the actual user-supplied146.816-second1920×1080 reference attachment and visually inspected twelve overview plus six detail frames. Observations support source-adjacent visuals, restrained explanations and several visible contexts; they do not establish reference architecture, live latency or general reliability. Reference name/path and extracted images were not added to product assets.
+2. Delivered [DEMO_WOW_PLAN.md](DEMO_WOW_PLAN.md): proposed day sequence for a continuous native Intro AI journey, compact source-adjacent visual stage, meaningful manipulation, narration/interruption, substantive Muse decision, small generality check and final capture. Includes time boxes, readiness criteria, candidate three-minute cut and a midpoint/recording stop rule. Preserves current script until rehearsal and distinguishes canonical graph proof from the recorded local engine prototype.
+3. Checked prompt JSON parsing, new-document local links and whitespace. No implementation, product tests, inference/spending, training, prototype integration, final video, merge, deployment or publication. Earlier test scores/results were read as historical evidence, not rerun. Concurrent log/archive/design edits preserved.
+
+Plan status: proposed prioritization within existing polish/capture work, not a PRD expansion or feature-freeze waiver. No new cap or empirical learner-study requirement.
+
+## PM131–PM137 — First-place push: Dijkstra hero journey (November 1)
+
+PM131 asked about access. PM132 supplied the participant guide and set the goal of a clear Indie first place, led by the demo example. PM133–PM137 are the question-tool answers: Dijkstra lecture slide, host the engine with a ~10s coda, freeze lifted, $40 cumulative cap, this session drives. Decisions: [DECISIONS.md PM132](DECISIONS.md).
+
+1. **Hero source.** Made an original Lecture 14 slide (`docs/examples/hero-dijkstra/`: HTML source, 1920×1080 PNG, PDF). Soma's own solver confirms: A→C→B→D→F costs 7; B improves from 4 to 3 at step 2; BFS takes A–F at cost 11; cutting D–F gives A→C→E→F at cost 9; the A–F tipping point is exactly 7.
+2. **Product fixes from live rehearsal.** Checked graphs now always include start, goal and edge-toggle controls. Before this, a natural question produced controls `step, replay`, so the cut-edge save was rejected with `invalid_request`. A partial neighbor order of valid unique nodes is now completed in node order and audited as `neighbor-order-completed`. Before this, a correct reading that left the start node out of the neighbor order set off a re-read and then a 4,096-token `generation_invalid`. The scene-authoring output cap is now 6,144. New regression case added; `tests/server/exploration.test.ts` 47/47 passed; typecheck passed; full offline suite 1,709 passed / 103 skipped (run before the neighbor-order change, then the affected file rerun).
+3. **Live evidence (`tests/providers/hero-journey-live.test.ts`, `.local/pm132/hero-live`).** Retained outcomes in order: image too large for the 1600 px service bound (zero calls; the test now mirrors the capture bound); "start"/"goal" captions read into node labels (captions removed from the slide); controls rejection (fixed); neighbor-order/token failure (fixed); a test version-ordering error; then a full pass. Passing run: exact reading, 24.0 s, five calls including one Wonder rejection and repair (Wonder caught "Settle C then B" against a trace that settles only C at that step); cut D–F with zero calls; Muse chose A–F for the tipping point and Soma established boundary 7 in 12.2 s; the follow-up "Why does the direct A to F edge only win once it costs 7 or less?" kept the experiment at version 3 in 8.9 s; exact reopen with zero calls. Ledger $16.706 → $17.120 of the $40 cap across all attempts. One pass is not a reliability rate.
+
+Deviations: the feature freeze and $20 cap were superseded by the user's PM135/PM136 answers. Not yet done: UI rehearsal of the hero journey, engine hosting, script rewrite, merge, deployment, publication and final video.

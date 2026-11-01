@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Soma · Observatory</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&amp;family=DM+Sans:wght@400;500;600&amp;family=DM+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#F5C66B}a:hover{color:#FFE2A6}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+input::placeholder{color:#8F8EAD}
+</style>
+</helmet>
+<div style="position: relative; width: 1280px; height: 800px; box-sizing: border-box; background-color: #0D0F1E; background-image: radial-gradient(#3A3E66 1px, transparent 1.6px), radial-gradient(#262A4A 1px, transparent 1.6px); background-size: 97px 89px, 53px 61px; background-position: 11px 7px, 31px 23px; color: #F3EEE4; font-family: 'DM Sans', system-ui, sans-serif">
+
+<header style="position: absolute; left: 48px; top: 0; width: 1184px; height: 72px; display: flex; align-items: center; gap: 16px">
+<span style="display: flex; align-items: center; gap: 8px; font: 800 22px 'Syne', sans-serif; letter-spacing: -0.01em"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 L14 10 L23 12 L14 14 L12 23 L10 14 L1 12 L10 10 Z" fill="#F5C66B"></path></svg>soma</span>
+<span style="flex: 1"></span>
+<button type="button" style="height: 44px; padding: 0 16px; display: flex; align-items: center; gap: 8px; background: transparent; border: 1px solid #2E3258; border-radius: 22px; font: inherit; font-size: 14px; color: #F3EEE4">Explorations<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<button type="button" aria-label="More" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #2E3258; border-radius: 22px; color: #F3EEE4"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+</header>
+
+<h1 style="position: absolute; left: 48px; top: 96px; width: 300px; margin: 0; font: 700 30px/1.15 'Syne', sans-serif; letter-spacing: -0.015em">Fewest edges or lowest cost?</h1>
+<div style="position: absolute; left: 48px; top: 196px; width: 220px; display: flex; flex-direction: column; gap: 10px">
+<p style="margin: 0; font-size: 13px; color: #A9A8C4">Light has reached</p>
+<div role="img" aria-label="3 of 6 places reached" style="display: flex; align-items: center; gap: 10px"><span style="width: 12px; height: 12px; border-radius: 6px; background: #F5C66B"></span><span style="width: 12px; height: 12px; border-radius: 6px; background: #F5C66B"></span><span style="width: 12px; height: 12px; border-radius: 6px; background: {{accent}}"></span><span style="width: 12px; height: 12px; box-sizing: border-box; border-radius: 6px; border: 2px solid #9D9BFF"></span><span style="width: 12px; height: 12px; box-sizing: border-box; border-radius: 6px; border: 2px solid #9D9BFF"></span><span style="width: 12px; height: 12px; box-sizing: border-box; border-radius: 6px; border: 2px dashed #4A4E78"></span></div>
+<p style="margin: 0; font: 500 15px 'DM Mono', monospace">3 of 6 places</p>
+</div>
+
+<div role="img" aria-label="Weighted graph, step 3 of 5. S, A and B are lit; Goal's cost drops from 10 to 3 through B; C and Goal are waiting; Unconnected X stays dark." style="position: absolute; left: 400px; top: 92px; width: 760px; height: 410px">
+<svg width="760" height="410" viewBox="0 0 760 410" aria-hidden="true" style="position: absolute; left: 0; top: 0; overflow: visible">
+<defs>
+<marker id="ob-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5A5F98"></path></marker>
+<marker id="ob-lit" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#F5C66B"></path></marker>
+<marker id="ob-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="{{accent}}"></path></marker>
+</defs>
+<circle cx="510" cy="90" r="46" fill="none" stroke="{{accent}}" stroke-opacity="0.35" stroke-width="1"></circle>
+<circle cx="510" cy="90" r="62" fill="none" stroke="{{accent}}" stroke-opacity="0.16" stroke-width="1"></circle>
+<g stroke="#5A5F98" stroke-width="1.6" fill="none">
+<line x1="122.6" y1="212.6" x2="365.5" y2="306.6" marker-end="url(#ob-dim)"></line>
+<line x1="432.2" y1="306.2" x2="646" y2="214.6" marker-end="url(#ob-dim)"></line>
+<line x1="125" y1="200" x2="643" y2="200" marker-end="url(#ob-dim)"></line>
+</g>
+<g stroke="#F5C66B" stroke-width="2.2" fill="none">
+<line x1="120.7" y1="183.1" x2="257.6" y2="107.8" marker-end="url(#ob-lit)"></line>
+<line x1="325" y1="90" x2="473" y2="90" marker-end="url(#ob-lit)"></line>
+</g>
+<line x1="539.4" y1="109" x2="648.9" y2="179.9" stroke="{{accent}}" stroke-width="2.6" marker-end="url(#ob-acc)"></line>
+</svg>
+
+<div style="position: absolute; left: 176px; top: 134px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #0D0F1E; border: 1px solid #F5C66B; border-radius: 11px; color: #F5C66B; font: 500 12px 'DM Mono', monospace">1</div>
+<div style="position: absolute; left: 386px; top: 79px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #0D0F1E; border: 1px solid #F5C66B; border-radius: 11px; color: #F5C66B; font: 500 12px 'DM Mono', monospace">1</div>
+<div style="position: absolute; left: 581px; top: 134px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #0D0F1E; border: 1px solid {{accent}}; border-radius: 11px; color: {{accent}}; font: 500 12px 'DM Mono', monospace">1</div>
+<div style="position: absolute; left: 231px; top: 249px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #0D0F1E; border: 1px solid #5A5F98; border-radius: 11px; color: #D9D6EA; font: 500 12px 'DM Mono', monospace">2</div>
+<div style="position: absolute; left: 526px; top: 249px; width: 28px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #0D0F1E; border: 1px solid #5A5F98; border-radius: 11px; color: #D9D6EA; font: 500 12px 'DM Mono', monospace">6</div>
+<div style="position: absolute; left: 369px; top: 189px; width: 32px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #0D0F1E; border: 1px solid #5A5F98; border-radius: 11px; color: #D9D6EA; font: 500 12px 'DM Mono', monospace">10</div>
+
+<div style="position: absolute; left: 58px; top: 168px; width: 64px; height: 64px; box-sizing: border-box; border-radius: 32px; background: #F5C66B; color: #1A1530; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 16px">S</b><br><span style="font: 500 12px 'DM Mono', monospace">0</span></span></div>
+<div style="position: absolute; left: 258px; top: 58px; width: 64px; height: 64px; box-sizing: border-box; border-radius: 32px; background: #F5C66B; color: #1A1530; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 16px">A</b><br><span style="font: 500 12px 'DM Mono', monospace">1</span></span></div>
+<div style="position: absolute; left: 478px; top: 58px; width: 64px; height: 64px; box-sizing: border-box; border-radius: 32px; background: {{accent}}; color: #1A1530; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 16px">B</b><br><span style="font: 500 12px 'DM Mono', monospace">2</span></span></div>
+<div style="position: absolute; left: 648px; top: 168px; width: 64px; height: 64px; box-sizing: border-box; border-radius: 32px; border: 2px solid #9D9BFF; color: #F3EEE4; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 14px">Goal</b><br><span style="font: 500 12px 'DM Mono', monospace"><s style="color: #8F8EAD">10</s> 3</span></span></div>
+<div style="position: absolute; left: 368px; top: 288px; width: 64px; height: 64px; box-sizing: border-box; border-radius: 32px; border: 2px solid #9D9BFF; color: #F3EEE4; display: flex; align-items: center; justify-content: center; text-align: center"><span><b style="font-size: 16px">C</b><br><span style="font: 500 12px 'DM Mono', monospace">2</span></span></div>
+<div style="position: absolute; left: 36px; top: 326px; width: 48px; height: 48px; box-sizing: border-box; border-radius: 24px; border: 2px dashed #4A4E78"></div>
+<div style="position: absolute; left: 96px; top: 332px; width: 160px; font-size: 14px; line-height: 18px; color: #A9A8C4"><b style="color: #D9D6EA; font-weight: 600">Unconnected X</b><br>no light reaches it</div>
+</div>
+
+<div style="position: absolute; left: 400px; top: 520px; width: 760px; display: flex; align-items: center; justify-content: center; gap: 10px">
+<button type="button" aria-pressed="true" style="height: 44px; padding: 0 18px; display: flex; align-items: center; gap: 10px; background: #F5C66B; border: 0; border-radius: 22px; color: #1A1530; font: inherit; font-size: 14px; font-weight: 600">Lowest cost<span style="font: 500 14px 'DM Mono', monospace">3</span></button>
+<button type="button" aria-pressed="false" style="height: 44px; padding: 0 18px; display: flex; align-items: center; gap: 10px; background: transparent; border: 1px solid #2E3258; border-radius: 22px; color: #F3EEE4; font: inherit; font-size: 14px">Fewest edges<span style="font: 500 14px 'DM Mono', monospace">10</span></button>
+<span style="width: 1px; height: 24px; background: #2E3258; margin: 0 6px"></span>
+<div role="group" aria-label="View" style="display: flex; border: 1px solid #2E3258; border-radius: 22px; padding: 3px">
+<button type="button" aria-pressed="true" style="height: 38px; padding: 0 14px; background: #262A4A; border: 0; border-radius: 19px; color: #F3EEE4; font: inherit; font-size: 13px; font-weight: 600">2D</button>
+<button type="button" aria-pressed="false" style="height: 38px; padding: 0 14px; background: transparent; border: 0; border-radius: 19px; color: #A9A8C4; font: inherit; font-size: 13px">3D</button>
+</div>
+<button type="button" style="height: 44px; padding: 0 12px; display: flex; align-items: center; gap: 6px; background: transparent; border: 0; color: #A9A8C4; font: inherit; font-size: 13px">Checked by Soma<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01" stroke-linecap="round"></path></svg></button>
+</div>
+
+<p style="position: absolute; left: 160px; top: 586px; width: 960px; margin: 0; text-align: center; font: 600 26px/1.3 'Syne', sans-serif; letter-spacing: -0.01em">Through B, Goal’s cost falls from 10 <span style="color: #F5C66B">to 3</span>.</p>
+
+<div style="position: absolute; left: 0; top: 636px; width: 1280px; display: flex; justify-content: center; align-items: center; gap: 14px">
+<button type="button" aria-label="Previous step" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #2E3258; border-radius: 22px; color: #F3EEE4"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<button type="button" aria-label="Play explanation" style="width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: #F3EEE4; border: 0; border-radius: 26px; color: #0D0F1E"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></button>
+<button type="button" aria-label="Next step" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #2E3258; border-radius: 22px; color: #F3EEE4"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+<span style="font: 500 13px 'DM Mono', monospace; color: #A9A8C4; padding-left: 6px">step 3 of 5</span>
+</div>
+
+<form style="position: absolute; left: 260px; top: 708px; width: 760px; height: 56px; display: flex; align-items: center; gap: 8px; margin: 0; box-sizing: border-box; padding: 0 6px 0 22px; background: #151830; border: 1px solid #2E3258; border-radius: 28px">
+<label for="ob-ask" class="sr">Ask about this explanation</label>
+<input id="ob-ask" type="text" placeholder="Wonder about something…" style="flex: 1; height: 48px; background: transparent; border: 0; font: inherit; font-size: 16px; color: #F3EEE4">
+<button type="button" aria-label="Record a question" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 22px; color: #D9D6EA"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></button>
+<button type="submit" style="height: 44px; padding: 0 22px; background: #F3EEE4; border: 0; border-radius: 22px; color: #0D0F1E; font: inherit; font-size: 15px; font-weight: 600">Ask</button>
+</form>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FF8A7A","options":["#FF8A7A","#7EE0C3","#B7A6FF"]},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#FF8A7A' };
+  }
+}
+</script>
+</body>
+</html>

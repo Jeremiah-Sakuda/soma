@@ -212,3 +212,8 @@ User authorized rounds4–6 on the same private branch. Implement current-pose i
 ### November1 — PM129 demo and submission framing
 
 Prepare a coherent engine-led three-minute script and ready-to-edit submission copy centered on real-world potential and a concrete working exploration. Reconcile active README/demo links and preserve earlier narratives as historical. Separate actual source/model/solver/persistence evidence from footage still needing capture; no final-video completion, new features or publication implied. Current production handoff: [SUBMISSION_EVIDENCE.md](SUBMISSION_EVIDENCE.md).
+
+
+### November1 — PM130 proposed demo polish and rehearsal priorities
+
+[Demo wow plan](DEMO_WOW_PLAN.md): rehearse one actual native source→visual→intervention→contextual explanation→saved reopen journey, then improve compact presentation, causal motion and interruptible narration before final capture. Includes a small fresh-source development check and an explicitly labeled recorded-engine segment. Time boxes and candidate cut are proposals, not completed implementation, new P0 scope, freeze exceptions or publication authorization. Current PM129 script remains baseline until the revised sequence is rehearsed.

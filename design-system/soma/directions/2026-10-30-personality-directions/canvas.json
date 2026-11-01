@@ -1,0 +1,22 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-30T22:28:37Z" },
+  "title": "Soma UI directions",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 800, "title": "A · Light table" },
+    "Instrument.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 800, "title": "B · Instrument" },
+    "Observatory.dc.html": { "x": 0, "y": 920, "w": 1280, "h": 800, "title": "C · Observatory" },
+    "Zine.dc.html": { "x": 1360, "y": 920, "w": 1280, "h": 800, "title": "D · Riso zine" },
+    "Pad.dc.html": { "x": 0, "y": 2140, "w": 1280, "h": 800, "title": "N1 · Engineering pad" },
+    "Spiral.dc.html": { "x": 1360, "y": 2140, "w": 1280, "h": 800, "title": "N2 · Spiral notepad" },
+    "Journal.dc.html": { "x": 2720, "y": 2140, "w": 1280, "h": 800, "title": "N3 · Dot journal" }
+  },
+  "order": ["Main.dc.html", "Instrument.dc.html", "Observatory.dc.html", "Zine.dc.html", "Pad.dc.html", "Spiral.dc.html", "Journal.dc.html"],
+  "notes": {
+    "heading": { "x": 0, "y": -300, "text": "Soma — four directions with personality", "kind": "title1", "maxW": 2640 },
+    "notebook": { "x": 0, "y": 1840, "text": "Leaning into the notebook — printed is checked, handwritten is Muse", "kind": "title1", "maxW": 4000 }
+  },
+  "designSystems": []
+}

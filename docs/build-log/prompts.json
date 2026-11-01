@@ -1428,6 +1428,13 @@
       "kind": "message",
       "prompt": "Do 3 more",
       "timestamp_note": "Exact received timestamp unavailable; recorded October31,2026 America/New_York. Continues PM125: three more subagent judging-and-iteration rounds."
+    },
+    {
+      "id": "PM127",
+      "received_at": null,
+      "kind": "message",
+      "prompt": "Have the judges score the project as is",
+      "timestamp_note": "Exact received timestamp unavailable; recorded November1,2026 America/New_York. As-is scoring only; no product iteration requested."
     }
   ]
 }

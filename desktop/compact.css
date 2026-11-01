@@ -15,6 +15,5 @@ button:disabled{opacity:.45;cursor:default}
 #fresh[aria-pressed=true]{background:var(--accent);color:white;border-color:var(--accent)}
 .steps{display:flex;align-items:center;gap:3px}.steps button{width:30px;padding:0}#step{font-variant-numeric:tabular-nums;font-size:11px;min-width:3.6em;text-align:center;opacity:.8}
 #expand{width:30px;padding:0}
-#status{margin:4px 18px 0;font-size:11px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:color-mix(in srgb,currentColor 72%,transparent);text-shadow:0 1px 2px rgb(255 255 255 / .5)}
-@media (prefers-color-scheme:dark){#status{text-shadow:0 1px 2px rgb(0 0 0 / .6)}}
+#status{width:fit-content;max-width:calc(100% - 36px);margin:4px 18px 0;padding:1px 8px;border-radius:8px;background:var(--paper);font-size:11.5px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:color-mix(in srgb,currentColor 86%,transparent)}#status:empty{display:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}

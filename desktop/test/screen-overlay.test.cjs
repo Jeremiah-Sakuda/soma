@@ -24,7 +24,7 @@ const model = (extra = {}) => ({
   ...extra,
 });
 
-function harness(images) {
+function harness(images, options = {}) {
   const child = new EventEmitter();
   child.stdout = new PassThrough();
   child.kill = () => {};
@@ -64,6 +64,7 @@ function harness(images) {
     overlayResult: (p) => results.push(p),
     overlayAction: (p) => actions.push(p),
     compareRegion: (a, b) => a === b,
+    ...options,
   });
   const event = (type) => child.stdout.write(JSON.stringify({ type }) + '\n');
   return {
@@ -229,3 +230,57 @@ test('after the learner uses another app, the next step re-checks the slide with
   }
 });
 
+
+test('a typed compact question sends one clean full-screen snapshot without opening the panel', async () => {
+  const panel = [], excluded = [];
+  const h = harness(['data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE'], {
+    hidePanel: () => panel.push('hide'),
+    showPanel: () => panel.push('show'),
+    hideForHighlight: () => panel.push('hide-for-highlight'),
+    excludePanel: async (fn) => {
+      excluded.push('capture');
+      return fn();
+    },
+  });
+  try {
+    const asking = h.controller.askTyped('  Why not the direct edge?  ');
+    assert.equal(h.controller.compactActive(), true);
+    assert.deepEqual(await h.controller.askTyped('A second question'), { ok: false, message: 'Muse is still working on your last question.' });
+    const result = await asking;
+    assert.deepEqual(result, { ok: true, message: 'Muse is reading your screen…' });
+    const begin = h.sent.find((e) => e.type === 'begin');
+    assert.equal(begin.text, 'Why not the direct edge?');
+    const source = h.sent.find((e) => e.type === 'source');
+    assert.deepEqual(source.focus, { kind: 'circle', region: { x: 0, y: 0, width: 1, height: 1 } });
+    assert.equal(h.sent.at(-1).type, 'end');
+    h.controller.feedback({ id: source.id, state: 'ready' });
+    assert.equal(h.controller.compactActive(), false);
+    assert.equal(h.controller.hasDrawing(), false);
+    await h.controller.screenOverlay({ id: source.id, model: model() });
+    assert.equal(h.controller.hasDrawing(), true);
+    assert.deepEqual(h.results.at(-1), { id: source.id, shown: true });
+    assert.deepEqual(panel, [], 'the panel is never hidden or reopened in compact mode');
+    assert.equal(excluded.length, 2, 'the snapshot and its check both leave Soma out');
+  } finally {
+    h.controller.dispose();
+  }
+});
+
+test('a typed question the page refuses reports why instead of a capture failure', async () => {
+  let release;
+  const h = harness([], {
+    captureImage: () => new Promise((resolve) => (release = resolve)),
+  });
+  try {
+    const asking = h.controller.askTyped('What changes if A–F costs 6?');
+    await wait(100);
+    const begin = h.sent.find((e) => e.type === 'begin');
+    h.controller.feedback({ id: begin.id, state: 'error', message: 'Soma is busy with another explanation.' });
+    release({ dataUrl: 'data:image/jpeg;base64,SLIDE', capturedAt: new Date().toISOString() });
+    assert.deepEqual(await asking, { ok: false, message: 'Soma is busy with another explanation.' });
+    assert.equal(h.sent.some((e) => e.type === 'source'), false);
+    assert.deepEqual(await h.controller.askTyped('   '), { ok: false, message: 'Type a question first.' });
+  } finally {
+    h.controller.dispose();
+  }
+});

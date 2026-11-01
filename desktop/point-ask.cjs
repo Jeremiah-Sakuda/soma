@@ -74,13 +74,15 @@ function createPointAsk({
   }
   /** Captures the display without Soma's own windows in it, so a check or a new snapshot
    * never reads Soma's drawing as slide content. */
+  let shielding = 0;
   async function captureClean(display) {
+    // Overlapping captures share the protection; the last one to finish removes it.
     const o = overlay && !overlay.isDestroyed() ? overlay : null;
-    o?.setContentProtection?.(true);
+    if (shielding++ === 0) o?.setContentProtection?.(true);
     try {
       return await excludePanel(() => captureImage(display));
     } finally {
-      if (o && !o.isDestroyed()) o.setContentProtection?.(false);
+      if (--shielding === 0 && overlay && !overlay.isDestroyed()) overlay.setContentProtection?.(false);
     }
   }
   /** A new snapshot is about to be taken: the drawing belongs to the previous one. */
@@ -139,8 +141,10 @@ function createPointAsk({
     overlay.setBounds(display.bounds);
     overlay.showInactive();
   }
+  let lastStop = '';
   function stop(reason = 'Point & ask stopped.', show = false) {
     const previous = current;
+    lastStop = reason;
     current = null;
     lastCapture = null;
     if (previous) {
@@ -158,19 +162,17 @@ function createPointAsk({
   /** Compact mode: one snapshot of the display the pointer is on, sent with a typed question.
    * Soma's own windows are left out of the snapshot; the panel stays hidden and the checked
    * search is drawn over the screen as usual. */
-  async function askTyped(text) {
+  async function askTyped(text, onDisplay) {
     const question = typeof text === 'string' ? text.trim().slice(0, 1000) : '';
-    if (!question) return false;
-    if (!available()) {
-      status('Soma is still loading. Try again in a moment.');
-      return false;
-    }
+    if (!question) return { ok: false, message: 'Type a question first.' };
+    if (!available()) return { ok: false, message: 'Soma is still loading. Try again in a moment.' };
+    if (current) return { ok: false, message: 'Muse is still working on your last question.' };
     stop('', false);
     overlayCapture = null;
     refused = null;
     clearGraph();
     overlay?.hide();
-    const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+    const display = onDisplay ?? screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
     const s = { id: randomUUID(), display, phase: 'preparing', points: [], compact: true };
     current = s;
     send({ type: 'begin', id: s.id, text: question });
@@ -178,7 +180,8 @@ function createPointAsk({
     try {
       await new Promise((resolve) => setTimeout(resolve, 80));
       const snapshot = await captureClean(display);
-      if (current !== s) return false;
+      // The page refused the question (not ready, or busy) or the learner cancelled it.
+      if (current !== s) return { ok: false, message: lastStop || 'That question was cancelled.' };
       lastCapture = { id: s.id, snapshot, display, expires: Date.now() + 120000, compact: true };
       overlayCapture = { ...lastCapture, expires: Date.now() + OVERLAY_RETENTION_MS };
       const held = lastCapture;
@@ -194,16 +197,25 @@ function createPointAsk({
         canPointBack: true,
       });
       send({ type: 'end', id: s.id });
-      status('Muse is reading your screen…');
-      return true;
+      // Never leave the bar waiting on an answer that is not coming.
+      clearTimeout(limit);
+      limit = setTimeout(() => {
+        if (current === s) stop('Soma did not hear back in time. Ask again.', false);
+      }, 180000);
+      return { ok: true, message: 'Muse is reading your screen…' };
     } catch {
-      if (current === s) stop('Capture failed. Check Screen Recording permission for Soma.', false);
-      return false;
+      const message = 'Capture failed. Check Screen Recording permission for Soma.';
+      if (current === s) stop(message, false);
+      return { ok: false, message };
     }
   }
   /** True while a checked search is drawn over the screen. */
   function hasDrawing() {
     return Boolean(graph?.verified);
+  }
+  /** True while a typed compact-mode question is being prepared. */
+  function compactActive() {
+    return Boolean(current?.compact);
   }
   function sample() {
     const s = current;
@@ -575,6 +587,7 @@ function createPointAsk({
     disable,
     askTyped,
     hasDrawing,
+    compactActive,
     clearScreenOverlay,
     markStale,
     stop,

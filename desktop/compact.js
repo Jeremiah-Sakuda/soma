@@ -8,77 +8,108 @@ const form = document.getElementById('bar'),
   play = document.getElementById('play'),
   previous = document.getElementById('previous'),
   next = document.getElementById('next');
-let state = { visual: false, busy: false, investigable: false, step: null, steps: null, playing: false };
+const IDLE = 'Return sends one snapshot of this screen with your question. Esc hides the bar.';
+// `step` is the zero-based index of the shown step; `steps` is how many there are.
+let state = { visual: false, busy: false, investigable: false, step: null, steps: null, playing: false, message: '' };
+let sending = false;
 const say = (message) => {
-  if (message) status.textContent = message;
+  status.textContent = message || '';
 };
+const freshPressed = () => fresh.getAttribute('aria-pressed') === 'true';
+const busy = () => sending || state.busy;
 function render() {
-  document.body.classList.toggle('busy', state.busy);
-  const hasSteps = state.visual && Number.isInteger(state.steps) && state.steps > 0;
+  document.body.classList.toggle('busy', busy());
+  form.setAttribute('aria-busy', String(busy()));
+  const hasSteps = state.visual && Number.isInteger(state.steps) && state.steps > 1 && Number.isInteger(state.step);
   steps.hidden = !hasSteps;
-  if (hasSteps) step.textContent = `${state.step} / ${state.steps}`;
-  previous.disabled = !hasSteps || state.busy || state.step <= 0;
-  next.disabled = !hasSteps || state.busy || state.step >= state.steps;
+  if (hasSteps) {
+    step.textContent = `${state.step + 1} / ${state.steps}`;
+    step.setAttribute('aria-label', `Step ${state.step + 1} of ${state.steps}`);
+  }
+  // Like the panel, stepping waits for playback to pause.
+  previous.disabled = !hasSteps || busy() || state.playing || state.step <= 0;
+  next.disabled = !hasSteps || busy() || state.playing || state.step >= state.steps - 1;
+  play.disabled = !hasSteps || busy();
   play.textContent = state.playing ? '❚❚' : '▶';
   play.setAttribute('aria-label', state.playing ? 'Pause the explanation' : 'Play the explanation');
-  test.hidden = !state.investigable;
-  test.disabled = state.busy;
-  // With nothing drawn yet, every question needs a snapshot.
+  test.hidden = !(state.visual && state.investigable);
+  test.disabled = busy();
+  // With nothing drawn, every question needs a snapshot.
   fresh.hidden = !state.visual;
-  input.placeholder = state.visual && fresh.getAttribute('aria-pressed') !== 'true'
-    ? 'Ask a follow-up, or “What if…”'
-    : 'Ask about your screen…';
+  if (!state.visual) fresh.setAttribute('aria-pressed', 'false');
+  input.placeholder = state.visual && !freshPressed() ? 'Ask a follow-up, or “What if…”' : 'Ask about your screen…';
 }
 async function send(mode) {
   const text = input.value.trim();
-  if (!text && mode !== 'investigate') return;
-  const snapshot = !state.visual || fresh.getAttribute('aria-pressed') === 'true';
+  if (mode === 'investigate' && (!state.visual || !state.investigable)) return;
+  if (!text && mode !== 'investigate') {
+    say('Type a question first.');
+    return;
+  }
+  if (busy()) {
+    say('Muse is still working on your last question.');
+    return;
+  }
+  const kind = mode === 'investigate' ? 'investigate' : !state.visual || freshPressed() ? 'snapshot' : 'followup';
+  sending = true;
+  render();
+  say(kind === 'snapshot' ? 'Taking one snapshot of this screen…' : kind === 'investigate' ? 'Muse is choosing what to test…' : 'Muse is answering…');
   try {
-    const result = await window.somaCompact.ask(text, mode === 'investigate' ? 'investigate' : snapshot ? 'snapshot' : 'followup');
-    if (result?.ok !== false) {
+    const result = await window.somaCompact.ask(text, kind);
+    if (result?.ok) {
       input.value = '';
       fresh.setAttribute('aria-pressed', 'false');
     }
     say(result?.message);
-  } catch (error) {
-    say(error.message || 'Soma could not take that question.');
+  } catch {
+    say('Soma could not take that question. Try again.');
+  } finally {
+    sending = false;
+    render();
   }
-  render();
 }
 form.addEventListener('submit', (event) => {
   event.preventDefault();
   void send('ask');
 });
-input.addEventListener('keydown', (event) => {
+document.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && event.metaKey) {
     event.preventDefault();
     void send('investigate');
   } else if (event.key === 'Escape') {
+    // While a drawing is up, the first Escape clears it (handled natively); this one hides.
     event.preventDefault();
     void window.somaCompact.control('hide');
-  } else if (event.key.toLowerCase() === 'n' && event.metaKey) {
+  } else if (event.key.toLowerCase() === 'n' && event.metaKey && state.visual) {
     event.preventDefault();
-    fresh.setAttribute('aria-pressed', String(fresh.getAttribute('aria-pressed') !== 'true'));
+    fresh.setAttribute('aria-pressed', String(!freshPressed()));
     render();
   }
 });
 test.addEventListener('click', () => void send('investigate'));
 fresh.addEventListener('click', () => {
-  fresh.setAttribute('aria-pressed', String(fresh.getAttribute('aria-pressed') !== 'true'));
+  fresh.setAttribute('aria-pressed', String(!freshPressed()));
   render();
   input.focus();
 });
 for (const [id, action] of [['previous', 'previous'], ['next', 'next'], ['play', 'play'], ['expand', 'expand']])
   document.getElementById(id).addEventListener('click', () => void window.somaCompact.control(action));
-window.somaCompact.onStatus(say);
-window.somaCompact.onState((next) => {
-  state = { ...state, ...next };
-  if (next.message) say(next.message);
+window.somaCompact.onStatus((message) => {
+  if (message) say(message);
+});
+window.somaCompact.onState((incoming) => {
+  const was = state;
+  state = { ...state, ...incoming };
+  // Report the page's error once, when it appears; when work ends cleanly with nothing drawn, return to the hint.
+  if (state.message && state.message !== was.message) say(state.message);
+  else if (was.busy && !state.busy && !state.visual && !state.message && !sending && !status.textContent) say(IDLE);
   render();
 });
 window.somaCompact.onFocus(() => {
   input.focus();
   input.select();
+  if (!busy() && !state.visual && !status.textContent) say(IDLE);
 });
+say(IDLE);
 render();
 input.focus();

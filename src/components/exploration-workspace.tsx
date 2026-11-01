@@ -871,13 +871,19 @@ export function ExplorationWorkspace() {
     } else if (d.action === 'play' && artifact) setPlaying(!playing);
   };
   const compactRun = artifact && state ? explorationExecution(artifact.spec, state) : null;
+  // `step` is the shown step's index and `steps` the count. `visual` means this card belongs to
+  // a screen snapshot, so it can be drawn there; the companion also requires the drawing to be up.
   const compactStatus = JSON.stringify({
     busy: busy || sourceBusy,
-    visual: !!artifact,
-    step: compactRun ? Math.min(state!.step, compactRun.steps.length - 1) : null,
-    steps: compactRun ? compactRun.steps.length - 1 : null,
+    visual:
+      !!artifact &&
+      sourceMemory.current?.id === artifact.id &&
+      sourceMemory.current.capture.capturedAt === artifact.source.capturedAt &&
+      !!sourceMemory.current.capture.nativeId,
+    step: compactRun?.steps.length ? Math.min(state!.step, compactRun.steps.length - 1) : null,
+    steps: compactRun ? compactRun.steps.length : null,
     playing,
-    message: error || pointAsk.status || '',
+    message: error || '',
     investigable: artifact?.spec.mode === 'checked-dijkstra' && !!state?.goal && liveEnabled !== false,
   });
   useEffect(() => {

@@ -104,7 +104,7 @@ window.somaCompact.onStatus((message) => {
 window.somaCompact.onState((incoming) => {
   const was = state;
   state = { ...state, ...incoming };
-  if (state.busy && handedOver !== null) {
+  if (state.pageBusy && handedOver !== null) {
     if (input.value.trim() === handedOver) input.value = '';
     handedOver = null;
   }

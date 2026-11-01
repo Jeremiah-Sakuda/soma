@@ -52,6 +52,8 @@ const locked = {
 function status(message) {
   if (win && !win.isDestroyed()) win.webContents.send('desktop:status', message);
   if (bar && !bar.isDestroyed()) bar.webContents.send('compact:status', message);
+  // Point & ask reports through status when its question ends; keep the bar's busy state current.
+  sendCompactState();
 }
 /** Compact mode: a small translucent ask bar instead of the panel. Questions are typed;
  * the checked search is drawn over the screen by the existing overlay. The hosted page
@@ -95,6 +97,8 @@ function sendCompactState() {
   bar.webContents.send('compact:state', {
     ...s,
     busy: s.busy || compactAsking || Boolean(compactPending) || Boolean(pointAsk?.compactActive()),
+    // Whether the page itself is working, as distinct from a request still on its way.
+    pageBusy: s.busy,
     visual: s.visual && Boolean(pointAsk?.hasDrawing()),
   });
 }
@@ -495,7 +499,7 @@ else {
         return { ok: false, message: 'Test it works on a checked shortest-path graph with a goal.' };
       view.webContents.send('desktop:compact', { action: mode === 'investigate' ? 'investigate' : 'ask', text });
       // Until the page reports the request, a second Return is refused here.
-      compactPending = { started: false, timer: setTimeout(() => endPending(), 8000) };
+      compactPending = { started: false, message: compactState?.message ?? '', timer: setTimeout(() => endPending(), 8000) };
       sendCompactState();
       return { ok: true, message: mode === 'investigate' ? 'Muse is choosing what to test…' : 'Muse is answering…' };
     });
@@ -520,7 +524,10 @@ else {
           compactPending.started = true;
           clearTimeout(compactPending.timer);
           compactPending.timer = setTimeout(endPending, 300000);
-        } else if (compactPending.started || (typeof payload.message === 'string' && payload.message)) {
+        } else if (
+          compactPending.started ||
+          (typeof payload.message === 'string' && payload.message && payload.message !== compactPending.message)
+        ) {
           // Finished, or refused with an error before it ever started.
           clearTimeout(compactPending.timer);
           compactPending = null;

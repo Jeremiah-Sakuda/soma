@@ -81,12 +81,19 @@ function createPointAsk({
     if (shielding++ === 0) o?.setContentProtection?.(true);
     try {
       // A capture that never returns must not leave Soma's windows protected or the bar busy.
-      return await excludePanel(() =>
-        Promise.race([
-          captureImage(display),
-          new Promise((_resolve, reject) => setTimeout(() => reject(Error('Capture timed out')), 15000)),
-        ]),
-      );
+      let timer;
+      try {
+        return await excludePanel(() =>
+          Promise.race([
+            captureImage(display),
+            new Promise((_resolve, reject) => {
+              timer = setTimeout(() => reject(Error('Capture timed out')), 15000);
+            }),
+          ]),
+        );
+      } finally {
+        clearTimeout(timer);
+      }
     } finally {
       if (--shielding === 0 && overlay && !overlay.isDestroyed()) overlay.setContentProtection?.(false);
     }
@@ -209,8 +216,10 @@ function createPointAsk({
       }, 180000);
       return { ok: true, message: 'Muse is reading your screen…' };
     } catch {
+      // Refused by the page while capturing: the page's reason is the useful one.
+      if (current !== s) return { ok: false, message: null };
       const message = 'Capture failed. Check Screen Recording permission for Soma.';
-      if (current === s) stop(message, false);
+      stop(message, false);
       return { ok: false, message };
     }
   }

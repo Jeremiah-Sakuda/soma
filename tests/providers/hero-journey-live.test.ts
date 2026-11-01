@@ -82,6 +82,7 @@ it.skipIf(process.env.SOMA_HERO_JOURNEY_LIVE !== 'true')(
         pair = (e: { from: string; to: string }) => [label(e.from), label(e.to)].sort().join('-'),
         named = (p: string[] | null | undefined) => p?.map(label);
       const weights = Object.fromEntries(first.spec.input.edges.map((e) => [pair(e), e.weight ?? 1]));
+      records.push({ phase: 'reading-check', check: first.source.readingCheck ?? null, audit: first.generation.audit.filter((e) => e.event.startsWith('reading-')) });
       records.push({ phase: 'reading', labels: [...labels.values()].sort(), weights, directed: first.spec.input.directed, start: label(first.spec.input.start), goal: first.spec.input.goal && label(first.spec.input.goal) });
       save();
       expect([...labels.values()].sort()).toEqual(['A', 'B', 'C', 'D', 'E', 'F']);
@@ -107,8 +108,7 @@ it.skipIf(process.env.SOMA_HERO_JOURNEY_LIVE !== 'true')(
         artifactId: first.id,
         baseVersion: first.version,
         state: first.state,
-        question:
-          'Choose an informative edge and investigate where fewest edges and lowest cost agree or diverge. Use the checked intervention results to explain the boundary, preserve the original graph and expose a hypothetical cost control.',
+        question: process.env.SOMA_HERO_PROBE_QUESTION || 'Would the direct A to F edge ever be the better route?',
       });
       dump('probe', probe);
       const audit = JSON.stringify(probe).match(/Application checked [^"]*/)?.[0] ?? null;
@@ -117,15 +117,34 @@ it.skipIf(process.env.SOMA_HERO_JOURNEY_LIVE !== 'true')(
 
       expect(probe.experiment?.edgeId && pair(probe.spec.mode === 'checked-dijkstra' ? probe.spec.input.edges.find((e) => e.id === probe.experiment!.edgeId)! : { from: '', to: '' })).toBe('A-F');
       expect(probe.experiment?.criticalCost).toBe(7);
+      records.push({ phase: 'tipping-point-choice', rationale: probe.experiment?.rationale ?? null });
+
+      // A different question on the same slide must lead Muse to a different connection.
+      const secondQuestion = 'What would make the cheapest route stop going through B to D?';
+      const { artifact: second } = await service.generate(principal, {
+        action: 'generate',
+        requestId: randomUUID(),
+        intent: 'investigate',
+        artifactId: probe.id,
+        baseVersion: probe.version,
+        state: probe.state,
+        question: secondQuestion,
+      });
+      dump('second-probe', second);
+      const secondEdge = second.spec.mode === 'checked-dijkstra' ? second.spec.input.edges.find((e) => e.id === second.experiment?.edgeId) : undefined;
+      records.push({ phase: 'second-question', question: secondQuestion, edge: secondEdge ? pair(secondEdge) : null, criticalCost: second.experiment?.criticalCost ?? null, rationale: second.experiment?.rationale ?? null, calls: second.generation.calls, costUsd: second.generation.costUsd, elapsedMs: second.generation.elapsedMs });
+      save();
+      expect(secondEdge && pair(secondEdge)).toBe('B-D');
+      expect(second.experiment?.criticalCost).toBe(3);
 
       const followQuestion =
         process.env.SOMA_HERO_FOLLOWUP || 'Why does the direct A to F edge only win once it costs 7 or less?';
       const { artifact: next } = await service.generate(principal, {
         action: 'generate',
         requestId: randomUUID(),
-        artifactId: probe.id,
-        baseVersion: probe.version,
-        state: probe.state,
+        artifactId: second.id,
+        baseVersion: second.version,
+        state: second.state,
         question: followQuestion,
       });
       dump('next', next);
@@ -133,7 +152,7 @@ it.skipIf(process.env.SOMA_HERO_JOURNEY_LIVE !== 'true')(
       records.push({ phase: 'follow-up', question: followQuestion, mode: next.spec.mode, path: nextRun && named(nextRun.path), experiment: next.experiment?.criticalCost ?? null, version: next.version, calls: next.generation.calls, costUsd: next.generation.costUsd, elapsedMs: next.generation.elapsedMs });
       save();
       expect(next.spec.mode).toBe('checked-dijkstra');
-      expect(next.version).toBe(3);
+      expect(next.version).toBe(4);
       expect(nextRun && named(nextRun.path)).toEqual(['A', 'C', 'B', 'D', 'F']);
       expect(next.source).toEqual(first.source);
 

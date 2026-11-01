@@ -304,7 +304,14 @@ export function ExplorationScene({
   overlay,
 }: {
   /** The learner's capture and where it drew the graph; present only while the pixels are in memory. */
-  overlay?: { image: string; layout: SourceGraphLayout; anchors?: SourceAnchor[]; nativeId?: string };
+  overlay?: {
+    image: string;
+    layout: SourceGraphLayout;
+    anchors?: SourceAnchor[];
+    nativeId?: string;
+    /** Muse Wonder's independent check of the reading drawn here. */
+    readingCheck?: { status: 'confirmed' | 'corrected' | 'disputed'; nodes: number; edges: number; corrections: { edgeId: string; from: number; to: number }[]; disputes: string[] };
+  };
   experiment?: ReactNode;
   experimentInline?: boolean;
   spec: ExplorationSpec;
@@ -570,6 +577,21 @@ export function ExplorationScene({
           computation &&
           (overlay && graphInput && overlayView === 'source' && panel.execution === 'primary' ? (
             <>
+            {overlay.readingCheck && (
+              <p className={`source-reading-check is-${overlay.readingCheck.status}`} role="status">
+                {overlay.readingCheck.status === 'confirmed'
+                  ? `Muse Wonder read your slide independently and confirmed all ${overlay.readingCheck.nodes} nodes and ${overlay.readingCheck.edges} weights.`
+                  : overlay.readingCheck.status === 'corrected'
+                    ? `Muse Wonder caught ${overlay.readingCheck.corrections.length} misread weight${overlay.readingCheck.corrections.length === 1 ? '' : 's'}; Spark looked again and agreed: ${overlay.readingCheck.corrections
+                        .map((c) => {
+                          const e = graphInput.edges.find((x) => x.id === c.edgeId);
+                          const n = (id?: string) => graphInput.nodes.find((x) => x.id === id)?.label ?? id ?? c.edgeId;
+                          return `${n(e?.from)}–${n(e?.to)} is ${c.to}, not ${c.from}`;
+                        })
+                        .join('; ')}.`
+                    : `Check before trusting this route. ${overlay.readingCheck.disputes.join(' ')}`}
+              </p>
+            )}
             {onScreen && (
               <p className="source-overlay-onscreen" role="status">
                 Drawn on your screen, over the window you captured.

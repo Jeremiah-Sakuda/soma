@@ -2440,3 +2440,25 @@ a.exploration-example-button { text-decoration: none; }
   border-radius: 0 6px 6px 0;
   font-size: 0.92em;
 }
+
+/* Muse Wonder's independent check of the reading drawn over the source. */
+.source-reading-check {
+  margin: 0 0 0.4rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.86em;
+  line-height: 1.35;
+}
+.source-reading-check.is-confirmed {
+  background: color-mix(in srgb, #15803d 10%, transparent);
+  color: color-mix(in srgb, #15803d 80%, currentColor);
+}
+.source-reading-check.is-confirmed::before { content: '✓ '; font-weight: 700; }
+.source-reading-check.is-corrected {
+  background: color-mix(in srgb, #ff7a3d 12%, transparent);
+}
+.source-reading-check.is-disputed {
+  background: color-mix(in srgb, #b91c1c 12%, transparent);
+  color: color-mix(in srgb, #b91c1c 85%, currentColor);
+  font-weight: 600;
+}

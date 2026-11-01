@@ -30,6 +30,15 @@ export type ExplorationSource = {
     edgeLabels: { edgeId: string; x: number; y: number }[];
   };
   detailRegion?: ImageRegion;
+  /** Muse Wonder's independent check of Spark's graph reading against the same image. */
+  readingCheck?: {
+    model: 'muse-wonder-1.0';
+    status: 'confirmed' | 'corrected' | 'disputed';
+    nodes: number;
+    edges: number;
+    corrections: { edgeId: string; from: number; to: number }[];
+    disputes: string[];
+  };
   change?: SourceChange & {
     fromObservationId: string;
     fromVersion: number;
@@ -43,6 +52,10 @@ import type { ExplorationViewState } from '../domain/exploration-view';
 export type ExplorationAudit = {
   event:
     | 'cost-probed'
+    | 'reading-confirmed'
+    | 'reading-corrected'
+    | 'reading-disputed'
+    | 'reading-unchecked'
     | 'investigation-declined'
     | 'cost-probe-unavailable'
     | 'review-approved'

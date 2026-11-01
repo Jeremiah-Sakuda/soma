@@ -92,6 +92,13 @@ type Artifact = {
     observationId?: string;
     anchors?: SourceAnchor[];
     layout?: SourceGraphLayout;
+    readingCheck?: {
+      status: 'confirmed' | 'corrected' | 'disputed';
+      nodes: number;
+      edges: number;
+      corrections: { edgeId: string; from: number; to: number }[];
+      disputes: string[];
+    };
     change?: SourceChange;
     kind: 'screenshot' | 'example';
     summary: string;
@@ -1692,6 +1699,7 @@ export function ExplorationWorkspace() {
                         layout: artifact.source.layout,
                         anchors: artifact.source.anchors,
                         nativeId: sourceMemory.current.capture.nativeId,
+                        readingCheck: artifact.source.readingCheck,
                       }
                     : undefined
                 }

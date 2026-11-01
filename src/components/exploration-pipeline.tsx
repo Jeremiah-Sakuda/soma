@@ -25,6 +25,7 @@ export function ExplorationPipeline({
       ? 'Source context reused'
       : 'Recorded source';
   const review = has('review-approved') ? 'Wonder reviewed' : 'Wonder not run';
+  const readingCheck = audit.find((item) => item.event.startsWith('reading-'));
   return (
     <details className="exploration-pipeline">
       <summary>
@@ -33,7 +34,9 @@ export function ExplorationPipeline({
       </summary>
       <p>
         {source}.{' '}
-        {has('cost-probed') ? 'Spark chose an edge; Soma computed the cost interventions. ' : ''}
+        {readingCheck ? `${readingCheck.detail} ` : ''}
+        {has('cost-probed') ? 'Muse chose the connection your question is about; Soma computed its exact boundary. ' : ''}
+        {has('investigation-declined') ? 'Muse judged that no single connection answers this question, so no cost experiment was run. ' : ''}
         {has('review-rejected')
           ? 'Wonder requested a correction before this version was accepted. '
           : ''}

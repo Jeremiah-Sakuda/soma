@@ -3,6 +3,8 @@ import { parseScreenshotDataUrl } from './image-source';
 import {
   META_ENDPOINT,
   META_MODEL,
+  META_REVIEW_MODEL,
+  type MetaModel,
   META_MAX_RESPONSE_BYTES,
   MetaClientError,
   parseMetaResponse,
@@ -19,6 +21,8 @@ export type MetaVisionRequest = {
   maxOutputTokens?: number;
   reasoningEffort?: 'minimal' | 'low';
   maxImages?: number;
+  /** Spark by default; Wonder for an independent check of the same image. */
+  model?: MetaModel;
   structuredOutput?: { name: string; schema: Record<string, unknown> };
 };
 const name = z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
@@ -159,7 +163,7 @@ function encode(request: MetaVisionRequest) {
             },
           }
         : {}),
-      model: META_MODEL,
+      model: z.enum([META_MODEL, META_REVIEW_MODEL]).parse(request.model ?? META_MODEL),
       instructions,
       tools,
       store: false,
@@ -185,7 +189,8 @@ function encode(request: MetaVisionRequest) {
  * usage always settles the shared reservation. No input content is logged. */
 export function visionRequestUpperBoundUsd(request: MetaVisionRequest): number {
   const info = encode(request);
-  return ((info.textBytes + info.images * 8192) * 1.25 + info.maxTokens * 4.25) / 1_000_000;
+  const [input, output] = request.model === META_REVIEW_MODEL ? [4, 20] : [1.25, 4.25];
+  return ((info.textBytes + info.images * 8192) * input + info.maxTokens * output) / 1_000_000;
 }
 /** Isolated image profile: v1 text callers retain their original byte/schema
  * bounds. Only inline PNG/JPEG is accepted; no URL fetch or provider file ID. */

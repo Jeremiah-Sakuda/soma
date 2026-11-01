@@ -3,10 +3,12 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { createExampleExploration } from '../../src/lib/domain/exploration';
+import { createExampleExploration, createWeightedExample } from '../../src/lib/domain/exploration';
 import {
   createExplorationService,
   locateFits,
+  callCap,
+  readingCheckFits,
   validateExplorationViewState,
 } from '../../src/lib/server/exploration';
 import { closeExplorationStore, explorationStore } from '../../src/lib/server/exploration-store';
@@ -1649,5 +1651,101 @@ describe('locate pass budget', () => {
     expect(locateFits(2, true)).toBe(false);
     expect(locateFits(1, false)).toBe(true);
     expect(locateFits(2, false)).toBe(false);
+  });
+});
+
+describe('Muse Wonder checks the reading against the same image', () => {
+  const weighted = () => {
+    const spec = createWeightedExample({ observationId: 'x', version: 1, region: null });
+    if (spec.mode !== 'checked-dijkstra') throw Error();
+    return spec;
+  };
+  const run = async (check: unknown, recheck?: unknown, isWeighted = false) => {
+    const base = script();
+    const seen: string[] = [];
+    const request = vi.fn(async (args: any) => {
+      const name = args.tools?.[0]?.name;
+      seen.push(`${name ?? 'structured'}:${args.model ?? 'muse-spark-1.3'}`);
+      if (name === 'check_reading') return result('check_reading', check, 1);
+      if (name === 'recheck_weights') return result('recheck_weights', recheck, 1);
+      if (!isWeighted) return base(args);
+      if (!args.instructions.includes('Required spec id='))
+        return result('inspect_source', { summary: 'A weighted graph.', uncertainty: [], graph: weighted().input }, 1);
+      // Compose the weighted example on whatever graph the service supplies.
+      const context = JSON.parse(args.input[0].content);
+      const m = /Required spec id=([^ ]+) and version=(\d+)/.exec(args.instructions)!;
+      const spec: any = weighted();
+      spec.id = m[1];
+      spec.version = Number(m[2]);
+      spec.sources = [{ observationId: context.source.observationId, version: context.source.version, region: null }];
+      spec.input = context.graph;
+      spec.comparison = { ...spec.comparison, input: { ...context.graph, algorithm: 'bfs' } };
+      return result('compose_exploration', { spec }, 2);
+    });
+    const service = createExplorationService({
+      request: request as never,
+      review: vi.fn(async () => result('review_exploration', { verdict: 'approve', findings: [] }, 1)) as never,
+      reviewEnabled: () => true,
+      upperBound: () => 0.01,
+      reserve: async () => randomUUID(),
+      settle: async () => {},
+      enabled: () => true,
+      validateImage: vi.fn() as never,
+      revalidate: async () => {},
+    });
+    await service.initialize(principal());
+    const artifact = (
+      await service.generate(
+        principal(),
+        generate({
+          question: 'Explain this graph.',
+          source: { kind: 'screenshot', dataUrl: 'data:image/png;base64,ORIGINAL_TEST_IMAGE', label: 'Screenshot', capturedAt: new Date().toISOString() },
+        }),
+      )
+    ).artifact;
+    return { artifact, seen, request };
+  };
+  it('records Wonder’s confirmation, made by Wonder on the image', async () => {
+    const { artifact, seen, request } = await run({ verdict: 'confirmed', issues: [] });
+    expect(seen).toContain('check_reading:muse-wonder-1.0');
+    const call = request.mock.calls.find((c: any) => c[0].tools?.[0]?.name === 'check_reading')![0] as any;
+    expect(call.input[0].content.some((p: any) => p.type === 'input_image')).toBe(true);
+    expect(artifact.source.readingCheck).toMatchObject({ status: 'confirmed', model: 'muse-wonder-1.0', edges: exampleInput().edges.length });
+    expect(artifact.generation.audit.some((e) => e.event === 'reading-confirmed')).toBe(true);
+  });
+  it('corrects a weight only when Spark, looking again without Wonder’s value, agrees', async () => {
+    const edge = weighted().input.edges[0];
+    const { artifact, request } = await run(
+      { verdict: 'disagree', issues: [{ edgeId: edge.id, kind: 'weight', seen: '7', note: 'The label reads 7.' }] },
+      { weights: [{ edgeId: edge.id, weight: 7 }] },
+      true,
+    );
+    const again = request.mock.calls.find((c: any) => c[0].tools?.[0]?.name === 'recheck_weights')![0] as any;
+    expect(JSON.stringify(again.input)).not.toContain('"7"');
+    expect(artifact.source.readingCheck).toMatchObject({ status: 'corrected', corrections: [{ edgeId: edge.id, from: edge.weight ?? 1, to: 7 }] });
+    if (artifact.spec.mode !== 'checked-dijkstra') throw Error();
+    expect(artifact.spec.input.edges.find((e) => e.id === edge.id)!.weight).toBe(7);
+  });
+  it('keeps the reading and shows the dispute when the two models still disagree', async () => {
+    const edge = weighted().input.edges[0];
+    const { artifact } = await run(
+      { verdict: 'disagree', issues: [{ edgeId: edge.id, kind: 'weight', seen: '7', note: '' }, { edgeId: null, kind: 'missing', seen: 'B to E', note: 'A drawn B–E line is not in the reading.' }] },
+      { weights: [{ edgeId: edge.id, weight: edge.weight ?? 1 }] },
+      true,
+    );
+    expect(artifact.source.readingCheck?.status).toBe('disputed');
+    expect(artifact.source.readingCheck?.disputes.join(' ')).toContain('Muse Wonder reads 7');
+    expect(artifact.source.uncertainty.join(' ')).toContain('B–E');
+    if (artifact.spec.mode !== 'checked-dijkstra') throw Error();
+    expect(artifact.spec.input.edges.find((e) => e.id === edge.id)!.weight).toBe(edge.weight);
+  });
+});
+
+describe('call budget with the reading check', () => {
+  it('leaves room for composition, review, a repair and its re-review', () => {
+    expect(callCap(true)).toBe(8);
+    expect(readingCheckFits(2, true)).toBe(true);
+    expect(readingCheckFits(3, true)).toBe(false);
+    expect(readingCheckFits(1, false)).toBe(false);
   });
 });

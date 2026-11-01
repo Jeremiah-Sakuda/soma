@@ -7,13 +7,14 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test test/*.test.cjs",
-    "test:smoke": "node test/smoke.cjs",
+    "test:smoke": "node test/smoke.cjs && node test/compact-smoke.cjs",
     "package": "electron-packager . Soma --platform=darwin --arch=arm64 --out=../.local/desktop-dist --overwrite --asar --app-bundle-id=app.soma.desktop --extend-info=Info.plist --ignore=^/test --ignore=^/README.md --extra-resource=node_modules/.cache/soma/hold-shortcut --extra-resource=node_modules/.cache/soma/computer-control --ignore=^/node_modules/\\.cache",
     "test:hosted": "node test/hosted.cjs",
     "release": "node release.cjs",
     "build:native": "node build-native.cjs",
     "prestart": "node build-native.cjs",
-    "prepackage": "node build-native.cjs"
+    "prepackage": "node build-native.cjs",
+    "test:compact-live": "node test/compact-live.cjs"
   },
   "devDependencies": {
     "@electron/osx-sign": "2.7.2",

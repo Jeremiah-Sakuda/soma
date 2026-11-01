@@ -29,10 +29,15 @@ The smoke script launches real Electron with an original local HTML fixture; it 
 
 ## Compact ask bar
 
-**Compact** in the toolbar, **Soma → Compact ask bar**, or **Option+Space** (Command+Option+Space if another launcher owns Option+Space) swaps the panel for a small translucent bar near the bottom of the screen. Type a question and press Return: Soma takes one snapshot of the display under the pointer, with its own windows left out, and the checked search is drawn over your screen by the same overlay as Point & ask. Pressing Return is the consent to send that snapshot; nothing is captured before it.
+**Compact** in the toolbar, **Soma → Compact ask bar**, or **Option+Space** (Command+Option+Space if another launcher owns Option+Space) swaps the panel for a small translucent bar near the bottom of the screen. Type a question and press Return: Soma takes one snapshot of the display the bar is on, with its own windows left out, and the checked search is drawn over your screen by the same overlay as Point & ask. Pressing Return is the consent to send that snapshot; nothing is captured before it. The panel stays closed while compact mode lasts, including after a voice Point & ask; clicking the Dock icon brings back the bar.
 
-Once something is drawn, Return asks a follow-up about it without a new snapshot; **New snapshot** (⌘N) captures again for the next question. **Test it** (⌘Return) asks Muse to pick the connection your question is about and Soma computes where the route changes. The step arrows and ▶ move through the drawn search and play the narration. Esc hides the bar (the drawing owns Esc while it is shown); ⤢ opens the full panel. The hosted page keeps running in the hidden panel.
+- **Follow-ups.** While a drawing is on screen, Return asks a follow-up about it without a new snapshot; **New snapshot** (⌘N) captures again for the next question. With nothing drawn, every question takes a snapshot.
+- **Test it** (⌘Return) asks Muse to pick the connection your question is about, and Soma computes where the route changes. It appears for a checked shortest-path graph with a goal.
+- **Steps.** ‹ › move through the drawn search and ▶ plays the narration; like the panel, stepping waits for playback to pause.
+- **One question at a time.** While Muse works, Return keeps your text and says so instead of starting another request.
+- **Esc** first clears the drawing (it owns Esc while shown), then hides the bar. Hiding the bar also cancels a question in flight and pauses narration. ⤢ opens the full panel and ends compact mode; **Capture display** and **Show Soma** end it too.
 
+A drag moves the bar; it stays where you put it on that display.
 
 ## Developer ID release phases
 

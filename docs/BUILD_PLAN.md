@@ -200,3 +200,7 @@ Iterate on the same local engine: actual Muse art/copy refinement, application m
 ### October31 — PM124 continued engine refinement
 
 User requested another iteration. Refine presentation framing, controlled slow/repeat playback and source-consistent forward-motion cues on the same local replay. Reuse recorded Muse outputs; preserve deterministic geometry and budget boundaries. [Executed verification](examples/pm124/README.md). No new release gate, main integration or publication.
+
+### October31 — PM125 authorized three judging iterations
+
+Three independent subagent review→fix→verify rounds on the same private local engine, using the supplied weighted judging rubric. Prioritize actual authorship proof, useful manipulation and concrete playback/accessibility defects. Scores are simulated development reviews; missing canonical engine integration, impact and release/publication gates remain explicit. [Round-by-round feedback and executed status](examples/pm125/JUDGING.md). No new release gate or provider spending.

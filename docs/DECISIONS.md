@@ -515,3 +515,7 @@ User asked to keep iterating toward startup-demo quality. Adopt direct crank man
 ## PM124 — Presentation and patient playback, October31
 
 Adopt an expanded local presentation view,0.5×/normal playback and explicit repeat in the existing recorded engine demo. Derive piston travel/forward-stroke direction and crank phase guides from the current constrained geometry; clarify that direction is the forward cycle, not measured velocity during reverse manipulation. Preserve actual Muse art/script and attribute runtime finishes/cues to Soma. No new inference or quantitative family, budget reset, main merge or publication. See [PM124 verification](examples/pm124/README.md).
+
+## PM125 — Three rubric-driven review rounds, October31
+
+User explicitly authorized subagents to judge and iterate three times. Use three independent read-only roles and the supplied Impact30/Meta25/Technical20/Demo25 rubric; retain subjective scores as development feedback only. Implement concrete local engine findings without inferring main integration, learner outcomes or publication authorization. Preserve the recorded Muse data and expose actual source/output/rejected-repair lineage; optional paired-stroke exploration creates no assessment evidence. Keep actual film time independent from reduced-motion display snapshots and preserve sentence boundaries for stroke previews. No new inference or budget reset; freeze/submission gates unchanged. [Three-round record](examples/pm125/JUDGING.md).

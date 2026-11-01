@@ -1,3 +1,7 @@
+## PM125 — Three judging-and-refinement rounds, October31
+
+Review **http://localhost:41914**: actual Muse/source/repair proof, matching-pose cycle discovery, representative stroke previews, coherent reduced-motion states, exact spoken transcript and bounded audio recovery. Three independent reviewers completed three rubric rounds;40browser/1701offline passed,100opt-in skipped; typecheck/build/full-HD export and unchanged PM118 manifest passed; [feedback, corrections, executed checks and remaining gates](docs/examples/pm125/JUDGING.md). Local recorded prototype on private spatial branch; no new inference, canonical engine integration, main merge or publication. Preview and real media clocks remain distinct; no learner-impact claim.
+
 ## PM124 — Presentation and motion refinement, October31
 
 Review **http://localhost:41914**: expanded presentation view,0.5× narration and silent playback, optional cycle repeat, direct forward-stroke guides and richer fin/rod finishes. [Authorship and checks](docs/examples/pm124/README.md). Twenty-two browser journeys,1696offline/100opt-in skipped, typecheck/build/full-HD export and unchanged PM118 manifest passed. No new inference calls/spend; recorded Muse art/script retained. Local private spatial branch only; no merge/push/publication or canonical engine integration.

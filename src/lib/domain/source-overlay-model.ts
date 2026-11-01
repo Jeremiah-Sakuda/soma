@@ -136,7 +136,9 @@ export function sourceOverlayModel({
       length = Math.hypot(b.x - a.x, b.y - a.y);
     // A printed label far from the straight midpoint means the source drew an arc.
     const control =
-      label && Math.hypot(label.x - mid.x, label.y - mid.y) > length * 0.4 ? { x: 2 * label.x - mid.x, y: 2 * label.y - mid.y } : mid;
+      label && Math.hypot(label.x - mid.x, label.y - mid.y) > Math.max(length * 0.2, r * 3)
+        ? { x: 2 * label.x - mid.x, y: 2 * label.y - mid.y }
+        : mid;
     const trim = (p: Point, toward: Point) => {
       const d = Math.hypot(toward.x - p.x, toward.y - p.y) || 1;
       return { x: p.x + ((toward.x - p.x) / d) * r * 1.1, y: p.y + ((toward.y - p.y) / d) * r * 1.1 };

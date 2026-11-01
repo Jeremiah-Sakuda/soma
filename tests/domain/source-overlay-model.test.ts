@@ -25,7 +25,10 @@ const layout = {
     { nodeId: 'E', x: 0.414, y: 0.698 },
     { nodeId: 'F', x: 0.534, y: 0.54 },
   ],
-  edgeLabels: [{ edgeId: 'AF', x: 0.321, y: 0.302 }],
+  edgeLabels: [
+    { edgeId: 'AF', x: 0.321, y: 0.302 },
+    { edgeId: 'CE', x: 0.32, y: 0.725 },
+  ],
 };
 const model = (index: number, extra = {}) => {
   const execution = runDijkstra({ ...hero, algorithm: 'dijkstra' });
@@ -41,6 +44,13 @@ describe('source overlay model', () => {
     expect(m.edges.find((e) => e.id === 'AF')?.tone).toBe('struck');
     expect(m.edges.find((e) => e.id === 'DF')?.tone).toBe('relaxed');
     expect(m.tags.filter((t) => t.tone === 'settled' || t.tone === 'current').map((t) => t.text)).toContain('④ D = 4');
+  });
+  it('draws an edge as an arc only when its printed label sits well off the straight line', () => {
+    const m = model(0);
+    const af = m.edges.find((e) => e.id === 'AF')!,
+      ce = m.edges.find((e) => e.id === 'CE')!;
+    expect(af.control.y).toBeLessThan(0.2);
+    expect(ce.control.y).toBeCloseTo(0.698, 2);
   });
   it('replays the goal’s last relaxation and the route on the final frame', () => {
     const m = model(99);

@@ -59,7 +59,25 @@ function executionCaption(execution: BfsExecution, index: number) {
   const step = execution.steps[Math.min(index, execution.steps.length - 1)];
   if (!step.current)
     return `${nodeName(execution.input, execution.input.start)} starts in the queue. No node has been expanded yet.`;
-  return `${nodeName(execution.input, step.current)} ${execution.modelId === 'dijkstra-nonnegative' ? `is settled at cost ${step.distances[step.current]}` : 'leaves the front of the queue'}.${step.discovered.length ? ` Added ${step.discovered.map((id) => nodeName(execution.input, id)).join(', ')}.` : ' No new nodes added.'}${step.status === 'found' ? ' Goal reached.' : step.status === 'unreachable' ? ' The queue is empty; the goal is unreachable with these connections.' : step.status === 'complete' ? ' All reachable nodes have been explored.' : ''}`;
+  // A cheaper route to a node that was already waiting is a checked change worth saying.
+  const before = execution.steps[Math.max(0, Math.min(index, execution.steps.length - 1) - 1)];
+  const cheaper =
+    execution.modelId === 'dijkstra-nonnegative'
+      ? Object.keys(step.distances).filter(
+          (id) =>
+            !step.discovered.includes(id) &&
+            before.distances[id] !== undefined &&
+            step.distances[id] < before.distances[id],
+        )
+      : [];
+  return `${nodeName(execution.input, step.current)} ${execution.modelId === 'dijkstra-nonnegative' ? `is settled at cost ${step.distances[step.current]}` : 'leaves the front of the queue'}.${step.discovered.length ? ` Added ${step.discovered.map((id) => nodeName(execution.input, id)).join(', ')}.` : cheaper.length ? '' : ' No new nodes added.'}${cheaper.map((id) => ` ${nodeName(execution.input, id)} drops from ${before.distances[id]} to ${step.distances[id]}.`).join('')}${step.status === 'found' ? ' Goal reached.' : step.status === 'unreachable' ? ' The queue is empty; the goal is unreachable with these connections.' : step.status === 'complete' ? ' All reachable nodes have been explored.' : ''}`;
+}
+/** The inspected search's step in one sentence; the journal shows only this. */
+export function explorationStepCaption(spec: ExplorationSpec, state: ExplorationViewState): string {
+  if (spec.mode === 'clarify') return spec.question;
+  const execution = explorationExecution(spec, state);
+  if (!execution) return spec.steps[Math.min(state.explanationStep, spec.steps.length - 1)].caption;
+  return executionCaption(execution, state.step);
 }
 export function explorationVisibleCaption(
   spec: ExplorationSpec,
@@ -69,7 +87,14 @@ export function explorationVisibleCaption(
   const execution = explorationExecution(spec, state);
   if (!execution) return spec.steps[Math.min(state.explanationStep, spec.steps.length - 1)].caption;
   if ((spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') && spec.comparison)
-    return `Primary: ${executionCaption(execution, state.step)} Comparison: ${executionCaption(comparisonExecution(spec, state)!, state.step)}`;
+  {
+    const comparison = comparisonExecution(spec, state)!;
+    const name = (computed: BfsExecution) =>
+      computed.modelId === 'dijkstra-nonnegative' ? 'Dijkstra' : 'BFS';
+    const [first, second] =
+      name(execution) === name(comparison) ? ['This search', 'Comparison'] : [name(execution), name(comparison)];
+    return `${first}: ${executionCaption(execution, state.step)} ${second}: ${executionCaption(comparison, state.step)}`;
+  }
   return executionCaption(execution, state.step);
 }
 

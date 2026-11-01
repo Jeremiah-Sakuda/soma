@@ -100,6 +100,8 @@ test('a recorded real Muse run is inspectable, manipulable and saved without liv
   );
   await expect(page.getByText('no inference on replay.', { exact: false })).toBeVisible();
   expect(actions).toEqual(['recording']);
+  // The audit opens inside the page menu; Escape closes the menu before continuing.
+  await page.keyboard.press('Escape');
   await pipeline.locator('summary').click();
   await page.getByRole('button', { name: 'Next step', exact: true }).click();
   await page.getByRole('button', { name: 'Save exploration', exact: true }).click();

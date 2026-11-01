@@ -453,6 +453,7 @@ test('conversational submission is opt-in and sends a completed transcript again
 }) => {
   const h = await setup(page);
   await h.example();
+  await page.getByLabel('More', { exact: true }).click();
   await page.getByText('Question settings', { exact: true }).click();
   await page.getByRole('checkbox', { name: /Ask and explain after recording/ }).check();
   await page.getByRole('button', { name: 'Record question', exact: true }).click();

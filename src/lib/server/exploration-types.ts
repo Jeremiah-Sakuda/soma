@@ -51,6 +51,7 @@ export type ExplorationAudit = {
     | 'source-interpreted'
     | 'source-repair-requested'
     | 'model-computed'
+    | 'scene-continued'
     | 'scene-layout-adjusted'
     | 'scene-validated'
     | 'repair-requested';

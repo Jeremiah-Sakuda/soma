@@ -83,7 +83,6 @@ export function ExplorationPredictionCard({
       </div>
       {!record ? (
         <>
-          <p>Before advancing, predict the next move. You can keep exploring without answering.</p>
           <button
             type="button"
             className="secondary-button"

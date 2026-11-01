@@ -19,4 +19,27 @@ describe('managed exploration namespace and account generation fences',()=>{
  it('rejects an account root removed before late publication without resurrecting its child',async()=>{await explorationStore.mutate(owner,()=>{},{create:true});fixture.values.delete(root);fixture.values.delete(`${root}/explorations/session`);fixture.writes=[];await expect(explorationStore.mutate(owner,session=>{session.activeRequestId='late-result';},{create:true})).rejects.toMatchObject({code:'forbidden'});expect(fixture.values.has(`${root}/explorations/session`)).toBe(false);expect(fixture.writes).toEqual([]);});
  it('uses the same guarded session shape for managed guests and enforces TTL before managed deletion occurs',async()=>{vi.useFakeTimers({now:new Date('2026-10-29T12:00:00Z')});const id='e'.repeat(64),guest:ExplorationPrincipal={kind:'guest',id,workspaceId:id,generation:id,key:`guest-${id}`};const state=await explorationStore.mutate(guest,session=>{session.activeRequestId='owned-synthetic-request';},{create:true});expect(state.expiresAt).toBe('2026-10-30T12:00:00.000Z');expect(fixture.values.has(`somaExploreGuests/${id}`)).toBe(true);expect((await explorationStore.read(guest))!.activeRequestId).toBe('owned-synthetic-request');vi.setSystemTime(new Date('2026-10-30T12:00:00Z'));expect(await explorationStore.read(guest)).toBeNull();expect(fixture.values.has(`somaExploreGuests/${id}`)).toBe(true);await expect(explorationStore.mutate(guest,()=>{})).rejects.toMatchObject({code:'session_expired'});const fresh=await explorationStore.mutate(guest,()=>{},{create:true});expect(fresh.activeRequestId).toBeNull();expect(fresh.artifacts).toEqual([]);});
  it('preserves global concurrency leases across midnight and cookie churn',async()=>{vi.useFakeTimers({now:new Date('2026-10-29T23:59:59Z')});const guests=['a','b','c','d','e'].map(letter=>{const id=letter.repeat(64);return{kind:'guest' as const,id,workspaceId:id,generation:id,key:`guest-${id}`};});for(const guest of guests)await explorationStore.mutate(guest,()=>{},{create:true});for(const guest of guests.slice(0,4))await explorationStore.mutate(guest,()=>{},{acquire:randomUUID()});vi.setSystemTime(new Date('2026-10-30T00:00:01Z'));await expect(explorationStore.mutate(guests[4],()=>{},{acquire:randomUUID()})).rejects.toMatchObject({code:'busy'});vi.setSystemTime(new Date('2026-10-30T00:01:31Z'));await explorationStore.mutate(guests[4],()=>{},{acquire:randomUUID()});const global=fixture.values.get('somaServiceLimits/exploration-global')!;expect(global.day).toBe('2026-10-30');expect(global.turns).toBe(1);expect((global.active as unknown[]).length).toBe(1);});
+ it('admits prepared-session traffic above the former 200-session threshold without resetting quotas or paid turn limits',async()=>{
+  const quota='somaServiceLimits/exploration-global',day=new Date().toISOString().slice(0,10);
+  fixture.values.set(quota,{day,created:200,turns:200,active:[]});
+  const id='f'.repeat(64),guest:ExplorationPrincipal={kind:'guest',id,workspaceId:id,generation:id,key:`guest-${id}`};
+  await explorationStore.mutate(guest,()=>{},{create:true});
+  expect(fixture.values.get(quota)?.created).toBe(201);expect(fixture.values.get(quota)?.turns).toBe(200);
+  await expect(explorationStore.mutate(guest,()=>{},{acquire:randomUUID()})).rejects.toMatchObject({code:'capacity'});
+  expect(await explorationStore.read(guest)).not.toBeNull();
+ });
+ it.each(['0','5001','NaN','1.5'])('keeps a bounded guest limit for invalid configuration %s',async value=>{
+  vi.stubEnv('SOMA_EXPLORATION_MAX_GUESTS_DAY',value);
+  fixture.values.set('somaServiceLimits/exploration-global',{day:new Date().toISOString().slice(0,10),created:1000,turns:0,active:[]});
+  const id='f'.repeat(64),guest:ExplorationPrincipal={kind:'guest',id,workspaceId:id,generation:id,key:`guest-${id}`};
+  await expect(explorationStore.mutate(guest,()=>{},{create:true})).rejects.toMatchObject({code:'capacity'});
+ });
+ it('honors a lower configured admission cap while keeping existing owned sessions usable',async()=>{
+  vi.stubEnv('SOMA_EXPLORATION_MAX_GUESTS_DAY','1');
+  const guest=(letter:string):ExplorationPrincipal=>{const id=letter.repeat(64);return{kind:'guest',id,workspaceId:id,generation:id,key:`guest-${id}`};};
+  await explorationStore.mutate(guest('e'),()=>{},{create:true});
+  await expect(explorationStore.mutate(guest('f'),()=>{},{create:true})).rejects.toMatchObject({code:'capacity'});
+  await explorationStore.mutate(guest('e'),s=>{s.revision++;});expect(await explorationStore.read(guest('e'))).not.toBeNull();
+ });
+
 });

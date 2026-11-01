@@ -61,15 +61,22 @@ export function ExplorationSearchStage({
     maxX = Math.max(...xs),
     minY = Math.min(...ys),
     maxY = Math.max(...ys);
+  const name = (id: string) => execution.input.nodes.find((node) => node.id === id)?.label ?? id;
+  const short = (id: string) => (name(id).length > 6 ? name(id).slice(0, 4) + '…' : name(id));
+  // Nodes are pills sized to their full name; long names widen the node, never truncate.
+  const fontSize = compact ? 12 : 14;
+  const labelWidth = (id: string) => Math.ceil(name(id).length * fontSize * 0.62) + 22;
+  const inset = Math.max(
+    55,
+    ...execution.input.nodes.map((node) => labelWidth(node.id) / 2 + 6),
+  );
   const point = (id: string) => {
     const p = panel.positions.find((p) => p.nodeId === id)!;
     return {
-      x: 55 + (maxX === minX ? 0.5 : (p.x - minX) / (maxX - minX)) * (width - 110),
+      x: inset + (maxX === minX ? 0.5 : (p.x - minX) / (maxX - minX)) * (width - 2 * inset),
       y: 48 + (maxY === minY ? 0.5 : (p.y - minY) / (maxY - minY)) * 190,
     };
   };
-  const name = (id: string) => execution.input.nodes.find((node) => node.id === id)?.label ?? id;
-  const short = (id: string) => (name(id).length > 6 ? name(id).slice(0, 4) + '…' : name(id));
   const slot = (i: number) => ({
     x: 34 + ((i % columns) * (width - 40)) / columns,
     y: 354 + Math.floor(i / columns) * 58,
@@ -79,6 +86,19 @@ export function ExplorationSearchStage({
     points.slice(i + 1).map((q) => Math.hypot(p.x - q.x, p.y - q.y)),
   );
   const radius = Math.max(10, Math.min(25, (Math.min(...distances, 100) - 8) / 2));
+  const nodeWidth = (id: string) => Math.max(radius * 2, labelWidth(id));
+  // Where a connection meets a node: the circle for round nodes, the pill's box otherwise.
+  const edgePoint = (center: Point, toward: Point, id: string) => {
+    const dx = toward.x - center.x,
+      dy = toward.y - center.y,
+      length = Math.hypot(dx, dy) || 1;
+    const halfWidth = nodeWidth(id) / 2;
+    const t =
+      halfWidth <= radius
+        ? (radius + 5) / length
+        : Math.min((halfWidth + 5) / (Math.abs(dx) || 0.001), (radius + 5) / (Math.abs(dy) || 0.001));
+    return { x: center.x + dx * Math.min(t, 0.5), y: center.y + dy * Math.min(t, 0.5) };
+  };
   const token = (id: string, position: Point, opacity = 1, kind = 'queue') => (
     <g
       key={`${kind}-${id}`}
@@ -144,13 +164,9 @@ export function ExplorationSearchStage({
         {execution.input.edges.map((edge) => {
           const from = point(edge.from),
             to = point(edge.to),
-            length = Math.hypot(to.x - from.x, to.y - from.y),
-            offset = (radius + 5) / (length || 1);
-          const start = {
-              x: from.x + (to.x - from.x) * offset,
-              y: from.y + (to.y - from.y) * offset,
-            },
-            end = { x: to.x - (to.x - from.x) * offset, y: to.y - (to.y - from.y) * offset };
+            length = Math.hypot(to.x - from.x, to.y - from.y);
+          const start = edgePoint(from, to, edge.from),
+            end = edgePoint(to, from, edge.to);
           const loop = from.y < 100 ? 1 : -1;
           const d =
             length === 0
@@ -209,15 +225,26 @@ export function ExplorationSearchStage({
               className={`exploration-node ${current ? 'is-current' : queued ? 'is-queued' : visited ? 'is-visited' : ''} ${selected === node.id || highlights.includes(node.id) ? 'is-selected' : ''}`}
               onClick={() => onSelect(node.id)}
             >
-              {current && <circle className="exploration-focus-ring" r={radius + 8} />}
-              <circle r={radius} />
-              <text
-                textAnchor="middle"
-                dominantBaseline="middle"
-                style={{ fontSize: radius < 20 ? 10 : 14 }}
-              >
-                <title>{name(node.id)}</title>
-                {radius < 20 ? name(node.id).slice(0, 2) : short(node.id)}
+              {current && (
+                <rect
+                  className="exploration-focus-ring"
+                  x={-nodeWidth(node.id) / 2 - 8}
+                  y={-radius - 8}
+                  width={nodeWidth(node.id) + 16}
+                  height={radius * 2 + 16}
+                  rx={radius + 8}
+                />
+              )}
+              <rect
+                className="exploration-node-shape"
+                x={-nodeWidth(node.id) / 2}
+                y={-radius}
+                width={nodeWidth(node.id)}
+                height={radius * 2}
+                rx={radius}
+              />
+              <text textAnchor="middle" dominantBaseline="middle" style={{ fontSize }}>
+                {name(node.id)}
               </text>
               <text className="exploration-node-state" y={radius + 20} textAnchor="middle">
                 {current
@@ -265,7 +292,7 @@ export function ExplorationSearchStage({
           </text>
         )}
       </svg>
-      <details className="exploration-graph-details" open={!compact}>
+      <details className="exploration-graph-details">
         <summary>Select a node & inspect graph</summary>
         <div className="exploration-object-buttons" aria-label="Select a graph object">
           {execution.input.nodes.map((node) => (

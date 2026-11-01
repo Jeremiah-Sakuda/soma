@@ -1,0 +1,1180 @@
+/* Dot journal — the exploration surface's visual language.
+ * Printed type is what Soma checked; handwriting is Muse's explanation.
+ * See docs/UI_DOT_JOURNAL.md. Scoped to .exploration-app so course routes keep
+ * their own tokens. */
+
+.exploration-app {
+  --desk: #e3d9c6;
+  --paper: #f7f2e8;
+  --paper-dot: #cbbfa8;
+  --gutter: #e6dcc9;
+  --bg: var(--desk);
+  --sidebar: #eadfcb;
+  --surface: var(--paper);
+  --surface-muted: #f1e9da;
+  --border: #d6c9b1;
+  --divider: #e2d7c2;
+  --control-border: #b7a98f;
+  --ink: #26221d;
+  --ink-2: #4a4339;
+  --muted: #5e5649;
+  --accent: #1d6b66;
+  --accent-hover: #155550;
+  --accent-soft: #dcebe5;
+  --highlight: #e8b23a;
+  --highlight-soft: #f6dfa4;
+  --muse-ink: #1d6b66;
+  --current: var(--highlight);
+  --success-bg: #e4ead2;
+  --success-fg: #3d571b;
+  --caution-bg: #f6e3b4;
+  --caution-fg: #6b4a06;
+  --shadow: 0 3px 0 #c9bb9f;
+  --paper-grid: radial-gradient(var(--paper-dot) 1.1px, transparent 1.5px);
+  /* Existing rules read the Geist variables; inside the journal they resolve to its faces. */
+  --font-geist: var(--font-journal-sans), 'Work Sans', system-ui, sans-serif;
+  --font-geist-mono: var(--font-journal-mono), 'Fragment Mono', ui-monospace, monospace;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-geist);
+}
+
+.exploration-app h1,
+.exploration-app h2,
+.exploration-app h3 {
+  font-family: var(--font-journal-serif), 'Young Serif', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Paper: every surface a student reads from is a dot-grid page. */
+.exploration-app .exploration-artifact,
+.exploration-app .exploration-ask-card,
+.exploration-app .exploration-source-card,
+.exploration-app .exploration-empty-stage,
+.exploration-app .exploration-library,
+.exploration-app .companion-memory {
+  background-color: var(--paper);
+  background-image: var(--paper-grid);
+  background-size: 20px 20px;
+  background-position: 10px 10px;
+  border-color: var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* Muse's ink. Authored narration and explanation are handwriting; checked
+ * values, labels and computed captions stay printed. */
+.exploration-app .exploration-authored-caption,
+.exploration-app .exploration-active-explanation {
+  font-family: var(--font-journal-hand), 'Kalam', cursive;
+  color: var(--muse-ink);
+}
+
+/* Buttons: flat paper controls with a pressed edge; the primary action is Muse-ink teal. */
+.exploration-app .primary-button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: 0 3px 0 #0f4440;
+}
+.exploration-app .primary-button:hover {
+  background: var(--accent-hover);
+}
+.exploration-app .primary-button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #0f4440;
+}
+.exploration-app .secondary-button {
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.exploration-app .secondary-button:hover {
+  background: var(--surface-muted);
+}
+.exploration-app .text-button {
+  color: var(--accent);
+}
+.exploration-app .status-chip {
+  background: transparent;
+  border: 1.5px solid var(--ink-2);
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.exploration-app .status-chip.ready {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.exploration-app .overline {
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exploration-app .primary-button:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────── */
+.exploration-app .journal-topbar {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 12px 32px;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 0;
+  background: transparent;
+}
+.exploration-app .journal-wordmark {
+  font-family: var(--font-journal-serif), 'Young Serif', Georgia, serif;
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--ink);
+  text-decoration: none;
+}
+.exploration-app .journal-topbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.exploration-app .journal-sharing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px 0 14px;
+  border: 1.5px dashed var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 14px;
+}
+
+/* ── Menus ───────────────────────────────────────────────────────────── */
+.exploration-app .journal-menu {
+  position: relative;
+}
+.exploration-app .journal-menu > summary {
+  list-style: none;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.exploration-app .journal-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.exploration-app .journal-menu[open] > summary {
+  background: var(--ink);
+  color: var(--paper);
+}
+.exploration-app .journal-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  z-index: 40;
+  width: min(400px, calc(100vw - 32px));
+  max-height: min(72vh, 680px);
+  overflow: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background-color: var(--paper);
+  background-image: var(--paper-grid);
+  background-size: 20px 20px;
+  border: 1.5px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 0 6px 0 rgb(38 34 29 / 0.14);
+}
+.exploration-app .journal-menu-panel.align-end {
+  right: 0;
+}
+.exploration-app .journal-menu-panel.align-start {
+  left: 0;
+}
+.exploration-app .journal-menu-panel .exploration-source-card,
+.exploration-app .journal-menu-panel .exploration-library,
+.exploration-app .journal-menu-panel .companion-memory {
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.exploration-app .journal-menu-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--accent);
+  font-weight: 500;
+}
+.exploration-app .journal-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Desk and spread ─────────────────────────────────────────────────── */
+.exploration-app .journal-desk,
+.exploration-app.has-exploration .journal-desk {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 4px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.exploration-app .journal-page {
+  min-width: 0;
+  background-color: var(--paper);
+  background-image: var(--paper-grid);
+  background-size: 20px 20px;
+  background-position: 10px 10px;
+  box-shadow: var(--shadow);
+}
+.exploration-app .exploration-artifact.journal-spread,
+.exploration-app.has-exploration .exploration-artifact.journal-spread {
+  display: grid;
+  grid-template-columns: minmax(320px, 5fr) 14px minmax(0, 8fr);
+  grid-template-rows: auto 1fr;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.exploration-app .journal-left-head {
+  grid-column: 1;
+  grid-row: 1;
+  padding: 32px 32px 12px 40px;
+  border-radius: 12px 0 0 0;
+  box-shadow: none;
+}
+.exploration-app .journal-left-body {
+  grid-column: 1;
+  grid-row: 2;
+  padding: 8px 32px 32px 40px;
+  border-radius: 0 0 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.exploration-app .journal-gutter {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  background: var(--gutter);
+  border-left: 1px solid var(--paper-dot);
+  box-shadow: var(--shadow);
+}
+.exploration-app .journal-right {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  position: relative;
+  padding: 28px 44px 32px 32px;
+  border-radius: 0 12px 12px 0;
+}
+.exploration-app .journal-right::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 14px;
+  width: 8px;
+  background: #2e2a24;
+  pointer-events: none;
+}
+.exploration-app .journal-left-head h2 {
+  font-size: 34px;
+  line-height: 1.12;
+  margin: 10px 0 8px;
+}
+.exploration-app .journal-left-head .exploration-objective {
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+/* ── Cover (nothing open yet) ────────────────────────────────────────── */
+.exploration-app .journal-cover {
+  width: min(760px, 100%);
+  margin: 24px auto 0;
+  padding: 44px 48px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.exploration-app .journal-cover h1 {
+  font-size: 40px;
+  line-height: 1.1;
+}
+.exploration-app .journal-cover-lede {
+  color: var(--ink-2);
+  font-size: 17px;
+  max-width: 56ch;
+}
+.exploration-app .journal-cover-subhead {
+  font-size: 18px;
+  margin-top: 6px;
+}
+.exploration-app .journal-cover .exploration-source-card {
+  background: transparent;
+  box-shadow: none;
+  border: 1.5px dashed var(--control-border);
+  border-radius: 12px;
+}
+
+/* ── Composer: one quiet line under the spread ───────────────────────── */
+.exploration-app .exploration-ask-card.journal-composer,
+.exploration-app.has-exploration .exploration-ask-card.journal-composer {
+  position: static;
+  max-height: none;
+  margin: 0;
+  padding: 12px 14px 10px 24px;
+  border: 0;
+  border-radius: 16px;
+  background-color: var(--paper);
+  background-image: none;
+  box-shadow: var(--shadow);
+}
+.exploration-app .journal-composer form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.exploration-app .journal-composer form > label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.exploration-app .journal-composer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.exploration-app .journal-composer textarea,
+.exploration-app.has-exploration .journal-composer textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  height: 44px;
+  max-height: 140px;
+  padding: 8px 0;
+  font-size: 17px;
+  resize: none;
+  border: 0;
+  border-bottom: 1.5px dotted var(--control-border);
+  border-radius: 0;
+  background: transparent;
+}
+.exploration-app .journal-composer .exploration-voice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.exploration-app .journal-composer .exploration-voice .exploration-ask-actions {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+/* The recording disclosure moves into the composer hint, which stays visible. */
+.exploration-app .journal-composer .exploration-voice > p.meta:not([role='status']),
+.exploration-app .journal-composer .exploration-voice > p.meta[role='status']:empty {
+  display: none;
+}
+.exploration-app .journal-composer-hint {
+  font-size: 12px;
+}
+
+/* ── Left page: search log, explanation note, key ────────────────────── */
+.exploration-app .journal-log {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.exploration-app .journal-log-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 19px;
+  margin: 0 0 8px;
+}
+.exploration-app .journal-log-title .meta {
+  font-family: var(--font-geist);
+  font-size: 13px;
+}
+.exploration-app .journal-log-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-geist-mono);
+  font-size: 16px;
+}
+.exploration-app .journal-log-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 32px;
+  padding: 0 8px;
+  margin: 0 -8px;
+  border-radius: 4px;
+}
+.exploration-app .journal-log-row.is-now {
+  background: var(--highlight);
+}
+.exploration-app .journal-log-row.is-unreached {
+  color: var(--muted);
+}
+.exploration-app .journal-signifier {
+  width: 18px;
+  text-align: center;
+  font-weight: 700;
+}
+.exploration-app .journal-log-leader {
+  flex: 1;
+  border-bottom: 1.5px dotted var(--paper-dot);
+  transform: translateY(4px);
+}
+.exploration-app .journal-log-row.is-now .journal-log-leader {
+  border-bottom-color: var(--ink);
+}
+.exploration-app .journal-log-value s {
+  color: var(--muted);
+}
+.exploration-app .journal-note {
+  margin: 0;
+  font-family: var(--font-journal-hand), 'Kalam', cursive;
+  font-size: 25px;
+  line-height: 1.3;
+  color: var(--muse-ink);
+}
+.exploration-app .journal-note-printed {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.exploration-app .journal-key {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 8px 12px;
+  border: 1.5px dashed var(--control-border);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.exploration-app .journal-key b {
+  font-family: var(--font-geist-mono);
+}
+.exploration-app .journal-key-hand {
+  font-family: var(--font-journal-hand), 'Kalam', cursive;
+  color: var(--muse-ink);
+  font-size: 15px;
+}
+
+/* Say each thing once: the log and note carry the step, so the older captions
+ * stay only for assistive technology. */
+.exploration-app .journal-right .exploration-spoken-caption,
+.exploration-app .journal-right .exploration-caption,
+.exploration-app .journal-right .exploration-active-explanation {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.exploration-app .journal-right .exploration-weighted-caption,
+.exploration-app .journal-right .exploration-motion-caption,
+.exploration-app .journal-right .exploration-stage-heading,
+.exploration-app .journal-right .exploration-playback > .action-row > .meta {
+  display: none;
+}
+
+/* ── Diagram: one node language for both searches ────────────────────── */
+.exploration-app .journal-right .exploration-search-stage .exploration-node .exploration-node-shape {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+.exploration-app .journal-right .exploration-search-stage .exploration-node > text {
+  fill: var(--ink);
+  font-family: var(--font-journal-serif), 'Young Serif', Georgia, serif;
+}
+.exploration-app .journal-right .exploration-search-stage .exploration-node.is-visited .exploration-node-shape {
+  fill: var(--ink);
+}
+.exploration-app .journal-right .exploration-search-stage .exploration-node.is-visited > text {
+  fill: var(--paper);
+}
+.exploration-app .journal-right .exploration-search-stage .exploration-node.is-current .exploration-node-shape {
+  fill: var(--highlight);
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+.exploration-app .journal-right .exploration-search-stage .exploration-node.is-selected .exploration-node-shape {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.exploration-app .journal-right .exploration-search-stage .exploration-focus-ring {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 4;
+}
+.exploration-app .journal-right .exploration-node .exploration-node-state {
+  fill: var(--ink-2);
+  font-size: 12px;
+}
+.exploration-app .journal-right [data-weighted-node] rect {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 1.75;
+}
+.exploration-app .journal-right [data-weighted-node].is-settled rect {
+  fill: var(--ink);
+}
+.exploration-app .journal-right [data-weighted-node].is-settled .exploration-weighted-node-label {
+  color: var(--paper);
+}
+.exploration-app .journal-right [data-weighted-node].is-current rect {
+  fill: var(--highlight);
+  stroke-width: 2.5;
+}
+.exploration-app .journal-right [data-weighted-node].is-unreached rect {
+  stroke: var(--control-border);
+  stroke-dasharray: 5 4;
+}
+.exploration-app .journal-right [data-weighted-node].is-selected rect {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.exploration-app .journal-right .exploration-weighted-node-label strong {
+  font-family: var(--font-journal-serif), 'Young Serif', Georgia, serif;
+  font-weight: 400;
+}
+.exploration-app .journal-right [data-cost-label] rect {
+  fill: var(--paper);
+  stroke: var(--ink-2);
+  stroke-width: 1.25;
+}
+.exploration-app .journal-right [data-cost-label] text {
+  fill: var(--ink);
+  font-family: var(--font-geist-mono);
+  font-size: 13px;
+}
+.exploration-app .journal-right [data-weighted-node].is-settled .exploration-weighted-node-label span {
+  color: #e6dcc9;
+}
+.exploration-app .journal-right .exploration-queue-track {
+  fill: var(--surface-muted);
+  stroke: var(--control-border);
+  stroke-dasharray: 5 4;
+}
+.exploration-app .journal-right .exploration-queue-label {
+  fill: var(--muted);
+}
+.exploration-app .journal-right .exploration-moving-token rect {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.exploration-app .journal-right .exploration-moving-token text {
+  fill: var(--ink);
+  font-family: var(--font-geist-mono);
+}
+
+/* ── Transport: one row above the diagram ────────────────────────────── */
+.exploration-app .journal-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: flex-start;
+  gap: 14px 12px;
+}
+.exploration-app .journal-right > * {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.exploration-app .journal-right > .exploration-playback,
+.exploration-app.has-exploration .journal-right > .exploration-playback {
+  flex: 0 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.exploration-app .journal-right > .exploration-playback > .action-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.exploration-app .journal-right > .exploration-step-bar,
+.exploration-app .journal-right > .exploration-explanation-navigation,
+.exploration-app.has-exploration .journal-right > .exploration-step-bar {
+  flex: 1 1 340px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.exploration-app .journal-right .exploration-step-bar .action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.exploration-app .journal-right .exploration-step-bar .primary-button,
+.exploration-app .journal-right .exploration-step-bar .secondary-button,
+.exploration-app.has-exploration .journal-right .exploration-step-bar .primary-button,
+.exploration-app.has-exploration .journal-right .exploration-step-bar .secondary-button {
+  min-height: 44px;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+.exploration-app .journal-right .exploration-step-bar .primary-button {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+  box-shadow: 0 3px 0 var(--ink);
+}
+.exploration-app .journal-right .exploration-step-bar .primary-button:hover {
+  background: var(--highlight-soft);
+}
+.exploration-app .journal-page-number,
+.exploration-app.has-exploration .journal-page-number {
+  font-family: var(--font-journal-serif), 'Young Serif', Georgia, serif;
+  font-size: 15px;
+  color: var(--ink-2);
+  padding: 0 4px;
+}
+.exploration-app .journal-icon-button {
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--ink);
+}
+.exploration-app .journal-right .exploration-playback .exploration-voice-settings > summary,
+.exploration-app.has-exploration .journal-right .exploration-playback .exploration-voice-settings summary {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.exploration-app .journal-right .exploration-comparison-switch {
+  display: flex;
+  gap: 8px;
+}
+.exploration-app .journal-right .exploration-comparison-switch button,
+.exploration-app.has-exploration .journal-right .exploration-comparison-switch button {
+  flex: 1;
+  min-height: 52px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  text-align: left;
+}
+.exploration-app .journal-right .exploration-comparison-switch button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--paper);
+}
+.exploration-app .journal-right .exploration-comparison-switch button[aria-pressed='true'] .meta {
+  color: #e6dcc9;
+}
+.exploration-app .journal-right .exploration-panel,
+.exploration-app.has-exploration .journal-right .exploration-panel {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* ── Left page header: provenance, version, save, page menu ─────────── */
+.exploration-app .journal-page-meta,
+.exploration-app.has-exploration .journal-page-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.exploration-app .journal-provenance {
+  flex: 1 1 220px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.exploration-app .journal-provenance > span:first-child {
+  font-weight: 600;
+  color: var(--accent);
+}
+.exploration-app .journal-save {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.exploration-app .journal-save .secondary-button {
+  min-height: 44px;
+  padding: 6px 14px;
+  font-size: 13px;
+}
+.exploration-app .journal-page-menu .journal-menu-panel {
+  width: min(440px, calc(100vw - 32px));
+}
+.exploration-app .journal-page-menu .exploration-pipeline,
+.exploration-app .journal-page-menu .exploration-audit,
+.exploration-app .journal-page-menu details {
+  margin: 0;
+}
+.exploration-app .journal-page-menu .exploration-delete {
+  padding-top: 10px;
+  border-top: 1.5px dashed var(--control-border);
+}
+.exploration-app .journal-left-head .exploration-recording-note {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ── Left page body: practice and suggestions as journal entries ─────── */
+.exploration-app .journal-left-body .exploration-prediction,
+.exploration-app .journal-left-body .exploration-application {
+  background: transparent;
+  border: 1.5px dashed var(--control-border);
+  border-radius: 10px;
+  box-shadow: none;
+}
+.exploration-app .journal-left-body .exploration-followups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.exploration-app .journal-left-body .exploration-followups::before {
+  content: 'Try asking';
+  flex: 1 1 100%;
+  font-family: var(--font-journal-serif), 'Young Serif', Georgia, serif;
+  font-size: 15px;
+}
+.exploration-app .journal-left-body .exploration-followups button {
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--ink-2);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  text-align: left;
+}
+
+/* ── Narrow: the spread becomes one page; the visual comes right after the title ── */
+@media (max-width: 1099px) {
+  .exploration-app .exploration-artifact.journal-spread,
+  .exploration-app.has-exploration .exploration-artifact.journal-spread {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+  .exploration-app .journal-left-head,
+  .exploration-app .journal-right,
+  .exploration-app .journal-left-body {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .exploration-app .journal-left-head {
+    border-radius: 12px 12px 0 0;
+    padding: 22px 24px 8px;
+  }
+  .exploration-app .journal-right {
+    border-radius: 0;
+    padding: 12px 24px 20px;
+    box-shadow: none;
+  }
+  .exploration-app .journal-right::after,
+  .exploration-app .journal-gutter {
+    display: none;
+  }
+  .exploration-app .journal-left-body {
+    border-radius: 0 0 12px 12px;
+    padding: 8px 24px 24px;
+    border-top: 1.5px dashed var(--control-border);
+  }
+}
+
+@media (max-width: 760px) {
+  .exploration-app .journal-topbar,
+  .exploration-app.has-exploration .journal-topbar {
+    padding: 8px 12px;
+    gap: 8px;
+    min-height: 0;
+  }
+  .exploration-app .journal-menu > summary {
+    padding: 0 12px;
+  }
+  .exploration-app .journal-source-menu > summary {
+    font-size: 0;
+    gap: 0;
+    padding: 0;
+    width: 44px;
+  }
+  .exploration-app .journal-sharing {
+    font-size: 12px;
+  }
+  .exploration-app .journal-desk,
+  .exploration-app.has-exploration .journal-desk {
+    padding: 0 8px 12px;
+    gap: 10px;
+  }
+  .exploration-app .journal-left-head,
+  .exploration-app.has-exploration .journal-left-head {
+    padding: 16px 16px 6px;
+  }
+  .exploration-app .journal-left-head h2,
+  .exploration-app.has-exploration .exploration-artifact .journal-left-head h2 {
+    font-size: 24px;
+    margin: 6px 0 4px;
+  }
+  .exploration-app .journal-left-head .exploration-objective {
+    font-size: 14px;
+  }
+  .exploration-app .journal-right,
+  .exploration-app.has-exploration .journal-right {
+    padding: 8px 12px 16px;
+    gap: 10px 8px;
+  }
+  .exploration-app .journal-left-body,
+  .exploration-app.has-exploration .journal-left-body {
+    padding: 8px 16px 20px;
+  }
+  .exploration-app .journal-note {
+    font-size: 21px;
+  }
+  .exploration-app .journal-cover {
+    margin-top: 8px;
+    padding: 24px 18px;
+  }
+  .exploration-app .journal-cover h1 {
+    font-size: 30px;
+  }
+  /* The composer stays one line at the bottom of the screen and never covers the visual
+   * with settings or notices; those live in the menus. */
+  .exploration-app .exploration-ask-card.journal-composer,
+  .exploration-app.has-exploration .exploration-ask-card.journal-composer {
+    position: sticky;
+    bottom: 0;
+    z-index: 30;
+    left: auto;
+    right: auto;
+    margin: 0 -8px -12px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -3px 0 #c9bb9f;
+    max-height: none;
+    overflow: visible;
+  }
+  .exploration-app .journal-composer form > label,
+  .exploration-app .journal-composer-context,
+  .exploration-app.has-exploration .journal-composer form > label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .exploration-app .journal-composer .exploration-voice .secondary-button {
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    font-size: 0;
+    gap: 0;
+  }
+  .exploration-app .journal-composer .primary-button {
+    min-height: 44px;
+    padding: 0 16px;
+    font-size: 14px;
+  }
+  .exploration-app .journal-composer .exploration-unavailable {
+    font-size: 12px;
+    margin: 4px 0 0;
+  }
+}
+@media (max-width: 760px) {
+  .exploration-app .journal-composer-hint {
+    font-size: 11px;
+  }
+}
+
+/* The diagram is the page's subject: it scales with the page and is never squeezed
+ * to make room for chrome. */
+.exploration-app .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+.exploration-app.has-exploration .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+.exploration-app .journal-right .exploration-search-stage,
+.exploration-app.has-exploration .journal-right .exploration-search-stage {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  max-width: none;
+}
+@media (max-width: 760px) {
+  .exploration-app .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app.has-exploration .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app .journal-right .exploration-search-stage,
+  .exploration-app.has-exploration .journal-right .exploration-search-stage {
+    height: auto;
+    max-height: none;
+  }
+}
+@media (max-width: 760px) {
+  .exploration-app .journal-right .exploration-comparison-switch button,
+  .exploration-app.has-exploration .journal-right .exploration-comparison-switch button {
+    min-height: 44px;
+    padding: 6px 14px;
+  }
+  .exploration-app .journal-right .exploration-comparison-switch button .meta {
+    display: none;
+  }
+}
+@media (max-width: 480px) {
+  .exploration-app .journal-save > .meta {
+    display: none;
+  }
+  .exploration-app .journal-save .secondary-button,
+  .exploration-app .journal-right .exploration-step-bar .secondary-button:has(> svg),
+  .exploration-app .journal-right .exploration-step-bar .primary-button:has(> svg),
+  .exploration-app.has-exploration .journal-right .exploration-step-bar .secondary-button:has(> svg),
+  .exploration-app.has-exploration .journal-right .exploration-step-bar .primary-button:has(> svg) {
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    gap: 0;
+    font-size: 0;
+  }
+  .exploration-app .journal-provenance {
+    font-size: 12px;
+  }
+}
+
+/* Icon-and-word controls: the word is visible on wide pages and stays as the
+ * accessible name when narrow pages show only the icon. */
+.exploration-app .journal-labelled-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* A new source chosen while a page is open is reviewed on the desk before Ask. */
+.exploration-app .journal-new-source .exploration-source-card {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  border: 1.5px dashed var(--accent);
+  border-radius: 12px;
+}
+.exploration-app .exploration-library h2 {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 760px) {
+  /* Companion window: one transport row, and the whole diagram fits above the
+   * question line (PM064), scaled to the remaining height rather than shrunk to 200 px. */
+  .exploration-app .journal-right > .exploration-playback,
+  .exploration-app.has-exploration .journal-right > .exploration-playback {
+    gap: 4px;
+  }
+  .exploration-app .journal-right .exploration-playback .primary-button,
+  .exploration-app.has-exploration .journal-right .exploration-playback .primary-button {
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    gap: 0;
+    font-size: 0;
+  }
+  .exploration-app .journal-labelled-icon > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .exploration-app .journal-right .exploration-playback .journal-labelled-icon {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+    padding: 0;
+  }
+  .exploration-app .journal-right > .exploration-step-bar,
+  .exploration-app.has-exploration .journal-right > .exploration-step-bar {
+    flex: 1 1 260px;
+  }
+  .exploration-app .journal-right .exploration-step-bar .secondary-button:has(> svg),
+  .exploration-app .journal-right .exploration-step-bar .primary-button:has(> svg),
+  .exploration-app.has-exploration .journal-right .exploration-step-bar .secondary-button:has(> svg),
+  .exploration-app.has-exploration .journal-right .exploration-step-bar .primary-button:has(> svg) {
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    gap: 0;
+    font-size: 0;
+  }
+  .exploration-app .journal-left-head .exploration-objective {
+    display: none;
+  }
+  .exploration-app .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app.has-exploration .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app .journal-right .exploration-search-stage,
+  .exploration-app.has-exploration .journal-right .exploration-search-stage {
+    width: auto;
+    max-width: 100%;
+    max-height: max(220px, calc(100dvh - 450px));
+    margin-inline: auto;
+    display: block;
+  }
+}
+@media (max-width: 760px) {
+  .exploration-app .journal-save > .meta {
+    display: none;
+  }
+  .exploration-app .journal-save .secondary-button {
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    gap: 0;
+    font-size: 0;
+  }
+  .exploration-app .journal-page-meta,
+  .exploration-app.has-exploration .journal-page-meta {
+    flex-wrap: nowrap;
+  }
+  .exploration-app .journal-provenance {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+}
+
+/* The question line docks at the bottom of the window at every width, so the
+ * diagram and the question always share the viewport (PM044). */
+.exploration-app .exploration-ask-card.journal-composer,
+.exploration-app.has-exploration .exploration-ask-card.journal-composer {
+  position: sticky;
+  bottom: 12px;
+  z-index: 30;
+  box-shadow: 0 3px 0 #c9bb9f, 0 -6px 24px rgb(38 34 29 / 0.08);
+}
+@media (max-width: 760px) {
+  .exploration-app .exploration-ask-card.journal-composer,
+  .exploration-app.has-exploration .exploration-ask-card.journal-composer {
+    bottom: 0;
+  }
+  .exploration-app .exploration-playback summary.journal-summary-icon {
+    font-size: 0;
+    gap: 0;
+  }
+}
+
+/* ── Less text: labels the reader doesn't need to read ───────────────── */
+.exploration-app .journal-composer form > label,
+.exploration-app.has-exploration .journal-composer form > label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.exploration-app .journal-key {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.exploration-app .journal-key > summary {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  min-height: 32px;
+  align-items: center;
+  cursor: pointer;
+}
+.exploration-app .journal-key > summary::-webkit-details-marker {
+  display: none;
+}
+.exploration-app .journal-key > p {
+  margin: 6px 0 0;
+}
+.exploration-app .journal-key b {
+  font-family: var(--font-geist-mono);
+}
+/* Route tabs: the name and total are enough; the found route stays as status text. */
+.exploration-app .journal-right .exploration-comparison-switch button .meta:not(:has([role='status'])) {
+  display: none;
+}
+.exploration-app .journal-right .exploration-controls > p.meta:last-child {
+  display: none;
+}
+.exploration-app .journal-left-body .exploration-prediction .section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.exploration-app .journal-left-body .exploration-prediction h3 {
+  font-size: 16px;
+}
+
+/* Narrow windows: the diagram takes the room actually left above the question line. */
+@media (max-width: 760px) {
+  .exploration-app .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app.has-exploration .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app .journal-right .exploration-search-stage,
+  .exploration-app.has-exploration .journal-right .exploration-search-stage {
+    max-height: var(--journal-graph-room, max(220px, calc(100dvh - 450px)));
+  }
+}
+@media (max-width: 760px) {
+  .exploration-app .journal-right .exploration-playback .exploration-voice-settings > summary.journal-summary-icon,
+  .exploration-app.has-exploration .journal-right .exploration-playback .exploration-voice-settings summary.journal-summary-icon {
+    font-size: 0;
+    gap: 0;
+    min-width: 44px;
+    justify-content: center;
+  }
+}

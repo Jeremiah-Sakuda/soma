@@ -32,7 +32,7 @@ const make = (version = 1) => {
     saved: false,
   };
 };
-async function setup(page: Page) {
+async function setup(page: Page, options: { empty?: boolean } = {}) {
   await page.addInitScript(() => {
     const fetch = window.fetch.bind(window);
     window.fetch = async (input, init) => {
@@ -47,14 +47,15 @@ async function setup(page: Page) {
           new ReadableStream({
             start(controller) {
               (window as any).__visualStream = controller;
-              controller.enqueue(
-                new TextEncoder().encode(
-                  JSON.stringify({
-                    type: 'progress',
-                    progress: { phase: 'reading-source', elapsedMs: 0 },
-                  }) + '\n',
-                ),
-              );
+              if (!(window as any).__suppressInitialProgress)
+                controller.enqueue(
+                  new TextEncoder().encode(
+                    JSON.stringify({
+                      type: 'progress',
+                      progress: { phase: 'reading-source', elapsedMs: 0 },
+                    }) + '\n',
+                  ),
+                );
             },
           }),
           { headers: { 'Content-Type': 'application/x-ndjson' } },
@@ -72,6 +73,7 @@ async function setup(page: Page) {
     return r.fulfill({ json: { artifact: a } });
   });
   await page.goto('/explore');
+  if (options.empty) return;
   await page
     .getByRole('button', { name: 'Try the original example', exact: true })
     .first()
@@ -168,4 +170,101 @@ test('an interrupted response keeps the draft and last visual with a clear recov
   await expect(
     page.getByRole('heading', { name: 'Original synthetic graph', exact: true }),
   ).toBeVisible();
+});
+
+test('a fresh screenshot is visible locally while its first explanation is still pending', async ({
+  page,
+}) => {
+  await setup(page);
+  await page.getByRole('button', { name: 'Cancel request', exact: true }).click();
+  // A new upload must show its own frozen pixels, while retaining the last valid card.
+  await page.getByText('Source & sharing', { exact: true }).click();
+  const image = await page.evaluate(() => {
+    const c = document.createElement('canvas');
+    c.width = 640;
+    c.height = 360;
+    const x = c.getContext('2d')!;
+    x.fillStyle = '#f5f0e5';
+    x.fillRect(0, 0, 640, 360);
+    x.fillStyle = '#17171c';
+    x.fillText('Original synthetic source while waiting', 30, 80);
+    return c.toDataURL('image/png').split(',')[1];
+  });
+  await page.locator('input[type=file]').setInputFiles({
+    name: 'original-waiting-source.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(image, 'base64'),
+  });
+  await page.evaluate(() => {
+    (window as any).__suppressInitialProgress = true;
+  });
+  await page.locator('#exploration-question').fill('Explain this selected screen.');
+  await page.getByRole('button', { name: 'Explore new context', exact: true }).click();
+  const receipt = page.getByRole('figure', { name: 'Source being explained' });
+  await expect(receipt).toBeVisible();
+  await expect(receipt.getByRole('img')).toBeVisible();
+  await expect(receipt).toContainText('You asked: Explain this selected screen.');
+  await expect(
+    page.getByRole('heading', { name: 'Original synthetic graph', exact: true }),
+  ).toBeVisible();
+  await page.setViewportSize({ width: 375, height: 704 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+    true,
+  );
+  await page.getByRole('button', { name: 'Cancel request', exact: true }).click();
+  await expect(receipt).toHaveCount(0);
+  await emit(page, { type: 'result', result: { artifact: make(2) } }, true).catch(() => {});
+  await expect(
+    page.getByRole('heading', { name: 'Original synthetic graph', exact: true }),
+  ).toBeVisible();
+});
+
+test('the first pending explanation opens the focused workspace with the local receipt above the fold', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 620, height: 704 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await setup(page, { empty: true });
+  const png = await page.evaluate(() => {
+    const c = document.createElement('canvas');
+    c.width = 640;
+    c.height = 360;
+    const x = c.getContext('2d')!;
+    x.fillStyle = '#f5f0e5';
+    x.fillRect(0, 0, 640, 360);
+    x.fillStyle = '#17171c';
+    x.fillText('Original synthetic first source', 20, 80);
+    return c.toDataURL('image/png').split(',')[1];
+  });
+  await page
+    .locator('input[type=file]')
+    .setInputFiles({
+      name: 'first-source.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(png, 'base64'),
+    });
+  await page.locator('#exploration-question').fill('Explain this new source.');
+  await page.evaluate(() => {
+    (window as any).__suppressInitialProgress = true;
+  });
+  await page.getByRole('button', { name: 'Ask Soma', exact: true }).click();
+  const receipt = page.getByRole('figure', { name: 'Source being explained' });
+  await expect(receipt).toBeInViewport();
+  for (const width of [620, 375]) {
+    await page.setViewportSize({ width, height: 704 });
+    const box = await receipt.boundingBox();
+    expect(box!.y).toBeGreaterThanOrEqual(0);
+    expect(box!.y + box!.height).toBeLessThan(550);
+    await expect(page.locator('.exploration-empty-stage')).toHaveCount(0);
+    await expect(
+      page.getByRole('button', { name: 'Cancel request', exact: true }),
+    ).toBeInViewport();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  }
+  await page.getByRole('button', { name: 'Cancel request', exact: true }).click();
+  await expect(receipt).toHaveCount(0);
+  await expect(page.locator('#exploration-question')).toHaveValue('Explain this new source.');
+  await expect(page.locator('#exploration-question')).toBeFocused();
 });

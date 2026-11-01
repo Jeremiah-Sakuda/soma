@@ -2639,6 +2639,10 @@ Deviations: evaluation only; no product, deployment, permission, spending or rel
 
 Deviation: clarification of assessment emphasis only; no product-scope change. Prior build-log content and other assessments were not consulted.
 
+## PM099 — Lower latency and immediate context feedback
+
+User authorized focused latency iteration. Reuse the same detached main worktree to preserve the concurrently tested spatial branch. Profile actual timings; implement a bounded compact continuation on existing visuals plus immediate frozen-source feedback, with full composition fallback and unchanged review/ownership/current-state/budget guards. No unreviewed generated scene, continuous screen upload, new provider or budget raise. Outcomes pending.
+
 
 ## PM100 — Preserve quality while reducing latency
 
@@ -2911,3 +2915,57 @@ PM131 asked about access. PM132 supplied the participant guide and set the goal 
 3. **Live evidence (`tests/providers/hero-journey-live.test.ts`, `.local/pm132/hero-live`).** Retained outcomes in order: image too large for the 1600 px service bound (zero calls; the test now mirrors the capture bound); "start"/"goal" captions read into node labels (captions removed from the slide); controls rejection (fixed); neighbor-order/token failure (fixed); a test version-ordering error; then a full pass. Passing run: exact reading, 24.0 s, five calls including one Wonder rejection and repair (Wonder caught "Settle C then B" against a trace that settles only C at that step); cut D–F with zero calls; Muse chose A–F for the tipping point and Soma established boundary 7 in 12.2 s; the follow-up "Why does the direct A to F edge only win once it costs 7 or less?" kept the experiment at version 3 in 8.9 s; exact reopen with zero calls. Ledger $16.706 → $17.120 of the $40 cap across all attempts. One pass is not a reliability rate.
 
 Deviations: the feature freeze and $20 cap were superseded by the user's PM135/PM136 answers. Not yet done: UI rehearsal of the hero journey, engine hosting, script rewrite, merge, deployment, publication and final video.
+
+### PM099 — Implemented latency/responsiveness outcomes
+
+1. Profiled actual PM097 stage receipts and three controlled full-authoring baseline follow-ups. Introduced typed compact continuation only for an adequate existing visual, preserving source/geometry/objects/controls/current computations and source uncertainty; full generation and clarification remain available. No reasoning-effort reduction or removed validator. After quality review, compact checked replies are constrained to one current primary snapshot, with full fallback beyond that trace. Provider contract/application parse bind the step; source/current-state/reference/review/repair budgets remain. True source reading reuse already existed, so no credit is claimed for adding it.
+2. Immediate local frozen-source/question/actual-region receipt; corrected first-use layout to keep it above the fold with Cancel and hide the empty stage, collapse non-active setup, preserve active-share controls, restore initial draft focus, and correct elapsed text inheriting spinner styles. Initial853ms receipt was below-fold and not a usability pass; corrected local production observation399ms before any model/server response,620/375render/cancel/focus/nooverflow/noerrors passed. Native circle waiting checks and no-progress-stream regression pass. No partial generated scene or fabricated stage.
+3. Final local1539offline/93skipped,137browser,21desktop,3relay, typecheck/webpackbuild/1339-file0link/0privateconfigtrace pass. Final source247files/0cc02ce97fd03e355260fe01566fd6191107dc6650fb92eae6cd05b82d79daf3. Real same-question/context final follow-ups all3publish/review/source-and-scene-preserve/exactsave-reopen:closures12.525s,biology11.442s,weighted7.522s. Baselineclosures rejected14.832s(cause not recovered before cleanup),biology12.104s,weighted12.102s. Early7.3/7.5/9.8prototype observations remain labeled; finalgeneralcases not consistently that fast, median11.442s, no broad speed guarantee. Actual editedweightedcase10.373s preserved disabledSA/cost2/no-goal/comparison/source and correctly explainedC/Goal tie at snapshot2. Actual outputs retained privately and renderer replay checks recorded separately.
+
+PM099 deviations: user PM100 explicitly prioritized quality. Expanded hardening accordingly; strengthened uncertain clarification review rather than omitting it. Actual newguest GET429(atcreated200/turns176) blocked two attempts before inference; none created a guest. Raised separately bounded/configurable session admission default1000/max5000 while leaving200paidturns/day, concurrency, budget/reservations/counters untouched. Actual finalaggregate205created/180turns/0active/$13.9676615of$15 at2026-10-30T21:50:12.313Z; no reset. Test fixtures were replay-seeded genuine prior public-source artifacts/prepared weighted examples, not newsource generations or student pilots; only follow-ups were new inference. Initial test harness mistakes: explanatory fixture retained BFS state; assumed all BFS turns require Wonder; new-source button has a different name. Corrected harnesses, retained receipts, did not relax source checks. Work remains in same detached main worktree; concurrent spatial source untouched. Publication/cleanCI pending.
+
+### PM100 — Quality preservation outcomes
+
+1. Retained source/ownership/revision/evidence/solver guards, current-parameter bindings, full visual fallback, reasoning effort and six-call/90s/$0.35 limits. Added strict current-snapshot checked reply to prevent generic replay preceding the requested answer; tests reject later/comparison/multiple compact checked steps, foreign references and new-source compact attempts. Full new-context scene authoring remains tested and available.
+2. Actual false-premise probe correctly rejected enzymes loweringDeltaG. Manual inspection found initial full-path legend/new-schematic responses guessed unreadable curve-style attribution despite Wonder approval. Not counted as quality passes. Strengthened author/reviewer rules, reviewed clarification suggestions and uncertain clarifications. Finallegend request refused guess/requestedclearerimage; finalnewdiagram used fullgeneration, Wonder rejected unsupportedstyleclaim, repair explicitly marked schematic from visible text, rereviewapproved. Correctedcase26.420s/4calls; quality deliberately takes precedence. Finalfalsepremise12.828s/2calls retained correct distinction. All3qualityrepeat artifacts preservedsource/exactsavedreadback. Review remainsadvisory, not scientificproof.
+3. Full automated and real-provider verification above, plus first-use/circle/cancel/keyboard/phone/reducedmotion; benchmark conclusions stay limited. No claim of instant fresh visuals, physicalMac/audio quality, newdomains/models/training/cloudprovisioning or learninggains. See LATENCY_AND_RESPONSIVENESS.md for sources, case distinctions and remaining latency. Private sources/provideroutputs/cookies remainignored; no externalrepo recreated, historyrewritten or spatialbranch merged.
+
+PM099/PM100 hosted evidence: implementationb5147d7 fast-forwarded original private soma main with original histories intact; spatialbranch/rootcode untouched. Vercel succeeded at https://vercel.com/jeremiah-sakudas-projects/soma/ETSUGPBaaTSiZcjqhX3DMZjAZ8Gi; production247-fileSHA0cc02ce97fd03e355260fe01566fd6191107dc6650fb92eae6cd05b82d79daf3 matches. Actualhosted edited-state reply9.296s/2calls preserves disabledSA/editedcost2/nogoal/currentprimary2/comparison/sourceoriginal10; correctC/Goaltie, actualWonderapproval, exactsave/readback. Hostedprepared/rate/render and blocked-before-backend391mslocalreceipt620/375/cancel/draft/nooverflow/noerrors pass; guestsdeleted. Sixfinaloutputrendererreplays plushostedactualoutputreplay pass withoutnewinference. Finalactualledger21:55:01.125Z$13.99902475/$15,208created/181turns/0active. Ownlocalserverstopped; no raw private material committed. CleanCI41134296347 pending.
+
+PM099/PM100 final completion: cleanCI41134296347 succeeded onb5147d7,1539offline/93skipped,137browser,28adversarial,21desktop,4diagnostic,3relay/defaultNextbuild/isolatedtrace1224files/twolinks/0privateconfig. Sixfinalactualoutputreplays andhostedresultreplay pass; initialwaitinglayoutreceipt/cancelandcurrenteditedgraphliveAPIpass. Sharedbudgetremainsbelow$15; no moreinference afterhostedproof. Currenthandoff/report updated; source/privatevalue/promptarchivechecks pass. Rootspatialbranchandunrelatedlogeditsleftuntouched.
+
+
+## PM114–PM116 — The dot journal, implemented and less wordy (October 30)
+
+The user chose the dot-journal direction (N3, from PM109–PM110) and asked for it to be built with frequent commits, pushed to main, and explained in a UI doc (PM114). Asked which base to use, they had no preference (PM115). It was built on main in an isolated worktree (`codex/dot-journal`), so the push carries only this change. The unmerged `codex/capture-first-ui` and `codex/spatial-exploration` branches were left alone and will need to adopt the journal. Mid-build the user asked to focus on UX and not overwhelm with text (PM116).
+
+1. **Implemented across eight interface commits:**
+   - Journal tokens and type, scoped to `/explore`: Young Serif, Work Sans, Fragment Mono and Kalam.
+   - A cover page and a two-page spread, with source, memory, settings and the library in top-bar menus.
+   - A printed bullet-journal search log derived from the checked trace, a handwritten explanation note, and a key. Printed is checked; handwriting is the explanation.
+   - The checked caption names Dijkstra and BFS and reports cheaper routes ("Goal drops from 10 to 3").
+   - Weighted costs on their own edge, with a new test that fails on the old placement.
+   - Full-name BFS pills, and one node language for both searches.
+   - One transport, and a page menu.
+   - Companion and phone layouts.
+   - A text pass that took the weighted example from 416 to 243 words on desktop.
+2. **Verification:**
+   - Typecheck passed.
+   - Offline suite: 1,543 passed, 93 opt-in skipped. Three service test files first failed only because the fresh worktree lacked the isolated services' dependencies; after `npm ci` in both services they passed.
+   - Browser journeys: 137/137 passed. The first full run failed 40.
+     - **Seven product regressions were found and fixed:** the BFS screen-reader queue list, resuming from the cover, a new source hidden in a menu, the question line off screen at 1280×720, the companion graph under the question line, a dead audit link, and keyboard access to Playback settings.
+     - **The remaining failures were tests of the replaced layout,** updated to open the menu, picker or tab that now holds what they check.
+   - Visual checks at 1440, 620 and 375 px with live inference off; no provider calls or spend.
+3. **Documentation:**
+   - `docs/UI_DOT_JOURNAL.md` explains the idea, layout, tokens, diagram rules, narrow screens, accessibility, measurements, verification and limits.
+   - `UI_UX_GUIDE.md` now opens with the current `/explore` direction.
+   - `DECISIONS.md` records PM114.
+
+Limits and deviations:
+- On a 375 px phone, weighted node text is still about 10–11 px. The search log lists every value at 16 px. A font increase overflowed the layout's cards and was reverted.
+- Desktop transport is two rows.
+- `exploration.css` still carries dead rules from the old layout.
+- Not checked: live generation and its waiting states, Gemini audio, native Electron, and real screen capture.
+- An early preview misstep started a dev server in the root checkout's configuration. It was stopped immediately, and its `next-env.d.ts` rewrite was reverted.
+- The October 31 freeze permits polish. This change adds no features, models or scope.
+

@@ -22,14 +22,22 @@ import {
 export const EXPLORATION_COOKIE = 'soma_explore';
 const TTL = 24 * 60 * 60 * 1000,
   MAX_BYTES = 768 * 1024,
-  MAX_GUESTS_DAY = 200,
   MAX_TURNS_DAY = 200;
 const databases = new Map<string, DatabaseSync>();
 // Keep an application-enforced limit even when deployment configuration is bad.
 // Increasing this does not increase the separate lifetime spending allowance.
+// Free/prepared session admission is separate from paid turn and spend limits.
+function maxNewGuests() {
+  const configured = Number(process.env.SOMA_EXPLORATION_MAX_GUESTS_DAY ?? 1000);
+  return Number.isSafeInteger(configured) && configured >= 1 && configured <= 5000
+    ? configured
+    : 1000;
+}
 function maxActiveGenerations() {
   const configured = Number(process.env.SOMA_EXPLORATION_MAX_ACTIVE ?? 4);
-  return Number.isSafeInteger(configured) && configured >= 1 && configured <= 16 ? configured : 4;
+  return Number.isSafeInteger(configured) && configured >= 1 && configured <= 16
+    ? configured
+    : 4;
 }
 const hash = (value: string) => createHash('sha256').update(value).digest('hex');
 export const assertExplorationOrigin = requireSameOrigin;
@@ -157,7 +165,7 @@ function applyLimits(
   isNew: boolean,
 ) {
   if (isNew && principal.kind === 'guest') {
-    if (current.created >= MAX_GUESTS_DAY) throw new ExplorationError('capacity');
+    if (current.created >= maxNewGuests()) throw new ExplorationError('capacity');
     current.created++;
   }
   if (options.release)

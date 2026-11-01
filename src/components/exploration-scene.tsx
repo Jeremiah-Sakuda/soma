@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'rea
 import SpatialWorkspace from './spatial-workspace';
 import { supportsSpatial } from '@/lib/domain/spatial-exploration';
 import { defaultSpatialView } from '@/lib/domain/spatial-schema';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ExplorationSearchStage } from './exploration-search-stage';
 import { useExplorationMotion } from './exploration-motion';
 import { diagramRoutes, pointOnDiagramRoute } from '@/lib/domain/diagram-routing';
@@ -354,7 +355,9 @@ export function ExplorationScene({
   const spatialPanel = panels.find((panel) => panel.kind === 'spatial');
   const spatialMode = state.spatial?.mode ?? (spatialPanel ? '3d' : '2d');
   const showSpatial = Boolean(spatialPanel) || spatialMode === '3d';
-  const singleSearch = showSpatial || compact || spec.mode === 'checked-dijkstra';
+  // One inspected search at a time; the journal's search log carries the queue and steps.
+  const singleSearch =
+    showSpatial || compact || spec.mode === 'checked-dijkstra' || spec.mode === 'checked-bfs';
   const graphSummary = (which: 'primary' | 'comparison', computed: BfsExecution) => {
     const current = computed.steps[Math.min(state.step, computed.steps.length - 1)];
     return (
@@ -559,7 +562,7 @@ export function ExplorationScene({
                   })
                 }
               >
-                Previous explanation
+                <ChevronLeft size={16} aria-hidden="true" /> Previous explanation
               </button>
               <button
                 type="button"
@@ -572,7 +575,7 @@ export function ExplorationScene({
                   })
                 }
               >
-                Next explanation
+                Next explanation <ChevronRight size={16} aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -600,7 +603,7 @@ export function ExplorationScene({
                 disabled={state.step <= 0}
                 onClick={() => onChange({ ...state, step: Math.max(0, state.step - 1) })}
               >
-                Previous explanation
+                <ChevronLeft size={16} aria-hidden="true" /> Previous step
               </button>
               <button
                 className="primary-button"
@@ -608,9 +611,9 @@ export function ExplorationScene({
                 disabled={state.step >= finalStep}
                 onClick={() => onChange({ ...state, step: state.step + 1 })}
               >
-                Next step
+                Next step <ChevronRight size={16} aria-hidden="true" />
               </button>
-              <span className="meta">
+              <span className="meta journal-page-number">
                 Step {Math.min(state.step, finalStep)} / {finalStep}
               </span>
               {singleSearch && experimentInline && experiment}
@@ -651,6 +654,15 @@ export function ExplorationScene({
           <>
             {graphs
               .filter((panel) => panel.execution === (comparison ? activeGraph : 'primary'))
+              .map(renderPanel)}
+            {/* The inspected search's queue stays available as text. */}
+            {panels
+              .filter(
+                (panel) =>
+                  panel.kind === 'frontier' &&
+                  panel.execution === (comparison ? activeGraph : 'primary') &&
+                  execution.modelId !== 'dijkstra-nonnegative',
+              )
               .map(renderPanel)}
             {experiment && !experimentInline && (
               <div className="exploration-experiment-slot">{experiment}</div>
@@ -702,15 +714,6 @@ export function ExplorationScene({
         <details className="exploration-controls-disclosure" open={!compact}>
           <summary>Change the experiment</summary>
           <div className="exploration-controls" aria-label="Search controls">
-            {spec.controls.includes('replay') && (
-              <button
-                className="text-button"
-                type="button"
-                onClick={() => onChange({ ...state, step: 0, explanationStep: 0 })}
-              >
-                Restart search
-              </button>
-            )}
             <div className="exploration-inputs">
               {spec.controls.includes('set-start') && (
                 <label>

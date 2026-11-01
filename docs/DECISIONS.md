@@ -539,3 +539,17 @@ The user set the goal of a clear first place in the Indie track and named the de
 - **Coordination:** this session drives the demo work. `DEMO_WOW_PLAN.md` from the concurrent PM130 session is the starting point and is updated with these decisions.
 
 Product consequences adopted with this decision: checked BFS/Dijkstra explorations always include start, goal and edge-toggle controls, because the application's solver answers those changes; a partial neighbor order made only of valid unique nodes is completed in node order and recorded as an assumption; scene authoring may use up to 6,144 output tokens.
+
+## PM099/PM100 — Responsiveness without lowering quality
+
+Adopt local frozen-context acknowledgement plus optional compact, application-bound continuation on an adequate existing visual. Preserve full composition/clarification, all state/source/ownership/numeric guards, reasoning effort and existing call/time/spend bounds. Checked compact replies contain one current-primary-snapshot step; later-primary views fall back. Strengthen review of unreadable labels and clarification suggestions following actual failed quality probes. No partial generated artifact is exposed. Separate bounded guest admission(default1000/configurable1–5000) from unchanged200paidturns/day, concurrency and$15lifetime cap after the real200guest counter blocked new sessions. Do not reset counters. Preserve the independent spatial branch; scope and evidence are in LATENCY_AND_RESPONSIVENESS.md.
+
+
+## PM114 — The dot journal for the exploration surface, October 30
+
+Jeremy chose the dot-journal direction from the personality canvas and asked for it to be implemented and pushed to main. The user stated no preference between building on main and building on the unmerged capture-first branch. It was built on main, so the push carries only this change. The capture-first and spatial branches remain unmerged and must adopt the journal stylesheet and structure when they are integrated.
+
+Adopted rule: printed type is checked computation and certain application facts; handwriting in one reserved ink is the explanation, attributed by the provenance line to Muse or to a prepared example's author. Each step is told once: in the note, or the printed caption when no explanation was written for that step. Duplicated captions remain only for assistive technology.
+
+Weighted costs sit on their own connection or fall back to the keyed legend. BFS nodes show full names. Secondary content lives in menus. Saving stays explicit. No change to models, budgets, evidence semantics, source handling or course routes. Layout and limits: UI_DOT_JOURNAL.md.
+

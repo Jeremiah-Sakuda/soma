@@ -32,3 +32,25 @@ it.each([500, 640])('keeps the weighted comparison labels clear at width %s', (w
   expect(layout.nodes.find((n) => n.id === 'x')!.label).toBe('Unconnected X');
   expect(spec).toEqual(before);
 });
+
+it.each([500, 640])('places each cost on its own connection at width %s', (width) => {
+  const spec = createWeightedExample({ observationId: 'synthetic', version: 1, region: null });
+  if (spec.mode !== 'checked-dijkstra') throw Error();
+  const panel = spec.scene.panels.find((p) => p.kind === 'graph')!;
+  if (panel.kind !== 'graph') throw Error();
+  const layout = weightedGraphLayout(panel, spec.input, width);
+  const nearest = (edge: (typeof layout.edges)[number], x: number, y: number) =>
+    Math.min(
+      ...Array.from({ length: 101 }, (_, i) => edge.point(i / 100)).map((p) =>
+        Math.hypot(p.x - x, p.y - y),
+      ),
+    );
+  for (const label of layout.labels.filter((l) => !l.legend)) {
+    const own = layout.edges.find((e) => e.id === label.id)!;
+    const distance = nearest(own, label.x, label.y);
+    // On the line, or touching it: never a detached badge with a leader line.
+    expect(distance).toBeLessThanOrEqual(21);
+    for (const other of layout.edges.filter((e) => e.id !== label.id))
+      expect(nearest(other, label.x, label.y)).toBeGreaterThan(distance);
+  }
+});

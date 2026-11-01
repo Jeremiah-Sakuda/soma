@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Play, Pause, RotateCcw } from 'lucide-react';
+import { MessageCircleQuestion, Pause, Play, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import { type ExplorationSpec } from '@/lib/domain/exploration';
 import { type ExplorationViewState } from './exploration-scene';
 import { PreparedAudio } from '@/lib/client/prepared-audio';
@@ -231,7 +231,9 @@ export function ExplorationPlayback({
         </button>
         <button
           type="button"
-          className="text-button"
+          className="text-button journal-icon-button"
+          aria-label="Replay from start"
+          title="Replay from start"
           disabled={disabled || spec.mode === 'clarify'}
           onClick={() => {
             resume.current = null;
@@ -241,16 +243,19 @@ export function ExplorationPlayback({
             onAdvance({ ...state, step: 0, explanationStep: 0 });
           }}
         >
-          <RotateCcw size={15} aria-hidden="true" />
-          Replay from start
+          <RotateCcw size={16} aria-hidden="true" />
         </button>
-        <button type="button" className="text-button" onClick={onQuestion}>
-          Ask about this
+        <button type="button" className="text-button journal-labelled-icon" onClick={onQuestion}>
+          <MessageCircleQuestion size={16} aria-hidden="true" />
+          <span>Ask about this</span>
         </button>
         <span className="meta">Follow along, or pause to ask about anything.</span>
       </div>
       <details className="exploration-voice-settings">
-        <summary>Playback settings</summary>
+        <summary className="journal-labelled-icon journal-summary-icon">
+          <SlidersHorizontal size={16} aria-hidden="true" />
+          Playback settings
+        </summary>
         <p className="meta">
           Muse Spark builds the explanation.{' '}
           {provider === 'gemini'

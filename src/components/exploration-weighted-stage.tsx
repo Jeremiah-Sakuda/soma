@@ -109,14 +109,6 @@ export function ExplorationWeightedStage({
           .filter((label) => !label.legend)
           .map((label) => (
             <g key={label.id} data-cost-label={label.id}>
-              <line
-                x1={label.anchor.x}
-                y1={label.anchor.y}
-                x2={label.x}
-                y2={label.y}
-                stroke="var(--control-border)"
-                strokeWidth="1"
-              />
               <rect
                 x={label.x - label.width / 2}
                 y={label.y - 11}
@@ -135,7 +127,12 @@ export function ExplorationWeightedStage({
           const current = frame.current === node.id,
             expanded = frame.expanded.includes(node.id);
           return (
-            <g key={node.id} data-weighted-node={node.id} onClick={() => onSelect(node.id)}>
+            <g
+              key={node.id}
+              data-weighted-node={node.id}
+              className={`${current ? 'is-current' : expanded ? 'is-settled' : step.queue.includes(node.id) ? 'is-waiting' : 'is-unreached'}${selected === node.id ? ' is-selected' : ''}`}
+              onClick={() => onSelect(node.id)}
+            >
               <rect
                 x={node.x - node.width / 2}
                 y={node.y - node.height / 2}

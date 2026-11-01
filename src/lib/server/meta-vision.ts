@@ -84,7 +84,7 @@ function encode(request: MetaVisionRequest) {
       tools.some((item) => item.parameters.type !== 'object')
     )
       throw new Error();
-    const instructions = z.string().min(1).max(8000).parse(request.instructions);
+    const instructions = z.string().min(1).max(12_000).parse(request.instructions);
     const maxTokens = z
       .number()
       .int()

@@ -182,7 +182,7 @@ it('retains every new component style through review, revision, persistence and 
     expect((await service.read(owner, artifact.id, 1)).active!.spec).toEqual(spec);
     // The real request encoder/estimator also runs in this harness before the
     // scripted author. Leave headroom under its 8,000-character instructions cap.
-    expect(request.mock.calls.at(-1)![0].instructions.length).toBeLessThan(7800);
+    expect(request.mock.calls.at(-1)![0].instructions.length).toBeLessThan(11_800);
     for (const style of styles) expect(request.mock.calls.at(-1)![0].instructions).toContain(style);
   }
 });
@@ -207,7 +207,7 @@ it('retains authored surfaces, coupled drivers and explanation defaults separate
   const reviewed = JSON.parse((review.mock.calls[0] as unknown as [{ input: { content: string }[] }])[0].input[0].content);
   expect(reviewed.checked.spatialPresentation.view.parameters).toEqual({ opening: .6 });
   expect(spatialScene(reviewed.spec, next.state)).toEqual(after);
-  expect(request.mock.calls[0][0].instructions.length).toBeLessThan(7800);
+  expect(request.mock.calls[0][0].instructions.length).toBeLessThan(11_800);
   expect(request.mock.calls[0][0].instructions).toContain('lathe');
   expect(Buffer.byteLength((review.mock.calls[0] as unknown as [{ input: { content: string }[] }])[0].input[0].content)).toBeLessThan(20000);
   await service.save(owner, next.id, next.version, next.state); closeExplorationStore();

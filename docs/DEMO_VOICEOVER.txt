@@ -1,17 +1,19 @@
-This is the moment I built Soma for. A slide with one example of Dijkstra… and a question it doesn't answer.
+[On camera] Every student has sat with a slide like this: one worked example, and the question you actually have isn't on it.
 
-"Why doesn't it just take the direct A-to-F edge?"
+[To Soma] "Why doesn't it just take the direct A-to-F edge?"
 
-Muse Spark reads my slide, every node and every weight, and Soma runs the real algorithm on top of it. That's the moment the lecture glossed over: B drops from four to three. Each ring and number here is computed, not drawn by a model.
+Muse Spark reads my slide, every node and every weight, and Soma runs the real algorithm right on top of it. There's the moment the lecture skipped: going through D costs seven, so the direct edge loses. Every loop and number here is computed, not drawn by a model.
 
-Now my own question. What if D-to-F weren't there? I cut it, right on the slide. New route, cost nine. Instantly, with no model call. The solver answers that.
+Now my own question. What if D-to-F weren't there? I cut it, right on the slide. New route, cost nine. Instantly, with no model call.
 
-Then I ask Soma for the tipping point. Muse decides which connection is worth testing, the direct edge, and Soma proves exactly where the answer flips. At seven the two routes tie. Below seven, the direct edge wins. The model chose the experiment. The code proved the answer.
+Then I ask for the tipping point. Muse picks which connection is worth testing, and Soma proves exactly where the answer flips. At seven the routes tie. Below seven, the direct edge wins. The model chose the experiment; the code proved the answer.
 
-When I ask why, the answer is about the experiment I'm running, not a textbook definition. And before an explanation reaches me, Muse Wonder checks it against Soma's computed trace. In one run it caught Spark settling two vertices in one step and sent it back to be fixed.
+When I ask why, the answer is about the experiment I'm running. And before any explanation reaches me, Muse Wonder checks it against Soma's computed trace. In one run it caught Spark settling two vertices at once and sent it back.
 
-Understanding means doing it again. Everything I explored is saved, and Soma can make a fresh problem from the same idea, hiding the answer until I try it myself.
+Everything I explored is saved, and Soma can make a fresh problem from the same idea, hiding the answer until I try it.
 
-The same idea reaches past graphs: the same checked search in 3D, and in our lab, an engine Muse drew and explains. Turn the crank and see why two pistons in the same spot are doing different jobs.
+The same approach reaches past graphs: the checked search in 3D, and in our lab, an engine Muse drew and explains.
 
-Every student has sat with a slide that shows one example and leaves the real question open. Soma turns that slide into something you can test. Built this week with Muse Spark, Muse Wonder and Muse Voice Transcribe. Turn what you're studying into something you can explore.
+[On camera] The slide didn't change. What changed is that I could finally ask it my question and get an answer I can trust.
+
+Built this week with Muse Spark, Muse Wonder and Muse Voice Transcribe. Turn what you're studying into something you can explore.

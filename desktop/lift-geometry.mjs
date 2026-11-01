@@ -52,8 +52,9 @@ export function liftLayout(model, frame) {
   const region = sheetRegion(model);
   const regionPx = { width: region.width * frame.width, height: region.height * frame.height };
   const r = model.radius * frame.width;
-  // The tallest node rises about two thirds of the graph's own height above the sheet.
-  const tallest = Math.max(r * 6, Math.min(frame.height * 0.34, Math.max(regionPx.height, regionPx.width * 0.5) * 0.62));
+  // The highest distance in the whole search rises about four fifths of the graph's own
+  // height, so a difference of one is plainly visible as height.
+  const tallest = Math.max(r * 6, Math.min(frame.height * 0.42, Math.max(regionPx.height, regionPx.width * 0.5) * 0.8));
   const scale = tallest / lift.maxDistance;
   // A node at distance 0 rests on the sheet; height above that is distance.
   const base = r * 0.78;
@@ -69,7 +70,8 @@ export function liftLayout(model, frame) {
       // when found; only Dijkstra's queued costs are estimates.
       tentative: n.status === 'waiting' && lift.unit === 'cost' && !(n.id === lift.source && n.distance === 0),
       ...toWorld(n, frame),
-      height: known ? base + n.distance * scale : 0,
+      // Within the search's own range, so a bad value cannot fly off screen.
+      height: known ? base + Math.max(0, Math.min(lift.maxDistance, n.distance)) * scale : 0,
       source: n.id === lift.source,
       goal: n.id === lift.goal,
     };
@@ -116,27 +118,23 @@ export function liftLayout(model, frame) {
   return { nodes, edges, sheet, hinge, region, radius: r, scale, base, tallest, unit: lift.unit, source: lift.source };
 }
 
-/** Vertical drop of a slack string's midpoint, proportional to its slack, bounded so a very
- * long connection does not fall through the sheet. */
-export function sagDepth(slack, scale, tallest) {
+/** Vertical drop of a slack string's midpoint, proportional to its slack (at least `least`
+ * so a small slack still shows), bounded so a very long connection stays near its ends. */
+export function sagDepth(slack, scale, tallest, least = 0) {
   if (!slack) return 0;
-  return Math.min(tallest * 0.55, slack * scale * 0.6);
+  return Math.min(tallest * 0.7, Math.max(least, slack * scale * 0.9));
 }
 
-/** A sag that never takes the string below the sheet between its two ends. */
-export function boundedSag(sag, za, zb, margin) {
-  return Math.max(0, Math.min(sag, Math.min(za, zb) - margin));
-}
-
-/** Points along a string from a to b (each {x, y, z}) sagging by `sag` at its middle. */
-export function stringPoints(a, b, sag, segments = 24) {
+/** Points along a string from a to b (each {x, y, z}) sagging by `sag` at its middle. A
+ * string that would sag through the sheet rests on it instead (never below `floor`). */
+export function stringPoints(a, b, sag, segments = 24, floor = -Infinity) {
   const out = [];
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
     out.push({
       x: a.x + (b.x - a.x) * t,
       y: a.y + (b.y - a.y) * t,
-      z: a.z + (b.z - a.z) * t - sag * 4 * t * (1 - t),
+      z: Math.max(Math.min(floor, a.z, b.z), a.z + (b.z - a.z) * t - sag * 4 * t * (1 - t)),
     });
   }
   return out;

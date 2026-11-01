@@ -49,6 +49,9 @@ function validOverlayModel(m) {
           (e.weight === undefined || (Number.isFinite(e.weight) && e.weight >= 0 && e.weight <= 1e7)) &&
           TONE.includes(e.tone),
       ) &&
+      // Ids key the drawing (and the 3D scene's objects), so each must be distinct.
+      new Set(m.nodes.map((n) => n.id)).size === m.nodes.length &&
+      new Set(m.edges.map((e) => e.id)).size === m.edges.length &&
       Array.isArray(m.weights) &&
       m.weights.length <= 24 &&
       m.weights.every((w) => id(w?.edgeId) && point(w) && text(w.text, 24)) &&

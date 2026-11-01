@@ -75,6 +75,11 @@ test('a flat scene lands on the slide pixel for pixel, and labels never overlap'
       assert.ok(Math.abs(items[i].x - items[j].x) >= (items[i].w + items[j].w) / 2 || Math.abs(ys[i] - ys[j]) >= 20, `${i} and ${j}`);
   const pts = stringPoints({ x: 0, y: 0, z: 10 }, { x: 10, y: 0, z: 10 }, 4, 4);
   assert.deepEqual(pts.map((p) => p.z), [10, 7, 6, 7, 10]);
+  // A string sagging through the sheet rests on it, but never above its lower end.
+  assert.deepEqual(stringPoints({ x: 0, y: 0, z: 10 }, { x: 10, y: 0, z: 10 }, 20, 4, 2).map((p) => p.z), [10, 2, 2, 2, 10]);
+  assert.deepEqual(stringPoints({ x: 0, y: 0, z: 1 }, { x: 10, y: 0, z: 10 }, 20, 2, 2).map((p) => p.z), [1, 1, 10]);
   assert.equal(sagDepth(0, 30, 300), 0);
-  assert.equal(sagDepth(100, 30, 300), 165, 'a very long string is bounded');
+  assert.equal(sagDepth(1, 30, 300), 27, 'sag is proportional to slack');
+  assert.equal(sagDepth(0.1, 30, 300, 12), 12, 'a small slack still shows');
+  assert.equal(sagDepth(100, 30, 300), 210, 'a very long string is bounded');
 });

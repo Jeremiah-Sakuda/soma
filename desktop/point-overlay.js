@@ -228,10 +228,14 @@ if (window.SomaLift)
   };
 function liftView(event) {
   const lift = window.SomaLift;
-  if (event.view === '3d' && lift) {
+  if (event.view === '3d' && !lift) {
+    // The 3D bundle did not load: stay flat and say so.
+    document.body.classList.remove('lifted');
+    window.somaPointOverlay.liftFailed();
+  } else if (event.view === '3d') {
     try {
-      if (lift.active) lift.update(event.model, frame, event.sheet);
-      else lift.show(event.model, event.sheet, frame);
+      // show() updates a running scene, and turns a landing back into a lift.
+      lift.show(event.model, event.sheet, frame);
       document.body.classList.add('lifted');
     } catch (error) {
       console.error('Soma 3D lift could not start:', error);

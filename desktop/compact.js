@@ -88,7 +88,7 @@ document.addEventListener('keydown', (event) => {
     // While a drawing is up, the first Escape clears it (handled natively); this one hides.
     event.preventDefault();
     void window.somaCompact.control('hide');
-  } else if (event.key.toLowerCase() === 'l' && event.metaKey && state.visual) {
+  } else if (event.key.toLowerCase() === 'l' && event.metaKey && state.visual && state.liftable) {
     event.preventDefault();
     void window.somaCompact.control('lift');
   } else if (event.key.toLowerCase() === 'n' && event.metaKey && state.visual) {

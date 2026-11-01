@@ -322,10 +322,11 @@ test('a verified drawing lifts into 3D with its own slide region as the sheet, o
     assert.deepEqual(h.results.at(-1), { id, shown: true, view: '3d' });
     assert.equal(h.windows[0].clickThrough, true);
     assert.equal(h.windows[0].forward, false, 'a lifted drawing is not clickable');
-    // The next step redraws in 3D without sending the sheet again.
+    // The next step redraws in 3D with the same sheet (not cropped again), so a scene the
+    // overlay had to rebuild still covers the slide.
     await h.controller.screenOverlay({ id, model: model({ ...LIFT, caption: null }) });
     assert.equal(h.draws.at(-1).view, '3d');
-    assert.equal(h.draws.at(-1).sheet, undefined);
+    assert.equal(h.draws.at(-1).sheet.dataUrl, 'data:image/jpeg;base64,SHEET');
     h.controller.overlayHover({ sender: h.windows[0].webContents }, true);
     assert.equal(h.windows[0].clickThrough, true, 'hovering cannot make the 3D drawing clickable');
     assert.equal(h.controller.setView('2d'), '3d', 'toggles in quick succession are ignored');
@@ -362,15 +363,25 @@ test('without WebGL the drawing stays flat and says why', async () => {
 });
 
 test('while lifted, a slide changed underneath takes the drawing down within seconds', async () => {
-  const h = harness(['data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,NEXT'], { cropImage: () => 'data:image/jpeg;base64,SHEET' });
+  const regions = [];
+  const h = harness(['data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,NEXT'], {
+    cropImage: () => 'data:image/jpeg;base64,SHEET',
+    compareRegion: (a, b, region) => {
+      regions.push(region);
+      return a === b;
+    },
+  });
   try {
     const id = await h.ready();
     await h.controller.screenOverlay({ id, model: model(LIFT) });
     h.controller.setView('3d');
-    await wait(2700);
-    assert.equal(h.controller.view, '3d', 'nothing changed, so no re-check');
-    h.controller.markStale();
-    await wait(2700);
+    regions.length = 0;
+    // Checked even though no Soma window lost focus: scrolling a slide need not move it.
+    await wait(4300);
+    assert.equal(h.controller.view, '3d', 'the slide is unchanged, so the drawing stays');
+    const { sheetRegion } = require('../screen-overlay.cjs');
+    assert.deepEqual(regions[0], sheetRegion(model(LIFT)), 'the whole covered region is compared');
+    await wait(4300);
     assert.equal(h.controller.hasDrawing(), false);
     assert.equal(h.controller.view, '2d');
     assert.deepEqual(h.results.at(-1), { id, shown: false });

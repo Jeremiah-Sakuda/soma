@@ -14,15 +14,15 @@ test('direct crank dragging unwraps two full turns, reverses and stops exactly',
  await page.mouse.up();await page.waitForTimeout(120);await expect(page.getByRole('slider')).toHaveValue('630');await expect(page.locator('h2')).toHaveText('Exhaust.');
 });
 test('part inspection interrupts voice, preserves pose and restores keyboard focus',async({page})=>{
- await page.goto('/');await page.getByRole('button',{name:/Play the cycle|Resume film|Play this stroke/}).click();await expect.poll(()=>page.locator('audio').evaluate((e:HTMLAudioElement)=>e.currentTime)).toBeGreaterThan(.15);
+ await page.goto('/');await page.getByRole('button',{name:/Play the cycle|Resume film|Play from here/}).click();await expect.poll(()=>page.locator('audio').evaluate((e:HTMLAudioElement)=>e.currentTime)).toBeGreaterThan(.15);
  await page.getByRole('button',{name:'02 Connecting Rod',exact:true}).click();await expect(page.locator('h2')).toHaveText('Connecting Rod');expect(await page.locator('audio').evaluate((e:HTMLAudioElement)=>e.paused)).toBe(true);
  const before=await page.getByRole('slider').inputValue();await page.waitForTimeout(120);await expect(page.getByRole('slider')).toHaveValue(before);await page.getByRole('slider').fill('450');await expect(page.locator('[data-engine]')).toHaveAttribute('data-selected','rod');
  await page.getByRole('button',{name:'Back to cycle',exact:true}).click();await expect(page.locator('h2')).toHaveText('Power.');await expect(page.locator('#part-rod')).toBeFocused();
  await page.locator('#part-piston').click();await page.keyboard.press('Escape');await expect(page.locator('#part-piston')).toBeFocused();await expect(page.locator('[data-engine]')).toHaveAttribute('data-selected','none');
 });
 test('space shortcut respects focused controls and source disclosure opens directly',async({page})=>{
- await page.goto('/');await page.getByRole('checkbox',{name:'Narration'}).uncheck();await page.locator('h1').click();await page.keyboard.press('Space');await expect(page.getByRole('button',{name:'Pause film'})).toBeVisible();await page.keyboard.press('Space');await expect(page.getByRole('button',{name:/Play the cycle|Resume film|Play this stroke/})).toBeVisible();
- await page.getByRole('slider').focus();const value=await page.getByRole('slider').inputValue();await page.keyboard.press('Space');await expect(page.getByRole('slider')).toHaveValue(value);await expect(page.getByRole('button',{name:/Play the cycle|Resume film|Play this stroke/})).toBeVisible();
+ await page.goto('/');await page.getByRole('checkbox',{name:'Narration'}).uncheck();await page.locator('h1').click();await page.keyboard.press('Space');await expect(page.getByRole('button',{name:'Pause film'})).toBeVisible();await page.keyboard.press('Space');await expect(page.getByRole('button',{name:/Play the cycle|Resume film|Play from here/})).toBeVisible();
+ await page.getByRole('slider').focus();const value=await page.getByRole('slider').inputValue();await page.keyboard.press('Space');await expect(page.getByRole('slider')).toHaveValue(value);await expect(page.getByRole('button',{name:/Play the cycle|Resume film|Play from here/})).toBeVisible();
  await page.getByRole('button',{name:'How Muse made this'}).click();await expect(page.getByRole('dialog')).toBeVisible();await page.keyboard.press('Escape');await expect(page.locator('#proof-trigger')).toBeFocused();
 });
 test('full-HD film typography stays in frame for all four strokes',async({page})=>{

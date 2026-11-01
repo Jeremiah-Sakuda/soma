@@ -1,0 +1,22 @@
+import {it,expect} from 'vitest';
+import {comparisonStates,turnAngle,poseObservation} from '../../docs/examples/pm126/comparison';
+it('arbitrary selected angles repeat linkage positions exactly after one revolution',()=>{for(let a=0;a<=720;a+=.7){const[x,y]=comparisonStates(a);for(const key of ['pinX','pinY','pistonY','rodAngle'] as const)expect(x[key]).toBeCloseTo(y[key],8);expect(y.degrees-x.degrees).toBeCloseTo(360,9);}});
+it('boundary observations do not assert an open valve',()=>{for(const a of [0,180,360,540,720])expect(poseObservation(a)).toContain('both valves are seated');expect(turnAngle(NaN)).toBe(0);expect(turnAngle(720)).toBe(0);});
+
+import {validateInvestigations,identity} from '../../docs/examples/pm126/investigation';
+import recorded from '../../docs/examples/pm126/recorded/investigations.json';
+import author from '../../docs/examples/pm126/recorded/author-1.json';
+import {studySnapshot} from '../../docs/examples/pm126/StudySnapshot';
+import {validateEngine} from '../../docs/examples/pm121/lib/engine';
+import film from '../../docs/examples/pm121/film.json';
+it('recorded investigation is exactly the actual author output with independently checked actions',()=>{expect(validateInvestigations(recorded)).toEqual(author.structured);expect(recorded.sourceSha256).toBe(identity.sourceSha256);expect(recorded.investigations[0].targetDegrees-recorded.investigations[0].observedDegrees).toBe(360);});
+it('rejects stale context/source, unknown operations/parts and invalid comparison geometry',()=>{for(const mutate of [(d:any)=>d.sourceSha256='wrong',(d:any)=>d.filmSha256='wrong',(d:any)=>d.investigations[0].observedDegrees=91,(d:any)=>d.investigations[0].targetDegrees=451,(d:any)=>d.investigations[0].targetDegrees=NaN,(d:any)=>d.investigations[0].action='run-code',(d:any)=>d.investigations[2].part='valve',(d:any)=>d.investigations[2].targetDegrees=721]){const d=structuredClone(recorded);mutate(d);expect(()=>validateInvestigations(d)).toThrow();}});
+it('export refuses changed valid films instead of stamping the recorded hash',()=>{for(const title of ['Changed valid title','</title><script>alert(1)</script>&"']){const changed=validateEngine({...film,title});expect(()=>studySnapshot(changed,0)).toThrow('Recorded film mismatch');}});
+import {recordedFilm,isRecordedFilm} from '../../docs/examples/pm126/recorded-film';
+import {validateRecordedInvestigation} from '../../docs/examples/pm126/investigation';
+import review from '../../docs/examples/pm126/recorded/review-1.json';
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+it('actual canonical film and synthetic source bytes match the recorded identities',()=>{expect(createHash('sha256').update(JSON.stringify(recordedFilm)).digest('hex')).toBe(identity.filmSha256);expect(createHash('sha256').update(readFileSync('docs/examples/pm121/public/source.png')).digest('hex')).toBe(identity.sourceSha256);});
+it('rejects altered valid film, changed author text or unapproved advisory without stale guidance',()=>{expect(isRecordedFilm(recordedFilm)).toBe(true);const changed=structuredClone(recordedFilm);changed.art[0].d+=' M0 0';expect(isRecordedFilm(changed)).toBe(false);expect(()=>validateRecordedInvestigation(recorded,author,review,changed)).toThrow();const altered=structuredClone(recorded);altered.investigations[0].explanation='Changed valid text';expect(()=>validateRecordedInvestigation(altered,author,review,recordedFilm)).toThrow('recorded author');expect(()=>validateRecordedInvestigation(recorded,author,{...review,structured:{approved:false,issues:[]}},recordedFilm)).toThrow();});
+it('an exported Muse investigation carries exact prepared question, decision and reply',()=>{const probe=recorded.investigations[2] as Parameters<typeof studySnapshot>[2];const html=studySnapshot(recordedFilm,450,probe);expect(html).toContain('Which part carries motion between');expect(html).toContain('target: 450');expect(html).toContain('Inspect the connecting rod');expect(html).toContain('not a live answer');expect(html).toContain(identity.filmSha256);expect(()=>studySnapshot(recordedFilm,0,{...probe!,explanation:'unrecorded'})).toThrow('differs from recorded');});

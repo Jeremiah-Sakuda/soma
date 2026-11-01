@@ -1,0 +1,37 @@
+{
+  "startedAt": "2026-11-01T01:59:43.708Z",
+  "before": 16.454000249999996,
+  "cap": 20,
+  "mode": "actual recorded Muse investigation on original synthetic source",
+  "sourceSha256": "376a321b37dcc18844c10e25164425372d2a02e45417b7b26327223fea976c99",
+  "filmSha256": "edf0a1c363fbd137ee28f0ae443d9592147e5af0579a7694bec22e96cbc6ac6b",
+  "attempts": [
+    {
+      "stage": "author",
+      "durationMs": 4182,
+      "usage": {
+        "input_tokens": 2006,
+        "output_tokens": 831
+      }
+    },
+    {
+      "stage": "advisory",
+      "durationMs": 3840,
+      "usage": {
+        "input_tokens": 1175,
+        "output_tokens": 303
+      },
+      "verdict": {
+        "approved": true,
+        "issues": []
+      }
+    }
+  ],
+  "status": "authored-validated-reviewed",
+  "finishedAt": "2026-11-01T01:59:53.275Z",
+  "elapsedMs": 9567,
+  "after": 16.470799499999995,
+  "costUsd": 0.01679925,
+  "calls": 2,
+  "certain": true
+}

@@ -204,3 +204,7 @@ User requested another iteration. Refine presentation framing, controlled slow/r
 ### October31 — PM125 authorized three judging iterations
 
 Three independent subagent review→fix→verify rounds on the same private local engine, using the supplied weighted judging rubric. Prioritize actual authorship proof, useful manipulation and concrete playback/accessibility defects. Scores are simulated development reviews; missing canonical engine integration, impact and release/publication gates remain explicit. [Round-by-round feedback and executed status](examples/pm125/JUDGING.md). No new release gate or provider spending.
+
+### October31 — PM126 three further review rounds
+
+User authorized rounds4–6 on the same private branch. Implement current-pose investigations, exact portable local output and actual bounded recorded Muse action selection, then verify provenance, interaction/recovery and a separate original-synthetic canonical service journey. Preserve unsuccessful live attempts, all settled spending and unresolved impact/hosted/native/publication gates. [Executed record](examples/pm126/JUDGING.md). No new release feature dependency or default renderer adoption.

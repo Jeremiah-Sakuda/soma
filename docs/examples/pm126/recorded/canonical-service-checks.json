@@ -1,0 +1,118 @@
+{
+  "scope": "Original synthetic real-provider development service checks, not held-out evaluation, hosted UI or engine integration",
+  "attempts": [
+    [
+      {
+        "phase": "preflight",
+        "at": "2026-11-01T02:05:37.510Z",
+        "before": 16.470799499999995,
+        "cap": 20,
+        "sourceSha256": "bdd335469c1de56284daa0cc4638bec3d4db308c9c9797b8cfe630cf65339b23",
+        "scope": "fresh original synthetic real-provider service journey, not held-out or hosted UI"
+      },
+      {
+        "phase": "generate",
+        "mode": "checked-bfs",
+        "calls": 3,
+        "costUsd": 0.04129525,
+        "elapsedMs": 15805
+      },
+      {
+        "phase": "revision",
+        "mode": "checked-bfs",
+        "calls": 2,
+        "costUsd": 0.03720875,
+        "elapsedMs": 10843
+      },
+      {
+        "phase": "failed",
+        "code": "expected [] to include 'eMT'"
+      },
+      {
+        "phase": "final",
+        "at": "2026-11-01T02:06:07.206Z",
+        "after": 16.549303499999997,
+        "elapsedMs": 29834,
+        "observedProviderCalls": 5
+      }
+    ],
+    [
+      {
+        "phase": "preflight",
+        "at": "2026-11-01T02:06:53.167Z",
+        "before": 16.549303499999997,
+        "cap": 20,
+        "sourceSha256": "bdd335469c1de56284daa0cc4638bec3d4db308c9c9797b8cfe630cf65339b23",
+        "scope": "fresh original synthetic real-provider service journey, not held-out or hosted UI"
+      },
+      {
+        "phase": "generate",
+        "mode": "checked-bfs",
+        "calls": 3,
+        "costUsd": 0.04299775,
+        "elapsedMs": 15789
+      },
+      {
+        "phase": "failed",
+        "code": "generation_invalid"
+      },
+      {
+        "phase": "final",
+        "at": "2026-11-01T02:07:26.704Z",
+        "after": 16.623450499999997,
+        "elapsedMs": 33644,
+        "observedProviderCalls": 4
+      }
+    ],
+    [
+      {
+        "phase": "preflight",
+        "at": "2026-11-01T02:08:42.278Z",
+        "before": 16.623450499999997,
+        "cap": 20,
+        "sourceSha256": "bdd335469c1de56284daa0cc4638bec3d4db308c9c9797b8cfe630cf65339b23",
+        "scope": "fresh original synthetic real-provider service journey, not held-out or hosted UI"
+      },
+      {
+        "phase": "generate",
+        "mode": "checked-bfs",
+        "calls": 3,
+        "costUsd": 0.043795749999999994,
+        "elapsedMs": 14638
+      },
+      {
+        "phase": "revision",
+        "mode": "checked-bfs",
+        "calls": 2,
+        "costUsd": 0.03881125,
+        "elapsedMs": 10437
+      },
+      {
+        "phase": "verified",
+        "exactReopen": true,
+        "originalRevisionPreserved": true,
+        "sourcePreserved": true,
+        "disabledEdgePreserved": true,
+        "noProviderCallsOnReopen": true
+      },
+      {
+        "phase": "final",
+        "at": "2026-11-01T02:09:09.764Z",
+        "after": 16.706057499999996,
+        "elapsedMs": 27608,
+        "observedProviderCalls": 5
+      }
+    ]
+  ],
+  "knownOutcome": "Third bounded attempt passed changed-state revision and exact Firestore reopen; first assertion assumed unmaterialized toggle, second follow-up generation rejected",
+  "pm126TotalNewCostUsd": 0.25205725,
+  "latestLedgerUsd": 16.7060575,
+  "cumulativeCapUsd": 20,
+  "rehearsal": {
+    "startedAt": "2026-11-01T02:10:12Z",
+    "finishedAt": "2026-11-01T02:10:51Z",
+    "elapsedSeconds": 39,
+    "scope": "Tool-mediated local navigation rehearsal: source proof → recorded Muse choice → reveal → download click; not narrated video or final submission",
+    "interruption": "No UI interruption observed; scrolling needed for export. Separate browser case verified downloaded file content."
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "sourceSha256": "376a321b37dcc18844c10e25164425372d2a02e45417b7b26327223fea976c99",
+  "filmSha256": "edf0a1c363fbd137ee28f0ae443d9592147e5af0579a7694bec22e96cbc6ac6b",
+  "investigations": [
+    {
+      "id": "two-turns",
+      "observedDegrees": 90,
+      "title": "Same position one turn later is a different stroke",
+      "action": "compare-turns",
+      "targetDegrees": 450,
+      "part": null,
+      "objective": "Observe that identical piston position one turn apart shows different valve states.",
+      "explanation": "Same crank-pin position returns after 360 deg, but valves differ: intake open at 90 deg versus both closed at 450 deg, so the first return is not the same stroke in the four-stroke sequence.",
+      "sourceQuote": "One cycle = four piston strokes = two crankshaft turns (720°)."
+    },
+    {
+      "id": "two-upstrokes",
+      "observedDegrees": 270,
+      "title": "Two upstrokes differ by valve state",
+      "action": "compare-turns",
+      "targetDegrees": 630,
+      "part": null,
+      "objective": "Compare the two upward strokes to see closed valves versus open exhaust valve.",
+      "explanation": "Both are upward mid-strokes with matching piston and rod geometry, but compression has both valves closed while exhaust has exhaust open, showing different gas exchange roles.",
+      "sourceQuote": "4. Exhaust: piston up; exhaust open; burnt gas leaves."
+    },
+    {
+      "id": "connected-motion",
+      "observedDegrees": 450,
+      "title": "Rod links piston pin to crank pin",
+      "action": "inspect-part",
+      "targetDegrees": 450,
+      "part": "rod",
+      "objective": "Inspect the connecting rod linking piston pin to crank pin at mid-stroke.",
+      "explanation": "At mid-power the rod is angled between the piston pin above and the crank pin to the side, visibly linking vertical piston motion to crank rotation.",
+      "sourceQuote": "Connecting rod joins piston pin to crank pin throughout."
+    }
+  ]
+}

@@ -553,3 +553,12 @@ Adopted rule: printed type is checked computation and certain application facts;
 
 Weighted costs sit on their own connection or fall back to the keyed legend. BFS nodes show full names. Secondary content lives in menus. Saving stays explicit. No change to models, budgets, evidence semantics, source handling or course routes. Layout and limits: UI_DOT_JOURNAL.md.
 
+
+## PM139–PM143 — North Star reference, native on-screen overlay, translucent UI, multi-step approved control, November 1
+
+The user supplied a reference product video as the North Star for demo quality and experience (PM139). Its defining qualities: visuals drawn on top of the user's real screen, voice-first questions, a presenter on camera, burned-in captions and range shown through everyday sources. Decisions:
+
+- **Native on-screen overlay (PM140):** the Mac companion draws Soma's checked search directly over the captured window, using the same geometry as the in-page overlay, tied to the Point & ask capture. The slide region must still match the capture before anything is drawn. The web overlay stays as the judge-openable path and fallback footage.
+- **On camera (PM141):** the video adds talking-head beats and burned-in captions.
+- **Translucent UI (PM142):** Soma's companion UI should feel integrated with the screen: macOS vibrancy and see-through surfaces in desktop mode.
+- **Computer control (PM143):** extend the existing approved actions (PM086) to a short Muse-planned sequence that the user approves before it runs. Each step re-observes the app and stops on any mismatch; Escape stops it. The existing refusals remain (password, payment and authentication controls; terminals and script editors), and Soma never submits coursework or writes to connected services. Steps that send, submit, delete or purchase still need their own explicit approval.

@@ -30,6 +30,10 @@ export type SourceOverlayModel = {
     tone: OverlayTone;
     /** Where a struck edge's slash goes: on the line, clear of printed labels. */
     strike?: Point;
+    /** For the 3D lift: the endpoints and the cost the search used (1 per edge for BFS). */
+    fromId?: string;
+    toId?: string;
+    weight?: number;
   }[];
   weights: { edgeId: string; x: number; y: number; text: string }[];
   /** Small tags with leader lines, in the reference style. Text is computed from the trace. */
@@ -37,6 +41,9 @@ export type SourceOverlayModel = {
   /** Kept for compatibility; the overlay no longer outlines source regions. */
   callouts: { id: string; label: string; x: number; y: number; width: number; height: number }[];
   caption: { text: string; stepLabel: string; x: number; y: number; anchor: 'top' | 'bottom'; font: number } | null;
+  /** Scale for the 3D lift: heights are checked distances, so they need the run's largest
+   * value, including tentative estimates. */
+  lift?: { directed: boolean; source: string; goal: string | null; maxDistance: number; unit: 'cost' | 'edges' };
 };
 
 const CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫'];
@@ -178,6 +185,9 @@ export function sourceOverlayModel({
       to: norm(trim(b, control)),
       center: norm(centre),
       ...(strike ? { strike } : {}),
+      fromId: edge.from,
+      toId: edge.to,
+      weight: Number(fmt(dijkstra ? weightOf(edge.from, edge.to) : 1, 4)),
       tone: cut
         ? 'cut'
         : pathEdges.has(key)
@@ -302,8 +312,17 @@ export function sourceOverlayModel({
     top = Math.min(...blocked.map((b) => b.y - b.h / 2));
   const left = Math.max(0.01, (Math.min(...points.map((p) => p.x)) - r * 2) / W);
   const underneath = H - bottom > font * 5 || H - bottom > top;
+  // Tentative estimates can exceed final distances (F ≤ 11 before it settles at 7).
+  const allDistances = execution.steps.flatMap((x) => Object.values(x.distances)).filter(Number.isFinite);
   return {
     final: finished,
+    lift: {
+      directed: Boolean(input.directed),
+      source: input.start,
+      goal: input.goal ?? null,
+      maxDistance: Math.max(1, ...allDistances),
+      unit: dijkstra ? 'cost' : 'edges',
+    },
     radius: r / W,
     font: font / W,
     nodes: modelNodes,

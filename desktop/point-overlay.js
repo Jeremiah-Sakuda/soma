@@ -217,10 +217,33 @@ function applyFrame(event) {
   svg.style.width = frame.width + 'px';
   svg.style.height = frame.height + 'px';
 }
+// The 3D lift draws the same checked model over the 2D sketch, which waits underneath and
+// returns exactly where the sheet lands.
+function liftView(event) {
+  const lift = window.SomaLift;
+  if (event.view === '3d' && lift) {
+    try {
+      if (lift.active) lift.update(event.model, frame, event.sheet);
+      else lift.show(event.model, event.sheet, frame);
+      document.body.classList.add('lifted');
+    } catch {
+      lift.dispose();
+      document.body.classList.remove('lifted');
+      window.somaPointOverlay.liftFailed();
+    }
+  } else if (lift?.active) lift.hide(() => document.body.classList.remove('lifted'));
+  else document.body.classList.remove('lifted');
+}
 window.somaPointOverlay.onDraw((event) => {
   applyFrame(event);
-  if (event.type === 'graph') return renderGraph(event.model);
+  if (event.type === 'graph') {
+    renderGraph(event.model);
+    liftView(event);
+    return;
+  }
   if (event.type === 'graph-clear') {
+    window.SomaLift?.dispose();
+    document.body.classList.remove('lifted');
     clearGraph();
     hideBuddy();
     typedText = '';

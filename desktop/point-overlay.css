@@ -69,3 +69,27 @@
 .graph-tag.is-quiet{opacity:.45}
 .buddy-shape{fill:#ff7a3d;stroke:#fff;stroke-width:1.8;filter:drop-shadow(0 0 7px #ff7a3d99)}
 #buddy-trail{fill:none;stroke:#ff7a3d;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .3s ease}
+
+/* The 3D lift: the sketch steps aside while the sheet is up, and returns as it lands. */
+#graph-layer,#graph-caption,#buddy{transition:opacity .35s ease}
+body.lifted #graph-layer,body.lifted #graph-caption,body.lifted #buddy,body.lifted #buddy-trail{opacity:0}
+#lift-canvas{position:absolute;pointer-events:none}
+#lift-labels{position:absolute;inset:0;pointer-events:none}
+.lift-tag{position:absolute;left:0;top:0;white-space:nowrap;padding:.18em .5em;border-radius:6px;font:700 14px/1.2 'Noteworthy','Bradley Hand','Marker Felt',cursive;color:#1d1d1b;background:#ffffffe6;border:1px solid #0002;box-shadow:0 3px 10px #0002;transition:opacity .25s ease;will-change:transform}
+.lift-tag:empty{display:none}
+.lift-tag.is-node{font-size:16px;margin-top:-4px}
+.lift-tag.is-settled{background:#d9f0e3f2;border-color:#2f7d5f80}
+.lift-tag.is-source{background:#fff1c4f2;border-color:#b8860080}
+.lift-tag.is-current{background:#ffe2c6f2;border-color:#d0702c80}
+.lift-tag.is-waiting{background:#ffffffd9;border-style:dashed;color:#5f5d58;font-weight:400}
+.lift-tag.is-edge{font-size:12.5px;padding:.1em .42em;margin-top:22px}
+.lift-tag.is-taut{background:#fff3b0e6;border-color:#a8860c60}
+.lift-tag.is-path{background:#ffd9cff2;border-color:#d8432a80}
+.lift-tag.is-slack{background:#eef1f4e6;border-color:#5d6b7860;color:#36414c}
+.lift-tag.is-cut{background:#ffe1def2;border-color:#c6282880;color:#9c1f17}
+#lift-caption{position:absolute;max-width:24em;padding:.6em .9em;border-radius:12px;background:#fbf7ecf5;color:#2b2a26;font:15px/1.4 system-ui;box-shadow:0 14px 40px #0003;border:1px solid #e7dfcc}
+#lift-caption strong{display:block;font:700 20px/1.2 'Noteworthy','Bradley Hand',cursive;color:#1d1d1b}
+#lift-caption span{display:block}
+#lift-caption span:empty{display:none}
+#lift-caption small{display:block;margin-top:.45em;padding-top:.4em;border-top:1px solid #e7dfcc;font-size:12.5px;color:#5c574c}
+@media(prefers-reduced-motion:reduce){.lift-tag{transition:none}}

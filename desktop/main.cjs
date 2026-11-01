@@ -97,6 +97,7 @@ function sendCompactState() {
   bar.webContents.send('compact:state', {
     ...s,
     busy: s.busy || compactAsking || Boolean(compactPending) || Boolean(pointAsk?.compactActive()),
+    view: pointAsk?.view ?? '2d',
     // Whether the page itself is working, as distinct from a request still on its way.
     pageBusy: s.busy,
     visual: s.visual && Boolean(pointAsk?.hasDrawing()),
@@ -411,9 +412,18 @@ else {
       captureImage: snapshotDisplay,
       enabledChange: (value) => win.webContents.send('desktop:point-enabled', value),
       overlayResult: (payload) => {
-        view.webContents.send('desktop:screen-overlay-result', { id: payload.id, shown: payload.shown, ...(payload.dismissed ? { dismissed: true } : {}) });
+        view.webContents.send('desktop:screen-overlay-result', {
+          id: payload.id,
+          shown: payload.shown,
+          ...(payload.dismissed ? { dismissed: true } : {}),
+          ...(payload.view ? { view: payload.view } : {}),
+        });
         if (compactMode && bar?.isVisible()) {
-          if (payload.shown)
+          if (payload.reason === 'webgl') status('This Mac could not draw in 3D, so the drawing stays flat on your slide.');
+          else if (payload.view === '3d')
+            status('Lifted off your slide. Height is the checked distance from the start; taut strings are shortest routes.');
+          else if (payload.view === '2d') status('Back on your slide.');
+          else if (payload.shown)
             status(`Drawn on your screen. Ask a follow-up${compactState?.investigable ? ', ⌘↩ tests it' : ''}, Esc clears.`);
           else if (payload.dismissed) status('Cleared. Return asks with a new snapshot; Esc hides the bar.');
           else if (payload.reason === 'invalid') status('This answer can’t be drawn on your screen. Open it with ⤢.');
@@ -427,6 +437,17 @@ else {
       if (trusted(event)) void pointAsk.screenOverlay(payload);
     });
     ipcMain.on('overlay:hover', (event, active) => pointAsk.overlayHover(event, active));
+    ipcMain.on('overlay:lift-failed', (event) => {
+      pointAsk.liftFailed(event);
+      sendCompactState();
+    });
+    // The page asks to lift its drawing into 3D or set it back down.
+    ipcMain.on('desktop:screen-overlay-view', (event, payload) => {
+      if (trusted(event) && payload && typeof payload.id === 'string' && ['2d', '3d'].includes(payload.view)) {
+        pointAsk.setView(payload.view, payload.id);
+        sendCompactState();
+      }
+    });
     ipcMain.on('overlay:toggle-edge', (event, edgeId) => pointAsk.overlayToggle(event, edgeId));
     computerControl = createComputerControl({BrowserWindow,ipcMain,globalShortcut,session:ses,origin,
       helperPath: app.isPackaged ? path.join(process.resourcesPath,'computer-control') : path.join(__dirname,'node_modules/.cache/soma/computer-control'),
@@ -506,6 +527,12 @@ else {
     ipcMain.handle('compact:control', async (event, action) => {
       if (!trustedBar(event)) throw new Error('Untrusted ask bar.');
       if (['previous', 'next', 'play'].includes(action)) view.webContents.send('desktop:compact', { action });
+      else if (action === 'lift') {
+        if (!pointAsk.hasDrawing()) return false;
+        const shown = pointAsk.setView(pointAsk.view === '3d' ? '2d' : '3d');
+        sendCompactState();
+        return shown;
+      }
       else if (action === 'hide') hideCompact();
       else if (action === 'expand') leaveCompact();
       else throw new Error('Unknown control.');

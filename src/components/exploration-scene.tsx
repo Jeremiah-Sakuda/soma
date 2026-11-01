@@ -332,12 +332,17 @@ export function ExplorationScene({
   );
   const toggleRef = useRef<(edgeId: string) => void>(() => {});
   const [onScreen, setOnScreen] = useState(false);
+  // Whether the companion has lifted the on-screen drawing into 3D.
+  const [lifted, setLifted] = useState(false);
   useEffect(() => {
     setOnScreen(false);
+    setLifted(false);
     if (!nativeId) return;
     const listen = (event: Event) => {
       const d = (event as CustomEvent).detail;
-      if (d?.id === nativeId) setOnScreen(d.shown === true);
+      if (d?.id !== nativeId) return;
+      setOnScreen(d.shown === true);
+      setLifted((was) => (d.shown !== true ? false : d.view === '3d' ? true : d.view === '2d' ? false : was));
     };
     window.addEventListener('soma:screen-overlay-result', listen);
     return () => window.removeEventListener('soma:screen-overlay-result', listen);
@@ -594,8 +599,24 @@ export function ExplorationScene({
             )}
             {onScreen && (
               <p className="source-overlay-onscreen" role="status">
-                Drawn on your screen, over the window you captured.
-                {spec.mode !== 'explanation' && spec.controls.includes('toggle-edge') ? ' Click a connection there to cut it;' : ''} Esc hides it.
+                {lifted
+                  ? 'Lifted off your slide in 3D: height is the checked distance from the start, and the shortest routes pull their strings taut.'
+                  : `Drawn on your screen, over the window you captured.${spec.mode !== 'explanation' && spec.controls.includes('toggle-edge') ? ' Click a connection there to cut it;' : ''}`}{' '}
+                Esc hides it.{' '}
+                {spec.mode !== 'explanation' && (
+                  <button
+                    type="button"
+                    className="source-overlay-lift"
+                    aria-pressed={lifted}
+                    onClick={() =>
+                      window.dispatchEvent(
+                        new CustomEvent('soma:screen-overlay-view', { detail: { id: nativeId, view: lifted ? '2d' : '3d' } }),
+                      )
+                    }
+                  >
+                    {lifted ? 'Set it back on the slide' : 'Lift it into 3D'}
+                  </button>
+                )}
               </p>
             )}
             <SourceOverlay

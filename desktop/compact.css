@@ -17,3 +17,4 @@ button:disabled{opacity:.45;cursor:default}
 #expand{width:30px;padding:0}
 #status{width:fit-content;max-width:calc(100% - 36px);margin:4px 18px 0;padding:1px 8px;border-radius:8px;background:var(--paper);font-size:11.5px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:color-mix(in srgb,currentColor 86%,transparent)}#status:empty{display:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+#lift[aria-pressed=true]{background:var(--accent);color:white;border-color:var(--accent)}#lift{font-weight:600}

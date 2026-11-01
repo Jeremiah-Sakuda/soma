@@ -3,7 +3,7 @@ const { spawn } = require('node:child_process');
 const { createInterface } = require('node:readline');
 const { randomUUID } = require('node:crypto');
 const { selectFocus, pointPanelBounds } = require('./point-geometry.cjs');
-const { validOverlayModel, overlayRegion, regionMatches } = require('./screen-overlay.cjs');
+const { validOverlayModel, overlayRegion, regionMatches, sheetRegion, cropCapture } = require('./screen-overlay.cjs');
 const OVERLAY_RETENTION_MS = 20 * 60 * 1000;
 // With no update for this long the learner has likely moved on; stop drawing over the screen.
 const OVERLAY_IDLE_MS = 3 * 60 * 1000;
@@ -34,6 +34,7 @@ function createPointAsk({
   },
   compareRegion = (original, fresh, region) =>
     regionMatches(require('electron').nativeImage, original, fresh, region),
+  cropImage = (dataUrl, region) => cropCapture(require('electron').nativeImage, dataUrl, region),
 }) {
   // The checked search drawn over the real display: bound to one Point & ask capture,
   // shown only after its region still matches, cleared by Escape or the next gesture.
@@ -41,7 +42,10 @@ function createPointAsk({
     graph = null,
     verifying = false,
     refused = null,
-    idleTimer = null;
+    idleTimer = null,
+    // The drawing as a flat sketch on the slide, or lifted off it in 3D.
+    view = '2d',
+    sheet = null;
   let lastCapture = null,
     lastCaptureTimer = null,
     highlightBusy = false;
@@ -61,10 +65,50 @@ function createPointAsk({
   }
   function hideOverlay() {
     if (graph?.verified && overlay && !overlay.isDestroyed()) {
-      draw({ type: 'graph', model: graph.model });
+      drawGraph(false);
       return;
     }
     overlay?.hide();
+  }
+  /** Draws the verified graph in the current view. The sheet (the capture's graph region)
+   * is sent only when the lift starts; the renderer keeps it. */
+  function drawGraph(withSheet) {
+    draw({
+      type: 'graph',
+      model: graph.model,
+      view,
+      ...(view === '3d' && withSheet && sheet?.data ? { sheet: sheet.data } : {}),
+    });
+  }
+  /** Lifts the drawing off the slide in 3D, or sets it back down. Only a drawing that is
+   * verified and on screen can change view. Returns the view now shown. */
+  function setView(next, id) {
+    if (!['2d', '3d'].includes(next) || next === view) return view;
+    const c = overlayCapture;
+    if (!graph?.verified || !c || graph.id !== c.id || (id && id !== graph.id) || !overlay || overlay.isDestroyed()) return view;
+    view = next;
+    if (view === '3d' && sheet?.id !== graph.id) {
+      let data = null;
+      try {
+        const region = sheetRegion(graph.model);
+        data = { dataUrl: cropImage(c.snapshot.dataUrl, region), region };
+      } catch {
+        data = null;
+      }
+      sheet = { id: graph.id, data };
+    }
+    // Lifted, the drawing is not clickable; flat, its connections can be cut again.
+    overlay.setIgnoreMouseEvents(true, view === '3d' ? undefined : { forward: true });
+    drawGraph(true);
+    overlayResult({ id: graph.id, shown: true, view });
+    return view;
+  }
+  /** The overlay could not start WebGL: stay flat and say so. */
+  function liftFailed(event) {
+    if (!fromOverlay(event) || view !== '3d' || !graph?.verified) return;
+    view = '2d';
+    overlay.setIgnoreMouseEvents(true, { forward: true });
+    overlayResult({ id: graph.id, shown: true, view, reason: 'webgl' });
   }
   // Set when the learner may have changed the screen by hand (Soma's panel lost focus).
   let stale = false,
@@ -109,6 +153,8 @@ function createPointAsk({
   function clearGraph() {
     const had = graph?.verified;
     graph = null;
+    view = '2d';
+    sheet = null;
     clearTimeout(idleTimer);
     if (overlay && !overlay.isDestroyed()) {
       overlay.setIgnoreMouseEvents(true);
@@ -590,14 +636,14 @@ function createPointAsk({
     }, Math.min(OVERLAY_IDLE_MS, c.expires - Date.now()));
     clearTimeout(hideTimer);
     overlayFor(c.display);
-    overlay.setIgnoreMouseEvents(true, { forward: true });
-    draw({ type: 'graph', model: graph.model });
+    overlay.setIgnoreMouseEvents(true, view === '3d' ? undefined : { forward: true });
+    drawGraph(false);
   }
   function fromOverlay(event) {
     return Boolean(overlay && !overlay.isDestroyed() && event?.sender === overlay.webContents);
   }
   function overlayHover(event, active) {
-    if (!fromOverlay(event) || !graph?.verified) return;
+    if (!fromOverlay(event) || !graph?.verified || view === '3d') return;
     overlay.setIgnoreMouseEvents(active !== true, { forward: true });
   }
   function overlayToggle(event, edgeId) {
@@ -616,6 +662,11 @@ function createPointAsk({
     askTyped,
     hasDrawing,
     compactActive,
+    setView,
+    liftFailed,
+    get view() {
+      return view;
+    },
     clearScreenOverlay,
     markStale,
     stop,

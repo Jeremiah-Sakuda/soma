@@ -44,6 +44,9 @@ function validOverlayModel(m) {
           point(e.to) &&
           point(e.center) &&
           (e.strike === undefined || point(e.strike)) &&
+          (e.fromId === undefined || id(e.fromId)) &&
+          (e.toId === undefined || id(e.toId)) &&
+          (e.weight === undefined || (Number.isFinite(e.weight) && e.weight >= 0 && e.weight <= 1e7)) &&
           TONE.includes(e.tone),
       ) &&
       Array.isArray(m.weights) &&
@@ -68,6 +71,16 @@ function validOverlayModel(m) {
           c.x + c.width <= 1.000001 &&
           c.y + c.height <= 1.000001,
       ) &&
+      (m.lift === undefined ||
+        (m.lift &&
+          typeof m.lift === 'object' &&
+          typeof m.lift.directed === 'boolean' &&
+          id(m.lift.source) &&
+          (m.lift.goal === null || id(m.lift.goal)) &&
+          Number.isFinite(m.lift.maxDistance) &&
+          m.lift.maxDistance > 0 &&
+          m.lift.maxDistance <= 1e7 &&
+          ['cost', 'edges'].includes(m.lift.unit))) &&
       (m.caption === null ||
         (m.caption &&
           text(m.caption.text, 400) &&
@@ -119,4 +132,28 @@ function regionMatches(nativeImage, originalDataUrl, freshDataUrl, region, toler
   return total / ((pa.length / 4) * 3) <= tolerance;
 }
 
-module.exports = { validOverlayModel, overlayRegion, regionMatches };
+/** Region of the slide that lifts as a sheet in 3D: the nodes and the drawn arcs, padded to
+ * include the printed node circles. Mirrors sheetRegion in lift-geometry.mjs. */
+function sheetRegion(m) {
+  const xs = [...m.nodes.map((n) => n.x), ...m.edges.map((e) => e.center.x)],
+    ys = [...m.nodes.map((n) => n.y), ...m.edges.map((e) => e.center.y)];
+  const pad = m.radius * 1.8;
+  const x = Math.max(0, Math.min(...xs) - pad),
+    y = Math.max(0, Math.min(...ys) - pad);
+  return { x, y, width: Math.min(1, Math.max(...xs) + pad) - x, height: Math.min(1, Math.max(...ys) + pad) - y };
+}
+
+/** Crops a capture to a normalized region, as a JPEG data URL for the 3D sheet. */
+function cropCapture(nativeImage, dataUrl, region) {
+  const image = nativeImage.createFromDataURL(dataUrl), size = image.getSize();
+  if (!size.width || !size.height) throw Error('Empty capture');
+  const rect = {
+    x: Math.floor(region.x * size.width),
+    y: Math.floor(region.y * size.height),
+    width: Math.max(1, Math.floor(region.width * size.width)),
+    height: Math.max(1, Math.floor(region.height * size.height)),
+  };
+  return `data:image/jpeg;base64,${image.crop(rect).toJPEG(88).toString('base64')}`;
+}
+
+module.exports = { validOverlayModel, overlayRegion, regionMatches, sheetRegion, cropCapture };

@@ -7,10 +7,11 @@ const form = document.getElementById('bar'),
   step = document.getElementById('step'),
   play = document.getElementById('play'),
   previous = document.getElementById('previous'),
-  next = document.getElementById('next');
+  next = document.getElementById('next'),
+  lift = document.getElementById('lift');
 const IDLE = 'Return sends one snapshot of this screen with your question. Esc hides the bar.';
 // `step` is the zero-based index of the shown step; `steps` is how many there are.
-let state = { visual: false, busy: false, investigable: false, step: null, steps: null, playing: false, message: '' };
+let state = { visual: false, busy: false, investigable: false, step: null, steps: null, playing: false, message: '', view: '2d' };
 let sending = false,
   // A follow-up's text stays in the box until the page takes it, in case it is refused.
   handedOver = null;
@@ -35,6 +36,9 @@ function render() {
   play.disabled = !hasSteps || busy();
   play.textContent = state.playing ? '❚❚' : '▶';
   play.setAttribute('aria-label', state.playing ? 'Pause the explanation' : 'Play the explanation');
+  lift.hidden = !state.visual;
+  lift.setAttribute('aria-pressed', String(state.view === '3d'));
+  lift.textContent = state.view === '3d' ? 'Flat' : '3D';
   test.hidden = !(state.visual && state.investigable);
   test.disabled = busy();
   // With nothing drawn, every question needs a snapshot.
@@ -84,6 +88,9 @@ document.addEventListener('keydown', (event) => {
     // While a drawing is up, the first Escape clears it (handled natively); this one hides.
     event.preventDefault();
     void window.somaCompact.control('hide');
+  } else if (event.key.toLowerCase() === 'l' && event.metaKey && state.visual) {
+    event.preventDefault();
+    void window.somaCompact.control('lift');
   } else if (event.key.toLowerCase() === 'n' && event.metaKey && state.visual) {
     event.preventDefault();
     fresh.setAttribute('aria-pressed', String(!freshPressed()));
@@ -96,7 +103,7 @@ fresh.addEventListener('click', () => {
   render();
   input.focus();
 });
-for (const [id, action] of [['previous', 'previous'], ['next', 'next'], ['play', 'play'], ['expand', 'expand']])
+for (const [id, action] of [['previous', 'previous'], ['next', 'next'], ['play', 'play'], ['expand', 'expand'], ['lift', 'lift']])
   document.getElementById(id).addEventListener('click', () => void window.somaCompact.control(action));
 window.somaCompact.onStatus((message) => {
   if (message) say(message);

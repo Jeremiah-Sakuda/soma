@@ -79,6 +79,25 @@ describe('source overlay model', () => {
   });
 });
 
+describe('3D lift data', () => {
+  it('carries each connection’s ends and the cost the search used, scaled by the run’s largest estimate', () => {
+    const m = model(99);
+    expect(m.lift).toEqual({ directed: false, source: 'A', goal: 'F', maxDistance: 11, unit: 'cost' });
+    expect(m.edges.find((e) => e.id === 'AF')).toMatchObject({ fromId: 'A', toId: 'F', weight: 11 });
+    expect(validOverlayModel(m)).toBe(true);
+  });
+  it('uses a slider’s cost, and one per edge for breadth-first search', () => {
+    const weights = { AF: 6 };
+    const execution = runDijkstra({ ...hero, algorithm: 'dijkstra', edges: hero.edges.map((e) => (e.id === 'AF' ? { ...e, weight: 6 } : e)) });
+    const slid = sourceOverlayModel({ layout, graph: hero, execution, index: 99, disabledEdgeIds: [], weights, caption: null, stepLabel: 'Step', aspect: 0.5625 });
+    expect(slid.edges.find((e) => e.id === 'AF')?.weight).toBe(6);
+    const bfs = runBfs({ ...hero, edges: hero.edges.map(({ weight: _w, ...e }) => e) });
+    const flat = sourceOverlayModel({ layout, graph: hero, execution: bfs, index: 99, disabledEdgeIds: [], caption: null, stepLabel: 'Step', aspect: 0.5625 });
+    expect(flat.lift?.unit).toBe('edges');
+    expect(new Set(flat.edges.map((e) => e.weight))).toEqual(new Set([1]));
+  });
+});
+
 describe('source overlay model edge cases', () => {
   it('keeps the route and the goal on a crowded final frame', () => {
     const ids = Array.from({ length: 12 }, (_, i) => `n${i}`);

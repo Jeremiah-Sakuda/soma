@@ -352,3 +352,19 @@ export function loopPath(x: number, y: number, r: number, id: string): string {
   }
   return parts.join(' ');
 }
+
+/** The order in which the checked route draws: from the start, one connection after another
+ * to the goal, each in its direction of travel (`reverse` when travel runs to → from). Empty
+ * when the route cannot be walked from the start (then it draws all at once, as before). */
+export function routeSequence(model: Pick<SourceOverlayModel, 'edges' | 'lift'>): Map<string, { index: number; reverse: boolean }> {
+  const order = new Map<string, { index: number; reverse: boolean }>();
+  const route = model.edges.filter((e) => e.tone === 'path' && e.fromId && e.toId);
+  let at = model.lift?.source;
+  while (at) {
+    const next = route.find((e) => !order.has(e.id) && (e.fromId === at || e.toId === at));
+    if (!next) break;
+    order.set(next.id, { index: order.size, reverse: next.toId === at });
+    at = next.toId === at ? next.fromId : next.toId;
+  }
+  return order.size === route.length ? order : new Map();
+}

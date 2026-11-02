@@ -3,11 +3,15 @@ import { useEffect, useState, type KeyboardEvent } from 'react';
 import type { BfsExecution, BfsInput } from '@/lib/domain/graph-search';
 import {
   loopPath,
+  routeSequence,
   sourceOverlayModel,
   tagBox,
   type SourceGraphLayout,
   type SourceOverlayModel,
 } from '@/lib/domain/source-overlay-model';
+// Seconds before the route starts drawing, and for each connection along it.
+const ROUTE_LEAD = 0.15,
+  ROUTE_SEGMENT = 0.45;
 
 export type { SourceGraphLayout } from '@/lib/domain/source-overlay-model';
 const WIDTH = 1000;
@@ -59,6 +63,12 @@ export function SourceOverlay({
   const [aspect, setAspect] = useState<number | null>(null);
   const model = aspect ? sourceOverlayModel({ ...input, aspect }) : null;
   const serialized = JSON.stringify(model);
+  // The final route draws from the start to the goal, one connection after another.
+  const sequence = model ? routeSequence(model) : new Map<string, { index: number; reverse: boolean }>();
+  const routeDone = `${ROUTE_LEAD + sequence.size * ROUTE_SEGMENT}s`;
+  // The goal's circle and its tags land as the route arrives there.
+  const goalNode = model?.nodes.find((n) => n.id === model.lift?.goal);
+  const atGoal = (p: { x: number; y: number }) => Boolean(goalNode && Math.abs(p.x - goalNode.x) < 1e-6 && Math.abs(p.y - goalNode.y) < 1e-6);
   useEffect(() => {
     onModel?.(serialized === 'null' ? null : (JSON.parse(serialized) as SourceOverlayModel));
   }, [serialized, onModel]);
@@ -103,9 +113,19 @@ export function SourceOverlay({
               d = `M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`;
             return (
               <g key={edge.id} className={`source-overlay-edge is-${edge.tone}`}>
-                {edge.tone !== 'idle' && edge.tone !== 'struck' && (
-                  <path key={edge.tone === 'path' ? 'path' : 'drawn'} d={d} className="source-overlay-stroke" pathLength={1} strokeWidth={r * (edge.tone === 'path' ? 0.22 : 0.18)} />
-                )}
+                {edge.tone !== 'idle' && edge.tone !== 'struck' && (() => {
+                  const step = edge.tone === 'path' ? sequence.get(edge.id) : undefined;
+                  return (
+                    <path
+                      key={edge.tone === 'path' ? 'path' : 'drawn'}
+                      d={step?.reverse ? `M ${b.x} ${b.y} Q ${c.x} ${c.y} ${a.x} ${a.y}` : d}
+                      className="source-overlay-stroke"
+                      pathLength={1}
+                      strokeWidth={r * (edge.tone === 'path' ? 0.22 : 0.18)}
+                      style={step ? { animationDelay: `${ROUTE_LEAD + step.index * ROUTE_SEGMENT}s`, animationDuration: `${ROUTE_SEGMENT}s`, animationTimingFunction: 'linear' } : undefined}
+                    />
+                  );
+                })()}
                 {edge.tone === 'struck' && (() => {
                   // One slash on the source's own line, clear of its printed labels.
                   const point = edge.strike ? at(edge.strike) : m,
@@ -151,7 +171,14 @@ export function SourceOverlay({
               >
                 <circle cx={p.x} cy={p.y} r={r * 1.25} className="source-overlay-target" />
                 {node.status !== 'unreached' && node.status !== 'waiting' && (
-                  <path key="solid" d={loopPath(p.x, p.y, r * 1.22, node.id)} className="source-overlay-loop" pathLength={1} strokeWidth={r * (node.status === 'current' ? 0.12 : 0.08)} />
+                  <path
+                    key="solid"
+                    d={loopPath(p.x, p.y, r * 1.22, node.id)}
+                    className="source-overlay-loop"
+                    pathLength={1}
+                    strokeWidth={r * (node.status === 'current' ? 0.12 : 0.08)}
+                    style={sequence.size && node.id === model.lift?.goal ? { animationDelay: routeDone } : undefined}
+                  />
                 )}
               </g>
             );
@@ -189,8 +216,18 @@ export function SourceOverlay({
               ? `M ${start.x} ${start.y} Q ${bend.x} ${bend.y} ${end.x} ${end.y}`
               : `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
             return (
-              <g key={tag.id} className={`source-overlay-tag is-${tag.tone}${tag.quiet ? ' is-quiet' : ''}`}>
-                <path d={lead} className="source-overlay-leader" pathLength={1} markerEnd={tag.curved ? 'url(#source-overlay-arrow)' : undefined} />
+              <g
+                key={tag.id}
+                className={`source-overlay-tag is-${tag.tone}${tag.quiet ? ' is-quiet' : ''}`}
+                style={sequence.size && (tag.tone === 'route' || atGoal(tag.anchor)) ? { animationDelay: routeDone } : undefined}
+              >
+                <path
+                  d={lead}
+                  className="source-overlay-leader"
+                  pathLength={1}
+                  markerEnd={tag.curved ? 'url(#source-overlay-arrow)' : undefined}
+                  style={sequence.size && (tag.tone === 'route' || atGoal(tag.anchor)) ? { animationDelay: routeDone } : undefined}
+                />
                 {!tag.curved && <circle cx={end.x} cy={end.y} r={3.2} className="source-overlay-dot" />}
                 <rect x={p.x - w / 2} y={p.y - h / 2} width={w} height={h} rx={3} />
                 <text x={p.x} y={p.y + 1} textAnchor="middle" dominantBaseline="central" fontSize={font}>

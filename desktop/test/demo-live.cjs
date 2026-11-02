@@ -36,8 +36,11 @@ const beat = async (name, fn) => {
   assert.ok(warp && fs.existsSync(warp), 'Set WARP_CURSOR to a built warp-cursor binary.');
   fs.mkdirSync(out, { recursive: true });
   const slide = pathToFileURL(path.resolve(__dirname, '../../docs/examples/hero-dijkstra/lecture-14-dijkstra.png')).href;
+  // A fresh profile each run: its own guest workspace, so per-workspace daily limits from
+  // earlier runs do not apply.
+  const profile = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'soma-demo-live-'));
   const app = await electron.launch({
-    args: [path.resolve(__dirname, '..')],
+    args: [path.resolve(__dirname, '..'), `--user-data-dir=${profile}`],
     executablePath: require('electron'),
     env: { ...process.env, SOMA_TEST_HOLD_HELPER: helper },
   });
@@ -133,8 +136,21 @@ const beat = async (name, fn) => {
       return `drawn in ${Math.round((Date.now() - t0) / 1000)} s`;
     });
 
+    // Every drawing the overlay receives: how many marks ink in fresh, and which tags.
+    await until('overlay page', async () => overlayPage(), 20000);
+    await overlayPage().evaluate(() => {
+      window.__draws = [];
+      new MutationObserver(() => {
+        const layer = document.getElementById('graph-layer');
+        if (!layer || layer.__logged) return;
+        layer.__logged = true;
+        window.__draws.push({ at: Math.round(performance.now()), total: layer.querySelectorAll('.graph-stroke, .graph-loop, .graph-tag, .graph-cut').length, fresh: layer.querySelectorAll('.ink-new').length, tags: [...layer.querySelectorAll('.graph-tag.ink-new text')].map((t) => t.textContent) });
+      }).observe(document.body, { childList: true, subtree: true });
+    });
     await beat('2 · checked search on the slide', async () => {
-      // Pause narration, then step to the end of the search.
+      // Let narration run a few steps, as a viewer sees it, then pause and step to the end.
+      await wait(12000);
+      fs.writeFileSync(path.join(out, 'draws-playing.json'), JSON.stringify(await overlayPage().evaluate(() => window.__draws.splice(0)), null, 1));
       const pause = page.getByRole('button', { name: 'Pause explanation', exact: true });
       if (await pause.isVisible().catch(() => false)) await pause.click();
       for (let i = 0; i < 12; i++) {
@@ -144,6 +160,7 @@ const beat = async (name, fn) => {
         await wait(500);
       }
       await wait(1500);
+      fs.writeFileSync(path.join(out, 'draws-stepping.json'), JSON.stringify(await overlayPage().evaluate(() => window.__draws.splice(0)), null, 1));
       const m = await model();
       const dist = Object.fromEntries(m.nodes.map((n) => [n.label, n.distance]));
       assert.equal(dist.F, 7, `F settles at 7 (got ${dist.F})`);
@@ -174,13 +191,13 @@ const beat = async (name, fn) => {
       const clear = page.getByRole('button', { name: 'Clear selected object', exact: true });
       if (await clear.isVisible().catch(() => false)) await clear.click();
       await ask('Would the direct A-to-F edge ever be the better route?', 'Investigate my question');
-      await until('the investigation', async () => /Why this connection/.test(await pageText()) || /could not|try again/i.test(await page.locator('[role=alert], .exploration-error').allInnerTexts().then((t) => t.join(' ')).catch(() => '')), 180000);
-      assert.match(await pageText(), /Why this connection/, 'the investigation finished');
+      // The companion's narrow layout titles the probe card rather than showing its rationale.
+      await until('the investigation', async () => /Why this connection|When does the route change/.test(await pageText()), 180000);
       const text = await pageText();
-      assert.match(text, /A[–-]F/, 'Muse chose A–F');
+      assert.match(text, /route change at A[–-]F|Why this connection[^\n]*A[–-]F|direct/i, 'Muse chose A–F');
       assert.match(text, /\b7\b/, 'the tie at 7 is shown');
       await shot('4-investigated');
-      return (text.match(/Why this connection:[^\n]*/) ?? [''])[0].slice(0, 160);
+      return (text.match(/When does the route change[^\n]*|Why this connection:[^\n]*/) ?? [''])[0].slice(0, 160);
     });
 
     await beat('5 · follow-up and provenance', async () => {

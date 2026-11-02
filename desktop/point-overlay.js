@@ -101,6 +101,20 @@ function loopPath(x, y, r, id) {
   }
   return parts.join(' ');
 }
+// The final route draws from the start to the goal, one connection after another, each in
+// its direction of travel (mirrors routeSequence in source-overlay-model.ts).
+const ROUTE_LEAD = 0.15, ROUTE_SEGMENT = 0.45;
+function routeSequence(m) {
+  const order = new Map(), route = m.edges.filter((e) => e.tone === 'path' && e.fromId && e.toId);
+  let at = m.lift?.source;
+  while (at) {
+    const next = route.find((e) => !order.has(e.id) && (e.fromId === at || e.toId === at));
+    if (!next) break;
+    order.set(next.id, { index: order.size, reverse: next.toId === at });
+    at = next.toId === at ? next.fromId : next.toId;
+  }
+  return order.size === route.length ? order : new Map();
+}
 function renderGraph(m) {
   clearGraph();
   hint.style.display = 'none';
@@ -111,13 +125,18 @@ function renderGraph(m) {
     at = (p) => ({ x: p.x * W, y: p.y * H });
   const now = new Set(), fresh = (key) => { now.add(key); return seen.has(key) ? '' : ' ink-new'; };
   const layer = el('g', { id: 'graph-layer', class: m.final ? 'is-final' : '' }, svg);
+  const sequence = routeSequence(m), routeDone = `${ROUTE_LEAD + sequence.size * ROUTE_SEGMENT}s`;
   for (const e of m.edges) {
     const a = at(e.from), c = at(e.control), b = at(e.to), mid = at(e.center);
     const d = `M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`;
     const g = el('g', { class: `graph-edge is-${e.tone}` }, layer);
-    if (e.tone !== 'idle' && e.tone !== 'struck')
-      // An edge inks once; later steps only change its tone. The final route inks again.
-      el('path', { d, class: 'graph-stroke' + fresh(`e-${e.id}-${e.tone === 'path' ? 'path' : 'drawn'}`), pathLength: 1, 'stroke-width': r * (e.tone === 'path' ? 0.22 : 0.18) }, g);
+    if (e.tone !== 'idle' && e.tone !== 'struck') {
+      // An edge inks once; later steps only change its tone. The final route inks again,
+      // travelling from the start.
+      const step = e.tone === 'path' ? sequence.get(e.id) : undefined;
+      const stroke = el('path', { d: step?.reverse ? `M ${b.x} ${b.y} Q ${c.x} ${c.y} ${a.x} ${a.y}` : d, class: 'graph-stroke' + fresh(`e-${e.id}-${e.tone === 'path' ? 'path' : 'drawn'}`), pathLength: 1, 'stroke-width': r * (e.tone === 'path' ? 0.22 : 0.18) }, g);
+      if (step) Object.assign(stroke.style, { animationDelay: `${ROUTE_LEAD + step.index * ROUTE_SEGMENT}s`, animationDuration: `${ROUTE_SEGMENT}s`, animationTimingFunction: 'linear' });
+    }
     if (e.tone === 'struck') {
       // One slash on the source's own line, a third of the way along, clear of its label.
       const k = r * 0.5, sp = e.strike ? at(e.strike) : mid, sx = sp.x, sy = sp.y;
@@ -136,7 +155,9 @@ function renderGraph(m) {
     if (n.status === 'unreached' || n.status === 'waiting') continue;
     const p = at(n);
     const g = el('g', { class: `graph-node is-${n.status}` }, layer);
-    el('path', { d: loopPath(p.x, p.y, r * 1.22, n.id), class: 'graph-loop' + (n.status === 'waiting' ? '' : fresh(`n-${n.id}-solid`)), pathLength: 1, 'stroke-width': r * (n.status === 'current' ? 0.12 : 0.08) }, g);
+    const loop = el('path', { d: loopPath(p.x, p.y, r * 1.22, n.id), class: 'graph-loop' + (n.status === 'waiting' ? '' : fresh(`n-${n.id}-solid`)), pathLength: 1, 'stroke-width': r * (n.status === 'current' ? 0.12 : 0.08) }, g);
+    // The goal is circled as the route arrives at it.
+    if (sequence.size && n.id === m.lift?.goal) loop.style.animationDelay = routeDone;
   }
   for (const w of m.weights) {
     const p = at(w);
@@ -158,12 +179,17 @@ function renderGraph(m) {
     const bend = { x: (start.x + end.x) / 2 + (end.y - start.y) * 0.25, y: (start.y + end.y) / 2 - (end.x - start.x) * 0.25 };
     const isNew = fresh(`t-${t.id}-${t.text}`);
     const g = el('g', { class: `graph-tag is-${t.tone}${t.quiet ? ' is-quiet' : ''}${isNew}` }, layer);
+    // The route's own label lands once the route has reached the goal.
+    const goal = m.nodes.find((n) => n.id === m.lift?.goal);
+    const atGoal = goal && Math.abs(t.anchor.x - goal.x) < 1e-6 && Math.abs(t.anchor.y - goal.y) < 1e-6;
+    if (sequence.size && (t.tone === 'route' || atGoal)) g.style.animationDelay = routeDone;
     el('path', { class: 'graph-leader', pathLength: 1,
       d: t.curved ? `M ${start.x} ${start.y} Q ${bend.x} ${bend.y} ${end.x} ${end.y}` : `M ${start.x} ${start.y} L ${end.x} ${end.y}`,
       ...(t.curved ? { 'marker-end': 'url(#graph-arrow)' } : {}) }, g);
     if (!t.curved) el('circle', { cx: end.x, cy: end.y, r: 3.5, class: 'graph-dot' }, g);
     el('rect', { x: p.x - w / 2, y: p.y - h / 2, width: w, height: h, rx: 3 }, g);
     el('text', { x: p.x, y: p.y + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': font }, g).textContent = t.text;
+    if (sequence.size && (t.tone === 'route' || atGoal)) g.querySelector('.graph-leader').style.animationDelay = routeDone;
   }
   probeGroup.remove();
   seen = now;

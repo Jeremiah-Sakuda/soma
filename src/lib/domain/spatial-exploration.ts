@@ -1,5 +1,6 @@
 import type { ExplorationSpec } from './exploration';
-import { comparisonExecution, explorationExecution, type ExplorationViewState } from './exploration-view';
+import { circuitSolution, comparisonExecution, explorationExecution, type ExplorationViewState } from './exploration-view';
+import { DC_UNITS } from './dc-circuit';
 import { defaultSpatialView, type SpatialPanel, type SpatialVector } from './spatial-schema';
 import type { MechanismParameter } from './mechanism-schema';
 
@@ -38,6 +39,35 @@ export function applySpatialViewAction(spec: ExplorationSpec, state: Exploration
 /** Projection of validated data. Never executes generated instructions or changes the solver. */
 export function spatialScene(spec: ExplorationSpec, state: ExplorationViewState, which: 'primary' | 'comparison' = 'primary'): SpatialScene | null {
   if (spec.mode === 'clarify') return null;
+  if (spec.mode === 'checked-circuit') {
+    // Height is the checked voltage: current runs downhill through every resistor.
+    const solution = circuitSolution(spec, state)!,
+      panel = spec.scene.panels.find((p) => p.kind === 'circuit');
+    if (panel?.kind !== 'circuit' || solution.status !== 'solved') return null;
+    const step = solution.steps[Math.min(state.step, solution.steps.length - 1)];
+    const voltages = Object.values(solution.voltages).filter((v): v is number => v !== null);
+    const low = Math.min(0, ...voltages),
+      span = Math.max(1e-9, Math.max(0, ...voltages) - low);
+    return {
+      title: panel.title, assurance: 'checked',
+      objects: spec.input.nodes.map((node) => {
+        const position = panel.positions.find((p) => p.nodeId === node.id)!;
+        const v = solution.voltages[node.id], shown = step.revealedNodes.includes(node.id) && v !== null;
+        return {
+          id: node.id, label: node.label, description: shown ? `${Number(v.toPrecision(4))} V` : v === null ? 'Not connected to ground' : 'Voltage not yet revealed',
+          shape: 'sphere', color: node.id === step.node ? 'clay' : node.id === spec.input.ground ? 'blue' : 'sage',
+          position: { x: (position.x - 0.5) * 7, y: shown ? ((v - low) / span) * 3 : 0, z: (position.y - 0.5) * 5 },
+          size: { x: 0.5, y: 0.5, z: 0.5 }, parentId: null,
+          visible: true, highlighted: node.id === step.node, status: shown ? 'Revealed' : 'Waiting',
+        };
+      }),
+      connections: spec.input.components.map((c) => ({
+        id: c.id, from: c.from, to: c.to, directed: false,
+        label: `${c.label} · ${Number((solution.state.values[c.id] ?? c.value).toPrecision(4))} ${DC_UNITS[c.kind]}`,
+        active: !solution.state.open.includes(c.id), highlighted: step.revealedComponents.includes(c.id),
+      })),
+    };
+  }
   if (spec.mode !== 'explanation') {
     const execution = which === 'comparison' ? comparisonExecution(spec, state) : explorationExecution(spec, state);
     if (!execution) return null;

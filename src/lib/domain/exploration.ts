@@ -9,7 +9,10 @@ import {
   type BfsExecution,
   type BfsInput,
 } from './graph-search';
+import { dcInputSchema, solveDc, DC_MODEL_ID, DC_MODEL_VERSION, type DcInput, type DcSolution } from './dc-circuit';
 export { bfsInputSchema, runBfs, BFS_MODEL_ID, BFS_MODEL_VERSION } from './graph-search';
+export { DC_MODEL_ID, DC_MODEL_VERSION } from './dc-circuit';
+export type { DcInput, DcSolution } from './dc-circuit';
 export type { BfsInput, BfsExecution, BfsStep } from './graph-search';
 
 const text = z.string().trim().min(1).max(360),
@@ -96,6 +99,16 @@ export const explorationPanelSchema = z.discriminatedUnion('kind', [
     objects: z.array(diagramObjectSchema).min(1).max(30),
   }),
   spatialPanelSchema,
+  // Appended last: the server addresses earlier members by position.
+  z.strictObject({
+    ...panelBase,
+    kind: z.literal('circuit'),
+    execution: z.literal('primary'),
+    positions: z
+      .array(z.strictObject({ nodeId: sceneIdSchema, ...point.shape }))
+      .min(2)
+      .max(10),
+  }),
 ]);
 const scene = z.strictObject({
   layout: z.enum(['diagram-sidebar', 'comparison', 'stack']),
@@ -158,6 +171,18 @@ export const explorationSpecSchema = z.discriminatedUnion('mode', [
     followups: z.array(text).max(4),
   }),
   z.strictObject({ ...common, mode: z.literal('clarify'), question: text }),
+  // Appended last: the server addresses earlier members by position.
+  z.strictObject({
+    ...common,
+    mode: z.literal('checked-circuit'),
+    modelId: z.literal(DC_MODEL_ID),
+    modelVersion: z.literal(DC_MODEL_VERSION),
+    input: dcInputSchema,
+    scene,
+    steps: z.array(step).min(1).max(12),
+    controls: z.array(z.enum(['step', 'replay', 'open-component', 'set-value'])).min(1).max(4),
+    followups: z.array(text).max(4),
+  }),
 ]);
 export type ExplorationSpec = z.infer<typeof explorationSpecSchema>;
 export type ExplorationPanel = z.infer<typeof explorationPanelSchema>;
@@ -165,11 +190,18 @@ export type SourceObservationRef = z.infer<typeof sourceObservationRefSchema>;
 export type CheckedExploration = {
   spec: ExplorationSpec;
   validation: {
-    assurance: 'checked-bfs' | 'checked-dijkstra' | 'explanation-only' | 'needs-clarification';
-    modelVersion: typeof BFS_MODEL_VERSION | 'dijkstra-nonnegative-v1' | null;
+    assurance:
+      | 'checked-bfs'
+      | 'checked-dijkstra'
+      | 'checked-circuit'
+      | 'explanation-only'
+      | 'needs-clarification';
+    modelVersion: typeof BFS_MODEL_VERSION | 'dijkstra-nonnegative-v1' | typeof DC_MODEL_VERSION | null;
     checks: string[];
   };
   executions: { primary: BfsExecution; comparison?: BfsExecution } | null;
+  /** The circuit as read, solved; present only for checked circuits. */
+  circuit?: DcSolution;
 };
 /** Structural + cross-reference checks; server must separately bind every
  * source observation/version to the caller and current authorized turn. */
@@ -227,6 +259,13 @@ export function validateExplorationSpec(raw: unknown): ExplorationSpec {
         objects.set(edge.id, identity);
       }
     }
+  let circuit: DcSolution | null = null;
+  if (spec.mode === 'checked-circuit') {
+    for (const node of spec.input.nodes) objects.set(node.id, JSON.stringify(['node', node.label]));
+    for (const component of spec.input.components) objects.set(component.id, component.kind);
+    circuit = solveDc(spec.input);
+    if (circuit.status !== 'solved') reject('The circuit as read has no single solution.');
+  }
   for (const id of objects.keys()) addId(id);
   const executions: { primary: BfsExecution; comparison?: BfsExecution } | null =
     spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra'
@@ -254,7 +293,17 @@ export function validateExplorationSpec(raw: unknown): ExplorationSpec {
       if (occupied.has(cell)) reject('Panel placements overlap.');
       occupied.add(cell);
     }
-    if ('execution' in panel) {
+    if (panel.kind === 'circuit') {
+      if (spec.mode !== 'checked-circuit') reject('A circuit panel requires a checked circuit.');
+      const input = (spec as { input: DcInput }).input;
+      const positions = panel.positions.map((position) => position.nodeId);
+      if (
+        positions.length !== input.nodes.length ||
+        new Set(positions).size !== positions.length ||
+        input.nodes.some((node) => !positions.includes(node.id))
+      )
+        reject('Every circuit node requires one approved position.');
+    } else if ('execution' in panel) {
       if (!graphInputs || !Object.hasOwn(graphInputs, panel.execution))
         reject('Panel references an unavailable execution.');
       if (panel.kind === 'graph') {
@@ -308,15 +357,24 @@ export function validateExplorationSpec(raw: unknown): ExplorationSpec {
     if (spec.scene.layout === 'comparison' && !spec.comparison)
       reject('Comparison layout requires both checked graphs.');
   }
+  if (spec.mode === 'checked-circuit') {
+    if (new Set(spec.controls).size !== spec.controls.length) reject('Controls must be unique.');
+    if (!spec.scene.panels.some((panel) => panel.kind === 'circuit'))
+      reject('A checked circuit requires its circuit panel.');
+    if (spec.scene.layout === 'comparison') reject('A checked circuit has no comparison.');
+  }
+  const traces: Record<string, { steps: unknown[] }> | null = circuit
+    ? { primary: circuit }
+    : executions;
   for (const item of spec.steps) {
     addId(item.id);
     if ((item.execution === null) !== (item.executionStep === null))
       reject('A step binding requires both execution and trace index.');
     if (
       item.execution !== null &&
-      (!executions ||
-        !Object.hasOwn(executions, item.execution) ||
-        item.executionStep! >= executions[item.execution]!.steps.length)
+      (!traces ||
+        !Object.hasOwn(traces, item.execution) ||
+        item.executionStep! >= traces[item.execution]!.steps.length)
     )
       reject('Step references an unavailable checked state.');
   }
@@ -348,6 +406,17 @@ export function checkExploration(raw: unknown): CheckedExploration {
         checks: ['schema', 'references'],
       },
       executions: null,
+    };
+  if (spec.mode === 'checked-circuit')
+    return {
+      spec,
+      validation: {
+        assurance: 'checked-circuit',
+        modelVersion: spec.modelVersion,
+        checks: ['schema', 'references', 'circuit-input', 'kirchhoff', 'deterministic-trace'],
+      },
+      executions: null,
+      circuit: solveDc(spec.input),
     };
   return {
     spec,
@@ -540,7 +609,7 @@ export function createExampleExploration(
 
 export function createWeightedExample(sourceRef: SourceObservationRef): ExplorationSpec {
   const base = createExampleExploration(sourceRef, 'comparison');
-  if (base.mode === 'clarify' || base.mode === 'explanation') throw new Error();
+  if (base.mode !== 'checked-bfs' && base.mode !== 'checked-dijkstra') throw new Error();
   const input: BfsInput = {
     ...base.input,
     algorithm: 'dijkstra',

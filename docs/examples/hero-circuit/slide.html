@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lecture 9 · Wheatstone Bridge</title>
+<style>
+  @page { size: 1920px 1080px; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  .slide {
+    width: 1920px; height: 1080px; box-sizing: border-box; position: relative;
+    padding: 72px 96px 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #1b1f24;
+  }
+  .kicker { font-size: 26px; letter-spacing: .04em; color: #5b6573; text-transform: uppercase; }
+  h1 { margin: 10px 0 0; font-size: 64px; font-weight: 700; color: #16365f; }
+  .rule { height: 4px; width: 100%; background: #16365f; margin: 26px 0 0; }
+  .body { display: grid; grid-template-columns: 1040px 1fr; gap: 64px; margin-top: 30px; }
+  .task { font-size: 34px; margin: 6px 0 28px; }
+  ol { margin: 0; padding-left: 40px; font-size: 28px; line-height: 1.5; }
+  ol li { margin-bottom: 14px; }
+  code { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 24px; white-space: nowrap; background: #f1f4f8; padding: 2px 8px; border-radius: 4px; }
+  .note { margin-top: 30px; font-size: 28px; color: #5b6573; }
+  .footer {
+    position: absolute; left: 96px; right: 96px; bottom: 36px; display: flex; justify-content: space-between;
+    font-size: 20px; color: #8a93a0; border-top: 1px solid #dde2e8; padding-top: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="kicker">Physics 2 · Lecture 9 · Kirchhoff’s laws</div>
+  <h1>Wheatstone Bridge: Worked Example</h1>
+  <div class="rule"></div>
+  <div class="body">
+    <svg width="1040" height="660" viewBox="0 0 1040 660" role="img" aria-label="Wheatstone bridge: a 12 volt battery with resistors R1 to R5">
+      <style>
+        .w { stroke: #3a4350; stroke-width: 4; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+        .z { stroke: #16365f; stroke-width: 4.5; fill: none; stroke-linejoin: round; }
+        .dot { fill: #16365f; }
+        .lbl { font: 700 32px "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #1b1f24; }
+        .val { font: 400 30px "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #1b1f24; }
+        .node { font: 700 34px "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #16365f; }
+        .plus { font: 700 30px "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #3a4350; }
+      </style>
+      <!-- wires -->
+      <polyline class="w" points="120,304 120,70 850,70 850,150"/>
+      <polyline class="w" points="120,344 120,590 850,590 850,510"/>
+      <line class="w" x1="470" y1="70" x2="470" y2="150"/>
+      <line class="w" x1="470" y1="270" x2="470" y2="390"/>
+      <line class="w" x1="470" y1="510" x2="470" y2="590"/>
+      <line class="w" x1="850" y1="270" x2="850" y2="390"/>
+      <line class="w" x1="470" y1="330" x2="590" y2="330"/>
+      <line class="w" x1="730" y1="330" x2="850" y2="330"/>
+      <!-- battery: long plate is + -->
+      <g id="part-V1">
+        <line class="w" x1="80" y1="304" x2="160" y2="304" style="stroke-width:5"/>
+        <line class="w" x1="98" y1="344" x2="142" y2="344" style="stroke-width:9"/>
+      </g>
+      <text class="plus" x="172" y="296">+</text>
+      <text class="lbl" x="170" y="346">12 V</text>
+      <!-- resistors -->
+      <polyline id="part-R1" class="z" points="470.0,150.0 488.0,155.0 452.0,165.0 488.0,175.0 452.0,185.0 488.0,195.0 452.0,205.0 488.0,215.0 452.0,225.0 488.0,235.0 452.0,245.0 488.0,255.0 470.0,270.0"/>
+      <polyline id="part-R2" class="z" points="470.0,390.0 488.0,395.0 452.0,405.0 488.0,415.0 452.0,425.0 488.0,435.0 452.0,445.0 488.0,455.0 452.0,465.0 488.0,475.0 452.0,485.0 488.0,495.0 470.0,510.0"/>
+      <polyline id="part-R3" class="z" points="850.0,150.0 868.0,155.0 832.0,165.0 868.0,175.0 832.0,185.0 868.0,195.0 832.0,205.0 868.0,215.0 832.0,225.0 868.0,235.0 832.0,245.0 868.0,255.0 850.0,270.0"/>
+      <polyline id="part-R4" class="z" points="850.0,390.0 868.0,395.0 832.0,405.0 868.0,415.0 832.0,425.0 868.0,435.0 832.0,445.0 868.0,455.0 832.0,465.0 868.0,475.0 832.0,485.0 868.0,495.0 850.0,510.0"/>
+      <polyline id="part-R5" class="z" points="590.0,330.0 601.7,348.0 613.3,312.0 625.0,348.0 636.7,312.0 648.3,348.0 660.0,312.0 671.7,348.0 683.3,312.0 695.0,348.0 706.7,312.0 718.3,348.0 730.0,330.0"/>
+      <text class="lbl" x="342" y="200">R₁</text><text class="val" x="342" y="236">2 Ω</text>
+      <text class="lbl" x="342" y="440">R₂</text><text class="val" x="342" y="476">4 Ω</text>
+      <text class="lbl" x="890" y="200">R₃</text><text class="val" x="890" y="236">4 Ω</text>
+      <text class="lbl" x="890" y="440">R₄</text><text class="val" x="890" y="476">8 Ω</text>
+      <text class="lbl" x="628" y="290">R₅</text><text class="val" x="620" y="390">5 Ω</text>
+      <!-- nodes -->
+      <circle id="node-A" class="dot" cx="470" cy="70" r="9"/><text class="node" x="456" y="52">A</text>
+      <circle id="node-B" class="dot" cx="470" cy="330" r="9"/><text class="node" x="422" y="342">B</text>
+      <circle id="node-C" class="dot" cx="850" cy="330" r="9"/><text class="node" x="872" y="342">C</text>
+      <circle id="node-D" class="dot" cx="470" cy="590" r="9"/><text class="node" x="456" y="634">D</text>
+      <!-- ground at D -->
+      <g id="ground"><line class="w" x1="120" y1="590" x2="120" y2="616"/><line class="w" x1="94" y1="616" x2="146" y2="616"/><line class="w" x1="104" y1="628" x2="136" y2="628"/><line class="w" x1="113" y1="640" x2="127" y2="640"/></g>
+    </svg>
+    <div>
+      <p class="task"><strong>Find the current through R₅.</strong><br>Ideal battery and wires; D is ground.</p>
+      <ol>
+        <li>Take <code>V_D = 0</code>, so <code>V_A = 12 V</code>.</li>
+        <li>Left divider: <code>V_B = 12 · 4/(2+4) = 8 V</code></li>
+        <li>Right divider: <code>V_C = 12 · 8/(4+8) = 8 V</code></li>
+        <li><code>I₅ = (V_B − V_C)/R₅</code></li>
+      </ol>
+      <p class="note">Balanced: <code>R₁/R₂ = R₃/R₄</code>, so <strong>I₅ = 0</strong></p>
+    </div>
+  </div>
+  <div class="footer"><span>Physics 2 · Week 6</span><span>Original example slide made for the Soma demo</span><span>9</span></div>
+</div>
+</body>
+</html>

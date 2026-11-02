@@ -47,7 +47,7 @@ describe('a model built for an explanation', () => {
     expect(spec.title).toBe(previous.title);
     expect(spec.scene.panels.map((p) => p.kind)).toEqual(['diagram', 'text', 'spatial']);
     expect(spec.scene.panels[2].placement).toEqual({ column: 1, row: 3, columnSpan: 2 });
-    expect(spec.steps.map((s) => s.caption)).toEqual(previous.steps.map((s) => s.caption));
+    expect(spec.steps.map((s) => s.caption)).toEqual((previous as { steps: { caption: string }[] }).steps.map((s) => s.caption));
     // The diagram's part lights its model twin; unknown ids are dropped.
     expect(spec.steps[0].highlightIds).toEqual(['loop', 'loop_3d', 'medulla']);
     const model = spec.scene.panels[2];

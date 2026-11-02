@@ -24,6 +24,7 @@ import {
 import { probeEdgeCost, type CostProbe } from '../domain/cost-probe';
 import { applyGraphLayout } from '../domain/source-layout';
 import { snapNodesToDrawing } from './node-snap';
+import { snapCircuitToDrawing } from './circuit-snap';
 import recordedExploration from '../fixtures/recorded-exploration.json';
 import recordedMechanism from '../fixtures/recorded-mechanism.json';
 import { circuitSolution, comparisonExecution, explorationExecution } from '../domain/exploration-view';
@@ -1895,6 +1896,20 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             });
           }
         }
+        // Spark's placement of a circuit is approximate; move it onto the drawing itself.
+        if (extracted.circuit && extracted.circuitLayout && request.source?.kind === 'screenshot' && request.source.dataUrl)
+          try {
+            const read = extracted.circuit;
+            const snapped = await snapCircuitToDrawing(request.source.dataUrl, extracted.circuitLayout);
+            extracted = { ...extracted, circuitLayout: snapped.layout };
+            audit.push({
+              event: 'graph-located',
+              call: calls,
+              detail: `Placed the circuit on the drawing: ${snapped.snappedNodes} of ${read.nodes.length} nodes on their junction dots${snapped.corrected ? ', the rest corrected from them' : ''}; ${snapped.refinedParts} of ${read.components.length} parts found along their wires. Presentation only; the circuit and its solution are unchanged.`,
+            });
+          } catch {
+            // An image the snapper cannot read keeps Spark's placement.
+          }
         source.layout = extracted.circuit ? sourceCircuitLayout(extracted.circuit, extracted.circuitLayout) : sourceGraphLayout(extracted);
         if (request.previousImage && previous && extracted.change) {
           source.change = {

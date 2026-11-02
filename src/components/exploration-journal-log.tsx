@@ -1,6 +1,8 @@
 'use client';
 import type { ExplorationSpec } from '@/lib/domain/exploration';
 import {
+  circuitQuantity,
+  circuitSolution,
   explorationExecution,
   explorationInputsChanged,
   explorationStepCaption,
@@ -70,10 +72,54 @@ export function ExplorationJournalLog({
       current
     );
   };
+  // A circuit's log: each node's checked voltage and each part's current, as the steps reveal them.
+  const circuit = circuitSolution(spec, state);
+  const cstep = circuit?.status === 'solved' ? circuit.steps[Math.min(state.step, circuit.steps.length - 1)] : null;
+  const circuitRows =
+    circuit && cstep && spec.mode === 'checked-circuit'
+      ? [
+          ...spec.input.nodes.map((n) => {
+            const v = circuit.voltages[n.id];
+            const mark: Mark = v === null ? 'unreached' : cstep.node === n.id ? 'now' : cstep.revealedNodes.includes(n.id) ? 'settled' : 'waiting';
+            return { id: n.id, name: n.label, mark, value: mark === 'settled' || mark === 'now' ? circuitQuantity(v!, 'V') : mark === 'unreached' ? 'cut off' : '—' };
+          }),
+          ...spec.input.components
+            .filter((c) => cstep.revealedComponents.includes(c.id))
+            .map((c) => ({
+              id: c.id,
+              name: c.label,
+              mark: 'settled' as Mark,
+              value: circuit.state.open.includes(c.id) ? 'open' : circuitQuantity(Math.abs(circuit.currents[c.id]), 'A'),
+            })),
+        ]
+      : [];
   const writer =
     provenance === 'prepared' ? 'the example’s author' : provenance === 'recorded' ? 'Muse (recorded run)' : 'Muse';
   return (
     <div className="journal-log">
+      {circuitRows.length > 0 && (
+        <section aria-labelledby="journal-log-title">
+          <h3 id="journal-log-title" className="journal-log-title">
+            Circuit log
+            <span className="meta">Nodal analysis · exact</span>
+          </h3>
+          <ul className="journal-log-rows">
+            {circuitRows.map((row) => (
+              <li key={row.id} className={`journal-log-row is-${row.mark}`}>
+                <span className="journal-signifier" aria-hidden="true">
+                  {signifier[row.mark]}
+                </span>
+                <span className="sr-only">
+                  {row.mark === 'now' ? 'Now:' : row.mark === 'settled' ? 'Known:' : row.mark === 'waiting' ? 'Not yet:' : 'Cut off:'}
+                </span>
+                <span className="journal-log-name">{row.name}</span>
+                <span className="journal-log-leader" aria-hidden="true" />
+                <span className="journal-log-value">{row.value}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {execution && step && (
         <section aria-labelledby="journal-log-title">
           <h3 id="journal-log-title" className="journal-log-title">
@@ -121,13 +167,28 @@ export function ExplorationJournalLog({
         <p className="journal-note-printed">{printed}</p>
       ) : changed ? (
         <p className="journal-note-printed">
-          You changed the experiment. The log and diagram show the recomputed search; the
-          written notes pause until you ask about it.
+          You changed the experiment. The log and diagram show the recomputed{' '}
+          {circuit ? 'circuit' : 'search'}; the written notes pause until you ask about it.
         </p>
       ) : null}
       <details className="journal-key">
         <summary>
-          {execution ? (
+          {circuit ? (
+            <>
+              <span>
+                <b aria-hidden="true">×</b> known
+              </span>
+              <span>
+                <b aria-hidden="true">→</b> now
+              </span>
+              <span>
+                <b aria-hidden="true">•</b> not yet
+              </span>
+              <span>
+                <b aria-hidden="true">○</b> cut off
+              </span>
+            </>
+          ) : execution ? (
             <>
               <span>
                 <b aria-hidden="true">×</b> {weighted ? 'settled' : 'done'}
@@ -147,7 +208,7 @@ export function ExplorationJournalLog({
           )}
         </summary>
         <p>
-          {execution ? 'Printed values are checked by Soma. ' : ''}
+          {execution || circuit ? 'Printed values are checked by Soma. ' : ''}
           <span className="journal-key-hand">Handwriting is the explanation.</span>
         </p>
       </details>

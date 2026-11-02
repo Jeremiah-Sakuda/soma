@@ -49,8 +49,15 @@ export function spatialScene(spec: ExplorationSpec, state: ExplorationViewState,
     if (panel?.kind !== 'circuit' || solution.status !== 'solved') return null;
     const step = solution.steps[Math.min(state.step, solution.steps.length - 1)];
     const voltages = Object.values(solution.voltages).filter((v): v is number => v !== null);
+    // Spread the drawing's footprint over the floor; a slide's circuit often fills a corner.
+    const xs = panel.positions.map((p) => p.x), zs = panel.positions.map((p) => p.y);
+    const span = (values: number[]) => Math.max(1e-6, Math.max(...values) - Math.min(...values));
+    const floor = (p: { x: number; y: number }) => ({
+      x: ((p.x - Math.min(...xs)) / span(xs) - 0.5) * 6,
+      z: ((p.y - Math.min(...zs)) / span(zs) - 0.5) * 4,
+    });
     const low = Math.min(0, ...voltages),
-      span = Math.max(1e-9, Math.max(0, ...voltages) - low);
+      range = Math.max(1e-9, Math.max(0, ...voltages) - low);
     return {
       title: panel.title, assurance: 'checked',
       checkedLabel: 'Checked circuit · spatial view',
@@ -61,7 +68,7 @@ export function spatialScene(spec: ExplorationSpec, state: ExplorationViewState,
         return {
           id: node.id, label: node.label, description: shown ? `${Number(v.toPrecision(4))} V` : v === null ? 'Not connected to ground' : 'Voltage not yet revealed',
           shape: 'sphere', color: node.id === step.node ? 'clay' : node.id === spec.input.ground ? 'blue' : 'sage',
-          position: { x: (position.x - 0.5) * 7, y: shown ? ((v - low) / span) * 3 : 0, z: (position.y - 0.5) * 5 },
+          position: { ...floor(position), y: shown ? ((v - low) / range) * 3 : 0 },
           size: { x: 0.5, y: 0.5, z: 0.5 }, parentId: null,
           visible: true, highlighted: node.id === step.node, status: shown ? 'Revealed' : 'Waiting',
         };

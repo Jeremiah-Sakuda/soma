@@ -195,7 +195,7 @@ export function ExplorationCircuitStage({
               Next step <ChevronRight size={16} aria-hidden="true" />
             </button>
             <span className="meta journal-page-number">
-              Step {Math.min(state.step, finalStep)} / {finalStep}
+              Step {Math.min(state.step, finalStep) + 1} of {finalStep + 1}
             </span>
           </div>
         </div>

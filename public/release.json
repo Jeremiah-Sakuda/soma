@@ -1,6 +1,6 @@
 {
   "releaseId": "soma-pm162-general-3d-2026-11-02",
-  "sourceTreeSha256": "60402a3f69fc0aeb2d24198c9ccf882aba5b0e75f34f65dcba4b56f2e1cf85ba",
+  "sourceTreeSha256": "47b2dd3145d5b919a9abf22f23a9198202280156ea3a181491df954bc99bfa97",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
     "desktop/Info.plist": "a7566833b9abda71d595bb76ba892daf8c33cccb10413e3a510a1a502c0db050",
@@ -164,7 +164,7 @@
     "src/components/spatial-canvas.tsx": "ff1877d18d53094c64ee10488fd7080f6f71c7be0fb084accebbd27ae4797032",
     "src/components/spatial-layout.ts": "d8293c4131d16ea38d5555e0ba7e55ceef5270724e4837ec81939d20d66aecec",
     "src/components/spatial-parts.ts": "5c2c36fb517c3de63eccd84b1746764a66546b780973024c5f2e756370774851",
-    "src/components/spatial-workspace.tsx": "1ec130c1d85596999b762d21bdb42c03d3030c3d842ef5e9800c0f44b0f0ff62",
+    "src/components/spatial-workspace.tsx": "2ba25677dd989e377f49d37cdf4c7d7f6a25c6eb3430de26d2fb68a9dfcea830",
     "src/components/today-view.tsx": "652f9d746c823f8e78b2de35e26300ded14cffb76ea8c21737464544d8fd472b",
     "src/components/workspace-deletion-recovery.tsx": "6646eff065e3a610751e0102b1fa7ecfcea0aba58ffe51ccfb4327daa65c705e",
     "src/lib/client/exploration-stream.ts": "0598f32ae5e3b388d50502a93c6e5d56a00f1789dfb807112a4c11d06555575f",

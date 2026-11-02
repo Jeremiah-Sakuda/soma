@@ -79,8 +79,7 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
       ? scene.heightNote ?? 'Height represents the current computed distance. Unreached nodes have unknown distance. Camera and separation never change the search.'
       : 'Shapes, depth and motion illustrate the explanation. They are not recovered geometry or a checked physical simulation.'}</p>
     {scene.annotations?.map((text, index) => <p className="meta" key={index}>{text}</p>)}
-    {/* Two renderers are worth comparing only for custom-built pieces. */}
-    {spatial3d && authored && <div className="spatial-renderer-switch" role="group" aria-label="Compare rendering approaches">
+    {spatial3d && <div className="spatial-renderer-switch" role="group" aria-label="Compare rendering approaches">
       <button type="button" aria-pressed={!anatomy && !compare} onClick={() => { setCompare(false); update({ renderer: 'three' }); }}>Current 3D</button>
       <button type="button" aria-pressed={anatomy && !compare} onClick={() => { setCompare(false); update({ renderer: 'anatomy' }); }}>Anatomy illustration</button>
       <button type="button" aria-pressed={compare} onClick={() => setCompare(!compare)}>Side by side</button>

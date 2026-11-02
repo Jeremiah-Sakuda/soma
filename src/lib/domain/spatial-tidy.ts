@@ -49,11 +49,12 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
     }
     if (o.rotation && (o.geometry?.length || drawn(o))) delete o.rotation;
   }
-  next.poses = next.poses.filter((pose) => {
+  for (const pose of next.poses) {
     const owner = byId.get(pose.objectId);
+    if (pose.path) pose.path = pose.path.filter((p, i, all) => i === 0 || Math.hypot(p.x - all[i - 1].x, p.y - all[i - 1].y, p.z - all[i - 1].z) >= 0.02);
+    // A posed path too short to draw keeps the part's own path at that step.
     if (pose.path && (!owner || !drawn(owner) || pose.path.length < (owner.shape === 'sheet' ? 3 : 2))) delete pose.path;
-    return true;
-  });
+  }
   const frames = (o: SpatialPanel['objects'][number]) => [o.position, ...next.poses.filter((p) => p.objectId === o.id && !p.path?.length).map((p) => p.position)];
   const posedPaths = (o: SpatialPanel['objects'][number]) => next.poses.filter((p) => p.objectId === o.id && p.path?.length).map((p) => p.path!);
   const extent = () => {

@@ -99,3 +99,15 @@ describe('sheets and turned parts', () => {
     expect(() => validateSpatialPanel(out, [])).not.toThrow();
   });
 });
+describe('posed paths with repeated points', () => {
+  it('drop the repeats, and a path left too short', () => {
+    const rod = { ...part('rod', 0, 0.5, 0, 0.1), shape: 'tube' as const, path: [{ x: -1, y: 0.5, z: 0 }, { x: 1, y: 0.5, z: 0 }] };
+    const out = tidySpatialPanel(panel([rod], [
+      { stepId: 's1', objectId: 'rod', position: rod.position, visible: true, path: [{ x: -1, y: 0.5, z: 0 }, { x: -1, y: 0.5, z: 0 }, { x: 1, y: 1, z: 0 }] },
+      { stepId: 's2', objectId: 'rod', position: rod.position, visible: true, path: [{ x: 0, y: 0, z: 0 }, { x: 0, y: 0.001, z: 0 }] },
+    ]));
+    expect(out.poses[0].path).toHaveLength(2);
+    expect(out.poses[1].path).toBeUndefined();
+    expect(() => validateSpatialPanel(out, [{ id: 's1' }, { id: 's2' }])).not.toThrow();
+  });
+});

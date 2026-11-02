@@ -298,7 +298,7 @@ export function ExplorationCircuitStage({
                   const xs = layout!.nodes.map((n) => n.x), ys = layout!.nodes.map((n) => n.y), pad = 0.06;
                   const x = Math.max(0, Math.min(...xs) - pad), y = Math.max(0, Math.min(...ys) - pad);
                   const region = { x, y, width: Math.min(1, Math.max(...xs) + pad) - x, height: Math.min(1, Math.max(...ys) + pad) - y };
-                  return { ...drawn, scene: liftScene(scene, region, anchors) };
+                  return { ...drawn, scene: liftScene(scene, region, anchors, state.selectedObjectId) };
                 }}
                 canToggle={spec.controls.includes('open-component')}
                 selected={state.selectedObjectId}

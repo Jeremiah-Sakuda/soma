@@ -460,6 +460,7 @@ else {
       }
     });
     ipcMain.on('overlay:toggle-edge', (event, edgeId) => pointAsk.overlayToggle(event, edgeId));
+    ipcMain.on('overlay:select', (event, objectId) => pointAsk.overlaySelect(event, objectId));
     computerControl = createComputerControl({BrowserWindow,ipcMain,globalShortcut,session:ses,origin,
       helperPath: app.isPackaged ? path.join(process.resourcesPath,'computer-control') : path.join(__dirname,'node_modules/.cache/soma/computer-control'),
       stopPoint:()=>pointAsk.disable(),status,accessibility:()=>process.platform==='darwin'&&systemPreferences.isTrustedAccessibilityClient(true),

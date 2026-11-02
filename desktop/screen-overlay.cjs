@@ -45,6 +45,7 @@ function validScene(sc) {
           (o.rotation === undefined || vec(o.rotation, -180, 180)) &&
           typeof o.visible === 'boolean' &&
           typeof o.highlighted === 'boolean' &&
+          (o.selected === undefined || typeof o.selected === 'boolean') &&
           (o.anchor === undefined || point(o.anchor)) &&
           (o.path === undefined || (Array.isArray(o.path) && o.path.length >= 2 && o.path.length <= 12 && o.path.every((p) => vec(p, -6, 6)))) &&
           (o.geometry === undefined || (Array.isArray(o.geometry) && o.geometry.length <= 12 && JSON.stringify(o.geometry).length <= 24000)) &&

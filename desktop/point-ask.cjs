@@ -143,8 +143,9 @@ function createPointAsk({
     // changed. Not on a timer regardless: each check briefly protects Soma's windows, which
     // screen recorders and shares honour, so a recorded demo would blink.
     if (view === '3d') liftWatch = setInterval(() => void watchLifted(c), LIFT_CHECK_MS);
-    // Lifted, the drawing is not clickable; flat, its connections can be cut again.
-    overlay.setIgnoreMouseEvents(true, view === '3d' ? undefined : { forward: true });
+    // Pointer moves reach the drawing in either view: flat, its connections can be cut; lifted,
+    // a model can be turned and its parts picked. Clicks pass through until it is hovered.
+    overlay.setIgnoreMouseEvents(true, { forward: true });
     drawGraph();
     overlayResult({ id: graph.id, shown: true, view });
     return view;
@@ -675,7 +676,7 @@ function createPointAsk({
     restartIdle(c);
     clearTimeout(hideTimer);
     overlayFor(c.display);
-    overlay.setIgnoreMouseEvents(true, view === '3d' ? undefined : { forward: true });
+    overlay.setIgnoreMouseEvents(true, { forward: true });
     drawGraph();
   }
   /** Re-checks the slide behind a drawing after the learner may have changed it. Takes the
@@ -727,8 +728,16 @@ function createPointAsk({
     return Boolean(overlay && !overlay.isDestroyed() && event?.sender === overlay.webContents);
   }
   function overlayHover(event, active) {
-    if (!fromOverlay(event) || !graph?.verified || view === '3d') return;
+    if (!fromOverlay(event) || !graph?.verified) return;
+    // Lifted, only a model (not a search's strings) can be held and turned.
+    if (view === '3d' && active === true && !graph.model.scene) return;
     overlay.setIgnoreMouseEvents(active !== true, { forward: true });
+  }
+  /** A part of the lifted model was picked: the page selects it for the next question. */
+  function overlaySelect(event, objectId) {
+    if (!fromOverlay(event) || !graph?.verified || view !== '3d' || typeof objectId !== 'string') return;
+    if (!graph.model.scene?.objects.some((o) => o.id === objectId)) return;
+    overlayAction({ id: graph.id, type: 'select', objectId });
   }
   function overlayToggle(event, edgeId) {
     if (!fromOverlay(event) || !graph?.verified || typeof edgeId !== 'string') return;
@@ -743,6 +752,7 @@ function createPointAsk({
   return {
     enable,
     disable,
+    overlaySelect,
     askTyped,
     hasDrawing,
     compactActive,

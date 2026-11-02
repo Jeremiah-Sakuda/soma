@@ -34,7 +34,7 @@ const out = path.resolve(outArg || '.local/model-harness');
           await new Promise((r) => requestAnimationFrame(r));
         }
       };
-      window.somaPointOverlay = { onDraw: (cb) => (window.__draw = cb), hover() {}, toggleEdge() {}, liftFailed: (r) => (window.__liftFailed = r ?? true) };
+      window.somaPointOverlay = { onDraw: (cb) => (window.__draw = cb), hover: (on) => (window.__hover = on), toggleEdge() {}, select: (id) => (window.__selected = id), liftFailed: (r) => (window.__liftFailed = r ?? true) };
     });
     await page.goto(pathToFileURL(path.join(__dirname, '../point-overlay.html')).href);
     await page.addStyleTag({ content: `html{background:#fff url(data:image/png;base64,${slide}) 0 0/100% 100% no-repeat}` });
@@ -69,8 +69,43 @@ const out = path.resolve(outArg || '.local/model-harness');
       await advance(1600);
       if (i === steps - 1) await shot('screen-last');
     }
+    // Interaction: point at a part, pick it, then turn the model by dragging.
+    let interaction = null;
+    if (process.env.INTERACT && !circuit) {
+      const target = await page.evaluate(() => {
+        const s = window.SomaModel.debug;
+        const v = [...s.parts.values()].find((p) => p.data.visible && p.data.shape !== 'sheet');
+        const p = v.mesh.position.clone();
+        p.y += (v.extent.min.y + v.extent.max.y) / 2;
+        p.x += (v.extent.min.x + v.extent.max.x) / 2;
+        p.z += (v.extent.min.z + v.extent.max.z) / 2;
+        s.model.localToWorld(p);
+        p.project(s.camera);
+        return { id: v.id, x: ((p.x + 1) / 2) * s.frame.width + s.frame.dx, y: ((1 - p.y) / 2) * s.frame.height + s.frame.dy };
+      });
+      await page.mouse.move(target.x, target.y);
+      await advance(100);
+      const hovered = await page.evaluate(() => window.__hover);
+      await page.mouse.down();
+      await page.mouse.up();
+      const picked = await page.evaluate(() => window.__selected ?? null);
+      // The page answers a pick by sending the scene back with the part selected.
+      const last = at(steps - 1);
+      last.scene.objects = last.scene.objects.map((o) => (o.id === picked ? { ...o, selected: true } : o));
+      await draw(last, '3d');
+      await advance(600);
+      await shot('screen-picked');
+      await page.mouse.move(target.x, target.y);
+      await page.mouse.down();
+      for (let i = 1; i <= 10; i++) await page.mouse.move(target.x + i * 22, target.y + i * 4);
+      await page.mouse.up();
+      await advance(400);
+      const turned = await page.evaluate(() => window.SomaModel.debug.turn);
+      await shot('screen-turned');
+      interaction = { part: target.id, hovered, picked, turned: Number(turned.toFixed(2)) };
+    }
     const failed = await page.evaluate(() => window.__liftFailed ?? null);
-    console.log(JSON.stringify({ steps, failed, errors }));
+    console.log(JSON.stringify({ steps, failed, errors, ...(interaction ? { interaction } : {}) }));
     if (failed || errors.length) process.exitCode = 1;
   } finally {
     await browser.close();

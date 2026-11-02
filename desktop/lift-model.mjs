@@ -25,6 +25,8 @@ import {
   Vector3,
   Box3,
   Color,
+  Raycaster,
+  Vector2,
 } from 'three';
 import { createSpatialPart } from '../src/components/spatial-parts';
 import { cameraDistance, easeInOut, clamp01, riseAt, approach, separateLabels } from './lift-geometry.mjs';
@@ -39,6 +41,11 @@ const SWAY_MS = 9000;
 const clock = () => (typeof window.__liftNow === 'function' ? window.__liftNow() : performance.now());
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const ACCENT = 0xd8572a;
+// A part the learner picked.
+const PICKED = 0x5551f5;
+// How far a drag can turn the model, and tip it toward or away from the viewer (radians).
+const TURN_LIMIT = Math.PI;
+const TIP_LIMIT = 0.35;
 let s = null;
 
 function shadowTexture() {
@@ -78,14 +85,18 @@ function build(frame) {
   const key = new DirectionalLight(0xfff3dd, 2.4);
   const fill = new DirectionalLight(0xbad9ec, 0.9);
   scene.add(key, fill);
-  const hinge = new Group(), yaw = new Group(), content = new Group(), model = new Group();
+  // table: a turntable on the sheet, so a drag turns the model about its own upright axis.
+  const hinge = new Group(), yaw = new Group(), content = new Group(), table = new Group(), model = new Group();
   hinge.add(yaw);
   yaw.add(content);
-  content.add(model);
+  content.add(table);
+  table.add(model);
   scene.add(hinge);
   s = {
-    canvas, labels, renderer, scene, camera, key, fill, hinge, yaw, content, model,
+    canvas, labels, renderer, scene, camera, key, fill, hinge, yaw, content, table, model,
     parts: new Map(), links: new Map(), shadowTex: shadowTexture(), pending: [],
+    // The learner's own turn and tip of the model, from dragging it.
+    turn: 0, tip: 0, held: false,
     t: 0, mode: 'enter', started: clock(), last: clock(), idleSince: null, sway: 0,
     frame: null, data: null, sheet: null, sheetKey: null, sheetReady: false, onExit: null, raf: 0,
   };
@@ -178,7 +189,9 @@ function fitAnchored(data) {
   s.unit = unit;
   s.model.rotation.x = Math.PI / 2;
   s.model.scale.setScalar(unit);
-  s.model.position.set(0, 0, 2);
+  // Turns about the middle of the drawing.
+  s.table.position.set(s.sheetBox.x, s.sheetBox.y, 0);
+  s.model.position.set(-s.sheetBox.x, -s.sheetBox.y, 2);
   s.floorY = 0;
   s.anchors = new Map(
     data.objects.map((o) => [o.id, { x: (o.anchor.x * f.width - f.width / 2) / unit, z: -(f.height / 2 - o.anchor.y * f.height) / unit }]),
@@ -195,7 +208,10 @@ function fitModel() {
   // Rotating about x by +90° turns the model's y (up) into the sheet's normal.
   s.model.rotation.x = Math.PI / 2;
   s.model.scale.setScalar(unit);
-  s.model.position.set(x - center.x * unit, y + center.z * unit * 0.25, -box.min.y * unit + 2);
+  // The turntable sits under the model's middle; the model stands on it.
+  const cy = y + center.z * unit * 0.25;
+  s.table.position.set(x, cy, 0);
+  s.model.position.set(-center.x * unit, 0, -box.min.y * unit + 2);
   s.floorY = box.min.y;
 }
 
@@ -271,7 +287,9 @@ function syncParts(data) {
     const pin = s.anchors?.get(o.id);
     v.target = pin ? new Vector3(pin.x, o.position.y, pin.z) : new Vector3(o.position.x, o.position.y, o.position.z);
     // A checked height reads with its value: "B 8.394 V".
-    v.label.textContent = s.pinned && o.visible ? `${o.label} ${o.detail}` : o.label;
+    // A picked part says what it does.
+    v.label.textContent = s.pinned && o.visible ? `${o.label} ${o.detail}` : o.selected ? `${o.label} — ${o.detail}` : o.label;
+    v.label.classList.toggle('is-selected', Boolean(o.selected));
     if (s.pinned && !v.stem) {
       v.stem = new Mesh(new CylinderGeometry(0.04, 0.04, 1, 8), new MeshBasicMaterial({ color: 0x8a8f86, transparent: true, opacity: 0 }));
       s.model.add(v.stem);
@@ -389,12 +407,14 @@ function renderFrame() {
   const t = s.t;
   const tiltPhase = clamp01(t / 0.5);
   const tilt = easeInOut(tiltPhase) + (s.mode === 'exit' ? 0 : 0.03 * Math.sin(Math.PI * clamp01((tiltPhase - 0.7) / 0.3)));
-  s.hinge.rotation.x = -TILT * tilt;
+  s.hinge.rotation.x = -TILT * tilt + s.tip * tilt;
   s.hinge.rotation.z = BASE_YAW * tilt;
   s.hinge.position.z = s.frame.height * 0.035 * tilt;
-  const swaying = s.mode === 'idle' && !quick && now - s.idleSince < SWAY_MS;
+  // Once the learner has turned it, the model holds still where they left it.
+  const swaying = s.mode === 'idle' && !quick && !s.touched && now - s.idleSince < SWAY_MS;
   s.sway = approach(s.sway, swaying ? 1 : 0, dt, 0.9);
   s.yaw.rotation.z = Math.sin((now - (s.idleSince ?? now)) / 2200) * 0.14 * s.sway;
+  s.table.rotation.z = s.turn * tilt;
   let moving = s.mode !== 'idle' || s.sway > 0.002;
   const sheetT = clamp01(t / 0.3), sh = s.sheet;
   if (sh) {
@@ -419,7 +439,7 @@ function renderFrame() {
     const rise = s.floorY + (v.at.y - s.floorY) * k;
     v.mesh.position.set(v.at.x, rise, v.at.z);
     v.inner.scale.setScalar(Math.max(0.001, clamp01(k * 1.4) * (1 + pulse)));
-    const dim = anyLit && !v.data.highlighted ? 0.55 : 1;
+    const dim = anyLit && !v.data.highlighted && !v.data.selected ? 0.55 : 1;
     v.inner.traverse((m) => {
       if (!m.isMesh) return;
       const mats = Array.isArray(m.material) ? m.material : [m.material];
@@ -427,8 +447,9 @@ function renderFrame() {
         mat.opacity = (mat.userData.baseOpacity ?? 1) * v.fade * dim;
         mat.depthWrite = mat.opacity > 0.95;
         if ('emissiveIntensity' in mat) {
-          if (v.data.highlighted && mat.emissive) mat.emissive.set(ACCENT);
-          mat.emissiveIntensity = v.data.highlighted ? 0.18 + 0.25 * (pulse / 0.12) : 0;
+          const lit = v.data.selected || v.data.highlighted || v.hover;
+          if (lit && mat.emissive) mat.emissive.set(v.data.selected || v.hover ? PICKED : ACCENT);
+          mat.emissiveIntensity = v.data.selected ? 0.3 : v.hover ? 0.18 : v.data.highlighted ? 0.18 + 0.25 * (pulse / 0.12) : 0;
         }
       }
     });
@@ -452,7 +473,7 @@ function renderFrame() {
     const top = ref
       ? new Vector3(ref.x, ref.y + lift + 0.15, ref.z)
       : new Vector3(v.at.x + (e.min.x + e.max.x) / 2, rise + e.max.y + 0.12, v.at.z + (e.min.z + e.max.z) / 2);
-    placeLabel(v.label, top, clamp01((k - 0.6) / 0.4) * v.fade * (anyLit && !v.data.highlighted ? 0.75 : 1), v.data.highlighted ? 4 : 2);
+    placeLabel(v.label, top, clamp01((k - 0.6) / 0.4) * v.fade * (anyLit && !v.data.highlighted && !v.data.selected && !v.hover ? 0.75 : 1), v.data.selected || v.hover ? 5 : v.data.highlighted ? 4 : 2);
   }
   // Flows arc between the parts they join, drawn once both have risen.
   for (const v of s.links.values()) {
@@ -579,11 +600,51 @@ function dispose() {
   s = null;
 }
 
+const ray = new Raycaster();
+/** What is under a screen point: a part's id, 'sheet' for the lifted slide, or null. */
+function hit(clientX, clientY) {
+  if (!s || s.mode === 'exit' || s.t < 0.6) return null;
+  const f = s.frame;
+  ray.setFromCamera(new Vector2(((clientX - f.dx) / f.width) * 2 - 1, -((clientY - f.dy) / f.height) * 2 + 1), s.camera);
+  const parts = [...s.parts.values()].filter((v) => v.data.visible && v.mesh);
+  const meshes = [];
+  for (const v of parts) v.inner.traverse((m) => m.isMesh && meshes.push([m, v.id]));
+  const first = ray.intersectObjects(meshes.map(([m]) => m), false)[0];
+  if (first) return meshes.find(([m]) => m === first.object)[1];
+  return s.sheet && ray.intersectObject(s.sheet.paper, false).length ? 'sheet' : null;
+}
+/** Hovering a part lights it and names its role. */
+function hover(id) {
+  if (!s) return;
+  for (const v of s.parts.values()) v.hover = v.id === id;
+  wake();
+}
+/** Turns the model by a drag of dx, dy pixels; it stays where the learner leaves it. */
+function drag(dx, dy) {
+  if (!s) return;
+  s.touched = true;
+  s.turn = Math.max(-TURN_LIMIT, Math.min(TURN_LIMIT, s.turn + dx * 0.008));
+  s.tip = Math.max(-TIP_LIMIT, Math.min(TIP_LIMIT, s.tip + dy * 0.004));
+  wake();
+}
+/** Back to the view it lifted into. */
+function resetView() {
+  if (!s) return;
+  s.turn = s.tip = 0;
+  s.touched = false;
+  s.idleSince = clock();
+  wake();
+}
+
 window.SomaModel = {
   show,
   update,
   hide,
   dispose,
+  hit,
+  hover,
+  drag,
+  resetView,
   onFail: null,
   get active() {
     return Boolean(s);

@@ -321,7 +321,7 @@ test('a verified drawing lifts into 3D with its own slide region as the sheet, o
     assert.equal(crops[0].dataUrl, 'data:image/jpeg;base64,SLIDE', 'the sheet is cut from the learner’s own capture');
     assert.deepEqual(h.results.at(-1), { id, shown: true, view: '3d' });
     assert.equal(h.windows[0].clickThrough, true);
-    assert.equal(h.windows[0].forward, false, 'a lifted drawing is not clickable');
+    assert.equal(h.windows[0].forward, true, 'pointer moves reach a lifted drawing; clicks still pass through');
     // The next step redraws in 3D with the same sheet (not cropped again), so a scene the
     // overlay had to rebuild still covers the slide.
     await h.controller.screenOverlay({ id, model: model({ ...LIFT, caption: null }) });
@@ -443,4 +443,36 @@ test('an answer with no drawing read can carry only a 3D scene, bounded like the
     { ...SCENE, objects: Array.from({ length: 25 }, (_, i) => ({ ...SCENE.objects[1], id: `p${i}` })) },
   ])
     assert.equal(validOverlayModel(model({ nodes: [], edges: [], tags: [], scene: bad })), false, JSON.stringify(bad).slice(0, 80));
+});
+
+test('a lifted model can be held and its parts picked, only from the overlay and only real parts', async () => {
+  const crops = [];
+  const h = harness(['data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE'], {
+    cropImage: (dataUrl, region) => {
+      crops.push(region);
+      return 'data:image/jpeg;base64,SHEET';
+    },
+  });
+  try {
+    const id = await h.ready();
+    await h.controller.screenOverlay({ id, model: model({ nodes: [], edges: [], tags: [], scene: SCENE }) });
+    assert.equal(h.controller.liftable, true);
+    const overlay = h.windows[0];
+    // Flat, there is nothing to pick.
+    h.controller.overlaySelect({ sender: overlay.webContents }, 'medulla');
+    assert.equal(h.actions.length, 0);
+    assert.equal(h.controller.setView('3d', id), '3d');
+    assert.deepEqual(crops, [SCENE.region], 'the sheet is the region the model stands on');
+    h.controller.overlayHover({ sender: overlay.webContents }, true);
+    assert.equal(overlay.clickThrough, false, 'hovering the model takes the pointer');
+    h.controller.overlayHover({ sender: overlay.webContents }, false);
+    assert.equal(overlay.clickThrough, true);
+    h.controller.overlaySelect({ sender: {} }, 'medulla');
+    h.controller.overlaySelect({ sender: overlay.webContents }, 'not-a-part');
+    assert.equal(h.actions.length, 0);
+    h.controller.overlaySelect({ sender: overlay.webContents }, 'medulla');
+    assert.deepEqual(h.actions, [{ id, type: 'select', objectId: 'medulla' }]);
+  } finally {
+    h.controller.dispose();
+  }
 });

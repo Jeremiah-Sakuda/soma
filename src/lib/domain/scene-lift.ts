@@ -22,6 +22,8 @@ export type LiftSceneObject = {
   shell?: boolean;
   visible: boolean;
   highlighted: boolean;
+  /** Picked by the learner, on the page or on screen. */
+  selected?: boolean;
   geometry?: MechanismPiece[];
   parameterValues?: Record<string, number>;
   /** Where the part stands on the capture (normalized), when it was read from the source. */
@@ -59,7 +61,7 @@ export function liftRegion(focus: Region | null | undefined, aspect: number): Re
 
 /** Projects any answer's spatial scene for the companion. Hidden parts stay in the scene so
  * they can reappear in place; geometry travels only with its own bounded pieces. */
-export function liftScene(scene: SpatialScene, region: Region, anchors?: Map<string, { x: number; y: number }>): LiftScene {
+export function liftScene(scene: SpatialScene, region: Region, anchors?: Map<string, { x: number; y: number }>, selectedId?: string | null): LiftScene {
   const objects = scene.objects.slice(0, 24).map((o): LiftSceneObject => ({
     id: o.id,
     label: clip(o.label, 60),
@@ -73,6 +75,7 @@ export function liftScene(scene: SpatialScene, region: Region, anchors?: Map<str
     ...(o.shell ? { shell: true } : {}),
     visible: o.visible,
     highlighted: o.highlighted,
+    ...(selectedId && o.id === selectedId ? { selected: true } : {}),
     ...(o.path?.length ? { path: o.path.map((p) => ({ ...p })) } : {}),
     ...(o.rotation ? { rotation: { ...o.rotation } } : {}),
     ...(o.geometry?.length ? { geometry: o.geometry, parameterValues: o.parameterValues ?? {} } : {}),

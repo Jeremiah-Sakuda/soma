@@ -219,13 +219,53 @@ function renderGraph(m) {
     document.body.appendChild(box);
   }
 }
+// A lifted model can be held: hovering it (or its sheet) takes the pointer from the apps
+// underneath, dragging turns it, clicking a part picks it, and a double click sets the view back.
+let held = null;
+const model = () => (document.body.classList.contains('lifted') && window.SomaModel?.active ? window.SomaModel : null);
 document.addEventListener('mousemove', (event) => {
-  const target = document.elementFromPoint(event.clientX, event.clientY);
-  const over = Boolean(target?.classList?.contains('graph-hit'));
+  const lifted = model();
+  if (held && lifted) {
+    const dx = event.clientX - held.x, dy = event.clientY - held.y;
+    if (Math.hypot(event.clientX - held.startX, event.clientY - held.startY) > 4) held.moved = true;
+    if (held.moved) lifted.drag(dx, dy);
+    held.x = event.clientX;
+    held.y = event.clientY;
+    return;
+  }
+  let over;
+  if (lifted) {
+    const id = lifted.hit(event.clientX, event.clientY);
+    lifted.hover(id && id !== 'sheet' ? id : null);
+    over = Boolean(id);
+    document.body.style.cursor = id && id !== 'sheet' ? 'pointer' : id ? 'grab' : '';
+  } else {
+    const target = document.elementFromPoint(event.clientX, event.clientY);
+    over = Boolean(target?.classList?.contains('graph-hit'));
+  }
   if (over !== graphHover) {
     graphHover = over;
     window.somaPointOverlay.hover(over);
   }
+});
+document.addEventListener('mousedown', (event) => {
+  const lifted = model();
+  if (!lifted || event.button !== 0) return;
+  const id = lifted.hit(event.clientX, event.clientY);
+  if (!id) return;
+  held = { id, x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false };
+  document.body.style.cursor = 'grabbing';
+});
+document.addEventListener('mouseup', () => {
+  if (!held) return;
+  const { id, moved } = held;
+  held = null;
+  document.body.style.cursor = '';
+  if (!moved && id !== 'sheet') window.somaPointOverlay.select(id);
+});
+document.addEventListener('dblclick', (event) => {
+  const lifted = model();
+  if (lifted && lifted.hit(event.clientX, event.clientY)) lifted.resetView();
 });
 document.addEventListener('click', (event) => {
   const edge = event.target?.getAttribute?.('data-edge');

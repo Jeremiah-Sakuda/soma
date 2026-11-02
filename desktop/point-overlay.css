@@ -86,6 +86,7 @@ body.lifted .graph-hit{pointer-events:none}
 .lift-tag.is-settled{background:#d9f0e3f5;border-color:#2f7d5f80}
 .lift-tag.is-source{background:#fff1c4f5;border-color:#b8860080}
 .lift-tag.is-current{background:#ffe2c6f5;border-color:#d0702c;box-shadow:0 0 0 3px #ff7a3d,0 3px 10px #0002}
+.lift-tag.is-selected{background:#eceaffF5;border-color:#5551f5;box-shadow:0 0 0 3px #5551f5,0 3px 10px #0002;max-width:22em;white-space:normal;text-align:center}
 .lift-tag.is-waiting{background:#fffffff0;border:1.5px dashed #64748b;color:#475569;font-weight:600}
 .lift-tag.is-drop{background:#fff3b0f5;border-color:#a8860c;color:#1d1d1b;font-weight:700}
 .lift-tag.is-edge{font-size:14.5px;padding:.08em .42em}

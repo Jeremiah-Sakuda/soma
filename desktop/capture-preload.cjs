@@ -131,10 +131,18 @@ window.addEventListener('soma:screen-overlay-view', (event) => {
   ipcRenderer.send('desktop:screen-overlay-view', { id: d.id, view: d.view });
 });
 ipcRenderer.on('desktop:screen-overlay-action', (_event, d) => {
-  if (isExploration() && d?.id === sourceInteraction && d.type === 'toggle-edge' && typeof d.edgeId === 'string')
+  if (!isExploration() || d?.id !== sourceInteraction) return;
+  if (d.type === 'toggle-edge' && typeof d.edgeId === 'string')
     window.dispatchEvent(
       new CustomEvent('soma:screen-overlay-action', {
         detail: { id: d.id, type: 'toggle-edge', edgeId: d.edgeId.slice(0, 48) },
+      }),
+    );
+  // A part picked on the lifted model.
+  else if (d.type === 'select' && typeof d.objectId === 'string')
+    window.dispatchEvent(
+      new CustomEvent('soma:screen-overlay-action', {
+        detail: { id: d.id, type: 'select', objectId: d.objectId.slice(0, 48) },
       }),
     );
 });

@@ -367,7 +367,7 @@ export function ExplorationScene({
     const scene = spatialScene(spec, state);
     if (!scene?.objects.length) return null;
     const at = Math.min(state.explanationStep, spec.steps.length - 1);
-    return sceneOverlayModel(liftScene(scene, liftRegion(focus, aspect)), {
+    return sceneOverlayModel(liftScene(scene, liftRegion(focus, aspect), undefined, state.selectedObjectId), {
       text: spec.steps[at].caption,
       stepLabel: `Step ${at + 1} of ${spec.steps.length}`,
     });
@@ -379,6 +379,8 @@ export function ExplorationScene({
   const explaining = spec.mode === 'explanation';
   useEffect(() => (explaining ? () => mirror(null) : undefined), [explaining, mirror]);
   const toggleRef = useRef<(edgeId: string) => void>(() => {});
+  const selectRef = useRef<(id: string) => void>(() => {});
+  selectRef.current = (id: string) => onChange({ ...state, selectedObjectId: state.selectedObjectId === id ? null : id });
   const [onScreen, setOnScreen] = useState(false);
   // Whether the companion has lifted the on-screen drawing into 3D.
   const [lifted, setLifted] = useState(false);
@@ -389,6 +391,11 @@ export function ExplorationScene({
   // Asked to lift before the model existed: lift once it arrives on screen.
   const pendingLift = useRef(false);
   const hasModel = spec.mode === 'explanation' && spec.scene.panels.some((p) => p.kind === 'spatial');
+  // The part picked on the model, by name.
+  const pickedPart =
+    spec.mode === 'explanation'
+      ? spec.scene.panels.flatMap((p) => (p.kind === 'spatial' ? p.objects : [])).find((o) => o.id === state.selectedObjectId)?.label
+      : undefined;
   useEffect(() => {
     if (pendingLift.current && hasModel && liftable && onScreen && !lifted) {
       pendingLift.current = false;
@@ -425,6 +432,8 @@ export function ExplorationScene({
     const listen = (event: Event) => {
       const d = (event as CustomEvent).detail;
       if (d?.id === nativeId && d.type === 'toggle-edge' && typeof d.edgeId === 'string') toggleRef.current(d.edgeId);
+      // A part picked on the lifted model is selected here too, for the next question.
+      if (d?.id === nativeId && d.type === 'select' && typeof d.objectId === 'string') selectRef.current(d.objectId);
     };
     window.addEventListener('soma:screen-overlay-action', listen);
     return () => window.removeEventListener('soma:screen-overlay-action', listen);
@@ -828,7 +837,7 @@ export function ExplorationScene({
             {screenNotice && !(onScreen && lifted)
               ? screenNotice
               : lifted
-                ? 'Lifted off your slide as a 3D model of this explanation. Step through it here; Esc hides it.'
+                ? `Lifted off your slide as a 3D model. ${pickedPart ? `${pickedPart} is selected: your next question is about it.` : 'Drag it to turn it, click a part to ask about it, double-click to set the view back.'} Esc hides it.`
                 : 'On your screen, over the window you captured. Esc hides it.'}
           </p>
           {onScreen && (liftable || !spatialPanel) && onBuildModel !== undefined && (

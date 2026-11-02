@@ -36,6 +36,36 @@ export function mergeModelScene(raw: unknown, previous: ExplorationSpec): unknow
   const panels: unknown[] = row === undefined ? kept.filter((p) => p.placement.row !== 4) : kept;
   row ??= 4;
   spatial.placement = { column: 1, row, columnSpan: 2 };
+  // A model part named like a diagram part (or a panel) is renamed, with every reference.
+  const taken = new Set<string>(kept.flatMap((p) => [p.id, ...(p.kind === 'diagram' ? p.objects.map((o) => o.id) : [])]));
+  const renamed = new Map<string, string>();
+  const sp = spatial as unknown as {
+    id: string;
+    objects?: { id?: unknown; parentId?: unknown }[];
+    connections?: { id?: unknown; from?: unknown; to?: unknown }[];
+    poses?: { objectId?: unknown }[];
+    viewAction?: { focusObjectId?: unknown } | null;
+  };
+  for (const item of [...(sp.objects ?? []), ...(sp.connections ?? [])]) {
+    if (typeof item?.id !== 'string' || !taken.has(item.id)) {
+      if (typeof item?.id === 'string') taken.add(item.id);
+      continue;
+    }
+    let next = `${item.id}_3d`.slice(0, 48);
+    for (let n = 2; taken.has(next); n++) next = `${item.id.slice(0, 40)}_3d${n}`;
+    renamed.set(item.id, next);
+    taken.add(next);
+    item.id = next;
+  }
+  if (taken.has(sp.id)) sp.id = `${sp.id}_model`.slice(0, 48);
+  const rename = (v: unknown) => (typeof v === 'string' ? renamed.get(v) ?? v : v);
+  for (const o of sp.objects ?? []) o.parentId = rename(o.parentId);
+  for (const c of sp.connections ?? []) {
+    c.from = rename(c.from);
+    c.to = rename(c.to);
+  }
+  for (const pose of sp.poses ?? []) pose.objectId = rename(pose.objectId);
+  if (sp.viewAction) sp.viewAction.focusObjectId = rename(sp.viewAction.focusObjectId);
   const stepIds = new Set(previous.steps.map((s) => s.id));
   if (Array.isArray(spatial.poses)) spatial.poses = spatial.poses.filter((p) => stepIds.has(p.stepId));
   if (Array.isArray(spatial.parameterPoses)) spatial.parameterPoses = spatial.parameterPoses.filter((p) => stepIds.has(p.stepId));
@@ -46,7 +76,7 @@ export function mergeModelScene(raw: unknown, previous: ExplorationSpec): unknow
   const authored = new Map(
     (spec.steps ?? [])
       .filter((s): s is { id: string; highlightIds?: unknown } => !!s && typeof s === 'object' && typeof (s as { id?: unknown }).id === 'string')
-      .map((s) => [s.id, Array.isArray(s.highlightIds) ? s.highlightIds.filter((id): id is string => typeof id === 'string' && known.has(id)) : []]),
+      .map((s) => [s.id, Array.isArray(s.highlightIds) ? s.highlightIds.map(rename).filter((id): id is string => typeof id === 'string' && known.has(id)) : []]),
   );
   const assumptions = [
     ...previous.assumptions,

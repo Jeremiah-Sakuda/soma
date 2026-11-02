@@ -2506,7 +2506,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         let authored: MetaResult;
         try {
           // A model built on request gets the author's full reasoning first.
-          authored = await compose(!computed && !modelIntent && (!!previousSpatial || mechanismIntent));
+          // A repair of a model only fixes named defects, so it can be quick and fit the time left.
+          authored = await compose(modelIntent ? attempt > 0 : !computed && (!!previousSpatial || mechanismIntent));
         } catch (error) {
           // Out of time thinking about a whole model: one quicker attempt with what is left.
           if (!(modelIntent && error instanceof MetaClientError && error.code === 'timeout' && deadline - Date.now() > 25_000)) throw error;

@@ -67,3 +67,19 @@ describe('a review verdict', () => {
     expect(() => parseExplorationReview(result({ findings: ['x'] }))).toThrow();
   });
 });
+describe('a model part named like a diagram part', () => {
+  it('is renamed, with its references, so the whole explanation still validates', () => {
+    const clash = structuredClone(authored) as typeof authored;
+    const model = clash.scene.panels[0] as { objects: { id: string; parentId: string | null }[]; poses: { objectId: string }[] };
+    model.objects[1].id = 'duct';
+    model.poses = [{ stepId: 's2', objectId: 'duct', position: { x: 0, y: 1, z: 0 }, visible: true }] as never;
+    clash.steps[1].highlightIds = ['duct'];
+    const { spec } = checkExploration(mergeModelScene(clash, previous) as ExplorationSpec);
+    if (spec.mode !== 'explanation') throw new Error('explanation expected');
+    const panel = spec.scene.panels[2];
+    if (panel.kind !== 'spatial') throw new Error('spatial expected');
+    expect(panel.objects[1].id).toBe('duct_3d');
+    expect(panel.poses[0].objectId).toBe('duct_3d');
+    expect(spec.steps[1].highlightIds).toContain('duct_3d');
+  });
+});

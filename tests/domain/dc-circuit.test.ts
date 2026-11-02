@@ -10,9 +10,9 @@ const series: DcInput = {
   ],
   ground: 'G',
   components: [
-    { id: 'V1', label: '12 V battery', kind: 'voltage-source', from: 'G', to: 'A', voltage: 12 },
-    { id: 'R1', label: 'R1', kind: 'resistor', from: 'A', to: 'B', resistance: 4 },
-    { id: 'R2', label: 'R2', kind: 'resistor', from: 'B', to: 'G', resistance: 8 },
+    { id: 'V1', label: '12 V battery', kind: 'voltage-source', from: 'G', to: 'A', value: 12 },
+    { id: 'R1', label: 'R1', kind: 'resistor', from: 'A', to: 'B', value: 4 },
+    { id: 'R2', label: 'R2', kind: 'resistor', from: 'B', to: 'G', value: 8 },
   ],
 };
 /** Wheatstone bridge: top T at the battery's + terminal, left L and right R midpoints, R5 across. */
@@ -20,12 +20,12 @@ const bridge = (r4: number): DcInput => ({
   nodes: ['G', 'T', 'L', 'R'].map((id) => ({ id, label: id })),
   ground: 'G',
   components: [
-    { id: 'V1', label: 'V1', kind: 'voltage-source', from: 'G', to: 'T', voltage: 12 },
-    { id: 'R1', label: 'R1', kind: 'resistor', from: 'T', to: 'L', resistance: 2 },
-    { id: 'R2', label: 'R2', kind: 'resistor', from: 'L', to: 'G', resistance: 4 },
-    { id: 'R3', label: 'R3', kind: 'resistor', from: 'T', to: 'R', resistance: 3 },
-    { id: 'R4', label: 'R4', kind: 'resistor', from: 'R', to: 'G', resistance: r4 },
-    { id: 'R5', label: 'R5', kind: 'resistor', from: 'L', to: 'R', resistance: 10 },
+    { id: 'V1', label: 'V1', kind: 'voltage-source', from: 'G', to: 'T', value: 12 },
+    { id: 'R1', label: 'R1', kind: 'resistor', from: 'T', to: 'L', value: 2 },
+    { id: 'R2', label: 'R2', kind: 'resistor', from: 'L', to: 'G', value: 4 },
+    { id: 'R3', label: 'R3', kind: 'resistor', from: 'T', to: 'R', value: 3 },
+    { id: 'R4', label: 'R4', kind: 'resistor', from: 'R', to: 'G', value: r4 },
+    { id: 'R5', label: 'R5', kind: 'resistor', from: 'L', to: 'R', value: 10 },
   ],
 });
 
@@ -40,9 +40,9 @@ function expectPhysical(input: DcInput, s: ReturnType<typeof solveDc>) {
     const value = s.state.values[c.id];
     if (open.has(c.id)) expect(s.currents[c.id]).toBe(0);
     else if (shorted.has(c.id)) expect(s.drops[c.id]).toBeCloseTo(0, 9);
-    else if (c.kind === 'resistor') expect(s.currents[c.id] * (value ?? c.resistance)).toBeCloseTo(s.drops[c.id], 9);
-    else if (c.kind === 'voltage-source') expect(-s.drops[c.id]).toBeCloseTo(value ?? c.voltage, 9);
-    else expect(s.currents[c.id]).toBeCloseTo(value ?? c.current, 9);
+    else if (c.kind === 'resistor') expect(s.currents[c.id] * (value ?? c.value)).toBeCloseTo(s.drops[c.id], 9);
+    else if (c.kind === 'voltage-source') expect(-s.drops[c.id]).toBeCloseTo(value ?? c.value, 9);
+    else expect(s.currents[c.id]).toBeCloseTo(value ?? c.value, 9);
   }
   for (const n of input.nodes) {
     const net = input.components.reduce(
@@ -70,7 +70,7 @@ describe('checked DC circuits (nodal analysis, exact fractions)', () => {
   it('keeps answers as exact fractions where decimals would round', () => {
     const third = solveDc({
       ...series,
-      components: [series.components[0], { ...series.components[1], resistance: 1 }, { ...series.components[2], resistance: 35 }],
+      components: [series.components[0], { ...series.components[1], value: 1 }, { ...series.components[2], value: 35 }],
     });
     expect(third.exact.currents.R1).toBe('1/3');
     expect(third.exact.voltages.B).toBe('35/3');
@@ -86,9 +86,9 @@ describe('checked DC circuits (nodal analysis, exact fractions)', () => {
           const s = solveDc({
             ...series,
             components: [
-              { ...series.components[0], voltage },
-              { ...series.components[1], resistance: r1 },
-              { ...series.components[2], resistance: r2 },
+              { ...series.components[0], value: voltage },
+              { ...series.components[1], value: r1 },
+              { ...series.components[2], value: r2 },
             ],
           });
           const ref = calculateCircuit({ topology: 'series', voltage, r1, r2 });
@@ -101,9 +101,9 @@ describe('checked DC circuits (nodal analysis, exact fractions)', () => {
             ],
             ground: 'G',
             components: [
-              { id: 'V1', label: 'V1', kind: 'voltage-source', from: 'G', to: 'A', voltage },
-              { id: 'R1', label: 'R1', kind: 'resistor', from: 'A', to: 'G', resistance: r1 },
-              { id: 'R2', label: 'R2', kind: 'resistor', from: 'A', to: 'G', resistance: r2 },
+              { id: 'V1', label: 'V1', kind: 'voltage-source', from: 'G', to: 'A', value: voltage },
+              { id: 'R1', label: 'R1', kind: 'resistor', from: 'A', to: 'G', value: r1 },
+              { id: 'R2', label: 'R2', kind: 'resistor', from: 'A', to: 'G', value: r2 },
             ],
           };
           const p = solveDc(parallel),
@@ -149,9 +149,9 @@ describe('checked DC circuits (nodal analysis, exact fractions)', () => {
       nodes: ['G', 'A', 'B'].map((id) => ({ id, label: id })),
       ground: 'G',
       components: [
-        { id: 'V1', label: 'V1', kind: 'voltage-source', from: 'G', to: 'A', voltage: 12 },
-        { id: 'Rint', label: 'internal', kind: 'resistor', from: 'A', to: 'B', resistance: 4 },
-        { id: 'RL', label: 'load', kind: 'resistor', from: 'B', to: 'G', resistance: 2 },
+        { id: 'V1', label: 'V1', kind: 'voltage-source', from: 'G', to: 'A', value: 12 },
+        { id: 'Rint', label: 'internal', kind: 'resistor', from: 'A', to: 'B', value: 4 },
+        { id: 'RL', label: 'load', kind: 'resistor', from: 'B', to: 'G', value: 2 },
       ],
     };
     const probe = probeDcValue(source, undefined, 'RL', { kind: 'power', componentId: 'RL' }, 'maximum-power');
@@ -175,7 +175,7 @@ describe('checked DC circuits (nodal analysis, exact fractions)', () => {
     expect(dead.status).toBe('unsolvable');
     expect(dead.reason).toMatch(/ideal source is shorted/);
     expect(solveDc(series, { values: { R2: 4 } }).exact.currents.R1).toBe('3/2');
-    expect(series.components[2]).toMatchObject({ resistance: 8 });
+    expect(series.components[2]).toMatchObject({ value: 8 });
   });
 
   it('drives current sources and keeps a loop cut off from ground running', () => {
@@ -183,9 +183,9 @@ describe('checked DC circuits (nodal analysis, exact fractions)', () => {
       nodes: ['G', 'A'].map((id) => ({ id, label: id })),
       ground: 'G',
       components: [
-        { id: 'I1', label: 'I1', kind: 'current-source', from: 'G', to: 'A', current: 2 },
-        { id: 'R1', label: 'R1', kind: 'resistor', from: 'A', to: 'G', resistance: 3 },
-        { id: 'R2', label: 'R2', kind: 'resistor', from: 'A', to: 'G', resistance: 6 },
+        { id: 'I1', label: 'I1', kind: 'current-source', from: 'G', to: 'A', value: 2 },
+        { id: 'R1', label: 'R1', kind: 'resistor', from: 'A', to: 'G', value: 3 },
+        { id: 'R2', label: 'R2', kind: 'resistor', from: 'A', to: 'G', value: 6 },
       ],
     };
     const s = solveDc(fed);
@@ -196,11 +196,11 @@ describe('checked DC circuits (nodal analysis, exact fractions)', () => {
       nodes: ['G', 'A', 'B', 'C'].map((id) => ({ id, label: id })),
       ground: 'G',
       components: [
-        { id: 'V1', label: 'V1', kind: 'voltage-source', from: 'G', to: 'A', voltage: 6 },
-        { id: 'R1', label: 'R1', kind: 'resistor', from: 'A', to: 'G', resistance: 2 },
-        { id: 'Rlink', label: 'link', kind: 'resistor', from: 'A', to: 'B', resistance: 1 },
-        { id: 'V2', label: 'V2', kind: 'voltage-source', from: 'B', to: 'C', voltage: 9 },
-        { id: 'R2', label: 'R2', kind: 'resistor', from: 'C', to: 'B', resistance: 3 },
+        { id: 'V1', label: 'V1', kind: 'voltage-source', from: 'G', to: 'A', value: 6 },
+        { id: 'R1', label: 'R1', kind: 'resistor', from: 'A', to: 'G', value: 2 },
+        { id: 'Rlink', label: 'link', kind: 'resistor', from: 'A', to: 'B', value: 1 },
+        { id: 'V2', label: 'V2', kind: 'voltage-source', from: 'B', to: 'C', value: 9 },
+        { id: 'R2', label: 'R2', kind: 'resistor', from: 'C', to: 'B', value: 3 },
       ],
     };
     const cut = solveDc(twoLoops, { open: ['Rlink'] });
@@ -218,14 +218,14 @@ describe('checked DC circuits (nodal analysis, exact fractions)', () => {
       const ids = Array.from({ length: n }, (_, i) => `N${i}`);
       const components: DcInput['components'] = [];
       for (let i = 1; i < n; i++)
-        components.push({ id: `T${i}`, label: `T${i}`, kind: 'resistor', from: ids[Math.floor(rand() * i)], to: ids[i], resistance: 1 + Math.floor(rand() * 20) / 2 });
+        components.push({ id: `T${i}`, label: `T${i}`, kind: 'resistor', from: ids[Math.floor(rand() * i)], to: ids[i], value: 1 + Math.floor(rand() * 20) / 2 });
       for (let k = 0; k < 4; k++) {
         const a = ids[Math.floor(rand() * n)],
           b = ids[Math.floor(rand() * n)];
-        if (a !== b) components.push({ id: `X${k}`, label: `X${k}`, kind: 'resistor', from: a, to: b, resistance: 0.5 + Math.floor(rand() * 30) / 4 });
+        if (a !== b) components.push({ id: `X${k}`, label: `X${k}`, kind: 'resistor', from: a, to: b, value: 0.5 + Math.floor(rand() * 30) / 4 });
       }
-      components.push({ id: 'S', label: 'S', kind: 'voltage-source', from: ids[0], to: ids[n - 1], voltage: Math.floor(rand() * 40) - 20 });
-      if (n > 2) components.push({ id: 'J', label: 'J', kind: 'current-source', from: ids[1], to: ids[0], current: Math.floor(rand() * 8) / 4 });
+      components.push({ id: 'S', label: 'S', kind: 'voltage-source', from: ids[0], to: ids[n - 1], value: Math.floor(rand() * 40) - 20 });
+      if (n > 2) components.push({ id: 'J', label: 'J', kind: 'current-source', from: ids[1], to: ids[0], value: Math.floor(rand() * 8) / 4 });
       const input = { nodes: ids.map((id) => ({ id, label: id })), ground: ids[0], components };
       expectPhysical(input, solveDc(input));
       const first = components[0].id;
@@ -237,10 +237,10 @@ describe('checked DC circuits (nodal analysis, exact fractions)', () => {
     const bad = (patch: Partial<DcInput>) => dcInputSchema.safeParse({ ...series, ...patch }).success;
     expect(bad({ ground: 'Z' })).toBe(false);
     expect(bad({ nodes: [...series.nodes, { id: 'C', label: 'C' }] })).toBe(false);
-    expect(bad({ components: [...series.components, { id: 'R9', label: 'R9', kind: 'resistor', from: 'A', to: 'A', resistance: 1 }] })).toBe(false);
+    expect(bad({ components: [...series.components, { id: 'R9', label: 'R9', kind: 'resistor', from: 'A', to: 'A', value: 1 }] })).toBe(false);
     expect(bad({ components: [...series.components, { ...series.components[1] }] })).toBe(false);
     expect(bad({ components: series.components.filter((c) => c.kind === 'resistor') })).toBe(false);
-    expect(bad({ components: [series.components[0], { ...series.components[1], resistance: 0 }, series.components[2]] })).toBe(false);
+    expect(bad({ components: [series.components[0], { ...series.components[1], value: 0 }, series.components[2]] })).toBe(false);
     expect(bad({})).toBe(true);
   });
 });

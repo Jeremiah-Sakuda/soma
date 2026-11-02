@@ -5,15 +5,23 @@ export const DC_MODEL_ID = 'dc-nodal' as const;
 export const DC_MODEL_VERSION = 'dc-nodal-v1' as const;
 
 const label = z.string().trim().min(1).max(40);
-const ends = { id: sceneIdSchema, label, from: sceneIdSchema, to: sceneIdSchema };
 /** Every component runs from `from` to `to`, and its current is positive when it flows that way.
- * A source's `to` is its positive terminal: a voltage source holds V(to) − V(from) = voltage, and
- * a current source drives `current` amperes through itself from `from` to `to`. */
-export const dcComponentSchema = z.discriminatedUnion('kind', [
-  z.strictObject({ ...ends, kind: z.literal('resistor'), resistance: z.number().finite().positive().max(1e9) }),
-  z.strictObject({ ...ends, kind: z.literal('voltage-source'), voltage: z.number().finite().min(-1e5).max(1e5) }),
-  z.strictObject({ ...ends, kind: z.literal('current-source'), current: z.number().finite().min(-1e3).max(1e3) }),
-]);
+ * `value` is ohms for a resistor, volts for a voltage source, amperes for a current source. A
+ * source's `to` is its positive terminal: a voltage source holds V(to) − V(from) = value, and a
+ * current source drives `value` amperes through itself from `from` to `to`. */
+export const DC_KINDS = ['resistor', 'voltage-source', 'current-source'] as const;
+export const dcComponentSchema = z.strictObject({
+  id: sceneIdSchema,
+  label,
+  kind: z.enum(DC_KINDS),
+  from: sceneIdSchema,
+  to: sceneIdSchema,
+  value: z.number().finite(),
+});
+export const DC_UNITS = { resistor: 'Ω', 'voltage-source': 'V', 'current-source': 'A' } as const;
+/** Allowed magnitudes per kind; resistances must be positive (a wire is a shared node). */
+export const dcValueAllowed = (kind: (typeof DC_KINDS)[number], v: number) =>
+  Number.isFinite(v) && (kind === 'resistor' ? v > 0 && v <= 1e9 : Math.abs(v) <= (kind === 'voltage-source' ? 1e5 : 1e3));
 export const dcInputSchema = z
   .strictObject({
     nodes: z.array(z.strictObject({ id: sceneIdSchema, label })).min(2).max(10),
@@ -31,6 +39,7 @@ export const dcInputSchema = z
       ids.add(c.id);
       if (!nodeIds.has(c.from) || !nodeIds.has(c.to)) issue('Component terminals must name circuit nodes.');
       if (c.from === c.to) issue('A component must join two different nodes.');
+      if (!dcValueAllowed(c.kind, c.value)) issue(`${c.label} has an unsupported value.`);
     }
     if (!input.components.some((c) => c.kind !== 'resistor')) issue('The circuit needs a source.');
     if (islands(input.nodes.map((n) => n.id), input.components).some((island) => !island.includes(input.ground)))
@@ -152,8 +161,7 @@ type ExactSolution = {
   currents: Map<string, Q>;
   value: (c: DcComponent) => Q;
 };
-const asRead = (c: DcComponent) =>
-  c.kind === 'resistor' ? c.resistance : c.kind === 'voltage-source' ? c.voltage : c.current;
+const asRead = (c: DcComponent) => c.value;
 /** Modified nodal analysis. Unknowns are node potentials (one reference per connected island,
  * ground for its own island) and the current through every voltage source or shorted part.
  * `exactValues` overrides values with exact fractions, for tipping points such as 20/3 Ω. */
@@ -222,9 +230,7 @@ function sanitizeState(input: DcInput, raw: Partial<DcState> | undefined): DcSta
   };
   for (const [id, v] of Object.entries(raw?.values ?? {})) {
     const c = input.components.find((x) => x.id === id);
-    if (!c || !Number.isFinite(v)) continue;
-    if (c.kind === 'resistor' ? v > 0 && v <= 1e9 : Math.abs(v) <= (c.kind === 'voltage-source' ? 1e5 : 1e3))
-      state.values[id] = v;
+    if (c && dcValueAllowed(c.kind, v)) state.values[id] = v;
   }
   return state;
 }
@@ -385,12 +391,9 @@ export function probeDcValue(
   if (observation.kind === 'power' && typeof condition === 'object')
     throw new Error('Ask for power to vanish or peak; ask about a current or voltage reaching a value.');
   const resistor = component.kind === 'resistor';
-  const unit = resistor ? 'Ω' : component.kind === 'voltage-source' ? 'V' : 'A';
+  const unit = DC_UNITS[component.kind];
   const originalValue = state.values[componentId] ?? asRead(component);
-  const allowed = (p: Q) =>
-    resistor
-      ? p.n > 0n && toNumber(p) <= 1e9
-      : Math.abs(toNumber(p)) <= (component.kind === 'voltage-source' ? 1e5 : 1e3);
+  const allowed = (p: Q) => (!resistor || p.n > 0n) && dcValueAllowed(component.kind, toNumber(p));
   const at = (p: Q) => new Map([[componentId, p]]);
   const name = (id: string) =>
     input.components.find((c) => c.id === id)?.label ?? input.nodes.find((n) => n.id === id)?.label ?? id;

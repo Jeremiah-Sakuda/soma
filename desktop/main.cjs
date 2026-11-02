@@ -446,8 +446,8 @@ else {
       if (trusted(event)) void pointAsk.screenOverlay(payload);
     });
     ipcMain.on('overlay:hover', (event, active) => pointAsk.overlayHover(event, active));
-    ipcMain.on('overlay:lift-failed', (event) => {
-      pointAsk.liftFailed(event);
+    ipcMain.on('overlay:lift-failed', (event, reason) => {
+      pointAsk.liftFailed(event, reason);
       sendCompactState();
     });
     // The page asks to lift its drawing into 3D or set it back down.

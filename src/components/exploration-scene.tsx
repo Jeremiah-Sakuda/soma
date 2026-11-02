@@ -618,11 +618,14 @@ export function ExplorationScene({
               </p>
             )}
             {onScreen && (
-              <p className="source-overlay-onscreen" role="status">
-                {lifted
-                  ? 'Lifted off your slide in 3D: height is the checked distance from the start, and the shortest routes pull their strings taut.'
-                  : `Drawn on your screen, over the window you captured.${spec.mode !== 'explanation' && spec.controls.includes('toggle-edge') ? ' Click a connection there to cut it;' : ''}`}{' '}
-                Esc hides it.{' '}
+              <div className="source-overlay-onscreen">
+                <p role="status">
+                  {lifted
+                    ? 'Lifted off your slide in 3D: height is the checked distance from the start, and the shortest routes pull their strings taut.'
+                    : `Drawn on your screen, over the window you captured.${spec.mode !== 'explanation' && spec.controls.includes('toggle-edge') ? ' Click a connection there to cut it;' : ''}`}{' '}
+                  Esc hides it.
+                </p>
+                {/* Outside the live region, so its name is not re-announced with each status. */}
                 {spec.mode !== 'explanation' && liftable && (
                   <button
                     type="button"
@@ -637,7 +640,7 @@ export function ExplorationScene({
                     Lift into 3D
                   </button>
                 )}
-              </p>
+              </div>
             )}
             <SourceOverlay
               image={overlay.image}

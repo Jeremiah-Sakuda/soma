@@ -83,6 +83,8 @@ function createPointAsk({
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => {
       if (graph?.id !== c.id) return;
+      // A lifted scene is being looked at, not forgotten: keep it until the capture expires.
+      if (view === '3d' && Date.now() < c.expires) return restartIdle(c);
       clearGraph();
       overlayResult({ id: c.id, shown: false, dismissed: true });
     }, Math.min(OVERLAY_IDLE_MS, c.expires - Date.now()));
@@ -91,12 +93,31 @@ function createPointAsk({
    * capture's graph region), so a scene rebuilt for any reason still covers the slide; the
    * renderer reuses it when unchanged. */
   function drawGraph() {
+    // A follow-up that moved the graph needs its own region of the slide, or stays flat.
+    if (view === '3d' && sheet?.key !== sheetKey() && !cutSheet(overlayCapture)) {
+      view = '2d';
+      clearInterval(liftWatch);
+      liftWatch = null;
+      overlay?.setIgnoreMouseEvents(true, { forward: true });
+      overlayResult({ id: graph.id, shown: true, view, reason: 'sheet' });
+    }
     draw({
       type: 'graph',
       model: graph.model,
       view,
       ...(view === '3d' && sheet?.key === sheetKey() && sheet.data ? { sheet: sheet.data } : {}),
     });
+  }
+  /** Cuts the graph's region from the capture as the 3D sheet. Without it nothing can
+   * honestly cover the original, so a failure keeps the drawing flat. */
+  function cutSheet(c) {
+    try {
+      const region = sheetRegion(graph.model);
+      sheet = { id: graph.id, key: sheetKey(), data: { dataUrl: cropImage(c.snapshot.dataUrl, region), region } };
+      return true;
+    } catch {
+      return false;
+    }
   }
   /** Lifts the drawing off the slide in 3D, or sets it back down. Only a drawing that is
    * verified and on screen can change view. Returns the view now shown. */
@@ -106,17 +127,9 @@ function createPointAsk({
     if (!graph?.verified || !graph.model.lift || !c || graph.id !== c.id || (id && id !== graph.id) || !overlay || overlay.isDestroyed()) return view;
     // Rapid toggles would resend the sheet each time.
     if (Date.now() - viewChanged < 350) return view;
-    if (next === '3d' && sheet?.key !== sheetKey()) {
-      // Without the slide's own region nothing can honestly cover the original: stay flat.
-      let data = null;
-      try {
-        const region = sheetRegion(graph.model);
-        data = { dataUrl: cropImage(c.snapshot.dataUrl, region), region };
-      } catch {
-        overlayResult({ id: graph.id, shown: true, view, reason: 'sheet' });
-        return view;
-      }
-      sheet = { id: graph.id, key: sheetKey(), data };
+    if (next === '3d' && sheet?.key !== sheetKey() && !cutSheet(c)) {
+      overlayResult({ id: graph.id, shown: true, view, reason: 'sheet' });
+      return view;
     }
     viewChanged = Date.now();
     view = next;
@@ -125,9 +138,10 @@ function createPointAsk({
     restartIdle(c);
     clearInterval(liftWatch);
     liftWatch = null;
-    // Lifted, the copy of the capture covers the live slide; if the learner changes the
-    // slide underneath (focus need not move, e.g. scrolling), notice within a few seconds
-    // and take the drawing down.
+    // Lifted, the copy of the capture covers the live slide; once the learner has used
+    // another app, check within a few seconds and take the drawing down if the slide
+    // changed. Not on a timer regardless: each check briefly protects Soma's windows, which
+    // screen recorders and shares honour, so a recorded demo would blink.
     if (view === '3d') liftWatch = setInterval(() => void watchLifted(c), LIFT_CHECK_MS);
     // Lifted, the drawing is not clickable; flat, its connections can be cut again.
     overlay.setIgnoreMouseEvents(true, view === '3d' ? undefined : { forward: true });
@@ -135,8 +149,8 @@ function createPointAsk({
     overlayResult({ id: graph.id, shown: true, view });
     return view;
   }
-  /** The overlay could not start WebGL: stay flat and say so. */
-  function liftFailed(event) {
+  /** The overlay could not draw in 3D (WebGL, or the sheet would not load): stay flat and say so. */
+  function liftFailed(event, reason) {
     if (!fromOverlay(event) || view !== '3d' || !graph?.verified) return;
     view = '2d';
     clearInterval(liftWatch);
@@ -144,7 +158,7 @@ function createPointAsk({
     overlay.setIgnoreMouseEvents(true, { forward: true });
     // A 3D draw may already be on its way; redraw flat so both sides agree.
     drawGraph();
-    overlayResult({ id: graph.id, shown: true, view, reason: 'webgl' });
+    overlayResult({ id: graph.id, shown: true, view, reason: reason === 'sheet' ? 'sheet' : 'webgl' });
   }
   // Set when the learner may have changed the screen by hand (Soma's panel lost focus).
   let stale = false,
@@ -617,7 +631,12 @@ function createPointAsk({
     graph = { id: c.id, model: event.model, verified };
     // After the learner used another app, check the slide is still the one drawn on before
     // drawing the next step. Soma's windows are left out of that capture, without hiding.
-    if (verified && stale && !verifying && Date.now() - lastCheck > 3000 && !(await recheck(c))) return;
+    if (verified && stale && !verifying && Date.now() - lastCheck > 3000) {
+      // Lifted, the same two-miss rule and covered region as the lifted watch.
+      if (view === '3d') {
+        if (!(await checkLifted(c)) && graph?.id !== c.id) return;
+      } else if (!(await recheck(c))) return;
+    }
     if (!verified) {
       if (verifying) return; // the latest model is drawn once verification finishes
       verifying = true;
@@ -689,9 +708,20 @@ function createPointAsk({
   // A passing banner or tooltip can differ for one check; a changed slide differs for two.
   let liftMisses = 0;
   async function watchLifted(c) {
-    if (view !== '3d' || verifying || current || overlayCapture !== c || graph?.id !== c.id || !graph.verified) return;
-    // The lifted sheet covers its whole region, so check all of it.
-    liftMisses = (await recheck(c, sheetRegion(graph.model), liftMisses === 0)) ? 0 : liftMisses + 1;
+    if (view !== '3d' || !stale || verifying || current || overlayCapture !== c || graph?.id !== c.id || !graph.verified) return;
+    await checkLifted(c);
+  }
+  /** Checks the whole covered region; a single miss is tolerated. Returns whether it matched. */
+  async function checkLifted(c) {
+    const since = viewChanged;
+    const ok = await recheck(c, sheetRegion(graph.model), liftMisses === 0);
+    // A view change during the check reset the count; this result is for the old view.
+    if (viewChanged === since && graph?.id === c.id) {
+      liftMisses = ok ? 0 : liftMisses + 1;
+      // A miss leaves the question open: look again on the next tick.
+      if (!ok) stale = true;
+    }
+    return ok;
   }
   function fromOverlay(event) {
     return Boolean(overlay && !overlay.isDestroyed() && event?.sender === overlay.webContents);

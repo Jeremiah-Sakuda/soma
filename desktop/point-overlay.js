@@ -222,9 +222,9 @@ function applyFrame(event) {
 // A lift that fails after starting (lost GPU context, an error mid-frame) drops back to the
 // flat sketch and tells the companion, which updates the controls.
 if (window.SomaLift)
-  window.SomaLift.onFail = () => {
+  window.SomaLift.onFail = (reason) => {
     document.body.classList.remove('lifted');
-    window.somaPointOverlay.liftFailed();
+    window.somaPointOverlay.liftFailed(reason);
   };
 function liftView(event) {
   const lift = window.SomaLift;

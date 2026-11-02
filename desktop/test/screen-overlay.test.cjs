@@ -390,17 +390,22 @@ test('while lifted, a slide changed underneath takes the drawing down within sec
     await h.controller.screenOverlay({ id, model: model(LIFT) });
     h.controller.setView('3d');
     regions.length = 0;
-    // Checked even though no Soma window lost focus: scrolling a slide need not move it.
+    // No check on a timer alone: each one briefly hides Soma's windows from recorders.
+    await wait(5300);
+    assert.equal(regions.length, 0, 'nothing used another app, so no check');
+    h.controller.markStale();
     await wait(5300);
     assert.equal(h.controller.view, '3d', 'the slide is unchanged, so the drawing stays');
     const { sheetRegion } = require('../screen-overlay.cjs');
     assert.deepEqual(regions[0], sheetRegion(model(LIFT)), 'the whole covered region is compared');
-    // One differing check (a passing banner) is not enough to take it down.
+    // One differing check (a passing banner) is not enough; it looks again on its own.
+    h.controller.markStale();
     await wait(5300);
     assert.equal(h.controller.view, '3d', 'a single mismatch is tolerated');
     await wait(5300);
     assert.equal(h.controller.view, '3d');
     // A changed slide differs on two checks in a row.
+    h.controller.markStale();
     await wait(10600);
     assert.equal(h.controller.hasDrawing(), false);
     assert.equal(h.controller.view, '2d');

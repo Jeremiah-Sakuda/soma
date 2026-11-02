@@ -4,5 +4,5 @@ contextBridge.exposeInMainWorld('somaPointOverlay', {
   hover: (active) => ipcRenderer.send('overlay:hover', active === true),
   toggleEdge: (edgeId) => ipcRenderer.send('overlay:toggle-edge', String(edgeId).slice(0, 48)),
   // The 3D lift could not start (no WebGL); the 2D drawing stays.
-  liftFailed: () => ipcRenderer.send('overlay:lift-failed'),
+  liftFailed: (reason) => ipcRenderer.send('overlay:lift-failed', reason === 'sheet' ? 'sheet' : 'webgl'),
 });

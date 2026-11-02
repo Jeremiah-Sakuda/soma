@@ -53,7 +53,7 @@ function validOverlayModel(m) {
       new Set(m.nodes.map((n) => n.id)).size === m.nodes.length &&
       new Set(m.edges.map((e) => e.id)).size === m.edges.length &&
       m.edges.every((e) => e.fromId === undefined || e.fromId !== e.toId) &&
-      (m.lift === undefined || m.nodes.some((n) => n.id === m.lift.source)) &&
+      (m.lift === undefined || (typeof m.lift === 'object' && m.lift !== null && m.nodes.some((n) => n.id === m.lift.source))) &&
       Array.isArray(m.weights) &&
       m.weights.length <= 24 &&
       m.weights.every((w) => id(w?.edgeId) && point(w) && text(w.text, 24)) &&

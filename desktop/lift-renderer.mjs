@@ -250,7 +250,7 @@ function placeSheet(layout, sheet) {
       undefined,
       // Without the slide's own region nothing can cover the original honestly: stay flat.
       () => {
-        if (s && s.sheet?.paper.material === paper) fail();
+        if (s && s.sheet?.paper.material === paper) fail('sheet');
       },
     );
   } else {
@@ -556,12 +556,15 @@ const coneGeometry = new Map();
 let notchGeometry = null;
 /** A small arrowhead near the end of a directed string, pointing along it. */
 function arrow(points, radius, mat) {
-  const i = Math.floor(points.length * 0.82), p = points[i], q = points[Math.min(points.length - 1, i + 1)];
   if (!coneGeometry.has(radius)) coneGeometry.set(radius, new ConeGeometry(radius * 2.6, radius * 6, 12));
   const cone = new Mesh(coneGeometry.get(radius), mat);
-  cone.position.set(p.x, p.y, p.z);
-  cone.quaternion.copy(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(q.x - p.x, q.y - p.y, q.z - p.z).normalize()));
   cone.userData.shared = true;
+  return pointArrow(cone, points);
+}
+function pointArrow(cone, points) {
+  const i = Math.floor(points.length * 0.82), p = points[i], q = points[Math.min(points.length - 1, i + 1)];
+  cone.position.set(p.x, p.y, p.z);
+  cone.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(q.x - p.x, q.y - p.y, q.z - p.z).normalize());
   return cone;
 }
 
@@ -626,14 +629,17 @@ function drawEdges(rise, sheetT) {
       if (shape !== v.shape) {
         const radius = r * (e.tone === 'path' ? 0.17 : e.kind === 'taut' || e.kind === 'pull' ? 0.11 : 0.042);
         // While heights glide, the same tube is reshaped in place; a new kind rebuilds it.
-        if (v.meshes.length && v.radius === radius && !e.directed) reshape(v.meshes[0], points, radius);
-        else {
+        if (v.meshes.length && v.radius === radius && v.directed === e.directed) {
+          reshape(v.meshes[0], points, radius);
+          if (e.directed) pointArrow(v.meshes[1], points);
+        } else {
           clearMeshes(v);
           v.meshes.push(tube(points, radius, v.mat));
           if (e.directed) v.meshes.push(arrow(points, radius, v.mat));
           for (const m of v.meshes) s.content.add(m);
         }
         v.radius = radius;
+        v.directed = e.directed;
         v.shape = shape;
       }
       // A string appears as its nodes leave the sheet, so the slide is untouched at first.
@@ -859,9 +865,9 @@ function hide(done) {
   wake();
 }
 /** WebGL failed after starting (context lost, or an error mid-frame): stop and report. */
-function fail() {
+function fail(reason = 'webgl') {
   dispose();
-  window.SomaLift.onFail?.();
+  window.SomaLift.onFail?.(reason);
 }
 function dispose() {
   if (!s) return;

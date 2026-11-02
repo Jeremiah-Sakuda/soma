@@ -17,6 +17,7 @@ test('the hero fixture is a valid overlay model with lift data', () => {
   assert.equal(validOverlayModel({ ...models[0], nodes: [...models[0].nodes, { ...models[0].nodes[0] }] }), false, 'node ids are distinct');
   assert.equal(validOverlayModel({ ...models[0], edges: [{ ...e, toId: e.fromId }] }), false, 'no loops');
   assert.equal(validOverlayModel({ ...models[0], lift: { ...models[0].lift, source: 'nowhere' } }), false, 'the start is a drawn node');
+  assert.equal(validOverlayModel({ ...models[0], lift: null }), false, 'a null lift is refused, not thrown on');
 });
 
 test('heights are checked distances and strings are taut exactly on shortest routes', async () => {

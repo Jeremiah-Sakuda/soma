@@ -68,6 +68,8 @@ export function circuitOverlayModel({
       b = px({ x: spot.x2, y: spot.y2 }),
       f = nodes.get(c.from)!,
       t = nodes.get(c.to)!;
+    // A part read as a point cannot be inked or given a direction; leave it undrawn.
+    if (Math.hypot(a.x - b.x, a.y - b.y) < 2) continue;
     const d = (p: Point, q: Point) => Math.hypot(p.x - q.x, p.y - q.y);
     ends.set(c.id, d(a, f) + d(b, t) <= d(b, f) + d(a, t) ? [a, b] : [b, a]);
   }

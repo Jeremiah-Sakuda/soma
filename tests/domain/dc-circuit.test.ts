@@ -40,8 +40,8 @@ function expectPhysical(input: DcInput, s: ReturnType<typeof solveDc>) {
     const value = s.state.values[c.id];
     if (open.has(c.id)) expect(s.currents[c.id]).toBe(0);
     else if (shorted.has(c.id)) expect(s.drops[c.id]).toBeCloseTo(0, 9);
-    else if (c.kind === 'resistor') expect(s.currents[c.id] * (value ?? c.value)).toBeCloseTo(s.drops[c.id], 9);
-    else if (c.kind === 'voltage-source') expect(-s.drops[c.id]).toBeCloseTo(value ?? c.value, 9);
+    else if (c.kind === 'resistor') expect(s.currents[c.id] * (value ?? c.value)).toBeCloseTo(s.drops[c.id]!, 9);
+    else if (c.kind === 'voltage-source') expect(-s.drops[c.id]!).toBeCloseTo(value ?? c.value, 9);
     else expect(s.currents[c.id]).toBeCloseTo(value ?? c.value, 9);
   }
   for (const n of input.nodes) {
@@ -242,5 +242,16 @@ describe('checked DC circuits (nodal analysis, exact fractions)', () => {
     expect(bad({ components: series.components.filter((c) => c.kind === 'resistor') })).toBe(false);
     expect(bad({ components: [series.components[0], { ...series.components[1], value: 0 }, series.components[2]] })).toBe(false);
     expect(bad({})).toBe(true);
+  });
+
+  it('keeps inherited names out of IDs and leaves the voltage across a cut-apart part undefined', () => {
+    for (const id of ['toString', 'valueOf', 'hasOwnProperty'])
+      expect(dcInputSchema.safeParse({ ...series, components: series.components.map((c, i) => (i === 1 ? { ...c, id } : c)) }).success).toBe(false);
+    // With R1, R2 and R5 open, the bridge's left node B floats on its own.
+    const s = solveDc(bridge(6), { open: ['R1', 'R2', 'R5'] });
+    expect(s.status).toBe('solved');
+    expect(s.voltages.L).toBeNull();
+    expect(s.drops.R1).toBeNull();
+    expect(s.drops.R3).toBe(4);
   });
 });

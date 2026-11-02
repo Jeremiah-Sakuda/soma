@@ -71,8 +71,9 @@ export type DcSolution = {
   voltages: Record<string, number | null>;
   /** Amperes from `from` to `to` through each component; 0 when open. */
   currents: Record<string, number>;
-  /** V(from) − V(to); defined even on a floating island. */
-  drops: Record<string, number>;
+  /** V(from) − V(to): defined on a floating island too, but null for an open part whose ends
+   * are in separate sections, where no voltage is fixed between them. */
+  drops: Record<string, number | null>;
   /** Watts absorbed (negative means the component delivers power). */
   power: Record<string, number>;
   exact: { voltages: Record<string, string | null>; currents: Record<string, string> };
@@ -158,6 +159,8 @@ function solveLinear(A: Q[][], b: Q[]): Q[] | null {
 type ExactSolution = {
   potentials: Map<string, Q>;
   grounded: Set<string>;
+  /** Each node's connected section, by its reference node. */
+  section: Map<string, string>;
   currents: Map<string, Q>;
   value: (c: DcComponent) => Q;
 };
@@ -211,6 +214,7 @@ function solveExact(input: DcInput, state: DcState, exactValues = new Map<string
   if (!x) return null;
   const potentials = new Map<string, Q>(input.nodes.map((n) => [n.id, index.has(n.id) ? x[index.get(n.id)!] : ZERO]));
   const grounded = new Set(groups.find((g) => g.includes(input.ground)) ?? []);
+  const section = new Map(groups.flatMap((g) => g.map((id) => [id, g.includes(input.ground) ? input.ground : g[0]] as const)));
   const currents = new Map<string, Q>();
   for (const c of input.components) {
     if (open.has(c.id)) currents.set(c.id, ZERO);
@@ -218,7 +222,7 @@ function solveExact(input: DcInput, state: DcState, exactValues = new Map<string
     else if (c.kind === 'current-source') currents.set(c.id, value(c));
     else currents.set(c.id, div(sub(potentials.get(c.from)!, potentials.get(c.to)!), value(c)));
   }
-  return { potentials, grounded, currents, value };
+  return { potentials, grounded, section, currents, value };
 }
 
 function sanitizeState(input: DcInput, raw: Partial<DcState> | undefined): DcState {
@@ -255,7 +259,7 @@ export function solveDc(raw: unknown, rawState?: Partial<DcState>): DcSolution {
       checks: { kcl: false, sources: false, power: false },
       steps: [],
     };
-  const { potentials, grounded, currents, value } = exact;
+  const { potentials, grounded, section, currents, value } = exact;
   const drop = (c: DcComponent) => sub(potentials.get(c.from)!, potentials.get(c.to)!);
   const open = new Set(state.open),
     shorted = new Set(state.shorted);
@@ -289,7 +293,7 @@ export function solveDc(raw: unknown, rawState?: Partial<DcState>): DcSolution {
     reason: null,
     voltages,
     currents: record((c) => toNumber(currents.get(c.id)!)),
-    drops: record((c) => toNumber(drop(c))),
+    drops: record((c) => (section.get(c.from) === section.get(c.to) ? toNumber(drop(c)) : null)),
     power: record((c) => toNumber(absorbed.get(c.id)!)),
     exact: { voltages: exactVoltages, currents: record((c) => toText(currents.get(c.id)!)) },
     checks: { kcl, sources, power },

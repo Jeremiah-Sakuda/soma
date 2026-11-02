@@ -9,7 +9,7 @@ import {
   type BfsExecution,
   type BfsInput,
 } from './graph-search';
-import { dcInputSchema, solveDc, DC_MODEL_ID, DC_MODEL_VERSION, type DcInput, type DcSolution } from './dc-circuit';
+import { dcInputSchema, dcValueAllowed, solveDc, DC_MODEL_ID, DC_MODEL_VERSION, type DcInput, type DcSolution } from './dc-circuit';
 export { bfsInputSchema, runBfs, BFS_MODEL_ID, BFS_MODEL_VERSION } from './graph-search';
 export { DC_MODEL_ID, DC_MODEL_VERSION } from './dc-circuit';
 export type { DcInput, DcSolution } from './dc-circuit';
@@ -178,6 +178,14 @@ export const explorationSpecSchema = z.discriminatedUnion('mode', [
     modelId: z.literal(DC_MODEL_ID),
     modelVersion: z.literal(DC_MODEL_VERSION),
     input: dcInputSchema,
+    /** The experiment the words were written for, when a follow-up was asked during one. */
+    writtenFor: z
+      .strictObject({
+        open: z.array(sceneIdSchema).max(16),
+        values: z.record(sceneIdSchema, z.number().finite()),
+      })
+      .nullable()
+      .optional(),
     scene,
     steps: z.array(step).min(1).max(12),
     controls: z.array(z.enum(['step', 'replay', 'open-component', 'set-value'])).min(1).max(4),
@@ -265,6 +273,18 @@ export function validateExplorationSpec(raw: unknown): ExplorationSpec {
     for (const component of spec.input.components) objects.set(component.id, component.kind);
     circuit = solveDc(spec.input);
     if (circuit.status !== 'solved') reject('The circuit as read has no single solution.');
+    if (spec.writtenFor) {
+      const parts = new Map(spec.input.components.map((c) => [c.id, c]));
+      const experiment = solveDc(spec.input, spec.writtenFor);
+      if (
+        spec.writtenFor.open.some((id) => !parts.has(id)) ||
+        Object.entries(spec.writtenFor.values).some(([id, v]) => !parts.has(id) || !dcValueAllowed(parts.get(id)!.kind, v)) ||
+        experiment.status !== 'solved'
+      )
+        reject('Step references an unavailable checked state.');
+      // Steps bind to the experiment's own trace.
+      circuit = experiment;
+    }
   }
   for (const id of objects.keys()) addId(id);
   const executions: { primary: BfsExecution; comparison?: BfsExecution } | null =

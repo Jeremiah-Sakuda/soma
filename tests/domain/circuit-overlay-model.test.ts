@@ -74,4 +74,11 @@ describe('a checked circuit drawn over its own slide', () => {
       }),
     ).toBeNull();
   });
+
+  it('says a source with no current has no closed path, never that its ends match', () => {
+    const solution = solveDc(heroCircuit, { open: ['R1', 'R3'] });
+    const text = solution.steps.map((_, i) => circuitCaption(solution, i)).join(' ');
+    expect(text).toContain('12 V battery carries no current: no closed path runs through it.');
+    expect(text).not.toContain('battery carries no current: both its ends');
+  });
 });

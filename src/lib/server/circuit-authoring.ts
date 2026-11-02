@@ -41,7 +41,7 @@ export function circuitCopySchema(input: DcInput, solution: DcSolution) {
 export type CircuitCopy = z.infer<ReturnType<typeof circuitCopySchema>>;
 
 export const CIRCUIT_COMPOSE =
-  ' A DC circuit was read from the learner’s source and solved exactly by Soma’s own nodal-analysis solver: checkedCircuit. Author only the words for the checked circuit visual using compose_circuit: title, objective, at most three assumptions, one to six steps and up to three followups. The application binds the circuit, layout, controls and computation. Each step has a traceIndex into checkedCircuit.steps: step 0 shows only ground at 0 V; each later step reveals one node (steps[k].node), from the highest voltage down, plus the currents of steps[k].revealedComponents. A caption may state only what is known at its traceIndex. Every number must be one checkedCircuit gives (voltages, currents, drops, power, component values) or the source prints; never do your own arithmetic, round differently or estimate. currents[id] > 0 means current flows through the component from its from node to its to node; say the direction with node labels. A current of 0 means no current. When state.disabledEdgeIds or state.edgeWeights are supplied, those parts are opened or changed by the learner’s experiment and checkedCircuit already reflects them; say so as a hypothetical change, never as a source fact. When circuitExperiment is supplied, Muse chose it and Soma computed it exactly: componentId is the part whose value varies, observe is what is watched, criticalValue is the exact value at which the condition holds (verified means Soma re-solved the circuit there and the condition held exactly), and cases are checked samples on either side. Explain where and why it tips, as a hypothetical change to that one part; never compute your own values, and if criticalValue is null, say no allowed value meets the condition, as the note says. Answer the learner’s question by the final step. Use visible labels in learner-facing words; never mention IDs, tool names or schema fields. highlightIds name the nodes and components each step is about. followups are short questions the learner could ask next, such as opening a part or changing a value. No mastery claims.';
+  ' A DC circuit was read from the learner’s source and solved exactly by Soma’s own nodal-analysis solver: checkedCircuit. Author only the words for the checked circuit visual using compose_circuit: title, objective, at most three assumptions, one to six steps and up to three followups. The application binds the circuit, layout, controls and computation. Each step has a traceIndex into checkedCircuit.steps: step 0 shows only ground at 0 V; each later step reveals one node (steps[k].node), from the highest voltage down, plus the currents of steps[k].revealedComponents. A caption may state only what is known at its traceIndex. Every number must be one checkedCircuit gives (voltages, currents, drops, power, component values) or the source prints; never do your own arithmetic, round differently or estimate. currents[id] > 0 means current flows through the component from its from node to its to node; say the direction with node labels. A current of 0 means no current. When state.disabledEdgeIds or state.edgeWeights are supplied, those parts are opened or changed by the learner’s experiment and checkedCircuit already reflects them; say so as a hypothetical change, never as a source fact. If experimentNote is supplied, the learner’s experiment could not be solved and checkedCircuit is the circuit as read: say that plainly and explain the circuit as read. When circuitExperiment is supplied, Muse chose it and Soma computed it exactly: componentId is the part whose value varies, observe is what is watched, criticalValue is the exact value at which the condition holds (verified means Soma re-solved the circuit there and the condition held exactly), and cases are checked samples on either side. Explain where and why it tips, as a hypothetical change to that one part; never compute your own values, and if criticalValue is null, say no allowed value meets the condition, as the note says. Answer the learner’s question by the final step. Use visible labels in learner-facing words; never mention IDs, tool names or schema fields. highlightIds name the nodes and components each step is about. followups are short questions the learner could ask next, such as opening a part or changing a value. No mastery claims.';
 
 /** A checked circuit spec assembled by the application from the reading, the solution and
  * Muse's copy. Positions for the diagram view come from where the source drew each node. */
@@ -54,6 +54,7 @@ export function circuitSpec({
   layout,
   copy,
   uncertainty,
+  writtenFor = null,
 }: {
   id: string;
   version: number;
@@ -63,6 +64,8 @@ export function circuitSpec({
   layout: CircuitLayoutRead | null | undefined;
   copy: CircuitCopy;
   uncertainty: string[];
+  /** The learner's experiment, when the words explain one rather than the circuit as read. */
+  writtenFor?: { open: string[]; values: Record<string, number> } | null;
 }): ExplorationSpec {
   const placed = input.nodes.every((n) => layout?.nodes.some((p) => p.nodeId === n.id));
   const positions = input.nodes.map((n, i) => {
@@ -94,6 +97,7 @@ export function circuitSpec({
       'Soma solves resistors and ideal DC sources only; capacitors, diodes and changing currents are not modeled.',
     ],
     input,
+    ...(writtenFor ? { writtenFor } : {}),
     scene: {
       layout: 'diagram-sidebar',
       panels: [

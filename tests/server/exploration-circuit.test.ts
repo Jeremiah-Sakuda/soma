@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createExplorationService, validateExplorationViewState } from '../../src/lib/server/exploration';
+import { explorationInputsChanged } from '../../src/lib/domain/exploration-view';
 import { closeExplorationStore } from '../../src/lib/server/exploration-store';
 import type { MetaResult } from '../../src/lib/server/meta-client';
 import type { ExplorationPrincipal } from '../../src/lib/server/exploration-types';
@@ -183,6 +184,11 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
     ).artifact;
     expect(second.version).toBe(2);
     expect(second.state.disabledEdgeIds).toEqual(['R2']);
+    // The words were written for R₂ open, so they show with it open and pause once it closes.
+    if (second.spec.mode !== 'checked-circuit') throw new Error('mode');
+    expect(second.spec.writtenFor).toEqual({ open: ['R2'], values: {} });
+    expect(explorationInputsChanged(second.spec, second.state)).toBe(false);
+    expect(explorationInputsChanged(second.spec, { ...second.state, disabledEdgeIds: [] })).toBe(true);
     const context = JSON.parse((request.mock.calls[2][0].input[0] as { content: string }).content);
     expect(context.checkedCircuit.currents.R2).toBe(0);
     expect(context.checkedCircuit.currents.R5).toBeGreaterThan(0);
@@ -241,5 +247,48 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
       } as never)
     ).artifact;
     expect(third.circuitExperiment?.criticalValue).toBe(8);
+  });
+
+  it('starts a new capture from its circuit as read, not the earlier experiment', async () => {
+    const soma = service();
+    await soma.initialize(owner);
+    const first = (await soma.generate(owner, screenshot() as never)).artifact;
+    const next = (
+      await soma.generate(owner, {
+        ...screenshot('What about this slide?'),
+        artifactId: first.id,
+        baseVersion: first.version,
+        state: { ...first.state, disabledEdgeIds: ['R2'], edgeWeights: { R4: 10 } },
+      } as never)
+    ).artifact;
+    expect(next.state.disabledEdgeIds).toEqual([]);
+    expect(next.state.edgeWeights ?? {}).toEqual({});
+    if (next.spec.mode !== 'checked-circuit') throw new Error('mode');
+    expect(next.spec.writtenFor ?? null).toBeNull();
+  });
+
+  it('keeps a reason that names a part by its label', async () => {
+    const request = script();
+    const base = request.getMockImplementation()!;
+    request.mockImplementation(async (r: { instructions: string; input: readonly unknown[] }) =>
+      r.instructions.includes('choose_circuit_investigation')
+        ? result('choose_circuit_investigation', { componentId: 'R4', watch: 'current', targetId: 'R5', condition: 'zero', reason: 'R4 sets the voltage at C.' }, 7)
+        : base(r),
+    );
+    const soma = service(request);
+    await soma.initialize(owner);
+    const first = (await soma.generate(owner, screenshot() as never)).artifact;
+    const probed = (
+      await soma.generate(owner, {
+        action: 'generate',
+        requestId: randomUUID(),
+        question: 'When would current flow through R5?',
+        intent: 'investigate',
+        artifactId: first.id,
+        baseVersion: first.version,
+        state: first.state,
+      } as never)
+    ).artifact;
+    expect(probed.circuitExperiment?.rationale).toBe('R4 sets the voltage at C.');
   });
 });

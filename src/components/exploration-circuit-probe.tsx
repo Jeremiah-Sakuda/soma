@@ -1,5 +1,5 @@
 'use client';
-import { DC_UNITS, probeDcValue, solveDc, type DcInput, type DcProbe, type DcState } from '@/lib/domain/dc-circuit';
+import { DC_UNITS, dcValueAllowed, probeDcValue, solveDc, type DcInput, type DcProbe, type DcState } from '@/lib/domain/dc-circuit';
 import { circuitQuantity } from '@/lib/domain/exploration-view';
 
 /** Muse chose one part of the circuit; Soma computed exactly where the watched quantity tips.
@@ -39,10 +39,19 @@ export function ExplorationCircuitProbe({
       : `the ${current.observe.kind} in ${name(current.observe.componentId)}`;
   const critical = current.criticalValue;
   const resistor = part.kind === 'resistor';
-  const top = resistor
-    ? Math.max(part.value, critical ?? 0, ...current.cases.map((c) => c.value)) * 1.6
-    : Math.max(Math.abs(part.value), Math.abs(critical ?? 0), 1) * 2;
-  const bottom = resistor ? Math.min(part.value, critical ?? part.value) / 20 : -top;
+  // The range covers the as-read value, the tipping point and the current value, within what
+  // the solver accepts for this kind of part.
+  const limit = resistor ? 1e9 : part.kind === 'voltage-source' ? 1e5 : 1e3;
+  const top = Math.min(
+    limit,
+    Math.max(
+      Math.abs(value),
+      resistor
+        ? Math.max(part.value, critical ?? 0, ...current.cases.map((c) => c.value)) * 1.6
+        : Math.max(Math.abs(part.value), Math.abs(critical ?? 0), 1) * 2,
+    ),
+  );
+  const bottom = resistor ? Math.min(value, part.value, critical ?? part.value) / 20 : -top;
   const solved = solveDc(input, { ...state, values: { ...state.values, [part.id]: value } });
   const reading = (() => {
     if (solved.status !== 'solved') return solved.reason ?? 'No single solution at this value.';
@@ -61,8 +70,8 @@ export function ExplorationCircuitProbe({
   })();
   const nudge = (direction: number, big: boolean) => {
     const step = resistor ? Math.max(value * (big ? 0.1 : 0.01), 1e-6) : big ? 1 : 0.1;
-    const next = Number((value + direction * step).toPrecision(10));
-    onChange(Math.min(top, Math.max(bottom, next)));
+    const next = Math.min(top, Math.max(bottom, Number((value + direction * step).toPrecision(10))));
+    if (dcValueAllowed(part.kind, next)) onChange(next);
   };
   return (
     <section className="exploration-cost-probe" aria-label="Checked circuit experiment">
@@ -95,7 +104,10 @@ export function ExplorationCircuitProbe({
             nudge(e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -1 : 1, e.shiftKey);
           }
         }}
-        onChange={(e) => onChange(Number(e.target.value))}
+        onChange={(e) => {
+          const next = Number(e.target.value);
+          if (dcValueAllowed(part.kind, next)) onChange(next);
+        }}
       />
       <p role="status">
         <strong>{reading}</strong>

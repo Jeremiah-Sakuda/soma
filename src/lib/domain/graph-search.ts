@@ -2,7 +2,9 @@ import {z} from 'zod';
 
 export const BFS_MODEL_ID='bfs-unweighted' as const;
 export const BFS_MODEL_VERSION='bfs-unweighted-v1' as const;
-export const sceneIdSchema=z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,47}$/).refine(value=>!['constructor','prototype','__proto__'].includes(value),'Reserved object ID.');
+// IDs key plain objects, so none may name an inherited member (toString, valueOf, ...).
+const RESERVED_IDS=new Set(['prototype','__proto__',...Object.getOwnPropertyNames(Object.prototype)]);
+export const sceneIdSchema=z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,47}$/).refine(value=>!RESERVED_IDS.has(value),'Reserved object ID.');
 const label=z.string().trim().min(1).max(80);
 export const bfsInputSchema=z.strictObject({
  nodes:z.array(z.strictObject({id:sceneIdSchema,label})).min(1).max(12),

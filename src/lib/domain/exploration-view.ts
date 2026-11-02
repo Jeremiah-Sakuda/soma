@@ -53,8 +53,17 @@ export function circuitSolution(spec: ExplorationSpec, state: ExplorationViewSta
   return solveDc(spec.input, { open: state.disabledEdgeIds, values: state.edgeWeights ?? {} });
 }
 export function explorationInputsChanged(spec: ExplorationSpec, state: ExplorationViewState) {
-  if (spec.mode === 'checked-circuit')
-    return state.disabledEdgeIds.length > 0 || Object.keys(state.edgeWeights ?? {}).length > 0;
+  // A circuit's words may be written for an experiment (a follow-up asked with a part open);
+  // they apply exactly when the view shows that experiment.
+  if (spec.mode === 'checked-circuit') {
+    const written = spec.writtenFor ?? { open: [], values: {} };
+    const same = (a: Record<string, number>, b: Record<string, number>) =>
+      Object.keys(a).length === Object.keys(b).length && Object.entries(a).every(([id, v]) => Object.hasOwn(b, id) && b[id] === v);
+    return (
+      [...state.disabledEdgeIds].sort().join() !== [...written.open].sort().join() ||
+      !same(state.edgeWeights ?? {}, written.values)
+    );
+  }
   return (
     (spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') &&
     ((state.start ?? spec.input.start) !== spec.input.start ||
@@ -110,13 +119,18 @@ export function circuitCaption(solution: DcSolution, index: number): string {
     const c = input.components.find((x) => x.id === id)!;
     const current = solution.currents[id];
     if (solution.state.open.includes(id)) parts.push(`${c.label} is open, so it carries nothing.`);
-    else if (current === 0) parts.push(`${c.label} carries no current: both its ends are at the same voltage.`);
+    else if (current === 0)
+      parts.push(
+        c.kind === 'resistor'
+          ? `${c.label} carries no current: both its ends are at the same voltage.`
+          : `${c.label} carries no current: no closed path runs through it.`,
+      );
     else {
       const [a, b] = current > 0 ? [c.from, c.to] : [c.to, c.from];
       const amount = circuitQuantity(Math.abs(current), 'A');
       parts.push(
         c.kind === 'resistor'
-          ? `${c.label} carries ${amount} from ${circuitName(input, a)} to ${circuitName(input, b)}, dropping ${circuitQuantity(Math.abs(solution.drops[id]), 'V')}.`
+          ? `${c.label} carries ${amount} from ${circuitName(input, a)} to ${circuitName(input, b)}, dropping ${circuitQuantity(Math.abs(solution.drops[id] ?? 0), 'V')}.`
           : `${c.label} drives ${amount} out of its ${current > 0 ? '+' : '−'} terminal.`,
       );
     }
@@ -167,7 +181,7 @@ export function captionIsGrounded(caption: string, executions: (BfsExecution | n
     const numbers = [
       ...Object.values(circuit.voltages).filter((v): v is number => v !== null),
       ...Object.values(circuit.currents),
-      ...Object.values(circuit.drops),
+      ...Object.values(circuit.drops).filter((v): v is number => v !== null),
       ...Object.values(circuit.power),
       ...circuit.input.components.map((c) => circuit.state.values[c.id] ?? c.value),
     ];

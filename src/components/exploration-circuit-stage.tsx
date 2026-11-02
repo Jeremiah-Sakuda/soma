@@ -25,6 +25,40 @@ type Layout = SourceGraphLayout & {
 };
 const value = (n: number) => String(Number(n.toPrecision(4)));
 
+/** A number field that lets a learner type through partial values ("0.", "-") and applies
+ * only allowed ones; it shows the applied value again when it loses focus. */
+function ValueField({
+  label,
+  current,
+  disabled,
+  allowed,
+  onApply,
+}: {
+  label: string;
+  current: number;
+  disabled: boolean;
+  allowed: (v: number) => boolean;
+  onApply: (v: number) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      aria-label={label}
+      disabled={disabled}
+      value={draft ?? String(current)}
+      onFocus={() => setDraft(String(current))}
+      onBlur={() => setDraft(null)}
+      onChange={(event) => {
+        setDraft(event.target.value);
+        const v = Number(event.target.value);
+        if (event.target.value.trim() !== '' && Number.isFinite(v) && allowed(v)) onApply(v);
+      }}
+    />
+  );
+}
+
 /** The circuit as a plain diagram, at the positions where the source drew its nodes. Used
  * when the capture is not in memory, or by choice. Every number comes from the solution. */
 function CircuitDiagram({ spec, solution, index }: { spec: CircuitSpec; solution: DcSolution; index: number }) {
@@ -131,7 +165,9 @@ export function ExplorationCircuitStage({
     ? spec.steps.find((item) => item.execution === 'primary' && item.executionStep === state.step)
     : undefined;
   const computed = circuitCaption(solution, state.step);
-  const lead = changed
+  // The experiment, described against the circuit as read, whenever one is set up.
+  const experimenting = state.disabledEdgeIds.length > 0 || Object.keys(state.edgeWeights ?? {}).length > 0;
+  const lead = experimenting
     ? [
         state.disabledEdgeIds.length ? `You opened ${state.disabledEdgeIds.map(name).join(', ')}.` : '',
         ...Object.entries(state.edgeWeights ?? {}).map(([id, v]) => {
@@ -298,17 +334,12 @@ export function ExplorationCircuitStage({
                   )}
                   {spec.controls.includes('set-value') && (
                     <label>
-                      <span className="sr-only">{c.label} value in {DC_UNITS[c.kind]}</span>
-                      <input
-                        type="number"
-                        step="any"
+                      <ValueField
+                        label={`${c.label} value in ${DC_UNITS[c.kind]}`}
+                        current={current}
                         disabled={open}
-                        min={c.kind === 'resistor' ? 0.001 : undefined}
-                        value={current}
-                        onChange={(event) => {
-                          const v = Number(event.target.value);
-                          if (event.target.value !== '' && Number.isFinite(v)) setValue(c.id, v);
-                        }}
+                        allowed={(v) => dcValueAllowed(c.kind, v)}
+                        onApply={(v) => setValue(c.id, v)}
                       />{' '}
                       {DC_UNITS[c.kind]}
                     </label>
@@ -317,11 +348,14 @@ export function ExplorationCircuitStage({
               );
             })}
           </div>
-          {changed && (
+          {experimenting && (
             <button
               type="button"
               className="secondary-button"
-              onClick={() => onChange({ ...state, disabledEdgeIds: [], edgeWeights: {}, step: finalStep })}
+              onClick={() => {
+                const asRead = { ...state, disabledEdgeIds: [], edgeWeights: {} };
+                onChange({ ...asRead, step: Math.max(0, (circuitSolution(spec, asRead)?.steps.length ?? 1) - 1) });
+              }}
             >
               Back to the circuit as read
             </button>
@@ -353,7 +387,11 @@ export function ExplorationCircuitStage({
                               : `${value(solution.state.values[c.id] ?? c.value)} ${DC_UNITS[c.kind]}`}
                           </td>
                           <td>{i === 0 ? '0 A' : `${circuitQuantity(Math.abs(i), 'A')}, ${node(a)} → ${node(b)}`}</td>
-                          <td>{circuitQuantity(Math.abs(solution.drops[c.id] ?? 0), 'V')}</td>
+                          <td>
+                            {solution.drops[c.id] === null
+                              ? 'not fixed (its ends are cut apart)'
+                              : circuitQuantity(Math.abs(solution.drops[c.id] ?? 0), 'V')}
+                          </td>
                         </tr>
                       );
                     })}

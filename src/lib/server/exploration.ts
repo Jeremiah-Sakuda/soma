@@ -2061,8 +2061,13 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             reason: z.string().min(1).max(200),
           })
           .parse(decision.parsedArguments);
+        // Numbers belong to the solver; a part's or node's own label (R4, N1) is not a number.
+        const labels = [...circuit.components, ...circuit.nodes]
+          .flatMap((x) => [x.label, x.id])
+          .sort((a, b) => b.length - a.length);
+        const unlabelled = labels.reduce((text, label) => text.split(label).join(' '), choice.reason);
         const rationale =
-          /\d|\b(?:zero|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|hundred|thousand|half|double|twice)\b/i.test(choice.reason)
+          /\d|\b(?:zero|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|hundred|thousand|half|double|twice)\b/i.test(unlabelled)
             ? null
             : choice.reason.trim();
         let probe: DcProbe | undefined;
@@ -2159,6 +2164,10 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
       // experiment. A reading with no single solution falls back to explanation only.
       let circuit: DcInput | null = !computed && extracted.circuit ? extracted.circuit : null;
       let circuitSolved: DcSolution | null = null;
+      // The experiment the words are written for: the learner's open parts and values on a
+      // follow-up about the same circuit, when that experiment has a single solution.
+      let circuitWrittenFor: { open: string[]; values: Record<string, number> } | null = null;
+      let circuitExperimentNote: string | null = null;
       if (circuit) {
         const asRead = solveDc(circuit);
         if (asRead.status !== 'solved') {
@@ -2169,11 +2178,18 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           });
           circuit = null;
         } else {
-          circuitSolved =
+          circuitSolved = asRead;
+          const underway =
             reuse && previous?.spec.mode === 'checked-circuit' && currentState
               ? circuitSolution(previous.spec, currentState)
-              : asRead;
-          if (circuitSolved?.status !== 'solved') circuitSolved = asRead;
+              : null;
+          if (underway && (underway.state.open.length || Object.keys(underway.state.values).length)) {
+            if (underway.status === 'solved') {
+              circuitSolved = underway;
+              circuitWrittenFor = { open: [...underway.state.open], values: { ...underway.state.values } };
+            } else
+              circuitExperimentNote = `The learner's current experiment (${[...underway.state.open.map((id) => `${id} open`), ...Object.entries(underway.state.values).map(([id, v]) => `${id} = ${v}`)].join(', ')}) has no single solution: ${underway.reason} checkedCircuit is the circuit as read; say so plainly.`;
+          }
           audit.push({
             event: 'model-computed',
             call: calls,
@@ -2192,7 +2208,9 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             graph: extracted.graph,
             checkedExecution: computed,
             experiment,
-            ...(circuit ? { circuit, checkedCircuit: circuitSolved, circuitExperiment: circuitExperiment ?? null } : {}),
+            ...(circuit
+              ? { circuit, checkedCircuit: circuitSolved, circuitExperiment: circuitExperiment ?? null, ...(circuitExperimentNote ? { experimentNote: circuitExperimentNote } : {}) }
+              : {}),
           }),
         },
       ];
@@ -2321,6 +2339,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                 : null,
             copy,
             uncertainty: source.uncertainty,
+            writtenFor: circuitWrittenFor,
           });
         }
         if (!experiment) {
@@ -2767,8 +2786,14 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                 (item) => item.execution === 'primary' && item.executionStep === nextState.step,
               );
               if (index >= 0) nextState.explanationStep = index;
-            } else if (spec.mode === 'checked-circuit' && previous.spec.mode === 'checked-circuit') {
-              // The learner's experiment carries over to the reply that explains it.
+            } else if (
+              spec.mode === 'checked-circuit' &&
+              previous.spec.mode === 'checked-circuit' &&
+              reuse &&
+              JSON.stringify(spec.input) === JSON.stringify(previous.spec.input)
+            ) {
+              // On the same circuit, the learner's experiment carries over to the reply that
+              // explains it; a new capture starts from the circuit as read.
               nextState.disabledEdgeIds = [...currentState.disabledEdgeIds];
               if (currentState.edgeWeights) nextState.edgeWeights = { ...currentState.edgeWeights };
               nextState.step = Math.min(currentState.step, Math.max(0, (circuitSolved?.steps.length ?? 1) - 1));

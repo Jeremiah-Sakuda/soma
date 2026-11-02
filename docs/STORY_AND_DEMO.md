@@ -32,7 +32,7 @@ Soma removes that reconstruction step. The material you are already looking at b
 
 The same questions turn up wherever people reason over connections they can't edit: a transit map, a network diagram, a delivery route. Soma's checked step is not tied to the classroom. Muse reads a picture into a typed graph, Soma's solver computes on it, and the overlay draws the result back onto the picture. The solver already runs on any weighted graph Spark can read (nonnegative costs, up to 12 nodes and 24 edges): in testing, 8 of 8 fresh original graph images were read exactly ([verification](VERIFICATION.md)). Each new kind of diagram needs a solver, a schema and a renderer, not a new product.
 
-**Status, stated plainly:** Soma has been built and demonstrated on course material. Uses beyond the classroom are potential. Say so in those words until a non-course diagram has been run live through the same flow (see the optional video beat below).
+**How to say it:** describe uses beyond the classroom as potential ("could", "the same idea applies"), never as something Soma already does for those users. Show one in the video only after a non-course diagram has been run live through the same flow (see the optional video beat below).
 
 ## The demonstration
 

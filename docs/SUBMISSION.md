@@ -38,7 +38,7 @@ The model chooses how to read, explain and investigate. The code proves the answ
 
 **Why it matters:** the questions that build understanding are "what if" questions, and static slides can't answer them. Soma removes the reconstruction step between a slide and an experiment, and it gives answers a learner can trust because the numbers are computed rather than generated.
 
-**How far it reaches:** the checked step doesn't depend on the picture being a slide. Soma's solver runs on any weighted graph Muse Spark can read, within its limits of nonnegative costs and 12 nodes (in testing, 8 of 8 fresh original graph images were read exactly), so the same experiment applies wherever people reason over connections they can't edit: transit maps, network diagrams, delivery routes. That reach is potential; Soma has been built and demonstrated on course material.
+**How far it reaches:** the checked step doesn't depend on the picture being a slide. Soma's solver runs on any weighted graph Muse Spark can read, within its limits of nonnegative costs and 12 nodes (in testing, 8 of 8 fresh original graph images were read exactly), so the same experiment could reach anywhere people reason over connections they can't edit: transit maps, network diagrams, delivery routes.
 
 **Why it's credible:** the core journey is one live run on an original slide; waits are shortened and labelled. The source becomes a controllable experiment, each change has a computed consequence, the model makes a visible decision, and the result can be kept and practiced. No study or adoption figures are claimed; the potential is shown through a working capability.
 
@@ -90,7 +90,7 @@ Routes, distances and the tipping point come from Soma's solver, run on the grap
 No. The answer is an experiment you manipulate on your own material, with computed results and an explanation that follows your changes.
 
 **Is Soma only for students?**
-Students are who we built it for and who the demo serves. The pattern underneath (the model reads and chooses, the code computes, the answer is drawn on the source) applies wherever people reason over a diagram they can't edit. Today the checked part is graph search on course material; we haven't yet demonstrated a diagram from outside the classroom.
+Students are who we built it for and who the demo serves. The pattern underneath (the model reads and chooses, the code computes, the answer is drawn on the source) applies wherever people reason over a diagram they can't edit. Today the checked part is graph search, starting with course material.
 
 **Is the engine generated live?**
 No. It is a recorded Muse run in the Soma lab, labelled as such.

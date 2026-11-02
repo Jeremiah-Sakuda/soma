@@ -59,7 +59,7 @@ flowchart LR
 
 **Keep the investigation connected.** Contextual follow-ups and saved revisions let the user continue from the current experiment. The opportunity is less setup and more direct exploration; no quantified time-saving or learning-gain result is claimed.
 
-**Reach past the classroom.** The checked step doesn't depend on the picture being a slide: Muse reads a picture into a typed graph, Soma's solver computes on it, and the result is drawn back onto the picture. The same questions come up on a transit map, a network diagram or a delivery route. Soma has been built and demonstrated on course material; those uses are potential, not shown yet.
+**Reach past the classroom.** The checked step doesn't depend on the picture being a slide: Muse reads a picture into a typed graph, Soma's solver computes on it, and the result is drawn back onto the picture. The same questions come up on a transit map, a network diagram or a delivery route, which is where Soma could go next.
 
 ## Exploring a richer visual language
 

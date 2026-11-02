@@ -147,7 +147,7 @@ ipcRenderer.on('desktop:screen-overlay-result', (_event, d) => {
           shown: d.shown === true,
           dismissed: d.dismissed === true,
           ...(d.view === '3d' || d.view === '2d' ? { view: d.view } : {}),
-          ...(['changed', 'webgl', 'sheet'].includes(d.reason) ? { reason: d.reason } : {}),
+          ...(['changed', 'moved', 'webgl', 'sheet'].includes(d.reason) ? { reason: d.reason } : {}),
         },
       }),
     );

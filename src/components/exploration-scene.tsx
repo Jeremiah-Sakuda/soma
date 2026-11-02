@@ -351,6 +351,8 @@ export function ExplorationScene({
       setScreenNotice(
         d.reason === 'changed'
           ? 'Your slide changed, so Soma took the drawing off your screen. Capture again to draw on the new one.'
+          : d.reason === 'moved'
+            ? 'Your screen changed before Soma could draw on it, so the drawing stays here. Ask again to draw on what is there now.'
           : d.reason === 'webgl'
             ? 'This Mac could not draw in 3D, so the drawing stays flat on your slide.'
             : d.reason === 'sheet'

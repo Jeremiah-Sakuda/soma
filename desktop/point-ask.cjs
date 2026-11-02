@@ -658,7 +658,7 @@ function createPointAsk({
       if (!ok) {
         graph = null;
         refused = c.id;
-        overlayResult({ id: c.id, shown: false });
+        overlayResult({ id: c.id, shown: false, reason: 'moved' });
         return;
       }
       graph.verified = true;

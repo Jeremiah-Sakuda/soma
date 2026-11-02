@@ -145,7 +145,7 @@ test('a changed screen gets no overlay, and clicks are accepted only from the ov
   try {
     const id = await changed.ready();
     await changed.controller.screenOverlay({ id, model: model() });
-    assert.deepEqual(changed.results.at(-1), { id, shown: false });
+    assert.deepEqual(changed.results.at(-1), { id, shown: false, reason: 'moved' });
     assert.equal(changed.draws.filter((d) => d.type === 'graph').length, 0);
     const results = changed.results.length;
     await changed.controller.screenOverlay({ id, model: model() });

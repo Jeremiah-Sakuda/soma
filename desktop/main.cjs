@@ -387,9 +387,11 @@ else {
       screen,
       globalShortcut,
       locked,
+      // A development run may substitute a scripted helper for live end-to-end tests; a
+      // packaged app always uses its own signed helper.
       helperPath: app.isPackaged
         ? path.join(process.resourcesPath, 'hold-shortcut')
-        : path.join(__dirname, 'node_modules/.cache/soma/hold-shortcut'),
+        : process.env.SOMA_TEST_HOLD_HELPER || path.join(__dirname, 'node_modules/.cache/soma/hold-shortcut'),
       available: () => trustedPage(view.webContents.getURL(), origin),
       send: (payload) => view.webContents.send('desktop:point-ask', payload),
       status,

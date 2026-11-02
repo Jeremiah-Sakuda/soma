@@ -43,6 +43,7 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const ACCENT = 0xd8572a;
 // A part the learner picked.
 const PICKED = 0x5551f5;
+const GREY = new Color(0xb9b6ae);
 // How far a drag can turn the model, and tip it toward or away from the viewer (radians).
 const TURN_LIMIT = 1.0;
 const TIP_LIMIT = 0.22;
@@ -95,6 +96,10 @@ function build(frame) {
   canvas.id = 'lift-canvas';
   const labels = document.createElement('div');
   labels.id = 'lift-labels';
+  // Leaders from a chip that had to move back to its part.
+  const leaders = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  leaders.id = 'lift-leaders';
+  labels.appendChild(leaders);
   labels.setAttribute('aria-hidden', 'true');
   let renderer;
   try {
@@ -218,7 +223,7 @@ function fitAnchored(data) {
   // A checked height's scale spans 0-3 for the whole run, so an early step with nothing
   // risen yet keeps the same scale as the last.
   const top = Math.max(3, ...data.objects.map((o) => o.position.y));
-  const unit = (f.height * 0.3) / top;
+  const unit = (f.height * 0.36) / top;
   s.unit = unit;
   s.model.rotation.x = Math.PI / 2;
   s.model.scale.setScalar(unit);
@@ -299,6 +304,7 @@ function syncParts(data) {
         for (const mat of mats) {
           mat.transparent = true;
           mat.userData.baseOpacity = mat.opacity;
+          if (mat.color) mat.userData.baseColor = mat.color.clone();
         }
       });
       const shadow = new Mesh(new PlaneGeometry(1, 1), new MeshBasicMaterial({ map: s.shadowTex, transparent: true, depthWrite: false, opacity: 0 }));
@@ -397,6 +403,7 @@ function flushLabels() {
   const clear = (b) =>
     b.x >= f.dx + 4 && b.y >= f.dy + 4 && b.x + b.w <= f.dx + f.width - 4 && b.y + b.h <= f.dy + f.height - 4 &&
     placed.every((p) => b.x + b.w + gap <= p.x || p.x + p.w + gap <= b.x || b.y + b.h + gap <= p.y || p.y + p.h + gap <= b.y);
+  const lines = [];
   for (const l of [...shown].sort((a, b) => b.priority - a.priority)) {
     const w = l.el._w, h = l.el._h;
     // A picked part's longer chip goes beside it, so it never covers the part it describes.
@@ -424,7 +431,12 @@ function flushLabels() {
     placed.push(box);
     l.el.style.transform = `translate(${box.x.toFixed(1)}px, ${box.y.toFixed(1)}px)`;
     l.el.style.opacity = String(l.opacity);
+    // A chip not touching its point gets a short leader back to it.
+    const nx = Math.max(box.x, Math.min(l.x, box.x + w)), ny = Math.max(box.y, Math.min(l.y, box.y + h));
+    if (Math.hypot(nx - l.x, ny - l.y) > 12) lines.push(`<line x1="${nx.toFixed(1)}" y1="${ny.toFixed(1)}" x2="${l.x.toFixed(1)}" y2="${l.y.toFixed(1)}" opacity="${l.opacity.toFixed(2)}"/><circle cx="${l.x.toFixed(1)}" cy="${l.y.toFixed(1)}" r="2.5" opacity="${l.opacity.toFixed(2)}"/>`);
   }
+  const svg = document.getElementById('lift-leaders');
+  if (svg) svg.innerHTML = lines.join('');
   s.pending = [];
 }
 
@@ -444,7 +456,14 @@ function caption(data) {
   const f = s.frame, r = data.region;
   box.style.left = Math.max(8, Math.min(r.x * f.width + f.dx, innerWidth - box.offsetWidth - 8)) + 'px';
   box.style.bottom = '';
-  box.style.top = Math.max(8, Math.min((r.y + r.height) * f.height + f.dy + 12, innerHeight - box.offsetHeight - 12)) + 'px';
+  const below = (r.y + r.height) * f.height + f.dy + 12;
+  if (below + box.offsetHeight <= innerHeight - 12) box.style.top = below + 'px';
+  else {
+    // No room under the region: beside it, on whichever side has more space.
+    const right = (r.x + r.width) * f.width + f.dx + 16, left = r.x * f.width + f.dx - box.offsetWidth - 16;
+    box.style.left = (right + box.offsetWidth <= innerWidth - 8 || left < 8 ? Math.min(right, innerWidth - box.offsetWidth - 8) : left) + 'px';
+    box.style.top = Math.max(8, innerHeight - box.offsetHeight - 24) + 'px';
+  }
 }
 
 function frameLoop() {
@@ -502,12 +521,15 @@ function renderFrame() {
     const rise = s.floorY + (v.at.y - s.floorY) * k;
     v.mesh.position.set(v.at.x, rise, v.at.z);
     v.inner.scale.setScalar(Math.max(0.001, clamp01(k * 1.4) * (1 + pulse)));
-    const dim = anyLit && !v.data.highlighted && !v.data.selected ? 0.55 : 1;
+    // Parts the step is not about step back by greying, not by fading, so the slide never
+    // shows through a solid part.
+    const dim = anyLit && !v.data.highlighted && !v.data.selected;
     v.inner.traverse((m) => {
       if (!m.isMesh) return;
       const mats = Array.isArray(m.material) ? m.material : [m.material];
       for (const mat of mats) {
-        mat.opacity = (mat.userData.baseOpacity ?? 1) * v.fade * dim;
+        mat.opacity = (mat.userData.baseOpacity ?? 1) * v.fade;
+        if (mat.userData.baseColor) mat.color.copy(mat.userData.baseColor).lerp(GREY, dim ? 0.55 : 0);
         mat.depthWrite = mat.opacity > 0.95;
         if ('emissiveIntensity' in mat) {
           const lit = v.data.selected || v.data.highlighted || v.hover;
@@ -531,12 +553,16 @@ function renderFrame() {
     }
     // An arrow is named at its tip, a tube or sheet at its middle; anything else above its top.
     const path = v.data.path;
-    const ref = path?.length ? (v.data.shape === 'arrow' ? path[path.length - 1] : path[Math.floor(path.length / 2)]) : null;
+    // A line is named at its middle: a message on its arrow, not on what it reaches.
+    const ref = path?.length ? (path.length === 2 ? { x: (path[0].x + path[1].x) / 2, y: (path[0].y + path[1].y) / 2, z: (path[0].z + path[1].z) / 2 } : path[Math.floor(path.length / 2)]) : null;
     const lift = rise - v.at.y;
     const top = ref
       ? new Vector3(ref.x, ref.y + lift + 0.15, ref.z)
       : new Vector3(v.at.x + (e.min.x + e.max.x) / 2, rise + e.max.y + 0.12, v.at.z + (e.min.z + e.max.z) / 2);
-    placeLabel(v.label, top, clamp01((k - 0.6) / 0.4) * v.fade * (anyLit && !v.data.highlighted && !v.data.selected && !v.hover ? 0.75 : 1), v.data.selected || v.hover ? 5 : v.data.highlighted ? 4 : 2);
+    // Parts the step is not about keep small, quiet names.
+    const quiet = anyLit && !v.data.highlighted && !v.data.selected && !v.hover;
+    v.label.classList.toggle('is-quiet', quiet);
+    placeLabel(v.label, top, clamp01((k - 0.6) / 0.4) * v.fade, v.data.selected || v.hover ? 5 : v.data.highlighted ? 4 : 2);
   }
   // Flows arc between the parts they join, drawn once both have risen.
   for (const v of s.links.values()) {

@@ -1378,7 +1378,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         input,
         tools,
         // Composing a whole 3D model is the longest single output; give it more of the budget.
-        deadlineMs: Math.min(request.intent === 'model' && structuredOutput ? 55_000 : 30_000, deadline - Date.now()),
+        deadlineMs: Math.min(request.intent === 'model' && structuredOutput ? 45_000 : 30_000, deadline - Date.now()),
         signal,
         maxOutputTokens: 6144,
         ...(mechanismBudget ? { reasoningEffort: 'minimal' as const } : {}),
@@ -2491,14 +2491,24 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
       for (let attempt = 0; attempt < 3; attempt++) {
         stage = 'composition';
         progress(attempt === 0 ? 'building-visual' : 'repairing-visual');
-        const authored = await call(
-          history,
-          [],
-          composeInstructions + ' Return only the schema-constrained JSON object; never prose.',
-          { name: 'soma_visual', schema: composeTool.parameters },
-          // A model built on request gets the author's full reasoning.
-          !computed && !modelIntent && (!!previousSpatial || mechanismIntent),
-        );
+        const compose = (quick: boolean) =>
+          call(
+            history,
+            [],
+            composeInstructions + ' Return only the schema-constrained JSON object; never prose.',
+            { name: 'soma_visual', schema: composeTool.parameters },
+            quick,
+          );
+        let authored: MetaResult;
+        try {
+          // A model built on request gets the author's full reasoning first.
+          authored = await compose(!computed && !modelIntent && (!!previousSpatial || mechanismIntent));
+        } catch (error) {
+          // Out of time thinking about a whole model: one quicker attempt with what is left.
+          if (!(modelIntent && error instanceof MetaClientError && error.code === 'timeout' && deadline - Date.now() > 25_000)) throw error;
+          audit.push({ event: 'model-retried', call: calls, detail: 'The 3D model took too long to compose; one quicker attempt requested.' });
+          authored = await compose(true);
+        }
         let proposal: AuthorProposal;
         if (
           authored.status === 'completed' &&

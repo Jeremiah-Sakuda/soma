@@ -11,7 +11,7 @@ const STATUS = ['current', 'settled', 'waiting', 'unreached'];
 const TONE = ['path', 'relaxed', 'tree', 'struck', 'cut', 'idle'];
 const TAG_TONE = ['settled', 'current', 'tentative', 'equation', 'route'];
 
-const SHAPES = ['sphere', 'box', 'cylinder', 'torus', 'arrow', 'tube'];
+const SHAPES = ['sphere', 'box', 'cylinder', 'torus', 'arrow', 'tube', 'sheet'];
 const COLORS = ['clay', 'sage', 'blue', 'gold', 'violet'];
 const vec = (v, lo, hi) => v && [v.x, v.y, v.z].every((n) => Number.isFinite(n) && n >= lo && n <= hi);
 const region = (r) =>
@@ -42,6 +42,7 @@ function validScene(sc) {
           vec(o.size, 0.05, 4.5) &&
           (o.parentId === null || id(o.parentId)) &&
           (o.shell === undefined || typeof o.shell === 'boolean') &&
+          (o.rotation === undefined || vec(o.rotation, -180, 180)) &&
           typeof o.visible === 'boolean' &&
           typeof o.highlighted === 'boolean' &&
           (o.anchor === undefined || point(o.anchor)) &&

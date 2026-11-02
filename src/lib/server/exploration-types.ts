@@ -73,6 +73,7 @@ export type ExplorationAudit = {
     | 'graph-located'
     | 'source-compared'
     | 'source-reused'
+    | 'model-retried'
     | 'source-interpreted'
     | 'source-repair-requested'
     | 'model-computed'

@@ -32,7 +32,8 @@ function FlatScene({ scene }: { scene: SpatialScene }) {
     {visible.map((object) => {
       const p = project(object.position.x, object.position.y), shell = scene.objects.some((o) => o.parentId === object.id);
       return <g key={object.id} data-spatial-object={object.id} data-position={JSON.stringify(object.position)}>
-        {object.path?.length ? <polyline points={object.path.map((q) => { const r = project(q.x, q.y); return `${r.x},${r.y}`; }).join(' ')} fill="none" stroke={palette[object.color]} strokeWidth={object.highlighted ? 6 : 4} strokeLinecap="round" markerEnd={object.shape === 'arrow' ? 'url(#spatial-flat-arrow)' : undefined} />
+        {object.shape === 'sheet' && object.path?.length ? <polygon points={object.path.map((q) => { const r = project(q.x, q.y); return `${r.x},${r.y}`; }).join(' ')} fill={palette[object.color]} fillOpacity="0.35" stroke={palette[object.color]} strokeWidth={object.highlighted ? 3 : 2} />
+        : object.path?.length ? <polyline points={object.path.map((q) => { const r = project(q.x, q.y); return `${r.x},${r.y}`; }).join(' ')} fill="none" stroke={palette[object.color]} strokeWidth={object.highlighted ? 6 : 4} strokeLinecap="round" markerEnd={object.shape === 'arrow' ? 'url(#spatial-flat-arrow)' : undefined} />
         : object.shape === 'sphere' || object.shape === 'torus'
           ? <ellipse cx={p.x} cy={p.y} rx={Math.max(7, object.size.x / extent * 105)} ry={Math.max(7, object.size.y / extent * 55)} fill={object.shape === 'torus' ? 'none' : palette[object.color]} fillOpacity={shell ? 0.1 : 0.8} stroke={palette[object.color]} strokeWidth={object.highlighted ? 4 : 2} />
           : <rect x={p.x - object.size.x / extent * 105} y={p.y - object.size.y / extent * 55} width={object.size.x / extent * 210} height={object.size.y / extent * 110} rx="8" fill={palette[object.color]} fillOpacity={shell ? 0.1 : 0.8} stroke={palette[object.color]} strokeWidth={object.highlighted ? 4 : 2} />}

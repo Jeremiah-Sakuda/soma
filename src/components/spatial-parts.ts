@@ -22,6 +22,7 @@ export function createSpatialPart(object: SpatialObject, selected: boolean, shel
   }
   if ((object.shape === 'arrow' || object.shape === 'tube') && object.path && object.path.length >= 2)
     return drawnPart(object, selected);
+  if (object.shape === 'sheet' && object.path && object.path.length >= 3) return sheetPart(object, selected);
   const tint = spatialColors[object.color];
   const surface = (color: number, metalness = 0.15, opacity = 1) => new THREE.MeshStandardMaterial({
     color, metalness, roughness: metalness > 0.5 ? 0.32 : 0.42,
@@ -210,6 +211,38 @@ export function createSpatialPart(object: SpatialObject, selected: boolean, shel
   for (const material of [body, dark, metal, ceramic]) if (!used.has(material)) material.dispose();
   root.scale.set(object.size.x, object.size.y, object.size.z);
   root.position.set(object.position.x, object.position.y, object.position.z);
+  if (object.rotation) root.rotation.set(...(['x', 'y', 'z'] as const).map((k) => (object.rotation![k] * Math.PI) / 180) as [number, number, number], 'XYZ');
+  return root;
+}
+
+/** A flat polygon through its corners (a parallelogram spanned by two vectors, a triangle,
+ * a plane through a crystal), see-through, with its edge drawn. */
+function outline(corners: THREE.Vector3[]) {
+  const path = new THREE.CurvePath<THREE.Vector3>();
+  corners.forEach((c, i) => path.add(new THREE.LineCurve3(c, corners[(i + 1) % corners.length])));
+  return path;
+}
+function sheetPart(object: SpatialObject, selected: boolean) {
+  const root = new THREE.Group();
+  const at = new THREE.Vector3(object.position.x, object.position.y, object.position.z);
+  const corners = object.path!.map((p) => new THREE.Vector3(p.x, p.y, p.z).sub(at));
+  const tint = spatialColors[object.color];
+  const geometry = new THREE.BufferGeometry();
+  const triangles: number[] = [];
+  for (let i = 1; i < corners.length - 1; i++) for (const c of [corners[0], corners[i], corners[i + 1]]) triangles.push(c.x, c.y, c.z);
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(triangles, 3));
+  geometry.computeVertexNormals();
+  const face = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
+    color: tint, roughness: 0.6, side: THREE.DoubleSide, transparent: true, opacity: 0.55, depthWrite: false,
+    emissive: selected || object.highlighted ? tint : 0, emissiveIntensity: selected || object.highlighted ? 0.2 : 0,
+  }));
+  face.userData.objectId = object.id; root.add(face);
+  const edge = new THREE.Mesh(
+    new THREE.TubeGeometry(outline(corners), corners.length * 8, Math.max(0.015, object.size.x * 0.12), 6, false),
+    new THREE.MeshStandardMaterial({ color: tint, roughness: 0.4 }),
+  );
+  edge.userData.objectId = object.id; root.add(edge);
+  root.position.copy(at);
   return root;
 }
 

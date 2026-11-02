@@ -79,3 +79,23 @@ describe('posed paths', () => {
     expect(at(1)[0].y).toBeGreaterThan(at(1)[1].y + 0.1);
   });
 });
+describe('sheets and turned parts', () => {
+  it('keep a parallelogram on its vectors and a bank angle through tidying', () => {
+    const a = { ...part('a', 1, 0.1, 0, 0.1), shape: 'arrow' as const, path: [{ x: 0, y: 0.1, z: 0 }, { x: 2, y: 0.1, z: 0 }] };
+    const b = { ...part('b', 0.5, 0.1, 0.5, 0.1), shape: 'arrow' as const, path: [{ x: 0, y: 0.1, z: 0 }, { x: 1, y: 0.1, z: 1 }] };
+    const area = { ...part('area', 1.5, 0.1, 0.5, 0.05), shape: 'sheet' as const, path: [{ x: 0, y: 0.1, z: 0 }, { x: 2, y: 0.1, z: 0 }, { x: 3, y: 0.1, z: 1 }, { x: 1, y: 0.1, z: 1 }] };
+    const road = { ...part('road', 0, 0, -2, 1), rotation: { x: 0, y: 0, z: 20 } };
+    const out = tidySpatialPanel(panel([a, b, area, road]));
+    expect(() => validateSpatialPanel(out, [])).not.toThrow();
+    const [ta, tb, tarea, troad] = out.objects;
+    // The sheet's corners are still the vectors' tail and tips.
+    expect(tarea.path![1]).toEqual(ta.path![1]);
+    expect(tarea.path![3]).toEqual(tb.path![1]);
+    expect(troad.rotation).toEqual({ x: 0, y: 0, z: 20 });
+  });
+  it('turns a sheet with too few corners into a slab', () => {
+    const out = tidySpatialPanel(panel([{ ...part('flat', 0, 0, 0, 1), shape: 'sheet' as const, path: [{ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }] }]));
+    expect(out.objects[0].shape).toBe('box');
+    expect(() => validateSpatialPanel(out, [])).not.toThrow();
+  });
+});

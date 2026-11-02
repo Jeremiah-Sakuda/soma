@@ -9,7 +9,8 @@ export type LiftSceneObject = {
   label: string;
   /** One short line for the part's chip: its role, or its checked value. */
   detail: string;
-  shape: 'sphere' | 'box' | 'cylinder' | 'torus' | 'arrow' | 'tube';
+  shape: 'sphere' | 'box' | 'cylinder' | 'torus' | 'arrow' | 'tube' | 'sheet';
+  rotation?: Vec;
   path?: Vec[];
   renderStyle: string | null;
   color: 'clay' | 'sage' | 'blue' | 'gold' | 'violet';
@@ -73,6 +74,7 @@ export function liftScene(scene: SpatialScene, region: Region, anchors?: Map<str
     visible: o.visible,
     highlighted: o.highlighted,
     ...(o.path?.length ? { path: o.path.map((p) => ({ ...p })) } : {}),
+    ...(o.rotation ? { rotation: { ...o.rotation } } : {}),
     ...(o.geometry?.length ? { geometry: o.geometry, parameterValues: o.parameterValues ?? {} } : {}),
     ...(anchors?.has(o.id) ? { anchor: anchors.get(o.id)! } : {}),
   }));

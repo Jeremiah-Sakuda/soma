@@ -7,7 +7,8 @@ const TARGET = 6.4,
   LIMIT = 5.8;
 const clampSize = (n: number) => Math.max(0.1, Math.min(4, n));
 
-const drawn = (o: SpatialPanel['objects'][number]) => (o.shape === 'arrow' || o.shape === 'tube') && (o.path?.length ?? 0) >= 2;
+const lined = (shape: string) => shape === 'arrow' || shape === 'tube' || shape === 'sheet';
+const drawn = (o: SpatialPanel['objects'][number]) => lined(o.shape) && (o.path?.length ?? 0) >= (o.shape === 'sheet' ? 3 : 2);
 function boxOf(o: SpatialPanel['objects'][number], at: SpatialVector = o.position): Box {
   if (drawn(o)) {
     const d = [at.x - o.position.x, at.y - o.position.y, at.z - o.position.z], r = o.size.x / 2;
@@ -36,17 +37,23 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
   const next: SpatialPanel = structuredClone(panel);
   const objects = next.objects;
   if (!objects.length) return next;
+  const byId = new Map(objects.map((o) => [o.id, o]));
   // An arrow or tube needs its path; a path on any other shape is dropped.
   for (const o of objects) {
-    if ((o.shape === 'arrow' || o.shape === 'tube') && (o.path?.length ?? 0) < 2) o.shape = 'cylinder';
-    if (o.shape !== 'arrow' && o.shape !== 'tube') delete o.path;
-    else o.path = o.path!.filter((p, i, all) => i === 0 || Math.hypot(p.x - all[i - 1].x, p.y - all[i - 1].y, p.z - all[i - 1].z) >= 0.02);
-    if (o.path && o.path.length < 2) {
-      o.shape = 'cylinder';
+    if (!lined(o.shape)) delete o.path;
+    else o.path = (o.path ?? []).filter((p, i, all) => i === 0 || Math.hypot(p.x - all[i - 1].x, p.y - all[i - 1].y, p.z - all[i - 1].z) >= 0.02);
+    // Too few points to draw: a sheet becomes a thin slab, a line a plain rod.
+    if (lined(o.shape) && !drawn(o)) {
+      o.shape = o.shape === 'sheet' ? 'box' : 'cylinder';
       delete o.path;
     }
+    if (o.rotation && (o.geometry?.length || drawn(o))) delete o.rotation;
   }
-  const byId = new Map(objects.map((o) => [o.id, o]));
+  next.poses = next.poses.filter((pose) => {
+    const owner = byId.get(pose.objectId);
+    if (pose.path && (!owner || !drawn(owner) || pose.path.length < (owner.shape === 'sheet' ? 3 : 2))) delete pose.path;
+    return true;
+  });
   const frames = (o: SpatialPanel['objects'][number]) => [o.position, ...next.poses.filter((p) => p.objectId === o.id && !p.path?.length).map((p) => p.position)];
   const posedPaths = (o: SpatialPanel['objects'][number]) => next.poses.filter((p) => p.objectId === o.id && p.path?.length).map((p) => p.path!);
   const extent = () => {

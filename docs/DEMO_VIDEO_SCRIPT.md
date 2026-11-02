@@ -80,6 +80,6 @@ Verified:
 
 Also verified (November 1): the 3D lift on the real screen through the compact bar, including a slide re-check while lifted, in an unreleased companion build (`desktop/test/compact-live.cjs`).
 
-Also verified (November 2): the circuit beat's reading, solution and investigation, live through the service twice on the Lecture 9 slide (exact reading both times; Wonder approved; Muse chose R₄ and Soma found exactly 8 Ω), and the circuit drawing, opening and value changes in the browser with a scripted provider.
+Also verified (November 2): the circuit beat's reading, solution and investigation, live through the service twice on the Lecture 9 slide (exact reading both times; Wonder approved; Muse chose R₄ and Soma found exactly 8 Ω), the circuit drawing, opening and value changes in the browser with a scripted provider, and the whole circuit journey live on the page against a local server, including Find the tipping point.
 
 Not yet verified: the narrated edit, Try a fresh example on the hero exploration, the panel's **Lift into 3D** button in a live Point & ask take (the live check used the compact bar), a signed companion release with the 3D lift, the circuit drawn by the native overlay on the real screen, the circuit on the hosted app, and any non-course diagram. No final video URL exists yet.

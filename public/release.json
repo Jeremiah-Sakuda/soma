@@ -1,6 +1,6 @@
 {
   "releaseId": "soma-pm163-hold-the-model-2026-11-02",
-  "sourceTreeSha256": "d41de72b165d32962d15a7bbfbb8280696f1a65ea617fbb178bdf007542f1e85",
+  "sourceTreeSha256": "6c4cc9fe2ad6525d1f317c217fbf3a65e41bc6233efeeb30f18228981eb499a9",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
     "desktop/Info.plist": "a7566833b9abda71d595bb76ba892daf8c33cccb10413e3a510a1a502c0db050",
@@ -20,7 +20,7 @@
     "desktop/entitlements.plist": "10e05feb0f31d546b4df7e3e444975d8d2ad2a6cc3acfe4c3514e4214ef78823",
     "desktop/lift-entry.mjs": "9696936e2616e965bb02a49237ed5f4a8e856359c7e0fbb252e42de43bf2b7db",
     "desktop/lift-geometry.mjs": "f1d31f418d958021165491c795aadc5cfe366aee0693775ab1f6387a30be2690",
-    "desktop/lift-model.mjs": "2d0ffd33d30bf6e719dbda656b70eae1d827bde6e616a72e5ad762df98168382",
+    "desktop/lift-model.mjs": "d67213dc06682bf0a87143ad72147b02378b5274be3c1e72bb04e780965667ef",
     "desktop/lift-renderer.mjs": "63d85a47ec24c8b4215e30399c84b65d142a706e790d24775f1d6536bd38d286",
     "desktop/main.cjs": "44697e9df37aaba5414b78ce1e87a6ee90002ff3aff464f3bc7715f0a01ceb5b",
     "desktop/native/ComputerControl.swift": "a4366a974d4843b1a10dffe0d03e851e71a41e2546b024d0fb517a5138a91669",
@@ -29,8 +29,8 @@
     "desktop/package.json": "73201b7f3906d485acd5b78d203024bb5ad224e9a6c984084522702dd21e1a7d",
     "desktop/point-ask.cjs": "8bfb6b54597a95edb5990935167a2cf4fe274a0edc4433710d2aff2ac8ab8d8d",
     "desktop/point-geometry.cjs": "56cb3a4d2acf2a13c45901d8aa241df1947c01a7f5eea3240d7a912ae646017c",
-    "desktop/point-overlay-3d.js": "c1a2ee189cbd0e03c5a0a79bf6a77592ec4b7bf792ac777d7777f197f1400e32",
-    "desktop/point-overlay.css": "037516bb560ed08a6c3c231717a51f9e23a3ac7738b693f4a8c99ba1a9303e5d",
+    "desktop/point-overlay-3d.js": "e7ce7803ccd52ecf14aa8d278d2eb9144703aa08fd506aefd5138742aad673a5",
+    "desktop/point-overlay.css": "fb6c0564eb30424adc313ef05462f9f714f28d2210738633c247a2998f19dba7",
     "desktop/point-overlay.html": "c9665bce2b787ae0e03174ab9a570e68b56e4d6283cf4f1aea54a15a72fb30d2",
     "desktop/point-overlay.js": "69c6ae8afa293a3ca53e11fce21f08e5cbc4a27ba603d5f30dafb877f13897f1",
     "desktop/point-preload.cjs": "74659fe109cfa132fd8ad0f53b7473844c9e6028a74fbcf9f9f833741ccbb781",

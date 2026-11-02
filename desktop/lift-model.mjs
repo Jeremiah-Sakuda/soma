@@ -178,10 +178,23 @@ function placeSheet(data, sheet) {
       sheet.dataUrl,
       (texture) => {
         if (!s || s.sheet?.paper.material !== paper) return texture.dispose();
-        texture.colorSpace = SRGBColorSpace;
-        paper.map = texture;
+        // Washed toward its paper colour, the lifted slide is a backdrop: its own drawing
+        // stays legible but never competes with the model as a second copy.
+        const tone = paperColour(texture.image);
+        const c = document.createElement('canvas');
+        c.width = texture.image.width;
+        c.height = texture.image.height;
+        const g = c.getContext('2d');
+        g.drawImage(texture.image, 0, 0);
+        g.fillStyle = `#${tone.getHexString(SRGBColorSpace)}`;
+        g.globalAlpha = 0.5;
+        g.fillRect(0, 0, c.width, c.height);
+        texture.dispose();
+        const washed = new CanvasTexture(c);
+        washed.colorSpace = SRGBColorSpace;
+        paper.map = washed;
         paper.needsUpdate = true;
-        coverMat.color.copy(paperColour(texture.image));
+        coverMat.color.copy(tone);
         s.sheetReady = true;
         wake();
       },
@@ -419,6 +432,13 @@ function flushLabels() {
         break;
       }
     }
+    // A chip the step is about searches further out, and is drawn with a leader.
+    if (!box && l.priority >= 4)
+      for (let r = 40; r <= 160 && !box; r += 24)
+        for (let a = 0; a < 8 && !box; a++) {
+          const b = { x: l.x + Math.cos(a * Math.PI / 4 - Math.PI / 2) * r - w / 2, y: l.y + Math.sin(a * Math.PI / 4 - Math.PI / 2) * r - h / 2, w, h };
+          if (clear(b)) box = b;
+        }
     if (!box && l.priority >= 4) {
       // Must be shown: the nearest spot kept on the display.
       const [ox, oy] = spots[0];
@@ -501,7 +521,8 @@ function renderFrame() {
   const sheetT = clamp01(t / 0.3), sh = s.sheet;
   if (sh) {
     const ready = s.sheetReady;
-    sh.paper.material.opacity = ready ? 1 - 0.5 * sheetT : 0;
+    // The lifted slide stays nearly solid, so it never reads as a second copy of the slide.
+    sh.paper.material.opacity = ready ? 1 - 0.12 * sheetT : 0;
     sh.cover.material.opacity = ready && s.hasCover ? 0.94 * clamp01(t / 0.06) : 0;
     sh.floor.material.opacity = 0.3 * tilt;
   }
@@ -520,7 +541,10 @@ function renderFrame() {
     // Rising out of the sheet on entry: from the floor up to where the part stands.
     const rise = s.floorY + (v.at.y - s.floorY) * k;
     v.mesh.position.set(v.at.x, rise, v.at.z);
-    v.inner.scale.setScalar(Math.max(0.001, clamp01(k * 1.4) * (1 + pulse)));
+    // A picked part stands out by size as well as colour.
+    v.pick = approach(v.pick ?? 0, v.data.selected ? 1 : 0, dt, 0.2);
+    if (Math.abs(v.pick - (v.data.selected ? 1 : 0)) > 0.01) moving = true;
+    v.inner.scale.setScalar(Math.max(0.001, clamp01(k * 1.4) * (1 + pulse) * (1 + 0.1 * v.pick)));
     // Parts the step is not about step back by greying, not by fading, so the slide never
     // shows through a solid part.
     const dim = anyLit && !v.data.highlighted && !v.data.selected;
@@ -533,8 +557,9 @@ function renderFrame() {
         mat.depthWrite = mat.opacity > 0.95;
         if ('emissiveIntensity' in mat) {
           const lit = v.data.selected || v.data.highlighted || v.hover;
-          if (lit && mat.emissive) mat.emissive.set(v.data.selected || v.hover ? PICKED : ACCENT);
-          mat.emissiveIntensity = v.data.selected ? 0.3 : v.hover ? 0.18 : v.data.highlighted ? 0.18 + 0.25 * (pulse / 0.12) : 0;
+          // A picked part glows in its own colour (its chip carries the pick colour).
+          if (lit && mat.emissive) mat.emissive.set(v.data.selected && mat.userData.baseColor ? mat.userData.baseColor : v.hover ? PICKED : ACCENT);
+          mat.emissiveIntensity = v.data.selected ? 0.5 : v.hover ? 0.18 : v.data.highlighted ? 0.18 + 0.25 * (pulse / 0.12) : 0;
         }
       }
     });

@@ -124,7 +124,12 @@ export default function SpatialCanvas(props: Props) {
         group.add(part); nodes.set(object.id, part);
         // Signal markers show motion, not another competing label on the mechanism.
         if (object.renderStyle !== 'marker' || selected)
-          label(object.label, part.position.clone(), selected ? 3 : object.highlighted ? 2 : shell ? 0 : 1, object.id, new THREE.Box3().setFromObject(part).max.y - part.position.y);
+        {
+          // An arrow is named at its tip, a tube or sheet at its middle.
+          const path = object.path, ref = path?.length ? (object.shape === 'arrow' ? path[path.length - 1] : path[Math.floor(path.length / 2)]) : null;
+          if (ref) label(object.label, new THREE.Vector3(ref.x, ref.y + 0.15, ref.z), selected ? 3 : object.highlighted ? 2 : 1);
+          else label(object.label, part.position.clone(), selected ? 3 : object.highlighted ? 2 : shell ? 0 : 1, object.id, new THREE.Box3().setFromObject(part).max.y - part.position.y);
+        }
       }
       const byId = new Map(visible.map((object) => [object.id, object]));
       for (const edge of current.scene.connections) {

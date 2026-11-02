@@ -168,7 +168,9 @@ function withShells(scene: SpatialScene): SpatialScene {
     objects: scene.objects.map((o) => ({
       ...o,
       shell: scene.objects.some((c) => c.parentId === o.id) ||
-        (solid(o) && scene.objects.some((c) => c.id !== o.id && c.visible && (c.path?.length || volume(c) < volume(o) * 0.6) && inside(o, centre(c)))),
+        (solid(o) && scene.objects.some((c) => c.id !== o.id && c.visible && (
+          // A tube, arrow or sheet passing through it, or a smaller part sitting in it.
+          c.path?.length ? c.path.some((p) => inside(o, p)) : volume(c) < volume(o) * 0.6 && inside(o, centre(c))))),
     })),
   };
 }

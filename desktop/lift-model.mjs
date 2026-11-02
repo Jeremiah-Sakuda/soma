@@ -445,7 +445,13 @@ function renderFrame() {
       v.stem.position.set(v.at.x, s.floorY + tall / 2, v.at.z);
       v.stem.material.opacity = 0.6 * v.fade * clamp01(k);
     }
-    const top = new Vector3(v.at.x + (e.min.x + e.max.x) / 2, rise + e.max.y + 0.12, v.at.z + (e.min.z + e.max.z) / 2);
+    // An arrow is named at its tip, a tube or sheet at its middle; anything else above its top.
+    const path = v.data.path;
+    const ref = path?.length ? (v.data.shape === 'arrow' ? path[path.length - 1] : path[Math.floor(path.length / 2)]) : null;
+    const lift = rise - v.at.y;
+    const top = ref
+      ? new Vector3(ref.x, ref.y + lift + 0.15, ref.z)
+      : new Vector3(v.at.x + (e.min.x + e.max.x) / 2, rise + e.max.y + 0.12, v.at.z + (e.min.z + e.max.z) / 2);
     placeLabel(v.label, top, clamp01((k - 0.6) / 0.4) * v.fade * (anyLit && !v.data.highlighted ? 0.75 : 1), v.data.highlighted ? 4 : 2);
   }
   // Flows arc between the parts they join, drawn once both have risen.

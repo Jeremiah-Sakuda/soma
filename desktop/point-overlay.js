@@ -255,7 +255,8 @@ for (const renderer of [window.SomaLift, window.SomaModel])
     };
 // A checked search lifts as strings and heights; any other answer lifts as its 3D model.
 function liftView(event) {
-  const scene = event.model?.scene && !event.model.nodes.length;
+  // A checked circuit carries its scene beside the drawing; a search carries its lift.
+  const scene = Boolean(event.model?.scene && !event.model.lift);
   const lift = scene ? window.SomaModel : window.SomaLift;
   // Switching between the two kinds: the other one lands first.
   (scene ? window.SomaLift : window.SomaModel)?.dispose();

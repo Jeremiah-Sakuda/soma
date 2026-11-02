@@ -166,6 +166,24 @@ function placeSheet(data, sheet) {
 
 /** Model units to sheet pixels: the model spans most of the sheet's width, kept short enough
  * to stand on screen, and stands on the sheet's middle. The model's y is up, out of the sheet. */
+/** A checked quantity as height: each part stands where it is printed on the slide and rises
+ * to its value, so the model's x and z come from the slide, not from the scene. */
+function anchored(data) {
+  return data.kind === 'height' && data.objects.length > 0 && data.objects.every((o) => o.anchor);
+}
+function fitAnchored(data) {
+  const f = s.frame;
+  const top = Math.max(1e-3, ...data.objects.map((o) => o.position.y));
+  const unit = (f.height * 0.3) / top;
+  s.unit = unit;
+  s.model.rotation.x = Math.PI / 2;
+  s.model.scale.setScalar(unit);
+  s.model.position.set(0, 0, 2);
+  s.floorY = 0;
+  s.anchors = new Map(
+    data.objects.map((o) => [o.id, { x: (o.anchor.x * f.width - f.width / 2) / unit, z: -(f.height / 2 - o.anchor.y * f.height) / unit }]),
+  );
+}
 function fitModel() {
   // The parts' real extents: custom pieces carry their own layout inside the part.
   const box = new Box3();
@@ -248,8 +266,14 @@ function syncParts(data) {
     if (v.data && !v.data.visible && o.visible) v.pulseAt = clock();
     v.data = o;
     v.index = index;
-    v.target = new Vector3(o.position.x, o.position.y, o.position.z);
-    v.label.textContent = o.label;
+    const pin = s.anchors?.get(o.id);
+    v.target = pin ? new Vector3(pin.x, o.position.y, pin.z) : new Vector3(o.position.x, o.position.y, o.position.z);
+    // A checked height reads with its value: "B 8.394 V".
+    v.label.textContent = s.pinned && o.visible ? `${o.label} ${o.detail}` : o.label;
+    if (s.pinned && !v.stem) {
+      v.stem = new Mesh(new CylinderGeometry(0.04, 0.04, 1, 8), new MeshBasicMaterial({ color: 0x8a8f86, transparent: true, opacity: 0 }));
+      s.model.add(v.stem);
+    }
     v.label.classList.toggle('is-current', o.highlighted);
   });
   for (const [key, v] of s.parts)
@@ -278,7 +302,7 @@ function syncLinks(data) {
       s.links.set(c.id, v);
     }
     v.data = c;
-    v.label.textContent = c.highlighted ? c.label : '';
+    v.label.textContent = c.highlighted || data.kind === 'height' ? c.label : '';
   }
   for (const [key, v] of s.links)
     if (!seen.has(key)) {
@@ -412,6 +436,13 @@ function renderFrame() {
     v.shadow.position.set((e.min.x + e.max.x) / 2, s.floorY - rise + 0.01, (e.min.z + e.max.z) / 2);
     const height = rise + e.min.y - s.floorY;
     v.shadow.material.opacity = 0.32 * v.fade * clamp01(k) * clamp01(1 - height / 3) * (v.data.parentId ? 0 : 1);
+    if (v.stem) {
+      // A stem from the slide up to the part reads its height.
+      const tall = Math.max(0.001, rise - s.floorY);
+      v.stem.scale.set(1, tall, 1);
+      v.stem.position.set(v.at.x, s.floorY + tall / 2, v.at.z);
+      v.stem.material.opacity = 0.6 * v.fade * clamp01(k);
+    }
     const top = new Vector3(v.at.x + (e.min.x + e.max.x) / 2, rise + e.max.y + 0.12, v.at.z + (e.min.z + e.max.z) / 2);
     placeLabel(v.label, top, clamp01((k - 0.6) / 0.4) * v.fade * (anyLit && !v.data.highlighted ? 0.75 : 1), v.data.highlighted ? 4 : 2);
   }
@@ -432,7 +463,8 @@ function renderFrame() {
     // From surface to surface, not centre to centre.
     const dir = pb.clone().sub(pa).normalize();
     const from = pa.clone().add(dir.clone().multiplyScalar(ra * 0.9)), to = pb.clone().sub(dir.clone().multiplyScalar(rb * 1.05));
-    const curve = arc(from, to, Math.min(1.2, span * 0.22));
+    // A checked quantity's links are straight ramps between heights; a model's flows arc.
+    const curve = arc(from, to, s.pinned ? 0 : Math.min(1.2, span * 0.22));
     const radius = (v.data.highlighted ? 0.05 : 0.03) * Math.max(1, span / 4);
     const key = [from, to].map((p) => p.toArray().map((n) => n.toFixed(2)).join(',')).join(';') + radius.toFixed(3);
     if (key !== v.key) {
@@ -488,9 +520,12 @@ function update(data, frame, sheet) {
   if (sheet || !s.sheet || !s.sheetKey) placeSheet(data, sheet ?? s.lastSheet ?? null);
   if (sheet) s.lastSheet = sheet;
   // Refit only when the set of parts changes, so a step's motion is not rescaled away.
+  s.pinned = anchored(data);
+  if (s.pinned) fitAnchored(data);
+  else s.anchors = null;
   syncParts(data);
   const fitKey = data.objects.map((o) => o.id).join(',') + s.sheetKey;
-  if (fitKey !== s.fitKey) {
+  if (!s.pinned && fitKey !== s.fitKey) {
     fitModel();
     s.fitKey = fitKey;
   }

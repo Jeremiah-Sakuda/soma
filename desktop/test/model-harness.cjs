@@ -13,8 +13,10 @@ const out = path.resolve(outArg || '.local/model-harness');
   const { build } = await import(require.resolve('rolldown', { paths: [path.resolve(__dirname, '../..')] }));
   const bundle = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'soma-scene-')), 'scene.cjs');
   await build({ input: path.join(__dirname, 'scene-from-artifact.ts'), resolve: { alias: { '@': path.resolve(__dirname, '../../src') } }, output: { file: bundle, format: 'cjs' }, logLevel: 'silent' });
-  const { overlayFor } = require(bundle);
-  const { spec, state } = JSON.parse(fs.readFileSync(artifactPath, 'utf8'));
+  const { overlayFor, circuitOverlay } = require(bundle);
+  // "circuit" renders the Lecture 9 bridge's voltage lift instead of a saved explanation.
+  const circuit = artifactPath === 'circuit';
+  const { spec, state } = circuit ? { spec: { mode: 'checked-circuit' }, state: {} } : JSON.parse(fs.readFileSync(artifactPath, 'utf8'));
   const slide = fs.readFileSync(slidePath).toString('base64');
   const W = Number(process.env.W || 1280), H = Number(process.env.H || 720);
   const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
@@ -37,10 +39,12 @@ const out = path.resolve(outArg || '.local/model-harness');
     await page.goto(pathToFileURL(path.join(__dirname, '../point-overlay.html')).href);
     await page.addStyleTag({ content: `html{background:#fff url(data:image/png;base64,${slide}) 0 0/100% 100% no-repeat}` });
     const display = { x: 0, y: 0, width: W, height: H };
-    const steps = spec.mode === 'explanation' ? spec.steps.length : 0;
-    const first = overlayFor(spec, state, 0, H / W);
+    const at = (i) => (circuit ? circuitOverlay(i, H / W) : overlayFor(spec, state, i, H / W));
+    const first = at(0);
+    const steps = circuit ? first?.steps ?? 0 : spec.mode === 'explanation' ? spec.steps.length : 0;
     if (!first) throw new Error('This answer has no 3D scene.');
-    const region = first.scene.region;
+    // The companion cuts the drawing's own region when it has one, the scene's otherwise.
+    const region = first.nodes.length ? (() => { const xs = first.nodes.map((n) => n.x), ys = first.nodes.map((n) => n.y), pad = first.radius * 1.8; const x = Math.max(0, Math.min(...xs) - pad), y = Math.max(0, Math.min(...ys) - pad); return { x, y, width: Math.min(1, Math.max(...xs) + pad) - x, height: Math.min(1, Math.max(...ys) + pad) - y }; })() : first.scene.region;
     const sheet = await page.evaluate(async ({ src, region }) => {
       const img = new Image();
       img.src = src;
@@ -61,7 +65,7 @@ const out = path.resolve(outArg || '.local/model-harness');
     await advance(2600);
     await shot('screen-step1');
     for (let i = 1; i < steps; i++) {
-      await draw(overlayFor(spec, state, i, H / W), '3d');
+      await draw(at(i), '3d');
       await advance(1600);
       if (i === steps - 1) await shot('screen-last');
     }

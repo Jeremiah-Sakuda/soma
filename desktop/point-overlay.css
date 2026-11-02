@@ -95,9 +95,9 @@ body.lifted .graph-hit{pointer-events:none}
 .lift-tag.is-tentative{background:#fffffff0;border:1.5px dashed #64748b;color:#475569;font-weight:600;font-size:14px}
 .lift-tag.is-pull{background:#f6d6f5f5;border-color:#b02aad80;color:#6d1a6b}
 .lift-tag.is-cut{background:#fff1f0f5;border:1.5px dashed #b45454;color:#b91c1c;font-size:17px;font-weight:700}
-.lift-tag.is-tick{font:600 12px/1 system-ui;padding:0;background:none;border:0;box-shadow:none;color:#6f685c}
-#lift-caption{position:absolute;max-width:26em;animation:lift-caption-in .45s ease-out both;padding:.6em .9em;border-radius:12px;background:#fbf7ecf5;color:#2b2a26;font:15px/1.4 system-ui;box-shadow:0 14px 40px #0003;border:1px solid #e7dfcc}
-#lift-caption strong{display:block;font:700 20px/1.2 'Noteworthy','Bradley Hand',cursive;color:#1d1d1b}
+.lift-tag.is-tick{font:700 15px/1 ui-rounded,system-ui,sans-serif;font-variant-numeric:tabular-nums;padding:0;background:none;border:0;box-shadow:none;color:#4f4a40}
+#lift-caption{position:absolute;max-width:26em;animation:lift-caption-in .45s ease-out both;padding:.6em .9em;border-radius:12px;background:#fbf7ec;color:#2b2a26;font:15px/1.4 system-ui;box-shadow:0 14px 40px #0003;border:1px solid #e7dfcc}
+#lift-caption strong{display:block;font:700 19px/1.25 ui-rounded,system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#1d1d1b}
 #lift-caption span{display:block}
 #lift-caption>span:empty{display:none}
 #lift-caption small{display:block;margin-top:.45em;padding-top:.4em;border-top:1px solid #e7dfcc;font-size:13px;color:#4f4a40}

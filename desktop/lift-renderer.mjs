@@ -292,9 +292,9 @@ function placeSheet(layout, sheet) {
   s.content.position.set(-x, -(y - h / 2), 0);
 }
 
-/** Even steps for the ruler (1, 2, 5, 10, …) giving at most about ten ticks. */
+/** Even steps for the ruler (1, 2, 5, 10, …) giving at most about twelve ticks. */
 function tickStep(top) {
-  const raw = Math.max(1, top) / 10, power = 10 ** Math.floor(Math.log10(raw));
+  const raw = Math.max(1, top) / 12, power = 10 ** Math.floor(Math.log10(raw));
   return [1, 2, 5, 10].map((m) => m * power).find((step) => step >= raw);
 }
 /** Evenly spaced ticks over the whole search's range, the same at every step, so the ruler
@@ -322,6 +322,10 @@ function syncTicks(layout) {
 }
 
 function syncNodes(layout) {
+  // A new step (any distance or status changed) retires old change labels it did not cause.
+  const signature = layout.nodes.map((n) => `${n.id}:${n.distance}:${n.status}`).join('|');
+  const newStep = signature !== s.signature;
+  s.signature = signature;
   const r = layout.radius;
   const seen = new Set();
   const now = clock();
@@ -350,6 +354,7 @@ function syncNodes(layout) {
       v.change = { from: v.data.distance, sign: v.data.tentative ? '≤' : '=', height: v.h, at: now };
     // Settled now: its label says so at once rather than replaying the last change.
     else if (v.data?.tentative && !n.tentative) v.change = null;
+    else if (newStep) v.change = null;
     // The node this step settles pulses once.
     if (n.status === 'current' && v.data?.status !== 'current') v.pulseAt = now;
     v.data = n;
@@ -461,7 +466,7 @@ function project(local, out = new Vector3()) {
 }
 const scratch = new Vector3();
 /** Queues a label: `bottom` sits above its point; `side` sits beside a string, off its line. */
-function placeLabel(el, local, opacity, priority, side = null) {
+function placeLabel(el, local, opacity, priority, side = null, edge = false) {
   const p = project(local, scratch);
   let { x, y } = p;
   if (side) {
@@ -477,7 +482,7 @@ function placeLabel(el, local, opacity, priority, side = null) {
     x += nx * 14;
     y += ny * 14 + 9;
   }
-  s.pending.push({ el, x, y, opacity: p.behind ? 0 : opacity, priority });
+  s.pending.push({ el, x, y, opacity: p.behind ? 0 : opacity, priority, edge });
 }
 /** Writes this frame's label positions, nudging overlapping ones apart. */
 function flushLabels() {
@@ -492,8 +497,10 @@ function flushLabels() {
     }
   const ys = separateLabels(shown.map((l) => ({ x: l.x, y: l.y, w: l.el._w, h: l.el._h, priority: l.priority })));
   shown.forEach((l, i) => {
+    // A string's label pushed far from its string would read as another's: hide it instead.
+    const strayed = l.edge && Math.abs(ys[i] - l.y) > 26;
     l.el.style.transform = `translate(${l.x.toFixed(1)}px, ${ys[i].toFixed(1)}px) translate(-50%, -100%)`;
-    l.el.style.opacity = String(l.opacity);
+    l.el.style.opacity = strayed ? '0' : String(l.opacity);
   });
   s.pending = [];
 }
@@ -561,6 +568,9 @@ function arrow(points, radius, mat) {
 /** Strings follow the animated node heights; each is rebuilt only when its shape changes. */
 function drawEdges(rise, sheetT) {
   const r = s.layout.radius;
+  // During an experiment, strings to nodes off the checked route step back with them.
+  const experiment = s.layout.edges.some((e) => e.kind === 'cut');
+  const onRoute = new Set(s.layout.edges.filter((e) => e.tone === 'path').flatMap((e) => [e.from, e.to]));
   const keep = new Set();
   for (const e of s.layout.edges) {
     keep.add(e.id);
@@ -627,15 +637,16 @@ function drawEdges(rise, sheetT) {
         v.shape = shape;
       }
       // A string appears as its nodes leave the sheet, so the slide is untouched at first.
-      v.mat.opacity = v.baseOpacity * clamp01(k * 2.5);
+      const dim = experiment && e.tone !== 'path' && !(onRoute.has(e.from) && onRoute.has(e.to)) ? 0.35 : 1;
+      v.mat.opacity = v.baseOpacity * clamp01(k * 2.5) * dim;
       v.label.textContent = e.label;
       const i = labelIndex(points, v.label);
       labelAt = points[i];
       side = [new Vector3(points[i - 3].x, points[i - 3].y, points[i - 3].z), new Vector3(points[i + 3].x, points[i + 3].y, points[i + 3].z)];
-      opacity = clamp01((k - 0.6) / 0.4) * (e.kind === 'tentative' ? 0.8 : 1);
+      opacity = clamp01((k - 0.6) / 0.4) * (e.kind === 'tentative' ? 0.8 : 1) * (dim < 1 ? 0.5 : 1);
     }
     const priority = e.kind === 'cut' || e.kind === 'pull' || e.tone === 'path' ? 2 : e.kind === 'slack' ? 1.5 : 1;
-    placeLabel(v.label, new Vector3(labelAt.x, labelAt.y, labelAt.z), opacity, priority, side);
+    placeLabel(v.label, new Vector3(labelAt.x, labelAt.y, labelAt.z), opacity, priority, side, true);
   }
   for (const [id, v] of s.edges)
     if (!keep.has(id)) {
@@ -694,7 +705,7 @@ function renderFrame() {
     // Lifted, the printed graph fades back so the strings and spheres carry the reading.
     sh.paper.material.opacity = ready ? 1 - 0.55 * sheetT : 0;
     sh.cover.material.opacity = ready && s.hasCover ? clamp01(t / 0.06) : 0;
-    sh.edge.material.opacity = 0.3 * sheetT;
+    sh.edge.material.opacity = 0.18 * sheetT;
     sh.floor.material.opacity = 0.3 * tilt;
   }
   // Nodes leave the sheet in order of distance; a change of distance glides.

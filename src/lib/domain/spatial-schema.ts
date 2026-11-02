@@ -36,7 +36,7 @@ export const spatialPanelSchema = z.strictObject({
     // Turns a plain part, in degrees about x, then y, then z: a banked road, a dipping slab.
     rotation: z.strictObject({ x: z.number().finite().min(-180).max(180), y: z.number().finite().min(-180).max(180), z: z.number().finite().min(-180).max(180) }).nullable().optional(),
     parentId: sceneIdSchema.nullable(),
-  })).min(1).max(16),
+  })).min(1).max(24),
   connections: z.array(z.strictObject({
     id: sceneIdSchema, from: sceneIdSchema, to: sceneIdSchema,
     label: z.string().trim().min(1).max(100), directed: z.boolean(),

@@ -237,8 +237,9 @@ function syncParts(data) {
     }
     if (!v.mesh) {
       const shell = shellNow;
-      const part = createSpatialPart({ ...o, position: { x: 0, y: 0, z: 0 } }, false, shell);
-      // The part builder places custom pieces at the object's position; draw them from the origin.
+      // Built where it stands (paths and pieces are laid out about the part's position), then
+      // drawn from the holder's origin, which carries the position and any pose.
+      const part = createSpatialPart(o, false, shell);
       part.position.set(0, 0, 0);
       const holder = new Group(), inner = new Group();
       inner.add(part);

@@ -28,7 +28,7 @@ function validScene(sc) {
       region(sc.region) &&
       Array.isArray(sc.objects) &&
       sc.objects.length >= 1 &&
-      sc.objects.length <= 16 &&
+      sc.objects.length <= 24 &&
       new Set(sc.objects.map((o) => o?.id)).size === sc.objects.length &&
       sc.objects.every(
         (o) =>

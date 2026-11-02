@@ -60,7 +60,7 @@ export function liftRegion(focus: Region | null | undefined, aspect: number): Re
 /** Projects any answer's spatial scene for the companion. Hidden parts stay in the scene so
  * they can reappear in place; geometry travels only with its own bounded pieces. */
 export function liftScene(scene: SpatialScene, region: Region, anchors?: Map<string, { x: number; y: number }>): LiftScene {
-  const objects = scene.objects.slice(0, 16).map((o): LiftSceneObject => ({
+  const objects = scene.objects.slice(0, 24).map((o): LiftSceneObject => ({
     id: o.id,
     label: clip(o.label, 60),
     detail: clip(o.description, 120),

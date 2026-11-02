@@ -7,7 +7,7 @@ import type { ExplorationSpec } from '../domain/exploration';
 // Keep the provider wire shape below Meta's ten-level nesting limit. The full
 // domain specification is assembled and validated before review/publication.
 export const spatialAuthorPanelSchema = spatialPanelSchema.omit({ parameters: true, parameterPoses: true }).extend({
-  objects: z.array(spatialPanelSchema.shape.objects.element.omit({ geometry: true })).min(1).max(16),
+  objects: z.array(spatialPanelSchema.shape.objects.element.omit({ geometry: true })).min(1).max(24),
 });
 export const mechanismAuthoringSchema = z.strictObject({
   panelId: sceneIdSchema,

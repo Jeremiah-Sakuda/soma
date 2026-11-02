@@ -440,7 +440,7 @@ test('an answer with no drawing read can carry only a 3D scene, bounded like the
     { ...SCENE, objects: [{ ...SCENE.objects[0], path: [{ x: 0, y: 0, z: Infinity }, { x: 1, y: 0, z: 0 }] }, SCENE.objects[1]] },
     { ...SCENE, objects: [SCENE.objects[1], SCENE.objects[1]] },
     { ...SCENE, connections: [{ ...SCENE.connections[0], to: 'nowhere' }] },
-    { ...SCENE, objects: Array.from({ length: 17 }, (_, i) => ({ ...SCENE.objects[1], id: `p${i}` })) },
+    { ...SCENE, objects: Array.from({ length: 25 }, (_, i) => ({ ...SCENE.objects[1], id: `p${i}` })) },
   ])
     assert.equal(validOverlayModel(model({ nodes: [], edges: [], tags: [], scene: bad })), false, JSON.stringify(bad).slice(0, 80));
 });

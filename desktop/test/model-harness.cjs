@@ -71,7 +71,7 @@ const out = path.resolve(outArg || '.local/model-harness');
     }
     // Interaction: point at a part, pick it, then turn the model by dragging.
     let interaction = null;
-    if (process.env.INTERACT && !circuit) {
+    if (process.env.INTERACT) {
       const target = await page.evaluate(() => {
         const s = window.SomaModel.debug;
         const v = [...s.parts.values()].find((p) => p.data.visible && p.data.shape !== 'sheet');

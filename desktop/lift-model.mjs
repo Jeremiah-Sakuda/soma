@@ -29,7 +29,7 @@ import {
   Vector2,
 } from 'three';
 import { createSpatialPart } from '../src/components/spatial-parts';
-import { cameraDistance, easeInOut, clamp01, riseAt, approach, separateLabels } from './lift-geometry.mjs';
+import { cameraDistance, easeInOut, clamp01, riseAt, approach } from './lift-geometry.mjs';
 
 const FOV = 28;
 // Tilted back less than the search lift: a model needs its front, not just its height.
@@ -44,10 +44,40 @@ const ACCENT = 0xd8572a;
 // A part the learner picked.
 const PICKED = 0x5551f5;
 // How far a drag can turn the model, and tip it toward or away from the viewer (radians).
-const TURN_LIMIT = Math.PI;
-const TIP_LIMIT = 0.35;
+const TURN_LIMIT = 1.0;
+const TIP_LIMIT = 0.22;
 let s = null;
 
+/** A soft-edged mask, so the sheet and the hollow it leaves have no hard rectangle. */
+function feather() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#000';
+  g.fillRect(0, 0, 256, 256);
+  g.filter = 'blur(12px)';
+  g.fillStyle = '#fff';
+  g.beginPath();
+  g.roundRect(20, 20, 216, 216, 28);
+  g.fill();
+  return new CanvasTexture(c);
+}
+/** The slide's paper colour, from the brightest corner of the captured region. */
+function paperColour(image) {
+  try {
+    const c = document.createElement('canvas');
+    c.width = c.height = 16;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(image, 0, 0, 16, 16);
+    const data = g.getImageData(0, 0, 16, 16).data;
+    const corners = [0, 15, 240, 255].map((i) => [data[i * 4], data[i * 4 + 1], data[i * 4 + 2], data[i * 4 + 3]]).filter((p) => p[3] > 200);
+    if (!corners.length) return new Color(0xffffff);
+    const best = corners.sort((a, b) => b[0] + b[1] + b[2] - (a[0] + a[1] + a[2]))[0];
+    return new Color().setRGB(best[0] / 255, best[1] / 255, best[2] / 255, SRGBColorSpace);
+  } catch {
+    return new Color(0xffffff);
+  }
+}
 function shadowTexture() {
   const c = document.createElement('canvas');
   c.width = c.height = 128;
@@ -135,8 +165,9 @@ function placeSheet(data, sheet) {
   const region = sheet?.region ?? data.region, f = s.frame;
   const w = region.width * f.width, h = region.height * f.height;
   const x = region.x * f.width + w / 2 - f.width / 2, y = f.height / 2 - (region.y * f.height + h / 2);
-  const paper = new MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, side: DoubleSide, opacity: 0 });
-  const coverMat = new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false });
+  // Both the sheet and the hollow it leaves are feathered, so neither reads as a pasted box.
+  const paper = new MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, side: DoubleSide, opacity: 0, alphaMap: feather() });
+  const coverMat = new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, alphaMap: feather() });
   if (sheet)
     new TextureLoader().load(
       sheet.dataUrl,
@@ -145,7 +176,7 @@ function placeSheet(data, sheet) {
         texture.colorSpace = SRGBColorSpace;
         paper.map = texture;
         paper.needsUpdate = true;
-        coverMat.color.set(0xf6f3ec);
+        coverMat.color.copy(paperColour(texture.image));
         s.sheetReady = true;
         wake();
       },
@@ -184,7 +215,9 @@ function anchored(data) {
 }
 function fitAnchored(data) {
   const f = s.frame;
-  const top = Math.max(1e-3, ...data.objects.map((o) => o.position.y));
+  // A checked height's scale spans 0-3 for the whole run, so an early step with nothing
+  // risen yet keeps the same scale as the last.
+  const top = Math.max(3, ...data.objects.map((o) => o.position.y));
   const unit = (f.height * 0.3) / top;
   s.unit = unit;
   s.model.rotation.x = Math.PI / 2;
@@ -294,7 +327,8 @@ function syncParts(data) {
       v.stem = new Mesh(new CylinderGeometry(0.04, 0.04, 1, 8), new MeshBasicMaterial({ color: 0x8a8f86, transparent: true, opacity: 0 }));
       s.model.add(v.stem);
     }
-    v.label.classList.toggle('is-current', o.highlighted);
+    // A step about many parts lights them all; only a few get the emphasised chip.
+    v.label.classList.toggle('is-current', o.highlighted && data.objects.filter((x) => x.highlighted && x.visible).length <= 3);
   });
   for (const [key, v] of s.parts)
     if (!seen.has(key)) {
@@ -344,6 +378,9 @@ function placeLabel(el, local, opacity, priority) {
   const p = project(local);
   s.pending.push({ el, x: p.x, y: p.y, opacity: p.behind ? 0 : opacity, priority });
 }
+/** Writes this frame's chips: each above its part if that spot is free, else beside or
+ * below it; a chip with no free spot near its part is hidden unless the step is about that
+ * part. Chips stay on the display and clear of the caption card. */
 function flushLabels() {
   const shown = s.pending.filter((l) => l.opacity > 0.05 && l.el.textContent);
   for (const l of s.pending) if (!shown.includes(l)) l.el.style.opacity = 0;
@@ -354,14 +391,40 @@ function flushLabels() {
       l.el._w = l.el.offsetWidth;
       l.el._h = l.el.offsetHeight;
     }
-  const ys = separateLabels(shown.map((l) => ({ x: l.x, y: l.y, w: l.el._w, h: l.el._h, priority: l.priority })));
-  shown.forEach((l, i) => {
-    // A name pushed far from its part would read as another part's: only the parts this step
-    // is about keep theirs; the rest wait for a clear spot.
-    const strayed = l.priority < 4 && Math.abs(ys[i] - l.y) > 30;
-    l.el.style.transform = `translate(${l.x.toFixed(1)}px, ${ys[i].toFixed(1)}px) translate(-50%, -100%)`;
-    l.el.style.opacity = strayed ? '0' : String(l.opacity);
-  });
+  const card = document.getElementById('lift-caption')?.getBoundingClientRect();
+  const f = s.frame, gap = 4;
+  const placed = card ? [{ x: card.left, y: card.top, w: card.width, h: card.height }] : [];
+  const clear = (b) =>
+    b.x >= f.dx + 4 && b.y >= f.dy + 4 && b.x + b.w <= f.dx + f.width - 4 && b.y + b.h <= f.dy + f.height - 4 &&
+    placed.every((p) => b.x + b.w + gap <= p.x || p.x + p.w + gap <= b.x || b.y + b.h + gap <= p.y || p.y + p.h + gap <= b.y);
+  for (const l of [...shown].sort((a, b) => b.priority - a.priority)) {
+    const w = l.el._w, h = l.el._h;
+    // A picked part's longer chip goes beside it, so it never covers the part it describes.
+    const spots = [
+      ...(l.priority >= 5 ? [[14, -h / 2], [-w - 14, -h / 2]] : []),
+      [-w / 2, -h - 6], [14, -h / 2], [-w - 14, -h / 2], [-w / 2, 10], [-w / 2, -2 * h - 10],
+    ];
+    let box = null;
+    for (const [ox, oy] of spots) {
+      const b = { x: l.x + ox, y: l.y + oy, w, h };
+      if (clear(b)) {
+        box = b;
+        break;
+      }
+    }
+    if (!box && l.priority >= 4) {
+      // Must be shown: the nearest spot kept on the display.
+      const [ox, oy] = spots[0];
+      box = { x: Math.max(f.dx + 4, Math.min(l.x + ox, f.dx + f.width - w - 4)), y: Math.max(f.dy + 4, Math.min(l.y + oy, f.dy + f.height - h - 4)), w, h };
+    }
+    if (!box) {
+      l.el.style.opacity = '0';
+      continue;
+    }
+    placed.push(box);
+    l.el.style.transform = `translate(${box.x.toFixed(1)}px, ${box.y.toFixed(1)}px)`;
+    l.el.style.opacity = String(l.opacity);
+  }
   s.pending = [];
 }
 
@@ -420,7 +483,7 @@ function renderFrame() {
   if (sh) {
     const ready = s.sheetReady;
     sh.paper.material.opacity = ready ? 1 - 0.5 * sheetT : 0;
-    sh.cover.material.opacity = ready && s.hasCover ? clamp01(t / 0.06) : 0;
+    sh.cover.material.opacity = ready && s.hasCover ? 0.94 * clamp01(t / 0.06) : 0;
     sh.floor.material.opacity = 0.3 * tilt;
   }
   const parts = [...s.parts.values()];

@@ -3,6 +3,7 @@ import type { SourceAnchor, SourceChange, ImageRegion } from '../domain/source-g
 import type { PointFocus } from '../domain/point-context';
 import type { ExplorationApplication } from '../domain/exploration-application';
 import type { CostProbe } from '../domain/cost-probe';
+import type { DcProbe } from '../domain/dc-circuit';
 import type { ExplorationPrediction } from '../domain/exploration-prediction';
 import type { CheckedExploration } from '../domain/exploration';
 import type { VerifiedAccount } from './account';
@@ -106,6 +107,8 @@ export type ExplorationArtifact = CheckedExploration & {
     audit: ExplorationAudit[];
   };
   experiment?: CostProbe;
+  /** Muse chose a part of a checked circuit; Soma computed exactly where it tips. */
+  circuitExperiment?: DcProbe;
   recording?: {
     id: string;
     generatedAt: string;

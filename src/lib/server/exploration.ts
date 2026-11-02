@@ -28,7 +28,15 @@ import { snapCircuitToDrawing } from './circuit-snap';
 import recordedExploration from '../fixtures/recorded-exploration.json';
 import recordedMechanism from '../fixtures/recorded-mechanism.json';
 import { circuitSolution, comparisonExecution, explorationExecution } from '../domain/exploration-view';
-import { dcInputSchema, dcValueAllowed, solveDc, type DcInput, type DcSolution } from '../domain/dc-circuit';
+import {
+  dcInputSchema,
+  dcValueAllowed,
+  probeDcValue,
+  solveDc,
+  type DcInput,
+  type DcProbe,
+  type DcSolution,
+} from '../domain/dc-circuit';
 import {
   CIRCUIT_COMPOSE,
   CIRCUIT_READING,
@@ -1994,7 +2002,99 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           detail:
             'The current controls removed the selected edge or goal. Explain this graph without the earlier cost intervention; original versions are retained.',
         });
-      if (request.intent === 'investigate') {
+      // A circuit experiment follows the learner's open parts and values; the varied part's own
+      // value is the experiment's variable, so it never comes from the saved values.
+      const circuitState = (componentId: string) => ({
+        open: currentState?.disabledEdgeIds ?? [],
+        values: Object.fromEntries(Object.entries(currentState?.edgeWeights ?? {}).filter(([id]) => id !== componentId)),
+      });
+      const previousCircuitProbe = reuse && previous?.spec.mode === 'checked-circuit' ? previous.circuitExperiment : undefined;
+      let circuitExperiment: DcProbe | undefined;
+      if (previousCircuitProbe && extracted.circuit)
+        try {
+          circuitExperiment = probeDcValue(
+            extracted.circuit,
+            circuitState(previousCircuitProbe.componentId),
+            previousCircuitProbe.componentId,
+            previousCircuitProbe.observe,
+            previousCircuitProbe.condition,
+            previousCircuitProbe.rationale,
+          );
+        } catch {
+          audit.push({
+            event: 'cost-probe-unavailable',
+            call: 0,
+            detail: 'The current experiment opened the part the earlier investigation varied; explaining the circuit without it.',
+          });
+        }
+      if (request.intent === 'investigate' && previous?.spec.mode === 'checked-circuit' && extracted.circuit) {
+        // Muse decides which part, what to watch and which condition the question is about; Soma
+        // computes the exact value and re-solves the circuit there to verify it.
+        const circuit = extracted.circuit;
+        const parts = circuit.components.map((c) => c.id) as [string, ...string[]];
+        const choose = tool(
+          'choose_circuit_investigation',
+          'Choose the one part whose value answers the learner question, what to watch and the condition, or componentId null. The application computes every result.',
+          z.strictObject({
+            componentId: z.enum(parts).nullable(),
+            watch: z.enum(['current', 'voltage', 'power']),
+            targetId: z.enum([...circuit.nodes.map((n) => n.id), ...parts] as [string, ...string[]]),
+            condition: z.enum(['zero', 'maximum-power']),
+            reason: z.string().min(1).max(200),
+          }),
+        );
+        const decision = typedCall(
+          await call(
+            [{ role: 'user', content: JSON.stringify({ ...context, circuit, checkedCircuit: circuitSolution(previous.spec, currentState ?? defaultState(previous.spec)) }) }],
+            [choose],
+            genericInstructions +
+              ' Read the learner question and the current circuit experiment. For any ONE part’s value (a resistance or a source value), Soma can compute exactly where a chosen quantity becomes zero, and so reverses: the current through a part (watch current, targetId that part) or the voltage at a node (watch voltage, targetId that node). It can also find the resistance at which a resistor takes the most power (watch power, condition maximum-power, targetId the same resistor as componentId). Choose the part whose value most directly answers this question, judged from the question and the circuit, not from a default. If the question is not about how one part’s value changes the circuit, return componentId null. reason: one short learner-facing sentence saying why this part answers the question, with no numbers. Return only choose_circuit_investigation.',
+          ),
+          'choose_circuit_investigation',
+        );
+        const choice = z
+          .strictObject({
+            componentId: z.string().min(1).max(48).nullable(),
+            watch: z.enum(['current', 'voltage', 'power']),
+            targetId: z.string().min(1).max(48),
+            condition: z.enum(['zero', 'maximum-power']),
+            reason: z.string().min(1).max(200),
+          })
+          .parse(decision.parsedArguments);
+        const rationale =
+          /\d|\b(?:zero|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|hundred|thousand|half|double|twice)\b/i.test(choice.reason)
+            ? null
+            : choice.reason.trim();
+        let probe: DcProbe | undefined;
+        if (choice.componentId)
+          try {
+            probe = probeDcValue(
+              circuit,
+              circuitState(choice.componentId),
+              choice.componentId,
+              choice.watch === 'voltage'
+                ? { kind: 'voltage', nodeId: choice.targetId }
+                : { kind: choice.watch, componentId: choice.targetId },
+              choice.condition,
+              rationale,
+            );
+          } catch {
+            probe = undefined;
+          }
+        if (probe) {
+          circuitExperiment = probe;
+          audit.push({
+            event: 'cost-probed',
+            call: calls,
+            detail: `Muse chose ${choice.componentId}, watching the ${choice.watch} ${choice.watch === 'voltage' ? 'at' : 'in'} ${choice.targetId}${rationale ? `: ${rationale}` : ''}. Application computed the exact value${probe.criticalValue === null ? ': none in range' : ` ${probe.criticalExact}${probe.verified ? ', verified by re-solving there' : ''}`}.`,
+          });
+        } else
+          audit.push({
+            event: 'investigation-declined',
+            call: calls,
+            detail: `Muse found no single part whose value answers this question${rationale ? `: ${rationale.replace(/[.\s]+$/, '')}` : ''}. ${circuitExperiment ? 'The earlier experiment is kept unchanged.' : 'No experiment was run.'}`,
+          });
+      } else if (request.intent === 'investigate') {
         if (!previous || previous.spec.mode !== 'checked-dijkstra' || !extracted.graph)
           throw new ExplorationError('invalid_request');
         // Muse decides which connection the learner's own question is about; Soma computes the
@@ -2092,7 +2192,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             graph: extracted.graph,
             checkedExecution: computed,
             experiment,
-            ...(circuit ? { circuit, checkedCircuit: circuitSolved } : {}),
+            ...(circuit ? { circuit, checkedCircuit: circuitSolved, circuitExperiment: circuitExperiment ?? null } : {}),
           }),
         },
       ];
@@ -2483,6 +2583,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                 ...(circuitSolved
                   ? {
                       checkedCircuit: circuitSolved,
+                      circuitExperiment: circuitExperiment ?? null,
                       currentConventions:
                         'currents[id] > 0 flows from the component’s from node to its to node; voltages are relative to ground.',
                     }
@@ -2713,6 +2814,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             state: nextState,
             saved: false,
             ...(experiment ? { experiment } : {}),
+            ...(circuitExperiment && circuit ? { circuitExperiment } : {}),
             ...(previous?.practiceOrigin ? { practiceOrigin: previous.practiceOrigin } : {}),
             ...(applicationObservation?.answer
               ? {

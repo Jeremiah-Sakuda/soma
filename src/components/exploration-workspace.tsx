@@ -34,7 +34,10 @@ import {
 } from './exploration-scene';
 import type { ExplorationPrediction } from '@/lib/domain/exploration-prediction';
 import { ExplorationCostProbe } from './exploration-cost-probe';
+import { ExplorationCircuitProbe } from './exploration-circuit-probe';
 import type { CostProbe } from '@/lib/domain/cost-probe';
+import type { DcProbe } from '@/lib/domain/dc-circuit';
+import { circuitSolution } from '@/lib/domain/exploration-view';
 import type { PublicExplorationApplication } from '@/lib/domain/exploration-application';
 import { ExplorationApplicationCard } from './exploration-application';
 import { ExplorationPredictionCard } from './exploration-prediction';
@@ -53,6 +56,7 @@ import './exploration-journal.css';
 type Artifact = {
   recording?: { id: string; generatedAt: string; sourceImage: string };
   experiment?: CostProbe;
+  circuitExperiment?: DcProbe;
   practiceOrigin?: {
     applicationId: string;
     artifactId: string;
@@ -1750,7 +1754,58 @@ export function ExplorationWorkspace() {
                     : undefined
                 }
                 experiment={
-                  !newContext &&
+                  !newContext && artifact.spec.mode === 'checked-circuit' ? (
+                    <>
+                      {artifact.circuitExperiment && (
+                        <ExplorationCircuitProbe
+                          probe={artifact.circuitExperiment}
+                          input={artifact.spec.input}
+                          state={{
+                            open: state.disabledEdgeIds,
+                            shorted: [],
+                            values: Object.fromEntries(
+                              Object.entries(state.edgeWeights ?? {}).filter(([id]) => id !== artifact.circuitExperiment!.componentId),
+                            ),
+                          }}
+                          value={
+                            state.edgeWeights?.[artifact.circuitExperiment.componentId] ??
+                            artifact.circuitExperiment.originalValue
+                          }
+                          disabled={sourceBusy}
+                          onChange={(value) => {
+                            const id = artifact.circuitExperiment!.componentId;
+                            const weights = { ...(state.edgeWeights ?? {}), [id]: value };
+                            if (artifact.spec.mode === 'checked-circuit' && artifact.spec.input.components.find((c) => c.id === id)?.value === value) delete weights[id];
+                            const next = { ...state, edgeWeights: weights, explanationStep: 0 };
+                            // Show the checked consequence at once: every node revealed.
+                            updateState({ ...next, step: Math.max(0, (circuitSolution(artifact.spec, next)?.steps.length ?? 1) - 1) });
+                          }}
+                        />
+                      )}
+                      {(question.trim() || !artifact.circuitExperiment) && (
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          title={
+                            liveEnabled === false
+                              ? 'Investigating needs live generation, which is off here.'
+                              : 'Muse picks the part your question is about; Soma computes exactly where it tips.'
+                          }
+                          disabled={busy || sourceBusy || liveEnabled === false || !!earlierVersion}
+                          onClick={() =>
+                            void ask(
+                              question.trim() ||
+                                'Choose the one part whose value most changes what this circuit does, and find exactly where it tips.',
+                              undefined,
+                              true,
+                            )
+                          }
+                        >
+                          {question.trim() ? 'Investigate my question' : 'Find the tipping point'}
+                        </button>
+                      )}
+                    </>
+                  ) : !newContext &&
                   artifact.spec.mode === 'checked-dijkstra' && (
                     <>
                       {artifact.experiment ? (

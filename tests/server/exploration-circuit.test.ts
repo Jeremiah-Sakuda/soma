@@ -47,6 +47,12 @@ function script(copy?: (context: any) => unknown) {
         },
         index,
       );
+    if (request.instructions.includes('choose_circuit_investigation'))
+      return result(
+        'choose_circuit_investigation',
+        { componentId: 'R4', watch: 'current', targetId: 'R5', condition: 'zero', reason: 'R₄ sets the voltage at C, the far end of R₅.' },
+        index,
+      );
     expect(request.instructions).toContain('compose_circuit');
     const context = JSON.parse((request.input[0] as { content: string }).content);
     return result(
@@ -193,5 +199,47 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
     const sent = JSON.stringify((review.mock.calls[0] as unknown as [{ input: unknown }])[0].input);
     expect(sent).toContain('checkedCircuit');
     expect(artifact.generation.audit.map((a) => a.event)).toContain('review-approved');
+  });
+
+  it('lets Muse choose the part a question is about and computes exactly where it tips', async () => {
+    const request = script();
+    const soma = service(request);
+    await soma.initialize(owner);
+    const first = (await soma.generate(owner, screenshot() as never)).artifact;
+    const second = (
+      await soma.generate(owner, {
+        action: 'generate',
+        requestId: randomUUID(),
+        question: 'When would current flow through R5?',
+        intent: 'investigate',
+        artifactId: first.id,
+        baseVersion: first.version,
+        state: first.state,
+      } as never)
+    ).artifact;
+    expect(second.circuitExperiment).toMatchObject({
+      componentId: 'R4',
+      observe: { kind: 'current', componentId: 'R5' },
+      criticalValue: 8,
+      criticalExact: '8',
+      verified: true,
+      rationale: 'R₄ sets the voltage at C, the far end of R₅.',
+    });
+    expect(second.generation.audit.map((a) => a.event)).toContain('cost-probed');
+    const composer = JSON.parse((request.mock.calls.at(-1)![0].input[0] as { content: string }).content);
+    expect(composer.circuitExperiment.criticalValue).toBe(8);
+    // A later follow-up keeps the experiment, recomputed under the learner's current changes.
+    const third = (
+      await soma.generate(owner, {
+        action: 'generate',
+        requestId: randomUUID(),
+        question: 'Why does it reverse there?',
+        intent: 'auto',
+        artifactId: first.id,
+        baseVersion: second.version,
+        state: { ...second.state, edgeWeights: { R4: 10 } },
+      } as never)
+    ).artifact;
+    expect(third.circuitExperiment?.criticalValue).toBe(8);
   });
 });

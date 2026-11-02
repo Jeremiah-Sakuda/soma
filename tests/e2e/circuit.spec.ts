@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { checkExploration } from '../../src/lib/domain/exploration';
 import { initialExplorationState } from '../../src/lib/domain/exploration-view';
 import { circuitSpec } from '../../src/lib/server/circuit-authoring';
+import { probeDcValue } from '../../src/lib/domain/dc-circuit';
 import { heroCircuit, heroCircuitLayout } from '../fixtures/hero-circuit';
 
 // Scripted provider/API fixture over the original Lecture 9 slide. The actual solver, overlay
@@ -16,7 +17,14 @@ test('a checked circuit draws on the uploaded slide and re-solves every experime
       return route.fulfill({ json: { active, artifacts: active ? [active] : [], versions: [], liveEnabled: true } });
     const body = route.request().postDataJSON();
     requests.push(body);
-    if (body.action === 'generate') {
+    if (body.action === 'generate' && body.intent === 'investigate')
+      active = {
+        ...active!,
+        version: 2,
+        state: body.state,
+        circuitExperiment: probeDcValue(heroCircuit, undefined, 'R4', { kind: 'current', componentId: 'R5' }, 'zero', 'R₄ sets the voltage at C, the far end of R₅.'),
+      };
+    else if (body.action === 'generate') {
       const spec = circuitSpec({
         id: 'explore_6a1b2c3d4e5f40718293a4b5c6d7e8f9',
         version: 1,
@@ -96,6 +104,23 @@ test('a checked circuit draws on the uploaded slide and re-solves every experime
 
   await page.getByRole('button', { name: 'Save exploration', exact: true }).click();
   expect(requests.find((r) => r.action === 'save').state.edgeWeights).toEqual({ R4: 10 });
+
+  // Muse chooses the part; Soma computes where R₅'s current reverses and the slider proves it.
+  await page.getByRole('button', { name: 'Find the tipping point', exact: true }).click();
+  const probe = page.getByRole('region', { name: 'Checked circuit experiment' });
+  await expect(probe).toBeVisible();
+  expect(requests.find((r) => r.intent === 'investigate')).toMatchObject({ baseVersion: 1 });
+  await expect(probe).toContainText('Why R₄: R₄ sets the voltage at C');
+  await expect(probe).toContainText('exactly zero when R₄ is 8 Ω');
+  await expect(probe.getByRole('status')).toContainText('from C to B');
+  await probe.getByRole('button', { name: 'Try the tipping point at 8 Ω' }).click();
+  await expect(probe.getByRole('status')).toContainText('Current in R₅: exactly 0 A');
+  const slider = probe.getByRole('slider');
+  await slider.focus();
+  await page.keyboard.press('Shift+ArrowLeft');
+  await expect(probe.getByRole('status')).toContainText('from B to C');
+  await expect(overlay.locator('.source-overlay-tag', { hasText: /^R₅[: ].*→$/ })).toBeVisible();
+  await probe.screenshot({ path: '.local/circuit/probe.png' });
 
   await page.getByRole('button', { name: 'Voltage as height' }).click();
   await expect(page.getByText('Checked circuit · spatial view')).toBeVisible();

@@ -278,7 +278,8 @@ test('a delayed resume cannot overwrite experiment controls changed while it was
 
 test('source-reading uncertainty remains inspectable even when the generated explanation omits that uncertainty',async({page})=>{
   await setup(page,{uncertainSource:true});await example(page);
-  await expect(page.getByText('Some source details need review.',{exact:false})).toBeVisible();
+  // No banner on the card; the uncertainty lives under Source & assumptions.
+  await expect(page.getByText('Some source details need review.',{exact:false})).toHaveCount(0);
   await page.getByLabel('Page details',{exact:true}).click();
   await page.getByText('Source & assumptions',{exact:true}).click();
   await expect(page.getByRole('heading',{name:'Source reading uncertainty',exact:true})).toBeVisible();

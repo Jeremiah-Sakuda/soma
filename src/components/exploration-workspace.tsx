@@ -1679,11 +1679,6 @@ export function ExplorationWorkspace() {
                 </details>
               )}
               <p className="exploration-objective">{artifact.spec.objective}</p>
-              {artifact.source.uncertainty.length > 0 && (
-                <p className="exploration-unavailable">
-                  Some source details need review. See “Source & assumptions”.
-                </p>
-              )}
               {earlierVersion && (
                 <p className="exploration-unavailable">
                   You are viewing an earlier version.{' '}

@@ -1377,7 +1377,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         instructions,
         input,
         tools,
-        deadlineMs: Math.min(30_000, deadline - Date.now()),
+        // Composing a whole 3D model is the longest single output; give it more of the budget.
+        deadlineMs: Math.min(request.intent === 'model' && structuredOutput ? 55_000 : 30_000, deadline - Date.now()),
         signal,
         maxOutputTokens: 6144,
         ...(mechanismBudget ? { reasoningEffort: 'minimal' as const } : {}),

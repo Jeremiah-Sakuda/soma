@@ -47,7 +47,8 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
     }
   }
   const byId = new Map(objects.map((o) => [o.id, o]));
-  const frames = (o: SpatialPanel['objects'][number]) => [o.position, ...next.poses.filter((p) => p.objectId === o.id).map((p) => p.position)];
+  const frames = (o: SpatialPanel['objects'][number]) => [o.position, ...next.poses.filter((p) => p.objectId === o.id && !p.path?.length).map((p) => p.position)];
+  const posedPaths = (o: SpatialPanel['objects'][number]) => next.poses.filter((p) => p.objectId === o.id && p.path?.length).map((p) => p.path!);
   const extent = () => {
     const min = [Infinity, Infinity, Infinity],
       max = [-Infinity, -Infinity, -Infinity];
@@ -59,6 +60,13 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
           max[i] = Math.max(max[i], b.max[i]);
         }
       }
+    for (const o of objects)
+      for (const path of posedPaths(o))
+        for (const p of path)
+          [p.x, p.y, p.z].forEach((v, i) => {
+            min[i] = Math.min(min[i], v);
+            max[i] = Math.max(max[i], v);
+          });
     return { min, max };
   };
   // Small parts first: the smallest visible dimension of each top-level part is at least a
@@ -91,7 +99,11 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
     for (const member of family) {
       member.position = shift(member.position);
       if (member.path) member.path = member.path.map(shift);
-      for (const pose of next.poses) if (pose.objectId === member.id) pose.position = shift(pose.position);
+      for (const pose of next.poses)
+        if (pose.objectId === member.id) {
+          pose.position = shift(pose.position);
+          if (pose.path) pose.path = pose.path.map(shift);
+        }
     }
   };
   for (let round = 0; round < 40; round++) {
@@ -138,6 +150,10 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
       o.size = { x: t, y: t, z: t };
     } else o.size = { x: clampSize(o.size.x * k), y: clampSize(o.size.y * k), z: clampSize(o.size.z * k) };
   }
-  for (const pose of next.poses) pose.position = place(pose.position);
+  for (const pose of next.poses) {
+    pose.position = place(pose.position);
+    if (pose.path?.length && drawn(byId.get(pose.objectId)!)) pose.path = pose.path.map(place);
+    else delete pose.path;
+  }
   return next;
 }

@@ -66,3 +66,16 @@ describe('tidySpatialPanel arrows and tubes', () => {
     expect(() => validateSpatialPanel(out, [])).not.toThrow();
   });
 });
+describe('posed paths', () => {
+  it('scale with the model and redraw the part at their step', async () => {
+    const { spatialScene } = await import('../../src/lib/domain/spatial-exploration');
+    const rod = { ...part('rod', 0, 0.5, 0, 0.1), shape: 'tube' as const, path: [{ x: -1, y: 0.5, z: 0 }, { x: 1, y: 0.5, z: 0 }] };
+    const tidy = tidySpatialPanel(panel([part('pin', -1, 0.5, 0, 0.3), rod], [{ stepId: 's2', objectId: 'rod', position: rod.position, visible: true, path: [{ x: -1, y: 1, z: 0 }, { x: 1, y: 0.5, z: 0 }] }]));
+    expect(() => validateSpatialPanel(tidy, [{ id: 's1' }, { id: 's2' }])).not.toThrow();
+    const spec = { mode: 'explanation', scene: { panels: [tidy] }, steps: [{ id: 's1', highlightIds: [] }, { id: 's2', highlightIds: [] }] } as never;
+    const at = (explanationStep: number) => spatialScene(spec, { explanationStep } as never)!.objects.find((o) => o.id === 'rod')!.path!;
+    expect(at(0)[0].y).toBeCloseTo(at(0)[1].y, 5);
+    // At step 2 the rod's left end has lifted.
+    expect(at(1)[0].y).toBeGreaterThan(at(1)[1].y + 0.1);
+  });
+});

@@ -224,7 +224,8 @@ function syncParts(data) {
   const seen = new Set();
   data.objects.forEach((o, index) => {
     seen.add(o.id);
-    const look = JSON.stringify([o.shape, o.renderStyle, o.color, o.size, o.geometry ?? null, o.parameterValues ?? null, data.objects.some((c) => c.parentId === o.id)]);
+    const shellNow = Boolean(o.shell) || data.objects.some((c) => c.parentId === o.id);
+    const look = JSON.stringify([o.shape, o.renderStyle, o.color, o.size, o.path ?? null, o.geometry ?? null, o.parameterValues ?? null, shellNow]);
     let v = s.parts.get(o.id);
     if (v && v.look !== look) {
       dispose3d(v.mesh);
@@ -235,7 +236,7 @@ function syncParts(data) {
       s.parts.set(o.id, v);
     }
     if (!v.mesh) {
-      const shell = data.objects.some((c) => c.parentId === o.id);
+      const shell = shellNow;
       const part = createSpatialPart({ ...o, position: { x: 0, y: 0, z: 0 } }, false, shell);
       // The part builder places custom pieces at the object's position; draw them from the origin.
       part.position.set(0, 0, 0);

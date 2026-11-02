@@ -41,6 +41,8 @@ export const spatialPanelSchema = z.strictObject({
   poses: z.array(z.strictObject({
     stepId: sceneIdSchema, objectId: sceneIdSchema,
     position: spatialVectorSchema, visible: z.boolean(),
+    // An arrow or tube can take a new path at this step: a rod tilting, an arrow growing.
+    path: z.array(spatialVectorSchema).min(2).max(12).nullable().optional(),
   })).max(48),
   parameters: z.array(mechanismParameterSchema).max(3).nullable().optional(),
   parameterPoses: z.array(z.strictObject({ stepId: sceneIdSchema, parameterId: sceneIdSchema, value: z.number().finite().min(0).max(1) })).max(24).nullable().optional(),
@@ -119,6 +121,10 @@ export function validateSpatialPanel(panel: SpatialPanel, steps: readonly { id: 
     const key = `${pose.stepId}:${pose.objectId}`;
     if (!objects.has(pose.objectId) || !steps.some((step) => step.id === pose.stepId) || poses.has(key))
       throw new Error('Spatial poses require unique object and step bindings.');
+    const owner = objects.get(pose.objectId)!;
+    if (pose.path?.length && owner.shape !== 'arrow' && owner.shape !== 'tube') throw new Error('Only arrows and tubes take a path at a step.');
+    if (pose.path?.some((p, i) => i > 0 && Math.hypot(p.x - pose.path![i - 1].x, p.y - pose.path![i - 1].y, p.z - pose.path![i - 1].z) < 0.02))
+      throw new Error('Path points must be distinct.');
     poses.add(key);
   }
 }

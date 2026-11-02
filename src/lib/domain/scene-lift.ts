@@ -17,6 +17,8 @@ export type LiftSceneObject = {
   position: Vec;
   size: Vec;
   parentId: string | null;
+  /** Holds other parts: drawn see-through. */
+  shell?: boolean;
   visible: boolean;
   highlighted: boolean;
   geometry?: MechanismPiece[];
@@ -67,6 +69,7 @@ export function liftScene(scene: SpatialScene, region: Region, anchors?: Map<str
     position: { ...o.position },
     size: { ...o.size },
     parentId: o.parentId,
+    ...(o.shell ? { shell: true } : {}),
     visible: o.visible,
     highlighted: o.highlighted,
     ...(o.path?.length ? { path: o.path.map((p) => ({ ...p })) } : {}),

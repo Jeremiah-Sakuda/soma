@@ -112,7 +112,7 @@ export default function SpatialCanvas(props: Props) {
         resources.push(floorGeometry, floorMaterial);
       }
       for (const object of visible) {
-        const shell = current.scene.objects.some((o) => o.parentId === object.id);
+        const shell = object.shell || current.scene.objects.some((o) => o.parentId === object.id);
         const selected = object.id === current.selected;
         const part = createSpatialPart(object, selected, shell);
         part.traverse((item) => {

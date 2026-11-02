@@ -41,6 +41,7 @@ function validScene(sc) {
           vec(o.position, -6, 6) &&
           vec(o.size, 0.05, 4.5) &&
           (o.parentId === null || id(o.parentId)) &&
+          (o.shell === undefined || typeof o.shell === 'boolean') &&
           typeof o.visible === 'boolean' &&
           typeof o.highlighted === 'boolean' &&
           (o.anchor === undefined || point(o.anchor)) &&

@@ -54,7 +54,7 @@ describe('a checked circuit drawn over its own slide', () => {
     expect(validOverlayModel(m)).toBe(true);
     expect(m.edges.find((e) => e.id === 'R2')!.tone).toBe('cut');
     const r5 = m.tags.find((t) => t.id === 'current-R5')!;
-    expect(r5.text).toMatch(/^R₅: ≈ 0\.4138 A →$/);
+    expect(r5.text).toMatch(/^R₅ ≈ 0\.4138 A →$/);
     const changed = model({ values: { R4: 10 } });
     expect(changed.weights).toEqual([expect.objectContaining({ edgeId: 'R4', text: '8 → 10 Ω' })]);
     // A higher R₄ lifts C above B, so current crosses from C to B.

@@ -85,13 +85,13 @@ test('a checked circuit draws on the uploaded slide and re-solves every experime
 
   await page.getByRole('checkbox', { name: 'R₂' }).uncheck();
   await expect(page.locator('.exploration-caption')).toContainText('You opened R₂.');
-  await expect(overlay.locator('.source-overlay-tag', { hasText: /R₅: ≈ 0\.4138 A →/ })).toBeVisible();
+  await expect(overlay.locator('.source-overlay-tag', { hasText: /R₅ ≈ 0\.4138 A →/ })).toBeVisible();
   await overlay.screenshot({ path: '.local/circuit/overlay-open-r2.png' });
 
   await page.getByRole('button', { name: 'Back to the circuit as read' }).click();
   await page.getByLabel('R₄ value in Ω').fill('10');
   await expect(page.locator('.exploration-caption')).toContainText('R₄ is now 10 Ω (was 8).');
-  await expect(overlay.locator('.source-overlay-tag', { hasText: /^R₅: .*←$/ })).toBeVisible();
+  await expect(overlay.locator('.source-overlay-tag', { hasText: /^R₅[: ].*←$/ })).toBeVisible();
   await overlay.screenshot({ path: '.local/circuit/overlay-r4-10.png' });
 
   await page.getByRole('button', { name: 'Save exploration', exact: true }).click();

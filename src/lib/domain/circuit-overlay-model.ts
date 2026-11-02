@@ -121,14 +121,19 @@ export function circuitOverlayModel({
   });
 
   // Annotations avoid the circuit's own marks and the source's text regions.
+  // Schematics print a node's letter beside its dot and a part's name and value beside its
+  // body, so keep clear of a margin around both.
   const blocked: Box[] = [
-    ...points.map((p) => ({ x: p.x, y: p.y, w: r * 2.4, h: r * 2.4 })),
-    ...[...ends.values()].map(([a, b]) => ({
-      x: (a.x + b.x) / 2,
-      y: (a.y + b.y) / 2,
-      w: Math.max(Math.abs(a.x - b.x), r * 2),
-      h: Math.max(Math.abs(a.y - b.y), r * 2),
-    })),
+    ...points.map((p) => ({ x: p.x, y: p.y, w: r * 2.4 + font * 3, h: r * 2.4 + font * 3 })),
+    ...[...ends.values()].map(([a, b]) => {
+      const horizontal = Math.abs(a.x - b.x) >= Math.abs(a.y - b.y);
+      return {
+        x: (a.x + b.x) / 2,
+        y: (a.y + b.y) / 2,
+        w: Math.abs(a.x - b.x) + (horizontal ? r * 2 : font * 7),
+        h: Math.abs(a.y - b.y) + (horizontal ? font * 5 : r * 2),
+      };
+    }),
     ...obstacles
       .filter((o) => !points.some((p) => p.x >= o.x * W && p.x <= (o.x + o.width) * W && p.y >= o.y * H && p.y <= (o.y + o.height) * H))
       .map((o) => ({ x: (o.x + o.width / 2) * W, y: (o.y + o.height / 2) * H, w: o.width * W, h: o.height * H })),
@@ -186,7 +191,7 @@ export function circuitOverlayModel({
       const angle = Math.atan2(b.y - a.y, b.x - a.x);
       const arrow = ARROWS[((Math.round(angle / (Math.PI / 4)) % 8) + 8) % 8];
       const amount = circuitQuantity(Math.abs(current), 'A');
-      place(`current-${id}`, `${c.label}: ${amount} ${arrow}`, fresh.has(id) && !finished ? 'equation' : 'route', mid, true);
+      place(`current-${id}`, `${c.label}${amount.startsWith('≈') ? ' ' : ': '}${amount} ${arrow}`, fresh.has(id) && !finished ? 'equation' : 'route', mid, true);
     };
     const nodeTag = (id: string) => {
       const v = solution.voltages[id];
@@ -194,7 +199,7 @@ export function circuitOverlayModel({
       const name = input.nodes.find((n) => n.id === id)!.label;
       place(
         `voltage-${id}`,
-        `${name.length > 14 ? `${name.slice(0, 13)}…` : name} = ${circuitQuantity(v, 'V')}`,
+        `${name.length > 14 ? `${name.slice(0, 13)}…` : name} ${circuitQuantity(v, 'V').replace(/^(?!≈)/, '= ')}`,
         step.node === id && !finished ? 'current' : 'settled',
         nodes.get(id)!,
         false,

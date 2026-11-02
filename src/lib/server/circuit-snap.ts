@@ -61,62 +61,94 @@ export async function snapCircuitToDrawing(dataUrl: string, layout: CircuitLayou
   };
   const px = (p: Point) => ({ x: p.x * W, y: p.y * H });
 
-  // 1. Junction dots: a filled disc, inked inside and mostly clear around (wires cross it).
-  const disc = (cx: number, cy: number, r: number) => {
-    let inside = 0, n = 0, around = 0, m = 0;
-    for (let dy = -r; dy <= r; dy++)
-      for (let dx = -r; dx <= r; dx++)
-        if (dx * dx + dy * dy <= r * r * 0.8) {
-          inside += ink(cx + dx, cy + dy);
-          n++;
-        }
-    for (let k = 0; k < 48; k++) {
-      const t = (k / 48) * Math.PI * 2;
-      around += ink(cx + Math.cos(t) * r * 1.9, cy + Math.sin(t) * r * 1.9);
-      m++;
+  // 1. Junction dots: the only ink thick enough to hold a small disc (wires, zigzags, plates and
+  // letters are thinner). A chamfer distance transform finds every such core in one pass.
+  const dist = new Uint16Array(W * H);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      if (!ink(x, y)) continue;
+      let d = 60000;
+      if (x > 0) d = Math.min(d, dist[i - 1] + 3);
+      if (y > 0) {
+        d = Math.min(d, dist[i - W] + 3);
+        if (x > 0) d = Math.min(d, dist[i - W - 1] + 4);
+        if (x < W - 1) d = Math.min(d, dist[i - W + 1] + 4);
+      } else d = Math.min(d, 3);
+      if (x === 0 || x === W - 1 || y === H - 1) d = Math.min(d, 3);
+      dist[i] = d;
     }
-    return { inside: inside / n, around: around / m };
-  };
-  const radii = [0.003, 0.004, 0.005, 0.006, 0.0075].map((f) => Math.max(3, Math.round(f * W)));
-  const reach = Math.round(0.08 * W);
-  const snappedNodes = layout.nodes.map((node) => {
-    const p = px(node);
-    const found: { x: number; y: number; r: number; d: number }[] = [];
-    for (let dy = -reach; dy <= reach; dy += 2)
-      for (let dx = -reach; dx <= reach; dx += 2) {
-        if (dx * dx + dy * dy > reach * reach) continue;
-        for (const r of radii) {
-          const s = disc(p.x + dx, p.y + dy, r);
-          if (s.inside >= 0.9 && s.around <= 0.3) {
-            found.push({ x: p.x + dx, y: p.y + dy, r, d: Math.hypot(dx, dy) });
-            break;
-          }
-        }
+  for (let y = H - 1; y >= 0; y--)
+    for (let x = W - 1; x >= 0; x--) {
+      const i = y * W + x;
+      if (!dist[i]) continue;
+      let d = dist[i];
+      if (x < W - 1) d = Math.min(d, dist[i + 1] + 3);
+      if (y < H - 1) {
+        d = Math.min(d, dist[i + W] + 3);
+        if (x < W - 1) d = Math.min(d, dist[i + W + 1] + 4);
+        if (x > 0) d = Math.min(d, dist[i + W - 1] + 4);
       }
-    if (!found.length) return null;
-    // Group hits into dots; take the nearest dot, but only when no second dot is nearly as near.
-    const dots: { x: number; y: number; d: number; n: number }[] = [];
-    for (const f of found) {
-      const dot = dots.find((g) => Math.hypot(g.x / g.n - f.x, g.y / g.n - f.y) <= radii.at(-1)! * 2);
-      if (dot) {
-        dot.x += f.x;
-        dot.y += f.y;
-        dot.n++;
-        dot.d = Math.min(dot.d, f.d);
-      } else dots.push({ x: f.x, y: f.y, d: f.d, n: 1 });
+      dist[i] = d;
     }
-    dots.sort((a, b) => a.d - b.d);
-    if (dots.length > 1 && dots[1].d < dots[0].d * 1.5 + radii[0] * 4) return null;
-    return { nodeId: node.nodeId, from: p, to: { x: dots[0].x / dots[0].n, y: dots[0].y / dots[0].n } };
-  });
-  const pairs = snappedNodes.filter((s): s is NonNullable<typeof s> => s !== null);
+  const core = Math.max(3, 0.0032 * W) * 3,
+    largest = (0.012 * W) ** 2 * Math.PI;
+  const seen = new Uint8Array(W * H);
+  const dots: Point[] = [];
+  for (let i = 0; i < dist.length; i++) {
+    if (dist[i] < core || seen[i]) continue;
+    const queue = [i];
+    seen[i] = 1;
+    let sx = 0, sy = 0, n = 0, x0 = W, x1 = 0, y0 = H, y1 = 0;
+    while (queue.length) {
+      const j = queue.pop()!,
+        x = j % W,
+        y = (j - x) / W;
+      sx += x; sy += y; n++;
+      x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+      for (const k of [j - 1, j + 1, j - W, j + W])
+        if (k >= 0 && k < dist.length && !seen[k] && dist[k] >= core && Math.abs((k % W) - x) <= 1) {
+          seen[k] = 1;
+          queue.push(k);
+        }
+    }
+    const w = x1 - x0 + 1, h = y1 - y0 + 1;
+    // Round and small: a dot's core, not a filled shape or a thick bar.
+    if (n <= largest && Math.max(w, h) <= Math.min(w, h) * 2 + 2) dots.push({ x: sx / n, y: sy / n });
+  }
+  // Each node takes its nearest dot when no other dot is nearly as near; each dot serves one
+  // node. A second round re-estimates the unmatched nodes from the first round's matches.
+  const reach = 0.13 * W;
+  let estimate = (p: Point) => p;
+  let pairs: { nodeId: string; from: Point; to: Point }[] = [];
+  for (let round = 0; round < 2; round++) {
+    const taken = new Set(pairs.map((p) => `${p.to.x},${p.to.y}`));
+    const fresh = layout.nodes
+      .filter((node) => !pairs.some((p) => p.nodeId === node.nodeId))
+      .map((node) => {
+        const at = estimate(px(node));
+        const near = dots
+          .filter((d) => !taken.has(`${d.x},${d.y}`))
+          .map((d) => ({ d, distance: Math.hypot(d.x - at.x, d.y - at.y) }))
+          .sort((a, b) => a.distance - b.distance);
+        const best = near[0];
+        if (!best || best.distance > reach || (near[1] && near[1].distance < best.distance * 1.6 + 0.01 * W)) return null;
+        return { nodeId: node.nodeId, from: px(node), to: best.d, distance: best.distance };
+      })
+      .filter((m): m is NonNullable<typeof m> => m !== null)
+      .sort((a, b) => a.distance - b.distance);
+    for (const m of fresh)
+      if (!pairs.some((p) => p.to === m.to)) pairs.push({ nodeId: m.nodeId, from: m.from, to: m.to });
+    estimate = fit(pairs) ?? estimate;
+  }
+  const snappedNodes = layout.nodes.map((node) => pairs.find((p) => p.nodeId === node.nodeId) ?? null);
   const correct = fit(pairs) ?? ((p: Point) => p);
   // A correction that stretches the drawing implausibly is not trusted.
   const probe = [correct({ x: 0, y: 0 }), correct({ x: W, y: H })];
   const sane =
-    Math.abs(probe[1].x - probe[0].x) / W > 0.6 &&
+    Math.abs(probe[1].x - probe[0].x) / W > 0.5 &&
     Math.abs(probe[1].x - probe[0].x) / W < 1.6 &&
-    Math.abs(probe[1].y - probe[0].y) / H > 0.6 &&
+    Math.abs(probe[1].y - probe[0].y) / H > 0.5 &&
     Math.abs(probe[1].y - probe[0].y) / H < 1.6;
   const move = sane ? correct : (p: Point) => p;
   const nodes = layout.nodes.map((node) => {

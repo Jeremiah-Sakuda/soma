@@ -133,6 +133,33 @@ it.skipIf(process.env.SOMA_CIRCUIT_LIVE !== 'true')(
       });
       records.push({ phase: 'after', ledger: await ledger() });
       save();
+      // Muse chooses the experiment for a new question; Soma computes and verifies it.
+      if (process.env.SOMA_CIRCUIT_INVESTIGATE === 'true') {
+        const investigateQuestion = 'When would current flow through R5, and which way?';
+        const { artifact: probed } = await service.generate(principal, {
+          action: 'generate',
+          requestId: randomUUID(),
+          question: investigateQuestion,
+          intent: 'investigate',
+          artifactId: artifact.id,
+          baseVersion: artifact.version,
+          state: artifact.state,
+        });
+        dump('investigate', probed);
+        records.push({
+          phase: 'investigate',
+          question: investigateQuestion,
+          calls: probed.generation.calls,
+          costUsd: probed.generation.costUsd,
+          elapsedMs: probed.generation.elapsedMs,
+          experiment: probed.circuitExperiment ?? null,
+          steps: probed.spec.mode === 'checked-circuit' ? probed.spec.steps.map((s) => `${s.executionStep}: ${s.caption}`) : [],
+          audit: probed.generation.audit.map((a) => `${a.event}: ${a.detail}`),
+        });
+        save();
+      }
+      records.push({ phase: 'final', ledger: await ledger() });
+      save();
       expect(mismatches).toEqual([]);
       expect(solution.exact.currents[input.components.find((c) => plain(c.label) === 'R5')!.id]).toBe('0');
     } finally {

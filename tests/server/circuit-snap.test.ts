@@ -21,6 +21,23 @@ const liveRead = {
     { componentId: 'R5', x1: 0.365, y1: 0.56, x2: 0.49, y2: 0.56 },
   ],
 };
+/** The second live read: x stretched about 1.3×, C 279 px off. */
+const liveReadStretched = {
+  nodes: [
+    { nodeId: 'A', x: 691 / 1920, y: 311 / 1080 },
+    { nodeId: 'B', x: 691 / 1920, y: 579 / 1080 },
+    { nodeId: 'C', x: 1225 / 1920, y: 579 / 1080 },
+    { nodeId: 'D', x: 691 / 1920, y: 872 / 1080 },
+  ],
+  components: [
+    { componentId: 'V1', x1: 217 / 1920, y1: 526 / 1080, x2: 217 / 1920, y2: 616 / 1080 },
+    { componentId: 'R1', x1: 691 / 1920, y1: 362 / 1080, x2: 691 / 1920, y2: 529 / 1080 },
+    { componentId: 'R2', x1: 691 / 1920, y1: 630 / 1080, x2: 691 / 1920, y2: 821 / 1080 },
+    { componentId: 'R3', x1: 1225 / 1920, y1: 313 / 1080, x2: 1225 / 1920, y2: 529 / 1080 },
+    { componentId: 'R4', x1: 1225 / 1920, y1: 630 / 1080, x2: 1225 / 1920, y2: 821 / 1080 },
+    { componentId: 'R5', x1: 778 / 1920, y1: 579 / 1080, x2: 1139 / 1920, y2: 579 / 1080 },
+  ],
+};
 const slide = async (width = 1600) =>
   'data:image/png;base64,' +
   (await sharp(readFileSync('docs/examples/hero-circuit/lecture-9-bridge.png')).resize({ width }).png().toBuffer()).toString('base64');
@@ -28,8 +45,11 @@ const px = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hy
 const mid = (c: { x1: number; y1: number; x2: number; y2: number }) => ({ x: (c.x1 + c.x2) / 2, y: (c.y1 + c.y2) / 2 });
 
 describe('a circuit reading snapped onto its own drawing', () => {
-  it('moves every node onto its junction dot and every part onto its body', async () => {
-    const { layout, snappedNodes, refinedParts } = await snapCircuitToDrawing(await slide(), liveRead);
+  it.each([
+    ['first live read', liveRead],
+    ['stretched second live read', liveReadStretched],
+  ])('moves every node onto its junction dot and every part onto its body (%s)', async (_, read) => {
+    const { layout, snappedNodes, refinedParts } = await snapCircuitToDrawing(await slide(), read);
     expect(snappedNodes).toBe(4);
     expect(refinedParts).toBe(6);
     for (const truth of heroCircuitLayout.nodes)

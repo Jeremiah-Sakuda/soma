@@ -1,6 +1,6 @@
 {
   "releaseId": "soma-pm160-3d-voice-2026-11-02",
-  "sourceTreeSha256": "48aabbb10b7c1327c6f15ca91ba5e440614bd84355072d9c7cf98b5ebb7a0581",
+  "sourceTreeSha256": "d2013c0dae5b640a22612b56e006153f808fedb25937c87c4b48dbeca174206f",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
     "desktop/Info.plist": "a7566833b9abda71d595bb76ba892daf8c33cccb10413e3a510a1a502c0db050",
@@ -142,9 +142,9 @@
     "src/components/exploration-search-stage.tsx": "d986c48cd0ea360cf0fb5c59c6cda8d0f67a4065506d334e4e5e5a1c4b7593e4",
     "src/components/exploration-source-grounding.tsx": "78ffe559465b2c47d26db990c87c94bd66216aa95e6173f22a57c5e33a5ec159",
     "src/components/exploration-voice.tsx": "87e4e2a5d3094836ceb0c53fd9a21798aa9b89c4523f81cd74c3ecd3851b4c2d",
-    "src/components/exploration-weighted-stage.tsx": "c2eb557f0ac00c78cf3a24f60fbd29b31b4703a447567e14e0c7dc0e35abcc03",
+    "src/components/exploration-weighted-stage.tsx": "0f0e2c67b537f1214000a4707b66a1ebd39b2aaaff59fcecc287cba0b751d380",
     "src/components/exploration-workspace.tsx": "cefee31ea6eadde2d882183b0beadc92642504fb9ff2016b8a28e7063f6938e2",
-    "src/components/exploration.css": "3203d09c2491c4d0d83317cd7cc62d074a7948c91732a789d99b4e0982734567",
+    "src/components/exploration.css": "8d85a35c9ad983947392713dca8b61f77d9e85cf69af5255f310299a77099670",
     "src/components/investigation-panel.tsx": "451be06ce455d37eb296af6a3b8be78d46220334c50d44f2733ff0982b75c2a7",
     "src/components/journal-menu.tsx": "936e6fa6a05c07350912aa306f20feaa21982e9cfbee991a0e5ae0f42dfce2c4",
     "src/components/learning-inspection.tsx": "24548c3e1c79953da4a4a0034d93887052b83c3e9c320f8b559d119ef49113f9",

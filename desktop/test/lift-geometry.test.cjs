@@ -12,6 +12,11 @@ test('the hero fixture is a valid overlay model with lift data', () => {
   assert.equal(validOverlayModel({ ...models[0], lift: { ...models[0].lift, maxDistance: -1 } }), false);
   assert.equal(validOverlayModel({ ...models[0], edges: [{ ...models[0].edges[0], weight: Infinity }] }), false);
   assert.equal(validOverlayModel({ ...models[0], edges: [{ ...models[0].edges[0], fromId: 'bad id!' }] }), false);
+  const e = models[0].edges[0];
+  assert.equal(validOverlayModel({ ...models[0], edges: [e, { ...e }] }), false, 'edge ids are distinct');
+  assert.equal(validOverlayModel({ ...models[0], nodes: [...models[0].nodes, { ...models[0].nodes[0] }] }), false, 'node ids are distinct');
+  assert.equal(validOverlayModel({ ...models[0], edges: [{ ...e, toId: e.fromId }] }), false, 'no loops');
+  assert.equal(validOverlayModel({ ...models[0], lift: { ...models[0].lift, source: 'nowhere' } }), false, 'the start is a drawn node');
 });
 
 test('heights are checked distances and strings are taut exactly on shortest routes', async () => {

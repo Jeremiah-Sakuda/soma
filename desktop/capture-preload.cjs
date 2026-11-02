@@ -142,7 +142,13 @@ ipcRenderer.on('desktop:screen-overlay-result', (_event, d) => {
   if (isExploration() && d?.id === sourceInteraction)
     window.dispatchEvent(
       new CustomEvent('soma:screen-overlay-result', {
-        detail: { id: d.id, shown: d.shown === true, dismissed: d.dismissed === true, ...(d.view === '3d' || d.view === '2d' ? { view: d.view } : {}) },
+        detail: {
+          id: d.id,
+          shown: d.shown === true,
+          dismissed: d.dismissed === true,
+          ...(d.view === '3d' || d.view === '2d' ? { view: d.view } : {}),
+          ...(['changed', 'webgl', 'sheet'].includes(d.reason) ? { reason: d.reason } : {}),
+        },
       }),
     );
 });

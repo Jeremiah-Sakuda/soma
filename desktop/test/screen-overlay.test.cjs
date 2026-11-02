@@ -352,7 +352,7 @@ test('without WebGL the drawing stays flat and says why', async () => {
     await h.controller.screenOverlay({ id, model: model(LIFT) });
     // Without its own slide region nothing could honestly cover the original: stay flat.
     assert.equal(h.controller.setView('3d'), '2d', 'a failed crop does not lift');
-    assert.deepEqual(h.results.at(-1), { id, shown: true, view: '2d', reason: 'webgl' });
+    assert.deepEqual(h.results.at(-1), { id, shown: true, view: '2d', reason: 'sheet' });
     assert.ok(h.draws.every((d) => d.view !== '3d'));
   } finally {
     h.controller.dispose();
@@ -378,7 +378,7 @@ test('a lift the overlay cannot draw falls back flat on both sides', async () =>
 
 test('while lifted, a slide changed underneath takes the drawing down within seconds', async () => {
   const regions = [];
-  const h = harness(['data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,NEXT'], {
+  const h = harness(['data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,BANNER', 'data:image/jpeg;base64,SLIDE', 'data:image/jpeg;base64,NEXT', 'data:image/jpeg;base64,NEXT'], {
     cropImage: () => 'data:image/jpeg;base64,SHEET',
     compareRegion: (a, b, region) => {
       regions.push(region);
@@ -395,7 +395,13 @@ test('while lifted, a slide changed underneath takes the drawing down within sec
     assert.equal(h.controller.view, '3d', 'the slide is unchanged, so the drawing stays');
     const { sheetRegion } = require('../screen-overlay.cjs');
     assert.deepEqual(regions[0], sheetRegion(model(LIFT)), 'the whole covered region is compared');
+    // One differing check (a passing banner) is not enough to take it down.
     await wait(5300);
+    assert.equal(h.controller.view, '3d', 'a single mismatch is tolerated');
+    await wait(5300);
+    assert.equal(h.controller.view, '3d');
+    // A changed slide differs on two checks in a row.
+    await wait(10600);
     assert.equal(h.controller.hasDrawing(), false);
     assert.equal(h.controller.view, '2d');
     assert.deepEqual(h.results.at(-1), { id, shown: false, reason: 'changed' });

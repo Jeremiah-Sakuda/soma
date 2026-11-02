@@ -321,12 +321,17 @@ export function ExplorationScene({
   spokenProgress?: number | null;
 }) {
   const [overlayView, setOverlayView] = useState<'source' | 'diagram'>('source');
+  // Whether the drawing on screen carries checked distances to lift into 3D.
+  const [liftable, setLiftable] = useState(false);
+  // Why the companion took the drawing down or kept it flat, when it says.
+  const [screenNotice, setScreenNotice] = useState('');
   // In the Mac companion, mirror the same overlay over the real display it was captured from.
   const nativeId = overlay?.nativeId;
   const mirror = useCallback(
     (model: SourceOverlayModel | null) => {
-      if (nativeId)
-        window.dispatchEvent(new CustomEvent('soma:screen-overlay', { detail: { id: nativeId, model } }));
+      if (!nativeId) return;
+      setLiftable(Boolean(model?.lift));
+      window.dispatchEvent(new CustomEvent('soma:screen-overlay', { detail: { id: nativeId, model } }));
     },
     [nativeId],
   );
@@ -337,11 +342,21 @@ export function ExplorationScene({
   useEffect(() => {
     setOnScreen(false);
     setLifted(false);
+    setScreenNotice('');
     if (!nativeId) return;
     const listen = (event: Event) => {
       const d = (event as CustomEvent).detail;
       if (d?.id !== nativeId) return;
       setOnScreen(d.shown === true);
+      setScreenNotice(
+        d.reason === 'changed'
+          ? 'Your slide changed, so Soma took the drawing off your screen. Capture again to draw on the new one.'
+          : d.reason === 'webgl'
+            ? 'This Mac could not draw in 3D, so the drawing stays flat on your slide.'
+            : d.reason === 'sheet'
+              ? 'Soma could not lift this drawing, so it stays flat on your slide.'
+              : '',
+      );
       setLifted((was) => (d.shown !== true ? false : d.view === '3d' ? true : d.view === '2d' ? false : was));
     };
     window.addEventListener('soma:screen-overlay-result', listen);
@@ -597,13 +612,18 @@ export function ExplorationScene({
                     : `Check before trusting this route. ${overlay.readingCheck.disputes.join(' ')}`}
               </p>
             )}
+            {screenNotice && !(onScreen && lifted) && (
+              <p className="source-overlay-onscreen" role="status">
+                {screenNotice}
+              </p>
+            )}
             {onScreen && (
               <p className="source-overlay-onscreen" role="status">
                 {lifted
                   ? 'Lifted off your slide in 3D: height is the checked distance from the start, and the shortest routes pull their strings taut.'
                   : `Drawn on your screen, over the window you captured.${spec.mode !== 'explanation' && spec.controls.includes('toggle-edge') ? ' Click a connection there to cut it;' : ''}`}{' '}
                 Esc hides it.{' '}
-                {spec.mode !== 'explanation' && (
+                {spec.mode !== 'explanation' && liftable && (
                   <button
                     type="button"
                     className="source-overlay-lift"

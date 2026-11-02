@@ -19,6 +19,7 @@ import {
   PlaneGeometry,
   TubeGeometry,
   BufferGeometry,
+  Float32BufferAttribute,
   CatmullRomCurve3,
   Vector3,
   Quaternion,
@@ -54,7 +55,7 @@ const FOV = 28;
 // sheet foreshortens to about a third of its height while a node's rise keeps nearly all.
 const TILT = (70 * Math.PI) / 180;
 // Turned once lifted, so a near node does not hide one behind it on the slide.
-const BASE_YAW = -0.3;
+const BASE_YAW = -0.26;
 const ENTER_MS = 2400;
 const EXIT_MS = 1000;
 // A slow turn shows the depth, then stops so the scene can rest (and stop rendering).
@@ -296,10 +297,10 @@ function tickStep(top) {
   const raw = Math.max(1, top) / 10, power = 10 ** Math.floor(Math.log10(raw));
   return [1, 2, 5, 10].map((m) => m * power).find((step) => step >= raw);
 }
-/** Evenly spaced ticks from 0 up to the highest distance shown, estimates included, so the
- * ruler reads as a scale; the shaft itself reaches the highest sphere. */
+/** Evenly spaced ticks over the whole search's range, the same at every step, so the ruler
+ * reads as a fixed scale from the first step. */
 function syncTicks(layout) {
-  const shown = Math.max(0, ...layout.nodes.map((n) => n.distance ?? 0));
+  const shown = layout.maxDistance;
   const step = tickStep(shown), values = [];
   for (let value = 0; value <= shown + 1e-9; value += step) values.push(Number(value.toFixed(6)));
   const key = values.join(',');
@@ -328,7 +329,7 @@ function syncNodes(layout) {
     seen.add(n.id);
     let v = s.nodes.get(n.id);
     if (!v) {
-      const sphere = new Mesh(new SphereGeometry(r * 0.78, 40, 24), material(nodeColor(n)));
+      const sphere = new Mesh(new SphereGeometry(r * 0.78, 40, 24), material(nodeColor(n), { emissive: new Color(COLOR.current), emissiveIntensity: 0 }));
       const halo = new Mesh(new TorusGeometry(r * 1.12, r * 0.09, 12, 48), new MeshBasicMaterial({ color: COLOR.current, transparent: true, opacity: 0 }));
       // An outline where the node was, turned to face the viewer: "was here", not a second node.
       const ghost = new Mesh(new TorusGeometry(r * 0.78, r * 0.05, 8, 40), new MeshBasicMaterial({ color: COLOR.ghost, transparent: true, opacity: 0, depthWrite: false }));
@@ -340,7 +341,7 @@ function syncNodes(layout) {
       const shadow = new Mesh(new CircleGeometry(r * 1.2, 32), new MeshBasicMaterial({ map: s.shadowTex, transparent: true, opacity: 0, depthWrite: false }));
       for (const o of [shadow, foot, pillar, ghost, trail, sphere, halo]) s.content.add(o);
       sphere.renderOrder = pillar.renderOrder = halo.renderOrder = 3;
-      v = { sphere, halo, ghost, trail, pillar, foot, shadow, label: tag('is-node'), h: 0, target: 0, change: null, pulseAt: -Infinity, data: null };
+      v = { sphere, halo, ghost, trail, pillar, foot, shadow, notches: [], label: tag('is-node'), h: 0, target: 0, change: null, pulseAt: -Infinity, data: null };
       s.nodes.set(n.id, v);
     }
     // A distance that changes (an estimate coming down, or a cut raising a route) leaves a
@@ -355,9 +356,7 @@ function syncNodes(layout) {
     v.target = n.height;
     const color = nodeColor(n);
     v.sphere.material.color.setHex(color);
-    v.sphere.material.opacity = n.tentative ? 0.55 : 1;
     v.pillar.material.color.setHex(color);
-    v.pillar.material.opacity = n.tentative ? 0.3 : 0.6;
     v.foot.material.color.setHex(n.status === 'current' ? COLOR.current : color);
     for (const o of [v.sphere, v.halo, v.ghost, v.pillar, v.foot, v.shadow]) o.position.set(n.x, n.y, o.position.z);
     if (n.distance === null) v.change = null;
@@ -365,14 +364,54 @@ function syncNodes(layout) {
     v.shadow.position.z = 0.3;
     const lifted = n.distance !== null;
     v.sphere.visible = v.pillar.visible = lifted;
-    v.label.className = `lift-tag is-node is-${n.status}${n.source ? ' is-source' : ''}${n.goal ? ' is-goal' : ''}`;
+    // A notch on the stem at each whole unit, so a height can be counted where perspective
+    // makes a near, tall node look no higher than a far, short one.
+    const units = lifted && layout.maxDistance <= 20 && layout.scale >= 9 ? Math.floor(Math.min(n.distance, layout.maxDistance) + 1e-9) : 0;
+    notchGeometry ??= new TorusGeometry(r * 0.13, r * 0.03, 6, 20);
+    while (v.notches.length < units) {
+      const m = new Mesh(notchGeometry, new MeshBasicMaterial({ color, transparent: true, opacity: 0 }));
+      m.userData.sharedGeometry = true;
+      m.renderOrder = 3;
+      s.content.add(m);
+      v.notches.push(m);
+    }
+    while (v.notches.length > units) {
+      const m = v.notches.pop();
+      s.content.remove(m);
+      m.material.dispose();
+    }
+    v.notches.forEach((m, i) => {
+      m.userData.z = layout.base + (i + 1) * layout.scale;
+      m.position.set(n.x, n.y, m.userData.z);
+      m.material.color.setHex(color);
+    });
+    // Styled as an estimate only when it is one: the start's 0 is exact while still queued.
+    const look = n.status === 'waiting' && !n.tentative ? 'settled' : n.status;
+    v.label.className = `lift-tag is-node is-${look}${n.source ? ' is-source' : ''}${n.goal ? ' is-goal' : ''}`;
   }
   for (const [id, v] of s.nodes)
     if (!seen.has(id)) {
       for (const o of [v.sphere, v.halo, v.ghost, v.trail, v.pillar, v.foot, v.shadow]) disposeObject(o);
+      for (const m of v.notches) {
+        s.content.remove(m);
+        m.material.dispose();
+      }
       v.label.remove();
       s.nodes.delete(id);
     }
+}
+
+/** Moves a two-point dashed line in place (no new GPU buffers per frame). */
+function setSegment(line, a, b) {
+  const geo = line.geometry, pos = geo.attributes.position;
+  pos.setXYZ(0, a.x, a.y, a.z);
+  pos.setXYZ(1, b.x, b.y, b.z);
+  pos.needsUpdate = true;
+  let dist = geo.attributes.lineDistance;
+  if (!dist) geo.setAttribute('lineDistance', (dist = new Float32BufferAttribute([0, 0], 1)));
+  dist.setX(1, Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z));
+  dist.needsUpdate = true;
+  geo.computeBoundingSphere();
 }
 
 function caption(model, layout) {
@@ -383,11 +422,12 @@ function caption(model, layout) {
     box.setAttribute('aria-hidden', 'true');
     const legend = document.createElement('div');
     legend.className = 'lift-legend';
-    for (const [cls, text] of [['start', `start (${layout.nodes.find((n) => n.source)?.label ?? 'A'})`], ['path', 'shortest route'], ['taut', 'taut: also shortest'], ['slack', 'slack: longer by n'], ['estimate', 'estimate, may drop'], ['ghost', 'old height']]) {
+    for (const [cls, text] of [['start', ''], ['path', 'shortest route'], ['taut', 'taut: also shortest'], ['slack', 'slack: longer by n'], ['estimate', 'estimate, may drop'], ['ghost', 'old height']]) {
       const item = document.createElement('span');
       const swatch = document.createElement('i');
       swatch.className = `is-${cls}`;
       item.append(swatch, text);
+      if (cls === 'start') box.startItem = item;
       legend.appendChild(item);
     }
     box.append(document.createElement('strong'), document.createElement('span'), document.createElement('small'), legend);
@@ -395,13 +435,15 @@ function caption(model, layout) {
   }
   const [title, body, note] = box.children;
   const source = layout.nodes.find((n) => n.source)?.label ?? 'the start';
+  // A follow-up can start from another node.
+  box.startItem.lastChild.textContent = `start (${source})`;
   title.textContent = model.caption?.stepLabel ?? 'Lifted off your slide';
   body.textContent = model.caption?.text ?? '';
   note.textContent = `Height is the checked ${layout.unit === 'edges' ? 'number of edges' : 'distance'} from ${source}.`;
   // Anchored like the flat caption, by the edge it grows away from, so a longer caption
   // never makes the card jump between steps.
   const f = s.frame, c = model.caption;
-  box.style.left = Math.max(8, (c ? c.x * f.width : 24) + f.dx - 20) + 'px';
+  box.style.left = Math.max(8, Math.min((c ? c.x * f.width : 24) + f.dx - 20, innerWidth - box.offsetWidth - 8)) + 'px';
   if (c && c.anchor === 'top') {
     box.style.bottom = '';
     box.style.top = Math.max(8, Math.min(c.y * f.height + f.dy, innerHeight - box.offsetHeight - 12)) + 'px';
@@ -458,11 +500,21 @@ function flushLabels() {
 
 /** The point along a string (by index) for its label: the middle, or the nearest point to it
  * whose label would not sit on a node. */
-function labelIndex(points) {
+function labelIndex(points, el) {
   const obstacles = s.obstacles ?? [];
-  for (const i of [12, 9, 15, 7, 17]) {
-    const p = project(points[i], scratch);
-    if (obstacles.every((o) => Math.hypot(p.x - o.x, p.y - o.y) > o.r + 22)) return i;
+  const w = el._w || 60, h = el._h || 22;
+  for (const i of [12, 9, 15, 7, 17, 5, 19]) {
+    // Where placeLabel would put this label's box, beside the string.
+    const a = project(points[i - 3], new Vector3()), b = project(points[i + 3], new Vector3()), p = project(points[i], scratch);
+    let nx = -(b.y - a.y), ny = b.x - a.x;
+    const len = Math.hypot(nx, ny) || 1;
+    if (ny > 0) [nx, ny] = [-nx, -ny];
+    const cx = p.x + (nx / len) * 14, bottom = p.y + (ny / len) * 14 + 9;
+    const clear = obstacles.every((o) => {
+      const dx = Math.max(cx - w / 2 - o.x, 0, o.x - (cx + w / 2)), dy = Math.max(bottom - h - o.y, 0, o.y - bottom);
+      return Math.hypot(dx, dy) > o.r + 3;
+    });
+    if (clear) return i;
   }
   return 12;
 }
@@ -494,6 +546,7 @@ function reshape(mesh, points, radius) {
   next.dispose();
 }
 const coneGeometry = new Map();
+let notchGeometry = null;
 /** A small arrowhead near the end of a directed string, pointing along it. */
 function arrow(points, radius, mat) {
   const i = Math.floor(points.length * 0.82), p = points[i], q = points[Math.min(points.length - 1, i + 1)];
@@ -576,7 +629,7 @@ function drawEdges(rise, sheetT) {
       // A string appears as its nodes leave the sheet, so the slide is untouched at first.
       v.mat.opacity = v.baseOpacity * clamp01(k * 2.5);
       v.label.textContent = e.label;
-      const i = labelIndex(points);
+      const i = labelIndex(points, v.label);
       labelAt = points[i];
       side = [new Vector3(points[i - 3].x, points[i - 3].y, points[i - 3].z), new Vector3(points[i + 3].x, points[i + 3].y, points[i + 3].z)];
       opacity = clamp01((k - 0.6) / 0.4) * (e.kind === 'tentative' ? 0.8 : 1);
@@ -650,6 +703,8 @@ function renderFrame() {
   const rise = (id) => (quick ? t : clamp01(riseAt(t, rank.get(id) ?? 0, lifted.length)));
   const r = s.layout.radius;
   let moving = s.mode !== 'idle' || s.sway > 0.002;
+  const experiment = s.layout.edges.some((e) => e.kind === 'cut');
+  const onRoute = new Set(s.layout.edges.filter((e) => e.tone === 'path').flatMap((e) => [e.from, e.to]));
   // Content-space rotation that faces the camera, for outlines drawn flat to the viewer.
   s.content.updateWorldMatrix(true, false);
   const facing = s.content.getWorldQuaternion(new Quaternion()).invert().multiply(s.camera.quaternion);
@@ -663,12 +718,26 @@ function renderFrame() {
     // A node grows out of its printed circle as it rises, and pulses once as it settles.
     const pulseAge = (now - v.pulseAt) / 400;
     const pulse = !quick && pulseAge >= 0 && pulseAge < 1 ? 0.15 * Math.sin(Math.PI * pulseAge) : 0;
-    if (pulse) moving = true;
+    if (!quick && pulseAge >= 0 && pulseAge < 2.5) moving = true;
+    // During an experiment, nodes off the checked route step back so the route reads.
+    const dim = experiment && !onRoute.has(v.data.id) ? 0.4 : 1;
     v.sphere.scale.setScalar(Math.max(0.001, clamp01(k * 1.6)) * (1 + pulse));
     v.pillar.scale.y = Math.max(0.001, z);
     v.pillar.position.z = z / 2;
+    for (const m of v.notches) {
+      // Notches ride up with the node and never show above it while its height glides.
+      m.position.z = m.userData.z * k;
+      m.visible = m.position.z <= z + 0.5;
+      m.scale.setScalar(Math.max(0.001, k));
+      m.material.opacity = (v.data.tentative ? 0.4 : 0.85) * clamp01((k - 0.7) / 0.3) * dim;
+    }
+    v.sphere.material.opacity = (v.data.tentative ? 0.55 : 1) * dim;
+    v.pillar.material.opacity = (v.data.tentative ? 0.3 : 0.6) * dim;
+    // The node this step settles flashes warm for a moment.
+    const flash = !quick && pulseAge >= 0 && pulseAge < 2.5 ? Math.sin((Math.PI * pulseAge) / 2.5) : 0;
+    v.sphere.material.emissiveIntensity = 0.55 * flash;
     v.foot.material.opacity = (v.data.distance === null ? 0.25 : 0.7) * sheetT;
-    v.shadow.material.opacity = 0.5 * Math.min(1, k) * (1 - Math.min(0.6, z / (s.layout.tallest * 2)));
+    v.shadow.material.opacity = 0.75 * Math.min(1, k) * (1 - Math.min(0.45, z / (s.layout.tallest * 2.5))) * dim;
     const isCurrent = v.data.status === 'current';
     v.halo.position.z = z;
     v.halo.material.opacity = isCurrent ? clamp01(k * 1.6) * (quick ? 0.9 : 0.65 + 0.3 * Math.sin(now / 220) * s.sway + 0.2 * (1 - s.sway)) : 0;
@@ -683,8 +752,7 @@ function renderFrame() {
         v.ghost.position.z = v.change.height * k;
         v.ghost.quaternion.copy(facing);
         v.ghost.material.opacity = 0.6 * fade;
-        v.trail.geometry.setFromPoints([new Vector3(v.data.x, v.data.y, v.change.height * k), new Vector3(v.data.x, v.data.y, z)]);
-        v.trail.computeLineDistances();
+        setSegment(v.trail, { x: v.data.x, y: v.data.y, z: v.change.height * k }, { x: v.data.x, y: v.data.y, z });
         v.trail.material.opacity = 0.9 * fade;
       } else v.change = null;
     }
@@ -694,7 +762,7 @@ function renderFrame() {
       n.distance === null ? '' : changing ? `${n.label} ${v.change.sign} ${fmt(v.change.from)} → ${fmt(n.distance)}` : `${n.label} ${n.tentative ? '≤' : '='} ${fmt(n.distance)}`;
     v.label.classList.toggle('is-drop', changing);
     const priority = isCurrent || n.goal || changing ? 4 : 3;
-    placeLabel(v.label, new Vector3(n.x, n.y, z + r * 1.05), n.distance === null ? 0 : clamp01((k - 0.5) / 0.5), priority);
+    placeLabel(v.label, new Vector3(n.x, n.y, z + r * 1.05), (n.distance === null ? 0 : clamp01((k - 0.5) / 0.5)) * (dim < 1 ? 0.6 : 1), priority);
   }
   // Where each sphere sits on screen, so string labels can keep off them.
   s.obstacles = [...s.nodes.values()]
@@ -707,8 +775,7 @@ function renderFrame() {
   // line to the current node.
   if (sh) {
     const at = s.rulerAt;
-    // Just taller than the highest sphere shown.
-    const top = s.layout.base + Math.max(0, ...s.layout.nodes.map((n) => Math.min(n.distance ?? 0, s.layout.maxDistance))) * s.layout.scale + r * 0.6;
+    const top = s.layout.base + s.layout.maxDistance * s.layout.scale + r * 0.6;
     const rulerT = clamp01((t - 0.4) / 0.15);
     sh.ruler.material.opacity = 0.7 * rulerT;
     sh.ruler.scale.y = Math.max(0.001, top);
@@ -720,8 +787,7 @@ function renderFrame() {
       placeLabel(tick.label, new Vector3(at.x - r * 0.9, at.y, z - r * 0.25), clamp01((t - 0.55) / 0.3), 0.5);
     }
     if (current && current.v.data.distance !== null) {
-      sh.level.geometry.setFromPoints([new Vector3(current.v.data.x, current.v.data.y, current.z), new Vector3(at.x, at.y, current.z)]);
-      sh.level.computeLineDistances();
+      setSegment(sh.level, { x: current.v.data.x, y: current.v.data.y, z: current.z }, { x: at.x, y: at.y, z: current.z });
       sh.level.material.opacity = 0.95 * clamp01((t - 0.7) / 0.3);
     } else sh.level.material.opacity = 0;
   }
@@ -772,6 +838,8 @@ function update(model, frame, sheet) {
 }
 function hide(done) {
   if (!s) return done?.();
+  // Landing: old heights from the last change no longer apply.
+  for (const v of s.nodes.values()) v.change = null;
   if (s.mode !== 'exit') {
     s.mode = 'exit';
     s.started = clock() - (1 - s.t) * EXIT_MS;
@@ -789,7 +857,7 @@ function dispose() {
   if (s.raf) cancelAnimationFrame(s.raf);
   s.scene.traverse((o) => {
     if (o.userData.shared) return;
-    o.geometry?.dispose();
+    if (!o.userData.sharedGeometry) o.geometry?.dispose();
     if (o.material) {
       if (o.material.map !== s.shadowTex) o.material.map?.dispose();
       o.material.alphaMap?.dispose();
@@ -799,6 +867,8 @@ function dispose() {
   for (const v of s.edges.values()) v.mat?.dispose();
   for (const g of coneGeometry.values()) g.dispose();
   coneGeometry.clear();
+  notchGeometry?.dispose();
+  notchGeometry = null;
   s.shadowTex.dispose();
   // Releasing the context on purpose is not a failure.
   s.canvas.removeEventListener('webglcontextlost', s.onLost);

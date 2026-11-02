@@ -80,7 +80,8 @@ export function liftLayout(model, frame) {
   });
   const edges = model.edges.flatMap((e) => {
     const a = byId.get(e.fromId), b = byId.get(e.toId);
-    if (!a || !b) return [];
+    // A loop has no length to hang as a string.
+    if (!a || !b || a === b) return [];
     const weight = Number.isFinite(e.weight) ? e.weight : null;
     if (e.tone === 'cut') return [{ id: e.id, from: a.id, to: b.id, weight, slack: null, kind: 'cut', tone: e.tone, label: '' }];
     const slack = weight === null ? null : slackOf(weight, a.distance, b.distance, lift.directed);

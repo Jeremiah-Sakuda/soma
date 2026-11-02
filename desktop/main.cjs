@@ -166,7 +166,12 @@ function explorationUnavailable() {
 // so it is only switched off when the last one finishes.
 let excluding = 0;
 async function excludeWindows(fn) {
-  if (excluding++ === 0) for (const w of [win, bar]) if (w && !w.isDestroyed()) w.setContentProtection(true);
+  if (excluding++ === 0) {
+    for (const w of [win, bar]) if (w && !w.isDestroyed()) w.setContentProtection(true);
+    // Give the window server a moment to apply protection (here and on the drawing, which
+    // Point & ask protects just before) before the frame is read.
+    await new Promise((r) => setTimeout(r, 100));
+  }
   try {
     return await fn();
   } finally {
@@ -418,9 +423,11 @@ else {
           shown: payload.shown,
           ...(payload.dismissed ? { dismissed: true } : {}),
           ...(payload.view ? { view: payload.view } : {}),
+          ...(payload.reason ? { reason: payload.reason } : {}),
         });
         if (compactMode && bar?.isVisible()) {
           if (payload.reason === 'webgl') status('This Mac could not draw in 3D, so the drawing stays flat on your slide.');
+          else if (payload.reason === 'sheet') status('Soma could not lift this drawing, so it stays flat on your slide.');
           else if (payload.view === '3d')
             status('Lifted off your slide. Height is the checked distance from the start; taut strings are shortest routes.');
           else if (payload.view === '2d') status('Back on your slide.');

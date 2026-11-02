@@ -38,30 +38,43 @@ export function SourceOverlay({
   onSelect,
   onModel,
   compact = false,
+  build,
   ...input
 }: {
   /** The same overlay is on the learner's screen; keep this copy small. */
   compact?: boolean;
   image: string;
-  layout: SourceGraphLayout;
-  graph: BfsInput;
-  execution: BfsExecution;
-  index: number;
-  disabledEdgeIds: readonly string[];
-  weights?: Record<string, number>;
   canToggle: boolean;
   selected: string | null;
-  caption: string | null;
   stepLabel: string;
-  /** Source text regions annotations should keep clear of. */
-  obstacles?: { x: number; y: number; width: number; height: number }[];
   onToggleEdge: (edgeId: string) => void;
   onSelect: (id: string) => void;
   /** Receives the same normalized model, e.g. to mirror it over the real display. */
   onModel?: (model: SourceOverlayModel | null) => void;
-}) {
+} & (
+  | {
+      build?: undefined;
+      layout: SourceGraphLayout;
+      graph: BfsInput;
+      execution: BfsExecution;
+      index: number;
+      disabledEdgeIds: readonly string[];
+      weights?: Record<string, number>;
+      caption: string | null;
+      /** Source text regions annotations should keep clear of. */
+      obstacles?: { x: number; y: number; width: number; height: number }[];
+    }
+  | {
+      /** Another checked family (a circuit) supplies its own model for the capture's shape. */
+      build: (aspect: number) => SourceOverlayModel | null;
+    }
+)) {
   const [aspect, setAspect] = useState<number | null>(null);
-  const model = aspect ? sourceOverlayModel({ ...input, aspect }) : null;
+  const model = !aspect
+    ? null
+    : build
+      ? build(aspect)
+      : sourceOverlayModel({ ...(input as Omit<Parameters<typeof sourceOverlayModel>[0], 'aspect'>), aspect });
   const serialized = JSON.stringify(model);
   // The final route draws from the start to the goal, one connection after another.
   const sequence = model ? routeSequence(model) : new Map<string, { index: number; reverse: boolean }>();

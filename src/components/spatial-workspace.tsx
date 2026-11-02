@@ -69,11 +69,11 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
   </div>;
   return <section className="spatial-workspace" aria-label="Spatial workspace">
     <div className="spatial-heading">
-      <div><span className="overline">{scene.assurance === 'checked' ? 'Checked search · spatial view' : '3D schematic · explanation only'}</span><h3>{scene.title}</h3></div>
+      <div><span className="overline">{scene.assurance === 'checked' ? scene.checkedLabel ?? 'Checked search · spatial view' : '3D schematic · explanation only'}</span><h3>{scene.title}</h3></div>
       <span className="spatial-state-label">{view.spread > 0 ? 'Separated' : 'Assembled'}{view.slice > 0 && spatial3d ? ' · Cutaway' : ''}</span>
     </div>
     <p className="meta spatial-assurance">{scene.assurance === 'checked'
-      ? 'Height represents the current computed distance. Unreached nodes have unknown distance. Camera and separation never change the search.'
+      ? scene.heightNote ?? 'Height represents the current computed distance. Unreached nodes have unknown distance. Camera and separation never change the search.'
       : 'Shapes, depth and motion illustrate the explanation. They are not recovered geometry or a checked physical simulation.'}</p>
     {scene.annotations?.map((text, index) => <p className="meta" key={index}>{text}</p>)}
     {spatial3d && <div className="spatial-renderer-switch" role="group" aria-label="Compare rendering approaches">

@@ -13,6 +13,9 @@ export type SpatialScene = {
   title: string; assurance: 'checked' | 'schematic';
   objects: SpatialObject[]; connections: SpatialConnection[];
   annotations?: string[];
+  /** What a checked scene's overline and height mean, when it is not a search. */
+  checkedLabel?: string;
+  heightNote?: string;
   parameters?: (MechanismParameter & { value: number; overridden: boolean })[];
 };
 export function supportsSpatial(spec: ExplorationSpec) {
@@ -50,6 +53,8 @@ export function spatialScene(spec: ExplorationSpec, state: ExplorationViewState,
       span = Math.max(1e-9, Math.max(0, ...voltages) - low);
     return {
       title: panel.title, assurance: 'checked',
+      checkedLabel: 'Checked circuit · spatial view',
+      heightNote: 'Height is each node’s checked voltage, so current runs downhill through every resistor and the battery lifts it back up. Nodes not yet revealed sit at the bottom.',
       objects: spec.input.nodes.map((node) => {
         const position = panel.positions.find((p) => p.nodeId === node.id)!;
         const v = solution.voltages[node.id], shown = step.revealedNodes.includes(node.id) && v !== null;

@@ -28,6 +28,8 @@ export type ExplorationSource = {
   layout?: {
     nodes: { nodeId: string; x: number; y: number }[];
     edgeLabels: { edgeId: string; x: number; y: number }[];
+    /** A circuit's parts, each by its two drawn ends. */
+    components?: { componentId: string; x1: number; y1: number; x2: number; y2: number }[];
   };
   detailRegion?: ImageRegion;
   /** Muse Wonder's independent check of Spark's graph reading against the same image. */

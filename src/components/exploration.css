@@ -2467,3 +2467,22 @@ div.source-overlay-onscreen > p { margin: 0; }
   color: color-mix(in srgb, #b91c1c 85%, currentColor);
   font-weight: 600;
 }
+
+/* Checked circuits: the plain diagram and the experiment controls. */
+.circuit-diagram { display: block; width: 100%; max-height: 420px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.circuit-part path { fill: none; stroke: var(--ink-2); stroke-width: 3; }
+.circuit-part.is-voltage-source path, .circuit-part.is-current-source path { stroke: var(--voltage); stroke-width: 4; }
+.circuit-part.is-carrying path { stroke: var(--current); stroke-width: 5; }
+.circuit-part.is-open path { stroke: var(--muted); stroke-dasharray: 6 6; }
+.circuit-part text { font-size: 14px; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 5px; stroke-linejoin: round; }
+.circuit-part .circuit-current { font-weight: 700; fill: var(--voltage); }
+.circuit-part .circuit-open { fill: var(--muted); font-style: italic; }
+.circuit-node circle { fill: var(--ink); }
+.circuit-node.is-current circle { fill: var(--current); }
+.circuit-node text { font-size: 15px; font-weight: 700; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 5px; stroke-linejoin: round; }
+.circuit-controls { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px 16px; margin: 8px 0 12px; }
+.circuit-control { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.circuit-control.is-open { background: var(--surface-muted); color: var(--muted); }
+.circuit-control label { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+.circuit-control input[type='number'] { width: 7ch; min-height: 32px; padding: 2px 6px; border: 1px solid var(--control-border); border-radius: 6px; font: inherit; }
+.circuit-readings th[scope='row'] { text-align: left; }

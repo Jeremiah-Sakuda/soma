@@ -7,6 +7,7 @@ import { defaultSpatialView } from '@/lib/domain/spatial-schema';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ExplorationSearchStage } from './exploration-search-stage';
 import { SourceOverlay, type SourceGraphLayout } from './source-overlay';
+import { ExplorationCircuitStage } from './exploration-circuit-stage';
 import type { SourceOverlayModel } from '@/lib/domain/source-overlay-model';
 import type { SourceAnchor } from '@/lib/domain/source-grounding';
 import { useExplorationMotion } from './exploration-motion';
@@ -306,7 +307,8 @@ export function ExplorationScene({
   /** The learner's capture and where it drew the graph; present only while the pixels are in memory. */
   overlay?: {
     image: string;
-    layout: SourceGraphLayout;
+    /** A circuit's layout also places each part by its two drawn ends. */
+    layout: SourceGraphLayout & { components?: { componentId: string; x1: number; y1: number; x2: number; y2: number }[] };
     anchors?: SourceAnchor[];
     nativeId?: string;
     /** Muse Wonder's independent check of the reading drawn here. */
@@ -395,6 +397,21 @@ export function ExplorationScene({
         <h3>A little more context</h3>
         <p>{spec.question}</p>
       </div>
+    );
+  if (spec.mode === 'checked-circuit')
+    return (
+      <ExplorationCircuitStage
+        spec={spec}
+        state={state}
+        onChange={onChange}
+        overlay={overlay}
+        mirror={mirror}
+        onScreen={onScreen}
+        screenNotice={screenNotice}
+        compact={compact}
+        experiment={experiment}
+        toggleRef={toggleRef}
+      />
     );
   const execution = explorationExecution(spec, state),
     comparison = comparisonExecution(spec, state);

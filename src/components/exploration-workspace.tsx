@@ -72,7 +72,7 @@ type Artifact = {
   updatedAt: string;
   spec: ExplorationSpec;
   validation: {
-    assurance: 'checked-bfs' | 'checked-dijkstra' | 'explanation-only' | 'needs-clarification';
+    assurance: 'checked-bfs' | 'checked-dijkstra' | 'checked-circuit' | 'explanation-only' | 'needs-clarification';
     modelVersion: string | null;
     checks: string[];
   };
@@ -845,6 +845,8 @@ export function ExplorationWorkspace() {
           return edge ? `${name(edge.from)}–${name(edge.to)} connection` : null;
         })() ??
         state.selectedObjectId)
+      : state?.selectedObjectId && artifact?.spec.mode === 'checked-circuit'
+        ? ([...artifact.spec.input.nodes, ...artifact.spec.input.components].find((x) => x.id === state.selectedObjectId)?.label ?? state.selectedObjectId)
       : artifact?.spec.mode === 'explanation' ? artifact.spec.scene.panels.flatMap((panel) =>
           panel.kind === 'spatial' ? panel.objects.map((o) => ({ id: o.id, label: o.label })) : []
         ).find((o) => o.id === state?.selectedObjectId)?.label ?? state?.selectedObjectId
@@ -1456,7 +1458,9 @@ export function ExplorationWorkspace() {
                   </span>
                   <span aria-hidden="true"> · </span>
                   <span>
-                    {artifact.validation.assurance === 'checked-dijkstra'
+                    {artifact.validation.assurance === 'checked-circuit'
+                      ? 'Checked circuit computation'
+                      : artifact.validation.assurance === 'checked-dijkstra'
                       ? 'Checked Dijkstra computation'
                       : artifact.validation.assurance === 'checked-bfs'
                         ? 'Checked BFS computation'

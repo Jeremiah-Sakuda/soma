@@ -1883,7 +1883,7 @@
   text-align: center;
   gap: 2px;
   font-size: 16px;
-  line-height: 18px;
+  line-height: 1.125;
   overflow-wrap: anywhere;
   color: var(--ink);
 }
@@ -1892,7 +1892,7 @@
 }
 .exploration-weighted-node-label span {
   font-family: var(--font-geist-mono), monospace;
-  font-size: 14px;
+  font-size: 0.875em;
   color: var(--ink-2);
 }
 .exploration-weighted-caption {

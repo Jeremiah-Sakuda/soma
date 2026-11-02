@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useMemo } from 'react';
+import { useId, useLayoutEffect, useMemo, useRef } from 'react';
 import type { BfsExecution, ExplorationPanel } from '@/lib/domain/exploration';
 import { beatProgress, easeMotion, weightedMotionFrame } from '@/lib/domain/exploration-motion';
 import { weightedGraphLayout } from '@/lib/domain/weighted-graph-layout';
@@ -29,6 +29,17 @@ export function ExplorationWeightedStage({
   const geometryKey = JSON.stringify([panel.positions, execution.input, width]);
   const layout = useMemo(() => weightedGraphLayout(panel, execution.input, width), [geometryKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const marker = useId().replace(/[^a-z0-9]/gi, '');
+  // A long name in a font that runs wide (fonts differ by platform) steps its size down until
+  // it fits its card, rather than being clipped.
+  const svgRef = useRef<SVGSVGElement>(null);
+  useLayoutEffect(() => {
+    for (const label of svgRef.current?.querySelectorAll<HTMLElement>('.exploration-weighted-node-label') ?? []) {
+      label.style.fontSize = '';
+      let size = parseFloat(getComputedStyle(label).fontSize);
+      const fits = () => label.scrollHeight <= label.clientHeight + 1 && label.scrollWidth <= label.clientWidth + 1;
+      while (!fits() && size > 9) label.style.fontSize = `${(size -= 1)}px`;
+    }
+  });
   const frame = weightedMotionFrame(execution, index, progress);
   const { step } = frame;
   const weighted = execution.modelId === 'dijkstra-nonnegative';
@@ -46,6 +57,7 @@ export function ExplorationWeightedStage({
         {frame.caption}
       </p>
       <svg
+        ref={svgRef}
         className="exploration-graph exploration-weighted-stage"
         viewBox={`0 0 ${layout.width} ${layout.height}`}
         role="img"

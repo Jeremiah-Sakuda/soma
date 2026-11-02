@@ -2,6 +2,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test, expect, type Page } from '@playwright/test';
 test.use({ launchOptions: { args: ['--enable-unsafe-swiftshader'] } });
+// Retired November 2: the journal's Examples group no longer offers the geometry-authoring
+// example or the mechanism recording (the Lab engine took their place). The tests that start
+// from those buttons are skipped, kept for when an entry point returns.
+const retired = test.skip;
 const gatePaths = (page: Page) => page.locator('g[data-anatomy-object="gate"] .anatomy-fill');
 const drawing = (page: Page) => gatePaths(page).evaluateAll(paths => paths.map(p => p.getAttribute('d')).join(' '));
 async function open(page: Page) {
@@ -10,7 +14,7 @@ async function open(page: Page) {
   await expect(page.getByRole('slider', { name: 'Gate opening', exact: true })).toHaveValue('0');
 }
 
-test('custom geometry follows explanation poses, supports a shared manual override, and reopens exactly', async ({ page }) => {
+retired('custom geometry follows explanation poses, supports a shared manual override, and reopens exactly', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.emulateMedia({ reducedMotion: 'reduce' }); await open(page);
   const original = (await (await page.request.get('/api/explore')).json()).active;
@@ -43,7 +47,7 @@ test('custom geometry follows explanation poses, supports a shared manual overri
   expect(errors).toEqual([]);
 });
 
-test('keyboard control, reduced motion and responsive geometry retain visible, reachable controls', async ({ page }) => {
+retired('keyboard control, reduced motion and responsive geometry retain visible, reachable controls', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' }); await open(page);
   const slider = page.getByRole('slider', { name: 'Gate opening', exact: true });
   await slider.focus(); await page.keyboard.press('ArrowRight'); await expect(slider).toHaveValue('0.01');
@@ -58,7 +62,7 @@ test('keyboard control, reduced motion and responsive geometry retain visible, r
   }
 });
 
-test('explanation motion interpolates a rigid hinge; manual takeover is immediate and stops', async ({ page }) => {
+retired('explanation motion interpolates a rigid hinge; manual takeover is immediate and stops', async ({ page }) => {
   await page.addInitScript(() => {
     const original = requestAnimationFrame; (window as unknown as { frames: number }).frames = 0;
     window.requestAnimationFrame = callback => { (window as unknown as { frames: number }).frames++; return original(callback); };
@@ -92,7 +96,7 @@ test('explanation motion interpolates a rigid hinge; manual takeover is immediat
   expect(await page.evaluate(() => (window as unknown as { frames: number }).frames)).toBe(before);
 });
 
-test('foreign and out-of-range saved mechanism parameters are rejected atomically', async ({ page }) => {
+retired('foreign and out-of-range saved mechanism parameters are rejected atomically', async ({ page }) => {
   await open(page); const { active } = await (await page.request.get('/api/explore')).json();
   const valid = await page.request.patch('/api/explore', { headers: { origin: new URL(page.url()).origin }, data: { action: 'save', artifactId: active.id, version: active.version, state: active.state } });
   expect(valid.status()).toBe(200);
@@ -103,7 +107,7 @@ test('foreign and out-of-range saved mechanism parameters are rejected atomicall
   expect((await (await page.request.get('/api/explore')).json()).active.state).toEqual(active.state);
 });
 
-test('authored geometry remains inspectable in 2D and when WebGL is unavailable', async ({ page }) => {
+retired('authored geometry remains inspectable in 2D and when WebGL is unavailable', async ({ page }) => {
   await page.addInitScript(() => {
     const original = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, kind: string, ...args: unknown[]) {
@@ -121,7 +125,7 @@ test('authored geometry remains inspectable in 2D and when WebGL is unavailable'
   await expect(page.getByRole('slider', { name: 'Gate opening', exact: true })).toHaveValue('1');
 });
 
-test('actual recorded Muse mechanism is inspectable in both renderers and labels replay provenance', async ({ page }) => {
+retired('actual recorded Muse mechanism is inspectable in both renderers and labels replay provenance', async ({ page }) => {
   await page.goto('/explore'); await page.getByRole('button', { name: 'Open Muse mechanism recording', exact: true }).click();
   await expect(page.getByText('Recorded Spark/Wonder run on an original synthetic screenshot.', { exact: false })).toBeVisible();
   await expect(page.locator('.anatomy-canvas')).toHaveAttribute('data-object-count', '4');

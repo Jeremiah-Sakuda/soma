@@ -124,7 +124,7 @@ function createPointAsk({
   function setView(next, id) {
     if (!['2d', '3d'].includes(next) || next === view) return view;
     const c = overlayCapture;
-    if (!graph?.verified || !graph.model.lift || !c || graph.id !== c.id || (id && id !== graph.id) || !overlay || overlay.isDestroyed()) return view;
+    if (!graph?.verified || !(graph.model.lift || graph.model.scene) || !c || graph.id !== c.id || (id && id !== graph.id) || !overlay || overlay.isDestroyed()) return view;
     // Rapid toggles would resend the sheet each time.
     if (Date.now() - viewChanged < 350) return view;
     if (next === '3d' && sheet?.key !== sheetKey() && !cutSheet(c)) {
@@ -751,9 +751,9 @@ function createPointAsk({
     get view() {
       return view;
     },
-    /** Whether the drawing on screen can lift into 3D (a checked graph search). */
+    /** Whether the drawing on screen can lift into 3D: a checked graph search, or any answer's 3D scene. */
     get liftable() {
-      return Boolean(graph?.verified && graph.model.lift);
+      return Boolean(graph?.verified && (graph.model.lift || graph.model.scene));
     },
     clearScreenOverlay,
     markStale,

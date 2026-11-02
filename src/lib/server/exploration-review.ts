@@ -47,6 +47,24 @@ export function explorationReviewRequest(
     ],
   };
 }
+/** Keeps a verdict that is clear but loosely shaped: a capitalized verdict, extra fields,
+ * a fourth finding or an overlong one. A missing or unknown verdict still fails. */
+function normalizeReview(value: unknown): unknown {
+  if (!value || typeof value !== 'object') return value;
+  const v = value as { verdict?: unknown; findings?: unknown };
+  const findings = typeof v.findings === 'string' ? [v.findings] : v.findings;
+  return {
+    verdict: typeof v.verdict === 'string' ? v.verdict.trim().toLowerCase() : v.verdict,
+    findings: Array.isArray(findings)
+      ? findings
+          .filter((f): f is string => typeof f === 'string' && f.trim().length > 0)
+          .slice(0, 3)
+          .map((f) => (f.length > 480 ? `${f.slice(0, 477)}…` : f))
+      : findings === undefined || findings === null
+        ? []
+        : findings,
+  };
+}
 export function parseExplorationReview(result: MetaResult) {
   if (result.status !== 'completed')
     throw new ExplorationReviewContractError(`review_${result.status}`);
@@ -57,7 +75,7 @@ export function parseExplorationReview(result: MetaResult) {
         ? result.structured
         : undefined;
   if (!raw) throw new ExplorationReviewContractError('review_tool_shape');
-  const value = typeof raw === 'object' && raw !== null && 'review' in raw ? raw.review : raw;
+  const value = normalizeReview(typeof raw === 'object' && raw !== null && 'review' in raw ? raw.review : raw);
   const parsed = schema.safeParse(value);
   if (!parsed.success) throw new ExplorationReviewContractError('review_output_schema');
   const review = parsed.data;

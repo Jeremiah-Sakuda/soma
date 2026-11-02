@@ -1,5 +1,6 @@
 'use client';
 import { CompanionMemory } from './companion-memory';
+import { defaultSpatialView } from '@/lib/domain/spatial-schema';
 import { readExplorationStream } from '@/lib/client/exploration-stream';
 import {
   explorationProgressLabel,
@@ -529,6 +530,7 @@ export function ExplorationWorkspace() {
     investigate = false,
     practice?: { artifact: Artifact; applicationId: string },
     fresh?: ExplorationCapture,
+    model = false,
   ) {
     const base = practice?.artifact ?? artifact;
     const baseState = practice?.artifact.state ?? state;
@@ -591,7 +593,7 @@ export function ExplorationWorkspace() {
       ...(practice ? { applicationId: practice.applicationId } : {}),
       requestId: id,
       question: draft.trim(),
-      intent: investigate ? 'investigate' : 'auto',
+      intent: model ? 'model' : investigate ? 'investigate' : 'auto',
       ...(pair
         ? {
             previousImage: sourceMemory.current!.capture.dataUrl,
@@ -647,10 +649,12 @@ export function ExplorationWorkspace() {
       )
         sourceMemory.current.version = result.artifact.version;
       apply(result.artifact);
+      // A model built on request opens in 3D.
+      if (model) setState((current) => (current ? { ...current, spatial: { ...(current.spatial ?? defaultSpatialView()), mode: '3d' } } : current));
       setCompareCapture(false);
       setNewContext(false);
       setQuestion((current) => (current === submittedDraft ? '' : current));
-      setNotice('New visual card ready. Explore it or ask a follow-up.');
+      setNotice(model ? 'The 3D model is ready. Step through it or drag to turn it.' : 'New visual card ready. Explore it or ask a follow-up.');
       if (spoken && (conversational || fresh)) setPlaying(true);
       return true;
     } catch (failure) {
@@ -1746,9 +1750,15 @@ export function ExplorationWorkspace() {
                 spec={artifact.spec}
                 state={state}
                 onChange={updateState}
+                modelBusy={busy}
+                onBuildModel={
+                  liveEnabled === false || newContext
+                    ? undefined
+                    : () => ask('Show this explanation as a 3D model.', undefined, false, undefined, undefined, true)
+                }
                 overlay={
                   !newContext &&
-                  artifact.source.layout &&
+                  (artifact.source.layout || artifact.spec.mode === 'explanation') &&
                   sourceMemory.current?.id === artifact.id &&
                   sourceMemory.current.capture.capturedAt === artifact.source.capturedAt
                     ? {
@@ -1756,6 +1766,7 @@ export function ExplorationWorkspace() {
                         layout: artifact.source.layout,
                         anchors: artifact.source.anchors,
                         nativeId: sourceMemory.current.capture.nativeId,
+                        focus: artifact.source.focus?.region,
                         readingCheck: artifact.source.readingCheck,
                       }
                     : undefined

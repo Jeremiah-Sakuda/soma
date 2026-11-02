@@ -1,4 +1,6 @@
 import { spatialViewSchema, spatialPanelSchema, defaultSpatialView, spatialRenderStyles } from '../domain/spatial-schema';
+import { MODEL_AUTHORING, mergeModelScene } from './model-authoring';
+import { tidySpatialPanel } from '../domain/spatial-tidy';
 import { MECHANISM_AUTHORING, spatialAuthorPanelSchema, mechanismAuthoringSchema, bindMechanismAuthoring } from './mechanism-authoring';
 import { createMechanismExample, MECHANISM_EXAMPLE_SOURCE } from '../domain/mechanism-example';
 import { supportsSpatial, applySpatialViewAction, spatialScene } from '../domain/spatial-exploration';
@@ -126,7 +128,7 @@ export const generateExplorationSchema = z
     predictionId: z.uuid().optional(),
     applicationId: z.uuid().optional(),
     intent: z
-      .enum(['auto', 'explain', 'focus', 'modify', 'compare', 'investigate'])
+      .enum(['auto', 'explain', 'focus', 'modify', 'compare', 'investigate', 'model'])
       .default('auto'),
     source: sourceSchema.optional(),
     previousImage: z.string().max(710_000).optional(),
@@ -1254,6 +1256,9 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           )
             throw new ExplorationError('revision_conflict');
         }
+        // A 3D model is built for an existing explanation, on the same source.
+        if (request.intent === 'model' && (previous?.spec.mode !== 'explanation' || request.source || request.applicationId))
+          throw new ExplorationError('invalid_request');
         if (request.applicationId) {
           applicationObservation = session.applications?.find(
             (a) => a.id === request.applicationId,
@@ -1426,7 +1431,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         !!previous &&
         !request.source &&
         previous.spec.mode !== 'clarify' &&
-        ['auto', 'explain', 'focus', 'investigate'].includes(request.intent);
+        ['auto', 'explain', 'focus', 'investigate', 'model'].includes(request.intent);
       const currentComparison =
         previous && currentState ? comparisonExecution(previous.spec, currentState) : null;
       const context = {
@@ -1918,7 +1923,10 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           } catch {
             // An image the snapper cannot read keeps Spark's placement.
           }
-        source.layout = extracted.circuit ? sourceCircuitLayout(extracted.circuit, extracted.circuitLayout) : sourceGraphLayout(extracted);
+        const layout = extracted.circuit ? sourceCircuitLayout(extracted.circuit, extracted.circuitLayout) : sourceGraphLayout(extracted);
+        // Stores reject undefined fields: an answer with no drawing read has no layout at all.
+        if (layout) source.layout = layout;
+        else delete source.layout;
         if (request.previousImage && previous && extracted.change) {
           source.change = {
             ...extracted.change,
@@ -2271,7 +2279,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
       const clarifySchema = explorationSpecSchema.options[2].extend(turnBinding);
       const previousSpatial = reuse && previous?.spec.mode === 'explanation'
         ? previous.spec.scene.panels.find((panel) => panel.kind === 'spatial') : undefined;
-      const mechanismIntent = !computed && /\b(3[- ]?d|isometric|mechanism|geometry|hinged?|spatial|cutaway)\b/i.test(request.question);
+      const modelIntent = request.intent === 'model' && previous?.spec.mode === 'explanation';
+      const mechanismIntent = !computed && (modelIntent || /\b(3[- ]?d|isometric|mechanism|geometry|hinged?|spatial|cutaway)\b/i.test(request.question));
       const turnSpecSchema = computed
         ? z.discriminatedUnion('mode', [
             explorationSpecSchema.options[0].extend({
@@ -2296,6 +2305,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           ]);
       const canContinue =
         reuse &&
+        !modelIntent &&
         !experiment &&
         !circuitCopy &&
         previous?.spec.mode !== 'clarify' &&
@@ -2357,7 +2367,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           const wire = z
             .strictObject({ spec: z.unknown(), mechanism: mechanismAuthoringSchema.nullable().optional() })
             .parse(proposal.parsedArguments);
-          const raw = wire.spec;
+          const raw = modelIntent && previous ? mergeModelScene(wire.spec, previous.spec) : wire.spec;
           const isContinuation =
             raw && typeof raw === 'object' && 'mode' in raw && raw.mode === 'continue';
           if (isContinuation && (!canContinue || !previous || previous.spec.mode === 'clarify'))
@@ -2372,6 +2382,9 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                 })
               : explorationSpecSchema.parse(raw);
           if (!isContinuation) bindMechanismAuthoring(candidate, wire.mechanism);
+          // A new model is arranged to read at a glance; a kept one keeps its positions.
+          if (!isContinuation && !previousSpatial && candidate.mode === 'explanation')
+            candidate.scene.panels = candidate.scene.panels.map((p) => (p.kind === 'spatial' ? tidySpatialPanel(p) : p));
           if (isContinuation)
             audit.push({
               event: 'scene-continued',
@@ -2437,6 +2450,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         : experiment
         ? `${genericInstructions} Use compose_cost_experiment. The existing graph, layout, controls, source and model bindings are preserved by the application. You author concise objective, trace-bound captions/narration and useful follow-ups from the supplied checked cost experiment. Use visible node labels in learner-facing words; never mention tool names, schema fields or internal IDs. Distinguish a direct edge cost from a whole path cost. At the critical tie, state equal total cost; equal costs do not guarantee the same chosen path. Describe recorded sampled paths as sampled outcomes. Captions describe their bound current trace snapshot; any other cost must be explicitly hypothetical. traceIndex must reference checkedExecution. highlightIds must name existing graph nodes or edges. Distinguish the original current cost from hypothetical interventions. Do not claim a global boundary when criticalCost is null. No invented measurements or mastery claims.`
         : sceneInstructions +
+          (modelIntent ? ` ${MODEL_AUTHORING}` : '') +
           (canContinue && computed
             ? ` A compact checked reply must contain exactly ONE step, execution="primary" and executionStep=${currentState?.step ?? 0}, so its answer is heard on the currently visible snapshot. Explain this actual state. Label any prediction or later/final outcome explicitly; never describe it as already visible. Use a full spec instead if this cannot answer the question faithfully.`
             : '') +
@@ -2960,6 +2974,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
               : error instanceof MetaClientError && error.code === 'timeout'
                 ? 'timeout'
                 : 'generation_invalid';
+      if (process.env.SOMA_DEBUG_FAILURES === 'true')
+        console.warn('[soma] generation failed', JSON.stringify({ code, stage, issues: failureIssues.length ? failureIssues : validationFacts(error), message: String((error as Error)?.message ?? error).slice(0, 600), audit: audit.slice(-6) }));
       try {
         await deps.store.mutate(
           principal,

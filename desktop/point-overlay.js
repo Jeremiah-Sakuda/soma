@@ -247,13 +247,19 @@ function applyFrame(event) {
 // returns exactly where the sheet lands.
 // A lift that fails after starting (lost GPU context, an error mid-frame) drops back to the
 // flat sketch and tells the companion, which updates the controls.
-if (window.SomaLift)
-  window.SomaLift.onFail = (reason) => {
-    document.body.classList.remove('lifted');
-    window.somaPointOverlay.liftFailed(reason);
-  };
+for (const renderer of [window.SomaLift, window.SomaModel])
+  if (renderer)
+    renderer.onFail = (reason) => {
+      document.body.classList.remove('lifted');
+      window.somaPointOverlay.liftFailed(reason);
+    };
+// A checked search lifts as strings and heights; any other answer lifts as its 3D model.
 function liftView(event) {
-  const lift = window.SomaLift;
+  const scene = event.model?.scene && !event.model.nodes.length;
+  const lift = scene ? window.SomaModel : window.SomaLift;
+  // Switching between the two kinds: the other one lands first.
+  (scene ? window.SomaLift : window.SomaModel)?.dispose();
+  if (scene && event.view === '3d') event = { ...event, model: { ...event.model.scene, caption: event.model.caption } };
   if (event.view === '3d' && !lift) {
     // The 3D bundle did not load: stay flat and say so.
     document.body.classList.remove('lifted');
@@ -281,6 +287,7 @@ window.somaPointOverlay.onDraw((event) => {
   }
   if (event.type === 'graph-clear') {
     window.SomaLift?.dispose();
+    window.SomaModel?.dispose();
     document.body.classList.remove('lifted');
     clearGraph();
     hideBuddy();

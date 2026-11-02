@@ -86,6 +86,8 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     await shot('31-landed-2d');
     const failed = await page.evaluate(() => Boolean(window.__liftFailed));
     console.log(JSON.stringify({ out, errors, liftFailed: failed }));
+    // A check, not only a camera: any page error or fallback fails the run.
+    if (errors.length || failed) process.exitCode = 1;
   } finally {
     await browser.close();
   }

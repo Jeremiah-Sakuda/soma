@@ -312,8 +312,11 @@ function flushLabels() {
     }
   const ys = separateLabels(shown.map((l) => ({ x: l.x, y: l.y, w: l.el._w, h: l.el._h, priority: l.priority })));
   shown.forEach((l, i) => {
+    // A name pushed far from its part would read as another part's: only the parts this step
+    // is about keep theirs; the rest wait for a clear spot.
+    const strayed = l.priority < 4 && Math.abs(ys[i] - l.y) > 30;
     l.el.style.transform = `translate(${l.x.toFixed(1)}px, ${ys[i].toFixed(1)}px) translate(-50%, -100%)`;
-    l.el.style.opacity = String(l.opacity);
+    l.el.style.opacity = strayed ? '0' : String(l.opacity);
   });
   s.pending = [];
 }

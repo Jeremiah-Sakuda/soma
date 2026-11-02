@@ -20,6 +20,8 @@ export function createSpatialPart(object: SpatialObject, selected: boolean, shel
     root.scale.set(object.size.x, object.size.y, object.size.z); root.position.set(object.position.x, object.position.y, object.position.z);
     return root;
   }
+  if ((object.shape === 'arrow' || object.shape === 'tube') && object.path && object.path.length >= 2)
+    return drawnPart(object, selected);
   const tint = spatialColors[object.color];
   const surface = (color: number, metalness = 0.15, opacity = 1) => new THREE.MeshStandardMaterial({
     color, metalness, roughness: metalness > 0.5 ? 0.32 : 0.42,
@@ -208,5 +210,39 @@ export function createSpatialPart(object: SpatialObject, selected: boolean, shel
   for (const material of [body, dark, metal, ceramic]) if (!used.has(material)) material.dispose();
   root.scale.set(object.size.x, object.size.y, object.size.z);
   root.position.set(object.position.x, object.position.y, object.position.z);
+  return root;
+}
+
+/** An arrow (a vector, force or flow from its first point to its last) or a smooth tube
+ * through its points; size.x is its thickness. Drawn in scene units about its position. */
+function drawnPart(object: SpatialObject, selected: boolean) {
+  const root = new THREE.Group();
+  const at = new THREE.Vector3(object.position.x, object.position.y, object.position.z);
+  const points = object.path!.map((p) => new THREE.Vector3(p.x, p.y, p.z).sub(at));
+  const arrow = object.shape === 'arrow';
+  const radius = Math.max(0.03, Math.min(0.4, object.size.x / 2));
+  const tint = spatialColors[object.color];
+  const material = new THREE.MeshStandardMaterial({
+    color: tint, roughness: 0.42, metalness: 0.1, side: THREE.DoubleSide,
+    emissive: selected || object.highlighted ? tint : 0, emissiveIntensity: selected || object.highlighted ? 0.18 : 0,
+  });
+  const curve = points.length === 2 ? new THREE.LineCurve3(points[0], points[1]) : new THREE.CatmullRomCurve3(points, false, 'centripetal');
+  const length = curve.getLength();
+  // An arrowhead takes the last stretch of the shaft, so the tip ends exactly at the last point.
+  const head = arrow ? Math.min(length * 0.35, radius * 5) : 0;
+  const shaftEnd = arrow ? Math.max(0.01, 1 - head / length) : 1;
+  const samples = curve.getSpacedPoints(Math.max(8, points.length * 12)).filter((_, i, all) => i / (all.length - 1) <= shaftEnd + 1e-6);
+  if (samples.length >= 2) {
+    const shaft = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(samples), Math.max(8, samples.length), arrow ? radius * 0.55 : radius, 12, false), material);
+    shaft.castShadow = true; shaft.userData.objectId = object.id; root.add(shaft);
+  }
+  if (arrow) {
+    const tip = curve.getPoint(1), direction = curve.getTangent(1).normalize();
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(radius * 1.5, head, 20), material);
+    cone.position.copy(tip).sub(direction.clone().multiplyScalar(head / 2));
+    cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
+    cone.castShadow = true; cone.userData.objectId = object.id; root.add(cone);
+  }
+  root.position.copy(at);
   return root;
 }

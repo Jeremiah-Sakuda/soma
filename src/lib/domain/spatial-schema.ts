@@ -22,7 +22,10 @@ export const spatialPanelSchema = z.strictObject({
     id: sceneIdSchema,
     label: z.string().trim().min(1).max(100),
     description: z.string().trim().min(1).max(240),
-    shape: z.enum(['sphere', 'box', 'cylinder', 'torus']),
+    shape: z.enum(['sphere', 'box', 'cylinder', 'torus', 'arrow', 'tube']),
+    // An arrow or a tube runs through these points (scene coordinates, like position): an
+    // arrow from its first point to its last, a tube smoothly through all of them.
+    path: z.array(spatialVectorSchema).min(2).max(12).nullable().optional(),
     // Application-owned illustrative meshes; never external assets or measured geometry.
     renderStyle: z.enum(spatialRenderStyles).nullable().optional(),
     geometry: z.array(mechanismPieceSchema).min(1).max(12).nullable().optional(),
@@ -78,6 +81,10 @@ export function validateSpatialPanel(panel: SpatialPanel, steps: readonly { id: 
   let pieces = 0, faces = 0;
   for (const object of panel.objects) {
     if (object.geometry?.length && object.renderStyle) throw new Error('Choose authored geometry or a catalog style for a part.');
+    const drawn = object.shape === 'arrow' || object.shape === 'tube';
+    if (drawn !== Boolean(object.path?.length)) throw new Error('Arrows and tubes, and only they, run through a path.');
+    if (object.path?.some((p, i) => i > 0 && Math.hypot(p.x - object.path![i - 1].x, p.y - object.path![i - 1].y, p.z - object.path![i - 1].z) < 0.02))
+      throw new Error('Path points must be distinct.');
     pieces += object.geometry?.length ?? 0;
     faces += validateMechanism(object.geometry ?? [], parameters);
   }

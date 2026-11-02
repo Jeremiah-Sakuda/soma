@@ -1754,7 +1754,13 @@ export function ExplorationWorkspace() {
                 onBuildModel={
                   liveEnabled === false || newContext
                     ? undefined
-                    : () => ask('Show this explanation as a 3D model.', undefined, false, undefined, undefined, true)
+                    : async () => {
+                        const ok = await ask('Show this explanation as a 3D model.', undefined, false, undefined, undefined, true);
+                        // No model this time: the diagram itself stands up in 3D, so the view still opens.
+                        if (!ok)
+                          setState((current) => (current ? { ...current, spatial: { ...(current.spatial ?? defaultSpatialView()), mode: '3d' } } : current));
+                        return ok;
+                      }
                 }
                 overlay={
                   !newContext &&

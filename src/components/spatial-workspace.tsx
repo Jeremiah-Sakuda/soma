@@ -22,6 +22,7 @@ function FlatScene({ scene }: { scene: SpatialScene }) {
   const extent = Math.max(3, ...scene.objects.flatMap((o) => [Math.abs(o.position.x) + o.size.x / 2, Math.abs(o.position.y) + o.size.y / 2]));
   const project = (x: number, y: number) => ({ x: 320 + (x / extent) * 210, y: 160 - (y / extent) * 110 });
   return <svg className="spatial-flat" viewBox="0 0 640 320" role="img" aria-label={`${scene.title}, front projection. Inspect each object using the list below.`}>
+    <defs><marker id="spatial-flat-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 1L9 5L1 9z" fill="context-stroke" /></marker></defs>
     {scene.connections.map((edge) => {
       const from = visible.find((o) => o.id === edge.from), to = visible.find((o) => o.id === edge.to);
       if (!from || !to) return null;
@@ -31,7 +32,8 @@ function FlatScene({ scene }: { scene: SpatialScene }) {
     {visible.map((object) => {
       const p = project(object.position.x, object.position.y), shell = scene.objects.some((o) => o.parentId === object.id);
       return <g key={object.id} data-spatial-object={object.id} data-position={JSON.stringify(object.position)}>
-        {object.shape === 'sphere' || object.shape === 'torus'
+        {object.path?.length ? <polyline points={object.path.map((q) => { const r = project(q.x, q.y); return `${r.x},${r.y}`; }).join(' ')} fill="none" stroke={palette[object.color]} strokeWidth={object.highlighted ? 6 : 4} strokeLinecap="round" markerEnd={object.shape === 'arrow' ? 'url(#spatial-flat-arrow)' : undefined} />
+        : object.shape === 'sphere' || object.shape === 'torus'
           ? <ellipse cx={p.x} cy={p.y} rx={Math.max(7, object.size.x / extent * 105)} ry={Math.max(7, object.size.y / extent * 55)} fill={object.shape === 'torus' ? 'none' : palette[object.color]} fillOpacity={shell ? 0.1 : 0.8} stroke={palette[object.color]} strokeWidth={object.highlighted ? 4 : 2} />
           : <rect x={p.x - object.size.x / extent * 105} y={p.y - object.size.y / extent * 55} width={object.size.x / extent * 210} height={object.size.y / extent * 110} rx="8" fill={palette[object.color]} fillOpacity={shell ? 0.1 : 0.8} stroke={palette[object.color]} strokeWidth={object.highlighted ? 4 : 2} />}
       </g>;
@@ -76,7 +78,8 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
       ? scene.heightNote ?? 'Height represents the current computed distance. Unreached nodes have unknown distance. Camera and separation never change the search.'
       : 'Shapes, depth and motion illustrate the explanation. They are not recovered geometry or a checked physical simulation.'}</p>
     {scene.annotations?.map((text, index) => <p className="meta" key={index}>{text}</p>)}
-    {spatial3d && <div className="spatial-renderer-switch" role="group" aria-label="Compare rendering approaches">
+    {/* Two renderers are worth comparing only for custom-built pieces. */}
+    {spatial3d && authored && <div className="spatial-renderer-switch" role="group" aria-label="Compare rendering approaches">
       <button type="button" aria-pressed={!anatomy && !compare} onClick={() => { setCompare(false); update({ renderer: 'three' }); }}>Current 3D</button>
       <button type="button" aria-pressed={anatomy && !compare} onClick={() => { setCompare(false); update({ renderer: 'anatomy' }); }}>Anatomy illustration</button>
       <button type="button" aria-pressed={compare} onClick={() => setCompare(!compare)}>Side by side</button>

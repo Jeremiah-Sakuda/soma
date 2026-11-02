@@ -183,6 +183,21 @@ export const explanationAuthorSceneSchema = explorationSpecSchema.options[1].sha
       .max(3),
   },
 );
+/** The same scene without a spatial panel, for a first answer. */
+export const explanationFlatSceneSchema = explanationAuthorSceneSchema.extend({
+  panels: z
+    .array(
+      z.discriminatedUnion('kind', [
+        explorationPanelSchema.options[0],
+        explorationPanelSchema.options[1],
+        explorationPanelSchema.options[2],
+        explorationPanelSchema.options[7],
+        explorationPanelSchema.options[8],
+      ]),
+    )
+    .min(1)
+    .max(3),
+});
 export function needsExplorationReview(spec: ExplorationSpec, learnerObservation = false) {
   return (
     spec.mode === 'checked-dijkstra' ||
@@ -2299,7 +2314,13 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         : z.discriminatedUnion('mode', [
             explorationSpecSchema.options[1].extend({
               ...turnBinding,
-              scene: previousSpatial || mechanismIntent ? explanationAuthorSceneSchema.extend({ panels: z.array(spatialAuthorPanelSchema).length(1) }) : explanationAuthorSceneSchema,
+              // A first answer is drawn in 2D; its 3D model is built on request (intent model)
+              // or when the question asks for 3D. A model, once built, stays with follow-ups.
+              scene: mechanismIntent && !previousSpatial
+                ? explanationAuthorSceneSchema.extend({ panels: z.array(spatialAuthorPanelSchema).length(1) })
+                : previousSpatial
+                  ? explanationAuthorSceneSchema
+                  : explanationFlatSceneSchema,
             }),
             clarifySchema,
           ]);
@@ -2381,7 +2402,9 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                   comparison: currentComparison?.input ?? null,
                 })
               : explorationSpecSchema.parse(raw);
-          if (!isContinuation) bindMechanismAuthoring(candidate, wire.mechanism);
+          // A model built on request uses plain and catalog shapes, which read cleanly at any
+          // size; custom pieces are kept for an explicit request.
+          if (!isContinuation) bindMechanismAuthoring(candidate, modelIntent ? null : wire.mechanism);
           // A new model is arranged to read at a glance; a kept one keeps its positions.
           if (!isContinuation && !previousSpatial && candidate.mode === 'explanation')
             candidate.scene.panels = candidate.scene.panels.map((p) => (p.kind === 'spatial' ? tidySpatialPanel(p) : p));
@@ -2470,7 +2493,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           [],
           composeInstructions + ' Return only the schema-constrained JSON object; never prose.',
           { name: 'soma_visual', schema: composeTool.parameters },
-          !computed && (!!previousSpatial || mechanismIntent),
+          // A model built on request gets the author's full reasoning.
+          !computed && !modelIntent && (!!previousSpatial || mechanismIntent),
         );
         let proposal: AuthorProposal;
         if (
@@ -2749,7 +2773,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
               detail: `Muse Wonder advisory review: ${review.verdict}.${review.findings.length ? ' ' + review.findings.join(' ') : ''}`,
             });
             if (review.verdict !== 'approve') {
-              if (reviewRepairs >= 1) throw new ExplorationError('generation_invalid');
+              // Two factual repairs: a first fix often trades one defect for another.
+              if (reviewRepairs >= 2) throw new ExplorationError('generation_invalid');
               reviewRepairs++;
               history = [
                 ...history,

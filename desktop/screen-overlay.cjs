@@ -11,7 +11,7 @@ const STATUS = ['current', 'settled', 'waiting', 'unreached'];
 const TONE = ['path', 'relaxed', 'tree', 'struck', 'cut', 'idle'];
 const TAG_TONE = ['settled', 'current', 'tentative', 'equation', 'route'];
 
-const SHAPES = ['sphere', 'box', 'cylinder', 'torus'];
+const SHAPES = ['sphere', 'box', 'cylinder', 'torus', 'arrow', 'tube'];
 const COLORS = ['clay', 'sage', 'blue', 'gold', 'violet'];
 const vec = (v, lo, hi) => v && [v.x, v.y, v.z].every((n) => Number.isFinite(n) && n >= lo && n <= hi);
 const region = (r) =>
@@ -44,6 +44,7 @@ function validScene(sc) {
           typeof o.visible === 'boolean' &&
           typeof o.highlighted === 'boolean' &&
           (o.anchor === undefined || point(o.anchor)) &&
+          (o.path === undefined || (Array.isArray(o.path) && o.path.length >= 2 && o.path.length <= 12 && o.path.every((p) => vec(p, -6, 6)))) &&
           (o.geometry === undefined || (Array.isArray(o.geometry) && o.geometry.length <= 12 && JSON.stringify(o.geometry).length <= 24000)) &&
           (o.parameterValues === undefined ||
             (o.parameterValues && typeof o.parameterValues === 'object' && Object.values(o.parameterValues).every((n) => Number.isFinite(n) && n >= 0 && n <= 1))),

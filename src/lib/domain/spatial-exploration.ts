@@ -130,7 +130,10 @@ export function spatialScene(spec: ExplorationSpec, state: ExplorationViewState,
         const pose = spatial.poses.find((p) => p.stepId === step.id && p.objectId === object.id);
         if (pose) { position = pose.position; visible = pose.visible; }
       }
-      return { ...object, position, ...(object.geometry?.length ? { parameterValues } : {}), visible, highlighted: highlights.includes(object.id), status: visible ? 'Visible' : 'Hidden at this step' };
+      // An arrow or tube moves with its pose as a whole.
+      const shift = { x: position.x - object.position.x, y: position.y - object.position.y, z: position.z - object.position.z };
+      const path = object.path?.map((p) => ({ x: p.x + shift.x, y: p.y + shift.y, z: p.z + shift.z }));
+      return { ...object, position, ...(path ? { path } : {}), ...(object.geometry?.length ? { parameterValues } : {}), visible, highlighted: highlights.includes(object.id), status: visible ? 'Visible' : 'Hidden at this step' };
     }),
     connections: spatial.connections.map((edge) => ({ ...edge, active: true, highlighted: highlights.includes(edge.id) })),
   };

@@ -86,6 +86,7 @@ export default function SpatialCanvas(props: Props) {
         if (object.geometry?.length) {
           const b = mechanismBounds(object); bounds.expandByPoint(new THREE.Vector3(...b.min)); bounds.expandByPoint(new THREE.Vector3(...b.max)); continue;
         }
+        if (object.path?.length) { for (const q of object.path) bounds.expandByPoint(new THREE.Vector3(q.x, q.y, q.z)); continue; }
         const p = new THREE.Vector3(object.position.x, object.position.y, object.position.z);
         const s = new THREE.Vector3(object.size.x, object.size.y, object.size.z).multiplyScalar(0.5);
         bounds.expandByPoint(p.clone().sub(s)); bounds.expandByPoint(p.clone().add(s));

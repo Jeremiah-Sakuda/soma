@@ -9,7 +9,8 @@ export type LiftSceneObject = {
   label: string;
   /** One short line for the part's chip: its role, or its checked value. */
   detail: string;
-  shape: 'sphere' | 'box' | 'cylinder' | 'torus';
+  shape: 'sphere' | 'box' | 'cylinder' | 'torus' | 'arrow' | 'tube';
+  path?: Vec[];
   renderStyle: string | null;
   color: 'clay' | 'sage' | 'blue' | 'gold' | 'violet';
   /** Model units, y up, centred on the sheet. */
@@ -68,6 +69,7 @@ export function liftScene(scene: SpatialScene, region: Region, anchors?: Map<str
     parentId: o.parentId,
     visible: o.visible,
     highlighted: o.highlighted,
+    ...(o.path?.length ? { path: o.path.map((p) => ({ ...p })) } : {}),
     ...(o.geometry?.length ? { geometry: o.geometry, parameterValues: o.parameterValues ?? {} } : {}),
     ...(anchors?.has(o.id) ? { anchor: anchors.get(o.id)! } : {}),
   }));

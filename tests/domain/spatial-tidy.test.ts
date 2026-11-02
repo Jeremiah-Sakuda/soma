@@ -50,3 +50,19 @@ describe('tidySpatialPanel attachments', () => {
     expect(clamp.position.x - string.position.x).toBeCloseTo((string.size.x / 2), 5);
   });
 });
+describe('tidySpatialPanel arrows and tubes', () => {
+  it('scales a path with the model and keeps a line thin', () => {
+    const arrow = { ...part('force', 0, 1, 0, 0.1), shape: 'arrow' as const, path: [{ x: 0, y: 0.5, z: 0 }, { x: 0, y: 1.5, z: 0 }] };
+    const out = tidySpatialPanel(panel([part('block', 0, 0, 0, 1), arrow]));
+    const [block, force] = out.objects;
+    expect(force.size.x).toBeLessThanOrEqual(0.4);
+    // The arrow still starts on top of the block.
+    expect(force.path![0].y).toBeCloseTo(block.position.y + block.size.y / 2, 5);
+    expect(() => validateSpatialPanel(out, [])).not.toThrow();
+  });
+  it('turns an arrow without a path into a plain part', () => {
+    const out = tidySpatialPanel(panel([{ ...part('x', 0, 0, 0, 1), shape: 'arrow' as const }]));
+    expect(out.objects[0].shape).toBe('cylinder');
+    expect(() => validateSpatialPanel(out, [])).not.toThrow();
+  });
+});

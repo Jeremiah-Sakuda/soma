@@ -414,3 +414,33 @@ test('while lifted, a slide changed underneath takes the drawing down within sec
     h.controller.dispose();
   }
 });
+
+const SCENE = {
+  kind: 'model',
+  title: 'Nephron',
+  note: 'An illustrative 3D model of this explanation.',
+  region: { x: 0.2, y: 0.2, width: 0.5, height: 0.5 },
+  objects: [
+    { id: 'loop_3d', label: 'Loop of Henle', detail: 'Dips into the salty medulla.', shape: 'tube', renderStyle: null, color: 'sage', position: { x: 0, y: 1, z: 0 }, size: { x: 0.2, y: 0.2, z: 0.2 }, parentId: null, visible: true, highlighted: true, path: [{ x: -1, y: 2, z: 0 }, { x: 0, y: 0.2, z: 0 }, { x: 1, y: 2, z: 0 }] },
+    { id: 'medulla', label: 'Medulla', detail: 'Saltier with depth.', shape: 'box', renderStyle: null, color: 'gold', position: { x: 0, y: 0.8, z: 0 }, size: { x: 3, y: 1.6, z: 1 }, parentId: null, visible: true, highlighted: false },
+  ],
+  connections: [{ id: 'c1', from: 'loop_3d', to: 'medulla', label: 'water out', directed: true, active: true, highlighted: false }],
+};
+test('an answer with no drawing read can carry only a 3D scene, bounded like the drawing', () => {
+  const sceneOnly = model({ nodes: [], edges: [], tags: [], scene: SCENE });
+  assert.equal(validOverlayModel(sceneOnly), true);
+  // The sheet and the screen check use the scene's region.
+  assert.deepEqual(overlayRegion(sceneOnly), SCENE.region);
+  // Still no drawing without a scene, and no unbounded scene.
+  assert.equal(validOverlayModel(model({ nodes: [], edges: [], tags: [] })), false);
+  for (const bad of [
+    { ...SCENE, kind: 'other' },
+    { ...SCENE, region: { x: 0.8, y: 0, width: 0.5, height: 0.5 } },
+    { ...SCENE, objects: [{ ...SCENE.objects[1], position: { x: 9, y: 0, z: 0 } }] },
+    { ...SCENE, objects: [{ ...SCENE.objects[0], path: [{ x: 0, y: 0, z: Infinity }, { x: 1, y: 0, z: 0 }] }, SCENE.objects[1]] },
+    { ...SCENE, objects: [SCENE.objects[1], SCENE.objects[1]] },
+    { ...SCENE, connections: [{ ...SCENE.connections[0], to: 'nowhere' }] },
+    { ...SCENE, objects: Array.from({ length: 17 }, (_, i) => ({ ...SCENE.objects[1], id: `p${i}` })) },
+  ])
+    assert.equal(validOverlayModel(model({ nodes: [], edges: [], tags: [], scene: bad })), false, JSON.stringify(bad).slice(0, 80));
+});

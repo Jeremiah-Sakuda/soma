@@ -51,7 +51,7 @@ Concurrent generations are limited by `SOMA_EXPLORATION_MAX_ACTIVE` (1–16, def
 | Muse Spark 1.3 | Vision interpretation, experiment selection and scene composition through four strict tools: `inspect_source`, `choose_cost_probe`, `compose_exploration` and `compose_cost_experiment` |
 | Muse Wonder 1.0 | Advisory review of weighted and prediction-informed cards against checked results |
 | Muse Voice Transcribe 1.0 | Optional spoken questions |
-| Gemini 2.5 Flash TTS | Optional narration audio; browser voice and captions are alternatives |
+| Gemini 3.1 Flash TTS (preview, Sulafat voice) | Optional narration audio; browser voice and captions are alternatives |
 
 No fine-tuned model, open-weight runtime or 3D renderer is claimed.
 

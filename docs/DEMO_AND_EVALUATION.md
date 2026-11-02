@@ -1,8 +1,8 @@
 # Soma demo and evaluation
 
-## Current submission framing — PM129
+## Current submission framing — November 1 positioning update
 
-The current[story](STORY_AND_DEMO.md),[three-minute script](DEMO_VIDEO_SCRIPT.md),[submission copy](SUBMISSION.md) and[claim/footage handoff](SUBMISSION_EVIDENCE.md) supersede older timed outlines below. The[demo operation guide](DEMO.md) owns current entry paths and recording modes.
+Students first, the capability second; see the [story and positioning](STORY_AND_DEMO.md). The current[story](STORY_AND_DEMO.md),[three-minute script](DEMO_VIDEO_SCRIPT.md),[submission copy](SUBMISSION.md) and[claim/footage handoff](SUBMISSION_EVIDENCE.md) supersede older timed outlines below. The[demo operation guide](DEMO.md) owns current entry paths and recording modes.
 
 Lead with the potential: help students and independent learners turn the material in front of them into something they can investigate. Open with the engine relationship, demonstrate the existing checked graph manipulation/follow-up/save loop, and return to actual Muse-selected visual investigations and a portable result. Keep the recorded local prototype distinct from the canonical product.
 

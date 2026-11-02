@@ -35,6 +35,8 @@ The user authorized a local comparison of the existing Three.js spatial view and
 
 ## Current positioning and desktop acceptance — PM049–PM050, October 29
 
+> **November 1 positioning update:** students first, the capability second. Soma is described as turning a diagram on your screen into an experiment whose answers are computed, built for students first; uses beyond the classroom are stated as potential. [STORY_AND_DEMO.md](STORY_AND_DEMO.md) owns the wording. Scope and acceptance below are unchanged.
+
 **Soma is a desktop visual learning companion that helps you understand what is on your screen.** Call it up over a slide, paper, problem or application; Muse Spark interprets the captured context and question, then composes an interactive visual explanation you can manipulate, hear and revisit.
 
 **Product hook:** Understand what is in front of you, without leaving what you are doing.

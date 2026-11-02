@@ -85,6 +85,10 @@ The guide also lists Best Agentic Use-Case ($5k), Best Build on Meta Open Weight
 The viral award involves an X demo post and submission of its link, with engagement counted through November 8 EOD. This is information, not authorization to post. Open-weight entries require an eligible deployment and verification. Community voting opens after the closing ceremony; the result is November 16.
 
 
+### Positioning against the rubric, November 1
+
+Soma is pitched students first, the capability second: the student journey is the demonstrated evidence for Impact and theme fit, and reach beyond the classroom is stated as potential. The weighing against each criterion is in [STORY_AND_DEMO.md](STORY_AND_DEMO.md) and the decision in [DECISIONS.md](DECISIONS.md).
+
 ### PM128 — Impact calibration correction, November1
 
 The participant guide asks about real-world potential, beneficiaries, significance, likelihood of use and problem-statement fit. It does not require a learner study, measured learning improvement, adoption or quantified time savings. Earlier simulated judges over-weighted missing empirical outcomes and treated a possible source of supporting evidence as a scoring prerequisite. For a hackathon, assess the concrete problem, credible benefit, distinctive capability and working demonstration; distinguish that plausible impact from any claimed measured results. Preserve truthful limitations without imposing a startup-validation or research-study gate.

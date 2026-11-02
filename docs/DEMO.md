@@ -1,45 +1,45 @@
 # Soma demo operation
 
-PM129 · November 1, 2026. The current story is potential-led and engine-led, with the working graph workflow as the continuity proof. [Narrative](STORY_AND_DEMO.md) · [Three-minute script](DEMO_VIDEO_SCRIPT.md) · [Submission copy](SUBMISSION.md) · [Evidence/footage](SUBMISSION_EVIDENCE.md).
+November 1, 2026 positioning update. Supersedes the PM129 engine-led version (kept in git history). The story is students first, the capability second: one continuous live run on the Lecture 14 slide, then a short look at how far it reaches. [Story and positioning](STORY_AND_DEMO.md) · [Three-minute script](DEMO_VIDEO_SCRIPT.md) · [Submission copy](SUBMISSION.md) · [Evidence and footage](SUBMISSION_EVIDENCE.md).
 
 ## The take
 
-1. Open the recorded engine comparison at 90°/450°. Move both cranks together; let the viewer notice identical linkage positions and different valve roles. Keep the recorded prototype/source label visible.
-2. Show an actual graph source becoming a visual. For the PM126 worksheet, change M–T and show route S→M→T become S→N→T. The code computes those graph results.
-3. Ask about the consequence, save the actual revision and reopen it. Keep its current experiment and source identity visible.
-4. Return explicitly to the engine prototype. Show the exact prepared Muse question, its chosen action and the mechanism consequence. Download and open the local investigation file.
-5. Close on the opportunity: bring explorable explanations to the material someone is already studying, with less setup between question and investigation.
+The [script](DEMO_VIDEO_SCRIPT.md) owns timing and wording. In order:
 
-The main cut shows one user journey and one expressive prototype. Keep additional memory, practice, course workspace, architecture and repair-history tours out of the three-minute story. They remain available for questions.
+1. **On camera:** the slide behind Jeremy, and the question it doesn't answer.
+2. **Ask on the slide:** Preview full screen, hold ⌃⌥Space, circle the graph, ask "Why doesn't it just take the direct A-to-F edge?" The native overlay draws the checked search on the slide.
+3. **Cut a connection:** click D–F on the slide. Route A → C → E → F, cost 9, no model call.
+4. **Muse chooses, Soma proves:** restore D–F, ask "Would the direct A-to-F edge ever be the better route?" and choose **Investigate my question**. Muse picks A–F; Soma computes the tie at 7. Drag the slider 11 → 8 → 7 → 6. A second question gets a different connection (B–D, tie at 3).
+5. **Follow-up:** ask why; open **How Muse made this** for the Wonder review line.
+6. **Keep it:** **Save exploration**, reopen it, then **Try a fresh example**.
+7. **Lift into 3D:** the panel's **Lift into 3D** (⌘L in the compact bar). Hold on the settled view: F at 7 on the ruler, taut route, A–F slack 4.
+8. **Reach:** a verified non-course diagram (Variant A) or the Soma lab engine (Variant B, default).
+9. **On camera:** the close and the end card.
+
+Keep the understanding map, course workspace, architecture and repair history out of the three-minute story. They remain available for questions.
 
 ## Entry paths
 
-**Canonical product:** the existing[Explore route](https://soma-woad-beta.vercel.app/explore), or the configured local product. Choose the actual final release before recording. Source capture/upload, checked graph manipulation, contextual follow-up and save/reopen belong here.
+**Native companion (the video's path):** the signed macOS companion loading the hosted app. Point & ask uses ⌃⌥Space once enabled in the toolbar; the compact bar is Option+Space. The 3D lift needs a companion build that includes it (the release after v0.4.0). Do not make an unrecorded OS permission prompt the opening dependency.
 
-**Engine:** build the standalone viewer, then serve it locally:
+**Browser (the judge path and fallback):** the [Explore route](https://soma-woad-beta.vercel.app/explore). Upload the [Lecture 14 slide](../public/examples/lecture-14-dijkstra.png) and ask the same question; the checked search is drawn over the uploaded capture. If the native overlay misaligns on a take, use **Share a window** on Preview and say which path the take used in its label.
 
-```sh
-node node_modules/vite/bin/vite.js build --config docs/examples/pm121/viewer/vite.config.mjs
-node scripts/serve-engine-demo.mjs
-```
-
-Open http://localhost:41914. Use **Why two turns?**, **How Muse made this**, **Explore recorded Muse investigations**, **Show Muse’s investigation** and **Save Muse investigation**. These are actual recorded source/model cases, with no runtime inference. The engine is not a public hosted canonical generation/save flow.
-
-**Native companion:** optional if the current binary/device route has been verified. Point & ask uses Control–Option–Space after the mode is enabled. Do not make an unrecorded OS permission interaction the opening dependency.
+**Soma lab engine:** the hosted [lab page](https://soma-woad-beta.vercel.app/lab/engine/index.html). Actual recorded Muse source and investigation cases, with no runtime inference. It is not a live generation or cloud-save flow.
 
 ## Recording modes
 
 - Fresh source generation: capture the actual result and wait. Shortened waits need actual elapsed-time labels.
-- Genuine recorded Muse generation: retain its recorded label and original attribution. New follow-ups may still be live operations.
-- Prepared examples: identify them as prepared, rather than recorded model output.
-- Engine illustrations: identify recorded prototype and original synthetic source. Its local study file is distinct from a saved canonical revision.
+- Genuine recorded Muse generation: keep its recorded label and original attribution. New follow-ups may still be live operations.
+- Prepared examples: identify them as prepared, not as recorded model output.
+- Lab illustrations: identify the recorded prototype and original synthetic source.
+- Variant A (non-course diagram): an original map only, run live, its route checked against the solver before it goes in the cut. Without that take, the reach beat stays potential and uses Variant B.
 
-Use original synthetic material or a source with explicit sharing permission. Review source interpretation visibly when it matters; graph computation checks the interpreted input, not every pixel-reading claim. Preserve the earlier valid artifact on generation failure and use the documented recorded/prepared path honestly.
+Use original synthetic material or a source with explicit sharing permission. Review source interpretation visibly when it matters; graph computation checks the interpreted input, not every pixel-reading claim. Preserve the earlier valid artifact on generation failure and use the documented recorded or prepared path honestly.
 
-The lifetime testing allowance is $20 cumulative, with prior consumption/reservations retained. Check available budget and admission before another live take; there is no fixed per-take cost promise.
+The cumulative testing allowance is $40 (PM132), with prior consumption and reservations retained. Check the actual ledger and admission before another live take; a full hero take has cost about $0.15–0.25, but there is no fixed per-take promise.
 
 ## Submission framing
 
-Impact means plausible real-world potential, beneficiaries and significance. A working source→change→consequence→kept-result demonstration supports that story. Learner studies, adoption and quantified savings are optional additional evidence, not hackathon prerequisites.
+Impact means plausible real-world potential, beneficiaries and significance. The student journey on the slide is the demonstrated evidence; reach beyond the classroom is stated as potential unless Variant A has been run. Learner studies, adoption and quantified savings are optional additional evidence, not hackathon prerequisites.
 
-Recording, final video upload, clean public judge access and publication remain separate completion steps. Use only[Jeremiah-Sakuda/soma](https://github.com/Jeremiah-Sakuda/soma) as the source repository; keep it private until authorized. No new hosted/native acceptance or final-video claim follows from this document.
+Recording, final video upload, clean public judge access and publication remain separate completion steps. Use only [Jeremiah-Sakuda/soma](https://github.com/Jeremiah-Sakuda/soma) as the source repository; keep it private until authorized. No new hosted or native acceptance or final-video claim follows from this document.

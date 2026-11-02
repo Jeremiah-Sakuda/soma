@@ -12,8 +12,11 @@ When I ask why, the answer is about the experiment I'm running. And before this 
 
 Everything I explored is saved, and Soma can make a fresh problem from the same idea, hiding the answer until I try it.
 
-The same approach reaches past graphs: the checked search in 3D, and in our lab, an engine Muse drew and explains.
+And the answer has a shape. Every height is a checked distance: the shortest route pulls tight, and the direct edge hangs slack by exactly four.
 
-[On camera] The slide didn't change. What changed is that I could finally ask it my question, and see why the answer is what it is, with the calculation checked.
+[Variant A, only if the map take is verified] And it was never only about this slide: here's a network map, same question, same checked answer.
+[Variant B, default] In our lab, Muse goes further: an engine it drew and explains, from a recorded run.
+
+[On camera] The slide didn't change. What changed is that I could ask it my question and see why, with the math checked. I built Soma for my lectures, but every diagram you can't edit has questions like mine.
 
 Built this week with Muse Spark, Muse Wonder and Muse Voice Transcribe. Turn what you're studying into something you can explore.

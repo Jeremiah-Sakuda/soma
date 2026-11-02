@@ -1,6 +1,6 @@
 # Soma desktop companion
 
-Soma brings interactive visual explanations beside whatever you are working on. This macOS Apple Silicon companion uses the current hosted Soma engine; it needs an internet connection. Capture is one snapshot at a time, only when requested, with preview before any model submission.
+Soma turns a diagram on your screen into an experiment whose answers are computed, not guessed, starting with the slide you're studying. Explanations work over whatever you're looking at; the checked part today is graph search, drawn directly on the source. This macOS Apple Silicon companion uses the current hosted Soma engine; it needs an internet connection. Capture is one snapshot at a time, only when requested, with preview before any model submission.
 
 From the repository root:
 

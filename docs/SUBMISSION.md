@@ -1,6 +1,6 @@
 # Soma — submission copy
 
-PM132 · November 1, 2026. Supersedes the PM129 draft (kept in git history). Ready-to-edit copy for the Cerebral Valley form; exact field limits are unconfirmed. This draft does not publish or submit anything.
+November 1, 2026 positioning update: students first, the capability second ([story](STORY_AND_DEMO.md)). Supersedes the PM132 copy (kept in git history). Ready-to-edit copy for the Cerebral Valley form; exact field limits are unconfirmed. This draft does not publish or submit anything.
 
 ## Project name
 
@@ -12,11 +12,11 @@ Turn what you're studying into something you can explore.
 
 ## One sentence
 
-Soma uses Meta's Muse models to turn the slide you're studying into a live, checked experiment drawn right on top of it: cut a connection, find the tipping point, ask why.
+Soma uses Meta's Muse models to turn the diagram in front of you, starting with the slide you're studying, into a live, checked experiment drawn right on top of it: cut a connection, find the tipping point, ask why.
 
 ## Short description
 
-Point Soma at a lecture slide and ask a question. Muse Spark reads every node and weight, and Soma runs the real algorithm directly on your captured slide, drawing each step, distance and route over it. Cut a connection on the slide and the route changes instantly. Ask for the tipping point and Muse picks the connection to test while Soma computes the exact answer. Before a weighted-graph explanation reaches you, Muse Wonder checks it against the computed result.
+Point Soma at a lecture slide and ask a question. Muse Spark reads every node and weight, and Soma runs the real algorithm directly on your captured slide, drawing each step, distance and route over it. Cut a connection on the slide and the route changes instantly. Ask for the tipping point and Muse picks the connection to test while Soma computes the exact answer. Before a weighted-graph explanation reaches you, Muse Wonder checks it against the computed result. Built for students first; the reading and solving underneath aren't tied to slides.
 
 ## Main description
 
@@ -26,15 +26,19 @@ Soma makes the slide itself the experiment. Capture your screen or upload a scre
 
 Then you experiment. Click a connection on the slide to cut it and Soma recomputes at once, with no model call. Choose **Find the tipping point** and Muse picks a connection to test (Soma steers it toward a direct shortcut when the slide has one); Soma computes exactly where the answer flips, and dragging the cost moves the route on the slide. Ask why, by voice or text, and the answer addresses the experiment you're running. Before a weighted-graph explanation reaches you, Muse Wonder reviews it against Soma's computed trace and sends mistakes back for repair. Explorations save and reopen, and Soma can generate a fresh problem from the same idea with the answer hidden.
 
+We built Soma for the student with a lecture slide, but the idea underneath isn't tied to the classroom. Muse reads a picture into a typed graph, Soma's solver computes on it, and the answer is drawn back onto the picture. The same questions turn up on a transit map, a network diagram or a delivery route. Today Soma checks graph search on course material; each new kind of diagram needs a solver, not a new product.
+
 The model chooses how to read, explain and investigate. The code proves the answer.
 
 ## Impact and problem-statement fit
 
 **Track:** Indie Developer / Build for Your World.
 
-**Who it's for:** students and independent learners working through algorithms and other diagram-heavy material, starting with graph search, a topic every computing student meets.
+**Who it's for first:** students and independent learners working through algorithms and other diagram-heavy material, starting with graph search, a topic every computing student meets. Soma grew out of its builder's own study workflow, which is why the hero is a lecture slide.
 
 **Why it matters:** the questions that build understanding are "what if" questions, and static slides can't answer them. Soma removes the reconstruction step between a slide and an experiment, and it gives answers a learner can trust because the numbers are computed rather than generated.
+
+**How far it reaches:** the checked step doesn't depend on the picture being a slide. Soma's solver runs on any weighted graph Muse Spark can read, within its limits of nonnegative costs and 12 nodes (in testing, 8 of 8 fresh original graph images were read exactly), so the same experiment applies wherever people reason over connections they can't edit: transit maps, network diagrams, delivery routes. That reach is potential; Soma has been built and demonstrated on course material.
 
 **Why it's credible:** the core journey is one live run on an original slide; waits are shortened and labelled. The source becomes a controllable experiment, each change has a computed consequence, the model makes a visible decision, and the result can be kept and practiced. No study or adoption figures are claimed; the potential is shown through a working capability.
 
@@ -64,7 +68,7 @@ All product code was written between October 26 and November 4, 2026. The dated 
 
 **Soma lab:** a recorded Muse run in which Spark drew and explained a four-stroke engine and chose which comparisons to show. It replays without a model call; live engine generation is not part of the product yet.
 
-**Next:** more checked subjects, each with its own solver, and richer source-anchored visuals.
+**Next:** graphs beyond the classroom with the same solver (transit, network and route maps), more checked subjects such as DC circuits, each with its own solver, and richer source-anchored visuals.
 
 ## Project links
 
@@ -84,6 +88,9 @@ Routes, distances and the tipping point come from Soma's solver, run on the grap
 
 **Is this an AI-for-education chatbot?**
 No. The answer is an experiment you manipulate on your own material, with computed results and an explanation that follows your changes.
+
+**Is Soma only for students?**
+Students are who we built it for and who the demo serves. The pattern underneath (the model reads and chooses, the code computes, the answer is drawn on the source) applies wherever people reason over a diagram they can't edit. Today the checked part is graph search on course material; we haven't yet demonstrated a diagram from outside the classroom.
 
 **Is the engine generated live?**
 No. It is a recorded Muse run in the Soma lab, labelled as such.

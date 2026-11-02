@@ -1,5 +1,7 @@
 # Soma product brief
 
+> **November 1 — positioning update:** students first, the capability second. Soma turns a diagram on your screen into an experiment whose answers are computed, not guessed, built for students first; uses beyond the classroom are potential. [STORY_AND_DEMO.md](STORY_AND_DEMO.md) owns the current wording; the October 29 framing below is kept as a record.
+
 **Current release framing — PM049–PM050 (October 29):** Soma is a desktop visual learning companion: invoke it over your existing work, capture the current display, review the snapshot, and explore a Muse-generated visual explanation beside the source. Intro AI is the initial demonstration. The web app remains the instant judge entry. [Current PRD](PRD.md) and [Desktop companion](DESKTOP_COMPANION.md) supersede historical student-hub launch positioning below.
 
 ## Current positioning — October 29, 2026 (P084)

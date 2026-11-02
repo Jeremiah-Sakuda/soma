@@ -2,9 +2,9 @@
 
 **Turn what you’re studying into something you can explore.**
 
-Soma turns the slide or diagram you're studying into a computed experiment drawn right on top of it: the model reads and chooses, the code computes. Meta’s Muse models interpret the source, compose the visual and help choose what to investigate. Change a connection, inspect a mechanism or ask about the consequence. Supported graph paths and costs are computed by Soma’s own solver.
+Soma turns a diagram on your screen into an experiment whose answers are computed, not guessed. Meta’s Muse models read the source, explain it and choose what to investigate; Soma’s own solver computes the result and draws it back onto the source, where you can cut a connection, change a cost or ask about the consequence. It starts with students: the slide you're studying becomes something you can test.
 
-The opportunity: less setup between encountering a difficult idea and having a useful way to explore it. [Demo story](docs/STORY_AND_DEMO.md) · [Three-minute script](docs/DEMO_VIDEO_SCRIPT.md) · [Submission copy](docs/SUBMISSION.md)
+The opportunity: less setup between encountering a difficult idea and having a useful way to explore it, first in the classroom and potentially, with the same solver, on graphs people read outside it. [Demo story](docs/STORY_AND_DEMO.md) · [Three-minute script](docs/DEMO_VIDEO_SCRIPT.md) · [Submission copy](docs/SUBMISSION.md)
 
 **[Try it in your browser](https://soma-woad-beta.vercel.app/explore)** (no account needed) · **[Download for macOS](https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.3.0)** (Apple Silicon, signed and notarized)
 
@@ -24,7 +24,7 @@ A lecture diagram gives you one example. The question you want to ask is often m
 
 Making that example interactive can require translating it into another tool or finding a demonstration that matches. Soma starts from the selected source and question, so the explanation can stay connected to what you are already working on.
 
-For students and independent learners, the potential is a shorter path from a moment of confusion to a useful investigation. The graph workflow makes that idea concrete: change a connection or cost, see the checked consequence, ask about it, and keep the revised exploration.
+Soma is built for students and independent learners first. The potential is a shorter path from a moment of confusion to a useful investigation. The graph workflow makes that idea concrete: change a connection or cost, see the checked consequence, ask about it, and keep the revised exploration.
 
 Soma grew out of its builder’s study workflow with Meta’s assistant. Its focus is the moment of understanding: giving the material in front of you something you can manipulate and investigate.
 
@@ -59,6 +59,8 @@ flowchart LR
 
 **Keep the investigation connected.** Contextual follow-ups and saved revisions let the user continue from the current experiment. The opportunity is less setup and more direct exploration; no quantified time-saving or learning-gain result is claimed.
 
+**Reach past the classroom.** The checked step doesn't depend on the picture being a slide: Muse reads a picture into a typed graph, Soma's solver computes on it, and the result is drawn back onto the picture. The same questions come up on a transit map, a network diagram or a delivery route. Soma has been built and demonstrated on course material; those uses are potential, not shown yet.
+
 ## Exploring a richer visual language
 
 On the experimental spatial branch, a recorded engine study shows actual Muse-authored vector artwork, teaching copy and visual investigation choices. Compare matching piston positions across different strokes, inspect the connecting rod and export the question/action/explanation as a standalone study file. Soma supplies constrained motion and source/artifact checks.
@@ -79,7 +81,7 @@ Each model has a defined job, and none of them is trusted blindly.
 
 **What the models never do:** compute paths, costs or search states, run code, write learner records, change validation rules or spend outside the application's budget.
 
-Narration audio uses Gemini 2.5 Flash TTS, because the Meta models offered for this event include transcription but not speech synthesis. The browser's own voice is a one-click alternative, and captions are always on.
+Narration audio uses Gemini 3.1 Flash TTS (preview, Sulafat voice), because the Meta models offered for this event include transcription but not speech synthesis. The words are the explanation on screen; Gemini only voices them. The browser's own voice is a one-click alternative, and captions are always on.
 
 ## What we tested this week
 
@@ -110,6 +112,7 @@ All code was written for the Meta Global AI Developer Hackathon, from kickoff on
 
 ## What comes next
 
+- **Graphs beyond the classroom.** The same solver and overlay on diagrams people use outside a course: transit, network and route maps. Reading them is the open question, not computing them.
 - **More checked subjects.** Each new subject needs a solver, a schema and a renderer; the capture, model and review pipeline stays the same. DC resistor circuits are the next candidate: Soma already explains circuit screenshots, and a solver would make them manipulable.
 - **Classroom pilots** that measure what students can do on their own afterward, not just what they did with help.
 - **Course awareness.** Reconnect the course workspace so a new lecture arrives with its experiment ready.
@@ -119,7 +122,7 @@ All code was written for the Meta Global AI Developer Hackathon, from kickoff on
 - Checked computation covers BFS and Dijkstra with nonnegative costs, up to 12 nodes and 24 edges. Everything else is an explanatory visual, labeled that way in the app. It is not a simulation.
 - Reading a screenshot can go wrong. The **Source & assumptions** panel shows Spark's reading of the source and the uncertainty it reported. That reading is shown for inspection; it is not independently re-checked.
 - Browser upload is the fully verified capture path. The desktop shortcut passes automated policy and synthetic capture checks. Real Screen Recording permission, multi-display capture and clean-Mac installation are being tested by hand.
-- Impact is framed as the potential for easier exploration of a learner’s own material; quantified time savings and classroom outcomes are not claimed.
+- Impact is framed around students first: easier exploration of a learner’s own material. Uses beyond the classroom are described as potential. Quantified time savings, adoption and classroom outcomes are not claimed.
 - Soma takes one snapshot when you ask. It does not record your screen, and screenshots are not stored.
 - Guest explorations last 24 hours. Live generation runs under a spend cap; the prepared examples need no model call.
 

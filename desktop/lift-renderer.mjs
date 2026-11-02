@@ -906,8 +906,8 @@ window.SomaLift = {
   get active() {
     return Boolean(s);
   },
-  // For the test harness only (it drives the clock): the live scene state.
+  // For the test harness and live diagnostics only: the live scene state.
   get debug() {
-    return typeof window.__liftNow === 'function' ? s : null;
+    return typeof window.__liftNow === 'function' || window.__liftDebug === true ? s : null;
   },
 };

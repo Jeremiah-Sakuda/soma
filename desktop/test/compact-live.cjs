@@ -71,7 +71,16 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
         test: !document.getElementById('test').hidden,
         fresh: !document.getElementById('fresh').hidden,
         placeholder: document.getElementById('question').placeholder,
+        lift: !document.getElementById('lift').hidden,
+        lifted: document.getElementById('lift').getAttribute('aria-pressed') === 'true',
       }));
+    // The overlay page's own view of the lift: running, and the flat sketch stepped aside.
+    const overlayLift = () =>
+      app.evaluate(async ({ BrowserWindow }) => {
+        const o = BrowserWindow.getAllWindows().find((w) => w.webContents.getURL().endsWith('point-overlay.html'));
+        if (!o) return null;
+        return o.webContents.executeJavaScript(`({ active: Boolean(window.SomaLift?.active), lifted: document.body.classList.contains('lifted') })`);
+      });
     const shot = async (name) => {
       const file = path.join(out, `${name}.png`);
       const png = await app.evaluate(async ({ desktopCapturer, screen }) => {
@@ -139,8 +148,13 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
     log('bar area in snapshot', JSON.stringify(barArea));
     assert.ok(barArea, 'the snapshot is available to the page');
     assert.ok(barArea.mean > 235 && barArea.darkShare < 0.01, 'the ask bar is not in the snapshot Muse read');
-    // 2. Step controls.
-    const before = drawn.b.step;
+    // 2. Step controls. Narration may be playing; stepping waits for it to pause.
+    if (await bar.evaluate(() => document.getElementById('play').getAttribute('aria-label').startsWith('Pause'))) await bar.click('#play');
+    await wait(1500);
+    await shot('1b-paused');
+    if ((await barState()).step.startsWith('1 /')) await bar.click('#next');
+    await wait(600);
+    const before = (await barState()).step;
     await bar.click('#previous');
     await wait(600);
     const after = (await barState()).step;
@@ -149,6 +163,70 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
     assert.match(after, /^\d+ \/ \d+$/);
     await bar.click('#next');
     await wait(600);
+    // 2b. Lift into 3D over the real screen.
+    assert.ok((await barState()).lift, 'the 3D control is offered for a checked shortest-path drawing');
+    if (process.env.LIFT_DEBUG)
+      await app.evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows().find((w) => w.webContents.getURL().endsWith('point-overlay.html'))?.webContents.executeJavaScript('window.__liftDebug = true'),
+      );
+    await bar.click('#lift');
+    await wait(3200);
+    if (process.env.LIFT_DEBUG) {
+      const dump = await app.evaluate(({ BrowserWindow, screen }) => {
+        const o = BrowserWindow.getAllWindows().find((w) => w.webContents.getURL().endsWith('point-overlay.html'));
+        return o.webContents
+          .executeJavaScript(
+            `(() => { const s = window.SomaLift.debug; const img = s.sheet.paper.material.map?.image;
+              return { frame, inner: [innerWidth, innerHeight], screenXY: [screenX, screenY], dpr: devicePixelRatio,
+                canvas: document.getElementById('lift-canvas').style.cssText, sframe: s.frame,
+                layoutRegion: s.layout.region, sheetRegion: s.lastSheet?.region, texture: img ? [img.width, img.height] : null,
+                nodes: s.layout.nodes.map((n) => [n.id, Math.round(n.x), Math.round(n.y)]), radius: s.layout.radius,
+                cover: (() => { const c = s.sheet.cover; return { w: c.geometry.parameters.width, h: c.geometry.parameters.height, pos: c.position.toArray(), opacity: c.material.opacity, visible: c.visible, color: c.material.color.getHexString(), parent: c.parent?.type, ready: s.sheetReady, hasCover: s.hasCover }; })(),
+                paper: { w: s.sheet.paper.geometry.parameters.width, pos: s.sheet.paper.position.toArray(), opacity: s.sheet.paper.material.opacity },
+                hinge: { pos: s.hinge.position.toArray(), rot: s.hinge.rotation.toArray().slice(0, 3) }, camera: s.camera.position.toArray(), drawing: [s.renderer.domElement.width, s.renderer.domElement.height] }; })()`,
+          )
+          .then((page) => ({ page, bounds: o.getBounds(), display: screen.getPrimaryDisplay().bounds, scale: screen.getPrimaryDisplay().scaleFactor }));
+      });
+      fs.writeFileSync(path.join(out, 'lift-debug.json'), JSON.stringify(dump, null, 2));
+      await shot('2-debug-lifted');
+      log('lift debug', JSON.stringify(dump).slice(0, 1500));
+    }
+    let lifted = await barState();
+    log('lifted', lifted.status, JSON.stringify(await overlayLift()));
+    assert.ok(lifted.lifted, '3D is pressed');
+    assert.match(lifted.status, /Lifted off your slide/);
+    assert.deepEqual(await overlayLift(), { active: true, lifted: true }, 'the overlay is drawing in 3D');
+    await shot('2a-lifted');
+    // Not taken down on a timer while nothing else was used.
+    await wait(7000);
+    assert.ok((await barState()).lifted && (await native()).overlay, 'still lifted after 10 s');
+    // Using another app triggers a real check under content protection: the lifted drawing
+    // must not be read as a changed slide.
+    await app.evaluate(() => globalThis.__slide.focus());
+    await wait(12000);
+    lifted = await barState();
+    log('after a check while lifted', lifted.status, JSON.stringify(await overlayLift()));
+    assert.ok(lifted.lifted && (await native()).overlay, 'a check while lifted keeps the drawing (content protection works here)');
+    await bar.evaluate(() => document.getElementById('question').focus());
+    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((w) => w.webContents.getURL().endsWith('compact.html'))?.focus());
+    // Steps keep working in 3D.
+    await bar.click('#previous');
+    await wait(1400);
+    assert.ok((await barState()).lifted, 'still 3D after a step');
+    await shot('2b-lifted-step');
+    await bar.click('#next');
+    await wait(1400);
+    await bar.click('#lift');
+    await wait(1600);
+    const flat = await barState();
+    log('set down', flat.status, JSON.stringify(await overlayLift()));
+    assert.ok(!flat.lifted, '3D released');
+    assert.match(flat.status, /Back on your slide/);
+    assert.equal((await overlayLift()).active, false, 'the 3D scene is disposed after landing');
+    if (process.env.LIFT_ONLY) {
+      console.log(JSON.stringify({ passed: true, out, liftOnly: true }));
+      return;
+    }
     // 3. A follow-up stays on the same snapshot and keeps the drawing.
     await bar.fill('#question', 'What if D–F weren’t there?');
     await bar.press('#question', 'Enter');

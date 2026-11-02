@@ -15,7 +15,8 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const errors = [];
   try {
-    const context = await browser.newContext({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1, bypassCSP: true, reducedMotion: process.env.REDUCED ? 'reduce' : 'no-preference' });
+    const W = Number(process.env.W || 1600), H = Number(process.env.H || 900);
+    const context = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: Number(process.env.DPR || 1), bypassCSP: true, reducedMotion: process.env.REDUCED ? 'reduce' : 'no-preference' });
     const page = await context.newPage();
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
@@ -50,7 +51,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
         c.getContext('2d').drawImage(img, region.x * img.naturalWidth, region.y * img.naturalHeight, c.width, c.height, 0, 0, c.width, c.height);
         return { dataUrl: c.toDataURL('image/jpeg', 0.9), region };
       }, { src: `data:image/png;base64,${slide}`, region: sheetRegion(model) });
-    const display = { x: 0, y: 0, width: 1600, height: 900 };
+    const display = { x: 0, y: 0, width: W, height: H };
     const draw = (model, view, sheet) => page.evaluate((e) => window.__draw(e), { type: 'graph', model, display, view, ...(sheet ? { sheet } : {}) });
     const advance = (ms) => page.evaluate((v) => window.__advance(v), ms);
     const shot = async (name) => {

@@ -465,6 +465,7 @@ export function ExplorationScene({
         compact={compact}
         experiment={experiment}
         toggleRef={toggleRef}
+        lift={{ liftable, lifted, toggle: () => setView(lifted ? '2d' : '3d') }}
       />
     );
   const execution = explorationExecution(spec, state),

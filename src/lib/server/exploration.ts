@@ -2791,8 +2791,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
               detail: `Muse Wonder advisory review: ${review.verdict}.${review.findings.length ? ' ' + review.findings.join(' ') : ''}`,
             });
             if (review.verdict !== 'approve') {
-              // Two factual repairs: a first fix often trades one defect for another.
-              if (reviewRepairs >= 2) throw new ExplorationError('generation_invalid');
+              if (reviewRepairs >= 1) throw new ExplorationError('generation_invalid');
               reviewRepairs++;
               history = [
                 ...history,

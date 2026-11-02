@@ -144,7 +144,10 @@ export function ExplorationCircuitStage({
   compact,
   experiment,
   toggleRef,
+  lift,
 }: {
+  /** Lifting the on-screen drawing into 3D, when the companion can. */
+  lift?: { liftable: boolean; lifted: boolean; toggle: () => void };
   spec: CircuitSpec;
   state: ExplorationViewState;
   onChange: (next: ExplorationViewState) => void;
@@ -262,9 +265,16 @@ export function ExplorationCircuitStage({
             {onScreen && (
               <div className="source-overlay-onscreen">
                 <p role="status">
-                  Drawn on your screen, over the window you captured.
-                  {spec.controls.includes('open-component') ? ' Click a part there to open it;' : ''} Esc hides it.
+                  {lift?.lifted
+                    ? 'Lifted off your slide in 3D: each node stands at its checked voltage, so current runs downhill.'
+                    : `Drawn on your screen, over the window you captured.${spec.controls.includes('open-component') ? ' Click a part there to open it;' : ''}`}{' '}
+                  Esc hides it.
                 </p>
+                {lift?.liftable && (
+                  <button type="button" className="source-overlay-lift" aria-pressed={lift.lifted} onClick={lift.toggle}>
+                    Lift into 3D
+                  </button>
+                )}
               </div>
             )}
             {drawable && view === 'source' ? (

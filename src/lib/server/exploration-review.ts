@@ -52,7 +52,7 @@ export function explorationReviewRequest(
 function normalizeReview(value: unknown): unknown {
   if (!value || typeof value !== 'object') return value;
   const v = value as { verdict?: unknown; findings?: unknown };
-  const findings = typeof v.findings === 'string' ? [v.findings] : v.findings;
+  const findings = v.findings;
   return {
     verdict: typeof v.verdict === 'string' ? v.verdict.trim().toLowerCase() : v.verdict,
     findings: Array.isArray(findings)

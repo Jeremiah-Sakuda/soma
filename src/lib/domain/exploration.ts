@@ -277,6 +277,9 @@ export function validateExplorationSpec(raw: unknown): ExplorationSpec {
       const parts = new Map(spec.input.components.map((c) => [c.id, c]));
       const experiment = solveDc(spec.input, spec.writtenFor);
       if (
+        new Set(spec.writtenFor.open).size !== spec.writtenFor.open.length ||
+        (spec.writtenFor.open.length && !spec.controls.includes('open-component')) ||
+        (Object.keys(spec.writtenFor.values).length && !spec.controls.includes('set-value')) ||
         spec.writtenFor.open.some((id) => !parts.has(id)) ||
         Object.entries(spec.writtenFor.values).some(([id, v]) => !parts.has(id) || !dcValueAllowed(parts.get(id)!.kind, v)) ||
         experiment.status !== 'solved'

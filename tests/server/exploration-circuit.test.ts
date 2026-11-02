@@ -291,4 +291,53 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
     ).artifact;
     expect(probed.circuitExperiment?.rationale).toBe('R4 sets the voltage at C.');
   });
+
+  it('answers an experiment with no single solution on the circuit as read, words visible', async () => {
+    const fed = {
+      nodes: [
+        { id: 'G', label: 'G' },
+        { id: 'A', label: 'A' },
+      ],
+      ground: 'G',
+      components: [
+        { id: 'I1', label: 'I₁', kind: 'current-source', from: 'G', to: 'A', value: 2 },
+        { id: 'R1', label: 'R₁', kind: 'resistor', from: 'A', to: 'G', value: 3 },
+        { id: 'R2', label: 'R₂', kind: 'resistor', from: 'A', to: 'G', value: 6 },
+      ],
+    };
+    const request = script((context) => ({
+      title: 'One source, two paths',
+      objective: 'See where the source current goes.',
+      assumptions: [],
+      steps: [{ traceIndex: context.checkedCircuit.steps.length - 1, caption: 'A sits at 4 V.', narration: 'A sits at 4 V.', highlightIds: ['A'] }],
+      followups: [],
+    }));
+    const base = request.getMockImplementation()!;
+    request.mockImplementation(async (r: { instructions: string; input: readonly unknown[] }) => {
+      if (!r.instructions.includes('source reader')) return base(r);
+      const read = await base(r);
+      const args = { ...read.tools[0].parsedArguments, circuit: fed, circuitLayout: null };
+      return result('inspect_source', args, 1);
+    });
+    const soma = service(request);
+    await soma.initialize(owner);
+    const first = (await soma.generate(owner, screenshot('Why is A at 4 V?') as never)).artifact;
+    const reply = (
+      await soma.generate(owner, {
+        action: 'generate',
+        requestId: randomUUID(),
+        question: 'Why is there no answer now?',
+        intent: 'auto',
+        artifactId: first.id,
+        baseVersion: first.version,
+        state: { ...first.state, disabledEdgeIds: ['R1', 'R2'], step: 0 },
+      } as never)
+    ).artifact;
+    const context = JSON.parse((request.mock.calls.at(-1)![0].input[0] as { content: string }).content);
+    expect(context.experimentNote).toContain('R₁ open, R₂ open');
+    if (reply.spec.mode !== 'checked-circuit') throw new Error('mode');
+    expect(reply.spec.writtenFor ?? null).toBeNull();
+    expect(reply.state.disabledEdgeIds).toEqual([]);
+    expect(explorationInputsChanged(reply.spec, reply.state)).toBe(false);
+  });
 });

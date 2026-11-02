@@ -97,6 +97,21 @@ export function circuitQuantity(value: number, unit: string) {
 }
 const circuitName = (input: DcInput, id: string) =>
   input.nodes.find((n) => n.id === id)?.label ?? input.components.find((c) => c.id === id)?.label ?? id;
+/** Whether a part's two ends are still joined through the other connected parts. */
+function connectedWithout(solution: DcSolution, id: string) {
+  const { input, state } = solution;
+  const part = input.components.find((c) => c.id === id)!;
+  const reached = new Set([part.from]);
+  for (let grew = true; grew; ) {
+    grew = false;
+    for (const c of input.components)
+      if (c.id !== id && !state.open.includes(c.id) && reached.has(c.from) !== reached.has(c.to)) {
+        reached.add(c.from).add(c.to);
+        grew = true;
+      }
+  }
+  return reached.has(part.to);
+}
 /** One computed sentence per reveal step: the node it fixes, then what each newly known part
  * carries, with the current's direction in the circuit's own node names. */
 export function circuitCaption(solution: DcSolution, index: number): string {
@@ -123,7 +138,11 @@ export function circuitCaption(solution: DcSolution, index: number): string {
       parts.push(
         c.kind === 'resistor'
           ? `${c.label} carries no current: both its ends are at the same voltage.`
-          : `${c.label} carries no current: no closed path runs through it.`,
+          : (solution.state.values[c.id] ?? c.value) === 0
+            ? `${c.label} is set to 0, so it drives no current.`
+            : !connectedWithout(solution, c.id)
+              ? `${c.label} carries no current: no closed path runs through it.`
+              : `${c.label} carries no current: the rest of the circuit balances it.`,
       );
     else {
       const [a, b] = current > 0 ? [c.from, c.to] : [c.to, c.from];

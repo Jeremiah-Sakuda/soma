@@ -182,7 +182,8 @@ export function ExplorationCircuitStage({
   const computedLine = `${lead ? `${lead} ` : ''}${computed}`;
   // The drawing carries Muse's sentence when every number in it is the solver's.
   const caption = grounded ?? computedLine;
-  const stepLabel = changed ? 'Your experiment' : `Step ${Math.min(state.step, finalStep) + 1} of ${finalStep + 1}`;
+  const stepLabel =
+    changed && experimenting ? 'Your experiment' : `${changed ? 'The circuit as read · ' : ''}Step ${Math.min(state.step, finalStep) + 1} of ${finalStep + 1}`;
   const layout = overlay?.layout;
   const drawable = Boolean(overlay && layout?.components?.length && spec.input.nodes.every((n) => layout.nodes.some((p) => p.nodeId === n.id)));
   const spatial = state.spatial?.mode === '3d';

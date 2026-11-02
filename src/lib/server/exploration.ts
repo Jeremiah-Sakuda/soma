@@ -2005,8 +2005,10 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
       // A circuit experiment follows the learner's open parts and values; the varied part's own
       // value is the experiment's variable, so it never comes from the saved values.
       const circuitState = (componentId: string) => ({
-        open: currentState?.disabledEdgeIds ?? [],
-        values: Object.fromEntries(Object.entries(currentState?.edgeWeights ?? {}).filter(([id]) => id !== componentId)),
+        open: reuse ? (currentState?.disabledEdgeIds ?? []) : [],
+        values: reuse
+          ? Object.fromEntries(Object.entries(currentState?.edgeWeights ?? {}).filter(([id]) => id !== componentId))
+          : {},
       });
       const previousCircuitProbe = reuse && previous?.spec.mode === 'checked-circuit' ? previous.circuitExperiment : undefined;
       let circuitExperiment: DcProbe | undefined;
@@ -2045,7 +2047,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         );
         const decision = typedCall(
           await call(
-            [{ role: 'user', content: JSON.stringify({ ...context, circuit, checkedCircuit: circuitSolution(previous.spec, currentState ?? defaultState(previous.spec)) }) }],
+            [{ role: 'user', content: JSON.stringify({ ...context, circuit, checkedCircuit: reuse && currentState ? circuitSolution(previous.spec, currentState) : solveDc(circuit) }) }],
             [choose],
             genericInstructions +
               ' Read the learner question and the current circuit experiment. For any ONE part’s value (a resistance or a source value), Soma can compute exactly where a chosen quantity becomes zero, and so reverses: the current through a part (watch current, targetId that part) or the voltage at a node (watch voltage, targetId that node). It can also find the resistance at which a resistor takes the most power (watch power, condition maximum-power, targetId the same resistor as componentId). Choose the part whose value most directly answers this question, judged from the question and the circuit, not from a default. If the question is not about how one part’s value changes the circuit, return componentId null. reason: one short learner-facing sentence saying why this part answers the question, with no numbers. Return only choose_circuit_investigation.',
@@ -2065,7 +2067,13 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         const labels = [...circuit.components, ...circuit.nodes]
           .flatMap((x) => [x.label, x.id])
           .sort((a, b) => b.length - a.length);
-        const unlabelled = labels.reduce((text, label) => text.split(label).join(' '), choice.reason);
+        const unlabelled = labels
+          .filter((label) => /\p{L}/u.test(label))
+          .reduce(
+            (text, label) =>
+              text.replace(new RegExp(`(?<![\\p{L}\\p{N}.])${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}.])`, 'gu'), ' '),
+            choice.reason,
+          );
         const rationale =
           /\d|\b(?:zero|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|hundred|thousand|half|double|twice)\b/i.test(unlabelled)
             ? null
@@ -2188,7 +2196,10 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
               circuitSolved = underway;
               circuitWrittenFor = { open: [...underway.state.open], values: { ...underway.state.values } };
             } else
-              circuitExperimentNote = `The learner's current experiment (${[...underway.state.open.map((id) => `${id} open`), ...Object.entries(underway.state.values).map(([id, v]) => `${id} = ${v}`)].join(', ')}) has no single solution: ${underway.reason} checkedCircuit is the circuit as read; say so plainly.`;
+            {
+              const label = (id: string) => circuit!.components.find((c) => c.id === id)?.label ?? id;
+              circuitExperimentNote = `The learner's current experiment (${[...underway.state.open.map((id) => `${label(id)} open`), ...Object.entries(underway.state.values).map(([id, v]) => `${label(id)} = ${v}`)].join(', ')}) has no single solution: ${underway.reason} checkedCircuit is the circuit as read; say so plainly.`;
+            }
           }
           audit.push({
             event: 'model-computed',
@@ -2792,10 +2803,12 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
               reuse &&
               JSON.stringify(spec.input) === JSON.stringify(previous.spec.input)
             ) {
-              // On the same circuit, the learner's experiment carries over to the reply that
-              // explains it; a new capture starts from the circuit as read.
-              nextState.disabledEdgeIds = [...currentState.disabledEdgeIds];
-              if (currentState.edgeWeights) nextState.edgeWeights = { ...currentState.edgeWeights };
+              // On the same circuit, the experiment the reply explains carries over with it; a new
+              // capture, or an experiment with no single solution, starts from the circuit as read.
+              if (circuitWrittenFor) {
+                nextState.disabledEdgeIds = [...circuitWrittenFor.open];
+                if (Object.keys(circuitWrittenFor.values).length) nextState.edgeWeights = { ...circuitWrittenFor.values };
+              }
               nextState.step = Math.min(currentState.step, Math.max(0, (circuitSolved?.steps.length ?? 1) - 1));
               const index = spec.steps.findIndex(
                 (item) => item.execution === 'primary' && item.executionStep === nextState.step,

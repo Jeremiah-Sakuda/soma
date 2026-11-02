@@ -81,4 +81,9 @@ describe('a checked circuit drawn over its own slide', () => {
     expect(text).toContain('12 V battery carries no current: no closed path runs through it.');
     expect(text).not.toContain('battery carries no current: both its ends');
   });
+
+  it('gives the real reason a source with an intact loop carries nothing', () => {
+    const off = solveDc(heroCircuit, { values: { V1: 0 } });
+    expect(off.steps.map((_, i) => circuitCaption(off, i)).join(' ')).toContain('12 V battery is set to 0, so it drives no current.');
+  });
 });

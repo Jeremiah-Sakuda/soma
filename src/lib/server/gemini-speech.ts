@@ -4,7 +4,8 @@ import { getServerApp } from './firebase-config';
 import { explorationStore, revalidateExplorationPrincipal } from './exploration-store';
 import { explorationViewStateSchema, validateExplorationViewState } from './exploration';
 import { explorationNarration } from '../domain/exploration-view';
-import { inspectVoiceWav, encodeVoiceWav, MAX_VOICE_WAV_BYTES } from '../domain/voice-audio';
+import { spokenText } from '../domain/spoken-text';
+import { inspectVoiceWav, encodeVoiceWav, VOICE_SAMPLE_RATE } from '../domain/voice-audio';
 import { reserveInference, settleInference, InferenceBudgetError } from './budget';
 import {
   ExplorationError,
@@ -12,8 +13,21 @@ import {
   type ExplorationStore,
 } from './exploration-types';
 
-export const GEMINI_TTS_MODEL = 'gemini-2.5-flash-tts';
-export const GEMINI_TTS_VOICE = 'Kore';
+export const GEMINI_TTS_MODEL = 'gemini-3.1-flash-tts-preview';
+// Spoken narration (at most 360 characters per step) runs about 30 s at this voice's pace;
+// its own ceiling, separate from the 30 s limit on recorded questions.
+const MAX_SPEECH_SECONDS = 60;
+const MAX_SPEECH_WAV_BYTES = 44 + VOICE_SAMPLE_RATE * MAX_SPEECH_SECONDS * 2;
+// Chosen by blind side-by-side ranking of one Soma narration across candidate voices and
+// style prompts (warmest and most conversational; see docs/DECISIONS.md).
+export const GEMINI_TTS_VOICE = 'Sulafat';
+// Gemini TTS follows a description of the delivery. No inline tags: in the audition a
+// tagged transcript produced a misread number.
+export const GEMINI_TTS_STYLE =
+  'You are a friendly teaching assistant at a whiteboard, explaining to one student who just asked a question. ' +
+  'Talk the way you would in person: relaxed and conversational, at an easy natural pace, with brief pauses between ideas. ' +
+  'Sound genuinely curious and encouraging, with a smile in your voice, never like you are reading or announcing. ' +
+  'Lean gently on the numbers so they are easy to follow. Say only the explanation, exactly as written:\n';
 export const speechRequestSchema = z.strictObject({
   artifactId: z.uuid(),
   version: z.number().int().positive(),
@@ -74,7 +88,8 @@ async function readResponse(response: Response, signal: AbortSignal): Promise<un
       const { done, value } = await reader.read();
       if (done) break;
       size += value.length;
-      if (size > 2_000_000) {
+      // Base64 of the longest allowed audio, plus the JSON around it.
+      if (size > Math.ceil(MAX_SPEECH_WAV_BYTES / 3) * 4 + 64_000) {
         await reader.cancel();
         throw new GeminiSpeechError('response_invalid');
       }
@@ -89,6 +104,13 @@ async function readResponse(response: Response, signal: AbortSignal): Promise<un
     throw new GeminiSpeechError('response_invalid');
   }
 }
+/** 16-bit mono PCM at 24 kHz, however the model spells it ("audio/L16;codec=pcm;rate=24000",
+ * "audio/l16; rate=24000; channels=1"). */
+function pcm24k(mimeType: string): boolean {
+  const [type, ...params] = mimeType.toLowerCase().split(';').map((part) => part.trim());
+  const values = Object.fromEntries(params.map((p) => p.split('=').map((x) => x.trim())));
+  return type === 'audio/l16' && values.rate === '24000' && (values.channels ?? '1') === '1' && (values.codec ?? 'pcm') === 'pcm';
+}
 export function parseGeminiSpeech(raw: unknown): Uint8Array {
   const parsed = z
     .object({
@@ -101,11 +123,11 @@ export function parseGeminiSpeech(raw: unknown): Uint8Array {
                 .array(
                   z.object({
                     inlineData: z.object({
-                      mimeType: z.enum(['audio/wav', 'audio/L16;codec=pcm;rate=24000']),
+                      mimeType: z.string().refine((value) => value === 'audio/wav' || pcm24k(value)),
                       data: z
                         .string()
                         .min(4)
-                        .max(Math.ceil(MAX_VOICE_WAV_BYTES / 3) * 4)
+                        .max(Math.ceil(MAX_SPEECH_WAV_BYTES / 3) * 4)
                         .regex(/^[A-Za-z0-9+/]+={0,2}$/),
                     }),
                   }),
@@ -124,7 +146,7 @@ export function parseGeminiSpeech(raw: unknown): Uint8Array {
   if (Buffer.from(bytes).toString('base64') !== data)
     throw new GeminiSpeechError('response_invalid');
   if (part.mimeType !== 'audio/wav') {
-    if (bytes.length % 2 || bytes.length < 2 || bytes.length > MAX_VOICE_WAV_BYTES - 44)
+    if (bytes.length % 2 || bytes.length < 2 || bytes.length > MAX_SPEECH_WAV_BYTES - 44)
       throw new GeminiSpeechError('response_invalid');
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength),
       samples = new Float32Array(bytes.length / 2);
@@ -132,10 +154,10 @@ export function parseGeminiSpeech(raw: unknown): Uint8Array {
       const value = view.getInt16(i * 2, true);
       samples[i] = value / (value < 0 ? 32768 : 32767);
     }
-    bytes = encodeVoiceWav(samples);
+    bytes = encodeVoiceWav(samples, VOICE_SAMPLE_RATE, MAX_SPEECH_SECONDS);
   }
   try {
-    inspectVoiceWav(bytes);
+    inspectVoiceWav(bytes, MAX_SPEECH_SECONDS);
   } catch {
     throw new GeminiSpeechError('response_invalid');
   }
@@ -192,16 +214,13 @@ export function createGeminiSpeaker(overrides: Partial<GeminiSpeechDependencies>
                 role: 'user',
                 parts: [
                   {
-                    text:
-                      'Read this explanation aloud in a clear, warm, natural voice. Say only the explanation:\n' +
-                      text,
+                    text: GEMINI_TTS_STYLE + spokenText(text),
                   },
                 ],
               },
             ],
             generationConfig: {
               responseModalities: ['AUDIO'],
-              maxOutputTokens: 1024,
               speechConfig: {
                 voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_TTS_VOICE } },
               },
@@ -226,8 +245,9 @@ export function createGeminiSpeaker(overrides: Partial<GeminiSpeechDependencies>
         throw new GeminiSpeechError(error.reason === 'configured' ? 'unavailable' : 'capacity');
       throw new GeminiSpeechError('unavailable');
     } finally {
-      // Conservative charge, not a claim about provider billing: bounded 1024
-      // output tokens + <=600 text characters fit below this $0.03 reservation.
+      // Conservative charge, not a claim about provider billing: 3.1 Flash TTS takes no
+      // output-token limit, so the bound is the audio itself. At most 60 s (~1,500 audio
+      // tokens) plus <=600 text characters fit below this $0.03 reservation.
       // Retain it even on post-send failure/cancellation; never retry implicitly.
       if (reservation)
         try {

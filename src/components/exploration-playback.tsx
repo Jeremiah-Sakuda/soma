@@ -8,6 +8,7 @@ import { PreparedAudio } from '@/lib/client/prepared-audio';
 
 export { explorationNarration, nextPlaybackState } from '@/lib/domain/exploration-view';
 import { explorationNarration, nextPlaybackState } from '@/lib/domain/exploration-view';
+import { spokenText } from '@/lib/domain/spoken-text';
 export function ExplorationPlayback({
   artifactId,
   version,
@@ -97,7 +98,8 @@ export function ExplorationPlayback({
     callbacks.current.onProgress(null, playbackKey);
     if (provider === 'browser') {
       setPreparing(false);
-      const utterance = new SpeechSynthesisUtterance(narration);
+      // Notation is spoken as words, as in the Gemini voice.
+      const utterance = new SpeechSynthesisUtterance(spokenText(narration));
       utterance.rate = rateRef.current;
       window.speechSynthesis.cancel();
       utterance.onend = finish;

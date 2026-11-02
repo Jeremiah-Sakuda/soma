@@ -656,8 +656,11 @@ function typedCall(result: MetaResult, name: string): MetaToolCall {
     result.status !== 'completed' ||
     result.tools.length !== 1 ||
     result.tools[0].name !== name
-  )
+  ) {
+    if (process.env.SOMA_DEBUG_FAILURES === 'true')
+      console.warn('[soma] untyped result', JSON.stringify({ status: result.status, tools: result.tools.map((t) => t.name), structured: Boolean(result.structured), usage: result.usage }));
     throw new ExplorationError('generation_invalid');
+  }
   return result.tools[0];
 }
 function toolHistory(call: MetaToolCall, output: unknown) {
@@ -1380,7 +1383,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         // Composing a whole 3D model is the longest single output; give it more of the budget.
         deadlineMs: Math.min(request.intent === 'model' && structuredOutput ? 45_000 : 30_000, deadline - Date.now()),
         signal,
-        maxOutputTokens: 6144,
+        // A whole 3D model, with its reasoning, needs more room than a 2D scene.
+        maxOutputTokens: request.intent === 'model' && structuredOutput ? 16_384 : 6144,
         ...(mechanismBudget ? { reasoningEffort: 'minimal' as const } : {}),
         maxImages: 3,
         ...(model !== META_MODEL ? { model, reasoningEffort: 'minimal' as const, maxOutputTokens: 1536 } : {}),

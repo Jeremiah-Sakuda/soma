@@ -581,3 +581,15 @@ The user asked whether studying is too narrow a frame, and whether to broaden So
 - **Prove breadth before claiming it.** An optional video beat shows an original non-course diagram only after it has been run live and its route checked. Until then the beat uses the Soma lab engine. Public copy frames the reach as potential ("could") without a "not yet demonstrated" disclaimer, at the user's request the same day.
 
 [STORY_AND_DEMO.md](STORY_AND_DEMO.md) owns the wording. README, SUBMISSION, the video script and voiceover, DEMO, SUBMISSION_EVIDENCE, the desktop README, HACKATHON_REQUIREMENTS and a note in the PRD were aligned. Product scope, checked computation and evidence rules are unchanged.
+
+## A second checked subject: DC circuits, November 1–2
+
+The user identified the main gap: deep verification was shown only on graph search, while other domains (the four-stroke engine lab) were recorded demonstrations rather than live engines. The decision is to make a second subject live and checked end to end rather than broaden copy:
+
+- **DC circuits, not another graph algorithm or the engine.** Another graph algorithm would still read as "graph search"; a live engine needs general kinematics the models would have to author. Ideal resistor circuits are a different subject every physics and engineering student meets, their laws live in Soma's code rather than the model's output, and the README and submission already named them as the next candidate.
+- **Same trust split as graphs.** Spark reads the circuit (junctions, resistors, sources, polarity, ground) and where it is drawn; Soma solves it exactly by nodal analysis in rational arithmetic and checks Kirchhoff's current law, every source's voltage and power balance on every solution. Muse writes only the words for a circuit card; the application assembles the spec. For "Find the tipping point", Muse chooses the part, what to watch and the condition; Soma computes the exact value from three exact solves and counts it as verified only when the circuit re-solved there meets the condition exactly.
+- **Reuse, don't fork.** Circuits share the capture, reading, review, versioning, overlay model and Mac companion. Opened parts and changed values reuse the view state's `disabledEdgeIds` and `edgeWeights`, so the companion's click-to-cut action opens a part with no desktop change.
+- **Placement is deterministic.** Spark's coordinates were 35–280 px off on the 1920-wide slide in live runs; junction-dot snapping and part-body search move them onto the drawing with no model call.
+- **Freeze exception.** This is post-freeze work (October 31), done at the user's direction on November 1. The engine lab stays a labelled recorded run and leaves the video; the reach beat becomes the circuit slide, run live.
+
+Evidence: `tests/domain/dc-circuit.test.ts`, `circuit-overlay-model.test.ts`, `tests/server/exploration-circuit.test.ts`, `circuit-snap.test.ts`, `tests/e2e/circuit.spec.ts`, and two live service runs (`tests/providers/circuit-live.test.ts`, `.local/circuit/live`, about $0.04 per turn). Not yet verified: the native overlay on the real screen, the hosted deployment.

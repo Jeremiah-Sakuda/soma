@@ -13,7 +13,7 @@ The [script](DEMO_VIDEO_SCRIPT.md) owns timing and wording. In order:
 5. **Follow-up:** ask why; open **How Muse made this** for the Wonder review line.
 6. **Keep it:** **Save exploration**, reopen it, then **Try a fresh example**.
 7. **Lift into 3D:** the panel's **Lift into 3D** (⌘L in the compact bar). Hold on the settled view: F at 7 on the ruler, taut route, A–F slack 4.
-8. **Reach:** a verified non-course diagram (Variant A) or the Soma lab engine (Variant B, default).
+8. **A second subject:** the Lecture 9 bridge slide in Preview, ⌥Space, "Why is there no current through R5?" Soma draws every voltage and current; B = C = 8 V and R₅ carries 0 A. Click R₂ on the slide to open it: current crosses R₅ from B to C.
 9. **On camera:** the close and the end card.
 
 Keep the understanding map, course workspace, architecture and repair history out of the three-minute story. They remain available for questions.
@@ -24,7 +24,9 @@ Keep the understanding map, course workspace, architecture and repair history ou
 
 **Browser (the judge path and fallback):** the [Explore route](https://soma-woad-beta.vercel.app/explore). Upload the [Lecture 14 slide](../public/examples/lecture-14-dijkstra.png) and ask the same question; the checked search is drawn over the uploaded capture. If the native overlay misaligns on a take, use **Share a window** on Preview and say which path the take used in its label.
 
-**Soma lab engine:** the hosted [lab page](https://soma-woad-beta.vercel.app/lab/engine/index.html). Actual recorded Muse source and investigation cases, with no runtime inference. It is not a live generation or cloud-save flow.
+**Circuit slide:** [Lecture 9 bridge](../public/examples/lecture-9-bridge.png) (PDF for Preview: `docs/examples/hero-circuit/Lecture-9-Bridge.pdf`). The same entry paths work: upload it in the browser or ask over it natively.
+
+**Soma lab engine:** the hosted [lab page](https://soma-woad-beta.vercel.app/lab/engine/index.html). Actual recorded Muse source and investigation cases, with no runtime inference. It is not a live generation or cloud-save flow, and it is no longer in the video.
 
 ## Recording modes
 
@@ -32,7 +34,8 @@ Keep the understanding map, course workspace, architecture and repair history ou
 - Genuine recorded Muse generation: keep its recorded label and original attribution. New follow-ups may still be live operations.
 - Prepared examples: identify them as prepared, not as recorded model output.
 - Lab illustrations: identify the recorded prototype and original synthetic source.
-- Variant A (non-course diagram): an original map only, run live, its route checked against the solver before it goes in the cut. Without that take, the reach beat stays potential and uses Variant B.
+- Circuit beat: the Lecture 9 slide run live, its values checked against the script's list before it goes in the cut.
+- Non-course diagrams stay potential unless an original map is run live and checked.
 
 Use original synthetic material or a source with explicit sharing permission. Review source interpretation visibly when it matters; graph computation checks the interpreted input, not every pixel-reading claim. Preserve the earlier valid artifact on generation failure and use the documented recorded or prepared path honestly.
 
@@ -40,6 +43,6 @@ The cumulative testing allowance is $40 (PM132), with prior consumption and rese
 
 ## Submission framing
 
-Impact means plausible real-world potential, beneficiaries and significance. The student journey on the slide is the demonstrated evidence; reach beyond the classroom is stated as potential unless Variant A has been run. Learner studies, adoption and quantified savings are optional additional evidence, not hackathon prerequisites.
+Impact means plausible real-world potential, beneficiaries and significance. The student journeys on the two slides are the demonstrated evidence; reach beyond the classroom is stated as potential. Learner studies, adoption and quantified savings are optional additional evidence, not hackathon prerequisites.
 
 Recording, final video upload, clean public judge access and publication remain separate completion steps. Use only [Jeremiah-Sakuda/soma](https://github.com/Jeremiah-Sakuda/soma) as the source repository; keep it private until authorized. No new hosted or native acceptance or final-video claim follows from this document.

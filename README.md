@@ -2,13 +2,13 @@
 
 **Turn what you’re studying into something you can explore.**
 
-Soma turns a diagram on your screen into an experiment whose answers are computed, not guessed. Meta’s Muse models read the source, explain it and choose what to investigate; Soma’s own solver computes the result and draws it back onto the source, where you can cut a connection, change a cost or ask about the consequence. It starts with students: the slide you're studying becomes something you can test.
+Soma turns a diagram on your screen into an experiment whose answers are computed, not guessed. Meta’s Muse models read the source, explain it and choose what to investigate; Soma’s own solver computes the result and draws it back onto the source, where you can cut a connection or open a resistor, change a cost or a value, or ask about the consequence. Two subjects are checked today, graph search and DC circuits. It starts with students: the slide you're studying becomes something you can test.
 
 The opportunity: less setup between encountering a difficult idea and having a useful way to explore it, first in the classroom and potentially, with the same solver, on graphs people read outside it. [Demo story](docs/STORY_AND_DEMO.md) · [Three-minute script](docs/DEMO_VIDEO_SCRIPT.md) · [Submission copy](docs/SUBMISSION.md)
 
 **[Try it in your browser](https://soma-woad-beta.vercel.app/explore)** (no account needed) · **[Download for macOS](https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.3.0)** (Apple Silicon, signed and notarized)
 
-**Try the demo slide in two minutes.** Download [the original Lecture 14 slide](public/examples/lecture-14-dijkstra.png), open [Soma](https://soma-woad-beta.vercel.app/explore), choose **Upload screenshot** and ask *“Why doesn’t it just take the direct A-to-F edge?”* Muse Spark reads the slide and Soma runs Dijkstra **on the slide itself**: rings, distances and the route are drawn over your own capture. Click a connection on the slide to cut it, or choose **Find the tipping point** and drag the cost. Every route and number comes from Soma’s solver, and Muse Wonder checks the explanation against it before you see it. The [Soma lab engine](https://soma-woad-beta.vercel.app/lab/engine/index.html) is a separate recorded Muse run.
+**Try the demo slide in two minutes.** Download [the original Lecture 14 slide](public/examples/lecture-14-dijkstra.png), open [Soma](https://soma-woad-beta.vercel.app/explore), choose **Upload screenshot** and ask *“Why doesn’t it just take the direct A-to-F edge?”* Muse Spark reads the slide and Soma runs Dijkstra **on the slide itself**: rings, distances and the route are drawn over your own capture. Click a connection on the slide to cut it, or choose **Find the tipping point** and drag the cost. Every route and number comes from Soma’s solver, and Muse Wonder checks the explanation against it before you see it. Then try a different subject: download [the original Lecture 9 bridge slide](public/examples/lecture-9-bridge.png) and ask *“Why is there no current through R5?”* Spark reads the circuit, Soma solves it exactly by nodal analysis and draws every node’s voltage and every current on the slide. Click a resistor on the slide to open it, or choose **Find the tipping point**: Muse picks the part to vary and Soma finds exactly where the current through R₅ reverses. The [Soma lab engine](https://soma-woad-beta.vercel.app/lab/engine/index.html) is a separate recorded Muse run.
 
 **Native interaction:** enable **Point & ask**, hold **Control–Option–Space**, point or circle while speaking, and release to ask about that region. Or press **Option–Space** for the compact ask bar: type a question, and Soma draws the checked search over the slide on your screen while its panel stays closed; press ⌘L to lift it into 3D, each vertex raised to its checked distance. The local trail responds immediately; Muse prepares the visual afterward. Step highlights now link back to the captured source. Compare a new capture with the prior one, or ask for a closer look at a formula. Native source references require an unchanged screen. The download above is Developer ID signed, Apple-notarized and stapled. Streaming speech is tested locally; its cloud relay awaits provisioning approval. [Details and verification](docs/POINT_AND_ASK.md).
 
@@ -32,22 +32,22 @@ Soma grew out of its builder’s study workflow with Meta’s assistant. Its foc
 
 ```mermaid
 flowchart LR
-  A[Snapshot of your screen] --> B[Muse Spark reads it<br/>into a typed graph]
-  B --> C[Soma's solver computes<br/>BFS and Dijkstra]
+  A[Snapshot of your screen] --> B[Muse Spark reads it into<br/>a typed graph or circuit]
+  B --> C[Soma's solver computes<br/>BFS, Dijkstra or nodal analysis]
   C --> F[Muse Spark writes the<br/>explanation and visual]
-  F --> G{Weighted or<br/>prediction card?}
+  F --> G{Weighted, circuit or<br/>prediction card?}
   G -- yes --> W[Muse Wonder reviews it<br/>against the checked results]
   G -- no --> H
   W --> H[You change it, ask,<br/>and save]
-  H -- Find the tipping point --> D[Muse Spark chooses<br/>an edge to test]
-  D --> E[Soma computes<br/>the cost cases]
+  H -- Find the tipping point --> D[Muse Spark chooses<br/>an edge or part to test]
+  D --> E[Soma computes<br/>the exact tipping value]
   E --> F
 ```
 
 1. **Capture.** ⌘⇧Space snapshots the display under your cursor. You review the snapshot, and it is not sent until you ask.
-2. **Read.** Muse Spark reads the pixels and returns the graph as typed data: nodes, edges, direction, costs, start and goal. Its reading is inspectable in Source & assumptions; unsupported or invalid output may prompt clarification or be declined.
-3. **Compute.** Soma runs breadth-first search and Dijkstra's algorithm on that graph. Every highlighted path, queue state and route cost on screen comes from this computation.
-4. **Experiment.** On a weighted graph, click **Find the tipping point** and Spark picks the edge most worth investigating. Soma computes how both routes change as that edge's cost changes. When the edge runs directly from start to goal, that includes the exact cost where the two routes tie. The cost slider then re-runs both searches in your browser at any value, with no further model call.
+2. **Read.** Muse Spark reads the pixels and returns the graph as typed data (nodes, edges, direction, costs, start and goal) or the circuit (junctions, resistors and sources with their values and polarity, and ground). For a circuit, Soma then snaps the reading onto the slide's own junction dots and part bodies. Its reading is inspectable in Source & assumptions; unsupported or invalid output may prompt clarification or be declined.
+3. **Compute.** Soma runs breadth-first search and Dijkstra's algorithm on a graph, or solves a circuit exactly by nodal analysis in fractions and checks Kirchhoff's current law at every junction. Every highlighted path, queue state, route cost, voltage and current on screen comes from this computation.
+4. **Experiment.** On a weighted graph, click **Find the tipping point** and Spark picks the edge most worth investigating. Soma computes how both routes change as that edge's cost changes. When the edge runs directly from start to goal, that includes the exact cost where the two routes tie. The cost slider then re-runs both searches in your browser at any value, with no further model call. On a circuit, Spark picks the part to vary and what to watch; Soma finds the exact value where that current or voltage reaches zero (or where a resistor takes the most power) and re-solves the circuit there to verify it.
 5. **Explain.** Spark writes the explanation, steps and narration around the checked results. For weighted and prediction-informed cards, Muse Wonder reviews the finished card against those results as an advisory critic and can send it back for one repair.
 6. **Follow up and save.** Ask about any node or edge, and your changes carry into the answer instead of resetting. Versions are saved and can be reopened.
 
@@ -59,7 +59,7 @@ flowchart LR
 
 **Keep the investigation connected.** Contextual follow-ups and saved revisions let the user continue from the current experiment. The opportunity is less setup and more direct exploration; no quantified time-saving or learning-gain result is claimed.
 
-**Reach past the classroom.** The checked step doesn't depend on the picture being a slide: Muse reads a picture into a typed graph, Soma's solver computes on it, and the result is drawn back onto the picture. The same questions come up on a transit map, a network diagram or a delivery route, which is where Soma could go next.
+**Reach past the classroom.** The checked step doesn't depend on the picture being a slide: Muse reads a picture into a typed graph or circuit, Soma's solver computes on it, and the result is drawn back onto the picture. The same questions come up on a transit map, a network diagram or a delivery route, which is where Soma could go next.
 
 ## Exploring a richer visual language
 
@@ -73,13 +73,13 @@ Each model has a defined job, and none of them is trusted blindly.
 
 | Model | Job in Soma | How it is held to account |
 | --- | --- | --- |
-| **Muse Spark 1.3** | Reads the screenshot (`inspect_source`), chooses the edge to test (`choose_cost_probe`) and writes the visual and explanation (`compose_exploration`, `compose_cost_experiment`) | Strict tool schemas are bound to the request's own IDs and versions. Output that fails validation goes back with structured findings for one bounded repair, or it is not published. |
-| **Muse Wonder 1.0** | Advisory reviewer for weighted and prediction-informed cards: approves, or requests a revision | It reviews the explanation against the solver's results, after the application's own checks have passed. |
+| **Muse Spark 1.3** | Reads the screenshot (`inspect_source`), chooses the edge or part to test (`choose_investigation`, `choose_circuit_investigation`) and writes the visual and explanation (`compose_exploration`, `compose_cost_experiment`, `compose_circuit`) | Strict tool schemas are bound to the request's own IDs and versions. Output that fails validation goes back with structured findings for one bounded repair, or it is not published. |
+| **Muse Wonder 1.0** | Advisory reviewer for weighted, circuit and prediction-informed cards: approves, or requests a revision | It reviews the explanation against the solver's results, after the application's own checks have passed. |
 | **Muse Voice Transcribe 1.0** | Turns a spoken question into text | You click to record. Soma does not store the recording. |
 
 **Where the reasoning shows up.** Spark decides *which experiment to run* on this particular graph; the application decides *what the answer is*. Every generated card shows its own pipeline (Spark read the source, Soma computed, Spark composed, Wonder reviewed or did not run), and a "How this card was prepared" panel lists the actual calls, events, time and cost. In testing, Wonder caught real defects: a Dijkstra frontier mislabeled as a first-in-first-out queue, and misleading wording about tied routes. On a live follow-up, it sent a card back for one revision before approving it.
 
-**What the models never do:** compute paths, costs or search states, run code, write learner records, change validation rules or spend outside the application's budget.
+**What the models never do:** compute paths, costs, search states, voltages or currents, run code, write learner records, change validation rules or spend outside the application's budget.
 
 Narration audio uses Gemini 3.1 Flash TTS (preview, Sulafat voice), because the Meta models offered for this event include transcription but not speech synthesis. The words are the explanation on screen; Gemini only voices them. The browser's own voice is a one-click alternative, and captions are always on.
 
@@ -92,7 +92,8 @@ These are small development samples, frozen before any model call, with the answ
 | Fresh original graph images (small, 3–4 nodes) | **8 of 8 read exactly.** Nodes, edges, direction, start, goal and costs all matched, and the results matched an independent Floyd–Warshall reference. The set covered reverse traversal, zero and fractional costs, ties, cycles and disconnected graphs. |
 | The full frozen set of 13 original sources | **12 of 13 intended outcomes.** Process diagrams became explanatory visuals, blank material got a clarifying question, and negative costs were correctly refused by the solver. The miss was a graph with missing costs, which was rejected safely instead of prompting a clarifying question. |
 | Nine screenshots: three real public pages (MDN, Google's ML course, OpenStax) and six original test images (two code variants, spreadsheet, circuit, cache diagram, unreadable crop) | **8 of 9 first requests** produced a source-specific explanation or a clarifying question. The code example changed correctly when the values on screen changed. The OpenStax page was rejected safely. |
-| Solver correctness | Dijkstra matches exhaustive simple-path costs, and BFS matches independent reference traces ([tests/domain](tests/domain)). |
+| Solver correctness | Dijkstra matches exhaustive simple-path costs, and BFS matches independent reference traces. The circuit solver agrees with independent two-resistor formulas, and Kirchhoff's and Ohm's laws hold on 60 random circuits ([tests/domain](tests/domain)). |
+| The original Lecture 9 circuit slide, two live service runs | **Both read exactly:** five resistors, the battery's polarity and ground. Soma solved B = C = 8 V and exactly 0 A through R₅; Wonder approved. Asked “When would current flow through R5?”, Muse chose R₄ and Soma found exactly 8 Ω, verified by re-solving. Snapping put every node within 6 px of the drawing in both runs. |
 | Engineering | Latest local spatial-branch checks: 1,709 offline passed / 102 opt-in skipped and 49 engine browser journeys, plus typecheck/build/export. Canonical runtime fingerprint unchanged; native release status is separate ([PM126](docs/examples/pm126/JUDGING.md)). |
 | One recent original-synthetic service journey | Generation, changed-edge revision and exact save/reopen passed in 27.608 seconds including application work, after retained earlier outcomes. This is an example, not a typical-latency or reliability claim ([receipts](docs/examples/pm126/recorded/canonical-service-checks.json)). |
 
@@ -104,6 +105,7 @@ All code was written for the Meta Global AI Developer Hackathon, from kickoff on
 
 - **The visual exploration engine** (`/explore`): capture or upload, Spark interpretation, the checked solver, generated scenes, manipulation, contextual follow-ups and versioned saves.
 - **Checked BFS and Dijkstra engines**, the model-chosen cost experiment, and weighted animation that replays the solver's own settlement and relaxation steps.
+- **Checked DC circuits** (November 1–2): exact nodal analysis with Kirchhoff checks, opening parts and changing values on the slide, a model-chosen tipping point verified by re-solving, junction-dot snapping, and a 3D view in which height is voltage.
 - **Visible model pipeline and a recorded live run** that judges can open without spending inference.
 - **The macOS companion**: global shortcut, display snapshot with preview, floating panel, a compact translucent ask bar for typed questions, the checked search drawn over the real screen and liftable into 3D (height is checked distance; shortest routes pull taut), and a restricted bridge to native features. It is signed and notarized.
 - **Voice**: Muse transcription for spoken questions, plus narrated, captioned playback that paces the animation.
@@ -113,13 +115,13 @@ All code was written for the Meta Global AI Developer Hackathon, from kickoff on
 ## What comes next
 
 - **Graphs beyond the classroom.** The same solver and overlay on diagrams people use outside a course: transit, network and route maps. Reading them is the open question, not computing them.
-- **More checked subjects.** Each new subject needs a solver, a schema and a renderer; the capture, model and review pipeline stays the same. DC resistor circuits are the next candidate: Soma already explains circuit screenshots, and a solver would make them manipulable.
+- **More checked subjects.** DC circuits were the second: the capture, reading, review, drawing and Mac companion stayed the same, and what was new was a solver, a reading contract and a way to draw voltages and currents. Truss statics is a natural next candidate.
 - **Classroom pilots** that measure what students can do on their own afterward, not just what they did with help.
 - **Course awareness.** Reconnect the course workspace so a new lecture arrives with its experiment ready.
 
 ## Scope
 
-- Checked computation covers BFS and Dijkstra with nonnegative costs, up to 12 nodes and 24 edges. Everything else is an explanatory visual, labeled that way in the app. It is not a simulation.
+- Checked computation covers BFS and Dijkstra with nonnegative costs, up to 12 nodes and 24 edges, and ideal DC circuits of resistors and sources, up to 10 nodes and 16 parts. Everything else is an explanatory visual, labeled that way in the app. It is not a simulation.
 - Reading a screenshot can go wrong. The **Source & assumptions** panel shows Spark's reading of the source and the uncertainty it reported. That reading is shown for inspection; it is not independently re-checked.
 - Browser upload is the fully verified capture path. The desktop shortcut passes automated policy and synthetic capture checks. Real Screen Recording permission, multi-display capture and clean-Mac installation are being tested by hand.
 - Impact is framed around students first: easier exploration of a learner’s own material. Uses beyond the classroom are described as potential. Quantified time savings, adoption and classroom outcomes are not claimed.

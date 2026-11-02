@@ -1,6 +1,6 @@
 # Soma — the story we are telling
 
-November 1, 2026 positioning update. This document owns how Soma is described everywhere: README, submission copy, video, desktop notes and answers to judges. It supersedes the PM129 framing (engine-led, "visual learning companion"), kept in git history. Product scope stays in the [PRD](PRD.md); this is a positioning decision, recorded in [DECISIONS.md](DECISIONS.md), not a new feature commitment.
+November 1, 2026 positioning update, revised November 2 for the second checked subject. This document owns how Soma is described everywhere: README, submission copy, video, desktop notes and answers to judges. It supersedes the PM129 framing (engine-led, "visual learning companion"), kept in git history. Product scope stays in the [PRD](PRD.md); this is a positioning decision, recorded in [DECISIONS.md](DECISIONS.md), not a new feature commitment.
 
 ## The positioning
 
@@ -8,8 +8,8 @@ November 1, 2026 positioning update. This document owns how Soma is described ev
 
 - **Tagline (unchanged):** Turn what you're studying into something you can explore.
 - **What Soma is:** Soma turns a diagram on your screen into an experiment whose answers are computed, not guessed. Meta's Muse models read the source and choose what to investigate; Soma's own solver computes the result and draws it back onto the source, where you can change it and see what happens.
-- **Who it's for first:** students and independent learners with a worked example in front of them and a question it doesn't answer. Graph search is the first checked subject, because every computing student meets it.
-- **How far it reaches:** the checked part of the pipeline doesn't depend on the picture being a lecture slide. Learning is where Soma starts and what it demonstrates in depth; it is not "one application of a platform".
+- **Who it's for first:** students and independent learners with a worked example in front of them and a question it doesn't answer. Two subjects are checked live: graph search, which every computing student meets, and DC circuits, which every physics and engineering student meets.
+- **How far it reaches:** the checked part of the pipeline doesn't depend on the picture being a lecture slide. Nor does it depend on one subject: the circuit path reuses the same capture, reading, review, drawing and companion as graph search. Learning is where Soma starts and what it demonstrates in depth; it is not "one application of a platform".
 
 ## Why this framing (weighed against the rubric)
 
@@ -30,7 +30,7 @@ Soma removes that reconstruction step. The material you are already looking at b
 
 ## Beyond the course
 
-The same questions turn up wherever people reason over connections they can't edit: a transit map, a network diagram, a delivery route. Soma's checked step is not tied to the classroom. Muse reads a picture into a typed graph, Soma's solver computes on it, and the overlay draws the result back onto the picture. The solver already runs on any weighted graph Spark can read (nonnegative costs, up to 12 nodes and 24 edges): in testing, 8 of 8 fresh original graph images were read exactly ([verification](VERIFICATION.md)). Each new kind of diagram needs a solver, a schema and a renderer, not a new product.
+The same questions turn up wherever people reason over connections they can't edit: a transit map, a network diagram, a delivery route. Soma's checked step is not tied to the classroom. Muse reads a picture into a typed graph, Soma's solver computes on it, and the overlay draws the result back onto the picture. The solver already runs on any weighted graph Spark can read (nonnegative costs, up to 12 nodes and 24 edges): in testing, 8 of 8 fresh original graph images were read exactly ([verification](VERIFICATION.md)). Each new kind of diagram needs a solver, a schema and a renderer, not a new product, and DC circuits show it: they were added on November 1–2 as a second checked subject on the same pipeline.
 
 **How to say it:** describe uses beyond the classroom as potential ("could", "the same idea applies"), never as something Soma already does for those users. Show one in the video only after a non-course diagram has been run live through the same flow (see the optional video beat below).
 
@@ -45,7 +45,7 @@ One continuous live run on the original Lecture 14 slide, drawn by the native ov
 5. **Why, checked:** the follow-up answers the experiment in progress; Muse Wonder checked the explanation against the computed trace.
 6. **Keep it:** save, reopen, and a fresh problem from the same idea.
 7. **The answer has a shape:** lift the search off the slide in 3D. Every height is a checked distance; the shortest route pulls taut and the direct edge hangs slack by exactly 4.
-8. **How far it goes:** if an original non-course diagram has been run live, show it for a few seconds with the same question and a checked answer. Otherwise show the Soma lab engine, labelled as a recorded Muse run.
+8. **Not only graphs:** the Lecture 9 bridge slide, run live through the same flow. Soma solves the circuit exactly: B and C both sit at 8 V, so no current crosses R₅. Open R₂ on the slide and current flows through it.
 9. **Close (on camera):** the slide didn't change; what changed is that I could ask it my question and see why, with the math checked.
 
 **The emotional arc:** confusion → control → consequence → possibility.
@@ -58,13 +58,14 @@ One continuous live run on the original Lecture 14 slide, drawn by the native ov
 | computed, checked, the code proves the answer | "accurate", "guaranteed" for anything Muse generates |
 | "starts with students", "built for students first" | "learning is just one application", "platform", "any domain" |
 | "could", "potential", "the same idea applies" for uses beyond the classroom | named user groups beyond students as if they already use Soma |
+| "two checked subjects: graph search and DC circuits" | "any subject", or calling the recorded engine lab live |
 | "no study or adoption figures are claimed" | minutes saved, grade gains, user counts |
 
 ## Claims boundary
 
-- **Checked:** BFS and Dijkstra routes, distances, cuts, tipping points and the 3D heights and slack. Everything else (explanations, mechanisms, general screenshots) is generated, labelled and reviewable.
-- **Demonstrated:** the student journey on the Lecture 14 slide, in the browser and on the real screen.
-- **Potential:** diagrams beyond the classroom; further checked subjects such as DC circuits.
+- **Checked:** BFS and Dijkstra routes, distances, cuts, tipping points and the 3D heights and slack; DC circuit voltages, currents, opened parts, changed values and tipping points, solved exactly with Kirchhoff's current law checked. Everything else (explanations, mechanisms, general screenshots) is generated, labelled and reviewable.
+- **Demonstrated:** the student journey on the Lecture 14 slide, in the browser and on the real screen; the circuit journey on the Lecture 9 slide, live through the service and in the browser.
+- **Potential:** diagrams beyond the classroom; further checked subjects such as truss statics.
 - **Not claimed:** measured learning gains, adoption or time saved.
 
 ## Use the right document

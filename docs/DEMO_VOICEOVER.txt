@@ -10,12 +10,11 @@ Then I ask Soma to test my question. Muse picks the connection my question is ab
 
 When I ask why, the answer is about the experiment I'm running. And before this explanation reached me, Muse Wonder checked it against Soma's computed trace. In one run it caught Spark settling two vertices at once and sent it back.
 
-Everything I explored is saved, and Soma can make a fresh problem from the same idea, hiding the answer until I try it.
+Everything I explored is saved, and Soma can make a fresh problem from the same idea.
 
 And the answer has a shape. Every height is a checked distance: the shortest route pulls tight, and the direct edge hangs slack by exactly four.
 
-[Variant A, only if the map take is verified] And it was never only about this slide: here's a network map, same question, same checked answer.
-[Variant B, default] In our lab, Muse goes further: an engine it drew and explains, from a recorded run.
+And it isn't only graphs. On a circuit slide, Soma solves the circuit exactly: B and C both sit at eight volts, so nothing crosses the bridge. I open R-two, and now current flows through it.
 
 [On camera] The slide didn't change. What changed is that I could ask it my question and see why, with the math checked. I built Soma for my lectures, but every diagram you can't edit has questions like mine.
 

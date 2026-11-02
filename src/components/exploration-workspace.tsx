@@ -53,6 +53,10 @@ import { ExplorationJournalLog } from './exploration-journal-log';
 import './exploration.css';
 import './exploration-journal.css';
 
+/** Steps in the checked trace on screen, for either checked family; null without one. */
+function compactStepCount(spec: ExplorationSpec, state: ExplorationViewState) {
+  return explorationExecution(spec, state)?.steps.length ?? (circuitSolution(spec, state)?.steps.length || null);
+}
 type Artifact = {
   recording?: { id: string; generatedAt: string; sourceImage: string };
   experiment?: CostProbe;
@@ -866,17 +870,18 @@ export function ExplorationWorkspace() {
     else if (d.action === 'investigate')
       void ask(
         text ||
-          'Choose an informative connection and investigate where fewest edges and lowest cost agree or diverge. Use the checked intervention results to explain the boundary, preserve the original graph and expose a hypothetical cost control.',
+          (artifact?.spec.mode === 'checked-circuit'
+            ? 'Choose the one part whose value most changes what this circuit does, and find exactly where it tips.'
+            : 'Choose an informative connection and investigate where fewest edges and lowest cost agree or diverge. Use the checked intervention results to explain the boundary, preserve the original graph and expose a hypothetical cost control.'),
         undefined,
         true,
       );
     else if ((d.action === 'next' || d.action === 'previous') && artifact && state) {
-      const run = explorationExecution(artifact.spec, state);
-      const last = Math.max(0, (run?.steps.length ?? 1) - 1);
+      const last = Math.max(0, (compactStepCount(artifact.spec, state) ?? 1) - 1);
       updateState({ ...state, step: Math.max(0, Math.min(last, state.step + (d.action === 'next' ? 1 : -1))) });
     } else if (d.action === 'play' && artifact) setPlaying(!playing);
   };
-  const compactRun = artifact && state ? explorationExecution(artifact.spec, state) : null;
+  const compactSteps = artifact && state ? compactStepCount(artifact.spec, state) : null;
   // `step` is the shown step's index and `steps` the count. `visual` means this card belongs to
   // a screen snapshot, so it can be drawn there; the companion also requires the drawing to be up.
   const compactStatus = JSON.stringify({
@@ -886,11 +891,13 @@ export function ExplorationWorkspace() {
       sourceMemory.current?.id === artifact.id &&
       sourceMemory.current.capture.capturedAt === artifact.source.capturedAt &&
       !!sourceMemory.current.capture.nativeId,
-    step: compactRun?.steps.length ? Math.min(state!.step, compactRun.steps.length - 1) : null,
-    steps: compactRun ? compactRun.steps.length : null,
+    step: compactSteps ? Math.min(state!.step, compactSteps - 1) : null,
+    steps: compactSteps,
     playing,
     message: error || '',
-    investigable: artifact?.spec.mode === 'checked-dijkstra' && !!state?.goal && liveEnabled !== false,
+    investigable:
+      ((artifact?.spec.mode === 'checked-dijkstra' && !!state?.goal) || artifact?.spec.mode === 'checked-circuit') &&
+      liveEnabled !== false,
   });
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('soma:compact-state', { detail: JSON.parse(compactStatus) }));

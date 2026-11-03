@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
 import { checkExploration } from '../../src/lib/domain/exploration';
 import { initialExplorationState } from '../../src/lib/domain/exploration-view';
 import { circuitSpec } from '../../src/lib/server/circuit-authoring';
@@ -9,7 +8,6 @@ import { heroCircuit, heroCircuitLayout } from '../fixtures/hero-circuit';
 // Scripted provider/API fixture over the original Lecture 9 slide. The actual solver, overlay
 // and React controls run in Chromium; this does not establish live inference.
 test('a checked circuit draws on the uploaded slide and re-solves every experiment in the page', async ({ page }) => {
-  const slide = readFileSync('docs/examples/hero-circuit/lecture-9-bridge.png');
   let active: Record<string, unknown> | null = null;
   const requests: any[] = [];
   await page.route('**/api/explore**', async (route) => {
@@ -74,8 +72,9 @@ test('a checked circuit draws on the uploaded slide and re-solves every experime
   // Screenshots show finished drawings, not ink mid-stroke.
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/explore');
-  await page.getByLabel('Upload a PNG or JPEG screenshot', { exact: true }).setInputFiles({ name: 'Lecture-9.png', mimeType: 'image/png', buffer: slide });
-  await page.locator('.exploration-ask-card textarea').fill('Why is there no current through R5?');
+  // The one-click demo slide loads the same original Lecture 9 image and its question.
+  await page.getByRole('button', { name: 'Try the Lecture 9 circuit slide (live)' }).click();
+  await expect(page.locator('.exploration-ask-card textarea')).toHaveValue('Why is there no current through R5?');
   await page.getByRole('button', { name: 'Ask Soma', exact: true }).click();
   const overlay = page.locator('figure.source-overlay');
   await expect(overlay).toBeVisible();

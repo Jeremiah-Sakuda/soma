@@ -483,15 +483,17 @@ export function ExplorationWorkspace() {
       if (uploadRef.current) uploadRef.current.value = '';
     }
   }
-  /** Loads the original Lecture 14 demo slide as a source; asking still runs live. */
-  async function lectureSlide() {
+  /** Loads an original demo slide as a source; asking still runs live. */
+  async function lectureSlide(circuit = false) {
     try {
-      const blob = await fetch('/examples/lecture-14-dijkstra.png').then((r) => {
+      const blob = await fetch(circuit ? '/examples/lecture-9-bridge.png' : '/examples/lecture-14-dijkstra.png').then((r) => {
         if (!r.ok) throw new Error();
         return r.blob();
       });
-      await upload(new File([blob], 'Lecture 14 · Dijkstra worked example.png', { type: 'image/png' }));
-      setQuestion('Why doesn’t it just take the direct A to F edge?');
+      await upload(
+        new File([blob], circuit ? 'Lecture 9 · Wheatstone bridge.png' : 'Lecture 14 · Dijkstra worked example.png', { type: 'image/png' }),
+      );
+      setQuestion(circuit ? 'Why is there no current through R5?' : 'Why doesn’t it just take the direct A to F edge?');
     } catch {
       setError('The demo slide could not be loaded. Try uploading a screenshot.');
     }
@@ -1093,6 +1095,14 @@ export function ExplorationWorkspace() {
         onClick={() => void lectureSlide()}
       >
         Try the Lecture 14 slide (live) <ArrowUpRight size={16} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        className="exploration-example-button"
+        disabled={sourceBusy || !initialized}
+        onClick={() => void lectureSlide(true)}
+      >
+        Try the Lecture 9 circuit slide (live) <ArrowUpRight size={16} aria-hidden="true" />
       </button>
       <button
         type="button"

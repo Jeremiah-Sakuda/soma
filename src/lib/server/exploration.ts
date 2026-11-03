@@ -2066,7 +2066,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
             reason: z.string().min(1).max(200),
           })
           .parse(decision.parsedArguments);
-        // Numbers belong to the solver; a part's or node's own label (R4, N1) is not a number.
+        // Numbers belong to the solver; a part's or node's own label (R4, N1) is not a number,
+        // even at the end of a sentence ("…of R5."), while a decimal beside it (R4.5) still is.
         const labels = [...circuit.components, ...circuit.nodes]
           .flatMap((x) => [x.label, x.id])
           .sort((a, b) => b.length - a.length);
@@ -2074,7 +2075,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           .filter((label) => /\p{L}/u.test(label))
           .reduce(
             (text, label) =>
-              text.replace(new RegExp(`(?<![\\p{L}\\p{N}.])${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}.])`, 'gu'), ' '),
+              text.replace(new RegExp(`(?<![\\p{L}\\p{N}]|\\p{N}\\.)${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}]|\\.\\p{N})`, 'gu'), ' '),
             choice.reason,
           );
         const rationale =

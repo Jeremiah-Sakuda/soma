@@ -267,12 +267,17 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
     expect(next.spec.writtenFor ?? null).toBeNull();
   });
 
-  it('keeps a reason that names a part by its label', async () => {
+  it.each([
+    ['R4 sets the voltage at C.', 'R4 sets the voltage at C.'],
+    // A label that ends the sentence is still a label, not a decimal.
+    ['R4 sets the voltage at C, the far end of R5.', 'R4 sets the voltage at C, the far end of R5.'],
+    ['R4 at 8.5 sets the voltage at C.', null],
+  ])('keeps a reason that names a part by its label: %s', async (reason, kept) => {
     const request = script();
     const base = request.getMockImplementation()!;
     request.mockImplementation(async (r: { instructions: string; input: readonly unknown[] }) =>
       r.instructions.includes('choose_circuit_investigation')
-        ? result('choose_circuit_investigation', { componentId: 'R4', watch: 'current', targetId: 'R5', condition: 'zero', reason: 'R4 sets the voltage at C.' }, 7)
+        ? result('choose_circuit_investigation', { componentId: 'R4', watch: 'current', targetId: 'R5', condition: 'zero', reason }, 7)
         : base(r),
     );
     const soma = service(request);
@@ -289,7 +294,7 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
         state: first.state,
       } as never)
     ).artifact;
-    expect(probed.circuitExperiment?.rationale).toBe('R4 sets the voltage at C.');
+    expect(probed.circuitExperiment?.rationale ?? null).toBe(kept);
   });
 
   it('answers an experiment with no single solution on the circuit as read, words visible', async () => {

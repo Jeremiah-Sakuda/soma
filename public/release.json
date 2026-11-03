@@ -1,6 +1,6 @@
 {
-  "releaseId": "soma-circuits-review2-2026-11-03",
-  "sourceTreeSha256": "bef14fcfbae32f1e26b42bb27ac5437c60dae432948e137c2ed9f8d12b95b071",
+  "releaseId": "soma-circuits-review3-2026-11-03",
+  "sourceTreeSha256": "0f84dc92994a7c605a8e4d20a95854c3296df7cb99d825054b63b70e77a40ef5",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
     "desktop/Info.plist": "a7566833b9abda71d595bb76ba892daf8c33cccb10413e3a510a1a502c0db050",
@@ -258,7 +258,7 @@
     "src/lib/server/exploration-review.ts": "e0fa7d0b70cda1a4407b6d99097e9a27b712b9fbf645de92c0bb6f594fb12745",
     "src/lib/server/exploration-store.ts": "80d83c2a16616aef0e5f4d3916b6611fca5446ce5594d3f57ad9e3474ab1ba71",
     "src/lib/server/exploration-types.ts": "598be6bf219c9633cda87965ca937c2d3da876be8b1b4c52ffab00699b697a67",
-    "src/lib/server/exploration.ts": "0c26b5268cae3b75d89b9b7b63b98c9cdff1a7ee2705f0bcbe6441c062f96531",
+    "src/lib/server/exploration.ts": "f0e2720650521800bc3ef8ea446f5a13d427209048ad16a4d5eb95ce4fec3600",
     "src/lib/server/firebase-config.ts": "5d4d84f5572044eb8dae9d99bbf7fd44ec18e5dd7ecde68bf418ae50990f755a",
     "src/lib/server/firestore.ts": "7ed2699066c5eefbe06215014045be369911a1cf89c709be0bde57a4a2c7425c",
     "src/lib/server/gemini-speech.ts": "30f76b6082a82e6f7bde933ed3b63ee3fbc118190b9d36baa71e11c03a43805c",

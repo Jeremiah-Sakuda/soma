@@ -1,0 +1,280 @@
+[
+ {
+  "phase": "preflight",
+  "at": "2026-11-03T00:03:59.273Z",
+  "freezeSha256": "236e49854643b7579cb7b22cd37e7a05cb285f411d5e5afcc747cf34cb8187ed",
+  "ledger": 34.15330050000013,
+  "turns": {
+   "day": "2026-11-02",
+   "created": 93,
+   "turns": 200,
+   "active": [],
+   "expiresAt": {
+    "_seconds": 1793777295,
+    "_nanoseconds": 324000000
+   }
+  }
+ },
+ {
+  "id": "circuit-series-parallel-kohm",
+  "subject": "circuit",
+  "status": "published",
+  "mode": "checked-circuit",
+  "passed": true,
+  "numbersMatch": true,
+  "mismatches": [],
+  "elapsedMs": 30957,
+  "calls": 3,
+  "costUsd": 0.04144025,
+  "audit": [
+   "graph-located: Placed the circuit on the drawing: 3 of 3 nodes on their junction dots; 3 of 4 parts found along their wires. Presentation only; the circuit and its solution are unchanged.",
+   "source-interpreted: Source circuit proposed; extraction remains fallible. Provider no-graph sentinel normalized to JSON null.",
+   "model-computed: Checked dc-nodal solution: 3 nodes, 4 parts; Kirchhoff's current law, source voltages and power balance hold exactly.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ]
+ },
+ {
+  "id": "circuit-two-sources",
+  "subject": "circuit",
+  "status": "published",
+  "mode": "checked-circuit",
+  "passed": true,
+  "numbersMatch": true,
+  "mismatches": [],
+  "elapsedMs": 29801,
+  "calls": 3,
+  "costUsd": 0.041561,
+  "audit": [
+   "graph-located: Placed the circuit on the drawing: 2 of 4 nodes on their junction dots; 4 of 5 parts found along their wires. Presentation only; the circuit and its solution are unchanged.",
+   "source-interpreted: Source circuit proposed; extraction remains fallible. Provider no-graph sentinel normalized to JSON null.",
+   "model-computed: Checked dc-nodal solution: 4 nodes, 5 parts; Kirchhoff's current law, source voltages and power balance hold exactly.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ]
+ },
+ {
+  "id": "circuit-current-source-ma",
+  "subject": "circuit",
+  "status": "published",
+  "mode": "checked-circuit",
+  "passed": true,
+  "numbersMatch": true,
+  "mismatches": [],
+  "elapsedMs": 28374,
+  "calls": 3,
+  "costUsd": 0.04067425,
+  "audit": [
+   "graph-located: Placed the circuit on the drawing: 2 of 3 nodes on their junction dots, the rest corrected from them; 4 of 4 parts found along their wires. Presentation only; the circuit and its solution are unchanged.",
+   "source-interpreted: Source circuit proposed; extraction remains fallible. Provider no-graph sentinel normalized to JSON null.",
+   "model-computed: Checked dc-nodal solution: 3 nodes, 4 parts; Kirchhoff's current law, source voltages and power balance hold exactly.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ]
+ },
+ {
+  "id": "circuit-ladder-unmarked-ground",
+  "subject": "circuit",
+  "status": "published",
+  "mode": "checked-circuit",
+  "passed": true,
+  "numbersMatch": true,
+  "mismatches": [],
+  "elapsedMs": 32126,
+  "calls": 3,
+  "costUsd": 0.047746750000000004,
+  "audit": [
+   "graph-located: Placed the circuit on the drawing: 3 of 5 nodes on their junction dots, the rest corrected from them; 7 of 7 parts found along their wires. Presentation only; the circuit and its solution are unchanged.",
+   "source-interpreted: Source circuit proposed; extraction remains fallible. Provider no-graph sentinel normalized to JSON null.",
+   "model-computed: Checked dc-nodal solution: 5 nodes, 7 parts; Kirchhoff's current law, source voltages and power balance hold exactly.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ]
+ },
+ {
+  "id": "circuit-decimal-mesh",
+  "subject": "circuit",
+  "status": "published",
+  "mode": "checked-circuit",
+  "passed": true,
+  "numbersMatch": true,
+  "mismatches": [],
+  "elapsedMs": 46095,
+  "calls": 5,
+  "costUsd": 0.08393400000000001,
+  "audit": [
+   "graph-located: Placed the circuit on the drawing: 2 of 6 nodes on their junction dots, the rest corrected from them; 7 of 7 parts found along their wires. Presentation only; the circuit and its solution are unchanged.",
+   "source-interpreted: Source circuit proposed; extraction remains fallible. Provider no-graph sentinel normalized to JSON null.",
+   "model-computed: Checked dc-nodal solution: 6 nodes, 7 parts; Kirchhoff's current law, source voltages and power balance hold exactly.",
+   "review-rejected: Muse Wonder advisory review: revise. Step circuit_1_5 narration reverses R5 current: it says return paths go 'through E to F', but checked R5=-1.001 A for E→F, so current actually flows F→E into E, then out E→D through R6. Correct the narration to F-to-E inflow and E-to-D outflow; the stated R3 value/direction (1.481 A B→E) is correct.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ]
+ },
+ {
+  "id": "circuit-ground-on-plus",
+  "subject": "circuit",
+  "status": "published",
+  "mode": "checked-circuit",
+  "passed": true,
+  "numbersMatch": true,
+  "mismatches": [],
+  "elapsedMs": 35879,
+  "calls": 3,
+  "costUsd": 0.046444,
+  "audit": [
+   "graph-located: Placed the circuit on the drawing: 3 of 4 nodes on their junction dots; 4 of 5 parts found along their wires. Presentation only; the circuit and its solution are unchanged.",
+   "source-interpreted: Source circuit proposed; extraction remains fallible. Provider no-graph sentinel normalized to JSON null.",
+   "model-computed: Checked dc-nodal solution: 4 nodes, 5 parts; Kirchhoff's current law, source voltages and power balance hold exactly.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ]
+ },
+ {
+  "id": "circuit-rc-declined",
+  "subject": "circuit",
+  "status": "failed",
+  "passed": false,
+  "elapsedMs": 60091,
+  "error": "Soma could not validate the generated explanation. Your previous exploration is unchanged."
+ },
+ {
+  "id": "graph-undirected-8",
+  "subject": "graph",
+  "status": "published",
+  "mode": "checked-dijkstra",
+  "passed": true,
+  "costMatches": true,
+  "wantCost": 18,
+  "gotCost": 18,
+  "mismatches": [],
+  "elapsedMs": 41691,
+  "calls": 5,
+  "costUsd": 0.098299,
+  "audit": [
+   "graph-located: Snapped 6 node position(s) onto the drawn nodes in the same frozen screenshot; no model call.",
+   "reading-confirmed: Muse Wonder read the same image and confirmed all 8 nodes and 13 connections with their weights.",
+   "source-interpreted: Source graph proposed; extraction remains fallible.",
+   "model-computed: Checked dijkstra-nonnegative trace with 9 snapshots.",
+   "repair-requested: Scene failed application validation (graph_positions_distinct:spec); one bounded application repair requested.",
+   "graph-layout-from-source: Placed graph nodes where the source drew them. Presentation only; graph, costs and trace unchanged.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ]
+ },
+ {
+  "id": "graph-directed-7",
+  "subject": "graph",
+  "status": "published",
+  "mode": "checked-dijkstra",
+  "passed": true,
+  "costMatches": true,
+  "wantCost": 15,
+  "gotCost": 15,
+  "mismatches": [],
+  "elapsedMs": 69225,
+  "calls": 6,
+  "costUsd": 0.12325925,
+  "audit": [
+   "neighbor-order-completed: Neighbor order omitted S; appended in listed node order. This is an assumption, not a source fact.",
+   "graph-located: Spark located the interpreted nodes and printed weights in a closer crop of the same frozen screenshot; the graph itself is unchanged.",
+   "graph-located: Snapped 2 node position(s) onto the drawn nodes in the same frozen screenshot; no model call.",
+   "reading-confirmed: Muse Wonder read the same image and confirmed all 7 nodes and 12 connections with their weights.",
+   "source-interpreted: Source graph proposed; extraction remains fallible.",
+   "model-computed: Checked dijkstra-nonnegative trace with 8 snapshots.",
+   "repair-requested: Scene failed application validation (scene_invalid:spec); one bounded application repair requested.",
+   "graph-layout-from-source: Placed graph nodes where the source drew them. Presentation only; graph, costs and trace unchanged.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ]
+ },
+ {
+  "id": "graph-decimal-10",
+  "subject": "graph",
+  "status": "published",
+  "mode": "checked-dijkstra",
+  "passed": true,
+  "costMatches": true,
+  "wantCost": 12,
+  "gotCost": 12,
+  "mismatches": [],
+  "elapsedMs": 46191,
+  "calls": 5,
+  "costUsd": 0.0914355,
+  "audit": [
+   "neighbor-order-completed: Neighbor order omitted A; appended in listed node order. This is an assumption, not a source fact.",
+   "graph-located: Spark located the interpreted nodes and printed weights in a closer crop of the same frozen screenshot; the graph itself is unchanged.",
+   "graph-located: Snapped 4 node position(s) onto the drawn nodes in the same frozen screenshot; no model call.",
+   "reading-confirmed: Muse Wonder read the same image and confirmed all 10 nodes and 16 connections with their weights.",
+   "source-interpreted: Source graph proposed; extraction remains fallible.",
+   "model-computed: Checked dijkstra-nonnegative trace with 11 snapshots.",
+   "graph-layout-from-source: Placed graph nodes where the source drew them. Presentation only; graph, costs and trace unchanged.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ]
+ },
+ {
+  "id": "graph-bfs-9",
+  "subject": "graph",
+  "status": "published",
+  "mode": "checked-bfs",
+  "passed": true,
+  "costMatches": true,
+  "wantCost": 3,
+  "gotCost": 3,
+  "mismatches": [],
+  "elapsedMs": 37693,
+  "calls": 5,
+  "costUsd": 0.07925725,
+  "audit": [
+   "graph-located: Spark located the interpreted nodes and printed weights in a closer crop of the same frozen screenshot; the graph itself is unchanged.",
+   "graph-located: Snapped 9 node position(s) onto the drawn nodes in the same frozen screenshot; no model call.",
+   "reading-confirmed: Muse Wonder read the same image and confirmed all 9 nodes and 12 connections.",
+   "source-interpreted: Source graph proposed; extraction remains fallible.",
+   "model-computed: Checked bfs-unweighted trace with 10 snapshots.",
+   "graph-layout-from-source: Placed graph nodes where the source drew them. Presentation only; graph, costs and trace unchanged.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ]
+ },
+ {
+  "id": "graph-undirected-12",
+  "subject": "graph",
+  "status": "published",
+  "mode": "checked-dijkstra",
+  "passed": true,
+  "costMatches": true,
+  "wantCost": 16,
+  "gotCost": 16,
+  "mismatches": [],
+  "elapsedMs": 65711,
+  "calls": 6,
+  "costUsd": 0.14840050000000002,
+  "audit": [
+   "graph-located: Snapped 7 node position(s) onto the drawn nodes in the same frozen screenshot; no model call.",
+   "reading-confirmed: Muse Wonder read the same image and confirmed all 12 nodes and 20 connections with their weights.",
+   "source-interpreted: Source graph proposed; extraction remains fallible.",
+   "model-computed: Checked dijkstra-nonnegative trace with 12 snapshots.",
+   "graph-layout-from-source: Placed graph nodes where the source drew them. Presentation only; graph, costs and trace unchanged.",
+   "review-rejected: Muse Wonder advisory review: revise. Step s4 caption 'Settle G then J' omits checked settlement order: after F, E is settled at step 6 before G at step 7 (then J at step 8). Revise caption/narration to include E between F and G or avoid implying G immediately follows F/J sequence.",
+   "graph-layout-from-source: Placed graph nodes where the source drew them. Presentation only; graph, costs and trace unchanged.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ]
+ },
+ {
+  "phase": "final",
+  "at": "2026-11-03T00:12:59.418Z",
+  "ledger": 35.08546625000013,
+  "turns": {
+   "day": "2026-11-03",
+   "created": 12,
+   "turns": 12,
+   "active": [],
+   "expiresAt": {
+    "_seconds": 1793837579,
+    "_nanoseconds": 80000000
+   }
+  }
+ }
+]

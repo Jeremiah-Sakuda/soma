@@ -2,17 +2,17 @@
 
 [To Soma] "Why doesn't it just take the direct A-to-F edge?"
 
-Muse Spark reads my slide, and Muse Wonder reads it again on its own to check every weight before Soma runs the real algorithm right on top of it. There's the moment the lecture skipped: going through D costs seven, so the direct edge loses. Every loop and number here is computed, not drawn by a model.
+Muse Spark reads my slide, and Muse Wonder checks that reading against the slide, weight by weight, before Soma runs the real algorithm right on top of it. There's the moment the lecture skipped: going through D costs seven, so the direct edge loses. Every loop and number here is computed.
 
-Now my own question. What if D-to-F weren't there? I cut it, right on the slide. New route, cost nine. Instantly, with no model call.
+Now my own question. What if D-to-F weren't there? I cut it, right on the slide. New route, cost nine, a number that isn't on the slide. Instantly, with no model call.
 
-Then I ask Soma to test my question. Muse picks the connection to vary, and Soma proves exactly where the answer flips. At seven the two routes tie; drop below seven and the direct edge wins outright.
+Then I ask what would send the route through E. Muse picks which connection to test, and Soma proves exactly where the answer flips: at [the tie value on screen], the routes tie, and past it the route turns through E.
 
-When I ask why, the answer is about the experiment I'm running, and Muse Wonder checked it against Soma's trace first. In one run it caught a step settling two vertices at once.
+When I ask why, the answer is about my experiment, and Muse Wonder checked it against Soma's trace first. Once, it caught a step settling two vertices at once.
 
 And the answer has a shape. Every height is a checked distance: the shortest route pulls tight, and the direct edge hangs slack by exactly four.
 
-And it isn't only graphs. On a circuit slide, Soma solves the circuit exactly: B and C both sit at eight volts, so nothing crosses the bridge. Open R-two, and current flows. Then I ask when current would flow at all. Muse picks R-four, a part I never named, and Soma finds the exact value, eight ohms. Drag across it, and the current turns around.
+And it isn't only graphs. On a circuit slide, Soma solves the circuit exactly: B and C both sit at eight volts, so nothing crosses the bridge. When would current flow? Muse picks R-four to vary, and Soma finds the exact value: eight ohms, the value that balances the bridge. Drag across it, and the current turns around.
 
 [On camera] The slide didn't change. What changed is that I could ask it my question and see why, with the math checked. I built Soma for my lectures, but every diagram you can't edit has questions like mine.
 

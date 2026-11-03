@@ -63,7 +63,7 @@ The models decide; the application constrains. Spark's output is validated again
 - Deterministic image snapping places a circuit reading on the slide's own junction dots and part bodies, with no model call.
 - A source-anchored overlay that draws the checked trace on the learner's own capture. Coordinates are stored; screenshot pixels are not.
 - Wonder review with bounded repair, application-enforced spend caps and retries, owned versioned persistence with exact reopen.
-- 1,819 offline tests and 169 browser journeys, run by CI on every push, plus opt-in live-provider journeys; two frozen evaluations with their answer keys and every failure retained ([verification](VERIFICATION.md)).
+- 1,820 offline tests and 169 browser journeys, run by CI on every push, plus opt-in live-provider journeys; two frozen evaluations with their answer keys and every failure retained ([verification](VERIFICATION.md)).
 
 ## Built during the event
 

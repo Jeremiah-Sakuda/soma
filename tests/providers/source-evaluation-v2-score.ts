@@ -69,16 +69,18 @@ export function scoreGraph(c: Extract<Case, { subject: 'graph' }>, spec: { mode:
   for (const key of read.keys()) if (!want.has(key)) mismatches.push(`extra ${key}`);
   // Cost to the goal from Soma's run on the reading, against the answer key's run.
   const run = exp.algorithm === 'bfs' ? runBfs : runDijkstra;
+  // The key's labels may be printed numbers ("1"), which are not valid IDs; give it its own.
+  const kid = (label: string) => `k_${exp.nodes.indexOf(label)}`;
   const key = run({
-    nodes: exp.nodes.map((id) => ({ id, label: id })),
-    edges: exp.edges.map(([a, b, w], i) => ({ id: `e${i}`, from: a, to: b, ...(w !== undefined ? { weight: w } : {}) })),
+    nodes: exp.nodes.map((label) => ({ id: kid(label), label })),
+    edges: exp.edges.map(([a, b, w], i) => ({ id: `e${i}`, from: kid(a), to: kid(b), ...(w !== undefined ? { weight: w } : {}) })),
     ...(exp.algorithm === 'dijkstra' ? { algorithm: 'dijkstra' } : {}),
     directed: exp.directed,
-    start: exp.start,
-    goal: exp.goal,
-    neighborOrder: [...exp.nodes].sort(),
+    start: kid(exp.start),
+    goal: kid(exp.goal),
+    neighborOrder: [...exp.nodes].sort().map(kid),
   });
-  const wantCost = key.steps.at(-1)!.distances[exp.goal];
+  const wantCost = key.steps.at(-1)!.distances[kid(exp.goal)];
   let gotCost: number | undefined;
   try {
     const exec = run(input);

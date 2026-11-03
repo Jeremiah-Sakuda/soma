@@ -62,7 +62,7 @@ To test material we didn't draw, three figures from Wikimedia Commons were froze
 
 Recorded provider cost was $0.25 for the three cases and $0.08 for the rerun. Three figures are a spot check, not a measure of reliability on coursework.
 
-The hosted app at release `soma-circuits-review3-2026-11-03` was also checked headless: production's `release.json` is byte-identical to the source manifest; the Lecture 14 button drew the checked search in 49 s with Wonder's reading-check line; the Lecture 9 button drew the circuit in 45 s; and a circuit investigation chose R₄ and found exactly 8 Ω, verified by re-solving. Muse's stated reason for R₄ was dropped by a filter bug that a part's label at the end of a sentence defeated; it is fixed in `a6d3790` and not yet exercised live.
+The hosted app at release `soma-circuits-review3-2026-11-03` was also checked headless: production's `release.json` is byte-identical to the source manifest; the Lecture 14 button drew the checked search in 49 s with Wonder's reading-check line; the Lecture 9 button drew the circuit in 45 s; and a circuit investigation chose R₄ and found exactly 8 Ω, verified by re-solving. Muse's stated reason for R₄ was dropped by a filter bug that a part's label at the end of a sentence defeated (fixed in `a6d3790`). After the fix, one investigation timed out when its composition call reached the 30-second per-call limit, as the capacitor rerun had; exploration calls now get up to 45 s within the unchanged 90-second turn (`709febe`). At release `soma-circuits-review6-2026-11-03` the hosted investigation then completed in 32 s and showed Muse's reason: "Changing R4 shifts node C relative to node B so R5 direction reveals imbalance."
 
 ## What these checks do not establish
 

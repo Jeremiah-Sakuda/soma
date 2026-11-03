@@ -282,6 +282,26 @@ describe('bounded exploration provider and persistence pipeline', () => {
     expect(artifact.executions).toBeNull();
     expect(artifact.spec.mode).toBe('clarify');
   });
+  it('a capture with nothing to place publishes with no undefined field, which Firestore would reject', async () => {
+    const { service } = harness(script({ clarify: true }));
+    await service.initialize(principal());
+    const artifact = (
+      await service.generate(
+        principal(),
+        generate({
+          source: { kind: 'screenshot', dataUrl: 'data:image/png;base64,ORIGINAL_TEST_IMAGE', label: 'Screenshot', capturedAt: new Date().toISOString() },
+        }),
+      )
+    ).artifact;
+    const undefinedAt = (value: unknown, path: string): string[] =>
+      value === undefined
+        ? [path]
+        : value && typeof value === 'object'
+          ? Object.entries(value).flatMap(([key, item]) => undefinedAt(item, `${path}.${key}`))
+          : [];
+    expect('layout' in artifact.source).toBe(false);
+    expect(undefinedAt(artifact, 'artifact')).toEqual([]);
+  });
   it('accepts only the observed exact no-graph string sentinel without granting checked assurance', async () => {
     const base = script({ clarify: true });
     let calls = 0;

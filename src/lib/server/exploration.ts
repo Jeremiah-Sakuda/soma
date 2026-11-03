@@ -1918,7 +1918,10 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           } catch {
             // An image the snapper cannot read keeps Spark's placement.
           }
-        source.layout = extracted.circuit ? sourceCircuitLayout(extracted.circuit, extracted.circuitLayout) : sourceGraphLayout(extracted);
+        // Firestore rejects an undefined field, so a source with nothing to place has no layout key.
+        const layout = extracted.circuit ? sourceCircuitLayout(extracted.circuit, extracted.circuitLayout) : sourceGraphLayout(extracted);
+        if (layout) source.layout = layout;
+        else delete source.layout;
         if (request.previousImage && previous && extracted.change) {
           source.change = {
             ...extracted.change,

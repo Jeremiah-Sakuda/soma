@@ -1,13 +1,13 @@
-> **Current status — PM094, October 30:** Original soma is the sole repository and remains private; the separate repository is deleted. Clean CI 41116288584 passed for the consolidated runtime: 1,512 offline tests/93 opt-in skipped,133 browser journeys,21 desktop and three relay checks. Source and current production both report PM091 fingerprint 8eca7077dff04f73a4a2ba7e58f56bd7ceb9ed414ae92935fd0ed78eff8245fe (246 files). Read-only route checks found memory 401 and computer 405, proving registered boundaries rather than full user acceptance. Production memory/action flows and physical native 0.4 testing/distribution remain separate. Earlier snapshot/count/exclusion paragraphs below are historical; both complete Git histories and original private docs now belong to soma.
+> **Current status — November 3, 2026.** At release `soma-circuits-review-2026-11-03` (branch `checked-circuits`): 1,819 offline tests passed with 106 opt-in live or environment-gated tests skipped, and CI runs the typecheck, production build and all 169 browser journeys on every push. `node scripts/verify-release.mjs` matches 288 runtime files to `public/release.json`. The sections from "Experience update, October 29 evening" onward are dated snapshots kept as they were written; their counts, links and branch names describe that day, and CI links into the retired `soma-hackathon` repository no longer resolve.
 
-# Verification record — October 29, 2026
+# Verification record
 
 Headline results from executed checks on clean checkouts and on production. These are small development samples, not reliability rates:
 
 - **Source reading:** 8 of 8 fresh original graph images (3–4 nodes) were read exactly, and the results matched an independent Floyd–Warshall reference. The full frozen set produced 12 of 13 intended outcomes.
-- **Second source reading set (November 3):** 6 of 6 fresh original circuit slides and 5 of 5 fresh graph slides of 7–12 nodes were read exactly and solved to the answer key. A capacitor circuit Soma should decline was correctly not read as a checked circuit, but no explanation was published, so the set produced 11 of 12 intended outcomes.
+- **Second source reading set (November 2):** 6 of 6 fresh original circuit slides and 5 of 5 fresh graph slides of 7–12 nodes were read exactly and solved to the answer key. A capacitor circuit Soma should decline was correctly not read as a checked circuit, but no explanation was published, so the set produced 11 of 12 intended outcomes.
 - **Varied screenshots:** of nine screenshots (three real public pages and six original test images), 8 produced a source-specific explanation or a clarifying question on the first request ([details](GENERAL_SCREENSHOTS.md)).
-- **Engineering:** the October 30 polish release passed clean CI with 1,396 offline tests (89 opt-in skipped) and all 116 browser journeys. Browser journeys cover the weighted comparison, cost experiment, companion layout, replay and label geometry.
+- **Engineering:** see the current status above. Browser journeys cover both demo slides, the weighted comparison, cost experiment, circuit experiments, companion layout, replay and label geometry.
 - **Release identity:** `node scripts/verify-release.mjs` matches a committed source tree to the deployed app.
 
 The sections below give the method, every failure and the limits.
@@ -22,7 +22,7 @@ Before release, AI-assisted internal reviews scored the product against the judg
 - At 620×704 the comparison shows one selectable graph and both full-route costs, with the experiment action nearby and a fixed question composer. The measured prepared weighted page fell from 3,637px to 1,961px; the composer starts at y564 rather than y2919, and the graph fits above it. These are browser content measurements, not actual macOS window/chrome measurements.
 - Failure records retain bounded stage/validation codes without storing raw provider prose, image pixels or private reasoning. Explanation-only steps require null computation bindings. Stage-specific source instructions fixed a reproduced attention-slide tool omission; the original synthetic attention slide then published as explanation-only. Earlier failed attempts remain counted.
 
-## Offline and clean-source checks
+## Offline and clean-source checks (October 29)
 
 Pinned dependency installation completed with `npm ci`, including the two isolated services. TypeScript, production build, four desktop policy checks and an isolated production browser import passed. The import inspected 1,224 traced files and two links with zero private-configuration mappings.
 
@@ -42,7 +42,7 @@ Before provider calls, 13 new original synthetic cases were frozen with SHA-256 
 
 Thus 12/13 requests published the intended artifact/refusal category; 10/10 fully legible supported sources published. This small development evaluation is not a general success-rate estimate. The cases are now disclosed development evidence, not future held-out tests. Recorded provider cost for the 13 requests was $0.496014, including the failure. All spending and retained reservations remain in the shared $15 total allowance.
 
-## Second fresh source evaluation (November 3)
+## Second fresh source evaluation (November 2)
 
 Twelve new original slides were rendered headlessly by `scripts/render-source-evaluation-v2.mjs` and frozen with their answer key before any provider call: SHA-256 `236e49854643b7579cb7b22cd37e7a05cb285f411d5e5afcc747cf34cb8187ed` over `cases.json` and every image. Inputs, key and results are in `tests/fixtures/source-evaluation-v2/`. Each case was one outer request on a fresh guest through the service, with Wonder review on and the hosted Firestore store; the answer key was never sent. A reading passed only if every printed label, kind, value and connection matched, each source had the right polarity, the ground was right, and Soma's solution of the reading matched the key: every node voltage for a circuit, the goal cost for a graph. An offline test first checks that every key solves and that the scorer rejects a flipped source, a value off by a factor of ten and a missing edge (`tests/providers/source-evaluation-v2.test.ts`).
 
@@ -58,7 +58,7 @@ They do not establish learning improvement, fidelity on real coursework, or live
 
 ## Reproducibility
 
-`node scripts/verify-release.mjs` compares 202 runtime files against `public/release.json`. The same manifest ships with the hosted app so a source checkout can be matched to production. Private prompts, source documents, credentials, captures, learner records and local build history are excluded from this repository. The source privacy scan checked configured server-secret values and excluded-file patterns; that is a targeted check, not a comprehensive security certification.
+`node scripts/verify-release.mjs` compares the runtime files (288 at this release) against `public/release.json`. The same manifest ships with the hosted app so a source checkout can be matched to production. Private prompts, source documents, credentials, captures, learner records and local build history are excluded from this repository. The source privacy scan checked configured server-secret values and excluded-file patterns; that is a targeted check, not a comprehensive security certification.
 
 ## Experience update, October 29 evening
 
@@ -78,7 +78,7 @@ The local complete offline suite passed 1,383 tests (89 opt-in skipped) before t
 
 The first published fresh-practice revision passed clean CI 41003567419. A real answer-informed Spark/Wonder response used two calls, 11.404 seconds and $0.03626125, preserving its checked input and attempt lineage. The first hosted harness later timed out on a title wait without stage instrumentation; delayed local and hosted response replays rendered successfully. A separate saved-child/reload regression exposed inconsistent history ordering, reproduced before the fix and passed afterward. The server now returns updated explorations in the same recent-first order as the live UI. All 61 affected service/HTTP tests and 25 exploration/replay/practice browser journeys passed after that correction; final production verification is recorded separately.
 
-The corrected history release passed [clean CI](https://github.com/Jeremiah-Sakuda/soma-hackathon/actions/runs/41004464496). Its stage-aware production journey passed a real saved fresh answer → Spark/Wonder explanation → unchanged checked input → exact saved-version reopen → preserved original/answer, plus phone legibility (18px rendered node text) and overflow checks. Two model calls took 11.815 seconds and $0.04183075; synthetic artifacts were removed. This is an engineering demonstration, not a learning-effectiveness result. Final handoff polish explicitly focuses and scrolls to the new visual; all four affected browser journeys passed, including heading-in-viewport and keyboard-focus assertions. No additional provider call was needed for this UI-only change.
+The corrected history release passed clean CI 41004464496 (retired repository). Its stage-aware production journey passed a real saved fresh answer → Spark/Wonder explanation → unchanged checked input → exact saved-version reopen → preserved original/answer, plus phone legibility (18px rendered node text) and overflow checks. Two model calls took 11.815 seconds and $0.04183075; synthetic artifacts were removed. This is an engineering demonstration, not a learning-effectiveness result. Final handoff polish explicitly focuses and scrolls to the new visual; all four affected browser journeys passed, including heading-in-viewport and keyboard-focus assertions. No additional provider call was needed for this UI-only change.
 
 
 ## Usability and visual audit — October 30
@@ -88,7 +88,7 @@ See [executed polish audit](POLISH_AUDIT.md) for observed defects, changes, view
 
 ### Published PM075 verification
 
-Runtime source [3784227](https://github.com/Jeremiah-Sakuda/soma/commit/3784227188f66ebeed38fa26ce33bc37c337f4b1) passed [clean CI 41009103487](https://github.com/Jeremiah-Sakuda/soma-hackathon/actions/runs/41009103487): 1,396 offline tests, 89 opt-in skipped, all 116 browser journeys, build, manifest, production browser trace and adversarial isolated browser gates. Production dpl_4ZfbJeADmec9cDbys9U2VrVsebN3 serves soma-pm075-2026-10-30. Anonymous source/production manifests match 204 runtime files, SHA-256 799156cb92662ef7366a68e40e701558f2f3ee59d117e23fd02d7e54b0433db7.
+Runtime source [3784227](https://github.com/Jeremiah-Sakuda/soma/commit/3784227188f66ebeed38fa26ce33bc37c337f4b1) passed clean CI 41009103487 (retired repository): 1,396 offline tests, 89 opt-in skipped, all 116 browser journeys, build, manifest, production browser trace and adversarial isolated browser gates. Production dpl_4ZfbJeADmec9cDbys9U2VrVsebN3 serves soma-pm075-2026-10-30. Anonymous source/production manifests match 204 runtime files, SHA-256 799156cb92662ef7366a68e40e701558f2f3ee59d117e23fd02d7e54b0433db7.
 
 The deployed six-viewport audit (320–1440px) had no horizontal overflow, sub-40px visible buttons or page exceptions. A 45-tab walk had no obscured focus; save/fresh-practice/cleanup passed without inference. At 620×704, the prepared weighted graph panel sits at y293.5–525.5 above the composer at y564. Shorter phone views still need vertical scrolling. Exact source-specific live-model results and retained first-request failures are in the polish audit; they were tested on the production build locally, not relabeled as new hosted requests. Shared final testing ledger $7.3758095/$15. The following documentation-only update does not change this runtime or require a new deployment.
 
@@ -104,7 +104,7 @@ A stricter manual-upload-during-hold check then reproduced a native-session canc
 
 ## PM077 release checkpoint — October 30
 
-Public code **be83c63c0f031495256c5e38699863c4be312ab3**, clean CI [41071744426](https://github.com/Jeremiah-Sakuda/soma-hackathon/actions/runs/41071744426): **1,401 offline passes / 89 opt-in skipped**, **13 desktop checks**, **28 isolated credential-browser checks**, and **123 browser journeys**. Final typecheck, production build, source-manifest verification and isolated runtime import passed.
+Public code **be83c63c0f031495256c5e38699863c4be312ab3**, clean CI 41071744426 (retired repository): **1,401 offline passes / 89 opt-in skipped**, **13 desktop checks**, **28 isolated credential-browser checks**, and **123 browser journeys**. Final typecheck, production build, source-manifest verification and isolated runtime import passed.
 
 Production deployment **dpl_7iqYXQRwyUPUGKP2tptkRxJ6XgN3** serves `soma-pm077-2026-10-30`; its complete 214-file runtime manifest matches committed source, fingerprint `f228f56827a1ab7dd28bf0246ba555c5fdac9f6ede0ee738a17870318a70f20a`. The first deployment attempt returned Not authorized; explicitly selecting the verified owner scope/project succeeded. A final actual Electron-to-production bridge/render/hide check passed with synthetic screen/audio/helper events and replayed actual model output, making no new model calls. The first hosted harness incorrectly passed production as a development override and was stopped; the successful run uses the app's fixed production origin.
 
@@ -127,9 +127,9 @@ The later parallel `24ec4b5` source/review format-recovery change was also integ
 
 ### PM086 final main verification
 
-Main merge [`04639b3`](https://github.com/Jeremiah-Sakuda/soma/commit/04639b3f79cfe82f6d15ac7015e2539fd8cd92f9) passed [clean CI 41105423022](https://github.com/Jeremiah-Sakuda/soma-hackathon/actions/runs/41105423022): **1,497 offline tests / 90 opt-in skipped**, **133 browser journeys**, **21 desktop checks**, **28 isolated credential-browser checks**, TypeScript, production build and manifest verification. The isolated production trace imported 1,224 files and two internal links with zero private configuration mappings. The feature branch also passed CI 41105422019. The final documentation-only commit does not change the verified runtime.
+Main merge [`04639b3`](https://github.com/Jeremiah-Sakuda/soma/commit/04639b3f79cfe82f6d15ac7015e2539fd8cd92f9) passed clean CI 41105423022 (retired repository): **1,497 offline tests / 90 opt-in skipped**, **133 browser journeys**, **21 desktop checks**, **28 isolated credential-browser checks**, TypeScript, production build and manifest verification. The isolated production trace imported 1,224 files and two internal links with zero private configuration mappings. The feature branch also passed CI 41105422019. The final documentation-only commit does not change the verified runtime.
 
-The public default/release branch remains `codex/submission-release`; select `main` to inspect this combined implementation. No production deployment or replacement of the signed 0.3.0 download was performed by PM086. The remaining coordinated rollout and physical native gates above still apply.
+At PM086, the public default/release branch was `codex/submission-release`; select `main` to inspect this combined implementation. No production deployment or replacement of the signed 0.3.0 download was performed by PM086. The remaining coordinated rollout and physical native gates above still apply.
 
 
 ## Original-repository consolidation — PM091

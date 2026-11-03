@@ -6,15 +6,13 @@ Muse Spark reads my slide, and Muse Wonder reads it again on its own to check ev
 
 Now my own question. What if D-to-F weren't there? I cut it, right on the slide. New route, cost nine. Instantly, with no model call.
 
-Then I ask Soma to test my question. Muse picks the connection my question is about, and Soma proves exactly where the answer flips. At seven the two routes cost the same; below seven, the direct edge wins outright. A different question, and Muse picks a different connection. The model chose the experiment; the code proved the answer.
+Then I ask Soma to test my question. Muse picks the connection to vary, and Soma proves exactly where the answer flips. At seven the two routes tie; drop below seven and the direct edge wins outright.
 
-When I ask why, the answer is about the experiment I'm running. And before this explanation reached me, Muse Wonder checked it against Soma's computed trace. In one run it caught Spark settling two vertices at once and sent it back.
-
-Everything I explored is saved, and Soma can make a fresh problem from the same idea.
+When I ask why, the answer is about the experiment I'm running, and Muse Wonder checked it against Soma's trace first. In one run it caught a step settling two vertices at once.
 
 And the answer has a shape. Every height is a checked distance: the shortest route pulls tight, and the direct edge hangs slack by exactly four.
 
-And it isn't only graphs. On a circuit slide, Soma solves the circuit exactly: B and C both sit at eight volts, so nothing crosses the bridge. I open R-two, and now current flows through it.
+And it isn't only graphs. On a circuit slide, Soma solves the circuit exactly: B and C both sit at eight volts, so nothing crosses the bridge. Open R-two, and current flows. Then I ask when current would flow at all. Muse picks R-four, a part I never named, and Soma finds the exact value, eight ohms. Drag across it, and the current turns around.
 
 [On camera] The slide didn't change. What changed is that I could ask it my question and see why, with the math checked. I built Soma for my lectures, but every diagram you can't edit has questions like mine.
 

@@ -11,7 +11,7 @@
 | [Soma Product Brief](https://chatgpt.com/space/page_7e56e47542748191869c38731e48fd0c) | Sequence 1, updated October 20 | Audience, firsthand workflow, Meta rationale and human-capability thesis; rewritten to match current positioning |
 | [Soma Hackathon Preparation Plan](https://chatgpt.com/space/page_7c36f67abf2481919d8c685d9353bb79) | Sequence 3, updated October 20 | Source-access experiment, fallback and measurement ideas; its old calendar and Python proposal are superseded by the current build/technical plans |
 | [Soma Demo and Evaluation Kit](https://chatgpt.com/space/page_c2c8bea67a3c81918762382f7b94cb9f) | Sequence 2, updated October 20 | Original semester material and all 18 development cases retained; storyboard and comparison protocol updated |
-| Participant Guide supplied by Jeremy | Full pasted text, saved October 26 | Exact [local copy](sources/PARTICIPANT_GUIDE.txt); summarized in [Hackathon Requirements](HACKATHON_REQUIREMENTS.md) |
+| Participant Guide supplied by Jeremy | Full pasted text, saved October 26 | Organizer material, not redistributed in this repository; summarized in [Hackathon Requirements](HACKATHON_REQUIREMENTS.md) |
 | Current product conversation | Through the request for a Codex handoff | Agent-led positioning, visible interactive payoff, source/attempt continuity, and explicit separation of targets from evidence |
 
 The online Pages were read, not rewritten as part of this local handoff. The existing [Soma PRD PDF](../output/pdf/Soma%20PRD.pdf) remains an earlier October 22 export and was not regenerated. Do not use it to override the local plan.

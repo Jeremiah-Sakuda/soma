@@ -2,7 +2,7 @@
 
 **PM064 execution update:** The owner adopted the six audit work items. Preservation/rendering fixes, compact companion, fresh source evaluation and public-source reproducibility are delivered and deployed. Clean checks and public CI passed; see the latest PM064 section in SOMA_V2_VALIDATION.md. The missing-cost source still safely rejects rather than clarifying. Native OS/course verification remains a human gate. The plan below is retained as the original audit proposal.
 
-The objective is a compelling, reliable desktop visual companion whose defining action is a model-chosen experiment with checked consequences. The [judging audit](HACKATHON_AUDIT_2026_10_29.md) found strong technical foundations, confirmed state and rendering defects, a mismatch with the companion viewport, and incomplete source/user evidence. Address those before expanding the feature set.
+The objective is a compelling, reliable desktop visual companion whose defining action is a model-chosen experiment with checked consequences. The judging audit (internal review, removed before publication) found strong technical foundations, confirmed state and rendering defects, a mismatch with the companion viewport, and incomplete source/user evidence. Address those before expanding the feature set.
 
 This is a proposed execution order. It preserves the October 31 feature freeze and November 4, 9 PM America/New_York submission deadline. Estimates assume one builder, reuse of the existing engine and separate human participation for device/user testing. They are effort ranges, not guarantees. No GPU training or publication is authorized merely by this plan.
 

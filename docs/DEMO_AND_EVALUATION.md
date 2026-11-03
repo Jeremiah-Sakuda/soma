@@ -8,7 +8,7 @@ Lead with the potential: help students and independent learners turn the materia
 
 The hackathon Impact rubric evaluates potential, beneficiaries, significance, likely use and theme fit. A learner study or measured time savings is not a prerequisite. The historical pilot methods below are optional future research methods and must not be treated as release, demo or judging gates. Demonstrate the working capability and make its potential understandable; reserve measured-result claims for actual measurements.
 
-Current implementation evidence is in[PM126](examples/pm126/JUDGING.md). Current public judge access, a narrated final three-minute video and submission receipt are separate uncompleted production steps. Only the original`soma` repository is canonical, and publication remains separately authorized. Existing cumulative$20 testing limits and admission/reserve rules remain unchanged.
+Current implementation evidence is in [VERIFICATION.md](VERIFICATION.md). Current public judge access, a narrated final three-minute video and submission receipt are separate uncompleted production steps. Only the original`soma` repository is canonical, and publication remains separately authorized. Existing cumulative$20 testing limits and admission/reserve rules remain unchanged.
 
 ## Historical storyboards and v1 evaluation methods
 

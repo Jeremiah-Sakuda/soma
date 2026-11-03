@@ -1,6 +1,6 @@
 # Three additional rubric-driven iterations
 
-Rounds4–6 continue [PM125](../pm125/JUDGING.md) on the private spatial branch. [Nine new scorecards, findings, fixes and executed evidence](JUDGING.md). These are subjective development reviews, not organizer scores, benchmarks or learner outcomes; scores precede their resulting corrections.
+Rounds4–6 continue PM125 (internal review, removed before publication) on the private spatial branch. Nine new scorecards, findings, fixes and executed evidence (internal review, removed before publication). These are subjective development reviews, not organizer scores, benchmarks or learner outcomes; scores precede their resulting corrections.
 
 New behavior: current-pose synchronized two-turn comparison; local standalone study export; actual recorded Spark-selected visual investigations with exact questions/context/action/source quotes and Wonder advisory; optional export of the whole investigation. Exact source/current-film/author identity gates prevent stale attribution. Tablet layout, pointer cancellation/ownership, stable scene identity, keyboard endpoint handling, narration preparation, sticky dismissal and single-scene layout refined. Replay makes no model calls and writes no learning evidence.
 

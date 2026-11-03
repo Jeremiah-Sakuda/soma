@@ -1,6 +1,6 @@
 # Meta hackathon requirements for Soma
 
-**Source:** the full participant guide supplied by Jeremy, preserved verbatim in [PARTICIPANT_GUIDE.txt](sources/PARTICIPANT_GUIDE.txt). This handoff records it on October 26, 2026. It is a planning digest, not a substitute for later official announcements or the complete governing terms.
+**Source:** the full participant guide supplied by Jeremy (organizer material, not redistributed in this repository). This handoff records it on October 26, 2026. It is a planning digest, not a substitute for later official announcements or the complete governing terms.
 
 ## Entry and project fit
 

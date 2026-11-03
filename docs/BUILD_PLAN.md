@@ -16,7 +16,7 @@ October 29: the scoped experience iteration is deployed at the canonical `/explo
 
 **PM064 completed October 29:** Audit fixes, compact native presentation, fresh source evaluation and a reviewed public source release are delivered. Production and public CI verification passed. See the latest PM064 validation record and CODEX_HANDOFF.md. Remaining work is actual-device/course testing, the documented missing-cost clarification limitation, and submission/demo preparation; do not reopen P0 for model count, training or 3D.
 
-**October 29 audit proposal (PM063):** [IMPROVEMENT_PLAN_2026_10_29.md](IMPROVEMENT_PLAN_2026_10_29.md) ranks verified follow-up preservation and weighted-rendering fixes, compact native UX, fresh source/evaluation gates and submission reproducibility ahead of optional model/3D expansion. [The audit](HACKATHON_AUDIT_2026_10_29.md) records three independent rubric reviews and executed checks. This is a proposed sequence, not completed fixes or automatic adoption of new scope. October 31 freeze and November 4, 9 PM America/New_York deadline remain fixed.
+**October 29 audit proposal (PM063):** [IMPROVEMENT_PLAN_2026_10_29.md](IMPROVEMENT_PLAN_2026_10_29.md) ranks verified follow-up preservation and weighted-rendering fixes, compact native UX, fresh source/evaluation gates and submission reproducibility ahead of optional model/3D expansion. The audit (internal review, removed before publication) records three independent rubric reviews and executed checks. This is a proposed sequence, not completed fixes or automatic adoption of new scope. October 31 freeze and November 4, 9 PM America/New_York deadline remain fixed.
 
 
 **PM061–PM062 sequence, October 29:** Verify and release the bounded cost-intervention interaction within weighted search, including actual Spark selection/composition, application checks, targeted Wonder review and saved controls. Preserve unrelated checkout work through an isolated release. Then prioritize progressive visual presentation and target-Mac testing. Benchmark an untuned Glimmer specialist before proposing an adapter job; GPU training and optional 3D remain gated stretch experiments. Shared application testing cap is $15 total with prior consumption retained. No change to October 31 freeze or November 4 deadline.
@@ -203,11 +203,11 @@ User requested another iteration. Refine presentation framing, controlled slow/r
 
 ### October31 — PM125 authorized three judging iterations
 
-Three independent subagent review→fix→verify rounds on the same private local engine, using the supplied weighted judging rubric. Prioritize actual authorship proof, useful manipulation and concrete playback/accessibility defects. Scores are simulated development reviews; missing canonical engine integration, impact and release/publication gates remain explicit. [Round-by-round feedback and executed status](examples/pm125/JUDGING.md). No new release gate or provider spending.
+Three independent subagent review→fix→verify rounds on the same private local engine, using the supplied weighted judging rubric. Prioritize actual authorship proof, useful manipulation and concrete playback/accessibility defects. Scores are simulated development reviews; missing canonical engine integration, impact and release/publication gates remain explicit. Round-by-round feedback and executed status (internal review, removed before publication). No new release gate or provider spending.
 
 ### October31 — PM126 three further review rounds
 
-User authorized rounds4–6 on the same private branch. Implement current-pose investigations, exact portable local output and actual bounded recorded Muse action selection, then verify provenance, interaction/recovery and a separate original-synthetic canonical service journey. Preserve unsuccessful live attempts, all settled spending and unresolved impact/hosted/native/publication gates. [Executed record](examples/pm126/JUDGING.md). No new release feature dependency or default renderer adoption.
+User authorized rounds4–6 on the same private branch. Implement current-pose investigations, exact portable local output and actual bounded recorded Muse action selection, then verify provenance, interaction/recovery and a separate original-synthetic canonical service journey. Preserve unsuccessful live attempts, all settled spending and unresolved impact/hosted/native/publication gates. Executed record (internal review, removed before publication). No new release feature dependency or default renderer adoption.
 
 ### November1 — PM129 demo and submission framing
 

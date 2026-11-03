@@ -4,11 +4,11 @@ Current [story](docs/STORY_AND_DEMO.md), [three-minute script/shot plan](docs/DE
 
 ## PM126 — Three more judging iterations, October31
 
-Review **http://localhost:41914**: current-pose paired crank experiment, standalone local study snapshots and actual recorded Muse-selected visual investigations with optional question/action/answer export. Six review/fix rounds total. [New nine scorecards, actual receipts, retained failures and verification](docs/examples/pm126/JUDGING.md). Final49browser/1709offline passed,102opt-in skipped; typecheck/build/full-HD export and unchanged PM118 manifest. One fresh original-synthetic canonical service revision/reopen passed after retained earlier outcomes; no hosted/native or engine-integration claim. Newly settled$0.25205725; last ledger$16.70605750/$20. Private branch, no merge/push/publication.
+Review **http://localhost:41914**: current-pose paired crank experiment, standalone local study snapshots and actual recorded Muse-selected visual investigations with optional question/action/answer export. Six review/fix rounds total. New nine scorecards, actual receipts, retained failures and verification (internal review, removed before publication). Final49browser/1709offline passed,102opt-in skipped; typecheck/build/full-HD export and unchanged PM118 manifest. One fresh original-synthetic canonical service revision/reopen passed after retained earlier outcomes; no hosted/native or engine-integration claim. Newly settled$0.25205725; last ledger$16.70605750/$20. Private branch, no merge/push/publication.
 
 ## PM125 — Three judging-and-refinement rounds, October31
 
-Review **http://localhost:41914**: actual Muse/source/repair proof, matching-pose cycle discovery, representative stroke previews, coherent reduced-motion states, exact spoken transcript and bounded audio recovery. Three independent reviewers completed three rubric rounds;40browser/1701offline passed,100opt-in skipped; typecheck/build/full-HD export and unchanged PM118 manifest passed; [feedback, corrections, executed checks and remaining gates](docs/examples/pm125/JUDGING.md). Local recorded prototype on private spatial branch; no new inference, canonical engine integration, main merge or publication. Preview and real media clocks remain distinct; no learner-impact claim.
+Review **http://localhost:41914**: actual Muse/source/repair proof, matching-pose cycle discovery, representative stroke previews, coherent reduced-motion states, exact spoken transcript and bounded audio recovery. Three independent reviewers completed three rubric rounds;40browser/1701offline passed,100opt-in skipped; typecheck/build/full-HD export and unchanged PM118 manifest passed; feedback, corrections, executed checks and remaining gates (internal review, removed before publication). Local recorded prototype on private spatial branch; no new inference, canonical engine integration, main merge or publication. Preview and real media clocks remain distinct; no learner-impact claim.
 
 ## PM124 — Presentation and motion refinement, October31
 
@@ -116,7 +116,7 @@ Use .local/pm064/submission or the public source for production reproduction; .l
 
 ## Current audit and release status October 29
 
-Read the [judging audit](docs/HACKATHON_AUDIT_2026_10_29.md) and [ranked improvement plan](docs/IMPROVEMENT_PLAN_2026_10_29.md) before expanding features. The plan is proposed; its fixes are not implemented by the audit. Confirmed priorities are ordinary follow-up input preservation, undirected weighted visuals, compact native presentation, source/generation evaluation and a reproducible public release.
+Read the judging audit (internal review, removed before publication) and [ranked improvement plan](docs/IMPROVEMENT_PLAN_2026_10_29.md) before expanding features. The plan is proposed; its fixes are not implemented by the audit. Confirmed priorities are ordinary follow-up input preservation, undirected weighted visuals, compact native presentation, source/generation evaluation and a reproducible public release.
 
 Current deployed v2 snapshot: `dpl_BRWN1WeoRaACbdFWkBRYz3LAkq6m` at https://soma-woad-beta.vercel.app/explore. Shared test allowance is $15 total; last audit ledger $5.20537675, with all earlier usage/reservations retained. Apple notarization, stapling and Gatekeeper passed; see [desktop guide](docs/DESKTOP_COMPANION.md) for the signed artifact. GitHub was PRIVATE at audit time and its remote HEAD predates several deployed features; do not publish unreviewed code/history automatically. GPU training remains separately unapproved.
 

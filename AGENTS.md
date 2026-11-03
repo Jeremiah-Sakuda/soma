@@ -1,6 +1,6 @@
 # Canonical repository — PM091
 
-Use only the original `Jeremiah-Sakuda/soma` repository and this working folder. It remains private until the user authorizes publication at the end of the hackathon. Both original and imported commit histories are preserved in main; do not create a separate submission repository or use archived `.local/pm*/submission` clones for new work. `.local/pm091` contains private migration backups, not a second product repository. Historical links may name the retired repository; active release/document links must use `soma`.
+Use only the original `Jeremiah-Sakuda/soma` repository and this working folder. Its visibility changes only with the user's authorization. Both original and imported commit histories are preserved in main; do not create a separate submission repository or use archived `.local/pm*/submission` clones for new work. `.local/pm091` contains private migration backups, not a second product repository. Historical links may name the retired repository; active release/document links must use `soma`.
 
 # Soma implementation instructions
 
@@ -17,7 +17,7 @@ The user adopted the v2 pivot on October 29. Start with `docs/SOMA_V2_IMPLEMENTA
 - **Before any UI or UX work, read `docs/UI_UX_GUIDE.md` first.** It owns personas, navigation (Today · Map · Activity), screen layouts, the visual language, motion and the accessibility checklist, and it links the design canvas and its references. It supersedes the visual language and navigation in `docs/UI_DIRECTION.md` (Ready Card), whose behavioral, evidence and copy rules still apply where the guide doesn't replace them. Preserve the existing app and verified behavior when applying it.
 - The historical PDF and older online companion plans can lag these files.
 - No integrations, test outcomes, pilots, or benchmark results are established merely by their appearance in a plan. Preserve explicit status.
-- Jeremy supplied the organizer's hacking-start announcement and authorized October 26 implementation; see docs/DECISIONS.md. Keep the October 31 feature freeze and November 4, 9 PM America/New_York submission deadline.
+- Jeremy supplied the organizer's hacking-start announcement and authorized October 26 implementation; see docs/DECISIONS.md. The user extended feature work past the planned October 31 freeze to add checked DC circuits (November 1–2). Keep the November 4, 9 PM America/New_York submission deadline.
 
 ## Product invariants
 
@@ -58,7 +58,7 @@ Run meaningful checks for numerical behavior, state changes, account isolation, 
 
 Use actual tool activity and concise decision records for inspectability; do not fabricate run logs or expose private internal reasoning. Live inference, prepared artifacts, uploaded sources, recordings, replay, and simulated time must be distinguishable.
 
-Do not expand P0 to improve model count. Preserve the Day 3 lab decision, October 31 feature freeze, and time for correctness and visual polish. Check the main lesson at the target viewport, keyboard-only, and with reduced motion.
+Do not expand P0 to improve model count. Preserve the Day 3 lab decision and time for correctness and visual polish. Check the main lesson at the target viewport, keyboard-only, and with reduced motion.
 
 Keep credentials, session state, private course documents, and learner records out of public code, fixtures, and demo assets. Preserve required third-party notices and identify original event work accurately. Ask for missing inputs only when needed; continue independent authorized work meanwhile.
 

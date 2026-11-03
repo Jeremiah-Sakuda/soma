@@ -644,7 +644,7 @@ After the hackathon, broaden verified institution coverage, remove remaining onb
 
 - **Review scheduler:** [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs) supplies a TypeScript card scheduler. Pin compatible runtime and package versions, persist rating history, and keep card scheduling distinct from concept understanding.
 
-- **Hackathon:** The supplied [Participant Guide](sources/PARTICIPANT_GUIDE.txt), captured in this handoff October 26, supplies the current schedule, public-repository and new-work requirements, three-minute video, judging stages, weights, credits, and awards. The [official event page](https://dev.meta.ai/events/global-hackathon) is a further reference. See [Hackathon Requirements](HACKATHON_REQUIREMENTS.md) for the timing ambiguity and release checklist.
+- **Hackathon:** The supplied Participant Guide (organizer material, not redistributed here), captured in this handoff October 26, supplies the current schedule, public-repository and new-work requirements, three-minute video, judging stages, weights, credits, and awards. The [official event page](https://dev.meta.ai/events/global-hackathon) is a further reference. See [Hackathon Requirements](HACKATHON_REQUIREMENTS.md) for the timing ambiguity and release checklist.
 
 - **Learning methods:** [Dunlosky et al.](https://www.psychologicalscience.org/publications/journals/pspi/learning-techniques.html) supports practice testing and distributed practice. [Bastani et al.](https://doi.org/10.1073/pnas.2422633122) motivates measuring independent performance separately from AI-assisted completion. These findings inform the design; they do not establish Soma’s learning effect.
 

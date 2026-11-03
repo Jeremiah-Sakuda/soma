@@ -1,0 +1,106 @@
+{
+  "description": "Retained record of the second live service run on the original Lecture 9 slide (November 2, 2026, 04:09 UTC): Muse Spark read the slide, Soma solved it, Muse Wonder reviewed the words, then Muse chose the part for the tipping point. Model output and Soma computation only; no image, credentials or learner data. Written by tests/providers/circuit-live.test.ts; scope: a real-provider service run, not the hosted UI and not held-out evidence.",
+  "placementNote": "nodeErrorsPx and partCentreErrorsPx are pixel distances on the 1920-wide slide between the drawing and where the circuit was placed by the snapper of that time. The current snapper, replayed offline on this run's raw Spark placement and on the first run's, puts every node within 6 px (tests/server/circuit-snap.test.ts).",
+  "sourceSha256": "fae05fdd937999d33d47b8129fae8b2410b827ba6352ee36c5e9274f4a7fb59f",
+  "runs": [
+    {
+      "phase": "generate",
+      "question": "Why is there no current through R5?",
+      "mode": "checked-circuit",
+      "calls": 3,
+      "costUsd": 0.042131999999999996,
+      "elapsedMs": 26314,
+      "audit": [
+        "graph-located: Placed the circuit on the drawing: 2 of 4 nodes on their junction dots, the rest corrected from them; 5 of 6 parts found along their wires. Presentation only; the circuit and its solution are unchanged.",
+        "source-interpreted: Source circuit proposed; extraction remains fallible. Provider no-graph sentinel normalized to JSON null.",
+        "model-computed: Checked dc-nodal solution: 4 nodes, 6 parts; Kirchhoff's current law, source voltages and power balance hold exactly.",
+        "review-approved: Muse Wonder advisory review: approve.",
+        "scene-validated: Typed scene, source versions and checked model references validated."
+      ],
+      "mismatches": [],
+      "voltages": {
+        "A": 12,
+        "B": 8,
+        "C": 8,
+        "D": 0
+      },
+      "currents": {
+        "V1": 3,
+        "R1": 2,
+        "R2": 2,
+        "R3": 1,
+        "R4": 1,
+        "R5": 0
+      },
+      "nodeErrorsPx": {
+        "A": 23,
+        "B": 1,
+        "C": 153,
+        "D": 1
+      },
+      "partCentreErrorsPx": {
+        "V1": 42,
+        "R1": 4,
+        "R2": 4,
+        "R3": 76,
+        "R4": 74,
+        "R5": 1
+      },
+      "steps": [
+        "0: Start with ground: node D is 0 V.",
+        "1: Top wire A is held at 12 V by the battery.",
+        "2: Left divider sets node B at 8 V.",
+        "3: Right divider sets node C at 8 V, so R5 has no current."
+      ]
+    },
+    {
+      "phase": "investigate",
+      "question": "When would current flow through R5, and which way?",
+      "calls": 3,
+      "costUsd": 0.04069025,
+      "elapsedMs": 19837,
+      "experiment": {
+        "version": "dc-probe-v1",
+        "componentId": "R4",
+        "observe": {
+          "kind": "current",
+          "componentId": "R5"
+        },
+        "condition": "zero",
+        "originalValue": 8,
+        "criticalValue": 8,
+        "criticalExact": "8",
+        "verified": true,
+        "rationale": null,
+        "note": "The current in R5 is exactly zero when R4 is 8 Ω; on either side it has opposite signs.",
+        "cases": [
+          {
+            "value": 4,
+            "observed": 0.24
+          },
+          {
+            "value": 8,
+            "observed": 0
+          },
+          {
+            "value": 16,
+            "observed": -0.16783216783216784
+          }
+        ]
+      },
+      "steps": [
+        "0: Start with ground: node D is 0 V.",
+        "1: Top wire A is held at 12 V by the battery.",
+        "2: Left divider sets node B at 8 V.",
+        "3: Node C is also 8 V, so R5 has 0 V and 0 A."
+      ],
+      "audit": [
+        "source-reused: Reused the owned source interpretation and current checked controls for an explanatory follow-up.",
+        "cost-probed: Muse chose R4, watching the current in R5. Application computed the exact value 8, verified by re-solving there.",
+        "model-computed: Checked dc-nodal solution: 4 nodes, 6 parts; Kirchhoff's current law, source voltages and power balance hold exactly.",
+        "review-approved: Muse Wonder advisory review: approve.",
+        "scene-validated: Typed scene, source versions and checked model references validated."
+      ]
+    }
+  ]
+}

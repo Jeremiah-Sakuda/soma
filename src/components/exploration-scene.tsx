@@ -619,7 +619,7 @@ export function ExplorationScene({
             {overlay.readingCheck && (
               <p className={`source-reading-check is-${overlay.readingCheck.status}`} role="status">
                 {overlay.readingCheck.status === 'confirmed'
-                  ? `Muse Wonder read your slide independently and confirmed all ${overlay.readingCheck.nodes} nodes and ${overlay.readingCheck.edges} ${overlay.readingCheck.weighted === false ? 'connections' : 'weights'}.`
+                  ? `Muse Wonder checked Spark’s reading against your slide and confirmed all ${overlay.readingCheck.nodes} nodes and ${overlay.readingCheck.edges} ${overlay.readingCheck.weighted === false ? 'connections' : 'weights'}.`
                   : overlay.readingCheck.status === 'corrected'
                     ? `Muse Wonder caught ${overlay.readingCheck.corrections.length} misread weight${overlay.readingCheck.corrections.length === 1 ? '' : 's'}; Spark looked again and agreed: ${overlay.readingCheck.corrections
                         .map((c) => {

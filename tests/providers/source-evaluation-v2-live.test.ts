@@ -34,8 +34,11 @@ it.skipIf(process.env.SOMA_EVAL_V2_LIVE !== 'true')(
     save();
     for (const c of cases) {
       if (only && !only.includes(c.id)) continue;
-      // Stop well inside the cap and the day's turns so the live demo keeps headroom.
-      if ((await ledger()) > 37.5 || Number((await turns())?.turns ?? 0) > 150) {
+      // Stop well inside the cap and the day's turns so the live demo keeps headroom. As in the
+      // store, a count from an earlier UTC day is stale until the next turn resets it.
+      const today = await turns();
+      const used = today?.day === new Date().toISOString().slice(0, 10) ? Number(today.turns ?? 0) : 0;
+      if ((await ledger()) > 37.5 || used > 150) {
         results.push({ id: c.id, status: 'not-run', reason: 'headroom guard' });
         save();
         continue;

@@ -55,7 +55,7 @@ Concurrent generations are limited by `SOMA_EXPLORATION_MAX_ACTIVE` (1–16, def
 | Muse Voice Transcribe 1.0 | Optional spoken questions |
 | Gemini 3.1 Flash TTS (preview, Sulafat voice) | Optional narration audio; browser voice and captions are alternatives |
 
-No fine-tuned model, open-weight runtime or 3D renderer is claimed.
+No fine-tuned model or open-weight runtime is claimed. The 3D view and the companion's 3D lift are drawn with three.js from Soma's checked values.
 
 ## Earlier event work in this snapshot
 

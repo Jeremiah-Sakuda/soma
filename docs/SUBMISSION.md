@@ -40,7 +40,7 @@ The model chooses how to read, explain and investigate. The code proves the answ
 
 **Why it matters:** the questions that build understanding are "what if" questions, and static slides can't answer them. Soma removes the reconstruction step between a slide and an experiment, and it gives answers a learner can trust because the numbers are computed rather than generated.
 
-**How far it reaches:** the checked step doesn't depend on the picture being a slide, and adding a subject doesn't mean a new product: the circuit path reuses the same capture, reading, review, overlay and Mac companion as graph search. Soma's graph solver runs on any weighted graph Muse Spark can read, within its limits of nonnegative costs and 12 nodes (in two frozen tests on images we drew in a lecture-slide style, every supported image was read exactly: 13 of 13 graphs with 3 to 12 nodes and 6 of 6 circuits; of the six images that were not supported graphs or circuits, four got the intended explanation, refusal or question, and two ended safely with no answer, both reported), so the same experiment could reach anywhere people reason over connections they can't edit: transit maps, network diagrams, delivery routes.
+**How far it reaches:** the checked step doesn't depend on the picture being a slide, and adding a subject doesn't mean a new product: the circuit path reuses the same capture, reading, review, overlay and Mac companion as graph search. Soma's graph solver runs on any weighted graph Muse Spark can read, within its limits of nonnegative costs and 12 nodes (in two frozen tests on images we drew in a lecture-slide style, every supported image was read exactly: 13 of 13 graphs with 3 to 12 nodes and 6 of 6 circuits; of the six images that were not supported graphs or circuits, four got the intended explanation, refusal or question, and two ended safely with no answer, both reported; and on three figures from Wikimedia Commons that we didn't draw, two weighted graphs were solved correctly and a circuit with no printed values got a clarifying question), so the same experiment could reach anywhere people reason over connections they can't edit: transit maps, network diagrams, delivery routes.
 
 **Why it's credible:** the core journey is one live run on an original slide; waits are shortened and labelled. The source becomes a controllable experiment, each change has a computed consequence, the model makes a visible decision, and the result can be kept and practiced. No study or adoption figures are claimed; the potential is shown through a working capability.
 
@@ -63,7 +63,7 @@ The models decide; the application constrains. Spark's output is validated again
 - Deterministic image snapping places a circuit reading on the slide's own junction dots and part bodies, with no model call.
 - A source-anchored overlay that draws the checked trace on the learner's own capture. Coordinates are stored; screenshot pixels are not.
 - Wonder review with bounded repair, application-enforced spend caps and retries, owned versioned persistence with exact reopen.
-- 1,820 offline tests and 169 browser journeys, run by CI on every push, plus opt-in live-provider journeys; two frozen evaluations with their answer keys and every failure retained ([verification](VERIFICATION.md)).
+- 1,824 offline tests and 169 browser journeys, run by CI on every push, plus opt-in live-provider journeys; three frozen evaluations with their answer keys and every failure retained ([verification](VERIFICATION.md)).
 
 ## Built during the event
 
@@ -78,6 +78,7 @@ All product code was written between October 26 and November 4, 2026. Coding beg
 ## Project links
 
 - Live app: https://soma-woad-beta.vercel.app/explore
+- Mac companion 0.4.0 (signed and notarized): https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.4.0
 - Demo slides: `public/examples/lecture-14-dijkstra.png` (graph search) and `public/examples/lecture-9-bridge.png` (DC circuit)
 - Repository: https://github.com/Jeremiah-Sakuda/soma (to be made public before submission)
 - Demo video: pending

@@ -5,6 +5,7 @@
 Headline results from executed checks on clean checkouts and on production. These are small development samples, not reliability rates:
 
 - **Source reading:** 8 of 8 fresh original graph images (3–4 nodes) were read exactly, and the results matched an independent Floyd–Warshall reference. The full frozen set produced 12 of 13 intended outcomes.
+- **Second source reading set (November 3):** 6 of 6 fresh original circuit slides and 5 of 5 fresh graph slides of 7–12 nodes were read exactly and solved to the answer key. A capacitor circuit Soma should decline was correctly not read as a checked circuit, but no explanation was published, so the set produced 11 of 12 intended outcomes.
 - **Varied screenshots:** of nine screenshots (three real public pages and six original test images), 8 produced a source-specific explanation or a clarifying question on the first request ([details](GENERAL_SCREENSHOTS.md)).
 - **Engineering:** the October 30 polish release passed clean CI with 1,396 offline tests (89 opt-in skipped) and all 116 browser journeys. Browser journeys cover the weighted comparison, cost experiment, companion layout, replay and label geometry.
 - **Release identity:** `node scripts/verify-release.mjs` matches a committed source tree to the deployed app.
@@ -40,6 +41,16 @@ Before provider calls, 13 new original synthetic cases were frozen with SHA-256 
 - The deliberately missing-cost graph failed publication after an artifact-identity validation error. This was safe rejection, but it did **not** provide the desired clarification. Do not count it as a successful explanation or silently omit it.
 
 Thus 12/13 requests published the intended artifact/refusal category; 10/10 fully legible supported sources published. This small development evaluation is not a general success-rate estimate. The cases are now disclosed development evidence, not future held-out tests. Recorded provider cost for the 13 requests was $0.496014, including the failure. All spending and retained reservations remain in the shared $15 total allowance.
+
+## Second fresh source evaluation (November 3)
+
+Twelve new original slides were rendered headlessly by `scripts/render-source-evaluation-v2.mjs` and frozen with their answer key before any provider call: SHA-256 `236e49854643b7579cb7b22cd37e7a05cb285f411d5e5afcc747cf34cb8187ed` over `cases.json` and every image. Inputs, key and results are in `tests/fixtures/source-evaluation-v2/`. Each case was one outer request on a fresh guest through the service, with Wonder review on and the hosted Firestore store; the answer key was never sent. A reading passed only if every printed label, kind, value and connection matched, each source had the right polarity, the ground was right, and Soma's solution of the reading matched the key: every node voltage for a circuit, the goal cost for a graph. An offline test first checks that every key solves and that the scorer rejects a flipped source, a value off by a factor of ten and a missing edge (`tests/providers/source-evaluation-v2.test.ts`).
+
+- Six circuits, all read exactly and solved to the key's voltages: a kΩ series–parallel network; two batteries; a 5 mA current source with kΩ resistors; a ladder with no ground symbol, where ground is taken at the battery's − terminal; a six-node network with decimal values; and ground marked on the battery's + terminal, which puts the − terminal's node at −15 V.
+- Five graphs of 7, 8, 9, 10 and 12 nodes, all read exactly with the key's goal cost: undirected, directed, decimal weights, an unweighted graph for breadth-first search, and a 12-node graph at Soma's limit.
+- One RC circuit with a capacitor and a switch, which the checked solver does not cover. Spark correctly did not read it as a checked circuit and Wonder approved the explanation, but the explanation failed to save. The source carried an undefined layout field, which Firestore rejects. Since November 1 (`e0e760f`) this affected every screenshot with no readable graph or circuit on the hosted store; the offline tests use a JSON store that drops the field, so they did not catch it. Fixed in `75af934` with a regression test; not yet deployed. One rerun of this case after the fix again declined the circuit, but the explanation call reached the 30-second per-call limit (`results-rc-after-fix.json`). It is still not a successful explanation.
+
+Thus 11 of 12 cases produced the intended outcome on the first run, and 11 of 11 supported slides were read exactly. A solved circuit took 28–46 s and 3–5 model calls; a graph took 38–69 s and 5–6 calls. Recorded provider cost for the first run was $0.93, including the failure. The rerun was charged its full $0.35 reservation because its usage was uncertain. Like the first set, these are now disclosed development cases rather than future held-out tests, and a small sample rather than a success rate.
 
 ## What these checks do not establish
 

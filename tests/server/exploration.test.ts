@@ -43,6 +43,18 @@ function result(name: string, value: unknown, index: number): MetaResult {
     usage: { input_tokens: 100, output_tokens: 200 },
   };
 }
+/** The example graph as a textbook figure would print it: vertices numbered 1–6, used as IDs. */
+function numbered(input: ReturnType<typeof exampleInput>) {
+  const id = new Map(input.nodes.map((n, i) => [n.id, String(i + 1)]));
+  return {
+    ...input,
+    nodes: input.nodes.map((n) => ({ id: id.get(n.id)!, label: id.get(n.id)! })),
+    edges: input.edges.map((e) => ({ ...e, from: id.get(e.from)!, to: id.get(e.to)! })),
+    start: id.get(input.start)!,
+    goal: input.goal && id.get(input.goal)!,
+    neighborOrder: input.neighborOrder.map((n) => id.get(n)!),
+  };
+}
 function script(
   options: {
     invalidFirst?: boolean;
@@ -51,6 +63,7 @@ function script(
     comparison?: boolean;
     clarify?: boolean;
     partialNeighborOrder?: boolean;
+    numericIds?: boolean;
     narrowControls?: boolean;
   } = {},
 ) {
@@ -65,7 +78,9 @@ function script(
           uncertainty: [],
           graph: options.clarify
             ? null
-            : options.partialNeighborOrder
+            : options.numericIds
+              ? numbered(exampleInput())
+              : options.partialNeighborOrder
               ? { ...exampleInput(), neighborOrder: exampleInput().neighborOrder.slice(1) }
               : exampleInput(),
         },
@@ -105,6 +120,11 @@ function script(
     spec.id = id[1];
     spec.version = Number(id[2]);
     if (spec.mode === 'checked-bfs' && context.graph) {
+      if (options.numericIds) {
+        const id = new Map(exampleInput().nodes.map((n, i) => [n.id, `n${i + 1}`]));
+        for (const panel of spec.scene.panels as { positions?: { nodeId: string }[] }[])
+          for (const position of panel.positions ?? []) position.nodeId = id.get(position.nodeId) ?? position.nodeId;
+      }
       spec.input = context.graph;
       const graphIds = new Set([
         ...spec.input.nodes.map((n: any) => n.id),
@@ -201,6 +221,18 @@ describe('bounded exploration provider and persistence pipeline', () => {
     const state = await explorationStore.read(owner);
     expect(state!.artifacts[0]).toEqual(first);
     expect(state!.artifacts).toHaveLength(2);
+  });
+  it('renames printed numbers used as vertex IDs, so a numbered textbook graph is still checked', async () => {
+    const { service } = harness(script({ numericIds: true }));
+    const owner = principal();
+    await service.initialize(owner);
+    const first = (await service.generate(owner, generate())).artifact;
+    expect(first.validation.assurance).toBe('checked-bfs');
+    expect(first.generation.audit.map((item) => item.event)).toContain('source-ids-renamed');
+    if (first.spec.mode !== 'checked-bfs') throw Error();
+    expect(first.spec.input.nodes.map((n) => [n.id, n.label])).toEqual(['1', '2', '3', '4', '5', '6'].map((n) => [`n${n}`, n]));
+    expect(first.spec.input.start).toBe('n1');
+    expect(first.executions?.primary.path).toEqual(['n1', 'n2', 'n5']);
   });
   it('completes a partial neighbor order and keeps checked graph controls explorable', async () => {
     const { service } = harness(script({ partialNeighborOrder: true, narrowControls: true }));

@@ -309,6 +309,58 @@ function sourceCircuitLayout(
     components: read.components.filter((c) => parts.has(c.componentId)),
   };
 }
+const SOURCE_ID = /^[A-Za-z][A-Za-z0-9_-]{0,47}$/;
+/** Textbook figures often number their vertices or nodes, and Spark may use the printed "1" as
+ * the ID, which IDs cannot be. Renames only such IDs (1 → n1, edge 1-2 → e1-2) everywhere the
+ * reading refers to them; labels stay as printed. Anything else is left for validation. */
+export function letterSourceIds(raw: unknown): { args: unknown; renamed: string[] } {
+  if (!raw || typeof raw !== 'object') return { args: raw, renamed: [] };
+  const args = structuredClone(raw) as Record<string, any>;
+  const renamed: string[] = [];
+  const rename = (items: unknown, prefix: string) => {
+    const map = new Map<string, string>();
+    if (!Array.isArray(items)) return map;
+    const taken = new Set(items.map((x) => x?.id).filter((id) => typeof id === 'string' && SOURCE_ID.test(id)));
+    for (const item of items) {
+      const id = item?.id;
+      if (typeof id !== 'string' || !id || SOURCE_ID.test(id) || map.has(id)) continue;
+      let next = (prefix + id.replace(/[^A-Za-z0-9_-]/g, '_')).slice(0, 48);
+      while (taken.has(next)) next = `${next.slice(0, 47)}_`;
+      taken.add(next);
+      map.set(id, next);
+      renamed.push(`${id} → ${next}`);
+    }
+    for (const item of items) if (map.has(item?.id)) item.id = map.get(item.id);
+    return map;
+  };
+  const swap = (map: Map<string, string>, id: unknown) => (typeof id === 'string' && map.has(id) ? map.get(id)! : id);
+  const graph = args.graph;
+  if (graph && typeof graph === 'object') {
+    const nodes = rename(graph.nodes, 'n'),
+      edges = rename(graph.edges, 'e');
+    if (Array.isArray(graph.edges))
+      for (const e of graph.edges) if (e) Object.assign(e, { from: swap(nodes, e.from), to: swap(nodes, e.to) });
+    graph.start = swap(nodes, graph.start);
+    graph.goal = swap(nodes, graph.goal);
+    if (Array.isArray(graph.neighborOrder)) graph.neighborOrder = graph.neighborOrder.map((id: unknown) => swap(nodes, id));
+    if (Array.isArray(args.nodePositions)) for (const p of args.nodePositions) if (p) p.nodeId = swap(nodes, p.nodeId);
+    if (Array.isArray(args.edgeLabels)) for (const l of args.edgeLabels) if (l) l.edgeId = swap(edges, l.edgeId);
+  }
+  const circuit = args.circuit;
+  if (circuit && typeof circuit === 'object') {
+    const nodes = rename(circuit.nodes, 'n'),
+      parts = rename(circuit.components, 'p');
+    circuit.ground = swap(nodes, circuit.ground);
+    if (Array.isArray(circuit.components))
+      for (const c of circuit.components) if (c) Object.assign(c, { from: swap(nodes, c.from), to: swap(nodes, c.to) });
+    const layout = args.circuitLayout;
+    if (layout && typeof layout === 'object') {
+      if (Array.isArray(layout.nodes)) for (const p of layout.nodes) if (p) p.nodeId = swap(nodes, p.nodeId);
+      if (Array.isArray(layout.components)) for (const p of layout.components) if (p) p.componentId = swap(parts, p.componentId);
+    }
+  }
+  return { args, renamed };
+}
 /** Appends unlisted nodes, in node order, to an otherwise valid partial neighbor order.
  * Duplicate or unknown entries are left for schema validation to reject. */
 export function completeNeighborOrder(graph: unknown): { graph: unknown; added: string[] } {
@@ -1612,6 +1664,15 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                 call: calls,
                 detail: `Omitted ${locations.omitted} optional source location(s) with invalid image bounds; no coordinates were clamped or invented.`,
               });
+            const ids = letterSourceIds(extractedCall.parsedArguments);
+            if (ids.renamed.length) {
+              Object.assign(extractedCall.parsedArguments, ids.args);
+              audit.push({
+                event: 'source-ids-renamed',
+                call: calls,
+                detail: `Spark used printed numbers as IDs; renamed ${ids.renamed.slice(0, 8).join(', ')}${ids.renamed.length > 8 ? ', …' : ''}. Labels are as printed.`,
+              });
+            }
             const order = normalizedNull
               ? { graph: null, added: [] }
               : completeNeighborOrder(extractedCall.parsedArguments.graph);

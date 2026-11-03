@@ -346,3 +346,27 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
     expect(explorationInputsChanged(reply.spec, reply.state)).toBe(false);
   });
 });
+
+describe('printed numbers used as circuit IDs', () => {
+  it('are renamed wherever the reading refers to them; labels stay as printed', async () => {
+    const { letterSourceIds } = await import('../../src/lib/server/exploration');
+    const { args, renamed } = letterSourceIds({
+      circuit: {
+        nodes: [{ id: '1', label: '1' }, { id: '2', label: '2' }],
+        ground: '2',
+        components: [
+          { id: '1', label: 'R1', kind: 'resistor', from: '1', to: '2', value: 4 },
+          { id: 'V1', label: 'V1', kind: 'voltage-source', from: '2', to: '1', value: 12 },
+        ],
+      },
+      circuitLayout: { nodes: [{ nodeId: '1', x: 0.1, y: 0.1 }], components: [{ componentId: '1', x1: 0, y1: 0, x2: 1, y2: 1 }] },
+    }) as { args: any; renamed: string[] };
+    expect(renamed).toEqual(['1 → n1', '2 → n2', '1 → p1']);
+    expect(args.circuit.ground).toBe('n2');
+    expect(args.circuit.nodes.map((n: any) => n.label)).toEqual(['1', '2']);
+    expect(args.circuit.components[0]).toMatchObject({ id: 'p1', from: 'n1', to: 'n2' });
+    expect(args.circuit.components[1]).toMatchObject({ id: 'V1', from: 'n2', to: 'n1' });
+    expect(args.circuitLayout.nodes[0].nodeId).toBe('n1');
+    expect(args.circuitLayout.components[0].componentId).toBe('p1');
+  });
+});

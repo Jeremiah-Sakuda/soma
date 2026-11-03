@@ -69,6 +69,7 @@ export type ExplorationAudit = {
     | 'source-detail-requested'
     | 'source-locations-omitted'
     | 'neighbor-order-completed'
+    | 'source-ids-renamed'
     | 'graph-layout-from-source'
     | 'graph-located'
     | 'source-compared'

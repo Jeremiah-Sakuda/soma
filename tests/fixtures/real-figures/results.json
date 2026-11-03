@@ -1,0 +1,129 @@
+[
+ {
+  "phase": "preflight",
+  "at": "2026-11-03T15:55:08.000Z",
+  "freezeSha256": "81c387e89a016e5b95b19d5c56a5b85a6d5950cd2547dfbdc365f1adc6262022",
+  "ledger": 31.19805450000007,
+  "turns": {
+   "day": "2026-11-03",
+   "created": 15,
+   "turns": 16,
+   "active": [],
+   "expiresAt": {
+    "_seconds": 1793893810,
+    "_nanoseconds": 908000000
+   }
+  }
+ },
+ {
+  "id": "commons-directed-shortest-path",
+  "subject": "graph",
+  "status": "published",
+  "mode": "checked-dijkstra",
+  "passed": true,
+  "costMatches": true,
+  "wantCost": 20,
+  "gotCost": 20,
+  "mismatches": [],
+  "elapsedMs": 44034,
+  "calls": 4,
+  "costUsd": 0.07076400000000001,
+  "audit": [
+   "neighbor-order-completed: Neighbor order omitted A; appended in listed node order. This is an assumption, not a source fact.",
+   "graph-located: Snapped 5 node position(s) onto the drawn nodes in the same frozen screenshot; no model call.",
+   "reading-confirmed: Muse Wonder read the same image and confirmed all 6 nodes and 7 connections with their weights.",
+   "source-interpreted: Source graph proposed; extraction remains fallible.",
+   "model-computed: Checked dijkstra-nonnegative trace with 7 snapshots.",
+   "graph-layout-from-source: Placed graph nodes where the source drew them. Presentation only; graph, costs and trace unchanged.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ]
+ },
+ {
+  "id": "commons-wikipedia-dijkstra",
+  "subject": "graph",
+  "status": "published",
+  "mode": "checked-dijkstra",
+  "passed": false,
+  "costMatches": true,
+  "wantCost": 20,
+  "gotCost": 20,
+  "mismatches": [
+   "nodes 1ASTART,2,3,4,5BGOAL,6",
+   "start/goal 1ASTART/5BGOAL",
+   "missing 1-2",
+   "missing 1-3",
+   "missing 1-6",
+   "missing 4-5",
+   "missing 5-6",
+   "extra 1ASTART-6",
+   "extra 1ASTART-3",
+   "extra 1ASTART-2",
+   "extra 5BGOAL-6",
+   "extra 4-5BGOAL"
+  ],
+  "labelsAsRead": [
+   "1 a start",
+   "2",
+   "3",
+   "4",
+   "5 b goal",
+   "6"
+  ],
+  "withPrintedAnnotationsStripped": {
+   "passed": true,
+   "costMatches": true,
+   "wantCost": 20,
+   "gotCost": 20,
+   "mismatches": []
+  },
+  "elapsedMs": 77332,
+  "calls": 7,
+  "costUsd": 0.14195325,
+  "audit": [
+   "source-repair-requested: Source interpretation failed its typed contract; one re-reading of the same frozen image requested. No new screen access.",
+   "graph-located: Snapped 5 node position(s) onto the drawn nodes in the same frozen screenshot; no model call.",
+   "reading-confirmed: Muse Wonder read the same image and confirmed all 6 nodes and 9 connections with their weights.",
+   "source-interpreted: Source graph proposed; extraction remains fallible.",
+   "model-computed: Checked dijkstra-nonnegative trace with 7 snapshots.",
+   "graph-layout-from-source: Placed graph nodes where the source drew them. Presentation only; graph, costs and trace unchanged.",
+   "review-rejected: Muse Wonder advisory review: revise. Step s2 caption says settling node 2 'does not improve the other tentative costs,' but checked step 2 first discovers node 4 via node 2 at distance 22 (from infinity), as its own narration states. Revise to say it does not improve nodes 3 or 6, but reaches node 4 with tentative cost 22.",
+   "graph-layout-from-source: Placed graph nodes where the source drew them. Presentation only; graph, costs and trace unchanged.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ],
+  "note": "Scored offline from the published artifact. The run itself recorded a failure because the harness crashed while scoring: its answer key used the printed \"1\" as an ID. Strict scoring fails only because Spark kept the figure's printed a/b annotations in the labels of nodes 1 and 5; with those stripped, every connection, weight, start, goal and the cost match the key.",
+  "originalHarnessError": "[\n  {\n    \"origin\": \"string\",\n    \"code\": \"invalid_format\",\n    \"format\": \"regex\",\n    \"pattern\": \"/^[A-Za-z][A-Za-z0-9_-]{0,47}$/\",\n    \"path\": [\n      \"nodes\",\n      0,\n      \"id\"\n    ],\n    \"messag"
+ },
+ {
+  "id": "commons-kirchhoff-symbolic",
+  "subject": "circuit",
+  "status": "published",
+  "mode": "clarify",
+  "passed": true,
+  "mismatches": [],
+  "elapsedMs": 24002,
+  "calls": 3,
+  "costUsd": 0.03352375,
+  "audit": [
+   "source-interpreted: No checked graph inferred; clarification or explanation only. Provider no-graph sentinel normalized to JSON null.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ]
+ },
+ {
+  "phase": "final",
+  "at": "2026-11-03T15:57:38.705Z",
+  "ledger": 31.44429550000007,
+  "turns": {
+   "day": "2026-11-03",
+   "created": 18,
+   "turns": 19,
+   "active": [],
+   "expiresAt": {
+    "_seconds": 1793894258,
+    "_nanoseconds": 378000000
+   }
+  }
+ }
+]

@@ -1,0 +1,86 @@
+[
+ {
+  "phase": "preflight",
+  "at": "2026-11-03T16:03:42.971Z",
+  "freezeSha256": "81c387e89a016e5b95b19d5c56a5b85a6d5950cd2547dfbdc365f1adc6262022",
+  "ledger": 31.44429550000007,
+  "turns": {
+   "day": "2026-11-03",
+   "created": 18,
+   "turns": 19,
+   "active": [],
+   "expiresAt": {
+    "_seconds": 1793894258,
+    "_nanoseconds": 378000000
+   }
+  }
+ },
+ {
+  "id": "commons-wikipedia-dijkstra",
+  "subject": "graph",
+  "status": "published",
+  "mode": "checked-dijkstra",
+  "passed": false,
+  "costMatches": true,
+  "wantCost": 20,
+  "gotCost": 20,
+  "mismatches": [
+   "nodes 1A,2,3,4,5B,6",
+   "start/goal 1A/5B",
+   "missing 1-2",
+   "missing 1-3",
+   "missing 1-6",
+   "missing 4-5",
+   "missing 5-6",
+   "extra 1A-2",
+   "extra 1A-3",
+   "extra 1A-6",
+   "extra 4-5B",
+   "extra 5B-6"
+  ],
+  "labelsAsRead": [
+   "1 a",
+   "2",
+   "3",
+   "4",
+   "5 b",
+   "6"
+  ],
+  "withPrintedAnnotationsStripped": {
+   "passed": true,
+   "costMatches": true,
+   "wantCost": 20,
+   "gotCost": 20,
+   "mismatches": []
+  },
+  "elapsedMs": 47622,
+  "calls": 4,
+  "costUsd": 0.079361,
+  "audit": [
+   "graph-located: Snapped 5 node position(s) onto the drawn nodes in the same frozen screenshot; no model call.",
+   "reading-confirmed: Muse Wonder read the same image and confirmed all 6 nodes and 9 connections with their weights.",
+   "source-interpreted: Source graph proposed; extraction remains fallible.",
+   "model-computed: Checked dijkstra-nonnegative trace with 7 snapshots.",
+   "graph-layout-from-source: Placed graph nodes where the source drew them. Presentation only; graph, costs and trace unchanged.",
+   "review-approved: Muse Wonder advisory review: approve.",
+   "scene-validated: Typed scene, source versions and checked model references validated."
+  ],
+  "note": "Scored offline from the published artifact. The run itself recorded a failure because the harness crashed while scoring: its answer key used the printed \"1\" as an ID. Strict scoring fails only because Spark kept the figure's printed a/b annotations in the labels of nodes 1 and 5; with those stripped, every connection, weight, start, goal and the cost match the key.",
+  "originalHarnessError": "[\n  {\n    \"origin\": \"string\",\n    \"code\": \"invalid_format\",\n    \"format\": \"regex\",\n    \"pattern\": \"/^[A-Za-z][A-Za-z0-9_-]{0,47}$/\",\n    \"path\": [\n      \"nodes\",\n      0,\n      \"id\"\n    ],\n    \"messag"
+ },
+ {
+  "phase": "final",
+  "at": "2026-11-03T16:04:33.003Z",
+  "ledger": 31.52365650000007,
+  "turns": {
+   "day": "2026-11-03",
+   "created": 19,
+   "turns": 20,
+   "active": [],
+   "expiresAt": {
+    "_seconds": 1793894672,
+    "_nanoseconds": 671000000
+   }
+  }
+ }
+]

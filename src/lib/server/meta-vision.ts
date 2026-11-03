@@ -208,7 +208,7 @@ export async function requestMetaVisionResponse(
   const controller = new AbortController(),
     abort = () => controller.abort();
   request.signal?.addEventListener('abort', abort, { once: true });
-  const timer = setTimeout(abort, Math.min(30_000, request.deadlineMs));
+  const timer = setTimeout(abort, Math.min(45_000, request.deadlineMs));
   let timedOut: () => void = () => {};
   const interrupted = new Promise<never>((_, reject) => {
     timedOut = () => reject(new MetaClientError('timeout', null, true));

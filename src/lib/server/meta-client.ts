@@ -108,7 +108,7 @@ async function readBody(response: Response, signal: AbortSignal): Promise<unknow
   } finally { signal.removeEventListener('abort', cancel); reader.releaseLock(); }
 }
 
-/** deadlineMs is a per-call duration, capped at 30 seconds. No retries occur here. */
+/** deadlineMs is a per-call duration, capped at 45 seconds. No retries occur here. */
 export async function requestMetaResponse(request: MetaRequest): Promise<MetaResult> {
   const key = process.env.MODEL_API_KEY;
   if (!key || (process.env.META_API_BASE_URL || 'https://api.meta.ai/v1') !== 'https://api.meta.ai/v1' || (process.env.META_MODEL_ID || META_MODEL) !== META_MODEL) throw new MetaClientError('configuration');
@@ -142,7 +142,7 @@ export async function requestMetaResponse(request: MetaRequest): Promise<MetaRes
   if (request.signal?.aborted) throw new MetaClientError('timeout');
   const controller = new AbortController(); const abort = () => controller.abort();
   request.signal?.addEventListener('abort', abort, { once: true });
-  const timer = setTimeout(abort, Math.min(30_000, request.deadlineMs));
+  const timer = setTimeout(abort, Math.min(45_000, request.deadlineMs));
   let rejectAbort: () => void = () => {};
   const interrupted = new Promise<never>((_, reject) => { rejectAbort = () => reject(new MetaClientError('timeout', null, true)); controller.signal.addEventListener('abort', rejectAbort, { once: true }); });
   try {

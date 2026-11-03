@@ -1409,7 +1409,9 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         instructions,
         input,
         tools,
-        deadlineMs: Math.min(30_000, deadline - Date.now()),
+        // A composition can run past 30 s on a busy provider; the 90 s turn deadline still bounds
+        // the whole turn, so one slow call no longer ends a turn that has time left.
+        deadlineMs: Math.min(45_000, deadline - Date.now()),
         signal,
         maxOutputTokens: 6144,
         ...(mechanismBudget ? { reasoningEffort: 'minimal' as const } : {}),

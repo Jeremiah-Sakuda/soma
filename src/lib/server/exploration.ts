@@ -2204,11 +2204,26 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
               circuitExperimentNote = `The learner's current experiment (${[...underway.state.open.map((id) => `${label(id)} open`), ...Object.entries(underway.state.values).map(([id, v]) => `${label(id)} = ${v}`)].join(', ')}) has no single solution: ${underway.reason} checkedCircuit is the circuit as read; say so plainly.`;
             }
           }
-          audit.push({
-            event: 'model-computed',
-            call: calls,
-            detail: `Checked dc-nodal solution: ${circuit.nodes.length} nodes, ${circuit.components.length} parts; Kirchhoff's current law, source voltages and power balance hold exactly.`,
-          });
+          // The solution is published as checked only if Kirchhoff's current law, every source's
+          // voltage and the power balance hold exactly; otherwise Soma explains without it.
+          const { kcl, sources, power } = circuitSolved!.checks;
+          if (kcl && sources && power)
+            audit.push({
+              event: 'model-computed',
+              call: calls,
+              detail: `Checked dc-nodal solution: ${circuit.nodes.length} nodes, ${circuit.components.length} parts; Kirchhoff's current law, source voltages and power balance hold exactly.`,
+            });
+          else {
+            audit.push({
+              event: 'model-computed',
+              call: calls,
+              detail: `The circuit solution failed its own checks (${[!kcl && "Kirchhoff's current law", !sources && 'source voltages', !power && 'power balance'].filter(Boolean).join(', ')}); explaining without a checked circuit.`,
+            });
+            circuit = null;
+            circuitSolved = null;
+            circuitWrittenFor = null;
+            circuitExperimentNote = null;
+          }
         }
       }
       const circuitCopy = circuit && circuitSolved ? circuitCopySchema(circuit, circuitSolved) : null;

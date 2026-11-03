@@ -93,6 +93,12 @@ test('a checked circuit draws on the uploaded slide and re-solves every experime
   await page.getByRole('checkbox', { name: 'R₂' }).uncheck();
   await expect(page.locator('.exploration-caption')).toContainText('You opened R₂.');
   await expect(overlay.locator('.source-overlay-tag', { hasText: /R₅ ≈ 0\.4138 A →/ })).toBeVisible();
+  // The table gives the solver's exact fraction beside the rounded value.
+  await page.getByText('Checked values in a table').click();
+  const readings = page.locator('table.circuit-readings');
+  await expect(readings.getByRole('row', { name: /^R₅ / })).toContainText('12/29 A ≈ 0.4138 A, B → C');
+  await expect(readings.getByRole('row', { name: /^Node C / })).toContainText('264/29 V ≈ 9.103 V');
+  await page.getByText('Checked values in a table').click();
   await overlay.screenshot({ path: '.local/circuit/overlay-open-r2.png' });
 
   await page.getByRole('button', { name: 'Back to the circuit as read' }).click();

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createRequire } from 'node:module';
 import { solveDc } from '../../src/lib/domain/dc-circuit';
 import { circuitOverlayModel } from '../../src/lib/domain/circuit-overlay-model';
-import { captionIsGrounded, circuitCaption } from '../../src/lib/domain/exploration-view';
+import { captionIsGrounded, circuitCaption, circuitExactQuantity } from '../../src/lib/domain/exploration-view';
 import { heroCircuit, heroCircuitLayout } from '../fixtures/hero-circuit';
 
 const require = createRequire(import.meta.url);
@@ -85,5 +85,16 @@ describe('a checked circuit drawn over its own slide', () => {
   it('gives the real reason a source with an intact loop carries nothing', () => {
     const off = solveDc(heroCircuit, { values: { V1: 0 } });
     expect(off.steps.map((_, i) => circuitCaption(off, i)).join(' ')).toContain('12 V battery is set to 0, so it drives no current.');
+  });
+});
+
+describe('exact circuit quantities', () => {
+  it('puts the solver’s fraction beside its rounded value only when the value is not whole', () => {
+    expect(circuitExactQuantity('12/29', 12 / 29, 'A')).toBe('12/29 A ≈ 0.4138 A');
+    expect(circuitExactQuantity('-12/29', -12 / 29, 'A', true)).toBe('12/29 A ≈ 0.4138 A');
+    expect(circuitExactQuantity('-264/29', -264 / 29, 'V')).toBe('−264/29 V ≈ −9.103 V');
+    expect(circuitExactQuantity('1/4', 0.25, 'A')).toBe('1/4 A = 0.25 A');
+    expect(circuitExactQuantity('8', 8, 'V')).toBe('8 V');
+    expect(circuitExactQuantity(null, 3, 'V')).toBe('3 V');
   });
 });

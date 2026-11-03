@@ -95,6 +95,13 @@ export function circuitQuantity(value: number, unit: string) {
   const plain = Number(value.toPrecision(4));
   return `${plain !== value ? '≈ ' : ''}${String(plain).replace('-', '−')} ${unit}`;
 }
+/** The solver's exact fraction beside its rounded decimal, "12/29 A ≈ 0.4138 A", when the
+ * value is not a whole number; otherwise the plain quantity. */
+export function circuitExactQuantity(exact: string | null | undefined, value: number, unit: string, magnitude = false) {
+  if (!exact?.includes('/')) return circuitQuantity(magnitude ? Math.abs(value) : value, unit);
+  const fraction = (magnitude ? exact.replace('-', '') : exact).replace('-', '−');
+  return `${fraction} ${unit} ${circuitQuantity(magnitude ? Math.abs(value) : value, unit).replace(/^(?!≈)/, '= ')}`;
+}
 const circuitName = (input: DcInput, id: string) =>
   input.nodes.find((n) => n.id === id)?.label ?? input.components.find((c) => c.id === id)?.label ?? id;
 /** Whether a part's two ends are still joined through the other connected parts. */

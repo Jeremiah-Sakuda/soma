@@ -14,6 +14,7 @@ import {
   captionIsGrounded,
   circuitCaption,
   circuitQuantity,
+  circuitExactQuantity,
   circuitSolution,
   explorationInputsChanged,
   type ExplorationViewState,
@@ -387,7 +388,7 @@ export function ExplorationCircuitStage({
                               ? 'open'
                               : `${value(solution.state.values[c.id] ?? c.value)} ${DC_UNITS[c.kind]}`}
                           </td>
-                          <td>{i === 0 ? '0 A' : `${circuitQuantity(Math.abs(i), 'A')}, ${node(a)} → ${node(b)}`}</td>
+                          <td>{i === 0 ? '0 A' : `${circuitExactQuantity(solution.exact.currents[c.id], i, 'A', true)}, ${node(a)} → ${node(b)}`}</td>
                           <td>
                             {solution.drops[c.id] === null
                               ? 'not fixed (its ends are cut apart)'
@@ -402,7 +403,7 @@ export function ExplorationCircuitStage({
                         <td colSpan={3}>
                           {solution.voltages[n.id] === null
                             ? 'Cut off from ground'
-                            : circuitQuantity(solution.voltages[n.id]!, 'V')}
+                            : circuitExactQuantity(solution.exact.voltages[n.id], solution.voltages[n.id]!, 'V')}
                           {n.id === spec.input.ground ? ' (ground)' : ''}
                         </td>
                       </tr>

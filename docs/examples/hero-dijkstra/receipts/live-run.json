@@ -1,0 +1,83 @@
+{
+  "description": "Retained record of the PM132 live service journey on the original Lecture 14 slide (November 1, 2026, 08:02 UTC): Muse Spark read the slide and Muse Wonder checked the reading and reviewed the words; the learner cut D–F with no model call; Muse chose the connection for the tipping point and Soma computed it; a follow-up kept the experiment; the saved exploration reopened exactly. Model output and Soma computation only; no image, credentials or learner data. Scope: a real-provider service run, not the hosted UI and not held-out evidence. The Wonder review that sent one step back is in wonder-review.json beside this file.",
+  "sourceSha256": "515f4259b058a6b08465aa0f8e4d7e9b23838eb0240a99d3e945c586c894f918",
+  "elapsedMs": 48249,
+  "observedProviderCalls": 10,
+  "runs": [
+    {
+      "phase": "generate",
+      "question": "Walk me through Dijkstra on this slide. Why doesn’t it just take the direct A to F edge?",
+      "mode": "checked-dijkstra",
+      "calls": 5,
+      "costUsd": 0.09415775000000001,
+      "elapsedMs": 24020
+    },
+    {
+      "phase": "reading",
+      "labels": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "weights": {
+        "A-B": 4,
+        "A-C": 1,
+        "A-F": 11,
+        "B-D": 1,
+        "B-C": 2,
+        "C-E": 5,
+        "D-F": 3,
+        "D-E": 3,
+        "E-F": 3
+      },
+      "directed": false,
+      "start": "A",
+      "goal": "F"
+    },
+    {
+      "phase": "intervention",
+      "disabled": "D-F",
+      "path": [
+        "A",
+        "C",
+        "E",
+        "F"
+      ],
+      "cost": 9,
+      "providerCalls": 0
+    },
+    {
+      "phase": "tipping-point",
+      "mode": "checked-dijkstra",
+      "audit": "Application checked 6 cost interventions on A-F; exact boundary 7.",
+      "calls": 3,
+      "costUsd": 0.041239,
+      "elapsedMs": 12249
+    },
+    {
+      "phase": "follow-up",
+      "question": "Why does the direct A to F edge only win once it costs 7 or less?",
+      "mode": "checked-dijkstra",
+      "path": [
+        "A",
+        "C",
+        "B",
+        "D",
+        "F"
+      ],
+      "experiment": 7,
+      "version": 3,
+      "calls": 2,
+      "costUsd": 0.032394,
+      "elapsedMs": 8908
+    },
+    {
+      "phase": "verified",
+      "exactReopen": true,
+      "noProviderCallsOnReopen": true
+    }
+  ]
+}

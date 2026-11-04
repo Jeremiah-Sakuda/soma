@@ -60,12 +60,12 @@ Let the route change, the lift and the current reversal carry the excitement. Th
 | computed routes and circuit quantities; consequences checked on the interpreted input | claiming code proves source reading or all explanatory prose; "accurate" or "guaranteed" for anything Muse generates |
 | "starts with students", "built for students first" | "learning is just one application", "platform", "any domain" |
 | "could", "potential", "the same idea applies" for uses beyond the classroom | named user groups beyond students as if they already use Soma |
-| "two checked subjects: graph search and DC circuits" | "any subject", or calling the recorded engine lab live |
+| "explore the diagram in front of you"; name graph/circuit examples when showing them | capability exclusions in the opening; universal subject guarantees; presenting a recorded run as live |
 | "no study or adoption figures are claimed" | minutes saved, grade gains, user counts |
 
 ## Claims boundary
 
-- **Checked:** BFS and Dijkstra routes, distances, cuts, tipping points and the numerical 3D heights/slack; string curve lengths are schematic. DC circuit voltages, currents, opened parts, changed values and tipping points are solved exactly with Kirchhoff's current law checked. Voltage-as-height is available in the browser workspace; the native circuit overlay stays flat. Everything else (explanations, mechanisms, general screenshots) is generated, labelled and reviewable.
+- **Checked:** BFS and Dijkstra routes, distances, cuts, tipping points and the numerical 3D heights/slack; string curve lengths are schematic. DC circuit voltages, currents, opened parts, changed values and tipping points are solved exactly with Kirchhoff's current law checked. Voltage-as-height is available in the browser workspace and current native release source. Generated spatial models and explanations retain their own visible provenance; installed-build acceptance is tracked in VERIFICATION.md.
 - **Demonstrated:** the student journey on the Lecture 14 slide, in the browser and on the real screen; the circuit journey on the Lecture 9 slide, live through the service and in the browser.
 - **Potential:** diagrams beyond the classroom; further checked subjects such as truss statics.
 - **Not claimed:** measured learning gains, adoption or time saved.
@@ -78,3 +78,12 @@ Let the route change, the lift and the current reversal carry the excitement. Th
 - [Demo operation](DEMO.md): entry paths, the take and fallbacks.
 
 The written framing is ready for review. No narrated video has been rendered or published by this documentation change, and the repository remains private until publication is separately authorized.
+
+
+## November 4 positioning clarification
+
+Lead with the action and experience: point at something, ask, explore the resulting visual. Keep topic coverage and expansion in documentation. The app’s cover should not introduce a capability taxonomy or contrast supported topics with everything else.
+
+3D is being introduced where spatial relationships make an explanation useful to explore. Current examples include graph distance and circuit voltage views, alongside generated spatial illustrations. Further subject-specific experiences are a potential expansion, assessed for usefulness and verified behavior. A 3D illustration and a solver-computed experiment have different assurance; describe those facts beside the actual result and in the evidence documentation. Do not promise a checked simulation for every topic.
+
+This changes positioning, not supported models or release acceptance. Keep actionable source, generation, review and save status visible in context.

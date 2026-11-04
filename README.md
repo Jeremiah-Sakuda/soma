@@ -2,7 +2,7 @@
 
 **Turn what you’re studying into something you can explore.**
 
-Soma turns a diagram on your screen into an experiment with computed routes, voltages and currents. Meta’s Muse models read the source, explain it and choose what to investigate; Soma’s own solver computes on that reading and draws the result back onto the source, where you can cut a connection or open a resistor, change a cost or a value, or ask about the consequence. Two subjects are checked today, graph search and DC circuits. It starts with students: the slide you're studying becomes something you can test.
+Soma turns what you’re studying into a visual you can explore on your screen. Meta’s Muse models read the source, explain it and choose what to investigate. Capture a diagram, ask a question, and try an idea directly on the material in front of you. In the graph and circuit examples, Soma computes routes, voltages and currents as you change connections or values.
 
 The opportunity: less setup between encountering a difficult idea and having a useful way to explore it, first in the classroom and potentially, with the same solver, on graphs people read outside it. [Demo story](docs/STORY_AND_DEMO.md) · [Three-minute script](docs/DEMO_VIDEO_SCRIPT.md) · [Submission copy](docs/SUBMISSION.md)
 

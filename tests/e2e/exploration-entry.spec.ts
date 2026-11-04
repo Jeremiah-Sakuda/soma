@@ -18,7 +18,7 @@ for (const viewport of [
     await page.goto('/explore');
     await expect(page.getByRole('button', { name: 'Compare weighted paths', exact: true })).toBeEnabled();
     await expect(page.locator('.journal-example-grid button').first()).toHaveAccessibleName('Watch a recorded Muse run');
-    await expect(page.locator('.journal-cover-lede')).toContainText('graphs and DC circuits into checked experiments');
+    await expect(page.getByRole('heading', { name: 'Point Soma at something you’re studying.' })).toBeVisible();
     const dock = await page.getByRole('region', { name: 'Ask about your context' }).boundingBox();
     for (const name of [
       'Compare weighted paths',

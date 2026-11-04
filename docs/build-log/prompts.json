@@ -1855,6 +1855,13 @@
   "kind": "user",
   "prompt": "Actually scratch that I think what we currently have is better than this. I just want to make sure we aren't overwhelming the user with too much information",
   "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+},
+{
+  "id": "UI-FRAMING-20261104-01",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "Also, our positioning and framing should not mention what we do not do. We shouldnt say for example, \"only x and y get 3D graphics\" it should be more so, 3D graphics are introduces for a few relevant topics now, with posisble expansion in the future. But that should not be in the app itself but documentation / So the line on \"Other examples get visual checks\" should not be present imo",
+  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
 }
 ]
 }

@@ -1,6 +1,6 @@
 {
-  "releaseId": "soma-lift-interaction-2026-11-04",
-  "sourceTreeSha256": "0063fa8f7c71f859ad7b2dbfb403d8c9c8790456eb7b36339392a5e8cc670ebe",
+  "releaseId": "soma-positive-framing-2026-11-04",
+  "sourceTreeSha256": "8e3004b90e96b4778a350eb9d1e27a0ab5874286b26a8df283a5bb65359c799f",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
     "desktop/Info.plist": "a7566833b9abda71d595bb76ba892daf8c33cccb10413e3a510a1a502c0db050",
@@ -159,7 +159,7 @@
     "src/components/exploration-source-grounding.tsx": "2b505038da610c51cbb71fab0171b5e06a34a40ccae3728611a2fbc976535367",
     "src/components/exploration-voice.tsx": "87e4e2a5d3094836ceb0c53fd9a21798aa9b89c4523f81cd74c3ecd3851b4c2d",
     "src/components/exploration-weighted-stage.tsx": "3a147fe6506e7e6a1f37637f82f115b45bf2a068d57a893f4260cddbfd9d7ad7",
-    "src/components/exploration-workspace.tsx": "fecab6fe11bae006d58019fb705ccea803d8f36613d10132e9494a472cc1157a",
+    "src/components/exploration-workspace.tsx": "5d5ef315bad8d97659280c2ba93806ae6c51943d398bf451574f5c3dfec4fb9f",
     "src/components/exploration.css": "28b568e1cb5c85bc43341f6debdfa662e2cac26ae58b052bfb8d89d81c2ff533",
     "src/components/investigation-panel.tsx": "451be06ce455d37eb296af6a3b8be78d46220334c50d44f2733ff0982b75c2a7",
     "src/components/journal-menu.tsx": "936e6fa6a05c07350912aa306f20feaa21982e9cfbee991a0e5ae0f42dfce2c4",

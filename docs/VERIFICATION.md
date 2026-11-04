@@ -1,3 +1,5 @@
+> **November 4 cover-copy follow-up:** removed the topic-capability paragraph, preserving the journal layout. All five existing entry journeys passed (four viewport sizes and keyboard source preview; 9.4 seconds), with no generation requests. Inspected the actual desktop cover. Manifest `soma-positive-framing-2026-11-04`, 314 files, SHA-256 `8e3004b90e96b4778a350eb9d1e27a0ab5874286b26a8df283a5bb65359c799f`. Earlier graph/runtime results below remain dated evidence; native sources are unchanged by this copy edit.
+
 > **Current graph interaction checkpoint — November 4 UTC.** Root main includes Claude’s `general-3d` at `1bb35e5` (integration `2cbead8`). Graph work is committed at `d9b37d6`, with release manifest `soma-lift-interaction-2026-11-04`; prior production and notarized artifacts below do not contain it. Final release is scheduled after the 5:30 PM ET freeze.
 
 ## Lifted graph interaction — local acceptance

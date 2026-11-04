@@ -3210,3 +3210,15 @@ No scope or schedule deviation. Remaining human inputs: final video URL, any req
 3. Recommended a narrow cleanup preserving layout and identity: prioritize capture plus one clearly labeled example, put remaining examples one level deeper, remove the generic checked-subjects cover paragraph, shorten pipeline disclosure wording while preserving actual review/recorded status, and keep warnings/save/sharing state visible. No cleanup implemented because the user selected the existing UI and asked for an overload check after rejecting mockups.
 
 Deviation: abandoned the proposed visual redesign on user correction. Initial mockup checks passed six desktop/three narrow states plus cut/restore/disclosures before the theme correction; revised journal B/C views were visually inspected. These mockup checks establish no production acceptance.
+
+
+## UI-FRAMING-20261104-01 — Positive framing and contextual coverage
+
+1. Removed the cover paragraph comparing graphs/DC circuits with other topics, retaining the current journal layout and headline. This is a four-line copy deletion in the shared workspace component; no engine, scene, pointer or layout code changed.
+2. Reframed the README opening and submission/story wording around capture, explanation and exploration. Documented current 3D examples and potential expansion, while retaining technical scope/evidence boundaries in documentation and result-specific status in the app. Recorded the decision in the UI guide and decisions log; the rejected mockups remain unadopted.
+3. Updated the existing entry journey’s obsolete copy expectation to the retained headline; running its four viewport checks and keyboard source-preview case. Actual outcomes and manifest identity follow below.
+
+Deviation: none; the user explicitly requested removing the app paragraph. No universal topic/physics claim or new production capability is introduced.
+
+
+Verification follow-up: all five existing entry browser journeys passed in 9.4 seconds (1440, 1280, 620 and 375px plus keyboard source preview), with no generation requests. Inspected the actual 1440px cover capture. `git diff --check` and manifest verification passed. Manifest `soma-positive-framing-2026-11-04` covers 314 files, SHA-256 `8e3004b90e96b4778a350eb9d1e27a0ab5874286b26a8df283a5bb65359c799f`. No new installer or hosted acceptance is claimed.

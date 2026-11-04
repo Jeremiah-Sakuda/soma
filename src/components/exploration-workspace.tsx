@@ -2199,10 +2199,6 @@ export function ExplorationWorkspace() {
           <section className="journal-page journal-cover" aria-labelledby="journal-cover-title">
             <p className="overline">Your study journal</p>
             <h1 id="journal-cover-title">Point Soma at something you’re studying.</h1>
-            <p className="journal-cover-lede">
-              Turn graphs and DC circuits into checked experiments. Other topics get visual
-              explanations.
-            </p>
             {library}
             <div className="journal-cover-entry">
               {(source || capture.sharing) && sourcePanel}

@@ -436,7 +436,13 @@ else {
           else if (payload.reason === 'webgl') status('This Mac could not draw in 3D, so the drawing stays flat on your slide.');
           else if (payload.reason === 'sheet') status('Soma could not lift this drawing, so it stays flat on your slide.');
           else if (payload.view === '3d')
-            status('Lifted off your slide. Height is the checked distance from the start; taut strings are shortest routes.');
+            status(
+              pointAsk.liftKind === 'model'
+                ? 'Lifted as an illustrative 3D model. Drag to turn it, click a part to pick it, double-click to reset.'
+                : pointAsk.liftKind === 'circuit'
+                  ? 'Lifted off your slide. Height is each node’s checked voltage.'
+                  : 'Lifted off your slide. Height is the checked distance from the start; taut strings are shortest routes.',
+            );
           else if (payload.view === '2d' && wasLifted) status('Back on your slide.');
           else if (payload.shown)
             status(`Drawn on your screen. Ask a follow-up${compactState?.investigable ? ', ⌘↩ tests it' : ''}, Esc clears.`);
@@ -546,6 +552,13 @@ else {
       if (['previous', 'next', 'play'].includes(action)) view.webContents.send('desktop:compact', { action });
       else if (action === 'lift') {
         if (!pointAsk.hasDrawing()) return false;
+        // An explanation with no model yet: the page asks Muse to build one, then lifts it.
+        if (pointAsk.view === '2d' && compactState?.buildsModel) {
+          if (compactState.busy) return false;
+          view.webContents.send('desktop:compact', { action: 'lift' });
+          status('Muse is building a 3D model of this explanation…');
+          return true;
+        }
         const shown = pointAsk.setView(pointAsk.view === '3d' ? '2d' : '3d');
         sendCompactState();
         return shown;
@@ -584,6 +597,7 @@ else {
         steps: Number.isInteger(payload.steps) ? payload.steps : null,
         playing: payload.playing === true,
         investigable: payload.investigable === true,
+        buildsModel: payload.buildsModel === true,
         message: typeof payload.message === 'string' ? payload.message.slice(0, 240) : '',
       };
       sendCompactState();

@@ -686,7 +686,8 @@ function createPointAsk({
     // A model update replaces the scene a pending lift was checked for.
     liftRequest = null;
     graph = { id: c.id, model: event.model, verified };
-    if (view === '3d' && !graph.model.lift) {
+    // A step of a lifted search, circuit or model stays lifted; anything else lands.
+    if (view === '3d' && !(graph.model.lift || graph.model.scene)) {
       view = '2d';
       sheet = null;
       clearInterval(liftWatch);
@@ -828,6 +829,12 @@ function createPointAsk({
     liftFailed,
     get view() {
       return view;
+    },
+    /** What a lift shows: a search's checked distances, a circuit's checked voltages, or an
+     * illustrative model. */
+    get liftKind() {
+      if (!graph?.verified) return null;
+      return graph.model.lift ? 'search' : graph.model.scene?.kind === 'height' ? 'circuit' : graph.model.scene ? 'model' : null;
     },
     /** Whether the drawing on screen can lift into 3D: a checked graph search, or any answer's 3D scene. */
     get liftable() {

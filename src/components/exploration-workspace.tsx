@@ -318,6 +318,7 @@ export function ExplorationWorkspace() {
     previous: ExplorationCapture;
   } | null>(null);
   const compactAction = useRef<(d: { action: string; text?: string }) => void>(() => {});
+  const [liftRequest, setLiftRequest] = useState(0);
   useEffect(() => {
     const handle = (event: Event) => {
       const d = (event as CustomEvent).detail;
@@ -906,6 +907,7 @@ export function ExplorationWorkspace() {
       const last = Math.max(0, (compactStepCount(artifact.spec, state) ?? 1) - 1);
       updateState({ ...state, step: Math.max(0, Math.min(last, state.step + (d.action === 'next' ? 1 : -1))) });
     } else if (d.action === 'play' && artifact) setPlaying(!playing);
+    else if (d.action === 'lift' && artifact?.spec.mode === 'explanation') setLiftRequest((n) => n + 1);
   };
   const compactSteps = artifact && state ? compactStepCount(artifact.spec, state) : null;
   // `step` is the shown step's index and `steps` the count. `visual` means this card belongs to
@@ -923,6 +925,11 @@ export function ExplorationWorkspace() {
     message: error || '',
     investigable:
       ((artifact?.spec.mode === 'checked-dijkstra' && !!state?.goal) || artifact?.spec.mode === 'checked-circuit') &&
+      liveEnabled !== false,
+    // The bar's 3D asks Muse for a model first when the explanation has none.
+    buildsModel:
+      artifact?.spec.mode === 'explanation' &&
+      !artifact.spec.scene.panels.some((p) => p.kind === 'spatial') &&
       liveEnabled !== false,
   });
   useEffect(() => {
@@ -1874,6 +1881,7 @@ export function ExplorationWorkspace() {
                 state={state}
                 onChange={updateState}
                 modelBusy={busy}
+                liftRequest={liftRequest}
                 onBuildModel={
                   liveEnabled === false || newContext
                     ? undefined

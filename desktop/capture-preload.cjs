@@ -162,7 +162,7 @@ ipcRenderer.on('desktop:screen-overlay-result', (_event, d) => {
 });
 // Compact mode: the native ask bar sends follow-ups and step/playback controls to the
 // current exploration and receives a one-line state back. No capture API is exposed.
-const COMPACT_ACTIONS = ['ask', 'investigate', 'next', 'previous', 'play'];
+const COMPACT_ACTIONS = ['ask', 'investigate', 'next', 'previous', 'play', 'lift'];
 ipcRenderer.on('desktop:compact', (_event, d) => {
   if (!isExploration() || !d || !COMPACT_ACTIONS.includes(d.action)) return;
   window.dispatchEvent(
@@ -181,6 +181,7 @@ window.addEventListener('soma:compact-state', (event) => {
     steps: Number.isInteger(d.steps) ? d.steps : null,
     playing: d.playing === true,
     investigable: d.investigable === true,
+    buildsModel: d.buildsModel === true,
     message: typeof d.message === 'string' ? d.message.slice(0, 240) : '',
   });
 });

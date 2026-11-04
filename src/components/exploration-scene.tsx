@@ -310,10 +310,13 @@ export function ExplorationScene({
   overlay,
   onBuildModel,
   modelBusy = false,
+  liftRequest = 0,
 }: {
   /** Builds a 3D model of an explanation that has none yet (a new version). */
   onBuildModel?: () => Promise<boolean>;
   modelBusy?: boolean;
+  /** Counts the companion bar's requests to lift an explanation that has no model yet. */
+  liftRequest?: number;
   /** The learner's capture and where it drew the graph; present only while the pixels are in memory. */
   overlay?: {
     image: string;
@@ -401,6 +404,20 @@ export function ExplorationScene({
     spec.mode === 'explanation'
       ? spec.scene.panels.flatMap((p) => (p.kind === 'spatial' ? p.objects : [])).find((o) => o.id === state.selectedObjectId)?.label
       : undefined;
+  // The companion's 3D button on an explanation with no model: build it, then lift it. If no
+  // model comes back, the diagram itself stands up, as on the page.
+  const seenLiftRequest = useRef(liftRequest);
+  useEffect(() => {
+    if (liftRequest === seenLiftRequest.current) return;
+    seenLiftRequest.current = liftRequest;
+    if (hasModel || !onBuildModel || modelBusy) return;
+    pendingLift.current = true;
+    void onBuildModel().then((ok) => {
+      if (ok) return;
+      pendingLift.current = false;
+      setView('3d');
+    });
+  }, [liftRequest, hasModel, onBuildModel, modelBusy, setView]);
   useEffect(() => {
     if (pendingLift.current && hasModel && liftable && onScreen && !lifted) {
       pendingLift.current = false;

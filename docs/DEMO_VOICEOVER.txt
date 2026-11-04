@@ -1,17 +1,19 @@
-This graph is on a PDF. I can cut a connection and watch the shortest route change, right here on the page.
+This graph is on my screen. Cut a connection, and the shortest route changes right on the page.
 
 I built Soma for questions I have while studying. Why doesn’t it take the direct route from A to F?
 
-Soma draws the search on the slide. Going through D costs seven; the direct edge costs eleven. Muse Spark reads the diagram, Muse Wonder checks the reading against the image, and Soma calculates the route.
+Muse Spark reads the diagram. Wonder reviews that reading against the image, and Soma calculates the route. Through D costs seven; the direct edge costs eleven.
 
-What would make the route go through E? I haven’t selected a connection or told it what to change. Muse chooses D-to-F. Soma calculates the threshold: at five, the routes tie. Above five, the route goes through E. I can move it back and forth and see exactly where that happens.
+What would make the route go through E? Muse chooses which connection to vary. Soma calculates where the two routes tie. Moving across that point changes the route.
 
-Why does it flip right there? Soma answers using the value I just changed. I can ask about this particular experiment and keep working with it.
+Why does it flip right there? The follow-up uses the value I just changed. I can keep asking about this particular experiment.
 
-The same graph lifts off the page. Height shows the cost of reaching each node. Cut D-to-F here, and F rises from seven to nine. Restore it: seven again.
+Height shows the cost of reaching each node. Cut D-to-F, and F rises from seven to nine. Restore it: seven again. The printed slide stays the same; this is my experiment.
 
-Now a circuit. Why is there no current through R-five? Both ends are at eight volts. Open R-two, and current starts flowing across the bridge. Then I ask when it would flow, and which way. Muse chooses R-four to vary. Below eight ohms, the current goes this way. Above eight, it turns around.
+Why does this engine need two turns? After one turn, the piston is back at the top, but the cycle isn’t finished. Muse chooses the teaching poses. Soma moves the illustrative cutaway through the second turn.
 
-I built this for my lectures. The useful part is being able to try the question as soon as I have it, on the diagram I’m already looking at.
+Both sides of this bridge are at eight volts, so no current crosses R-five. I ask when it would flow. Muse chooses R-four; Soma finds the balance at eight ohms. Below that, current flows from B to C. Above it, the direction reverses.
+
+I built Soma to work with the diagram I’m already looking at, so I can try a question instead of leaving it on the page.
 
 That’s Soma. You can try it at the link on screen.

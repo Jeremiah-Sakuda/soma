@@ -1,126 +1,79 @@
-# Soma — three-minute demo script
+# Soma — three-minute recording script
 
-**Recorded take notes — November 4, 20:34 UTC:** [Rehearsal clips and limitations](DEMO_REHEARSALS.md) now include actual native graph, engine and circuit footage. Match the edit to its take: the graph investigation selected E–F with tie 1, and D–F had already been selected, so that take cannot accompany an “unselected connection” claim. The new circuit investigation chose R4 for the question about R5; exact balance is 8 Ω. Circuit changes were made in the app panel and mirrored to the lifted display, not by clicking a native 3D resistor. The engine's four recorded poses provide an alternate visual beat; the final inclusion decision and three-minute cut remain open. All current clips are silent, and waits/cuts must keep their disclosure.
+Updated November 4, 2026, after the filmed rehearsals and Claude's review. **Filming is not authorized to start yet.** This is the revised edit plan. A new coherent graph take, final voiceover and final three-minute video do not yet exist. [Rehearsal evidence](DEMO_REHEARSALS.md) owns what was actually recorded; [delivery runbook](FINAL_DELIVERY_RUNBOOK.md) owns release and submission gates.
 
-November 4 script revision: open with the working interaction on the PDF, then return clearly to the start of that same take. Give the unselected-edge investigation the most time: the viewer should see Muse choose what to change and then watch the consequence. The 3D lift and current reversal supply the other visual payoffs. The spoken copy uses ordinary descriptions of what is happening; it leaves detailed verification in the evidence record.
+The main cut now includes a **25-second engine beat**. The R2-opening detour and on-camera pieces are removed. Jeremy records voiceover after the computer footage is assembled. The target is 3:00 including the end card; reserve natural result holds rather than speeding up interactions.
 
-This is a production script, not captured footage. The graph source is the original demo Lecture 14 slide (`docs/examples/hero-dijkstra/Lecture-14-Dijkstra.pdf`); the circuit source is the original demo Lecture 9 bridge (`docs/examples/hero-circuit/Lecture-9-Bridge.pdf`). Neither should be introduced as a real instructor’s handout. The main sequence follows one graph take, with a clearly separated circuit take. The opening graph excerpt is a preview of the same take, not another inference result spliced into it.
+## Recording decision
 
-**November 4 graph checkpoint:** interactive lifted cutting/restoration and rotation are committed at `d9b37d6`, with 14 renderer and 82 desktop tests passing locally. Physical native acceptance and the replacement installer remain pending. The cold open and 1:31 beat require that installed-build check; if it fails, retain the previously verified flat cut and observational lift. Claude’s engine is under construction, with a 4:30 PM ET go/no-go. [Verification](VERIFICATION.md) owns current status.
+1. Before a new take, read the **existing companion session's** allowance. Four admissions remained at 20:45:02.502 UTC; this is not a fresh balance check. A graph explanation, investigation and contextual follow-up use three admissions. An engine run uses two and a circuit run uses two. Failed admitted attempts count. The next reset is 7 PM EST; submission is 9 PM EST. Do not reset identities or rely on the reset as the primary plan.
+2. Complete the no-generation hand checks on an available drawing: D–F click/cut and restore, held-button rotation/reset, and microphone/recording audio. If no eligible drawing is available, perform the interaction check on the first generated graph while recording; do not claim that creating a fresh drawing is free. For graph rotation, Turn left/right and Reset view are fallbacks. The engine has no equivalent camera buttons. Neither the cold open nor the full video requires a drag shot.
+3. When filming is authorized and allowance permits, prioritize **one coherent graph take using up to three generations**. Capture clearing the selection before the E question. Keep the actual choice, boundary, current value and follow-up together. Preserve one remaining admission for recovery if four are still available.
+4. Reuse the existing original-source engine and circuit takes, with recorded-run labels and explicit transitions. Do not regenerate them just for matching wording. Their generation waits and source versions are documented in the rehearsal record.
+5. If the new graph take fails or cannot be recorded, use the footage-only fallback below. Do not insert an unsupported graph investigation claim into existing cut/restore footage.
 
-**Previous November 4 UTC delivery:** web runtime `1658b98` uses `soma-clarity-2026-11-04`, with calculation-owned source captions, printed browser-height values and compact save feedback. The native sources remain those of the signed/notarized private 0.4.1 draft; the published installer remains 0.4.0. Local renderer/controller checks and the labeled silent QA clips do not establish physical native alignment or hosted acceptance, which remain pending after the origin approval rejection. Actual service E investigation (Muse chose D–F, tie 5), source-preserving follow-up/save and circuit image-check/reversal runs remain separate evidence. Final three-minute/native footage is still pending. [Verification](VERIFICATION.md) owns current CI/deployment results, source identity and retained failures.
+## Main edit timeline
 
-**What the viewer should notice:** the PDF is still open in Preview; a question becomes an experiment on it; Muse chooses a connection the user did not name; the route and current visibly change.
+| Time | Computer footage | Voiceover / edit requirement |
+| --- | --- | --- |
+| 0:00–0:08 | Successful D–F cut in the lifted graph; hold cost 9. Use an excerpt from the same graph take used below. | “This graph is on my screen. Cut a connection, and the shortest route changes right on the page.” Label this as an excerpt from the take. If native clicking fails, replace this shot with a verified panel-controlled change and show the control. |
+| 0:08–0:18 | Explicit return to the start of the graph take: original slide and typed question. | “I built Soma for questions I have while studying. Why doesn’t it take the direct route from A to F?” Do not imply voice input when the take uses typing. |
+| 0:18–0:38 | Actual reading/review result and settled route A–C–B–D–F, cost 7 versus direct edge 11. | “Muse Spark reads the diagram. Wonder reviews that reading against the image, and Soma calculates the route. Through D costs seven; the direct edge costs eleven.” Keep the actual Wonder status. Label the measured generation wait if shortened. |
+| 0:38–1:10 | Visibly clear selection; ask “What would make the route go through E?”; use Test it / the investigation control. Show the returned choice and exact boundary, then move across it. | “What would make the route go through E? Muse chooses which connection to vary. Soma calculates where the two routes tie. Moving across that point changes the route.” Name a connection/value only after inspecting this take. Hold both checked outcomes for at least two seconds. |
+| 1:10–1:25 | Keep the changed value active; ask “Why does it flip right there?” Show the actual reply referring to that value. | “Why does it flip right there? The follow-up uses the value I just changed. I can keep asking about this particular experiment.” Use this line only if the visible reply supports it. |
+| 1:25–1:45 | Restore the original graph, settle at 7, lift, cut D–F to 9, restore to 7. | “Height shows the cost of reaching each node. Cut D-to-F, and F rises from seven to nine. Restore it: seven again. The printed slide stays the same; this is my experiment.” Keep the current result and source distinguishable. This supplies the opening excerpt. |
+| 1:45–2:10 | Separate recorded engine take: original slide, lifted cutaway, 360° and 720° readouts; use the 630° pose briefly if time permits. | “Why does this engine need two turns? After one turn, the piston is back at the top, but the cycle isn’t finished. Muse chooses the teaching poses. Soma moves the illustrative cutaway through the second turn.” Retain the illustrative label and angle readouts. |
+| 2:10–2:38 | Separate recorded circuit take: open on the balanced lift. Show R4 investigation control, below 8 Ω, exact 8 Ω, then above 8 Ω. | “Both sides of this bridge are at eight volts, so no current crosses R-five. I ask when it would flow. Muse chooses R-four; Soma finds the balance at eight ohms. Below that, current flows from B to C. Above it, the direction reverses.” Show actual panel controls; native 3D resistor labels are not clickable. |
+| 2:38–2:50 | Hold the last useful result; optional brief return to graph/engine as explicitly separated excerpts. | “I built Soma to work with the diagram I’m already looking at, so I can try a question instead of leaving it on the page.” No new feature montage or unsupported subject. |
+| 2:50–3:00 | End card with verified working product and repository links. | “That’s Soma. You can try it at the link on screen.” Leave quiet reading time. A private repository URL is not a judge-accessible link. |
 
-**Voice:** Jeremy, conversational. Speak to the result on screen. Pause when the route changes, the graph lifts or the current reverses. The script should not sound excited on the viewer’s behalf. Keep the existing tagline available on the end card; there is no need to read it aloud.
+[Voiceover-only copy](DEMO_VOICEOVER.txt) follows this timeline. The main copy is 260 words: approximately 108–120 seconds at 130–145 words per minute, leaving about a minute for visible actions and holds. Timing is an edit target, not a completed timed rehearsal. The final voiceover is recorded against the assembled footage.
 
-## Checked facts the footage must match
+## Values must follow the take
 
-**Settled-frame rehearsal check:** advancing to the last checked step is not the same as the drawing finishing its animation. Wait for the full route and its final labels to settle, then hold the completed result for at least two seconds before lifting or cutting away. The silent local QA take caught a short final-source hold; its graph/circuit figures, current values and actual save/reopen were verified separately. Keep real source, current controls and printed numerical readouts legible in the chosen framing.
+The graph's original shortest route is A–C–B–D–F at 7; the direct A–F edge costs 11. Cutting D–F gives A–C–E–F at 9. These computed values are independent of the model's investigation choice.
 
-These values come from Soma's solver and have been confirmed in live runs ([receipt](examples/hero-dijkstra/receipts/live-run.json)):
+For the exact E question on the original graph, valid recorded/computed possibilities include:
 
-- The cheapest route is A → C → B → D → F, cost 7. B improves from 4 to 3 when C settles (tag "③ B = 3"); D settles at 4 (tag "④ D = 4"), and F's dashed "F ≤ 11" becomes the equation tag "4 + 3 = 7 < 11", with the printed A–F line struck once.
-- BFS (fewest edges) takes A–F directly, cost 11.
-- Cutting D–F gives A → C → E → F, cost 9.
-- The tipping point on A–F is exactly 7. At 7 the routes tie, both costing 7, and Soma's fixed tie rule draws the direct edge; below 7 the direct edge wins outright. (Fallback question only; see below.)
-- "What would make the route go through E?" names no connection, so Muse has to choose one. Four connections can send the route through E, and Soma's probe gives each an exact answer on this slide: C–E below 3 (tie at 3; A → C → E → F), E–F below 1 (tie at 1), D–F above 5 (tie at 5; A → C → E → F, cost 9), or B–D above 3 (tie at 3). D–E touches E but only ties even at cost 0, so it never wins. If Muse picks anything else, or no connection, use the fallback question "Would the direct A-to-F edge ever be the better route?" and the A–F facts above.
-- In both successful November 4 UTC service investigations, no edge was preselected and Muse chose D–F. The latest run independently checked D–F = 2.5 → A–C–B–D–F, cost 6.5, and D–F = 7.5 → A–C–E–F, cost 9. Its follow-up at 7.5 retained the original source cost 3 and passed Wonder review plus exact save/reopen. A new take may choose another valid connection; narrate its actual checked boundary.
-- In 3D, F rises to 7 on the ruler; the route strings are taut and A–F hangs with "11 · slack 4". Heights and numerical slack come from the checked graph; string curvature/length is schematic, not a physical measurement of cost.
+| Connection varied | Boundary | Route through E wins when |
+| --- | ---: | --- |
+| D–F | 5 | D–F is above 5 |
+| E–F | 1 | E–F is below 1 |
+| C–E | 3 | C–E is below 3 |
+| B–D | 3 | B–D is above 3 |
 
-The circuit beat's values come from Soma's circuit solver and were confirmed in two live service runs ([receipt of the second](examples/hero-circuit/receipts/live-run.json)):
+These are a check on the returned experiment, not instructions to make Muse choose a particular connection. A choice without a useful verified boundary does not support the planned success claim. Keep failed attempts and switch to the fallback if necessary.
 
-- B and C both sit at 8 V, so R₅ carries exactly 0 A (tag "R₅: 0 A", dashed). R₁ and R₂ carry 2 A, R₃ and R₄ carry 1 A, and the battery 3 A.
-- Opening R₂ sends about 0.4138 A through R₅ from B to C (tag "R₅ ≈ 0.4138 A →"); C rises to about 9.103 V.
-- The tipping point: asked "When would current flow through R5, and which way?", Muse chose R₄. The current in R₅ is exactly zero when R₄ is 8 Ω, the value printed on the slide and the bridge's balance point (R₁/R₂ = R₃/R₄). Above 8 Ω it flows from C to B (arrow ←); below, from B to C (arrow →). The table of checked values shows exact fractions, such as 12/29 A ≈ 0.4138 A for R₅ with R₂ open.
+**The existing native graph take is not a cleared-selection demonstration.** D–F was already selected; Muse chose E–F, with tie 1. E–F=0 produced cost 6 and the follow-up used that value. Much of the later panel interaction was hidden behind the fullscreen source window in the raw recording. Do not narrate “I haven’t selected a connection,” “Muse chose D–F” or “they tie at five” over it. Earlier service-only D–F investigations are separate evidence, not matching computer-use footage.
 
-If a take shows anything else, stop and retake. Never narrate a value that is not on screen.
+In the recorded circuit investigation, R2 was restored and selection cleared, Muse chose R4, and Soma computed balance at 8 Ω. The filmed controls show R4=0.4 Ω → approximately 1.032 A B→C, R4=8 Ω → zero, and R4=25.6 Ω → approximately 0.2429 A C→B. Open on the balanced lift; the earlier flat footage contains retained defects. No R2-opening beat is needed in this cut.
 
-## Script and shot plan
+The engine's visible crankshaft poses are 0°, 360°, 630° and 720°. Its parts, proportions and motion are illustrative. Muse places the built-in cutaway and chooses teaching poses; Soma constructs and moves it. Do not claim the engine geometry was reconstructed from the screenshot or that it is a measured engine simulation.
 
-The timing is an edit target, with shortened model waits disclosed using this take’s actual measurements. Cursor movement, slider response and result holds play at their actual speed. All spoken words are captioned. Small factual labels are separate from captions and must stay clear of the diagram.
+## Footage-only fallback — no new generation
 
-The recording copy below assumes the verified D–F / tie 5 and R₄ / balance 8 Ω outcomes. A new take can choose differently: use its actual valid choice and computed boundary. Do not coach the model to pick D–F just to fit the script. The alternatives in Checked facts remain available.
+If the coherent new graph take is unavailable, use this honest alternative:
 
-| Time | On screen | Spoken | Small on-screen label |
-| --- | --- | --- | --- |
-| 0:00–0:10 | Cold open on the actual native overlay over Preview. From the already-read, lifted graph, click D–F; hold the changed route and F rising to 9. Use this excerpt from the same retained take as the rest of the demo. | This graph is on a PDF. I can cut a connection and watch the shortest route change, right here on the page. | Original demo slide · excerpt from this take |
-| 0:10–0:20 | Briefly show Jeremy, then cut clearly to the start of the take: plain slide, no overlay. Circle the graph and ask. | I built Soma for questions I have while studying. Why doesn’t it take the direct route from A to F? | Start of take · Point & ask |
-| 0:20–0:42 | Show the actual reading result, then the search drawing on the source. Let the completed A–C–B–D–F route settle; hold cost 7 beside direct cost 11 for two seconds. Shorten the measured generation wait. | Soma draws the search on the slide. Going through D costs seven; the direct edge costs eleven. Muse Spark reads the diagram, Muse Wonder checks the reading against the image, and Soma calculates the route. | Spark: reads · Wonder: reviews · Soma: calculates · actual wait: [n] s |
-| 0:42–1:16 | Keep the original graph active. Clear the selected object visibly. Ask the exact E question and click Investigate my question. Show Muse’s chosen connection and its reason. For D–F, show the tie at 5, then drag above 5 and hold on A–C–E–F. | What would make the route go through E? I haven’t selected a connection or told it what to change. Muse chooses D-to-F. Soma calculates the threshold: at five, the routes tie. Above five, the route goes through E. I can move it back and forth and see exactly where that happens. | Muse chose the connection · Soma computed the threshold · actual wait: [n] s |
-| 1:16–1:31 | Keep the changed D–F value active. Ask the follow-up through Point & ask. Show the actual answer mentioning the changed experiment. Highlight the relevant sentence editorially only if it exists in this take; do not replace the model’s answer. | Why does it flip right there? Soma answers using the value I just changed. I can ask about this particular experiment and keep working with it. | Current experiment · actual review status · actual wait: [n] s |
-| 1:31–1:49 | Show Back to the graph as read; advance to the final checked step, confirm F = 7, then Lift into 3D. Click D–F in the lifted view, hold F = 9 for two seconds, then restore the dashed connection and hold F = 7. Keep the source page recognizable. This supplies the cold-open excerpt. | The same graph lifts off the page. Height shows the cost of reaching each node. Cut D-to-F here, and F rises from seven to nine. Restore it: seven again. | Source restored · computed heights · string curves schematic |
-| 1:49–2:30 | Switch to the original bridge slide; circle it and ask about R₅. Show B = C = 8 V and R₅ = 0 A. Open R₂ and hold 0.4138 A B→C. Restore source, clear selection, and ask When would current flow through R5, and which way? in the panel. Show the actual R₄ choice. Drag below and above 8 Ω with two-second holds on opposite current arrows. | Now a circuit. Why is there no current through R-five? Both ends are at eight volts. Open R-two, and current starts flowing across the bridge. Then I ask when it would flow, and which way. Muse chooses R-four to vary. Below eight ohms, the current goes this way. Above eight, it turns around. | Original demo slide · DC circuit calculation · Muse chose R₄ · actual waits labeled |
-| 2:30–2:47 | Jeremy on camera beside the settled circuit result. No extra feature montage. Keep the last useful result visible. | I built this for my lectures. The useful part is being able to try the question as soon as I have it, on the diagram I’m already looking at. | Soma · checked graph search and DC circuits |
-| 2:47–3:00 | End card with verified product/repository links. Say the line, then leave quiet time to read. Credit only the models actually used in the take. | That’s Soma. You can try it at the link on screen. | Built during the Meta Global AI Developer Hackathon · Muse Spark / Wonder / Voice Transcribe when used |
+- 0:00–0:15: original slide and introduction.
+- 0:15–0:55: existing graph source interpretation, lift and successful cut/restore. Omit the graph investigation and contextual-follow-up claims entirely. Say that the result is a changed experiment while the original slide remains visible.
+- 0:55–1:40: existing engine source-to-lift and cycle poses, with recorded-run and illustrative labels.
+- 1:40–2:40: existing circuit balanced lift, Muse's R4 investigation and visible panel changes through zero to the opposite current direction. This is the model-selected experiment in this version of the film.
+- 2:40–3:00: short close and verified end card.
 
-[Voiceover-only recording copy](DEMO_VOICEOVER.txt). The current spoken copy is **276 words** (whitespace count). At 130–145 words per minute, the words occupy roughly 114–127 seconds, leaving the rest for actions, result holds and the end card. This is a planning estimate, not a timed rehearsal.
+Use the separate [footage-only voiceover](DEMO_VOICEOVER_FOOTAGE_ONLY.txt), then time it against the chosen excerpts; do not reuse the graph-investigation paragraph from the main copy. No new run, mouse-drag shot or scripted model choice is required to use the existing clips.
 
-### Match the words to the take
+## Capture and edit rules
 
-- If Wonder did not complete the image review, remove “Muse Wonder checks the reading against the image” and use the actual status label. Image agreement is not a correctness guarantee.
-- If Muse selects another connection for E, replace only the connection/threshold/result sentences with the actual valid outcome. If no usable choice is published, retake or use the labeled recorded investigation; do not narrate a success over a failed result.
-- If the follow-up does not use the changed value, keep that failure out of a successful-take claim. The script’s continuity claim needs an actual matching answer.
-- For the circuit, the exact input remains “When would current flow through R5, and which way?” The shorter narration describes that question; it is not a claim that a new prompt has been tested. If a different part is chosen, verify its direction/boundary before changing the voiceover.
-- If the circuit beat will not fit at a natural pace, omit the R₂-open detour and its sentence. Keep Muse’s choice and both sides of the current reversal; those show more than another computed number. If more time is needed, shorten the on-camera close before speeding up an interaction.
-- The camera and panel must leave the route and arrows visible. Only say “on the page” over actual native footage. In a browser take say “over the captured slide,” and introduce that capture visibly.
+- Use the latest signed local **0.5.0 recording candidate** with the caption/startup fixes. Published 0.4.0 cannot perform the new explanation-model lift. Final notarization/publication is a release gate, separate from filming the local candidate. Record exact source and hosted manifest with every take.
+- Keep original synthetic demo-source labels. Sources: [graph](examples/hero-dijkstra/Lecture-14-Dijkstra.pdf), [engine](examples/hero-engine/lecture-7-four-stroke.png), [circuit](examples/hero-circuit/Lecture-9-Bridge.pdf). The existing native graph take used an original-slide viewer; engine/circuit used Preview. Describe the actual app used.
+- Record computer footage without system audio for Jeremy's later voiceover. The product can speak on lift and on explanation arrows; pause it if necessary. If product audio is included, listen to it first and credit its configured speech provider. No audible-quality check is established by the silent rehearsals.
+- Enable Do Not Disturb manually before capture and remove private background content. Do not use `native/2026-11-04T19-52-42.927Z/`; it is marked private and unsafe to share.
+- Keep focus in Soma during the lifted shot. Switching to another app or clicking the source can mark it stale and trigger source rechecks; those checks can blink in recordings. Necessary source changes are explicit cuts between examples.
+- Leave the compact bar at its default position; the caption safe area does not follow an arbitrarily dragged bar. Keep the app panel beside the useful drawing for circuit controls. Record normal native cursor/action timing, including unsuccessful attempts.
+- Hold each settled result for at least two seconds. Shorten generation waits with the **measured duration from that take** visibly labeled. Do not stitch incompatible states into a continuous action or replace model output.
+- Existing clips are private and silent, with provenance footers. A clean final edit may use concise equivalent provenance labels, retaining original-source, recorded/live, illustrative and shortened-wait disclosures. Replay of retained artifacts must remain labeled replay.
+- Keep voiceover captions clear of result labels and the app's caption card. Verify readability at final export size. End card/model credits name only tools actually used; typed takes do not establish Voice Transcribe use.
 
-## Editorial choices
+## Current status
 
-The opening shows the capability before explaining it. The middle spends its time on a decision: the user names E, and Muse chooses a connection to investigate. Model names appear once where their work is visible. The 3D beat makes a route change visible as a change in height; the circuit beat ends with the arrow changing direction.
-
-Dropped from the spoken copy: “Every student has…”, “the answer has a shape”, “with the math checked, not guessed”, the aside about an earlier Wonder catch, and repeated “a number that isn’t on the slide.” Keep the real Wonder catch in supporting evidence. It need not interrupt the current experiment.
-
-No montage of unfinished topics, invented user results, scripted model decisions or generic claims about transforming education. Save/reopen stays outside the three-minute cut; it remains available in the judge route.
-
-## Candidate second 3D example — integrated engine, selection pending
-
-The built-in four-stroke cutaway is integrated at `af9a223`. Open the original [Lecture 7 slide](examples/hero-engine/lecture-7-four-stroke.png) and ask “Why does this engine need two turns?” Muse places the cutaway and chooses explanation poses; Soma supplies the assembled parts and motion. Keep the illustrative label visible. This is distinct from the earlier recorded 2D vector engine.
-
-**Potential 30-second beat, replacing part of the circuit slot:** type the question, lift the diagram region, and let the model settle before narration begins. Step to one crankshaft turn and hold: the piston has returned, but the cycle is only halfway through. Advance through the second turn and show the completed cycle. Explain: “The piston is back where it started. The cycle isn’t. Muse places the cutaway beside the question; Soma moves its parts through the four strokes.” Use those words only if the actual generated steps show those poses. ‹ › speak the selected explanation step; ▶ plays the remainder. Product narration stays muted under the recorded voiceover.
-
-The cutaway’s parts, proportions and motion are illustrative. Do not describe its geometry as generated from the screenshot or as a measured engine simulation. A failed model request reports a retryable failure rather than lifting a flat substitute. The slide lifts as a crisp cropped card, including for a typed question.
-
-The 4:30 PM ET go/no-go remains pending. Inspect attachment, occlusion, label readability, crank/valve motion and the one-turn/two-turn reveal at final video size. The canonical voiceover stays unchanged until actual footage earns inclusion; retain the checked circuit as the fallback.
-
-## Capture setup
-
-- **Release:** record the actual web manifest and installed companion version with the take. This integrated engine requires companion **0.5.0**, with signed/notarized packaging and physical acceptance still pending. Before recording, read the existing companion session’s remaining allowance; two generations use two slots, subject to the shared spend cap. The signed [0.4.0 release](https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.4.0) includes the overlay, compact bar and 3D lift. The signed/notarized 0.4.1 draft contains the November 4 geometry/controller/precision fixes; it still needs current physical native alignment and hosted acceptance after the pending origin approval. Do not identify older native footage as a 0.4.1 run. [Current evidence](VERIFICATION.md).
-- **Screen:** 1920×1080, with notifications and the menu bar clock hidden. Preview shows `Lecture-14-Dijkstra.pdf` full screen. The companion loads the hosted app, so the overlay draws over Preview.
-- **Point & ask:** hold ⌃⌥Space, circle the graph, and speak. For a silent rehearsal, type the question into the composer first; Point & ask then uses the typed text instead of the microphone.
-- **Questions:** "Why doesn't it just take the direct A-to-F edge?", then "What would make the route go through E?" (fallback: "Would the direct A-to-F edge ever be the better route?") and, spoken, "Why does it flip right there?" On the circuit slide: "Why is there no current through R5?", then "When would current flow through R5, and which way?" Both slides stay in the panel's Point & ask flow; the compact bar (⌥Space) hides the panel and has no slider.
-- **Circuit slide:** open `Lecture-9-Bridge.pdf` in a second Preview window, full screen, before the take, so the switch is one keystroke.
-- **On camera:** two short pieces to camera, recorded separately at eye level in soft side light. Keep the laptop screen visible but out of focus.
-- **Fallback:** if the native overlay misaligns on a take, use **Share a window** on Preview; the same drawing then appears over the capture inside Soma. Say which path the take used in its label.
-- **Takes:** each full take costs about $0.20–0.35 of live inference, including the circuit investigation. Keep every raw file and record its measured waits. Rehearse actions silently first; check the remaining budget before additional live takes. Keep one coherent successful graph take rather than combining incompatible outcomes. Note each take's actual generation time for the "wait shortened" label.
-
-## Edit rules
-
-- **Burned-in captions:** two lines at most, 42 characters per line, bottom centre, white on a 60% dark band. Keep the band clear of the overlay's own caption, which sits under the graph. Quoted questions to Soma go in italics.
-- Keep the slide recognizable at all times; the drawing on it is the hero. Don't cut to the diagram view.
-- Hold each settled route and each circuit current direction for at least two seconds. An animation still drawing is not a settled hold.
-- Shorten only generation waits, and label each one with the duration measured in that take.
-- The earlier Wonder catch is supporting evidence ([wonder-review.json](examples/hero-dijkstra/receipts/wonder-review.json)), outside this cut. Never present it as part of the current take unless that take has its own recorded rejection.
-- The circuit beat must be its own live take on the Lecture 9 slide, with its values checked against the list above. If the native overlay misaligns on it, use **Share a window** like the hero fallback and label it.
-- The Soma lab engine is a recorded Muse run and is no longer in the cut. If it is ever shown, keep its label on screen and never present it as generated live.
-- A non-course diagram (a transit or network map) stays potential: never imply one works without footage of it working.
-- Mute product narration under the voiceover. If product audio is audible, credit the configured speech provider: Muse writes the words, not the voice.
-
-## Status
-
-Verified:
-- the hero journey, live through the service (PM132);
-- the native overlay on the real Preview window: alignment across the rounds and a clean final frame (PM139–PM153);
-- the hosted app at an earlier release, `soma-pm153-review-2026-11-01` (this script's release is the one in `public/release.json`).
-
-Also verified (November 1): the 3D lift on the real screen through the compact bar, including a slide re-check while lifted, in an unreleased companion build (`desktop/test/compact-live.cjs`).
-
-Also verified (November 2): the circuit beat's reading, solution and investigation, live through the service twice on the Lecture 9 slide (exact reading both times; Wonder approved; Muse chose R₄ and Soma found exactly 8 Ω), the circuit drawing, opening and value changes in the browser with a scripted provider, and the whole circuit journey live on the page against a local server, including Find the tipping point.
-
-Also verified (November 1, 9:25 PM): the whole graph journey through the panel on the real screen (`desktop/test/demo-live.cjs`, nine of nine beats), including **Lift into 3D** from the panel. On recording, dock the panel at the right edge: in that run it covered the left half of the slide.
-
-Also verified (November 3): the hosted app at release `soma-circuits-review3-2026-11-03`, headless: the Lecture 14 button drew the checked search with the green line "Muse Wonder checked Spark's reading against your slide and confirmed all 6 nodes and 9 weights"; the Lecture 9 button drew the circuit; the circuit investigation chose R₄ and found exactly 8 Ω, verified. Muse's reason for R₄ did not appear at first: a filter bug, fixed; after the fix, on release `soma-circuits-review6-2026-11-03`, the panel read "Why R4: Changing R4 shifts node C relative to node B so R5 direction reveals imbalance" (investigation in 32 s). One earlier attempt timed out when a composition call hit the old 30-second per-call limit, now 45 s. The signed companion [0.4.0](https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.4.0) is published.
-
-Also verified (November 4 UTC, current canonical service): the exact E question with no edge selected, D–F boundary 5 and routes on both sides; the follow-up at D–F = 7.5, source/base preservation and exact save/reopen. The circuit run confirmed all six parts and polarity with Wonder's independent image check, then verified R₄ balance 8 Ω and R₅ direction reversal plus save/reopen. Two unavailable reviews, the misleading-title rejection and a later composition HTTP failure remain in the [verification record](VERIFICATION.md). These are separate attempts, not an aggregate success-rate claim.
-
-Not yet verified: the reported deployment's hosted manifest/UI and native acceptance (browser approval pending); the circuit drawn by the native overlay on the real screen, its investigation and R₄ drag through the complete companion sequence; the narrated/timed edit; and any non-course diagram. No final video URL exists yet. Save, reopen and Try a fresh example remain outside the three-minute cut. No new transcription or audible-quality check is claimed.
+Real-screen graph, engine and circuit footage exists; [DEMO_REHEARSALS.md](DEMO_REHEARSALS.md) records successful actions and failures. Fresh packaged startup acceptance passed. Caption placement passed 25 actual-renderer tests and exact retained-data replay; the latest signed local package includes that fix. Physical mouse cut/restore after the pointer fix, held-button drag/reset, audible narration quality, a new coherent graph take and the final narrated/timed export remain distinct open checks. CI/release/access status is maintained in [VERIFICATION.md](VERIFICATION.md) and [FINAL_DELIVERY_RUNBOOK.md](FINAL_DELIVERY_RUNBOOK.md).

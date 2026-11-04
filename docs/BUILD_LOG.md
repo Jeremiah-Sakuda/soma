@@ -3316,3 +3316,15 @@ Deviation: none; confirmation only.
 3. A filmed held-button drag still needs a reliable input method or the user’s brief physical action; recording remains stopped under the previous instruction.
 
 Deviation: none; no runtime or guard changes.
+
+
+## DEMO-CLAUDE-REVIEW-20261104-01 — Reconcile filming plan with actual evidence
+
+1. Rewrote the main three-minute script and 260-word voiceover to include a 25-second engine beat, remove the R2 detour/on-camera pieces, and avoid predetermined D–F/tie-5 or cleared-selection claims over unmatched footage. A new coherent graph take remains pending; its actual choice/value/reply must determine the words. Added a separate 270-word footage-only fallback that omits graph-investigation claims and uses the recorded circuit investigation. Neither timeline is a completed timed export.
+2. Updated the runbook to prioritize a three-generation graph take only after the user starts recording and after checking the existing session's actual allowance; reuse engine/circuit clips and keep the last known fourth slot for recovery. Retained manual click/drag/audio checks, panel-only circuit edits, focus/recheck cautions, silence/provenance rules and private-background exclusion. No filming, inference or settings change was performed.
+3. Independently checked at 21:01 UTC: bff7b10 CI passed; dc4c9cd/2cf017c runs remained active; canonical repository PRIVATE, latest published companion 0.4.0, 0.4.1 draft. Local 0.5.0 remains signed/not notarized or published. No visibility change or history rewrite; separate access-session proposal remains unverified. Unrelated next-env/mockup changes preserved.
+
+Deviation: the engine moves from a conditional alternative into the main edit plan based on reviewed actual-screen evidence, displacing the R2 detour and on-camera pieces. The prior broader “ready” wording is corrected: usable footage exists, but fresh recording and distribution gates are distinct and open. This review does not override the user's instruction not to start filming.
+
+
+Review follow-up at 21:06 UTC: full CI is now successful for `dc4c9cd` (41910292073) and `2cf017c` (41910991471), as well as earlier `bff7b10`. Hosted polish manifest still matches. Static documentation validation confirmed ten adjacent main-edit slots spanning exactly 180 seconds and voiceover counts 260 main / 270 fallback; this is not an audible timed rehearsal. No filming/inference or visibility/history change.

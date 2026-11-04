@@ -104,7 +104,7 @@ export function clearOfInk(region: Region, grid: InkGrid | null | undefined): Re
   const row = (y: number) => share(Math.max(0, x0), Math.min(W - 1, x1), (x) => y * W + x);
   const grow = (start: number, step: number, size: number, limit: number, gap: number, line: (at: number) => number) => {
     const inReach = (at: number) => at >= 0 && at < size && Math.abs(at - start) <= limit;
-    const blankFrom = (from: number) => {
+    const blankFrom = (from: number): number | null => {
       for (let at = from; inReach(at); at += step) {
         const s = line(at);
         if (s === 0) return at;
@@ -112,8 +112,9 @@ export function clearOfInk(region: Region, grid: InkGrid | null | undefined): Re
       }
       return null;
     };
-    let edge = blankFrom(start);
-    if (edge === null) return start;
+    const first = blankFrom(start);
+    if (first === null) return start;
+    let edge = first;
     for (;;) {
       let label: number | null = null;
       for (let d = 1; d <= gap && inReach(edge + step * d); d++) {
@@ -121,7 +122,7 @@ export function clearOfInk(region: Region, grid: InkGrid | null | undefined): Re
         if (s >= 0.85) break;
         if (s > 0) { label = edge + step * d; break; }
       }
-      const past = label === null ? null : blankFrom(label);
+      const past: number | null = label === null ? null : blankFrom(label);
       if (past === null) return edge;
       edge = past;
     }

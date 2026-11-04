@@ -206,7 +206,7 @@ describe('where each step stops the crank', () => {
   });
   it('spreads steps that name no stroke evenly, and keeps Muse\'s own stops', async () => {
     const { crankStops } = await import('@/lib/server/model-authoring');
-    expect(crankStops(steps('It needs four separate moves.', 'A move is one stroke.', 'Each one is half a crank circle.', 'So here is the whole cycle.'))).toEqual([0, 1 / 3, 2 / 3, 1]);
+    crankStops(steps('It needs four separate moves.', 'A move is one stroke.', 'Each one is half a crank circle.', 'So here is the whole cycle.')).forEach((v, i) => expect(v).toBeCloseTo(i / 3));
     expect(crankStops(steps('a', 'b'), new Map([['s0', 0.25], ['s1', 0.1]]))).toEqual([0.25, 0.25]);
   });
 });

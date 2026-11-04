@@ -48,8 +48,8 @@ const NAMES: Record<EngineRole, [string, string]> = {
   crank: ['Crankshaft', 'Illustrative crankshaft.'],
   intake_valve: ['Intake valve', 'Illustrative intake valve.'],
   exhaust_valve: ['Exhaust valve', 'Illustrative exhaust valve.'],
-  intake_cam: ['Intake camshaft', 'Illustrative camshaft over the intake valve.'],
-  exhaust_cam: ['Exhaust camshaft', 'Illustrative camshaft over the exhaust valve.'],
+  intake_cam: ['Intake cam', 'Illustrative camshaft over the intake valve.'],
+  exhaust_cam: ['Exhaust cam', 'Illustrative camshaft over the exhaust valve.'],
   spark_plug: ['Spark plug', 'Illustrative spark plug.'],
   timing_belt: ['Cam drive', 'Illustrative drive from the crankshaft to the camshafts.'],
   charge: ['Gas in the cylinder', 'Illustrative gas in the cylinder.'],
@@ -151,7 +151,7 @@ export function engineLabelPoint(role: EngineRole, theta: number): { x: number; 
     case 'spark_plug': return { x: 0, y: 3.7, z: 0.1 };
     case 'timing_belt': { const c = camCentre(-1); return { x: c.x - 0.33, y: c.y + 0.34, z: ENGINE.drive }; }
     case 'charge': return { x: 0.15, y: (p.y + ENGINE.deck) / 2, z: 0.25 };
-    case 'spark': return { x: 0, y: ENGINE.roof - 0.08, z: 0.12 };
+    case 'spark': return { x: -0.06, y: ENGINE.roof - 0.07, z: 0.12 };
     case 'intake_flow': return { x: -1.0, y: 3.12, z: 0.14 };
     case 'exhaust_flow': return { x: 1.0, y: 3.12, z: 0.14 };
   }

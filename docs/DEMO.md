@@ -6,13 +6,13 @@ November 3, 2026 operation update. The story is students first, the capability s
 
 ## The take
 
-Follow the [current script](DEMO_VIDEO_SCRIPT.md#script-and-shot-plan), in this order:
+Capture the operations below in order. The [current script](DEMO_VIDEO_SCRIPT.md#script-and-shot-plan) opens the edit with the D–F cut from step 3, then returns clearly to the start of that same take; do not replay that cut a second time in the main sequence.
 
-1. **On camera:** the slide behind Jeremy, and the question it doesn't answer.
+1. **Introduction:** a short piece to camera with the slide behind Jeremy, placed after the opening action in the edit.
 2. **Ask on the slide:** Preview full screen, hold ⌃⌥Space, circle the graph, ask "Why doesn't it just take the direct A-to-F edge?" The native overlay draws the checked search on the slide.
 3. **Cut a connection:** click D–F on the slide. Route A → C → E → F, cost 9, no model call.
 4. **Muse chooses, Soma computes:** restore D–F, choose **Clear selected object** if needed, ask "What would make the route go through E?" and choose **Investigate my question**. Read the connection and tie actually returned, then drag across it to send the route through E. The script lists four acceptable choices and their boundaries; do not assume a particular edge. If the investigation cannot answer it, use the script's A–F fallback question and label the take accordingly. Keep the changed cost active for the follow-up; restore source values before the 3D lift.
-5. **Follow-up:** ask "Why does it flip right there?" The explanation must address the current experiment. Only attribute a Wonder review to this turn if its pipeline says it ran; an earlier catch uses the script's separate earlier-run label.
+5. **Follow-up:** ask "Why does it flip right there?" The explanation must address the current experiment. Only attribute a Wonder review to this turn if its pipeline says it ran; the earlier Wonder catch remains supporting evidence outside this cut.
 6. **Lift into 3D:** return to the slide's original values (the current release source provides **Back to the graph as read**) and advance **Next step** to the final checked search before using the panel's **Lift into 3D**. Confirm F = 7 and wait for the full source route/labels to settle, then hold the completed result at least two seconds before lifting. Hold on the settled view: F at 7 on the ruler, taut route, A–F slack 4.
 7. **A second subject:** switch Preview to the Lecture 9 bridge slide and use the panel's Point & ask flow, ⌃⌥Space, with "Why is there no current through R5?" Check B = C = 8 V and R₅ = 0 A. Open R₂ on the slide: R₅ becomes 12/29 A ≈ 0.4138 A from B to C. Choose **Back to the circuit as read**, then **Clear selected object** if needed, and ask "When would current flow through R5, and which way?" and choose **Investigate my question**. The recorded hero choice is R₄, balance at 8 Ω; move it above and below that value and hold on the reversed arrow each time. Match the actual take to the script's checked facts.
 8. **On camera:** the close and end card.

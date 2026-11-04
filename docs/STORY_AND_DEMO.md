@@ -38,20 +38,19 @@ The same questions turn up wherever people reason over connections they can't ed
 
 ## The demonstration
 
-The planned cut follows one continuous live run on the original Lecture 14 slide, drawn by the native overlay on the real Preview window, then the 3D lift and circuit. The [three-minute script](DEMO_VIDEO_SCRIPT.md) owns timing, wording and footage status.
+The cut opens on a connection disappearing from the graph while the PDF stays open in Preview. Then it returns visibly to the start of that same take. The [three-minute script](DEMO_VIDEO_SCRIPT.md) owns the words, timing and conditional lines.
 
-1. **The moment (on camera):** every student has sat with a slide like this.
-2. **Ask on the slide:** Point & ask, "Why doesn't it just take the direct A-to-F edge?" The checked search is drawn on the slide itself.
-3. **My own experiment:** cut D–F on the slide; new route, cost 9, no model call.
-4. **Muse chooses, Soma computes:** ask “What would make the route go through E?” without selecting an edge. Muse chooses a connection; Soma computes its boundary. Actual service runs chose D–F, tie 5, with a route through E above it. Use the actual take's valid choice and value; 7 belongs only to the separate A–F fallback question.
-5. **Why, checked:** the follow-up answers the experiment in progress; Muse Wonder checked the explanation against the computed trace.
-6. **The answer has a shape:** restore the graph as read, advance to its final checked step (F = 7), then lift it in 3D. Every height is a checked distance; the shortest route pulls taut and the direct edge shows four units of computed extra cost. String curves are schematic; the solver supplies the height and slack numbers.
-7. **A second subject:** the Lecture 9 bridge. B = C = 8 V, so R₅ carries 0 A. Open R₂: R₅ carries 12/29 A from B to C. Restore the source, clear any selected part and ask about R₅ current; in the recorded run Muse chose R₄ and Soma verified reversal around 8 Ω. Follow the actual checked choice in a new take.
-8. **Close (on camera):** the slide didn't change; what changed is that I could ask it my question and inspect the computed consequence.
+1. **Show the interaction first:** click D–F on the already-read slide and hold the new route, cost 9. This is an opening excerpt from the retained graph take.
+2. **Return to the plain slide:** Jeremy introduces Soma and asks why the direct A–F edge loses. Show the source reading, review and calculated route, cost 7.
+3. **Let Muse choose:** clear selection and ask “What would make the route go through E?” The user has named a goal, not a connection. Show the actual chosen edge, its reason and the computed threshold. The verified D–F example ties at 5; values above 5 route through E.
+4. **Stay with the experiment:** ask why the route changes while the changed value remains active. The answer must address that state.
+5. **Lift the graph:** visibly restore source values, complete the checked search and lift it into 3D. F is at 7; the direct edge has numerical slack 4. The curves are schematic.
+6. **Reverse a current:** show the balanced bridge, optionally open R₂, then restore it. Muse chooses a component to investigate. In the verified R₄ case, dragging across 8 Ω reverses R₅’s current. Hold on both directions.
+7. **Close on the use:** Jeremy can try a question on the diagram he is already studying. Keep the demonstrated scope—graph search and DC circuits—visible on the end card.
 
 Save/reopen and fresh graph practice remain available for follow-up questions and the form, outside the current three-minute cut. Keep product narration muted during silent verification; service proof is not native footage or a timed final edit.
 
-**The emotional arc:** confusion → control → consequence → possibility.
+Let the route change, the lift and the current reversal carry the excitement. The narration names the action and explains the result.
 
 ## Words we use and words we avoid
 

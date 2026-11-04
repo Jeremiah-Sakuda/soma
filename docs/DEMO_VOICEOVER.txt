@@ -1,20 +1,17 @@
-[On camera] Every student has sat with a slide like this: one worked example, and the question you actually have isn't on it.
+This graph is on a PDF. I can cut a connection and watch the shortest route change, right here on the page.
 
-[To Soma] "Why doesn't it just take the direct A-to-F edge?"
+I built Soma for questions I have while studying. Why doesn’t it take the direct route from A to F?
 
-Muse Spark reads my slide, and Muse Wonder checks that reading against the slide, weight by weight, before Soma runs the real algorithm right on top of it. There's the comparison the slide doesn't show: going through D costs seven, so the direct edge loses. Every loop and number here is computed.
-(If the take shows no reading-check line, drop "and Muse Wonder checks that reading against the slide, weight by weight,".)
+Soma draws the search on the slide. Going through D costs seven; the direct edge costs eleven. Muse Spark reads the diagram, Muse Wonder checks the reading against the image, and Soma calculates the route.
 
-Now my own question. What if D-to-F weren't there? I cut it, right on the slide. New route, cost nine, a number that isn't on the slide. Instantly, with no model call.
+What would make the route go through E? I haven’t selected a connection or told it what to change. Muse chooses D-to-F. Soma calculates the threshold: at five, the routes tie. Above five, the route goes through E. I can move it back and forth and see exactly where that happens.
 
-Then I ask what would send the route through E. Muse picks which connection to test, and Soma proves exactly where the answer flips: at [the tie value on screen], the routes tie, and past it the route turns through E.
+Why does it flip right there? Soma answers using the value I just changed. I can ask about this particular experiment and keep working with it.
 
-When I ask why, the answer fits my experiment. Muse Wonder checked it against Soma's trace; once, it caught a mistake and sent it back.
+Back to the original graph. Here’s the same search in three dimensions. Height shows the cost of reaching each node. F is at seven; the direct edge has four units of extra cost.
 
-And the answer has a shape. Every height is a checked distance. The shortest route pulls tight; the direct edge has four units of extra cost.
+Now a circuit. Why is there no current through R-five? Both ends are at eight volts. Open R-two, and current starts flowing across the bridge. Then I ask when it would flow, and which way. Muse chooses R-four to vary. Below eight ohms, the current goes this way. Above eight, it turns around.
 
-And it isn't only graphs. On a circuit slide, Soma solves the circuit exactly: B and C both sit at eight volts, so nothing crosses the bridge. Open R-two, and about four tenths of an amp flows through R-five, a number that isn't on the slide. The slide shows the balanced case; Soma shows both sides of it. Muse picks R-four to vary, and as I drag it past the balance point, the current turns around.
+I built this for my lectures. The useful part is being able to try the question as soon as I have it, on the diagram I’m already looking at.
 
-[On camera] The slide didn't change. But I could ask it my question and see why, with the math checked, not guessed. I built Soma for my lectures, and every diagram you can't edit has questions like mine.
-
-Built during the hackathon with Muse Spark, Muse Wonder and Muse Voice Transcribe. Turn what you're studying into something you can explore.
+That’s Soma. You can try it at the link on screen.

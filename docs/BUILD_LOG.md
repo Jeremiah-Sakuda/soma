@@ -3046,6 +3046,50 @@ One user instruction this session was intentionally not archived, at the user's 
 2. Delivered [Muse ambition review](MUSE_AMBITION_REVIEW_2026_11_01.md), mapping real-world potential30%, tooling25%, technical craft20%, demo25% to strengths and specific gaps. Code confirms narrow direct-edge-biased choice, application-owned overlay choreography, and Wonder review of extracted summary/trace without original pixels. Prioritized question-directed bounded investigations, consequential source re-inspection and unfamiliar-input evidence over model-count additions. Retained actual review catch and source/latency/recorded-engine limitations.
 3. Archived the attached request verbatim, checked JSON and report links/whitespace. Recommendations only: no code/script edits, inference, new tests, budget reset, merge, deployment or publication. Existing concurrent work remains untouched. No placement prediction or invented learner-study requirement.
 
+
+## RUBRIC-20261101-02 — Review of round-five follow-up proposal (November1)
+
+1. Inspected clean checkout70fda2d, round-five commit6bc4d5e and the current caption guard/tests. Agreed with question-directed investigation and source-image review as highest-value proposals; existing guided selection and actual Wonder trace review remain real contributions rather than absent model use. No previous tests or physical capture claims were rerun.
+2. Identified a remaining semantic gap:captionIsGrounded checks numeric membership across all steps/edge costs/counts, not number-to-node/relationship/current-state correctness. Recommended a targeted regression and typed fact binding or computed numerical captions. Image-aware review should seek mismatches/uncertainty, with a controlled wrong-weight check; it cannot guarantee source truth.
+3. Advice only: prioritize1/2, then unfamiliar input and final native/audio checks; keep extra desktop autonomy/SAM conditional on a clear demonstrated benefit. No product/script changes, inference, model spend, tests, commit, deployment or publication. Only required prompt/log entries appended; the implementing session retains ownership of product changes.
+
+
+## COMMIT-COUNT-20261101-01 — Current history count
+
+1. Current demo/hero-dijkstra HEAD24b1d1d has346 reachable commits, including preserved merged history.
+2. Local main has336; the current origin/main tracking ref has345. No remote fetch was performed, so that is the last-fetched remote state.
+3. Read-only Git inspection; prompt/log appended. No commit, history rewrite, branch change, push or product changes.
+
+
+## COMMIT-COUNT-20261101-02 — Interpreting the history count
+
+1. Explained that346 is a substantial commit count and includes preserved combined histories and incremental code/test/documentation work; no external hackathon benchmark asserted.
+2. Distinguished commit volume from product scope or judging strength; recommended focusing remaining effort on a coherent working demo and reliability.
+3. Conversation/logging only; no new Git count, tests, inference, commit or product changes.
+
+
+## DEADLINE-20261101-01 — Submission deadline
+
+1. Rechecked the supplied participant guide: Wednesday November4,2026 at9:00PM Eastern/EST.
+2. Guide states submission is through the CV platform and late submissions will not be considered.
+3. Answer/logging only; no product changes, tests, inference or external submission.
+
+
+## JUDGING-20261101-01 — Hackathon judge evaluation and scoring request
+
+1. Evaluated Soma against official Meta Global AI Developer Hackathon criteria (Indie Developer track, Stage Two 0–10 weighted rubric: Impact 30%, Meta Tooling 25%, Technical Depth 20%, Demo 25%), assuming the 3-minute video matches `docs/DEMO_VIDEO_SCRIPT.md`.
+2. Assessed the project against hackathon rules, specifically verifying that it avoids the anti-project list (not a simple RAG chatbot; deterministic solver decoupled from model hallucination).
+3. Evaluated eligibility for track prizes ($25k–$150k) and bonus categories ($5k Best Agentic Use-Case, $5k Best Creative Build using Image or Wonder, $20k Most Viral, $10k Community Vote).
+4. Correction, same night: the numerical score for this request is recorded under GUIDE-20261101-01. Stage 1 pass, weighted 7.4/10 (Impact 6.5, tooling 8.0, technical depth 8.0, demo 7.5).
+
+
+## GUIDE-20261101-01 — Judge score of Soma against the supplied participant guide
+
+1. Stage 1 pass. Stage 2 weighted score 7.4/10, assuming `docs/DEMO_VIDEO_SCRIPT.md` is the submitted video: Impact 6.5 (1.950), Meta tooling 8.0 (2.000), technical depth 8.0 (1.600), demo 7.5 (1.875). Exact total 7.425. Current code, not the earlier ambition note, is what was scored: question-directed `choose_investigation`, and Wonder re-reading the slide image.
+2. Eligible to be ranked for Indie Developer prizes. Eligible for Community Vote once the project is in the public gallery, and a weak contender for Best Agentic Use-Case. Would not flag Best Creative Build. Not eligible for the open-weight prize. Most Viral is not yet eligible; no X post is on record. No indie place assigned; other submissions were not seen.
+3. The 7.4 is conditional. Submission copy still says the repository is private and that no demo video URL exists. A package arriving that way would not receive the demo score. No product code, tests, inference, deployment, or submission.
+
+
 ## OVERNIGHT-REVIEW-01 — Independent review and improvement cycle
 
 1. Completed the initial product, engineering and demo reviews and a fresh independent final panel. Their private assessments and follow-up closures remain in ignored `.local/overnight-review`; they are internal judgments, not prize predictions or official scores. Used reproduced source/state/numerical/UX findings to drive two implementation rounds and the current plan in `docs/BUILD_PLAN.md`.
@@ -3099,3 +3143,32 @@ Prompt: [OVERNIGHT-REVIEW-06](build-log/prompts.json). Exact receipt time unavai
 1. Independent engineering, visual and product review drove three corrections within the current journey: source/native captions derive from the current calculation rather than global numeric membership; browser height views print inspected distances/revealed voltages; compact save controls visibly distinguish Unsaved/Saving…/Saved and use safe operation-specific failure copy. Five adversarial actual-component caption cases failed before the fix and passed after; authored notes/recorded output remain unchanged and separately labeled. Updated scope, UI, submission and current evidence docs without adding a model or checked subject.
 2. Complete local checks passed: 1,957 application tests (107 gated skips), 75 desktop tests and 189 browser checks (14 gated skips; 3.7 minutes). Types, production build, manifest and isolated 1,224-file/two-link trace passed with zero private mappings; seven synthetic relay/credential contracts and 28 isolated adversarial credential-browser cases passed without actual audio. The readout's eight domain cases/three browser journeys and two save cases are included in these totals. Retained the five-case red caption baseline, first combined batch's two layout failures and the next save run's ambiguous locator failure; fixed real overflow and misleading save copy rather than weakening assertions. Manifest soma-clarity-2026-11-04 has 309 files, SHA-256 3a37ca173de7ffea80e778d08fcc8cd61b5385f42dc33d1346f4ca0f099f7d53. The first silent production-build walkthrough passed (58.3-second interaction case); its 57.4-second private 1440×1080 H.264/25 fps MP4 has no audio, SHA-256 1a5415c7cc9eee1c90838c37369bb8a7e3fdfa5350beda788b5de93c9ebd03d2. Real UI actions show graph7→9, circuit balance/reversal and exact saved reopen, with no forbidden/media/page-error entries. Captured and encoded frames were reviewed; known software-GPU/compatibility warnings are retained. It is labeled local replay/no-new-inference/no-native acceptance, not a final demo. Runtime1658b98 was pushed; Vercel metadata reports dpl_7GfiPEQEEsZr4XmBd2cCyNATQ8vf READY/production with the canonical alias. Full CI41841781776 passed 1,957 application/75desktop checks and recorded188browser passes plus one case passing on retry (14skips;12.8minutes), not an all-green first attempt. Its first failure expected an automatic source region before explicit selection; independent review identified a missing authored-step precondition. A forced later-step local case reproduced that assertion; the corrected explicit0→selection→1/pointing/capture-continuity test passed five runs, with unchanged types/runtime manifest. The original runner trace was not uploaded under the previous failure-only policy; its full log and local reproduction trace are retained. Future noncancelled runs now retain test-results even after a successful retry. Clean full CI 41846607806 then passed exact `7c213c476c082062f38cc0d725771b0660d482a6`: 1,957 application tests (107 gated skips), 75 desktop tests and 189 browser checks with no retries (14 gated skips; 12.3 minutes), plus all types/build/manifest/trace/adversarial checks. Source-pointing passed first attempt in 5.0 seconds; the full lift/GPU sequence in 49.2 seconds. Browser artifact 13332078729 uploaded successfully. Test/workflow follow-up leaves runtime `1658b98`, manifest, native installer and QA footage unchanged. Vercel reports dpl_FCeQx192twca5pqKV2XLYtKMmrRX READY/production through metadata only.
 3. Original private soma/main remains canonical. Native sources are unchanged from the notarized private 0.4.1 draft; published 0.4.0 is preserved. The old caffeinate assertion had expired; restarted a bounded 14-hour caffeinate process at 13:20:06 UTC (PID79531) through the deadline, without changing lock/security settings. Explicit hosted/native retry authorization remains unanswered after the earlier automatic origin rejection; no bypass or hosted content request. No sound, voice, new paid inference, training, budget change, visibility change or final submission. Physical native acceptance and final demo delivery remain pending. Fresh independent rubric review of the current code/encoded stills assessed 8.33/10 (Impact8.4, Meta8.9, Technical8.8, Demo7.3), with no numerical contradiction and filming/access/delivery as the remaining gaps. This private review is not an official score or prize probability. Updated operation/script/evidence handoffs to the current runtime and added a settled-source hold check; old clips/builds remain dated evidence.
+
+
+## DEMO-SCRIPT-20261104-01 / 02 — Script and visual-payoff revision
+
+Prompts are archived verbatim in `docs/build-log/prompts.json`; exact receipt times are unavailable. The earlier supplied rubric/request is preserved retrospectively as DEMO-RUBRIC-ATTACHMENT-01 if it was not already archived. Its requested first-place assessment was interrupted and is not claimed complete by this script work.
+
+1. Reworked the canonical three-minute script and voiceover around an immediate PDF intervention, a model-chosen graph experiment, the 3D lift and current reversal. Kept actual source facts, conditional model choices and review status; removed generic opening language, repeated numerical boasting and the earlier-run review aside.
+2. User clarified script only. No new video was rendered, no sound or model call occurred, and no native/hosted access was attempted. Existing silent QA frames were inspected solely to understand the actual controls and readable results. Local draft/backups are under `.local/demo-editorial-review/`.
+3. Synchronized the story, rehearsal/edit ordering and evidence shot timings. Checked spoken-copy/table consistency, contiguous 180-second schedule, word count, source values and local document links; no product/runtime changes or new acceptance claims. Existing uncommitted delivery documentation was preserved.
+
+Deviation: the proposed review-video edit was dropped immediately on clarification. The opening now previews the same take’s D–F cut before returning explicitly to the source capture; no fake continuous chronology or combined model outcomes. Final recording and actual spoken timing remain unverified.
+
+
+## DEMO-3D-20261104-01 / 02 — Second visual example discussion
+
+1. Identified the existing 1:31–1:49 graph lift and the absence of a second 3D example in the locked voiceover. The prior response recommended testing a manipulation while lifted; this discussion does not establish that recording-build acceptance.
+2. Inspected the retained engine investigation frame and authorship/implementation records. Recommended a single-cylinder cutaway as a conditional second example; explicitly distinguished the existing recorded 2D vector prototype from a proposed true-3D scene and canonical live generation. Consulted NASA Glenn’s four-stroke reference for the two-turn explanatory concept.
+3. Added a proposed replacement beat and concrete visual acceptance criteria to the script. Kept the canonical spoken copy, current circuit slot and implementation unchanged. No video rendering, paid inference, new asset, deployment or new performance result.
+
+Deviation: none implemented; engine inclusion remains a proposed editorial choice conditional on visual quality and truthful provenance.
+
+
+## DEMO-DELIVERY-SPLIT-20261104-01 — Coordinated final delivery
+
+1. User assigned Claude engine geometry/authoring and Codex interactive graph/circuit work, documentation, deployment, companion release and submission form. Shared pointer/UI/manifest edits require coordination.
+2. First checkpoint: commit/push pending root documentation only, preserving the unrelated `next-env.d.ts` change. Await Claude’s `general-3d` merge, then pull main before graph implementation. Push and integration results are pending at this entry.
+3. Schedule: engine go/no-go 4:30 PM ET; code freeze 5:30 PM ET; deploy/release/final docs after freeze; submission deadline 9 PM ET. Implementation, current native acceptance, deployment, release and form completion remain pending.
+
+Deviation: user-authorized division of work and final delivery sequence supersedes earlier tentative engine exclusion and earlier freeze dates. No engine quality, fresh model result or submission success is established by this assignment.

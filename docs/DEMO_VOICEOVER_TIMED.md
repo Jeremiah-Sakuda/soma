@@ -28,9 +28,13 @@ Height shows each node’s checked cost. I restore the original graph, cut D-to-
 
 ## 1:45–2:10
 
+*Picture cues: the engine lifts at 1:45; one turn at 1:54; the second turn at 2:00; full cycle at 2:05. Leave a short pause at each pose.*
+
 Why does a four-stroke engine need two turns? After one turn, the piston is back at the top, but the cycle isn’t finished. Muse chooses the teaching poses; Soma moves this illustrative cutaway through the second turn.
 
 ## 2:10–2:38
+
+*Picture cues: lift and balanced bridge until 2:22; current one way at 2:22; exact balance at 2:28; reverse current at 2:33.*
 
 Here’s a bridge circuit. Both sides sit at eight volts, so no current crosses R-five. Muse chooses R-four to investigate. At eight ohms, it balances. Change the resistance below and above that point, and the current reverses.
 

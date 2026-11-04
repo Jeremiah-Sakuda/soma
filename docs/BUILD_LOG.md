@@ -3183,3 +3183,10 @@ Checkpoint: documentation commit `e6d0a67` pushed successfully to original `orig
 3. Actual-renderer browser suite passed 14/14, including 1280×720 and captured-display offsets. Focused controller tests passed 15/15; types and bundle build passed. Final complete desktop run passed **82/82**, with no skips or failures (36.7 seconds). Inspected local screenshots after moving controls away from node C; retained the original overlap failure and earlier stale expectation/test-harness failures privately. No inference, audio, physical native capture, new installer or final deployment is claimed.
 
 Deviation: none from the coordinated ownership. Engine quality remains Claude’s work; shared release manifest refresh awaits coordination. Private verification artifacts: `.local/lift-graph-interaction-review/` and `.local/lifted-graph-interaction/`. The renderer tests use known checked solver fixtures for returned state, while actual source freshness tests exercise the native controller with synthetic capture adapters. These are separate from a full physical companion-to-app acceptance run.
+
+
+## DEMO-DELIVERY-SPLIT-20261104-03 — Release manifest ownership
+
+1. User confirmed Codex owns `public/release.json`; Claude will merge only engine source changes and report the 4:30 PM ET go/no-go. No engine result is inferred from that confirmation.
+2. Graph implementation committed at `d9b37d6`. Updated the script/276-word voiceover, rehearsal and evidence map to show an actual lifted 7→9→7 cut/restore; filming remains conditional on physical companion acceptance.
+3. Regenerating the graph checkpoint manifest and pushing the integrated main; final installer, post-freeze deployment and submission remain pending. No deviation from the agreed schedule or file ownership.

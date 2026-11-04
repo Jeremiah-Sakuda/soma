@@ -1812,6 +1812,14 @@
   "question": "Docs are pushed to main at e6d0a67. Please have Claude confirm when general-3d is merged, and reserve desktop/point-overlay.js plus the graph/circuit pointer-routing sections of point-ask.cjs for me after that merge. I’ll reuse the model pointer interface and leave engine-owned files untouched.",
   "prompt": "claude: Merged general-3d to main at 1bb35e5 with the release manifest regenerated; typecheck and the web and desktop tests passed, while the three runner-service suites need CI. I’m continuing on the engine from that commit, and I’m leaving the Codex-reserved overlay and pointer-routing sections alone.",
   "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC during lifted-graph implementation."
+},
+{
+  "id": "DEMO-DELIVERY-SPLIT-20261104-03",
+  "received_at": null,
+  "kind": "clarification",
+  "question": "The lifted graph is ready for handoff: clicks cut/restore edges, dragging rotates it, and the pointer safeguards passed review. Please ask Claude to leave public/release.json to me for the graph checkpoint and final release; his engine merge can bring its source changes without regenerating that file. I’ll regenerate it after each integration. Also send the engine go/no-go at 4:30 PM ET.",
+  "prompt": "public/release.json now belongs to Codex, and when the engine merges it only the source comes across, so I’ll send the go/no-go at 4:30 PM ET. I’m re-rendering with the size, label and crank fixes now.",
+  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
 }
 ]
 }

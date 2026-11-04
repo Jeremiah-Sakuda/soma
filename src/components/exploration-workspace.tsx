@@ -2032,6 +2032,7 @@ export function ExplorationWorkspace() {
               />
               {versionHistory}
               <ExplorationSourceGrounding
+                key={JSON.stringify(artifact.spec.sources)}
                 capture={
                   source?.capturedAt === artifact.source.capturedAt
                     ? source

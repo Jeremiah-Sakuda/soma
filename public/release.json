@@ -1,6 +1,6 @@
 {
-  "releaseId": "soma-overnight-labels-2026-11-04",
-  "sourceTreeSha256": "a5e00132b90ff8da4a915e9c800ecf946dc139e743c48fa2d3dcf791bc6a0f22",
+  "releaseId": "soma-overnight-inspect-2026-11-04",
+  "sourceTreeSha256": "1786188f126c46163ee1a9a9d5ad2dfec85d166c8f4cf48fdad7f57cf949862f",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
     "desktop/Info.plist": "a7566833b9abda71d595bb76ba892daf8c33cccb10413e3a510a1a502c0db050",
@@ -154,10 +154,10 @@
     "src/components/exploration-prediction.tsx": "57fd8a0e35cfdc67645142da5e3831d1cb98dc3ac46d795594e068ef3cbb5036",
     "src/components/exploration-scene.tsx": "cdf5052c1f0dc0030637d68a8bc1a0b976025675db9f80a62b1dbfe92a201855",
     "src/components/exploration-search-stage.tsx": "d986c48cd0ea360cf0fb5c59c6cda8d0f67a4065506d334e4e5e5a1c4b7593e4",
-    "src/components/exploration-source-grounding.tsx": "78ffe559465b2c47d26db990c87c94bd66216aa95e6173f22a57c5e33a5ec159",
+    "src/components/exploration-source-grounding.tsx": "2b505038da610c51cbb71fab0171b5e06a34a40ccae3728611a2fbc976535367",
     "src/components/exploration-voice.tsx": "87e4e2a5d3094836ceb0c53fd9a21798aa9b89c4523f81cd74c3ecd3851b4c2d",
     "src/components/exploration-weighted-stage.tsx": "3a147fe6506e7e6a1f37637f82f115b45bf2a068d57a893f4260cddbfd9d7ad7",
-    "src/components/exploration-workspace.tsx": "b78be739140d7c4c46ce33fd2633218c77cad7f93c61c0340d3b8bba20f67ee8",
+    "src/components/exploration-workspace.tsx": "8581578ac8abea459c944167698b21c06ed8f2b0b2a17623d73d0efeb7ac8341",
     "src/components/exploration.css": "4adf886bf89ed97bd7b65cd8e16960ca5c1c1a2b7187d6bee79af09df6004c60",
     "src/components/investigation-panel.tsx": "451be06ce455d37eb296af6a3b8be78d46220334c50d44f2733ff0982b75c2a7",
     "src/components/journal-menu.tsx": "936e6fa6a05c07350912aa306f20feaa21982e9cfbee991a0e5ae0f42dfce2c4",

@@ -1,5 +1,7 @@
 # Soma — current handoff, November 4 UTC, 2026
 
+**Latest integration — November 4 UTC:** engine source `af9a223` fast-forwarded into canonical main; manifest checkpoint `412cfb9` pushed. Companion **0.5.0** must ship with this web release for explanation-model lifting. The built-in engine is illustrative: Muse places it and chooses teaching poses; Soma supplies parts and motion. Explanation arrows speak a step after lift; ▶ continues. Typed asks lift the diagram region; failed models expose retry. Double-click reset, actual production allowance and final physical acceptance are still being verified. Engine go/no-go remains 4:30 PM ET, freeze 5:30 PM ET. Earlier checkpoints below are dated evidence.
+
 Use this working folder and the original [Jeremiah-Sakuda/soma](https://github.com/Jeremiah-Sakuda/soma) repository. Both event-built histories are preserved. Archived `.local/pm*/submission` paths mentioned below are historical backups, not working repositories. Repository visibility changes only with the user's authorization.
 
 **Current product:** selected visible context → Muse interpretation → a checked visual drawn on the source → local manipulation → contextual follow-up → saved revision. Students come first. Checked subjects are BFS/Dijkstra graph search and ideal DC circuits; other supported screenshots produce explanatory visuals or clarification. Course setup and full-semester collection do not block exploration. Preserve v1 data/routes and read-only source boundaries.

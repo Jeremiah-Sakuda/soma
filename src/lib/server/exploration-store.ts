@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { mkdirSync, chmodSync } from 'node:fs';
+import { mkdirSync, chmodSync, statSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import {
@@ -8,7 +8,7 @@ import {
   assertVerifiedAccount,
   revalidateBackgroundAccount,
 } from './account';
-import { readOrCreateAccountWorkspace } from './account-store';
+import { readAccountWorkspace, readOrCreateAccountWorkspace } from './account-store';
 import { getServerFirestore } from './firebase-config';
 import { getPersistenceMode } from './store';
 import { requireSameOrigin } from './http';
@@ -61,12 +61,15 @@ function validatePrincipal(principal: ExplorationPrincipal) {
 }
 export async function resolveExplorationPrincipal(
   request: Request,
-  options: { createGuest?: boolean } = {},
+  options: { createGuest?: boolean; readOnly?: boolean } = {},
 ): Promise<{ principal: ExplorationPrincipal; setCookie?: string }> {
   const cookie = request.headers.get('cookie') ?? '',
     account = await verifyAccountSession(request);
   if (account) {
-    const workspace = await readOrCreateAccountWorkspace(account);
+    const workspace = options.readOnly
+      ? await readAccountWorkspace(account)
+      : await readOrCreateAccountWorkspace(account);
+    if (!workspace) throw new ExplorationError('session_expired');
     const id = hash(account.uid);
     return {
       principal: {
@@ -88,7 +91,7 @@ export async function resolveExplorationPrincipal(
   let token = matches.length === 1 ? matches[0].slice(EXPLORATION_COOKIE.length + 1) : '';
   let setCookie: string | undefined;
   if (!/^[a-f0-9]{64}$/.test(token)) {
-    if (!options.createGuest) throw new ExplorationError('session_expired');
+    if (!options.createGuest || options.readOnly) throw new ExplorationError('session_expired');
     token = randomBytes(32).toString('hex');
     setCookie = `${EXPLORATION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
   }
@@ -203,6 +206,27 @@ function db() {
 export function closeExplorationStore() {
   for (const value of databases.values()) value.close();
   databases.clear();
+}
+/** Inspection must not initialize SQLite files or a guest/account workspace. */
+export async function readExistingExplorationSession(principal: ExplorationPrincipal) {
+  validatePrincipal(principal);
+  if (getPersistenceMode() === 'firestore') return explorationStore.read(principal);
+  if (principal.kind === 'account') throw new ExplorationError('unavailable');
+  const path = resolve(/* turbopackIgnore: true */ process.env.SOMA_EXPLORATION_DB_PATH || '.local/soma-explorations.sqlite');
+  try { statSync(path); }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+    throw error;
+  }
+  const connection = new DatabaseSync(path, { readOnly: true });
+  try {
+    const row = connection.prepare('SELECT payload FROM exploration_sessions WHERE key=? AND expires_at>?')
+      .get(principal.key, Date.now()) as { payload: string } | undefined;
+    if (!row) return null;
+    const state = JSON.parse(row.payload) as ExplorationSession;
+    check(principal, state);
+    return state;
+  } finally { connection.close(); }
 }
 export const explorationStore: ExplorationStore = {
   async read(principal) {

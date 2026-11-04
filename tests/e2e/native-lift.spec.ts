@@ -123,6 +123,72 @@ async function checkedGeometry(page: Page) {
   });
 }
 
+test('double-clicking a model part restores its lifted view after dragging', async ({ page }) => {
+  await open(page);
+  const model = {
+    ...final, lift: undefined, nodes: [], edges: [], tags: [], weights: [], caption: null,
+    scene: {
+      kind: 'model', title: 'Original synthetic block', note: 'Pointer reset fixture.',
+      region: { x: 0.2, y: 0.2, width: 0.6, height: 0.6 }, connections: [],
+      objects: [{
+        id: 'synthetic-block', label: 'Block', detail: 'Original synthetic part', shape: 'box',
+        color: 'blue', renderStyle: null, position: { x: 0, y: 1, z: 0 },
+        size: { x: 2, y: 2, z: 2 }, parentId: null, visible: true, highlighted: false,
+      }],
+    },
+  };
+  await draw(page, model); await advance(page);
+  expect(await page.evaluate(() => (window as any).__failed)).toEqual([]);
+  const view = () => page.evaluate(() => {
+    const s = (window as any).SomaModel.debug;
+    return { turn: s.turn, tip: s.tip, rotation: [s.hinge.rotation.x, s.hinge.rotation.z, s.table.rotation.z], data: JSON.stringify(s.data) };
+  });
+  const point = () => page.evaluate(() => {
+    const renderer = (window as any).SomaModel;
+    renderer.debug.scene.updateMatrixWorld(true);
+    for (let y = 80; y < innerHeight - 80; y += 20)
+      for (let x = 80; x < innerWidth - 80; x += 20)
+        if (renderer.hit(x, y) === 'synthetic-block') return { x, y };
+    throw Error('No pickable surface on the real synthetic model');
+  });
+  const initial = await view();
+  let at = await point();
+  await page.mouse.move(at.x, at.y); await page.mouse.down();
+  await page.mouse.move(at.x + 65, at.y + 25, { steps: 8 }); await page.mouse.up();
+  await advance(page);
+  const turned = await view();
+  expect(Math.abs(turned.turn)).toBeGreaterThan(0.1);
+  expect(turned.rotation).not.toEqual(initial.rotation);
+  // Empty desktop space must not reset the model.
+  expect(await page.evaluate(() => (window as any).SomaModel.hit(2, 2))).toBeNull();
+  await page.mouse.dblclick(2, 2); await advance(page);
+  expect(await view()).toEqual(turned);
+  at = await point();
+  await page.mouse.dblclick(at.x, at.y); await advance(page);
+  expect(await view()).toEqual(initial);
+  expect(await page.evaluate(() => (window as any).__selections)).toEqual(['synthetic-block']);
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual([]);
+  await page.screenshot({ path: test.info().outputPath('model-double-click-reset.png') });
+  await clean(page);
+  expect(await page.evaluate(() => (window as any).SomaModel.active)).toBe(false);
+});
+
+test('double-clicking a lifted graph edge toggles once and preserves its rotated view', async ({ page }) => {
+  await open(page); await draw(page); await advance(page);
+  let at = await edgePoint(page);
+  await page.mouse.move(at.x, at.y); await page.mouse.down();
+  await page.mouse.move(at.x + 55, at.y + 20, { steps: 8 }); await page.mouse.up();
+  await advance(page);
+  const turned = await orientation(page), geometry = await checkedGeometry(page);
+  at = await edgePoint(page);
+  await page.mouse.dblclick(at.x, at.y); await advance(page);
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual(['DF']);
+  expect(await page.evaluate(() => (window as any).__selections)).toEqual([]);
+  expect(await orientation(page)).toEqual(turned);
+  expect(await checkedGeometry(page)).toEqual(geometry);
+  await clean(page);
+});
+
 test('clicking a lifted string cuts and restores the checked route without landing', async ({ page }) => {
   await open(page); await draw(page); await advance(page);
   const before = await orientation(page);

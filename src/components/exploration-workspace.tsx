@@ -321,6 +321,8 @@ export function ExplorationWorkspace() {
   const compactAction = useRef<(d: { action: string; text?: string; on?: boolean }) => void>(() => {});
   // The companion's ask bar is up and this page's panel is closed.
   const compactMode = useRef(false);
+  // Narrating one step at a time, because the learner is stepping by hand.
+  const [stepByStep, setStepByStep] = useState(false);
   const [liftRequest, setLiftRequest] = useState(0);
   useEffect(() => {
     const handle = (event: Event) => {
@@ -676,9 +678,14 @@ export function ExplorationWorkspace() {
       setQuestion((current) => (current === submittedDraft ? '' : current));
       setNotice(model ? 'The 3D model is ready. Step through it or drag to turn it.' : 'New visual card ready. Explore it or ask a follow-up.');
       // Narration needs something to look at. With the panel closed, an explanation shows nothing
-      // until its model is lifted, and then the learner sets the pace: › steps it, ▶ narrates it.
+      // until its model is lifted; then each step is spoken as the learner reaches it.
       const nothingShown = compactMode.current && result.artifact.spec.mode === 'explanation';
       if (spoken && (conversational || fresh) && !nothingShown) setPlaying(true);
+      // The model lifting off the slide is what there was to wait for: speak its first step.
+      if (model && compactMode.current) {
+        setStepByStep(true);
+        setPlaying(true);
+      }
       return true;
     } catch (failure) {
       if (request.current?.id === id && !controller.signal.aborted)
@@ -916,11 +923,15 @@ export function ExplorationWorkspace() {
     else if ((d.action === 'next' || d.action === 'previous') && artifact && state) {
       const last = Math.max(0, (compactStepCount(artifact.spec, state) ?? 1) - 1), by = d.action === 'next' ? 1 : -1;
       if (artifact.spec.mode === 'explanation') {
-        // Taking a step by hand takes over from the narration.
-        flushSync(() => setPlaying(false));
+        // A step by hand speaks that step, replacing whatever was being said, then waits.
+        setStepByStep(true);
+        setPlaying(true);
         updateState({ ...state, explanationStep: Math.max(0, Math.min(last, state.explanationStep + by)) });
       } else updateState({ ...state, step: Math.max(0, Math.min(last, state.step + by)) });
-    } else if (d.action === 'play' && artifact) setPlaying(!playing);
+    } else if (d.action === 'play' && artifact) {
+      setStepByStep(false);
+      setPlaying(!playing);
+    }
     else if (d.action === 'lift' && artifact?.spec.mode === 'explanation') setLiftRequest((n) => n + 1);
   };
   const compactSteps = artifact && state ? compactStepCount(artifact.spec, state) : null;
@@ -1893,7 +1904,11 @@ export function ExplorationWorkspace() {
                 spec={artifact.spec}
                 state={state}
                 playing={playing}
-                onPlaying={setPlaying}
+                onPlaying={(value) => {
+                  if (value) setStepByStep(false);
+                  setPlaying(value);
+                }}
+                stopAfterStep={stepByStep}
                 disabled={busy || sourceBusy || newContext}
                 onAdvance={(next) => {
                   viewSequence.current++;

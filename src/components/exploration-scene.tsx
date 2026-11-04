@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import SpatialWorkspace from './spatial-workspace';
 import { spatialScene, supportsSpatial } from '@/lib/domain/spatial-exploration';
-import { liftFocus, liftRegion, liftScene, sceneOverlayModel } from '@/lib/domain/scene-lift';
+import { clearOfInk, liftFocus, liftRegion, liftScene, sceneOverlayModel, type InkGrid } from '@/lib/domain/scene-lift';
 import { defaultSpatialView } from '@/lib/domain/spatial-schema';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ExplorationSearchStage } from './exploration-search-stage';
@@ -298,6 +298,32 @@ function StateTable({ execution, step }: { execution: BfsExecution; step: BfsSte
   );
 }
 
+/** Which cells of a small copy of the capture differ from its commonest colour, its paper. */
+function inkGrid(img: HTMLImageElement): InkGrid | null {
+  try {
+    const width = 256, height = Math.max(8, Math.round((width * img.naturalHeight) / img.naturalWidth));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const g = canvas.getContext('2d', { willReadFrequently: true });
+    if (!g) return null;
+    g.drawImage(img, 0, 0, width, height);
+    const data = g.getImageData(0, 0, width, height).data, counts = new Map<number, number>();
+    for (let i = 0; i < data.length; i += 4) {
+      const key = ((data[i] >> 4) << 8) | ((data[i + 1] >> 4) << 4) | (data[i + 2] >> 4);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    const paper = [...counts].sort((a, b) => b[1] - a[1])[0][0];
+    const [r, gr, b] = [(paper >> 8) * 17, ((paper >> 4) & 15) * 17, (paper & 15) * 17];
+    const ink = new Uint8Array(width * height);
+    for (let i = 0; i < ink.length; i++)
+      ink[i] = Math.abs(data[i * 4] - r) + Math.abs(data[i * 4 + 1] - gr) + Math.abs(data[i * 4 + 2] - b) > 60 ? 1 : 0;
+    return { width, height, ink };
+  } catch {
+    return null;
+  }
+}
+
 export function ExplorationScene({
   spec,
   state,
@@ -360,12 +386,18 @@ export function ExplorationScene({
     focus = overlay?.focus,
     anchors = overlay?.anchors;
   const [aspect, setAspect] = useState<number | null>(null);
+  const [ink, setInk] = useState<InkGrid | null>(null);
   useEffect(() => {
     setAspect(null);
+    setInk(null);
     if (!nativeId || !image || spec.mode !== 'explanation') return;
     let live = true;
     const img = new Image();
-    img.onload = () => live && img.naturalWidth && setAspect(img.naturalHeight / img.naturalWidth);
+    img.onload = () => {
+      if (!live || !img.naturalWidth) return;
+      setAspect(img.naturalHeight / img.naturalWidth);
+      setInk(inkGrid(img));
+    };
     img.src = image;
     return () => {
       live = false;
@@ -376,7 +408,7 @@ export function ExplorationScene({
     const scene = spatialScene(spec, state);
     if (!scene?.objects.length) return null;
     const at = Math.min(state.explanationStep, spec.steps.length - 1);
-    return sceneOverlayModel(liftScene(scene, liftRegion(liftFocus(focus, anchors, spec.steps), aspect), undefined, state.selectedObjectId), {
+    return sceneOverlayModel(liftScene(scene, clearOfInk(liftRegion(liftFocus(focus, anchors, spec.steps), aspect), ink), undefined, state.selectedObjectId), {
       text: spec.steps[at].caption,
       stepLabel: `Step ${at + 1} of ${spec.steps.length}`,
     });

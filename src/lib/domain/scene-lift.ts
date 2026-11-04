@@ -84,6 +84,32 @@ export function liftFocus(
   return { x, y, width: Math.min(1 - x, u.x1 + 0.04 - x), height: Math.min(1 - y, u.y1 + 0.05 - y) };
 }
 
+/** A coarse map of where a capture has anything on it, row by row from the top left. */
+export type InkGrid = { width: number; height: number; ink: Uint8Array };
+/** Moves each edge of a region outward to the nearest blank line of the capture, so a lift never
+ * slices a label in half. It reaches further sideways and below than above, where a slide's title
+ * sits; an edge with no blank line in reach stays where it was. */
+export function clearOfInk(region: Region, grid: InkGrid | null | undefined): Region {
+  if (!grid?.width || !grid.height) return region;
+  const { width: W, height: H, ink } = grid;
+  let x0 = Math.floor(region.x * W), x1 = Math.ceil((region.x + region.width) * W) - 1;
+  let y0 = Math.floor(region.y * H), y1 = Math.ceil((region.y + region.height) * H) - 1;
+  const columnBlank = (x: number) => { for (let y = Math.max(0, y0); y <= Math.min(H - 1, y1); y++) if (ink[y * W + x]) return false; return true; };
+  const rowBlank = (y: number) => { for (let x = Math.max(0, x0); x <= Math.min(W - 1, x1); x++) if (ink[y * W + x]) return false; return true; };
+  const reach = (start: number, step: number, limit: number, size: number, blank: (at: number) => boolean) => {
+    for (let at = start, n = 0; at >= 0 && at < size && n <= limit; at += step, n++) if (blank(at)) return at;
+    return start;
+  };
+  const side = Math.ceil(W * 0.12), below = Math.ceil(H * 0.12), above = Math.ceil(H * 0.05);
+  for (let pass = 0; pass < 2; pass++) {
+    x0 = reach(x0, -1, side, W, columnBlank);
+    x1 = reach(x1, 1, side, W, columnBlank);
+    y0 = reach(y0, -1, above, H, rowBlank);
+    y1 = reach(y1, 1, below, H, rowBlank);
+  }
+  return { x: x0 / W, y: y0 / H, width: (x1 + 1 - x0) / W, height: (y1 + 1 - y0) / H };
+}
+
 export function liftRegion(focus: Region | null | undefined, aspect: number): Region {
   const minW = 0.42, minH = Math.min(1, (minW * 0.62) / Math.max(0.2, aspect));
   const base = focus ?? { x: 0.2, y: 0.2, width: 0.6, height: 0.6 };

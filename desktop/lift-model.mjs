@@ -179,8 +179,8 @@ function placeSheet(data, sheet) {
   const region = sheet?.region ?? data.region, f = s.frame;
   const w = region.width * f.width, h = region.height * f.height;
   const x = region.x * f.width + w / 2 - f.width / 2, y = f.height / 2 - (region.y * f.height + h / 2);
-  // Both the sheet and the hollow it leaves are feathered, so neither reads as a pasted box.
-  const paper = new MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, side: DoubleSide, opacity: 0, alphaMap: feather() });
+  // The sheet is the slide itself, crisp to its edges.
+  const paper = new MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, side: DoubleSide, opacity: 0 });
   // The hollow it leaves is solid to its edges, so none of the slide's drawing stays behind.
   const coverMat = new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, alphaMap: feather(3, 2, 6) });
   if (sheet)
@@ -188,21 +188,9 @@ function placeSheet(data, sheet) {
       sheet.dataUrl,
       (texture) => {
         if (!s || s.sheet?.paper.material !== paper) return texture.dispose();
-        // Washed toward its paper colour, the lifted slide is a backdrop: its own drawing
-        // stays legible but never competes with the model as a second copy.
         const tone = paperColour(texture.image);
-        const c = document.createElement('canvas');
-        c.width = texture.image.width;
-        c.height = texture.image.height;
-        const g = c.getContext('2d');
-        g.drawImage(texture.image, 0, 0);
-        g.fillStyle = `#${tone.getHexString(SRGBColorSpace)}`;
-        g.globalAlpha = 0.68;
-        g.fillRect(0, 0, c.width, c.height);
-        texture.dispose();
-        const washed = new CanvasTexture(c);
-        washed.colorSpace = SRGBColorSpace;
-        paper.map = washed;
+        texture.colorSpace = SRGBColorSpace;
+        paper.map = texture;
         paper.needsUpdate = true;
         coverMat.color.copy(tone);
         s.sheetReady = true;
@@ -223,10 +211,12 @@ function placeSheet(data, sheet) {
   const cover = new Mesh(new PlaneGeometry(w * 1.03, h * 1.03), coverMat);
   cover.position.set(x, y, -2);
   cover.renderOrder = -2;
-  const floor = new Mesh(new PlaneGeometry(w * 0.95, h * 0.5), new MeshBasicMaterial({ map: s.shadowTex, transparent: true, opacity: 0, depthWrite: false }));
-  floor.position.set(x + w * 0.02, y - h * 0.4, -1);
+  // A soft drop shadow under the sheet, tilting with it, gives it an edge against the slide.
+  const floor = new Mesh(new PlaneGeometry(w * 1.08, h * 1.08), new MeshBasicMaterial({ color: 0x1d2430, alphaMap: feather(10, 8, 12), transparent: true, opacity: 0, depthWrite: false }));
+  floor.position.set(x, y - h * 0.012, -0.5);
   floor.renderOrder = -1;
-  s.scene.add(cover, floor);
+  s.scene.add(cover);
+  s.content.add(floor);
   s.content.add(plane);
   s.sheet = { paper: plane, cover, floor };
   s.hinge.position.set(x, y - h / 2, 0);
@@ -605,7 +595,7 @@ function renderFrame() {
     // Lifted, the slide's region is covered completely, so its drawing never shows twice.
     sh.paper.material.opacity = ready ? 1 : 0;
     sh.cover.material.opacity = ready && s.hasCover ? clamp01(t / 0.06) : 0;
-    sh.floor.material.opacity = 0.14 * tilt;
+    sh.floor.material.opacity = 0.26 * tilt;
   }
   const parts = [...s.parts.values()];
   const anyLit = parts.some((v) => v.data.highlighted && v.data.visible);

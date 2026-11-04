@@ -174,3 +174,26 @@ describe('where an explanation lifts from', () => {
     expect(liftFocus({ x: 0, y: 0, width: 1, height: 1 }, anchors.filter((a) => a.id !== 'diagram'), steps)).toBeUndefined();
   });
 });
+
+describe('keeping a lift clear of what is on the slide', () => {
+  // 20 by 10 cells: a label sits across x = 4..7 on row 4, a title across the top rows.
+  const grid = (() => {
+    const width = 20, height = 10, ink = new Uint8Array(width * height);
+    for (let x = 4; x <= 7; x++) ink[4 * width + x] = 1;
+    for (let x = 0; x < 20; x++) ink[0 * width + x] = 1;
+    return { width, height, ink };
+  })();
+  it('moves an edge that would slice a label out to the next blank line', async () => {
+    const { clearOfInk } = await import('@/lib/domain/scene-lift');
+    const r = clearOfInk({ x: 0.3, y: 0.2, width: 0.4, height: 0.6 }, grid);
+    expect(r.x).toBeCloseTo(0.15);
+    expect(r.x + r.width).toBeCloseTo(0.7);
+  });
+  it('leaves a clean edge, and an edge with no blank line in reach, where it was', async () => {
+    const { clearOfInk } = await import('@/lib/domain/scene-lift');
+    expect(clearOfInk({ x: 0.5, y: 0.2, width: 0.3, height: 0.6 }, grid)).toEqual({ x: 0.5, y: 0.2, width: 0.3, height: 0.6 });
+    const solid = { width: 20, height: 10, ink: new Uint8Array(200).fill(1) };
+    expect(clearOfInk({ x: 0.5, y: 0.2, width: 0.3, height: 0.6 }, solid)).toEqual({ x: 0.5, y: 0.2, width: 0.3, height: 0.6 });
+    expect(clearOfInk({ x: 0.5, y: 0.2, width: 0.3, height: 0.6 }, null)).toEqual({ x: 0.5, y: 0.2, width: 0.3, height: 0.6 });
+  });
+});

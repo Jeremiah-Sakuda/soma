@@ -20,7 +20,10 @@ export function ExplorationPlayback({
   onQuestion,
   onProgress,
   disabled = false,
+  stopAfterStep = false,
 }: {
+  /** Speak the current step only, for a learner stepping by hand. */
+  stopAfterStep?: boolean;
   artifactId: string;
   version: number;
   spec: ExplorationSpec;
@@ -44,8 +47,8 @@ export function ExplorationPlayback({
   useEffect(() => {
     if (activeAudio.current) activeAudio.current.playbackRate = rate;
   }, [rate]);
-  const callbacks = useRef({ onPlaying, onAdvance, onProgress });
-  callbacks.current = { onPlaying, onAdvance, onProgress };
+  const callbacks = useRef({ onPlaying, onAdvance, onProgress, stopAfterStep });
+  callbacks.current = { onPlaying, onAdvance, onProgress, stopAfterStep };
   const generation = useRef(0),
     buffer = useRef(new PreparedAudio());
   const narration = explorationNarration(spec, state);
@@ -90,7 +93,7 @@ export function ExplorationPlayback({
       ended = true;
       resume.current = null;
       callbacks.current.onProgress(1, playbackKey);
-      const next = nextPlaybackState(spec, state);
+      const next = callbacks.current.stopAfterStep ? null : nextPlaybackState(spec, state);
       if (next) callbacks.current.onAdvance(next);
       else callbacks.current.onPlaying(false);
     };

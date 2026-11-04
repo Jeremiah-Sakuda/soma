@@ -77,7 +77,8 @@ function compactBar() {
     title: 'Soma ask bar',
     webPreferences: { ...locked, preload: path.join(__dirname, 'compact-preload.cjs') },
   });
-  bar.setAlwaysOnTop(true, 'floating');
+  // Above the on-screen drawing, whose window sits at the screen-saver level.
+  bar.setAlwaysOnTop(true, 'screen-saver', 1);
   bar.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   bar.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   bar.webContents.on('will-navigate', (event) => event.preventDefault());

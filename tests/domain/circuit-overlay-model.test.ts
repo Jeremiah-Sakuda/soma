@@ -26,6 +26,7 @@ describe('a checked circuit drawn over its own slide', () => {
     for (let i = 0; i < solution.steps.length; i++) {
       const m = model({}, i);
       expect(validOverlayModel(m)).toBe(true);
+      expect(m.aspect).toBe(1080 / 1920);
       expect(m.lift).toBeUndefined();
       expect(captionIsGrounded(m.caption!.text, [], solution)).toBe(true);
     }

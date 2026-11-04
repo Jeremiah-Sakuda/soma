@@ -43,13 +43,17 @@ function createPointAsk({
   let overlayCapture = null,
     graph = null,
     verifying = false,
+    activeRecheck = null,
     refused = null,
     idleTimer = null,
     // The drawing as a flat sketch on the slide, or lifted off it in 3D.
     view = '2d',
     sheet = null,
     viewChanged = 0,
-    liftWatch = null;
+    liftWatch = null,
+    // A lift requested after the learner left Soma waits for a fresh source check.
+    // Exact request/capture/model ownership prevents its late result lifting a new scene.
+    liftRequest = null;
   let lastCapture = null,
     lastCaptureTimer = null,
     highlightBusy = false;
@@ -77,7 +81,7 @@ function createPointAsk({
   /** The capture and region a sheet was cut for: a follow-up that moves the graph needs a new one. */
   function sheetKey() {
     const r = sheetRegion(graph.model);
-    return `${graph.id}:${[r.x, r.y, r.width, r.height].map((v) => v.toFixed(3)).join(',')}`;
+    return JSON.stringify([graph.id, r.x, r.y, r.width, r.height]);
   }
   function restartIdle(c) {
     clearTimeout(idleTimer);
@@ -93,6 +97,7 @@ function createPointAsk({
    * capture's graph region), so a scene rebuilt for any reason still covers the slide; the
    * renderer reuses it when unchanged. */
   function drawGraph() {
+    let failure = null;
     // A follow-up that moved the graph needs its own region of the slide, or stays flat.
     if (view === '3d' && sheet?.key !== sheetKey() && !cutSheet(overlayCapture)) {
       view = '2d';
@@ -100,6 +105,7 @@ function createPointAsk({
       liftWatch = null;
       overlay?.setIgnoreMouseEvents(true, { forward: true });
       overlayResult({ id: graph.id, shown: true, view, reason: 'sheet' });
+      failure = 'sheet';
     }
     draw({
       type: 'graph',
@@ -107,6 +113,7 @@ function createPointAsk({
       view,
       ...(view === '3d' && sheet?.key === sheetKey() && sheet.data ? { sheet: sheet.data } : {}),
     });
+    return failure;
   }
   /** Cuts the graph's region from the capture as the 3D sheet. Without it nothing can
    * honestly cover the original, so a failure keeps the drawing flat. */
@@ -122,9 +129,52 @@ function createPointAsk({
   /** Lifts the drawing off the slide in 3D, or sets it back down. Only a drawing that is
    * verified and on screen can change view. Returns the view now shown. */
   function setView(next, id) {
-    if (!['2d', '3d'].includes(next) || next === view) return view;
+    if (!['2d', '3d'].includes(next)) return view;
     const c = overlayCapture;
-    if (!graph?.verified || !graph.model.lift || !c || graph.id !== c.id || (id && id !== graph.id) || !overlay || overlay.isDestroyed()) return view;
+    if (!graph?.verified || !c || graph.id !== c.id || (id && id !== graph.id) || !overlay || overlay.isDestroyed()) return view;
+    // Setting the already-flat view must also cancel a lift that is still checking.
+    if (next === '2d' && liftRequest) {
+      liftRequest = null;
+      if (view === '2d') overlayResult({ id: graph.id, shown: true, view });
+    }
+    if (next === view || !graph.model.lift) return view;
+    if (Date.now() >= c.expires) {
+      clearGraph();
+      overlayResult({ id: c.id, shown: false, reason: 'cleared' });
+      return view;
+    }
+    if (next === '3d' && (stale || verifying)) {
+      overlayResult({ id: graph.id, shown: true, view: '2d', reason: 'checking' });
+      if (liftRequest) return view;
+      const preceding = activeRecheck?.capture === c ? activeRecheck.done : null;
+      // A first-publication check cannot own a verified drawing, but refuse explicitly if
+      // an adapter ever reaches that state rather than leaving a checking notice behind.
+      if (verifying && !preceding) {
+        overlayResult({ id: c.id, shown: true, view: '2d' });
+        return view;
+      }
+      const request = { capture: c, graph };
+      liftRequest = request;
+      void (async () => {
+        // Let an existing owned re-check finish, then verify the entire sheet that will
+        // cover the source. No overlapping captures, extra polling or stale lift.
+        if (preceding) await preceding;
+        if (liftRequest !== request || overlayCapture !== c || graph !== request.graph || !graph.verified) return;
+        if (preceding) overlayResult({ id: c.id, shown: true, view: '2d', reason: 'checking' });
+        const ok = await recheck(c, sheetRegion(request.graph.model));
+        if (liftRequest !== request) return;
+        liftRequest = null;
+        if (!ok || overlayCapture !== c || graph !== request.graph || !graph.verified || Date.now() >= c.expires) return;
+        // Another blur during the capture requires another deliberate lift request.
+        if (stale) {
+          overlayResult({ id: c.id, shown: true, view: '2d' });
+          return;
+        }
+        if (setView('3d', c.id) !== '3d')
+          overlayResult({ id: c.id, shown: true, view: '2d' });
+      })();
+      return view;
+    }
     // Rapid toggles would resend the sheet each time.
     if (Date.now() - viewChanged < 350) return view;
     if (next === '3d' && sheet?.key !== sheetKey() && !cutSheet(c)) {
@@ -202,6 +252,7 @@ function createPointAsk({
   }
   function clearGraph() {
     const had = graph?.verified;
+    liftRequest = null;
     graph = null;
     view = '2d';
     sheet = null;
@@ -616,7 +667,10 @@ function createPointAsk({
     const c = overlayCapture;
     if (!event || typeof event.id !== 'string' || !c || c.id !== event.id) return;
     if (event.model === null || Date.now() > c.expires) {
-      if (graph?.id === c.id) clearGraph();
+      if (graph?.id === c.id) {
+        clearGraph();
+        overlayResult({ id: c.id, shown: false, reason: 'cleared' });
+      }
       return;
     }
     // A capture whose screen changed, or that the learner dismissed, stays down until the
@@ -628,7 +682,15 @@ function createPointAsk({
       return;
     }
     const verified = graph?.id === c.id && graph.verified;
+    // A model update replaces the scene a pending lift was checked for.
+    liftRequest = null;
     graph = { id: c.id, model: event.model, verified };
+    if (view === '3d' && !graph.model.lift) {
+      view = '2d';
+      sheet = null;
+      clearInterval(liftWatch);
+      liftWatch = null;
+    }
     // After the learner used another app, check the slide is still the one drawn on before
     // drawing the next step. Soma's windows are left out of that capture, without hiding.
     if (verified && stale && !verifying && Date.now() - lastCheck > 3000) {
@@ -662,7 +724,6 @@ function createPointAsk({
         return;
       }
       graph.verified = true;
-      overlayResult({ id: c.id, shown: true });
       globalShortcut.register('Escape', () => {
         const hidden = graph?.id;
         clearGraph();
@@ -676,11 +737,15 @@ function createPointAsk({
     clearTimeout(hideTimer);
     overlayFor(c.display);
     overlay.setIgnoreMouseEvents(true, view === '3d' ? undefined : { forward: true });
-    drawGraph();
+    const failure = drawGraph();
+    overlayResult({ id: c.id, shown: true, view, ...(failure ? { reason: failure } : liftRequest && view === '2d' ? { reason: 'checking' } : {}) });
   }
   /** Re-checks the slide behind a drawing after the learner may have changed it. Takes the
    * drawing down and returns false if the graph's region no longer matches. */
   async function recheck(c, region = overlayRegion(graph.model), tolerateOnce = false) {
+    let resolveDone;
+    const check = { capture: c, done: new Promise((resolve) => { resolveDone = resolve; }) };
+    activeRecheck = check;
     verifying = true;
     stale = false;
     let ok = false;
@@ -692,6 +757,8 @@ function createPointAsk({
     } finally {
       verifying = false;
       lastCheck = Date.now();
+      if (activeRecheck === check) activeRecheck = null;
+      resolveDone();
     }
     // A newer capture's first model arrived while this check ran; verify it now.
     if (graph && !graph.verified && overlayCapture && graph.id === overlayCapture.id && graph.id !== c.id)

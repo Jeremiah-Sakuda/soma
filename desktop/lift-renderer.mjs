@@ -1,7 +1,7 @@
 // Lifts Soma's checked search off the learner's slide in 3D, drawn over the real display.
 // The graph's region of the learner's own capture peels up as a sheet hinged on its bottom
-// edge; each node rises on a pillar to its checked distance and each connection becomes a
-// string as long as its cost (taut on shortest routes, slack by the difference elsewhere).
+// edge; each node rises on a pillar in proportion to its checked distance. Strings
+// illustrate computed slack; their curved lengths and sag are schematic, not measured cost.
 // A ruler at the back of the sheet reads off the heights. Bundled into point-overlay-3d.js;
 // exposes window.SomaLift.
 import {
@@ -212,8 +212,17 @@ function resize(frame) {
 
 /** The sheet, the paper-coloured cover where it came from, its shadow and the ruler. */
 function placeSheet(layout, sheet) {
-  const key = `${sheet ? `${sheet.dataUrl.length}:${sheet.dataUrl.slice(-48)}` : 'none'}:${s.frame.width}x${s.frame.height}`;
-  if (s.sheetKey === key) return;
+  const region = sheet?.region ?? layout.region;
+  const key = {
+    image: sheet?.dataUrl ?? null,
+    region: JSON.stringify(region),
+    width: s.frame.width,
+    height: s.frame.height,
+    radius: layout.radius,
+  };
+  // Equal-length captures can share their trailing bytes. The region is part of the
+  // capture too: reusing either the old texture or its old hinge would misplace it.
+  if (s.sheetKey && Object.keys(key).every((name) => s.sheetKey[name] === key[name])) return;
   if (s.sheet) for (const o of Object.values(s.sheet)) disposeObject(o);
   for (const t of s.ticks) {
     disposeObject(t.mesh);
@@ -225,7 +234,6 @@ function placeSheet(layout, sheet) {
   s.sheetReady = false;
   // Placed where the learner's slide shows this exact region, so a flat sheet is the slide
   // itself and only reveals itself as it lifts.
-  const region = sheet?.region ?? layout.region;
   const r = layout.radius;
   const f = s.frame,
     w = region.width * f.width,
@@ -294,16 +302,19 @@ function placeSheet(layout, sheet) {
 
 /** Even steps for the ruler (1, 2, 5, 10, …) giving at most about twelve ticks. */
 function tickStep(top) {
-  const raw = Math.max(1, top) / 12, power = 10 ** Math.floor(Math.log10(raw));
-  return [1, 2, 5, 10].map((m) => m * power).find((step) => step >= raw);
+  const raw = top / 12, power = 10 ** Math.floor(Math.log10(raw));
+  return [1, 2, 5, 10].map((m) => m * power).find((step) => step > 0 && Number.isFinite(step) && step >= raw) ?? top;
 }
 /** Evenly spaced ticks over the whole search's range, the same at every step, so the ruler
  * reads as a fixed scale from the first step. */
 function syncTicks(layout) {
   const shown = layout.maxDistance;
-  const step = tickStep(shown), values = [];
-  for (let value = 0; value <= shown + 1e-9; value += step) values.push(Number(value.toFixed(6)));
-  const key = values.join(',');
+  const step = tickStep(shown);
+  // Count in a dimensionless ratio, so tiny positive costs have the same ruler
+  // as ordinary costs. Never round scientific values to zero or accumulate drift.
+  const count = Math.min(12, Math.floor(shown / step + Number.EPSILON * 16));
+  const values = Array.from({ length: count + 1 }, (_, i) => i * step);
+  const key = `${layout.radius}:${values.join(',')}`;
   if (s.tickKey === key) return;
   s.tickKey = key;
   for (const t of s.ticks) {
@@ -327,6 +338,21 @@ function syncNodes(layout) {
   const newStep = signature !== s.signature;
   s.signature = signature;
   const r = layout.radius;
+  // Geometry sizes use display pixels, so a resized display or a revised source
+  // radius must rebuild those meshes even when node identities have not changed.
+  if (s.nodeRadius !== undefined && s.nodeRadius !== r) {
+    for (const v of s.nodes.values()) disposeNode(v);
+    s.nodes.clear();
+    for (const v of s.edges.values()) {
+      clearMeshes(v);
+      v.mat?.dispose();
+      v.label.remove();
+    }
+    s.edges.clear();
+    notchGeometry?.dispose();
+    notchGeometry = null;
+  }
+  s.nodeRadius = r;
   const seen = new Set();
   const now = clock();
   for (const n of layout.nodes) {
@@ -350,7 +376,7 @@ function syncNodes(layout) {
     }
     // A distance that changes (an estimate coming down, or a cut raising a route) leaves a
     // ghost at the old height, so the change reads.
-    if (v.data && v.data.distance !== null && n.distance !== null && Math.abs(n.distance - v.data.distance) > 1e-9)
+    if (v.data && v.data.distance !== null && n.distance !== null && n.distance !== v.data.distance)
       v.change = { from: v.data.distance, sign: v.data.tentative ? '≤' : '=', height: v.h, at: now };
     // Settled now: its label says so at once rather than replaying the last change.
     else if (v.data?.tentative && !n.tentative) v.change = null;
@@ -396,14 +422,18 @@ function syncNodes(layout) {
   }
   for (const [id, v] of s.nodes)
     if (!seen.has(id)) {
-      for (const o of [v.sphere, v.halo, v.ghost, v.trail, v.pillar, v.foot, v.shadow]) disposeObject(o);
-      for (const m of v.notches) {
-        s.content.remove(m);
-        m.material.dispose();
-      }
-      v.label.remove();
+      disposeNode(v);
       s.nodes.delete(id);
     }
+}
+
+function disposeNode(v) {
+  for (const o of [v.sphere, v.halo, v.ghost, v.trail, v.pillar, v.foot, v.shadow]) disposeObject(o);
+  for (const m of v.notches) {
+    s.content.remove(m);
+    m.material.dispose();
+  }
+  v.label.remove();
 }
 
 /** Moves a two-point dashed line in place (no new GPU buffers per frame). */
@@ -427,7 +457,7 @@ function caption(model, layout) {
     box.setAttribute('aria-hidden', 'true');
     const legend = document.createElement('div');
     legend.className = 'lift-legend';
-    for (const [cls, text] of [['start', ''], ['path', 'shortest route'], ['taut', 'taut: also shortest'], ['slack', 'slack: longer by n'], ['estimate', 'estimate, may drop'], ['ghost', 'old height']]) {
+    for (const [cls, text] of [['start', ''], ['path', 'shortest route'], ['taut', 'taut: no slack'], ['slack', 'slack: extra cost n'], ['estimate', 'estimate, may drop'], ['ghost', 'old height']]) {
       const item = document.createElement('span');
       const swatch = document.createElement('i');
       swatch.className = `is-${cls}`;
@@ -444,7 +474,7 @@ function caption(model, layout) {
   box.startItem.lastChild.textContent = `start (${source})`;
   title.textContent = model.caption?.stepLabel ?? 'Lifted off your slide';
   body.textContent = model.caption?.text ?? '';
-  note.textContent = `Height is the checked ${layout.unit === 'edges' ? 'number of edges' : 'distance'} from ${source}.`;
+  note.textContent = `Height is the checked ${layout.unit === 'edges' ? 'number of edges' : 'distance'} from ${source}. String lengths are schematic.`;
   // Anchored like the flat caption, by the edge it grows away from, so a longer caption
   // never makes the card jump between steps.
   const f = s.frame, c = model.caption;
@@ -606,7 +636,8 @@ function drawEdges(rise, sheetT) {
     let labelAt, side = null, opacity;
     if (e.kind === 'cut') {
       // Removed: a dashed line on the sheet between the two printed circles.
-      if (v.shape !== 'cut') {
+      const shape = `cut:${a.x}:${a.y}:${b.x}:${b.y}:${r}`;
+      if (v.shape !== shape) {
         clearMeshes(v);
         const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
         const from = r * 0.95, to = len - r * 0.95, dash = r * 0.4, gap = r * 0.25;
@@ -615,7 +646,7 @@ function drawEdges(rise, sheetT) {
           v.meshes.push(tube([{ x: a.x + (dx * d) / len, y: a.y + (dy * d) / len, z: 1 }, { x: a.x + (dx * e2) / len, y: a.y + (dy * e2) / len, z: 1 }], r * 0.07, v.mat));
         }
         for (const m of v.meshes) s.content.add(m);
-        v.shape = 'cut';
+        v.shape = shape;
       }
       v.mat.opacity = sheetT;
       v.label.textContent = `✕ ${A.data.label}–${B.data.label} removed`;
@@ -625,7 +656,7 @@ function drawEdges(rise, sheetT) {
       // Slack hangs by its amount; a string too slack for its height rests on the sheet.
       const sag = sagDepth(Math.max(0, e.slack ?? 0), s.layout.scale, s.layout.tallest, r * 0.45) * k;
       const points = stringPoints(a, b, sag, 24, r * 0.12);
-      const shape = `${a.z.toFixed(1)}:${b.z.toFixed(1)}:${sag.toFixed(1)}`;
+      const shape = `${a.x}:${a.y}:${b.x}:${b.y}:${a.z.toFixed(1)}:${b.z.toFixed(1)}:${sag.toFixed(1)}:${r}:${e.directed}`;
       if (shape !== v.shape) {
         const radius = r * (e.tone === 'path' ? 0.17 : e.kind === 'taut' || e.kind === 'pull' ? 0.11 : 0.042);
         // While heights glide, the same tube is reshaped in place; a new kind rebuilds it.
@@ -728,6 +759,9 @@ function renderFrame() {
   let current = null;
   for (const v of s.nodes.values()) {
     v.h = quick ? v.target : approach(v.h, v.target, dt, 0.5);
+    // Reduced motion shows the current calculation, without a fading old height
+    // or a changing-value label that would keep the render loop alive.
+    if (quick) v.change = null;
     if (Math.abs(v.h - v.target) > 0.3) moving = true;
     const k = v.data.distance === null ? 0 : rise(v.data.id);
     const z = Math.max(0, v.h * k);
@@ -846,7 +880,7 @@ function update(model, frame, sheet) {
   const layout = liftLayout(model, s.frame);
   s.layout = layout;
   s.model = model;
-  if (sheet || !s.sheet || !s.sheetKey) placeSheet(layout, sheet ?? s.lastSheet ?? null);
+  placeSheet(layout, sheet ?? s.lastSheet ?? null);
   if (sheet) s.lastSheet = sheet;
   syncNodes(layout);
   syncTicks(layout);
@@ -911,3 +945,5 @@ window.SomaLift = {
     return typeof window.__liftNow === 'function' || window.__liftDebug === true ? s : null;
   },
 };
+
+reducedMotion.addEventListener('change', wake);

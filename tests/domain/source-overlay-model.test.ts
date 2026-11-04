@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createRequire } from 'node:module';
 import { runBfs, runDijkstra } from '../../src/lib/domain/graph-search';
-import { sourceOverlayModel } from '../../src/lib/domain/source-overlay-model';
+import { routeSequence, sourceOverlayModel } from '../../src/lib/domain/source-overlay-model';
 import { captionIsGrounded } from '../../src/lib/domain/exploration-view';
 
 const require = createRequire(import.meta.url);
@@ -80,6 +80,73 @@ describe('source overlay model', () => {
 });
 
 describe('3D lift data', () => {
+  it('preserves small checked distances, costs and relative heights through native geometry', async () => {
+    const graph = {
+      nodes: ['A', 'B', 'C', 'X'].map((id) => ({ id, label: id })),
+      edges: [E('AB', 'A', 'B', 4e-7), E('BC', 'B', 'C', 4e-7), E('AC', 'A', 'C', 1e-6)],
+      directed: false, start: 'A', goal: 'C', neighborOrder: ['A', 'B', 'C', 'X'],
+    };
+    const positions = { nodes: graph.nodes.map((n, i) => ({ nodeId: n.id, x: 0.15 + i * 0.2, y: i % 2 ? 0.6 : 0.3 })), edgeLabels: [] };
+    const execution = runDijkstra({ ...graph, algorithm: 'dijkstra' });
+    const m = sourceOverlayModel({ layout: positions, graph, execution, index: 99, disabledEdgeIds: [], caption: null, stepLabel: 'Final', aspect: 0.5625 });
+    expect(m.nodes.find((n) => n.id === 'B')!.distance).toBe(4e-7);
+    expect(m.nodes.find((n) => n.id === 'C')!.distance).toBe(8e-7);
+    expect(m.nodes.find((n) => n.id === 'X')!.distance).toBeNull();
+    expect(m.edges.find((e) => e.id === 'AB')!.weight).toBe(4e-7);
+    expect(m.edges.find((e) => e.id === 'AC')!.weight).toBe(1e-6);
+    expect(m.tags.find((t) => t.tone === 'route')?.text).toContain('8e-7');
+    expect(m.lift?.maxDistance).toBe(1e-6);
+    expect(m.aspect).toBe(0.5625);
+    expect(validOverlayModel(m)).toBe(true);
+    const { liftLayout } = await import(new URL('../../desktop/lift-geometry.mjs', import.meta.url).href);
+    const lifted = liftLayout(m, { width: 1600, height: 900 });
+    const height = (id: string) => lifted.nodes.find((n: { id: string }) => n.id === id).height;
+    expect((height('B') - height('A')) / lifted.tallest).toBeCloseTo(0.4, 12);
+    expect((height('C') - height('A')) / lifted.tallest).toBeCloseTo(0.8, 12);
+    expect(height('C') - height('A')).toBeGreaterThan(100);
+    expect(lifted.edges.find((e: { id: string }) => e.id === 'BC').kind).toBe('taut');
+    expect(lifted.edges.find((e: { id: string }) => e.id === 'AC').kind).toBe('slack');
+  });
+  it('keeps zero-cost graphs liftable and subnormal values visible without an unsafe lift scale', () => {
+    for (const weight of [0, 1e-310]) {
+      const graph = { nodes: ['A', 'B'].map((id) => ({ id, label: id })), edges: [E('AB', 'A', 'B', weight)], directed: false, start: 'A', goal: 'B', neighborOrder: ['A', 'B'] };
+      const execution = runDijkstra({ ...graph, algorithm: 'dijkstra' });
+      const m = sourceOverlayModel({ layout: { nodes: [{ nodeId: 'A', x: 0.2, y: 0.5 }, { nodeId: 'B', x: 0.7, y: 0.5 }], edgeLabels: [] }, graph, execution, index: 99, disabledEdgeIds: [], caption: null, stepLabel: 'Final', aspect: 0.5625 });
+      expect(m.nodes.find((n) => n.id === 'B')!.distance).toBe(weight);
+      expect(m.edges[0].weight).toBe(weight);
+      expect(validOverlayModel(m)).toBe(true);
+      if (weight === 0) expect(m.lift?.maxDistance).toBe(1);
+      else {
+        expect(m.lift).toBeUndefined();
+        expect(m.tags.some((t) => t.text.includes('1e-310'))).toBe(true);
+      }
+    }
+  });
+  it('carries the largest supported checked path through native validation without reducing its range', () => {
+    const ids = Array.from({ length: 12 }, (_, i) => `n${i}`);
+    const graph = { nodes: ids.map((id) => ({ id, label: id })), edges: ids.slice(1).map((id, i) => E(`e${i}`, ids[i], id, 1e6)), directed: true, start: ids[0], goal: ids[11], neighborOrder: ids };
+    const positions = { nodes: ids.map((nodeId, i) => ({ nodeId, x: 0.05 + (i % 6) * 0.17, y: 0.25 + Math.floor(i / 6) * 0.45 })), edgeLabels: [] };
+    const execution = runDijkstra({ ...graph, algorithm: 'dijkstra' });
+    const m = sourceOverlayModel({ layout: positions, graph, execution, index: 99, disabledEdgeIds: [], caption: null, stepLabel: 'Final', aspect: 0.5625 });
+    expect(m.nodes.find((n) => n.id === ids[11])!.distance).toBe(11e6);
+    expect(m.lift!.maxDistance).toBe(11e6);
+    expect(validOverlayModel(m)).toBe(true);
+  });
+  it('orders undirected reverse paths from the active start and omits unreachable paths', () => {
+    const graph = { ...hero, start: 'F', goal: 'A' };
+    const execution = runDijkstra({ ...graph, algorithm: 'dijkstra' });
+    const m = sourceOverlayModel({ layout, graph: hero, execution, index: 99, disabledEdgeIds: [], caption: null, stepLabel: 'Final', aspect: 0.5625 });
+    expect(m.lift).toMatchObject({ source: 'F', goal: 'A' });
+    expect([...routeSequence(m)]).toEqual([
+      ['DF', { index: 0, reverse: true }], ['BD', { index: 1, reverse: true }],
+      ['BC', { index: 2, reverse: false }], ['AC', { index: 3, reverse: true }],
+    ]);
+    const disconnected = runDijkstra({ ...graph, algorithm: 'dijkstra', edges: [] });
+    const empty = sourceOverlayModel({ layout, graph: hero, execution: disconnected, index: 99, disabledEdgeIds: hero.edges.map((e) => e.id), caption: null, stepLabel: 'Final', aspect: 0.5625 });
+    expect(routeSequence(empty).size).toBe(0);
+    expect(empty.nodes.find((n) => n.id === 'A')!.distance).toBeNull();
+    expect(empty.edges.every((e) => e.tone === 'cut')).toBe(true);
+  });
   it('carries each connection’s ends and the cost the search used, scaled by the run’s largest estimate', () => {
     const m = model(99);
     expect(m.lift).toEqual({ directed: false, source: 'A', goal: 'F', maxDistance: 11, unit: 'cost' });
@@ -141,11 +208,21 @@ describe('source overlay model edge cases', () => {
     expect(text).toContain('= 78');
     expect(validOverlayModel(m)).toBe(true);
   });
-  it('rounds edited costs and node distances, and keeps huge costs valid', () => {
+  it('rounds edited cost labels without changing checked geometry values', () => {
     const m = model(99, { weights: { AF: 134.6153846153846 } });
     expect(m.weights.find((w) => w.edgeId === 'AF')?.text).toBe('11 → 134.62');
+    expect(model(99, { weights: { AF: 0.0051 } }).weights.find((w) => w.edgeId === 'AF')?.text).toBe('11 → 0.0051');
     const big = model(99, { weights: { AF: 123456789.123 } });
     expect(validOverlayModel(big)).toBe(true);
+  });
+  it('does not turn a small improvement into a displayed equality followed by less-than', () => {
+    const graph = { nodes: ['A', 'B', 'C'].map((id) => ({ id, label: id })), edges: [E('AB', 'A', 'B', 0.1), E('BC', 'B', 'C', 0.2), E('AC', 'A', 'C', 0.300001)], directed: false, start: 'A', goal: 'C', neighborOrder: ['A', 'B', 'C'] };
+    const execution = runDijkstra({ ...graph, algorithm: 'dijkstra' });
+    const m = sourceOverlayModel({ layout: { nodes: [{ nodeId: 'A', x: 0.2, y: 0.5 }, { nodeId: 'B', x: 0.4, y: 0.3 }, { nodeId: 'C', x: 0.7, y: 0.5 }], edgeLabels: [] }, graph, execution, index: 99, disabledEdgeIds: [], caption: null, stepLabel: 'Final', aspect: 0.5625 });
+    const equation = m.tags.find((t) => t.tone === 'equation')!.text;
+    const [, , value, old] = equation.split(/[+=<]/).map((n) => Number(n.trim()));
+    expect(value).toBeLessThan(old);
+    expect(equation).toContain('< 0.300001');
   });
   it('makes a rounded equation add up', () => {
     const g = { nodes: ['A', 'B', 'C'].map((id) => ({ id, label: id })), edges: [E('AB', 'A', 'B', 0.004), E('BC', 'B', 'C', 0.004), E('AC', 'A', 'C', 1)], directed: false, start: 'A', goal: 'C', neighborOrder: ['A', 'B', 'C'] };

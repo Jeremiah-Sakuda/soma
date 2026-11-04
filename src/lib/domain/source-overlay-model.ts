@@ -17,6 +17,8 @@ export type SourceOverlayModel = {
   /** The completed search: draw only the result. */
   final: boolean;
   radius: number;
+  /** Capture height / width. Older recorded models omit it and use legacy padding. */
+  aspect?: number;
   /** Tag font size as a fraction of the capture width. */
   font: number;
   nodes: { id: string; label: string; x: number; y: number; status: OverlayStatus; distance: number | null }[];
@@ -95,14 +97,21 @@ export function sourceOverlayModel({
     const label = fullName(id);
     return label.length > 14 ? `${label.slice(0, 13)}…` : label;
   };
-  const fmt = (n: number, places = 2) => (Number.isInteger(n) ? String(n) : String(Number(n.toFixed(places))));
-  // An equation must still add up after rounding.
-  const sum = (a: number, b: number, total: number) => {
-    for (const places of [2, 3, 4]) {
-      const [x, y, z] = [a, b, total].map((n) => Number(fmt(n, places)));
-      if (Number(fmt(x + y, places)) === z) return [a, b, total].map((n) => fmt(n, places));
+  const fmt = (n: number, places = 2) => {
+    const rounded = Number(n.toFixed(places));
+    // Compact labels may round, but keep at most 0.1% relative display error.
+    // A fixed decimal count can otherwise turn .0051 into .01 or erase it.
+    return String(n !== 0 && Math.abs((rounded - n) / n) > 0.001 ? Number(n.toPrecision(6)) : rounded);
+  };
+  // A displayed relaxation must still add up and remain strictly below the old value.
+  const sum = (a: number, b: number, total: number, old: number) => {
+    for (const places of [2, 3, 4, 6, 9, 12, 15]) {
+      const [x, y, z, previous] = [a, b, total, old].map((n) => Number(fmt(n, places)));
+      const displayedSum = x + y;
+      if (Math.abs(displayedSum - z) <= Number.EPSILON * Math.max(Math.abs(displayedSum), Math.abs(z)) * 2 && z < previous)
+        return [a, b, total, old].map((n) => fmt(n, places));
     }
-    return [a, b, total].map((n) => fmt(n, 4));
+    return [a, b, total, old].map(String);
   };
   const dijkstra = execution.modelId === 'dijkstra-nonnegative';
   // Cut connections are absent from the executed input; their printed cost comes from the graph.
@@ -187,7 +196,7 @@ export function sourceOverlayModel({
       ...(strike ? { strike } : {}),
       fromId: edge.from,
       toId: edge.to,
-      weight: Number(fmt(dijkstra ? weightOf(edge.from, edge.to) : 1, 4)),
+      weight: dijkstra ? weightOf(edge.from, edge.to) : 1,
       tone: cut
         ? 'cut'
         : pathEdges.has(key)
@@ -212,7 +221,7 @@ export function sourceOverlayModel({
     const status: OverlayStatus =
       step.current === node.id ? 'current' : step.expanded.includes(node.id) ? 'settled' : step.queue.includes(node.id) ? 'waiting' : 'unreached';
     const distance = step.distances[node.id];
-    return [{ id: node.id, label: node.label, x: p.x, y: p.y, status, distance: distance === undefined ? null : Number(fmt(distance)) }];
+    return [{ id: node.id, label: node.label, x: p.x, y: p.y, status, distance: distance ?? null }];
   });
 
   // Annotations avoid the source's own marks: nodes, printed weights and text regions.
@@ -269,8 +278,8 @@ export function sourceOverlayModel({
     if (!anchor || !edgeCentre.has(pairKey(x.parent, x.node))) continue;
     const w = weightOf(x.parent, x.node),
       from = execution.steps.find((s2) => s2.parents[x.node] === x.parent && s2.distances[x.node] === x.value)?.distances[x.parent] ?? x.value - w;
-    const [fa, fw, fv] = sum(from, w, x.value);
-    place(`equation-${x.node}`, `${fa} + ${fw} = ${fv} < ${fmt(x.old)}`, 'equation', anchor, true);
+    const [fa, fw, fv, previous] = sum(from, w, x.value, x.old);
+    place(`equation-${x.node}`, `${fa} + ${fw} = ${fv} < ${previous}`, 'equation', anchor, true);
   }
   // The route and the goal's own tag claim their places first on the final frame.
   let routeLine: string | null = null;
@@ -314,16 +323,21 @@ export function sourceOverlayModel({
   const underneath = H - bottom > font * 5 || H - bottom > top;
   // Tentative estimates can exceed final distances (F ≤ 11 before it settles at 7).
   const allDistances = execution.steps.flatMap((x) => Object.values(x.distances)).filter(Number.isFinite);
+  const maxDistance = Math.max(0, ...allDistances) || 1;
+  // Retain subnormal checked facts in 2D, but do not offer a lift whose pixel scale
+  // could overflow. This floor leaves ample finite scale for actual display sizes.
+  const lift: SourceOverlayModel['lift'] = maxDistance >= 1e-300 ? {
+    directed: Boolean(input.directed),
+    source: input.start,
+    goal: input.goal ?? null,
+    maxDistance,
+    unit: dijkstra ? 'cost' : 'edges',
+  } : undefined;
   return {
     final: finished,
-    lift: {
-      directed: Boolean(input.directed),
-      source: input.start,
-      goal: input.goal ?? null,
-      maxDistance: Math.max(1, ...allDistances),
-      unit: dijkstra ? 'cost' : 'edges',
-    },
+    ...(lift ? { lift } : {}),
     radius: r / W,
+    aspect,
     font: font / W,
     nodes: modelNodes,
     edges,

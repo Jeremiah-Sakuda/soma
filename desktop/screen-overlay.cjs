@@ -19,6 +19,7 @@ function validOverlayModel(m) {
       Number.isFinite(m.radius) &&
       m.radius > 0 &&
       m.radius <= 0.06 &&
+      (m.aspect === undefined || (Number.isFinite(m.aspect) && m.aspect >= 1 / 1600 && m.aspect <= 1600)) &&
       Number.isFinite(m.font) &&
       m.font > 0 &&
       m.font <= 0.05 &&
@@ -31,7 +32,7 @@ function validOverlayModel(m) {
           text(n.label, 80) &&
           point(n) &&
           STATUS.includes(n.status) &&
-          (n.distance === null || (Number.isFinite(n.distance) && Math.abs(n.distance) <= 1e7)),
+          (n.distance === null || (Number.isFinite(n.distance) && n.distance >= 0 && n.distance <= 11e6)),
       ) &&
       Array.isArray(m.edges) &&
       m.edges.length <= 24 &&
@@ -46,7 +47,7 @@ function validOverlayModel(m) {
           (e.strike === undefined || point(e.strike)) &&
           (e.fromId === undefined || id(e.fromId)) &&
           (e.toId === undefined || id(e.toId)) &&
-          (e.weight === undefined || (Number.isFinite(e.weight) && e.weight >= 0 && e.weight <= 1e7)) &&
+          (e.weight === undefined || (Number.isFinite(e.weight) && e.weight >= 0 && e.weight <= 1e6)) &&
           TONE.includes(e.tone),
       ) &&
       // Ids key the drawing (and the 3D scene's objects), so each must be distinct.
@@ -83,8 +84,8 @@ function validOverlayModel(m) {
           id(m.lift.source) &&
           (m.lift.goal === null || id(m.lift.goal)) &&
           Number.isFinite(m.lift.maxDistance) &&
-          m.lift.maxDistance > 0 &&
-          m.lift.maxDistance <= 1e7 &&
+          m.lift.maxDistance >= 1e-300 &&
+          m.lift.maxDistance <= 11e6 &&
           ['cost', 'edges'].includes(m.lift.unit))) &&
       (m.caption === null ||
         (m.caption &&
@@ -98,18 +99,18 @@ function validOverlayModel(m) {
   );
 }
 
-/** Normalized bounding box of the drawn graph, padded by the ring radius. */
+/** Normalized source region including nodes and arc/cost centers, padded in capture pixels. */
 function overlayRegion(m) {
-  const xs = m.nodes.map((n) => n.x),
-    ys = m.nodes.map((n) => n.y),
-    pad = m.radius * 1.5;
-  const x = Math.max(0, Math.min(...xs) - pad),
-    y = Math.max(0, Math.min(...ys) - pad);
+  const xs = [...m.nodes.map((n) => n.x), ...m.edges.map((e) => e.center.x)],
+    ys = [...m.nodes.map((n) => n.y), ...m.edges.map((e) => e.center.y)],
+    padX = m.radius * 1.5, padY = padX / (m.aspect ?? 1);
+  const x = Math.max(0, Math.min(...xs) - padX),
+    y = Math.max(0, Math.min(...ys) - padY);
   return {
     x,
     y,
-    width: Math.min(1, Math.max(...xs) + pad) - x,
-    height: Math.min(1, Math.max(...ys) + pad) - y,
+    width: Math.min(1, Math.max(...xs) + padX) - x,
+    height: Math.min(1, Math.max(...ys) + padY) - y,
   };
 }
 
@@ -147,12 +148,13 @@ function regionMatches(nativeImage, originalDataUrl, freshDataUrl, region, toler
 /** Region of the slide that lifts as a sheet in 3D: the nodes and the drawn arcs, padded to
  * include the printed node circles. Mirrors sheetRegion in lift-geometry.mjs. */
 function sheetRegion(m) {
-  const xs = [...m.nodes.map((n) => n.x), ...m.edges.map((e) => e.center.x)],
-    ys = [...m.nodes.map((n) => n.y), ...m.edges.map((e) => e.center.y)];
-  const pad = m.radius * 1.8;
-  const x = Math.max(0, Math.min(...xs) - pad),
-    y = Math.max(0, Math.min(...ys) - pad);
-  return { x, y, width: Math.min(1, Math.max(...xs) + pad) - x, height: Math.min(1, Math.max(...ys) + pad) - y };
+  const nodePad = m.radius * 1.8;
+  const edgePad = m.aspect === undefined ? nodePad : Math.max(m.font * 1.5, m.radius * 0.6);
+  const aspect = m.aspect ?? 1;
+  const xs = [...m.nodes.flatMap((n) => [n.x - nodePad, n.x + nodePad]), ...m.edges.flatMap((e) => [e.center.x - edgePad, e.center.x + edgePad])];
+  const ys = [...m.nodes.flatMap((n) => [n.y - nodePad / aspect, n.y + nodePad / aspect]), ...m.edges.flatMap((e) => [e.center.y - edgePad / aspect, e.center.y + edgePad / aspect])];
+  const x = Math.max(0, Math.min(...xs)), y = Math.max(0, Math.min(...ys));
+  return { x, y, width: Math.min(1, Math.max(...xs)) - x, height: Math.min(1, Math.max(...ys)) - y };
 }
 
 /** Crops a capture to a normalized region, as a JPEG data URL for the 3D sheet. */

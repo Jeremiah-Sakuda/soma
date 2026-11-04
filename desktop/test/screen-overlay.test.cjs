@@ -98,6 +98,37 @@ test('overlay models are bounded to normalized shapes and known statuses', () =>
   assert.ok(r.x < 0.1 && r.x + r.width > 0.6 && r.width <= 1);
 });
 
+test('native numeric bounds accept the whole supported path and refuse out-of-range facts', () => {
+  const maximum = model({ ...LIFT, nodes: model().nodes.map((n, i) => ({ ...n, distance: i ? 11e6 : 0 })), lift: { ...LIFT.lift, maxDistance: 11e6 } });
+  assert.equal(validOverlayModel(maximum), true);
+  assert.equal(validOverlayModel({ ...maximum, nodes: maximum.nodes.map((n) => ({ ...n, distance: 11e6 + 1 })) }), false);
+  assert.equal(validOverlayModel({ ...maximum, nodes: maximum.nodes.map((n) => ({ ...n, distance: -1 })) }), false);
+  assert.equal(validOverlayModel({ ...maximum, lift: { ...maximum.lift, maxDistance: 11e6 + 1 } }), false);
+  assert.equal(validOverlayModel(model({ edges: [{ ...model().edges[0], weight: 1e6 }] })), true);
+  assert.equal(validOverlayModel(model({ edges: [{ ...model().edges[0], weight: 1e6 + 1 }] })), false);
+});
+
+test('freshness checks cover an arc cost outside the node box with capture-correct padding', () => {
+  const m = model({ aspect: 9 / 16 });
+  const region = overlayRegion(m), center = m.edges[0].center;
+  assert.ok(region.y < center.y && region.y + region.height > center.y);
+  assert.ok(Math.abs((center.y - region.y) * 900 - m.radius * 1600 * 1.5) < 1e-9);
+  const image = (changes = []) => {
+    const w = 100, h = 100, data = Buffer.alloc(w * h * 4, 200);
+    for (const rect of changes) for (let y = rect.y; y < rect.y + rect.height; y++)
+      for (let x = rect.x; x < rect.x + rect.width; x++) data.fill(0, (y * w + x) * 4, (y * w + x) * 4 + 3);
+    return { getSize: () => ({ width: w, height: h }), crop: (rect) => ({ toBitmap: () => {
+      const rows = [];
+      for (let y = rect.y; y < rect.y + rect.height; y++) rows.push(data.subarray((y * w + rect.x) * 4, (y * w + rect.x + rect.width) * 4));
+      return Buffer.concat(rows);
+    } }) };
+  };
+  const images = { original: image(), changedCost: image([{ x: 32, y: 38, width: 6, height: 4 }]), clock: image([{ x: 0, y: 0, width: 10, height: 10 }]) };
+  const nativeImage = { createFromDataURL: (key) => images[key] };
+  assert.equal(regionMatches(nativeImage, 'original', 'clock', region, 0), true);
+  assert.equal(regionMatches(nativeImage, 'original', 'changedCost', region, 0), false);
+});
+
 test('region comparison ignores changes outside the graph and rejects changes inside it', () => {
   const pixels = (changeInside, changeOutside) => {
     const w = 10, h = 10, data = Buffer.alloc(w * h * 4, 200);
@@ -123,7 +154,7 @@ test('the overlay is drawn only for the latest capture and only after its region
     await h.controller.screenOverlay({ id: 'other', model: model() });
     assert.equal(h.draws.filter((d) => d.type === 'graph').length, 0);
     await h.controller.screenOverlay({ id, model: model() });
-    assert.deepEqual(h.results.at(-1), { id, shown: true });
+    assert.deepEqual(h.results.at(-1), { id, shown: true, view: '2d' });
     assert.equal(h.draws.filter((d) => d.type === 'graph').length, 1);
     assert.equal(h.windows[0].forward, true);
     assert.ok(h.shortcuts.has('Escape'));
@@ -259,7 +290,7 @@ test('a typed compact question sends one clean full-screen snapshot without open
     assert.equal(h.controller.hasDrawing(), false);
     await h.controller.screenOverlay({ id: source.id, model: model() });
     assert.equal(h.controller.hasDrawing(), true);
-    assert.deepEqual(h.results.at(-1), { id: source.id, shown: true });
+    assert.deepEqual(h.results.at(-1), { id: source.id, shown: true, view: '2d' });
     assert.deepEqual(panel, [], 'the panel is never hidden or reopened in compact mode');
     assert.equal(excluded.length, 2, 'the snapshot and its check both leave Soma out');
   } finally {

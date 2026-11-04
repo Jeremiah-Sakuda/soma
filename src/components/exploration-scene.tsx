@@ -356,7 +356,9 @@ export function ExplorationScene({
       if (d?.id !== nativeId) return;
       setOnScreen(d.shown === true);
       setScreenNotice(
-        d.reason === 'changed'
+        d.reason === 'checking'
+          ? 'Checking that your slide is still the same before lifting…'
+          : d.reason === 'changed'
           ? 'Your slide changed, so Soma took the drawing off your screen. Capture again to draw on the new one.'
           : d.reason === 'moved'
             ? 'Your screen changed before Soma could draw on it, so the drawing stays here. Ask again to draw on what is there now.'

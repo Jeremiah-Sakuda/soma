@@ -3,8 +3,10 @@ import { checkExploration, createWeightedExample, createExampleExploration } fro
 import { createSpatialExample } from '../../src/lib/domain/spatial-example';
 import { spatialScene, spatialPresentation, supportsSpatial } from '../../src/lib/domain/spatial-exploration';
 import { spatialViewSchema, defaultSpatialView } from '../../src/lib/domain/spatial-schema';
-import { initialExplorationState, explorationExecution } from '../../src/lib/domain/exploration-view';
+import { initialExplorationState, explorationExecution, circuitSolution } from '../../src/lib/domain/exploration-view';
 import { arrangeExplanationPanels } from '../../src/lib/domain/exploration-layout';
+import { circuitSpec } from '../../src/lib/server/circuit-authoring';
+import { heroCircuit, heroCircuitLayout } from '../fixtures/hero-circuit';
 
 function candidate() {
   const spec = createSpatialExample();
@@ -60,6 +62,42 @@ describe('bounded spatial contracts', () => {
   });
 });
 describe('spatial projection and presentation', () => {
+  it.each([1e-8, 1e-200])('preserves relative graph heights when every cost is scaled by %s', (factor) => {
+    const original = createWeightedExample({ observationId: 'test-source', version: 1, region: null });
+    if (original.mode !== 'checked-dijkstra') throw new Error('fixture');
+    const scaled = structuredClone(original);
+    for (const edge of scaled.input.edges) edge.weight = (edge.weight ?? 1) * factor;
+    const finalScene = (spec: typeof original) => {
+      const state = initialExplorationState(spec);
+      const run = explorationExecution(spec, state)!;
+      return spatialScene(spec, { ...state, step: run.steps.length - 1 })!;
+    };
+    const before = finalScene(original), after = finalScene(scaled);
+    for (const object of before.objects) {
+      expect(after.objects.find((o) => o.id === object.id)!.position.y).toBeCloseTo(object.position.y, 10);
+    }
+    expect(after.objects.some((o) => o.position.y > 0.5)).toBe(true);
+  });
+  it.each([1, -1])('preserves circuit voltage differences at tiny source values with polarity %s', (sign) => {
+    const sceneFor = (volts: number) => {
+      const input = structuredClone(heroCircuit);
+      input.components.find((c) => c.id === 'V1')!.value = volts;
+      const spec = circuitSpec({ id: 'spatial-voltage-range', version: 1, observationId: 'test-source', sourceVersion: 1,
+        input, layout: heroCircuitLayout, uncertainty: [],
+        copy: { title: 'Bridge voltage', objective: 'Inspect the checked voltages.', assumptions: [], followups: [],
+          steps: [{ traceIndex: 3, caption: 'Inspect the circuit.', narration: 'Inspect the circuit.', highlightIds: [] }] },
+      });
+      const state = initialExplorationState(spec), solution = circuitSolution(spec, state)!;
+      expect(solution.status).toBe('solved');
+      return spatialScene(spec, { ...state, step: solution.steps.length - 1 })!;
+    };
+    const before = sceneFor(sign * 12), after = sceneFor(sign * 1e-12);
+    for (const object of before.objects) {
+      const y = after.objects.find((o) => o.id === object.id)!.position.y;
+      expect(Number.isFinite(y)).toBe(true);
+      expect(y).toBeCloseTo(object.position.y, 10);
+    }
+  });
   it('bounds tentative distance heights even when a large initial cost is later improved', () => {
     const spec = createWeightedExample({ observationId: 'test-source', version: 1, region: null });
     if (spec.mode !== 'checked-dijkstra') throw new Error('fixture');

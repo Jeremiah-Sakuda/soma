@@ -4,6 +4,7 @@ import { createSpatialPart } from '../../src/components/spatial-parts';
 import { placeSpatialLabel, spatialCameraDistance, type LabelRect } from '../../src/components/spatial-layout';
 import { spatialRenderStyles, spatialPanelSchema } from '../../src/lib/domain/spatial-schema';
 import { createSpatialExample } from '../../src/lib/domain/spatial-example';
+import { ENGINE } from '../../src/lib/domain/engine-kinematics';
 
 it.each(spatialRenderStyles)('%s builds finite, bounded, selectable geometry within a fixed mesh budget', (renderStyle) => {
   const object = { id: 'part', label: 'Part', description: 'Illustrative geometry', renderStyle, shape: 'box' as const, color: 'sage' as const, position: { x: 0, y: 0, z: 0 }, size: { x: 1, y: 1, z: 1 }, parentId: null, visible: true, highlighted: false, status: 'Visible' };
@@ -22,10 +23,13 @@ it.each(spatialRenderStyles)('%s builds finite, bounded, selectable geometry wit
     for (const mat of Array.isArray(child.material) ? child.material : [child.material]) materials.add(mat);
   });
   const bounds = new THREE.Box3().setFromObject(root);
-  for (const axis of ['x', 'y', 'z'] as const) {
-    expect(bounds.min[axis]).toBeGreaterThanOrEqual(-0.501);
-    expect(bounds.max[axis]).toBeLessThanOrEqual(0.501);
-    expect(bounds.max[axis] - bounds.min[axis]).toBeGreaterThan(0.1);
+  // The built-in engine's parts are laid out in engine units about the crank axis, so each
+  // stays inside the whole assembly's envelope rather than a unit cube.
+  const engine = renderStyle.startsWith('engine-');
+  for (const [i, axis] of (['x', 'y', 'z'] as const).entries()) {
+    expect(bounds.min[axis]).toBeGreaterThanOrEqual(engine ? ENGINE.envelope.min[i] - 2 * ENGINE.envelope.max[1] : -0.501);
+    expect(bounds.max[axis]).toBeLessThanOrEqual(engine ? 2 * ENGINE.envelope.max[1] : 0.501);
+    expect(bounds.max[axis] - bounds.min[axis]).toBeGreaterThan(engine ? 0.01 : 0.1);
   }
   expect(geometries.size).toBeGreaterThan(0); expect(geometries.size).toBeLessThanOrEqual(32);
   expect(triangles).toBeLessThan(18000);

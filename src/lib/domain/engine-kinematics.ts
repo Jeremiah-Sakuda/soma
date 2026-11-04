@@ -21,7 +21,7 @@ export const ENGINE = {
   stem: 1.05,
   camBase: 0.13,
   /** The whole assembly's extent at any angle, for framing and tidying. */
-  envelope: { min: [-1.25, -1.05, -0.95] as const, max: [1.25, 4.45, 0.75] as const },
+  envelope: { min: [-1.6, -1.05, -0.95] as const, max: [1.6, 4.45, 0.75] as const },
 } as const;
 
 export const engineRoles = [

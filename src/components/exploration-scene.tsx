@@ -15,6 +15,7 @@ import { useExplorationMotion } from './exploration-motion';
 import { diagramRoutes, pointOnDiagramRoute } from '@/lib/domain/diagram-routing';
 import { diagramLayout, diagramEdgeLabels } from '@/lib/domain/exploration-layout';
 import { routeCost } from '@/lib/domain/cost-probe';
+import type { DcObservation } from '@/lib/domain/dc-circuit';
 import { beatProgress } from '@/lib/domain/exploration-motion';
 import {
   runBfs,
@@ -33,13 +34,15 @@ export {
   type ExplorationViewState,
 } from '@/lib/domain/exploration-view';
 import {
-  captionIsGrounded,
   comparisonExecution,
+  graphExperimentActive,
   explorationExecution,
   explorationInputsChanged,
+  explorationStepCaption,
   explorationVisibleCaption,
   type ExplorationViewState,
 } from '@/lib/domain/exploration-view';
+import { defaultGraphControls } from '@/lib/domain/graph-state';
 const nodeName = (input: BfsInput, id: string | null) =>
   input.nodes.find((node) => node.id === id)?.label ?? 'None';
 
@@ -302,6 +305,7 @@ export function ExplorationScene({
   playing = false,
   spokenProgress = null,
   experiment,
+  circuitObservation,
   experimentInline = false,
   overlay,
   onBuildModel,
@@ -324,6 +328,7 @@ export function ExplorationScene({
     readingCheck?: { status: 'confirmed' | 'corrected' | 'disputed'; weighted?: boolean; nodes: number; edges: number; corrections: { edgeId: string; from: number; to: number }[]; disputes: string[] };
   };
   experiment?: ReactNode;
+  circuitObservation?: DcObservation;
   experimentInline?: boolean;
   spec: ExplorationSpec;
   state: ExplorationViewState;
@@ -412,7 +417,9 @@ export function ExplorationScene({
       if (d?.id !== nativeId) return;
       setOnScreen(d.shown === true);
       setScreenNotice(
-        d.reason === 'changed'
+        d.reason === 'checking'
+          ? 'Checking that your slide is still the same before lifting…'
+          : d.reason === 'changed'
           ? 'Your slide changed, so Soma took the drawing off your screen. Capture again to draw on the new one.'
           : d.reason === 'moved'
             ? 'Your screen changed before Soma could draw on it, so the drawing stays here. Ask again to draw on what is there now.'
@@ -454,6 +461,30 @@ export function ExplorationScene({
   const { selectedObjectId: _selected, spatial: _presentation, ...motionState } = state;
   const motionKey = JSON.stringify([spec.id, spec.version, motionState]);
   const progress = useExplorationMotion(motionKey, playing, spokenProgress);
+  const titleControlsKey = JSON.stringify([
+    state.start, state.goal, state.disabledEdgeIds, state.reversed, state.edgeWeights,
+  ]);
+  // Only scientific controls change these titles. Keep the display spec stable
+  // during camera/selection/step updates so the spatial canvas can reuse geometry.
+  const displaySpec = useMemo(() => {
+    if ((spec.mode !== 'checked-bfs' && spec.mode !== 'checked-dijkstra') ||
+      !explorationInputsChanged(spec, state)) return spec;
+    const primary = explorationExecution(spec, state);
+    const secondary = comparisonExecution(spec, state);
+    const panels = spec.scene.panels.map((panel) => {
+      if (panel.kind !== 'graph' && panel.kind !== 'frontier' && panel.kind !== 'state-table')
+        return panel;
+      const computed = panel.execution === 'comparison' ? secondary : primary;
+      if (!computed) return panel;
+      const title = panel.kind === 'graph'
+        ? `Current graph: start ${nodeName(computed.input, computed.input.start)}, ${computed.input.goal === null
+            ? 'all reachable nodes'
+            : `goal ${nodeName(computed.input, computed.input.goal)}`}`
+        : panel.kind === 'frontier' ? 'Current frontier' : 'Current node costs';
+      return { ...panel, title };
+    });
+    return { ...spec, scene: { ...spec.scene, panels } };
+  }, [spec, titleControlsKey]);
   if (spec.mode === 'clarify')
     return (
       <div className="exploration-clarify">
@@ -473,6 +504,7 @@ export function ExplorationScene({
         screenNotice={screenNotice}
         compact={compact}
         experiment={experiment}
+        circuitObservation={circuitObservation}
         toggleRef={toggleRef}
         lift={{ liftable, lifted, toggle: () => setView(lifted ? '2d' : '3d') }}
       />
@@ -482,6 +514,7 @@ export function ExplorationScene({
   const step = execution?.steps[Math.min(state.step, execution.steps.length - 1)],
     explanation = spec.steps[Math.min(state.explanationStep, spec.steps.length - 1)];
   const changed = explorationInputsChanged(spec, state),
+    experimenting = graphExperimentActive(spec, state),
     highlights = changed
       ? []
       : spec.mode === 'explanation'
@@ -495,17 +528,10 @@ export function ExplorationScene({
       )
     : undefined;
   const finalStep = Math.max(execution?.steps.length ?? 1, comparison?.steps.length ?? 1) - 1;
-  // The overlay follows the visible trace: use Muse's caption only when it was written for
-  // exactly this snapshot; otherwise the computed caption describes what is drawn.
-  const overlayStep =
-    spec.mode === 'explanation'
-      ? explanation
-      : spec.steps.find((item) => item.execution === 'primary' && item.executionStep === state.step);
-  const overlayCaption =
-    overlayStep?.caption &&
-    (spec.mode === 'explanation' || captionIsGrounded(overlayStep.caption, [execution, comparison]))
-      ? overlayStep.caption
-      : explorationVisibleCaption(spec, state);
+  // The source draws the primary checked snapshot, so its printed/native caption
+  // comes from that calculation. Authored explanations stay in the journal;
+  // finding their numbers elsewhere in a trace does not establish their meaning.
+  const overlayCaption = explorationStepCaption(spec, state);
   const select = (selectedObjectId: string) => onChange({ ...state, selectedObjectId });
   const graphInput =
     spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra' ? spec.input : null;
@@ -527,7 +553,7 @@ export function ExplorationScene({
   };
   // After a learner change, the authored captions describe the original graph; say only what was computed.
   const experimentCaption = (() => {
-    if (!changed || !execution || !graphInput) return null;
+    if (!experimenting || !execution || !graphInput) return null;
     const names = (ids: readonly string[]) => ids.map((id) => nodeName(graphInput, id)).join(' → ');
     const cut = graphInput.edges
       .filter((edge) => state.disabledEdgeIds.includes(edge.id))
@@ -550,7 +576,7 @@ export function ExplorationScene({
       ? `${lead}Checked route: ${names(execution.path)}, cost ${routeCost(execution.input, execution.path)}.`
       : `${lead}No route reaches ${nodeName(graphInput, state.goal)} now.`;
   })();
-  const panels = spec.scene.panels;
+  const panels = displaySpec.mode === 'clarify' ? spec.scene.panels : displaySpec.scene.panels;
   const heroDiagram =
     spec.mode === 'explanation' ? panels.find((panel) => panel.kind === 'diagram') : undefined;
   const graphs = panels.filter((panel) => panel.kind === 'graph');
@@ -577,7 +603,7 @@ export function ExplorationScene({
             <span role="status">
               Route: {computed.path?.map((id) => nodeName(computed.input, id)).join(' → ')} ·
               total cost {routeCost(computed.input, computed.path)} ·{' '}
-              {computed.path!.length - 1} edges
+              {computed.path!.length - 1} {computed.path!.length === 2 ? 'edge' : 'edges'}
             </span>
           ) : computed.modelId === 'dijkstra-nonnegative' ? (
             'Full route · lowest cost'
@@ -683,7 +709,7 @@ export function ExplorationScene({
             {overlay.readingCheck && (
               <p className={`source-reading-check is-${overlay.readingCheck.status}`} role="status">
                 {overlay.readingCheck.status === 'confirmed'
-                  ? `Muse Wonder read your slide independently and confirmed all ${overlay.readingCheck.nodes} nodes and ${overlay.readingCheck.edges} ${overlay.readingCheck.weighted === false ? 'connections' : 'weights'}.`
+                  ? `Muse Wonder checked Spark’s reading against your slide and confirmed all ${overlay.readingCheck.nodes} nodes and ${overlay.readingCheck.edges} ${overlay.readingCheck.weighted === false ? 'connections' : 'weights'}.`
                   : overlay.readingCheck.status === 'corrected'
                     ? `Muse Wonder caught ${overlay.readingCheck.corrections.length} misread weight${overlay.readingCheck.corrections.length === 1 ? '' : 's'}; Spark looked again and agreed: ${overlay.readingCheck.corrections
                         .map((c) => {
@@ -947,7 +973,12 @@ export function ExplorationScene({
       >
         {showSpatial ? (
           <>
-            <SpatialWorkspace spec={spec} state={state} onChange={onChange} which={comparison ? activeGraph : 'primary'} />
+            <SpatialWorkspace
+              spec={displaySpec}
+              state={state}
+              onChange={onChange}
+              which={comparison ? activeGraph : 'primary'}
+            />
             {experiment && !experimentInline && <div className="exploration-experiment-slot">{experiment}</div>}
             {panels.some((p) => !['graph', 'frontier', 'diagram', 'spatial'].includes(p.kind)) && <details className="exploration-supporting-panels">
               <summary>Steps, numbers & context</summary>
@@ -1116,6 +1147,21 @@ export function ExplorationScene({
                   ))}
                 </div>
               </details>
+            )}
+            {experimenting && (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => onChange({
+                  ...state,
+                  ...defaultGraphControls(spec.input),
+                  step: 0,
+                  explanationStep: 0,
+                  selectedObjectId: null,
+                })}
+              >
+                Back to the graph as read
+              </button>
             )}
             <details>
               <summary>Search state in a table</summary>

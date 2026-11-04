@@ -59,11 +59,11 @@ export function spatialScene(spec: ExplorationSpec, state: ExplorationViewState,
       z: ((p.y - Math.min(...zs)) / span(zs) - 0.5) * 4,
     });
     const low = Math.min(0, ...voltages),
-      range = Math.max(1e-9, Math.max(0, ...voltages) - low);
+      range = Math.max(0, ...voltages) - low || 1;
     return {
       title: panel.title, assurance: 'checked',
       checkedLabel: 'Checked circuit · spatial view',
-      heightNote: 'Height is each node’s checked voltage, so current runs downhill through every resistor and the battery lifts it back up. Nodes not yet revealed sit at the bottom.',
+      heightNote: 'Relative height represents each node’s checked voltage. Resistor current flows from higher to lower voltage. Nodes not yet revealed sit at the bottom.',
       objects: spec.input.nodes.map((node) => {
         const position = panel.positions.find((p) => p.nodeId === node.id)!;
         const v = solution.voltages[node.id], shown = step.revealedNodes.includes(node.id) && v !== null;
@@ -90,7 +90,7 @@ export function spatialScene(spec: ExplorationSpec, state: ExplorationViewState,
     const step = execution.steps[Math.min(state.step, execution.steps.length - 1)];
     // Tentative costs can be much larger than their eventual settled values.
     // One scale over the complete trace keeps every frame bounded and comparable.
-    const max = Math.max(1, ...execution.steps.flatMap((s) => Object.values(s.distances)).filter(Number.isFinite));
+    const max = Math.max(0, ...execution.steps.flatMap((s) => Object.values(s.distances)).filter(Number.isFinite)) || 1;
     const path = step.status === 'found' ? execution.path ?? [] : [];
     const input = which === 'comparison' ? spec.comparison!.input : spec.input;
     return {

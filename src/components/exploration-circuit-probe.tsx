@@ -28,7 +28,8 @@ export function ExplorationCircuitProbe({
   try {
     current = probeDcValue(input, state, probe.componentId, probe.observe, probe.condition, probe.rationale);
   } catch {
-    // Keep the saved result if the current experiment makes the probe unavailable.
+    // A saved boundary is not evidence for changed values that cannot be evaluated.
+    return <p className="meta">This experiment cannot be checked at the current component values. Adjust a value to try again.</p>;
   }
   const unit = DC_UNITS[part.kind];
   const name = (id: string) =>
@@ -63,8 +64,9 @@ export function ExplorationCircuitProbe({
     const c = input.components.find((x) => x.id === o.componentId)!;
     if (o.kind === 'power') return `Power in ${c.label}: ${circuitQuantity(solved.power[c.id], 'W')}`;
     const i = solved.currents[c.id];
-    // A tipping point that is not a terminating decimal leaves only rounding residue here.
-    if (Math.abs(i) < 1e-9) return `Current in ${c.label}: ${i === 0 ? 'exactly ' : ''}0 A`;
+    // Only an exact zero is zero. Small currents, including residue from a rounded
+    // non-terminating tipping value, retain their computed magnitude and direction.
+    if (i === 0) return `Current in ${c.label}: exactly 0 A`;
     const [a, b] = i > 0 ? [c.from, c.to] : [c.to, c.from];
     return `Current in ${c.label}: ${circuitQuantity(Math.abs(i), 'A')}, from ${name(a)} to ${name(b)}`;
   })();

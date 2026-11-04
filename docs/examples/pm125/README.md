@@ -1,6 +1,6 @@
 # Three independent review-and-improvement rounds
 
-User-authorized local refinement on the private `codex/spatial-exploration` branch. [Judges, exact rubric scores, findings and iteration records](JUDGING.md). [Reproducible truthful demonstration route](DEMO_ROUTE.md).
+User-authorized local refinement on the private `codex/spatial-exploration` branch. Judges, exact rubric scores, findings and iteration records (internal review, removed before publication). [Reproducible truthful demonstration route](DEMO_ROUTE.md).
 
 Three judges independently reviewed each revision against Impact30%, Meta tooling25%, Technical depth/execution20%, Demo25%. Their scores are subjective development feedback, not organizer scores, benchmarks or learner evidence. All three rounds resulted in implementation and executed verification. The final scores precede the third round's resulting fixes; no final acceptance was invented.
 

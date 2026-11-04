@@ -87,10 +87,14 @@ export async function POST(request: Request) {
       .safeParse(body);
     if (!action.success) throw new ExplorationError('invalid_request');
     if (action.data.action === 'recording') {
-      const parsed = z.strictObject({ action: z.literal('recording'), mechanism: z.boolean().optional() }).safeParse(body);
+      const parsed = z.strictObject({
+        action: z.literal('recording'),
+        mechanism: z.boolean().optional(),
+        subject: z.enum(['graph', 'circuit']).optional(),
+      }).refine((value) => !(value.mechanism && value.subject)).safeParse(body);
       if (!parsed.success)
         throw new ExplorationError('invalid_request');
-      return response(await explorationService.recording(principal, parsed.data.mechanism));
+      return response(await explorationService.recording(principal, parsed.data.mechanism, parsed.data.subject));
     }
     if (action.data.action === 'application')
       return response(await explorationService.application(principal, body));

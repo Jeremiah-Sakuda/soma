@@ -8,14 +8,16 @@ import { liftScene } from '@/lib/domain/scene-lift';
 import { SourceOverlay, type SourceGraphLayout } from './source-overlay';
 import { defaultSpatialView } from '@/lib/domain/spatial-schema';
 import { circuitOverlayModel } from '@/lib/domain/circuit-overlay-model';
-import { DC_UNITS, dcValueAllowed, type DcSolution } from '@/lib/domain/dc-circuit';
+import { DC_UNITS, dcValueAllowed, type DcObservation, type DcSolution } from '@/lib/domain/dc-circuit';
 import type { ExplorationSpec } from '@/lib/domain/exploration';
 import type { SourceOverlayModel } from '@/lib/domain/source-overlay-model';
 import type { SourceAnchor } from '@/lib/domain/source-grounding';
 import {
   captionIsGrounded,
   circuitCaption,
+  circuitObservationCaption,
   circuitQuantity,
+  circuitExactQuantity,
   circuitSolution,
   explorationInputsChanged,
   type ExplorationViewState,
@@ -143,6 +145,7 @@ export function ExplorationCircuitStage({
   screenNotice,
   compact,
   experiment,
+  circuitObservation,
   toggleRef,
   lift,
 }: {
@@ -157,6 +160,7 @@ export function ExplorationCircuitStage({
   screenNotice: string;
   compact: boolean;
   experiment?: ReactNode;
+  circuitObservation?: DcObservation;
   /** Receives the open/reconnect action for clicks on the companion's drawing. */
   toggleRef: MutableRefObject<(id: string) => void>;
 }) {
@@ -170,6 +174,7 @@ export function ExplorationCircuitStage({
     ? spec.steps.find((item) => item.execution === 'primary' && item.executionStep === state.step)
     : undefined;
   const computed = circuitCaption(solution, state.step);
+  const observed = changed && circuitObservation ? circuitObservationCaption(solution, circuitObservation) : null;
   // The experiment, described against the circuit as read, whenever one is set up.
   const experimenting = state.disabledEdgeIds.length > 0 || Object.keys(state.edgeWeights ?? {}).length > 0;
   const lead = experimenting
@@ -183,10 +188,11 @@ export function ExplorationCircuitStage({
         .filter(Boolean)
         .join(' ')
     : '';
-  const grounded = authored && captionIsGrounded(authored.caption, [], solution) ? authored.caption : null;
-  const computedLine = `${lead ? `${lead} ` : ''}${computed}`;
-  // The drawing carries Muse's sentence when every number in it is the solver's.
-  const caption = grounded ?? computedLine;
+  const authoredCaption = authored && captionIsGrounded(authored.caption, [], solution) ? authored.caption : null;
+  const computedLine = `${lead ? `${lead} ` : ''}${observed ?? computed}`;
+  // Printed/source/native facts always describe this calculation. Authored
+  // prose remains a separately labeled explanation, never a checked caption.
+  const caption = computedLine;
   const stepLabel =
     changed && experimenting ? 'Your experiment' : `${changed ? 'The circuit as read · ' : ''}Step ${Math.min(state.step, finalStep) + 1} of ${finalStep + 1}`;
   const layout = overlay?.layout;
@@ -280,6 +286,7 @@ export function ExplorationCircuitStage({
             {drawable && view === 'source' ? (
               <SourceOverlay
                 image={overlay!.image}
+                family="circuit"
                 build={(aspect) => {
                   const drawn = circuitOverlayModel({
                     layout: { nodes: layout!.nodes, components: layout!.components ?? [] },
@@ -337,7 +344,7 @@ export function ExplorationCircuitStage({
       <div className="exploration-caption" aria-live="polite">
         <span className="overline">{stepLabel}</span>
         <p>{solved ? computedLine : `${lead ? `${lead} ` : ''}${solution.reason}`}</p>
-        {grounded && <p className="exploration-authored-caption">Soma’s explanation: {grounded}</p>}
+        {authoredCaption && <p className="exploration-authored-caption">Soma’s explanation: {authoredCaption}</p>}
       </div>
       <details className="exploration-controls-disclosure" open={!compact}>
         <summary>Change the experiment</summary>
@@ -385,6 +392,7 @@ export function ExplorationCircuitStage({
           {solved && (
             <details>
               <summary>Checked values in a table</summary>
+              {observed && <p>{computed}</p>}
               <div className="exploration-table-scroll">
                 <table className="exploration-state-table circuit-readings">
                   <thead>
@@ -408,7 +416,7 @@ export function ExplorationCircuitStage({
                               ? 'open'
                               : `${value(solution.state.values[c.id] ?? c.value)} ${DC_UNITS[c.kind]}`}
                           </td>
-                          <td>{i === 0 ? '0 A' : `${circuitQuantity(Math.abs(i), 'A')}, ${node(a)} → ${node(b)}`}</td>
+                          <td>{i === 0 ? '0 A' : `${circuitExactQuantity(solution.exact.currents[c.id], i, 'A', true)}, ${node(a)} → ${node(b)}`}</td>
                           <td>
                             {solution.drops[c.id] === null
                               ? 'not fixed (its ends are cut apart)'
@@ -423,7 +431,7 @@ export function ExplorationCircuitStage({
                         <td colSpan={3}>
                           {solution.voltages[n.id] === null
                             ? 'Cut off from ground'
-                            : circuitQuantity(solution.voltages[n.id]!, 'V')}
+                            : circuitExactQuantity(solution.exact.voltages[n.id], solution.voltages[n.id]!, 'V')}
                           {n.id === spec.input.ground ? ' (ground)' : ''}
                         </td>
                       </tr>

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import sharp from 'sharp';
+import { readFileSync } from 'node:fs';
 import { snapNodesToDrawing } from '../../src/lib/server/node-snap';
+import recordedGraph from '../../src/lib/fixtures/recorded-graph.json';
 
 const W = 1600,
   H = 900;
@@ -66,4 +68,73 @@ describe('snapping robustness', () => {
       }
     }
   }, 30000);
+});
+
+describe('optional topology corroboration for farther circles', () => {
+  const edges = [['A', 'B'], ['A', 'C'], ['B', 'C'], ['B', 'D'], ['C', 'E'], ['D', 'E'], ['D', 'F'], ['E', 'F']];
+  const graph = { edges: edges.map(([from, to]) => ({ from, to })) };
+  const estimates = () => Object.entries(truth).map(([nodeId, [x, y]]) => ({
+    nodeId, x: (x + (nodeId === 'D' ? 70 : 1)) / W, y: (y + (nodeId === 'D' ? -20 : 1)) / H,
+  }));
+  async function drawing(options: { edges?: string[][]; curved?: boolean; rival?: boolean; letterO?: boolean } = {}) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="white"/>
+      ${(options.edges ?? edges).map(([a, b]) => options.curved && [a, b].includes('D')
+        ? `<path d="M ${truth[a].join(' ')} Q ${(truth[a][0] + truth[b][0]) / 2 + 90} ${(truth[a][1] + truth[b][1]) / 2 - 110} ${truth[b].join(' ')}" fill="none" stroke="#333" stroke-width="3"/>`
+        : `<line x1="${truth[a][0]}" y1="${truth[a][1]}" x2="${truth[b][0]}" y2="${truth[b][1]}" stroke="#333" stroke-width="3"/>`).join('')}
+      ${Object.entries(truth).map(([id, [x, y]]) => `<circle cx="${x}" cy="${y}" r="38" fill="white" stroke="#16365f" stroke-width="4"/><text x="${x}" y="${y + 13}" font-size="38" font-family="Arial" font-weight="700" text-anchor="middle" fill="#16365f">${id === 'D' && options.letterO ? 'O' : id}</text>`).join('')}
+      ${options.rival ? '<circle cx="760" cy="410" r="38" fill="white" stroke="#16365f" stroke-width="4"/>' : ''}
+    </svg>`;
+    return 'data:image/png;base64,' + (await sharp(Buffer.from(svg)).png().toBuffer()).toString('base64');
+  }
+
+  it('requires checked adjacency and straight pixel connections to move an otherwise rejected far node', async () => {
+    const start = estimates();
+    const image = await drawing();
+    const baseline = await snapNodesToDrawing(image, start);
+    expect(baseline.positions.find((p) => p.nodeId === 'D')).toEqual(start.find((p) => p.nodeId === 'D'));
+    const snapped = await snapNodesToDrawing(image, start, graph);
+    const d = snapped.positions.find((p) => p.nodeId === 'D')!;
+    expect(Math.hypot(d.x * W - truth.D[0], d.y * H - truth.D[1])).toBeLessThan(6);
+    expect(start).toEqual(estimates());
+  });
+
+  it.each(['unconnected O', 'one straight edge', 'curved edges', 'rival ring', 'narrow connection angle'] as const)(
+    'keeps a distant estimate when the pixels provide %s', async (caseName) => {
+      const noD = edges.filter((edge) => !edge.includes('D'));
+      const custom = caseName === 'narrow connection angle' ? [...noD, ['D', 'A'], ['D', 'B']] : undefined;
+      const image = await drawing({
+        edges: caseName === 'unconnected O' ? noD : caseName === 'one straight edge' ? [...noD, ['D', 'E']] : custom,
+        curved: caseName === 'curved edges', rival: caseName === 'rival ring', letterO: caseName === 'unconnected O',
+      });
+      const start = estimates();
+      const actualGraph = custom ? { edges: custom.map(([from, to]) => ({ from, to })) } : graph;
+      const snapped = await snapNodesToDrawing(image, start, actualGraph);
+      expect(snapped.positions.find((p) => p.nodeId === 'D')).toEqual(start.find((p) => p.nodeId === 'D'));
+    },
+  );
+
+  it('requires at least three reliable local anchors before using topology', async () => {
+    const start = estimates().filter((p) => ['B', 'D', 'E'].includes(p.nodeId))
+      .map((p) => p.nodeId === 'D' ? { ...p, x: (truth.D[0] + 85) / W } : p);
+    const image = await drawing();
+    const baseline = await snapNodesToDrawing(image, start);
+    expect(baseline.positions.find((p) => p.nodeId === 'D')).toEqual(start.find((p) => p.nodeId === 'D'));
+    const snapped = await snapNodesToDrawing(image, start, graph);
+    expect(snapped.positions.find((p) => p.nodeId === 'D')).toEqual(start.find((p) => p.nodeId === 'D'));
+  });
+
+  it('corrects the real captured D/F offsets from pixels without changing the recorded fixture', async () => {
+    const before = structuredClone(recordedGraph);
+    const start = recordedGraph.source.layout.nodes;
+    const image = 'data:image/png;base64,' + readFileSync('public/synthetic/recorded-lecture-14.png').toString('base64');
+    const baseline = await snapNodesToDrawing(image, start);
+    const snapped = await snapNodesToDrawing(image, start, recordedGraph.spec.input);
+    // Independent drawing coordinates from the original slide, used only as a test oracle.
+    for (const [id, x, y] of [['D', 663.33, 373.33], ['F', 855, 490]] as const) {
+      expect(baseline.positions.find((p) => p.nodeId === id)).toEqual(start.find((p) => p.nodeId === id));
+      const point = snapped.positions.find((p) => p.nodeId === id)!;
+      expect(Math.hypot(point.x * W - x, point.y * H - y)).toBeLessThan(3);
+    }
+    expect(recordedGraph).toEqual(before);
+  });
 });

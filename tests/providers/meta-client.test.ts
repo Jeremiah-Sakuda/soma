@@ -86,10 +86,40 @@ describe('bounded Meta Responses boundary', () => {
   it('never exposes provider error details and preserves any valid error-response usage', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => response({ error: { message: 'PRIVATE fixture key and source text' }, usage }, 429)));
     const error = await failure(requestMetaResponse(request()));
-    expect(error).toMatchObject({ code: 'http', usage, requestSent: true });
+    expect(error).toMatchObject({ code: 'http', httpStatus: 429, usage, requestSent: true });
     expect(JSON.stringify(error)).not.toContain('PRIVATE');
     vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('PRIVATE fixture network details'); }));
     expect(await failure(requestMetaResponse(request()))).toMatchObject({ code: 'network', usage: null, requestSent: true });
+  });
+
+  it.each([401, 503])('retains HTTP %s when the bounded error body is not JSON, without leaking its text or retrying', async status => {
+    const fetcher = vi.fn(async () => new Response('<html>PRIVATE provider error and source context</html>', { status }));
+    vi.stubGlobal('fetch', fetcher);
+    const error = await failure(requestMetaResponse(request()));
+    expect(error).toMatchObject({ code: 'http', httpStatus: status, usage: null, requestSent: true });
+    expect(`${error.message}${JSON.stringify(error)}`).not.toContain('PRIVATE');
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it('retains the HTTP status without weakening the error-body size bound', async () => {
+    let cancelled = false;
+    const stream = new ReadableStream({
+      start(controller) { controller.enqueue(new Uint8Array(META_MAX_RESPONSE_BYTES + 1)); },
+      cancel() { cancelled = true; },
+    });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(stream, { status: 502 })));
+    expect(await failure(requestMetaResponse(request()))).toMatchObject({ code: 'response_limit', httpStatus: 502, usage: null, requestSent: true });
+    expect(cancelled).toBe(true);
+  });
+
+  it('accepts only sanitized HTTP-status metadata and does not infer status from a body', async () => {
+    for (const value of [0, 99, 600, 503.5, NaN, '503' as unknown as number])
+      expect(new MetaClientError('http', null, true, value).httpStatus).toBeUndefined();
+    expect(new MetaClientError('http', null, true, 503).httpStatus).toBe(503);
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('503 PRIVATE malformed successful response')));
+    const error = await failure(requestMetaResponse(request()));
+    expect(error).toMatchObject({ code: 'response_invalid', usage: null, requestSent: true });
+    expect(error.httpStatus).toBeUndefined();
   });
 
   it('bounds streamed bodies even with absent or dishonest Content-Length', async () => {

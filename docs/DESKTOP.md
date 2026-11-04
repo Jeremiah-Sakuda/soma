@@ -4,7 +4,7 @@
 
 Enable **Point & ask**, hold **Control–Option–Space**, circle or point while speaking, then release. Soma joins a fresh display snapshot, normalized focus and transcript into the existing visual engine. Escape cancels; the old visual remains until a valid replacement arrives. [Behavior, privacy, checks and distribution status](POINT_AND_ASK.md). The existing **⌘⇧Space** path still captures a snapshot for review before asking.
 
-[Download 0.3.0](https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.3.0): Apple Silicon, Developer ID signed, Apple-notarized and stapled. Gatekeeper accepted the release. Archive checksum is attached to the release.
+[Download 0.4.0](https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.4.0) (November 3): Apple Silicon, Developer ID signed, Apple-notarized and stapled; Gatekeeper accepted it. It adds the checked search drawn over your screen, the compact bar and the 3D lift. Archive SHA-256 `4853088e8f1d3169b63d2b46bf70e92e0b08d5d1adfa664f085fa28c86aefe91`, also attached to the release. The earlier [0.3.0](https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.3.0) remains available.
 
 Use macOS Apple Silicon for the packaged companion. From this checkout, install with `npm ci --prefix desktop`, then `npm start --prefix desktop`. `npm run package --prefix desktop` creates an unsigned local package. Read `desktop/main.cjs` and `desktop/policy.cjs` for the actual menu labels and registered shortcut.
 

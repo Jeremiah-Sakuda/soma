@@ -1,5 +1,5 @@
 {
-  "description": "Retained Muse Wonder review from the PM132 live hero run on the original Lecture 14 slide (November 1, 2026). Wonder compared Spark's step captions with Soma's computed Dijkstra trace and asked for a revision; Spark repaired the steps and the next review approved. Model output only; no credentials or learner data.",
+  "description": "Retained Muse Wonder review from the PM132 live hero run on the original Lecture 14 slide (November 1, 2026). Wonder compared Spark's step captions with Soma's computed Dijkstra trace and asked for a revision; Spark repaired the steps and the next review approved. Model output only; no credentials or learner data. Note: the repaired steps Wonder then approved still skip E's settlement at 6, which comes before F at 7. The review is advisory; the route, costs and the drawing on the slide come from Soma's trace, which settles E.",
   "model": "muse-wonder-1.0",
   "verdict": "revise",
   "findings": [

@@ -142,6 +142,9 @@ describe('checked DC circuits (nodal analysis, exact fractions)', () => {
     expect(probe.criticalExact).toBe('51/7');
     expect(probe.verified).toBe(true);
     expect(probe.criticalValue).toBeCloseTo(51 / 7, 10);
+    const floating = probeDcValue(bridge(5), { open: ['R1', 'R2', 'R5'] }, 'R4', { kind: 'voltage', nodeId: 'L' }, 'zero');
+    expect(floating.note).toContain('no defined value');
+    expect(floating.cases).toEqual([]);
   });
 
   it('finds maximum power where the load matches the rest of the circuit', () => {
@@ -158,6 +161,74 @@ describe('checked DC circuits (nodal analysis, exact fractions)', () => {
     expect(probe).toMatchObject({ criticalValue: 4, verified: true });
     expect(probe.cases.find((c) => c.value === 4)?.observed).toBe(9);
     expect(() => probeDcValue(source, undefined, 'Rint', { kind: 'power', componentId: 'RL' }, 'maximum-power')).toThrow();
+  });
+
+  it('declines source-power probes instead of applying the resistor-only I²R relation', () => {
+    const input: DcInput = {
+      nodes: ['G', 'A'].map((id) => ({ id, label: id })),
+      ground: 'G',
+      components: [
+        { id: 'V1', label: 'V1', kind: 'voltage-source', from: 'G', to: 'A', value: 12 },
+        { id: 'R1', label: 'R1', kind: 'resistor', from: 'A', to: 'G', value: 4 },
+        { id: 'I1', label: 'I1', kind: 'current-source', from: 'G', to: 'A', value: 2 },
+      ],
+    };
+    // The current source's current is constant, but its power is -2·V1 and vanishes at V1=0.
+    expect(solveDc(input, { values: { V1: 0 } }).power.I1).toBe(0);
+    expect(solveDc(input, { values: { V1: 1 } }).power.I1).toBe(-2);
+    expect(() => probeDcValue(input, undefined, 'V1', { kind: 'power', componentId: 'I1' }, 'zero')).toThrow(/require a resistor/);
+    // A resistor's power does vanish at its zero-current point; keep that supported case.
+    expect(probeDcValue(bridge(5), undefined, 'R4', { kind: 'power', componentId: 'R5' }, 'zero'))
+      .toMatchObject({ criticalValue: 6, verified: true });
+  });
+
+  it('describes fixed-current load power as increasing rather than independent of resistance', () => {
+    const input: DcInput = {
+      nodes: ['G', 'A'].map((id) => ({ id, label: id })),
+      ground: 'G',
+      components: [
+        { id: 'I1', label: 'I1', kind: 'current-source', from: 'G', to: 'A', value: 2 },
+        { id: 'R1', label: 'R1', kind: 'resistor', from: 'A', to: 'G', value: 3 },
+      ],
+    };
+    const probe = probeDcValue(input, undefined, 'R1', { kind: 'power', componentId: 'R1' }, 'maximum-power');
+    expect(probe.criticalValue).toBeNull();
+    expect(probe.note).toContain('power rises with resistance');
+    expect(probe.cases.map((c) => c.observed)).toEqual([6, 12, 24]);
+    const zero = probeDcValue(input, undefined, 'R1', { kind: 'power', componentId: 'R1' }, 'zero');
+    expect(zero.note).toContain('No allowed value');
+    expect(zero.note).not.toContain('does not depend');
+  });
+
+  it('keeps representable extreme results finite and refuses overflow or lost nonzero quantities', () => {
+    const input = (voltage: number, resistance: number): DcInput => ({
+      nodes: ['G', 'A'].map((id) => ({ id, label: id })),
+      ground: 'G',
+      components: [
+        { id: 'V1', label: 'V1', kind: 'voltage-source', from: 'G', to: 'A', value: voltage },
+        { id: 'R1', label: 'R1', kind: 'resistor', from: 'A', to: 'G', value: resistance },
+      ],
+    });
+    const large = solveDc(input(100, 1e-300));
+    expect(large.status).toBe('solved');
+    expect(large.currents.R1 / 1e302).toBeCloseTo(1, 12);
+    expect(large.power.R1 / 1e304).toBeCloseTo(1, 12);
+    expect(large.checks).toEqual({ kcl: true, sources: true, power: true });
+    const subnormal = solveDc(input(1e-155, 1));
+    expect(subnormal.status).toBe('solved');
+    expect(subnormal.power.R1).toBeGreaterThan(0);
+    expect(subnormal.power.R1 / 1e-310).toBeCloseTo(1, 12);
+    for (const unsupported of [input(1e5, 1e-300), input(1e-170, 1)]) {
+      expect(dcInputSchema.safeParse(unsupported).success).toBe(true);
+      const solved = solveDc(unsupported);
+      expect(solved.status).toBe('unsolvable');
+      expect(solved.reason).toContain('supported numeric range');
+      expect(solved.currents).toEqual({});
+      expect(solved.power).toEqual({});
+      expect(solved.checks).toEqual({ kcl: false, sources: false, power: false });
+    }
+    expect(() => probeDcValue(input(1e5, 1e-300), undefined, 'V1', { kind: 'power', componentId: 'R1' }, 'zero'))
+      .toThrow(/supported numeric range/);
   });
 
   it('opens and shorts parts without changing the circuit as read', () => {

@@ -216,7 +216,8 @@ export function ExplorationWeightedStage({
       {step.status === 'found' && (
         <p className="exploration-stage-route">
           Route: {execution.path?.map(name).join(' → ')} · total cost{' '}
-          {routeCost(execution.input, execution.path)} · {execution.path!.length - 1} edges
+          {routeCost(execution.input, execution.path)} · {execution.path!.length - 1}{' '}
+          {execution.path!.length === 2 ? 'edge' : 'edges'}
         </p>
       )}
       <details className="exploration-graph-details">

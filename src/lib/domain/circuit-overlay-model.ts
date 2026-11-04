@@ -222,6 +222,7 @@ export function circuitOverlayModel({
   return {
     final: finished,
     radius: r / W,
+    aspect,
     font: font / W,
     nodes: modelNodes,
     edges,

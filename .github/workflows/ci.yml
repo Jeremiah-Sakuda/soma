@@ -37,8 +37,9 @@ jobs:
       - name: Verify isolated credential browser with adversarial synthetic pages
         run: SOMA_CREDENTIAL_BROWSER_TESTS=true npx vitest run tests/credential-runner/browser.test.ts
       - run: npm run test:e2e
+      # Retain failed-attempt traces even when Playwright's retry succeeds.
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: ${{ !cancelled() }}
         with:
           name: browser-test-results
           path: test-results/

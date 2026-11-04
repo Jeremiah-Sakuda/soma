@@ -15,6 +15,31 @@ function completed(name:string,args:unknown){return{status:'completed',tools:[{t
 beforeEach(async()=>{directory=mkdtempSync(join(tmpdir(),'soma-explore-route-'));vi.stubEnv('SOMA_PERSISTENCE','local-synthetic');vi.stubEnv('SOMA_EXPLORATION_DB_PATH',join(directory,'explore.sqlite'));vi.stubEnv('SOMA_BUDGET_DB_PATH',join(directory,'budget.sqlite'));vi.stubEnv('SOMA_LIVE_INFERENCE','true');vi.stubEnv('MODEL_API_KEY','synthetic-key-never-used-for-network');vi.stubEnv('META_ALLOCATION_USD','150');vi.stubEnv('META_APP_SPEND_CAP_USD','5');vi.stubEnv('VERCEL','');cookie='';provider.request.mockReset();provider.request.mockImplementation(async input=>{if(!input.instructions.includes('Required spec id=')){const spec=createExampleExploration();if(spec.mode!=='checked-bfs')throw new Error();return completed('inspect_source',{summary:'Original synthetic BFS graph',uncertainty:[],graph:spec.input});}const context=JSON.parse(input.input[0].content);const match=/Required spec id=([^ ]+) and version=(\d+)/.exec(input.instructions)!;const spec=createExampleExploration({observationId:context.source.observationId,version:context.source.version,region:null});spec.id=match[1];spec.version=Number(match[2]);return completed('compose_exploration',{spec});});const initial=await GET(request('GET'));expect(initial.status).toBe(200);cookie=initial.headers.get('set-cookie')!.split(';')[0];});
 afterEach(()=>{closeExplorationStore();vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});});
 describe('exploration HTTP ownership and complete route pipeline',()=>{
+ it('opens a selected recorded subject as an owned editable copy without provider calls', async () => {
+   const response = await POST(request('POST', { action: 'recording', subject: 'graph' }));
+   expect(response.status).toBe(200);
+   const { artifact } = await response.json();
+   expect(artifact.recording).toBeDefined();
+   expect(artifact.generation.mode).toBe('live');
+   const state = { ...artifact.state, step: 1 };
+   expect((await PATCH(request('PATCH', { action: 'save', artifactId: artifact.id, version: 1, state }))).status).toBe(200);
+   const reopened = await (await GET(request('GET', undefined, { url: `http://localhost:3000/api/explore?artifactId=${artifact.id}` }))).json();
+   expect(reopened.active.state).toEqual(state);
+   expect(reopened.active.generation).toEqual(artifact.generation);
+   const other = await GET(request('GET', undefined, { cookie: '' }));
+   const otherCookie = other.headers.get('set-cookie')!.split(';')[0];
+   expect((await GET(request('GET', undefined, { cookie: otherCookie, url: `http://localhost:3000/api/explore?artifactId=${artifact.id}` }))).status).toBe(404);
+   expect(provider.request).not.toHaveBeenCalled();
+ });
+ it('rejects unknown or ambiguous recording selectors before provider or artifact work', async () => {
+   for (const body of [
+     { action: 'recording', subject: 'unknown' },
+     { action: 'recording', subject: 'graph', mechanism: true },
+     { action: 'recording', subject: 'circuit', fixturePath: '/private/source' },
+   ]) expect((await POST(request('POST', body))).status).toBe(400);
+   expect((await (await GET(request('GET'))).json()).artifacts).toEqual([]);
+   expect(provider.request).not.toHaveBeenCalled();
+ });
  it('establishes a private cookie and creates a labeled original example without provider spend',async()=>{const initial=await GET(request('GET'));expect(initial.headers.get('cache-control')).toBe('private, no-store');expect(cookie).toMatch(/^soma_explore=[a-f0-9]{64}$/);const response=await POST(request('POST',{action:'example'}));const data=await response.json();expect(response.status).toBe(200);expect(data.artifact.generation.mode).toBe('prepared-example');expect(data.artifact.generation.costUsd).toBe(0);expect(provider.request).not.toHaveBeenCalled();});
  it('generates, saves modified interaction state and resumes the exact scene through public handlers',async()=>{const response=await POST(request('POST',{action:'generate',requestId:randomUUID(),question:'Why is A next?',source:{kind:'example',label:'Original example',capturedAt:new Date().toISOString()}}));expect(response.status).toBe(200);const {artifact}=await response.json();expect(artifact.generation.mode).toBe('live');expect(provider.request).toHaveBeenCalledTimes(2);const state={...artifact.state,step:1,start:'b',goal:'x',reversed:true,selectedObjectId:'b'};const saved=await PATCH(request('PATCH',{action:'save',artifactId:artifact.id,version:1,state}));expect(saved.status).toBe(200);const resumed=await GET(request('GET',undefined,{url:`http://localhost:3000/api/explore?artifactId=${artifact.id}`}));const body=await resumed.json();expect(body.active.state).toEqual(state);expect(body.active.spec).toEqual(artifact.spec);});
  it('rejects cross-origin mutation, missing cookies, and invalid account sessions without a guest downgrade',async()=>{expect((await POST(request('POST',{action:'example'},{origin:'https://attacker.invalid'}))).status).toBe(403);expect((await POST(request('POST',{action:'example'},{cookie:''}))).status).toBe(401);const invalid=await GET(request('GET',undefined,{cookie:'soma_account=invalid; '+cookie}));expect(invalid.status).toBe(401);expect((await invalid.json()).code).toBe('account_required');expect(provider.request).not.toHaveBeenCalled();});

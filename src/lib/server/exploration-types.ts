@@ -4,6 +4,7 @@ import type { PointFocus } from '../domain/point-context';
 import type { ExplorationApplication } from '../domain/exploration-application';
 import type { CostProbe } from '../domain/cost-probe';
 import type { DcProbe } from '../domain/dc-circuit';
+import type { CircuitReadingCheck } from './circuit-reading-check';
 import type { ExplorationPrediction } from '../domain/exploration-prediction';
 import type { CheckedExploration } from '../domain/exploration';
 import type { VerifiedAccount } from './account';
@@ -15,6 +16,14 @@ export type ExplorationPrincipal = {
   generation: string;
   key: string;
   account?: VerifiedAccount;
+};
+export type PublicDemoImage = '/synthetic/recorded-detour.png' | '/synthetic/recorded-mechanism.png' | '/synthetic/recorded-lecture-14.png' | '/synthetic/recorded-lecture-9.png';
+export type RecordedPresentation = {
+  kind: 'circuit-drawing-alignment-v1' | 'graph-drawing-alignment-v1';
+  sourceImageSha256: string;
+  layout: NonNullable<ExplorationSource['layout']>;
+  snappedNodes: number;
+  refinedParts: number;
 };
 export type ExplorationSource = {
   observationId: string;
@@ -43,6 +52,9 @@ export type ExplorationSource = {
     corrections: { edgeId: string; from: number; to: number }[];
     disputes: string[];
   };
+  circuitReadingCheck?: CircuitReadingCheck;
+  /** Server-assigned original public demo material, never a private uploaded image. */
+  publicDemo?: { image: PublicDemoImage; presentation?: RecordedPresentation };
   change?: SourceChange & {
     fromObservationId: string;
     fromVersion: number;
@@ -65,10 +77,12 @@ export type ExplorationAudit = {
     | 'review-approved'
     | 'review-rejected'
     | 'review-incomplete-retried'
+    | 'review-transport-retried'
     | 'review-format-retried'
     | 'source-detail-requested'
     | 'source-locations-omitted'
     | 'neighbor-order-completed'
+    | 'source-ids-renamed'
     | 'graph-layout-from-source'
     | 'graph-located'
     | 'source-compared'
@@ -113,7 +127,9 @@ export type ExplorationArtifact = CheckedExploration & {
   recording?: {
     id: string;
     generatedAt: string;
-    sourceImage: '/synthetic/recorded-detour.png' | '/synthetic/recorded-mechanism.png';
+    sourceImage: PublicDemoImage;
+    /** Current deterministic display alignment, separate from the model's original layout. */
+    presentation?: RecordedPresentation;
   };
   practiceOrigin?: {
     applicationId: string;

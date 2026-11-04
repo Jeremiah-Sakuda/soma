@@ -272,8 +272,9 @@ export const explorationStore: ExplorationStore = {
         applyLimits(quotaValue, principal, options, expired);
         change(state);
         state.revision++;
-        serialize(state);
-        tx.set(ref, { state, expiresAt: new Date(state.expiresAt) });
+        // Store exactly what the local store stores and the size check measured: JSON drops an
+        // undefined field, which Firestore would otherwise reject outright.
+        tx.set(ref, { state: JSON.parse(serialize(state)), expiresAt: new Date(state.expiresAt) });
         tx.set(quota, { ...quotaValue, expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) });
         return state;
       });

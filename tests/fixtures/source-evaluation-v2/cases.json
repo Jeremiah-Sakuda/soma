@@ -1,0 +1,854 @@
+[
+ {
+  "id": "circuit-series-parallel-kohm",
+  "subject": "circuit",
+  "question": "How much current flows through R3?",
+  "expected": {
+   "outcome": "checked-circuit",
+   "nodes": [
+    "A",
+    "B",
+    "D"
+   ],
+   "ground": "D",
+   "components": [
+    {
+     "kind": "voltage-source",
+     "from": "D",
+     "to": "A",
+     "value": 9
+    },
+    {
+     "label": "R1",
+     "kind": "resistor",
+     "ends": [
+      "A",
+      "B"
+     ],
+     "value": 1000
+    },
+    {
+     "label": "R2",
+     "kind": "resistor",
+     "ends": [
+      "B",
+      "D"
+     ],
+     "value": 2200
+    },
+    {
+     "label": "R3",
+     "kind": "resistor",
+     "ends": [
+      "B",
+      "D"
+     ],
+     "value": 3300
+    }
+   ]
+  }
+ },
+ {
+  "id": "circuit-two-sources",
+  "subject": "circuit",
+  "question": "Which way does current flow through R3, and how much?",
+  "expected": {
+   "outcome": "checked-circuit",
+   "nodes": [
+    "A",
+    "B",
+    "C",
+    "D"
+   ],
+   "ground": "D",
+   "components": [
+    {
+     "kind": "voltage-source",
+     "from": "D",
+     "to": "A",
+     "value": 12
+    },
+    {
+     "kind": "voltage-source",
+     "from": "D",
+     "to": "C",
+     "value": 6
+    },
+    {
+     "label": "R1",
+     "kind": "resistor",
+     "ends": [
+      "A",
+      "B"
+     ],
+     "value": 4
+    },
+    {
+     "label": "R2",
+     "kind": "resistor",
+     "ends": [
+      "B",
+      "C"
+     ],
+     "value": 6
+    },
+    {
+     "label": "R3",
+     "kind": "resistor",
+     "ends": [
+      "B",
+      "D"
+     ],
+     "value": 3
+    }
+   ]
+  }
+ },
+ {
+  "id": "circuit-current-source-ma",
+  "subject": "circuit",
+  "question": "What is the voltage at A?",
+  "expected": {
+   "outcome": "checked-circuit",
+   "nodes": [
+    "A",
+    "B",
+    "D"
+   ],
+   "ground": "D",
+   "components": [
+    {
+     "kind": "current-source",
+     "from": "D",
+     "to": "A",
+     "value": 0.005
+    },
+    {
+     "label": "R1",
+     "kind": "resistor",
+     "ends": [
+      "A",
+      "B"
+     ],
+     "value": 2000
+    },
+    {
+     "label": "R2",
+     "kind": "resistor",
+     "ends": [
+      "A",
+      "D"
+     ],
+     "value": 1000
+    },
+    {
+     "label": "R3",
+     "kind": "resistor",
+     "ends": [
+      "B",
+      "D"
+     ],
+     "value": 3000
+    }
+   ]
+  }
+ },
+ {
+  "id": "circuit-ladder-unmarked-ground",
+  "subject": "circuit",
+  "question": "How much current reaches R6?",
+  "expected": {
+   "outcome": "checked-circuit",
+   "nodes": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E"
+   ],
+   "ground": "E",
+   "components": [
+    {
+     "kind": "voltage-source",
+     "from": "E",
+     "to": "A",
+     "value": 10
+    },
+    {
+     "label": "R1",
+     "kind": "resistor",
+     "ends": [
+      "A",
+      "B"
+     ],
+     "value": 10
+    },
+    {
+     "label": "R2",
+     "kind": "resistor",
+     "ends": [
+      "B",
+      "E"
+     ],
+     "value": 20
+    },
+    {
+     "label": "R3",
+     "kind": "resistor",
+     "ends": [
+      "B",
+      "C"
+     ],
+     "value": 10
+    },
+    {
+     "label": "R4",
+     "kind": "resistor",
+     "ends": [
+      "C",
+      "E"
+     ],
+     "value": 20
+    },
+    {
+     "label": "R5",
+     "kind": "resistor",
+     "ends": [
+      "C",
+      "D"
+     ],
+     "value": 10
+    },
+    {
+     "label": "R6",
+     "kind": "resistor",
+     "ends": [
+      "D",
+      "E"
+     ],
+     "value": 20
+    }
+   ]
+  }
+ },
+ {
+  "id": "circuit-decimal-mesh",
+  "subject": "circuit",
+  "question": "What current flows through R3?",
+  "expected": {
+   "outcome": "checked-circuit",
+   "nodes": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F"
+   ],
+   "ground": "D",
+   "components": [
+    {
+     "kind": "voltage-source",
+     "from": "D",
+     "to": "A",
+     "value": 24
+    },
+    {
+     "label": "R1",
+     "kind": "resistor",
+     "ends": [
+      "A",
+      "B"
+     ],
+     "value": 1.5
+    },
+    {
+     "label": "R2",
+     "kind": "resistor",
+     "ends": [
+      "B",
+      "C"
+     ],
+     "value": 4.7
+    },
+    {
+     "label": "R3",
+     "kind": "resistor",
+     "ends": [
+      "B",
+      "E"
+     ],
+     "value": 10
+    },
+    {
+     "label": "R4",
+     "kind": "resistor",
+     "ends": [
+      "C",
+      "F"
+     ],
+     "value": 6.8
+    },
+    {
+     "label": "R5",
+     "kind": "resistor",
+     "ends": [
+      "E",
+      "F"
+     ],
+     "value": 3.3
+    },
+    {
+     "label": "R6",
+     "kind": "resistor",
+     "ends": [
+      "D",
+      "E"
+     ],
+     "value": 2.2
+    }
+   ]
+  }
+ },
+ {
+  "id": "circuit-ground-on-plus",
+  "subject": "circuit",
+  "question": "What is the voltage at A?",
+  "expected": {
+   "outcome": "checked-circuit",
+   "nodes": [
+    "A",
+    "B",
+    "C",
+    "D"
+   ],
+   "ground": "D",
+   "components": [
+    {
+     "kind": "voltage-source",
+     "from": "A",
+     "to": "D",
+     "value": 15
+    },
+    {
+     "label": "R1",
+     "kind": "resistor",
+     "ends": [
+      "A",
+      "B"
+     ],
+     "value": 5
+    },
+    {
+     "label": "R2",
+     "kind": "resistor",
+     "ends": [
+      "B",
+      "D"
+     ],
+     "value": 10
+    },
+    {
+     "label": "R3",
+     "kind": "resistor",
+     "ends": [
+      "B",
+      "C"
+     ],
+     "value": 2
+    },
+    {
+     "label": "R4",
+     "kind": "resistor",
+     "ends": [
+      "C",
+      "D"
+     ],
+     "value": 8
+    }
+   ]
+  }
+ },
+ {
+  "id": "circuit-rc-declined",
+  "subject": "circuit",
+  "question": "How does the capacitor voltage change after the switch closes?",
+  "expected": {
+   "outcome": "declined"
+  }
+ },
+ {
+  "id": "graph-undirected-8",
+  "subject": "graph",
+  "question": "Show me how Dijkstra finds the shortest path on this slide.",
+  "expected": {
+   "algorithm": "dijkstra",
+   "directed": false,
+   "start": "A",
+   "goal": "H",
+   "nodes": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H"
+   ],
+   "edges": [
+    [
+     "A",
+     "B",
+     4
+    ],
+    [
+     "A",
+     "C",
+     2
+    ],
+    [
+     "B",
+     "C",
+     5
+    ],
+    [
+     "B",
+     "D",
+     10
+    ],
+    [
+     "C",
+     "D",
+     3
+    ],
+    [
+     "B",
+     "E",
+     8
+    ],
+    [
+     "D",
+     "E",
+     6
+    ],
+    [
+     "D",
+     "F",
+     8
+    ],
+    [
+     "C",
+     "F",
+     12
+    ],
+    [
+     "E",
+     "G",
+     5
+    ],
+    [
+     "F",
+     "G",
+     2
+    ],
+    [
+     "G",
+     "H",
+     3
+    ],
+    [
+     "E",
+     "H",
+     14
+    ]
+   ]
+  }
+ },
+ {
+  "id": "graph-directed-7",
+  "subject": "graph",
+  "question": "Show me the shortest path from S to T and how Dijkstra finds it.",
+  "expected": {
+   "algorithm": "dijkstra",
+   "directed": true,
+   "start": "S",
+   "goal": "T",
+   "nodes": [
+    "S",
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "T"
+   ],
+   "edges": [
+    [
+     "S",
+     "A",
+     3
+    ],
+    [
+     "S",
+     "B",
+     6
+    ],
+    [
+     "A",
+     "B",
+     2
+    ],
+    [
+     "A",
+     "C",
+     7
+    ],
+    [
+     "B",
+     "C",
+     3
+    ],
+    [
+     "A",
+     "D",
+     9
+    ],
+    [
+     "C",
+     "D",
+     2
+    ],
+    [
+     "C",
+     "E",
+     6
+    ],
+    [
+     "B",
+     "E",
+     11
+    ],
+    [
+     "D",
+     "E",
+     3
+    ],
+    [
+     "D",
+     "T",
+     8
+    ],
+    [
+     "E",
+     "T",
+     2
+    ]
+   ]
+  }
+ },
+ {
+  "id": "graph-decimal-10",
+  "subject": "graph",
+  "question": "What is the cheapest route from A to J?",
+  "expected": {
+   "algorithm": "dijkstra",
+   "directed": false,
+   "start": "A",
+   "goal": "J",
+   "nodes": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J"
+   ],
+   "edges": [
+    [
+     "A",
+     "B",
+     2.5
+    ],
+    [
+     "A",
+     "C",
+     1.5
+    ],
+    [
+     "B",
+     "D",
+     3
+    ],
+    [
+     "C",
+     "D",
+     2.5
+    ],
+    [
+     "B",
+     "E",
+     4.5
+    ],
+    [
+     "D",
+     "E",
+     1.5
+    ],
+    [
+     "D",
+     "F",
+     3.5
+    ],
+    [
+     "C",
+     "F",
+     6.5
+    ],
+    [
+     "E",
+     "G",
+     2
+    ],
+    [
+     "F",
+     "G",
+     1
+    ],
+    [
+     "E",
+     "H",
+     5.5
+    ],
+    [
+     "G",
+     "H",
+     2.5
+    ],
+    [
+     "G",
+     "I",
+     3
+    ],
+    [
+     "F",
+     "I",
+     4
+    ],
+    [
+     "H",
+     "J",
+     2
+    ],
+    [
+     "I",
+     "J",
+     3.5
+    ]
+   ]
+  }
+ },
+ {
+  "id": "graph-bfs-9",
+  "subject": "graph",
+  "question": "Walk me through the breadth-first search on this slide.",
+  "expected": {
+   "algorithm": "bfs",
+   "directed": false,
+   "start": "A",
+   "goal": "I",
+   "nodes": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I"
+   ],
+   "edges": [
+    [
+     "A",
+     "B"
+    ],
+    [
+     "A",
+     "C"
+    ],
+    [
+     "A",
+     "D"
+    ],
+    [
+     "B",
+     "E"
+    ],
+    [
+     "C",
+     "F"
+    ],
+    [
+     "D",
+     "G"
+    ],
+    [
+     "E",
+     "F"
+    ],
+    [
+     "F",
+     "G"
+    ],
+    [
+     "E",
+     "H"
+    ],
+    [
+     "F",
+     "H"
+    ],
+    [
+     "G",
+     "I"
+    ],
+    [
+     "H",
+     "I"
+    ]
+   ]
+  }
+ },
+ {
+  "id": "graph-undirected-12",
+  "subject": "graph",
+  "question": "Show me how Dijkstra finds the shortest path from A to L.",
+  "expected": {
+   "algorithm": "dijkstra",
+   "directed": false,
+   "start": "A",
+   "goal": "L",
+   "nodes": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J",
+    "K",
+    "L"
+   ],
+   "edges": [
+    [
+     "A",
+     "B",
+     3
+    ],
+    [
+     "A",
+     "C",
+     5
+    ],
+    [
+     "A",
+     "D",
+     4
+    ],
+    [
+     "B",
+     "C",
+     1
+    ],
+    [
+     "C",
+     "D",
+     2
+    ],
+    [
+     "B",
+     "E",
+     6
+    ],
+    [
+     "C",
+     "F",
+     4
+    ],
+    [
+     "D",
+     "G",
+     8
+    ],
+    [
+     "E",
+     "F",
+     2
+    ],
+    [
+     "F",
+     "G",
+     3
+    ],
+    [
+     "E",
+     "H",
+     5
+    ],
+    [
+     "F",
+     "I",
+     6
+    ],
+    [
+     "G",
+     "J",
+     2
+    ],
+    [
+     "H",
+     "I",
+     1
+    ],
+    [
+     "I",
+     "J",
+     4
+    ],
+    [
+     "H",
+     "K",
+     3
+    ],
+    [
+     "I",
+     "K",
+     5
+    ],
+    [
+     "I",
+     "L",
+     7
+    ],
+    [
+     "J",
+     "L",
+     3
+    ],
+    [
+     "K",
+     "L",
+     4
+    ]
+   ]
+  }
+ }
+]

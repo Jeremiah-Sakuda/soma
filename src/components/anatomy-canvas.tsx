@@ -70,7 +70,7 @@ export default function AnatomyCanvas({ scene, view, selected, onSelect, onView 
   const selectedPart = parts.find(p => p.object.id === selected);
   const rotate = (azimuth: number, elevation: number) => onView({ azimuth: ((azimuth + 180) % 360 + 360) % 360 - 180, elevation: Math.max(0, Math.min(85, elevation)) });
   return <div ref={root} className="anatomy-canvas" data-rendered="true" data-object-count={parts.length}>
-    <div className="anatomy-plate-head" aria-hidden="true"><span>FIG. 01 <span className="anatomy-plate-divider">/</span> {scene.assurance === 'checked' ? 'SEARCH STATE' : 'INSIDE THE MECHANISM'}</span><span>ANATOMY</span></div>
+    <div className="anatomy-plate-head" aria-hidden="true"><span>FIG. 01 <span className="anatomy-plate-divider">/</span> {scene.assurance === 'checked' ? 'CHECKED STATE' : 'INSIDE THE MECHANISM'}</span><span>ANATOMY</span></div>
     <svg viewBox={`0 0 ${size.width} ${size.height}`} role="img" aria-label={`${scene.title}, Anatomy isometric illustration. Select named parts below; camera buttons rotate the drawing.`}
       onPointerDown={e => { if (e.button !== 0) return; drag.current = { x: e.clientX, y: e.clientY, azimuth: view.azimuth, elevation: view.elevation, moved: false, objectId: (e.target as Element).closest('[data-anatomy-object]')?.getAttribute('data-anatomy-object') ?? null, last: 0 }; e.currentTarget.setPointerCapture(e.pointerId); }}
       onPointerMove={e => { const d = drag.current; if (!d) return; if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 6 && !d.moved) return; d.moved = true; if (performance.now() - d.last > 32) { d.last = performance.now(); rotate(d.azimuth - (e.clientX - d.x) * .4, d.elevation + (e.clientY - d.y) * .3); } }}

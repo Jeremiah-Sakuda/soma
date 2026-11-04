@@ -333,11 +333,21 @@ window.somaPointOverlay.onDraw((event) => {
     clearGraph();
     hideBuddy();
     typedText = '';
+    typing++;
     seen = new Set();
     if (graphHover) window.somaPointOverlay.hover((graphHover = false));
     return;
   }
+  // Pointing at new context replaces the graph. Do not leave a live 3D canvas or
+  // its caption above the new selection, even if no separate clear event arrived.
+  window.SomaLift?.dispose();
+  document.body.classList.remove('lifted');
   clearGraph();
+  hideBuddy();
+  seen = new Set();
+  typedText = '';
+  typing++;
+  if (graphHover) window.somaPointOverlay.hover((graphHover = false));
   hint.style.display = '';
   hint.textContent = event.text;
   document.getElementById('source-annotations')?.remove();

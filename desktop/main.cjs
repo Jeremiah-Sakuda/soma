@@ -42,7 +42,8 @@ let win,
   revision = 0,
   shortcutOK = false,
   pointAsk,
-  computerControl;
+  computerControl,
+  lastDrawing = null;
 const locked = {
   nodeIntegration: false,
   contextIsolation: true,
@@ -420,6 +421,8 @@ else {
       captureImage: snapshotDisplay,
       enabledChange: (value) => win.webContents.send('desktop:point-enabled', value),
       overlayResult: (payload) => {
+        const wasLifted = lastDrawing?.id === payload.id && lastDrawing.view === '3d';
+        lastDrawing = payload.shown ? { id: payload.id, view: payload.view ?? '2d' } : null;
         view.webContents.send('desktop:screen-overlay-result', {
           id: payload.id,
           shown: payload.shown,
@@ -428,11 +431,13 @@ else {
           ...(payload.reason ? { reason: payload.reason } : {}),
         });
         if (compactMode && bar?.isVisible()) {
-          if (payload.reason === 'webgl') status('This Mac could not draw in 3D, so the drawing stays flat on your slide.');
+          if (payload.reason === 'checking') status('Checking that your slide is still the same before lifting…');
+          else if (payload.reason === 'cleared') status('Drawing cleared. Return asks with a new snapshot; Esc hides the bar.');
+          else if (payload.reason === 'webgl') status('This Mac could not draw in 3D, so the drawing stays flat on your slide.');
           else if (payload.reason === 'sheet') status('Soma could not lift this drawing, so it stays flat on your slide.');
           else if (payload.view === '3d')
             status('Lifted off your slide. Height is the checked distance from the start; taut strings are shortest routes.');
-          else if (payload.view === '2d') status('Back on your slide.');
+          else if (payload.view === '2d' && wasLifted) status('Back on your slide.');
           else if (payload.shown)
             status(`Drawn on your screen. Ask a follow-up${compactState?.investigable ? ', ⌘↩ tests it' : ''}, Esc clears.`);
           else if (payload.dismissed) status('Cleared. Return asks with a new snapshot; Esc hides the bar.');

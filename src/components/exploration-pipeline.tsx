@@ -11,10 +11,12 @@ export function ExplorationPipeline({
   generation,
   checked,
   replay,
+  family = 'graph',
 }: {
   generation: Generation;
   checked: boolean;
   replay?: boolean;
+  family?: 'graph' | 'circuit';
 }) {
   if (generation.mode === 'prepared-example') return null;
   const audit = generation.audit ?? [];
@@ -41,21 +43,21 @@ export function ExplorationPipeline({
       <p>
         {source}.{' '}
         {readingCheck ? `${readingCheck.detail} ` : ''}
-        {has('cost-probed') ? 'Muse chose the connection your question is about; Soma computed its exact boundary. ' : ''}
-        {has('investigation-declined') ? 'Muse judged that no single connection answers this question, so no new cost experiment was run. ' : ''}
+        {has('cost-probed') ? `Muse chose the ${family === 'circuit' ? 'component and quantity' : 'connection'} to investigate; Soma computed the supported cases and checked whether a boundary exists. ` : ''}
+        {has('investigation-declined') ? `Muse found no supported single-${family === 'circuit' ? 'component' : 'connection'} investigation for this question, so no new experiment was run. ` : ''}
         {has('review-rejected')
           ? 'Wonder requested a correction before this version was accepted. '
           : ''}
         {checked
-          ? 'Search results come from the deterministic solver. '
+          ? `${family === 'circuit' ? 'Circuit quantities' : 'Search results'} come from the deterministic solver, conditional on the source reading. `
           : 'This is an explanatory visual, not a checked simulation. '}
         Model review is advisory. These are recorded generation actions; changing a control
         recomputes locally.
       </p>
       {has('cost-probe-unavailable') && (
         <p>
-          The earlier cost intervention is unavailable with these controls. This explanation
-          preserves the current graph.
+          The earlier intervention is unavailable with these controls. This explanation
+          preserves the current experiment.
         </p>
       )}
       <a

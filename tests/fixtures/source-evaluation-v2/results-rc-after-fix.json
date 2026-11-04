@@ -1,0 +1,41 @@
+[
+ {
+  "phase": "preflight",
+  "at": "2026-11-03T00:17:52.523Z",
+  "freezeSha256": "236e49854643b7579cb7b22cd37e7a05cb285f411d5e5afcc747cf34cb8187ed",
+  "ledger": 35.08546625000013,
+  "turns": {
+   "day": "2026-11-03",
+   "created": 12,
+   "turns": 12,
+   "active": [],
+   "expiresAt": {
+    "_seconds": 1793837579,
+    "_nanoseconds": 80000000
+   }
+  }
+ },
+ {
+  "id": "circuit-rc-declined",
+  "subject": "circuit",
+  "status": "failed",
+  "passed": false,
+  "elapsedMs": 52324,
+  "error": "The explanation took too long. Your previous exploration is unchanged."
+ },
+ {
+  "phase": "final",
+  "at": "2026-11-03T00:18:48.476Z",
+  "ledger": 35.43546625000013,
+  "turns": {
+   "day": "2026-11-03",
+   "created": 13,
+   "turns": 13,
+   "active": [],
+   "expiresAt": {
+    "_seconds": 1793837928,
+    "_nanoseconds": 82000000
+   }
+  }
+ }
+]

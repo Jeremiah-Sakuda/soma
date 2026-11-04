@@ -1,0 +1,453 @@
+{
+  "spec": {
+    "schemaVersion": "exploration-v1",
+    "id": "explore_bf4a567fd490438ca1cbf36873af98ed",
+    "version": 2,
+    "title": "Balanced now, current in R5 if R4 changes",
+    "objective": "Show R5 now has 0 current because B and C are both 8 V, and when changing R4 alone would make R5 current flow B to C or C to B.",
+    "sources": [
+      {
+        "observationId": "capture_da3768d01841481bb6fc038fb7583b38",
+        "version": 1,
+        "region": null
+      }
+    ],
+    "assumptions": [
+      "Wires and sources are ideal; every resistor follows Ohm’s law.",
+      "Wires are ideal and the 12 V source is ideal.",
+      "Ground D is 0 V, so A is 12 V.",
+      "Resistors are R1 2 ohm, R2 4 ohm, R3 4 ohm, R4 8 ohm, R5 5 ohm."
+    ],
+    "uncertainty": [],
+    "unsupportedClaims": [
+      "Soma solves resistors and ideal DC sources only; capacitors, diodes and changing currents are not modeled."
+    ],
+    "mode": "checked-circuit",
+    "modelId": "dc-nodal",
+    "modelVersion": "dc-nodal-v1",
+    "input": {
+      "nodes": [
+        {
+          "id": "A",
+          "label": "A"
+        },
+        {
+          "id": "B",
+          "label": "B"
+        },
+        {
+          "id": "C",
+          "label": "C"
+        },
+        {
+          "id": "D",
+          "label": "D"
+        }
+      ],
+      "ground": "D",
+      "components": [
+        {
+          "id": "VS1",
+          "label": "12 V",
+          "kind": "voltage-source",
+          "from": "D",
+          "to": "A",
+          "value": 12
+        },
+        {
+          "id": "R1",
+          "label": "R1",
+          "kind": "resistor",
+          "from": "A",
+          "to": "B",
+          "value": 2
+        },
+        {
+          "id": "R2",
+          "label": "R2",
+          "kind": "resistor",
+          "from": "B",
+          "to": "D",
+          "value": 4
+        },
+        {
+          "id": "R3",
+          "label": "R3",
+          "kind": "resistor",
+          "from": "A",
+          "to": "C",
+          "value": 4
+        },
+        {
+          "id": "R4",
+          "label": "R4",
+          "kind": "resistor",
+          "from": "C",
+          "to": "D",
+          "value": 8
+        },
+        {
+          "id": "R5",
+          "label": "R5",
+          "kind": "resistor",
+          "from": "B",
+          "to": "C",
+          "value": 5
+        }
+      ]
+    },
+    "scene": {
+      "layout": "diagram-sidebar",
+      "panels": [
+        {
+          "id": "circuit-primary",
+          "title": "Checked circuit",
+          "placement": {
+            "column": 1,
+            "row": 1,
+            "columnSpan": 2
+          },
+          "kind": "circuit",
+          "execution": "primary",
+          "positions": [
+            {
+              "nodeId": "A",
+              "x": 0.29444444444444445,
+              "y": 0.29746913580246914
+            },
+            {
+              "nodeId": "B",
+              "x": 0.294375,
+              "y": 0.5383333333333333
+            },
+            {
+              "nodeId": "C",
+              "x": 0.4925,
+              "y": 0.5383333333333333
+            },
+            {
+              "nodeId": "D",
+              "x": 0.29452205882352944,
+              "y": 0.7791503267973856
+            }
+          ]
+        },
+        {
+          "id": "circuit-steps",
+          "title": "Step by step",
+          "placement": {
+            "column": 1,
+            "row": 2,
+            "columnSpan": 2
+          },
+          "kind": "steps"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "circuit_2_0",
+        "caption": "Start with ground D at 0 V; no other voltages known yet.",
+        "narration": "The battery negative fixes node D at 0 V. This is the reference for all voltages.",
+        "highlightIds": [
+          "D"
+        ],
+        "execution": "primary",
+        "executionStep": 0
+      },
+      {
+        "id": "circuit_2_1",
+        "caption": "Node A is 12 V from the 12 V source to ground D.",
+        "narration": "The 12 V source connects D to A, holding A at 12 V above ground.",
+        "highlightIds": [
+          "A",
+          "VS1",
+          "D"
+        ],
+        "execution": "primary",
+        "executionStep": 1
+      },
+      {
+        "id": "circuit_2_2",
+        "caption": "Node B is 8 V; 2 A flows A to B and B to D.",
+        "narration": "Left divider leaves B at 8 V, with 2 A from A to B through R1 and 2 A from B to D through R2.",
+        "highlightIds": [
+          "A",
+          "B",
+          "D",
+          "R1",
+          "R2"
+        ],
+        "execution": "primary",
+        "executionStep": 2
+      },
+      {
+        "id": "circuit_2_3",
+        "caption": "Node C is also 8 V, so B to C across R5 has 0 V and 0 current.",
+        "narration": "As read B and C are both 8 V, so R5 has 0 current. As a hypothetical change if only R4 varied: at 8 ohm R5 is exactly zero; at 4 ohm 0.24 A flows from B to C; when negative it flows from C to B, so direction flips around balance.",
+        "highlightIds": [
+          "B",
+          "C",
+          "R3",
+          "R4",
+          "R5"
+        ],
+        "execution": "primary",
+        "executionStep": 3
+      }
+    ],
+    "controls": [
+      "step",
+      "replay",
+      "open-component",
+      "set-value"
+    ],
+    "followups": [
+      "What if R4 were set to 4 ohm - which way would R5 current go?",
+      "What if R4 were set to 16 ohm - would the direction flip?",
+      "What if R5 were opened - would B and C stay at 8 V?"
+    ]
+  },
+  "question": "When would current flow through R5, and which way?",
+  "source": {
+    "observationId": "capture_da3768d01841481bb6fc038fb7583b38",
+    "version": 1,
+    "kind": "screenshot",
+    "label": "Lecture 9 · Wheatstone bridge (original demo slide)",
+    "capturedAt": "2026-11-04T03:15:27.178Z",
+    "summary": "Slide shows balanced Wheatstone bridge. 12 V ideal battery (+ to node A, - to node D=ground, 0 V so V_A=12 V). Left branch R1=2Ω A-B over R2=4Ω B-D; right branch R3=4Ω A-C over R4=8Ω C-D; bridge R5=5Ω B-C. Voltage-divider gives V_B=12*4/(2+4)=8 V and V_C=12*8/(4+8)=8 V. I5=(V_B-V_C)/R5=0. Balanced condition R1/R2=R3/R4=0.5, so B and C equipotential, no current through R5.",
+    "uncertainty": [],
+    "imageSha256": "fae05fdd937999d33d47b8129fae8b2410b827ba6352ee36c5e9274f4a7fb59f",
+    "anchors": [
+      {
+        "id": "title",
+        "label": "Wheatstone Bridge title",
+        "region": {
+          "x": 0.05,
+          "y": 0.09,
+          "width": 0.6,
+          "height": 0.09
+        }
+      },
+      {
+        "id": "ckt",
+        "label": "Bridge circuit diagram",
+        "region": {
+          "x": 0.088,
+          "y": 0.285,
+          "width": 0.53,
+          "height": 0.55
+        }
+      },
+      {
+        "id": "r5",
+        "label": "R5 5Ω B-C",
+        "region": {
+          "x": 0.335,
+          "y": 0.47,
+          "width": 0.2,
+          "height": 0.12
+        }
+      },
+      {
+        "id": "steps",
+        "label": "Voltage divider steps",
+        "region": {
+          "x": 0.635,
+          "y": 0.31,
+          "width": 0.3,
+          "height": 0.28
+        }
+      },
+      {
+        "id": "balanced",
+        "label": "Balanced condition I5=0",
+        "region": {
+          "x": 0.635,
+          "y": 0.552,
+          "width": 0.25,
+          "height": 0.06
+        }
+      }
+    ],
+    "layout": {
+      "nodes": [
+        {
+          "nodeId": "A",
+          "x": 0.29444444444444445,
+          "y": 0.29746913580246914
+        },
+        {
+          "nodeId": "B",
+          "x": 0.294375,
+          "y": 0.5383333333333333
+        },
+        {
+          "nodeId": "C",
+          "x": 0.4925,
+          "y": 0.5383333333333333
+        },
+        {
+          "nodeId": "D",
+          "x": 0.29452205882352944,
+          "y": 0.7791503267973856
+        }
+      ],
+      "edgeLabels": [],
+      "components": [
+        {
+          "componentId": "VS1",
+          "x1": 0.11285546655322451,
+          "y1": 0.49333333333333335,
+          "x2": 0.11285546655322451,
+          "y2": 0.5544444444444444
+        },
+        {
+          "componentId": "R1",
+          "x1": 0.2944265130176693,
+          "y1": 0.37333333333333335,
+          "x2": 0.2944265130176693,
+          "y2": 0.4766666666666667
+        },
+        {
+          "componentId": "R2",
+          "x1": 0.2944676247061214,
+          "y1": 0.5955555555555555,
+          "x2": 0.2944676247061214,
+          "y2": 0.6988888888888889
+        },
+        {
+          "componentId": "R3",
+          "x1": 0.4924809275672129,
+          "y1": 0.37333333333333335,
+          "x2": 0.4924809275672129,
+          "y2": 0.4766666666666667
+        },
+        {
+          "componentId": "R4",
+          "x1": 0.49252203925566507,
+          "y1": 0.5955555555555555,
+          "x2": 0.49252203925566507,
+          "y2": 0.6988888888888889
+        },
+        {
+          "componentId": "R5",
+          "x1": 0.359375,
+          "y1": 0.5381115792848337,
+          "x2": 0.4275,
+          "y2": 0.5381115792848337
+        }
+      ]
+    },
+    "circuitReadingCheck": {
+      "model": "muse-wonder-1.0",
+      "status": "confirmed",
+      "components": 6,
+      "corrections": [],
+      "disputes": []
+    }
+  },
+  "generation": {
+    "mode": "live",
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "calls": 3,
+    "usage": {
+      "input_tokens": 11793,
+      "output_tokens": 3230
+    },
+    "costUsd": 0.041424,
+    "elapsedMs": 36578,
+    "checks": [
+      "schema",
+      "references",
+      "circuit-input",
+      "kirchhoff",
+      "deterministic-trace"
+    ],
+    "audit": [
+      {
+        "event": "source-reused",
+        "call": 0,
+        "detail": "Reused the owned source interpretation and current checked controls for an explanatory follow-up."
+      },
+      {
+        "event": "cost-probed",
+        "call": 1,
+        "detail": "Muse chose R4, watching the current in R5: Varying R4 unbalances the bridge and shows how direction through R5 flips around balance.. Application computed the exact value 8, verified by re-solving there."
+      },
+      {
+        "event": "model-computed",
+        "call": 1,
+        "detail": "Checked dc-nodal solution: 4 nodes, 6 parts; Kirchhoff's current law, source voltages and power balance hold exactly."
+      },
+      {
+        "event": "review-approved",
+        "call": 3,
+        "detail": "Muse Wonder advisory review: approve."
+      },
+      {
+        "event": "scene-validated",
+        "call": 3,
+        "detail": "Typed scene, source versions and checked model references validated."
+      }
+    ],
+    "timings": [
+      {
+        "call": 1,
+        "stage": "interpretation",
+        "durationMs": 10813
+      },
+      {
+        "call": 2,
+        "stage": "composition",
+        "durationMs": 20581
+      },
+      {
+        "call": 3,
+        "stage": "review",
+        "durationMs": 3144
+      }
+    ]
+  },
+  "createdAt": "2026-11-04T03:16:02.471Z",
+  "updatedAt": "2026-11-04T03:16:39.831Z",
+  "state": {
+    "step": 0,
+    "explanationStep": 0,
+    "start": null,
+    "goal": null,
+    "disabledEdgeIds": [],
+    "reversed": false,
+    "selectedObjectId": null
+  },
+  "circuitExperiment": {
+    "version": "dc-probe-v1",
+    "componentId": "R4",
+    "observe": {
+      "kind": "current",
+      "componentId": "R5"
+    },
+    "condition": "zero",
+    "originalValue": 8,
+    "criticalValue": 8,
+    "criticalExact": "8",
+    "verified": true,
+    "rationale": "Varying R4 unbalances the bridge and shows how direction through R5 flips around balance.",
+    "note": "The current in R5 is exactly zero when R4 is 8 Ω; on either side it has opposite signs.",
+    "cases": [
+      {
+        "value": 4,
+        "observed": 0.24
+      },
+      {
+        "value": 8,
+        "observed": 0
+      },
+      {
+        "value": 16,
+        "observed": -0.16783216783216784
+      }
+    ]
+  }
+}

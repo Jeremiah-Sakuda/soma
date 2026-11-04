@@ -228,6 +228,62 @@
   flex-direction: column;
   gap: 6px;
 }
+.exploration-app .journal-example-grid,
+.exploration-app .journal-example-extras {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.exploration-app .journal-example-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+.exploration-app .journal-example-copy small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+.exploration-app .journal-recording-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+.exploration-app .journal-recording-switch button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--paper);
+  font-size: 12px;
+}
+.exploration-app .journal-recording-switch button[aria-pressed='true'] {
+  color: var(--paper);
+  background: var(--ink);
+}
+.exploration-app .journal-source-uncertainty {
+  margin: 8px 0;
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.exploration-app .journal-source-uncertainty summary { cursor: pointer; padding: 6px 0; }
+.exploration-app .journal-source-uncertainty ul { padding-left: 20px; margin: 4px 0 10px; }
+.exploration-app .journal-recording-details {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.exploration-app .journal-recording-details summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+.exploration-app .exploration-example-button > svg {
+  flex-shrink: 0;
+}
 
 /* ── Desk and spread ─────────────────────────────────────────────────── */
 .exploration-app .journal-desk,
@@ -311,13 +367,13 @@
 
 /* ── Cover (nothing open yet) ────────────────────────────────────────── */
 .exploration-app .journal-cover {
-  width: min(760px, 100%);
+  width: min(1080px, 100%);
   margin: 24px auto 0;
-  padding: 44px 48px;
+  padding: 28px 32px;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 .exploration-app .journal-cover h1 {
   font-size: 40px;
@@ -332,11 +388,78 @@
   font-size: 18px;
   margin-top: 6px;
 }
+.exploration-app .journal-cover-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 28px;
+}
+.exploration-app .journal-cover-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.exploration-app .journal-cover .journal-example-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.exploration-app .journal-cover .journal-example-grid .exploration-example-button {
+  border: 1px solid var(--control-border);
+  border-radius: 12px;
+  background: var(--paper);
+  padding: 12px;
+  min-height: 86px;
+}
+.exploration-app .journal-cover .journal-example-grid .exploration-example-button:hover {
+  border-color: var(--accent);
+}
+.exploration-app .journal-cover .journal-example-grid .exploration-example-button.is-recommended {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.exploration-app .journal-cover .journal-example-extras {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.exploration-app .journal-cover .journal-example-extras .exploration-example-button {
+  text-align: left;
+  line-height: 1.4;
+}
 .exploration-app .journal-cover .exploration-source-card {
   background: transparent;
   box-shadow: none;
   border: 1.5px dashed var(--control-border);
   border-radius: 12px;
+  padding: 16px;
+  gap: 12px;
+}
+.exploration-app .journal-cover .exploration-source-empty {
+  min-height: 64px;
+  padding: 10px;
+  flex-direction: row;
+  gap: 12px;
+  text-align: left;
+}
+.exploration-app .journal-cover .exploration-source-empty > svg {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+@media (max-width: 900px) {
+  .exploration-app .journal-cover-entry {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .exploration-app .journal-cover .exploration-source-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .exploration-app .journal-cover .exploration-source-actions > button {
+    flex: 1 1 180px;
+  }
 }
 
 /* ── Composer: one quiet line under the spread ───────────────────────── */
@@ -749,6 +872,12 @@
   align-items: center;
   gap: 8px;
 }
+.exploration-app .journal-save-status {
+  white-space: nowrap;
+}
+.exploration-app .journal-save[data-save-state='saved'] .journal-save-status {
+  color: var(--accent);
+}
 .exploration-app .journal-save .secondary-button {
   min-height: 44px;
   padding: 6px 14px;
@@ -971,9 +1100,6 @@
   }
 }
 @media (max-width: 480px) {
-  .exploration-app .journal-save > .meta {
-    display: none;
-  }
   .exploration-app .journal-save .secondary-button,
   .exploration-app .journal-right .exploration-step-bar .secondary-button:has(> svg),
   .exploration-app .journal-right .exploration-step-bar .primary-button:has(> svg),
@@ -1069,13 +1195,29 @@
   }
 }
 @media (max-width: 760px) {
-  .exploration-app .journal-save > .meta {
-    display: none;
+  /* Keep a legible label in the compact target without adding a header row. */
+  .exploration-app .journal-save {
+    position: relative;
+    flex: 0 0 56px;
+    width: 56px;
+    height: 44px;
+  }
+  .exploration-app .journal-save .journal-save-status {
+    position: absolute;
+    inset-inline-start: 50%;
+    bottom: 6px;
+    transform: translateX(-50%);
+    font-size: 12px;
+    line-height: 14px;
+    pointer-events: none;
+    z-index: 1;
   }
   .exploration-app .journal-save .secondary-button {
-    width: 44px;
-    min-width: 44px;
-    padding: 0;
+    width: 56px;
+    min-width: 56px;
+    height: 44px;
+    align-items: flex-start;
+    padding: 6px 0 0;
     gap: 0;
     font-size: 0;
   }

@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createExampleExploration, createWeightedExample } from '../../src/lib/domain/exploration';
+import { comparisonExecution, explorationExecution, explorationInputsChanged, graphExperimentActive, initialExplorationState } from '../../src/lib/domain/exploration-view';
+import { probeEdgeCost } from '../../src/lib/domain/cost-probe';
 import {
   createExplorationService,
   locateFits,
@@ -14,6 +16,7 @@ import {
 import { closeExplorationStore, explorationStore } from '../../src/lib/server/exploration-store';
 import { MetaClientError, type MetaResult } from '../../src/lib/server/meta-client';
 import { visionRequestUpperBoundUsd } from '../../src/lib/server/meta-vision';
+import { cropSourceDetail } from '../../src/lib/server/source-detail';
 import type { ExplorationPrincipal } from '../../src/lib/server/exploration-types';
 
 const principal = (id = 'a'): ExplorationPrincipal => ({
@@ -43,6 +46,18 @@ function result(name: string, value: unknown, index: number): MetaResult {
     usage: { input_tokens: 100, output_tokens: 200 },
   };
 }
+/** The example graph as a textbook figure would print it: vertices numbered 1–6, used as IDs. */
+function numbered(input: ReturnType<typeof exampleInput>) {
+  const id = new Map(input.nodes.map((n, i) => [n.id, String(i + 1)]));
+  return {
+    ...input,
+    nodes: input.nodes.map((n) => ({ id: id.get(n.id)!, label: id.get(n.id)! })),
+    edges: input.edges.map((e) => ({ ...e, from: id.get(e.from)!, to: id.get(e.to)! })),
+    start: id.get(input.start)!,
+    goal: input.goal && id.get(input.goal)!,
+    neighborOrder: input.neighborOrder.map((n) => id.get(n)!),
+  };
+}
 function script(
   options: {
     invalidFirst?: boolean;
@@ -51,6 +66,7 @@ function script(
     comparison?: boolean;
     clarify?: boolean;
     partialNeighborOrder?: boolean;
+    numericIds?: boolean;
     narrowControls?: boolean;
   } = {},
 ) {
@@ -65,7 +81,9 @@ function script(
           uncertainty: [],
           graph: options.clarify
             ? null
-            : options.partialNeighborOrder
+            : options.numericIds
+              ? numbered(exampleInput())
+              : options.partialNeighborOrder
               ? { ...exampleInput(), neighborOrder: exampleInput().neighborOrder.slice(1) }
               : exampleInput(),
         },
@@ -105,6 +123,11 @@ function script(
     spec.id = id[1];
     spec.version = Number(id[2]);
     if (spec.mode === 'checked-bfs' && context.graph) {
+      if (options.numericIds) {
+        const id = new Map(exampleInput().nodes.map((n, i) => [n.id, `n${i + 1}`]));
+        for (const panel of spec.scene.panels as { positions?: { nodeId: string }[] }[])
+          for (const position of panel.positions ?? []) position.nodeId = id.get(position.nodeId) ?? position.nodeId;
+      }
       spec.input = context.graph;
       const graphIds = new Set([
         ...spec.input.nodes.map((n: any) => n.id),
@@ -202,6 +225,18 @@ describe('bounded exploration provider and persistence pipeline', () => {
     expect(state!.artifacts[0]).toEqual(first);
     expect(state!.artifacts).toHaveLength(2);
   });
+  it('renames printed numbers used as vertex IDs, so a numbered textbook graph is still checked', async () => {
+    const { service } = harness(script({ numericIds: true }));
+    const owner = principal();
+    await service.initialize(owner);
+    const first = (await service.generate(owner, generate())).artifact;
+    expect(first.validation.assurance).toBe('checked-bfs');
+    expect(first.generation.audit.map((item) => item.event)).toContain('source-ids-renamed');
+    if (first.spec.mode !== 'checked-bfs') throw Error();
+    expect(first.spec.input.nodes.map((n) => [n.id, n.label])).toEqual(['1', '2', '3', '4', '5', '6'].map((n) => [`n${n}`, n]));
+    expect(first.spec.input.start).toBe('n1');
+    expect(first.executions?.primary.path).toEqual(['n1', 'n2', 'n5']);
+  });
   it('completes a partial neighbor order and keeps checked graph controls explorable', async () => {
     const { service } = harness(script({ partialNeighborOrder: true, narrowControls: true }));
     const owner = principal();
@@ -281,6 +316,26 @@ describe('bounded exploration provider and persistence pipeline', () => {
     expect(artifact.validation.assurance).toBe('needs-clarification');
     expect(artifact.executions).toBeNull();
     expect(artifact.spec.mode).toBe('clarify');
+  });
+  it('a capture with nothing to place publishes with no undefined field, which Firestore would reject', async () => {
+    const { service } = harness(script({ clarify: true }));
+    await service.initialize(principal());
+    const artifact = (
+      await service.generate(
+        principal(),
+        generate({
+          source: { kind: 'screenshot', dataUrl: 'data:image/png;base64,ORIGINAL_TEST_IMAGE', label: 'Screenshot', capturedAt: new Date().toISOString() },
+        }),
+      )
+    ).artifact;
+    const undefinedAt = (value: unknown, path: string): string[] =>
+      value === undefined
+        ? [path]
+        : value && typeof value === 'object'
+          ? Object.entries(value).flatMap(([key, item]) => undefinedAt(item, `${path}.${key}`))
+          : [];
+    expect('layout' in artifact.source).toBe(false);
+    expect(undefinedAt(artifact, 'artifact')).toEqual([]);
   });
   it('accepts only the observed exact no-graph string sentinel without granting checked assurance', async () => {
     const base = script({ clarify: true });
@@ -396,7 +451,9 @@ describe('bounded exploration provider and persistence pipeline', () => {
   });
   it('retains reservation on unknown sent provider usage and marks zero known cost as uncertain', async () => {
     const request = vi.fn(async () => {
-      throw new MetaClientError('network', null, true);
+      const error = new MetaClientError('network', null, true);
+      error.message = 'PRIVATE synthetic provider response details';
+      throw error;
     });
     const { service, settle } = harness(request as never);
     await service.initialize(principal());
@@ -412,7 +469,8 @@ describe('bounded exploration provider and persistence pipeline', () => {
       usageCertain: false,
       reservedUsd: 0.35,
     });
-    expect(JSON.stringify(stored)).not.toContain('network');
+    expect(stored!.runs[0].failure?.issues).toEqual([{ code: 'provider_network', path: ['provider'] }]);
+    expect(JSON.stringify(stored)).not.toContain('PRIVATE');
   });
   it('checks conservative remaining spend before any provider request', async () => {
     const { service, request } = harness();
@@ -910,7 +968,7 @@ describe('fast explanatory follow-ups', () => {
     expect(revised.generation.audit[0].event).toBe('source-reused');
     expect(revised.state).toMatchObject({ start: 'b', step: 1, selectedObjectId: 'b' });
     expect(revised.spec.mode === 'checked-bfs' && revised.spec.scene.panels[0]).toEqual(
-      original.spec.mode === 'checked-bfs' && original.spec.scene.panels[0],
+      original.spec.mode === 'checked-bfs' && { ...original.spec.scene.panels[0], title: 'Current experiment' },
     );
     expect((await service.read(principal(), original.id, 1)).active).toEqual(original);
   });
@@ -1294,9 +1352,9 @@ describe('model-directed checked cost experiment', () => {
     expect(a.spec.input).toEqual(
       original.spec.mode === 'checked-dijkstra' ? original.spec.input : null,
     );
-    expect(a.spec.scene.panels.filter((p) => p.kind === 'graph')).toEqual(
+    expect(a.spec.scene.panels.filter((p) => p.kind === 'graph').map(({ title: _title, ...panel }) => panel)).toEqual(
       original.spec.mode === 'checked-dijkstra'
-        ? original.spec.scene.panels.filter((p) => p.kind === 'graph')
+        ? original.spec.scene.panels.filter((p) => p.kind === 'graph').map(({ title: _title, ...panel }) => panel)
         : null,
     );
     expect(a.experiment).toMatchObject({ edgeId: 'sg', criticalCost: 3 });
@@ -1325,8 +1383,13 @@ describe('model-directed checked cost experiment', () => {
     ).artifact;
     expect(next.experiment?.edgeId).toBe('sg');
     if (next.spec.mode !== 'checked-dijkstra') throw Error();
-    expect(next.spec.input.edges[0].weight).toBe(2);
-    expect(next.spec.comparison!.input.edges[0].weight).toBe(2);
+    expect(next.spec.input).toEqual(a.spec.input);
+    expect(next.spec.comparison!.input).toEqual(a.spec.comparison!.input);
+    expect(next.spec.writtenFor?.edgeWeights).toEqual({ sg: 2 });
+    expect(next.state.edgeWeights).toEqual({ sg: 2 });
+    expect(next.executions!.primary.input.edges[0].weight).toBe(2);
+    expect(next.executions!.comparison!.input.edges[0].weight).toBe(2);
+    expect(explorationExecution(next.spec, next.state)).toEqual(next.executions!.primary);
   });
 });
 
@@ -1425,11 +1488,23 @@ describe('automatic follow-up preservation regression', () => {
       expect(revised.source).toEqual(original.source);
       expect(revised.generation.audit.some((e) => e.event === 'cost-probe-unavailable')).toBe(true);
       const input = revised.executions!.primary.input;
+      if (revised.spec.mode !== 'checked-dijkstra') throw Error();
+      expect(revised.spec.input).toEqual(original.spec.input);
+      expect(revised.spec.comparison!.input).toEqual(original.spec.comparison!.input);
+      expect(revised.state).toMatchObject(state);
+      expect(explorationExecution(revised.spec, revised.state)!.input).toEqual(input);
       if (kind === 'disabled-edge') {
         expect(input.edges.some((e) => e.id === 'sg')).toBe(false);
+        expect(revised.spec.input.edges.some((e) => e.id === 'sg')).toBe(true);
+        expect(revised.spec.writtenFor?.disabledEdgeIds).toEqual(['sg']);
         expect(revised.executions!.primary.path).toEqual(['s', 'a', 'b', 'g']);
+        const restored = validateExplorationViewState(revised.spec, { ...revised.state, disabledEdgeIds: [] });
+        expect(explorationExecution(revised.spec, restored)!.input.edges.some((e) => e.id === 'sg')).toBe(true);
+        expect(explorationInputsChanged(revised.spec, restored)).toBe(true);
       } else {
         expect(input.goal).toBeNull();
+        expect(revised.spec.input.goal).toBe('g');
+        expect(revised.spec.writtenFor?.goal).toBeNull();
         expect(revised.executions!.primary.status).toBe('complete');
       }
       await service.save(principal(), revised.id, revised.version, revised.state);
@@ -1484,7 +1559,7 @@ describe('automatic follow-up preservation regression', () => {
       });
     },
   );
-  it('publishes and persists the effective graph for an explanatory auto response', async () => {
+  it('publishes and persists effective controls alongside the source graph for an explanatory auto response', async () => {
     const setup = harness();
     await setup.service.initialize(principal());
     const original = (await setup.service.example(principal())).artifact;
@@ -1513,12 +1588,177 @@ describe('automatic follow-up preservation regression', () => {
     });
     expect(revised.executions!.primary.input.edges.some((e) => e.id === 'sa')).toBe(false);
     expect(revised.executions!.primary.status).toBe('unreachable');
+    if (revised.spec.mode !== 'checked-bfs' || original.spec.mode !== 'checked-bfs') throw Error();
+    expect(revised.spec.input).toEqual(original.spec.input);
+    const { explanationStep: _oldExplanationStep, ...preservedState } = state;
+    expect(revised.state).toMatchObject(preservedState);
+    expect(revised.spec.writtenFor).toMatchObject({ start: 'b', goal: 'x', disabledEdgeIds: ['sa'], reversed: true });
+    expect(explorationExecution(revised.spec, initialExplorationState(revised.spec))!.path).toEqual(['s', 'a', 'g']);
     await setup.service.save(principal(), revised.id, revised.version, revised.state);
     closeExplorationStore();
     expect((await setup.service.read(principal(), revised.id)).active!.executions).toEqual(
       revised.executions,
     );
     expect((await setup.service.read(principal(), original.id, 1)).active).toEqual(original);
+  });
+});
+
+describe('source-preserving graph reply lifecycle', () => {
+  type ReplyKind = 'cost-copy' | 'compact' | 'full';
+  const serviceWithReview = (request: ReturnType<typeof vi.fn>, review: ReturnType<typeof vi.fn>) => createExplorationService({
+    request: request as never, review: review as never, reviewEnabled: () => true,
+    upperBound: () => 0.03, reserve: async () => randomUUID(), settle: async () => {},
+    enabled: () => true, revalidate: async () => {},
+  });
+  async function originalGraph(kind: ReplyKind) {
+    const setup = harness();
+    await setup.service.initialize(principal());
+    const original = (await setup.service.example(principal(), true)).artifact;
+    if (original.spec.mode !== 'checked-dijkstra') throw Error();
+    // A source-specific title must not survive unchanged on a hypothetical trace.
+    for (const panel of original.spec.scene.panels) if (panel.kind === 'graph') panel.title = 'Lecture graph';
+    if (kind === 'cost-copy') original.experiment = probeEdgeCost(original.spec.input, 'ab');
+    await explorationStore.mutate(principal(), (session) => { session.artifacts[0] = structuredClone(original); });
+    return original;
+  }
+  function author(kind: ReplyKind) {
+    return vi.fn(async (args: any) => {
+      const context = JSON.parse(args.input[0].content);
+      const index = context.previous.state.step;
+      const step = { id: 'currentReply', execution: 'primary', executionStep: index, caption: 'Inspect the current checked route.', narration: 'Explanation for these controls.', highlightIds: ['s'] };
+      if (kind === 'cost-copy') return result('compose_cost_experiment', {
+        title: 'Explain the changed connection', objective: 'Explain the current checked route.',
+        steps: [{ traceIndex: index, caption: step.caption, narration: step.narration, highlightIds: step.highlightIds }], followups: [],
+      }, 1);
+      if (kind === 'compact') return result('compose_exploration', { spec: {
+        mode: 'continue', title: 'Explain the current route', objective: 'Keep the current experiment.',
+        assumptions: [], steps: [step], followups: [],
+      } }, 1);
+      const spec = structuredClone(context.previous.spec);
+      const binding = /Required spec id=([^ ]+) and version=(\d+)/.exec(args.instructions)!;
+      spec.id = binding[1]; spec.version = Number(binding[2]);
+      spec.input = context.graph;
+      spec.comparison.input = context.previous.checkedComparison.input;
+      // Model-supplied scientific controls must never override the owned request state.
+      spec.writtenFor = { start: 's', goal: 'g', disabledEdgeIds: [], reversed: false, edgeWeights: { ab: 0 } };
+      spec.steps = [step];
+      return result('compose_exploration', { spec }, 1);
+    });
+  }
+  const approvedReview = () => vi.fn(async () => result('review_exploration', { verdict: 'approve', findings: [] }, 1));
+  const reply = (artifact: Awaited<ReturnType<typeof originalGraph>>, state = artifact.state) => ({
+    action: 'generate', requestId: randomUUID(), artifactId: artifact.id, baseVersion: artifact.version,
+    intent: 'explain', question: 'Explain this current route.', state,
+  });
+
+  it.each(['cost-copy', 'compact', 'full'] as const)('preserves source, current controls, reviewed labels and exact reopen through a second %s reply', async (kind) => {
+    const original = await originalGraph(kind);
+    if (original.spec.mode !== 'checked-dijkstra') throw Error();
+    const request = author(kind), review = approvedReview(), service = serviceWithReview(request, review);
+    const controls = { ...original.state, step: 1, selectedObjectId: 'ab', edgeWeights: { ab: 7.5 } };
+    const changed = (await service.generate(principal(), reply(original, controls))).artifact;
+    if (changed.spec.mode !== 'checked-dijkstra') throw Error();
+    expect(changed.spec.input).toEqual(original.spec.input);
+    expect(changed.spec.comparison!.input).toEqual(original.spec.comparison!.input);
+    expect(changed.source).toEqual(original.source);
+    expect(changed.spec.writtenFor?.edgeWeights).toEqual({ ab: 7.5 });
+    expect(changed.state).toMatchObject(controls);
+    expect(changed.executions!.primary.path).toEqual(['s', 'c', 'g']);
+    expect(changed.executions!.primary.steps.at(-1)!.distances.g).toBe(8);
+    expect(changed.executions!.primary.input.edges.find((edge) => edge.id === 'ab')!.weight).toBe(7.5);
+    expect(explorationExecution(changed.spec, changed.state)).toEqual(changed.executions!.primary);
+    expect(comparisonExecution(changed.spec, changed.state)).toEqual(changed.executions!.comparison);
+    expect(explorationInputsChanged(changed.spec, changed.state)).toBe(false);
+    expect(graphExperimentActive(changed.spec, changed.state)).toBe(true);
+    expect(review).toHaveBeenCalledTimes(1);
+    const reviewed = JSON.parse((review.mock.calls[0] as any)[0].input[0].content);
+    expect(reviewed.spec.input).toEqual(original.spec.input);
+    expect(reviewed.spec.writtenFor.edgeWeights).toEqual({ ab: 7.5 });
+    expect(reviewed.checked.executions.primary.input.edges.find((edge: any) => edge.id === 'ab').weight).toBe(7.5);
+    expect(reviewed.spec.scene.panels.find((panel: any) => panel.kind === 'graph' && panel.execution === 'primary').title).toContain('Current experiment');
+    expect(reviewed.spec.scene.panels.filter((panel: any) => panel.kind === 'graph').every((panel: any) => !panel.title.includes('Lecture graph'))).toBe(true);
+    expect(changed.generation.audit.some((item) => item.event === 'review-approved')).toBe(true);
+    await service.save(principal(), changed.id, changed.version, changed.state);
+    closeExplorationStore();
+    const reopened = (await service.read(principal(), changed.id)).active!;
+    expect(reopened.spec).toEqual(changed.spec);
+    expect(reopened.state).toEqual(changed.state);
+    expect(reopened.executions).toEqual(changed.executions);
+    const reset = validateExplorationViewState(reopened.spec, initialExplorationState(reopened.spec));
+    expect(explorationExecution(reopened.spec, reset)!.path).toEqual(['s', 'a', 'b', 'g']);
+    expect(explorationExecution(reopened.spec, reset)!.steps.at(-1)!.distances.g).toBe(3);
+    expect(explorationInputsChanged(reopened.spec, reset)).toBe(true);
+    const restored = (await service.generate(principal(), reply(reopened, reset))).artifact;
+    if (restored.spec.mode !== 'checked-dijkstra') throw Error();
+    expect(restored.spec.input).toEqual(original.spec.input);
+    expect(restored.spec.comparison!.input).toEqual(original.spec.comparison!.input);
+    expect(restored.executions!.primary.path).toEqual(['s', 'a', 'b', 'g']);
+    expect(restored.spec.writtenFor?.edgeWeights ?? {}).toEqual({});
+    expect(restored.state.edgeWeights ?? {}).toEqual({});
+    expect(explorationInputsChanged(restored.spec, restored.state)).toBe(false);
+    expect(graphExperimentActive(restored.spec, restored.state)).toBe(false);
+    expect(review).toHaveBeenCalledTimes(2);
+    await service.save(principal(), restored.id, restored.version, restored.state);
+    closeExplorationStore();
+    expect((await service.read(principal(), restored.id)).active!.spec).toEqual(restored.spec);
+    expect((await service.read(principal(), original.id, 1)).active).toEqual(original);
+  });
+
+  it('reopens a cut edge, restores it from the retained base, and explains the restored source', async () => {
+    const original = await originalGraph('full');
+    if (original.spec.mode !== 'checked-dijkstra') throw Error();
+    const review = approvedReview(), service = serviceWithReview(author('full'), review);
+    const changed = (await service.generate(principal(), reply(original, { ...original.state, disabledEdgeIds: ['ab'], selectedObjectId: 'ab' }))).artifact;
+    if (changed.spec.mode !== 'checked-dijkstra') throw Error();
+    expect(changed.spec.input.edges.some((edge) => edge.id === 'ab')).toBe(true);
+    expect(changed.executions!.primary.input.edges.some((edge) => edge.id === 'ab')).toBe(false);
+    expect(changed.state.disabledEdgeIds).toEqual(['ab']);
+    expect(changed.executions!.primary.path).toEqual(['s', 'c', 'g']);
+    await service.save(principal(), changed.id, changed.version, changed.state);
+    closeExplorationStore();
+    const reopened = (await service.read(principal(), changed.id)).active!;
+    expect(reopened.state.disabledEdgeIds).toEqual(['ab']);
+    const reset = validateExplorationViewState(reopened.spec, { ...reopened.state, disabledEdgeIds: [] });
+    expect(explorationExecution(reopened.spec, reset)!.path).toEqual(['s', 'a', 'b', 'g']);
+    const restored = (await service.generate(principal(), reply(reopened, reset))).artifact;
+    if (restored.spec.mode !== 'checked-dijkstra') throw Error();
+    expect(restored.spec.input).toEqual(original.spec.input);
+    expect(restored.state.disabledEdgeIds).toEqual([]);
+    expect(restored.executions!.primary.path).toEqual(['s', 'a', 'b', 'g']);
+    expect(review).toHaveBeenCalledTimes(2);
+  });
+
+  it('still rejects an experiment when the mandatory reviewer requests revision twice', async () => {
+    const original = await originalGraph('cost-copy');
+    const request = author('cost-copy');
+    const review = vi.fn(async () => result('review_exploration', { verdict: 'revise', findings: ['The explanation does not explain the checked change.'] }, 1));
+    const service = serviceWithReview(request, review);
+    await expect(service.generate(principal(), reply(original, { ...original.state, edgeWeights: { ab: 7.5 } }))).rejects.toMatchObject({ code: 'generation_invalid' });
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(review).toHaveBeenCalledTimes(2);
+    expect((await service.read(principal(), original.id)).active).toEqual(original);
+    const session = (await explorationStore.read(principal()))!;
+    expect(session.artifacts).toHaveLength(1);
+    expect(session.runs.at(-1)!.audit?.filter((item) => item.event === 'review-rejected')).toHaveLength(2);
+  });
+
+  it.each(['primary', 'comparison'] as const)('rejects a later full proposal that silently changes the effective %s graph', async (which) => {
+    const original = await originalGraph('full');
+    const review = approvedReview(), service = serviceWithReview(author('full'), review);
+    const changed = (await service.generate(principal(), reply(original, { ...original.state, edgeWeights: { ab: 7.5 } }))).artifact;
+    const validAuthor = author('full');
+    const tampered = vi.fn(async (args: any) => {
+      const response = await validAuthor(args);
+      const spec = (response.tools[0].parsedArguments as any).spec;
+      const input = which === 'primary' ? spec.input : spec.comparison.input;
+      input.edges.find((edge: any) => edge.id === 'sc').weight = 25;
+      return result('compose_exploration', { spec }, 1);
+    });
+    const laterReview = approvedReview(), later = serviceWithReview(tampered, laterReview);
+    await expect(later.generate(principal(), reply(changed))).rejects.toMatchObject({ code: 'generation_invalid' });
+    expect(tampered).toHaveBeenCalledTimes(2);
+    expect(laterReview).not.toHaveBeenCalled();
+    expect((await later.read(principal(), changed.id)).active).toEqual(changed);
   });
 });
 
@@ -1717,6 +1957,63 @@ describe('Muse Wonder checks the reading against the same image', () => {
     expect(call.input[0].content.some((p: any) => p.type === 'input_image')).toBe(true);
     expect(artifact.source.readingCheck).toMatchObject({ status: 'confirmed', model: 'muse-wonder-1.0', edges: exampleInput().edges.length });
     expect(artifact.generation.audit.some((e) => e.event === 'reading-confirmed')).toBe(true);
+  });
+  it.each([false, true])('keeps the whole original image in the reading check when detail cropping fails: %s', async (cropFails) => {
+    const original = 'data:image/png;base64,' + readFileSync('tests/fixtures/exploration-source-evaluation/bfs-cycle.png').toString('base64');
+    const base = script();
+    const request = vi.fn(async (args: any) => {
+      const name = args.tools?.[0]?.name;
+      if (name === 'check_reading') return result('check_reading', { verdict: 'confirmed', issues: [] }, 1);
+      if (name === 'locate_graph') return result('locate_graph', { nodes: [], edgeLabels: [] }, 1);
+      const response = await base(args);
+      if (response.tools[0]?.name === 'inspect_source')
+        response.tools[0].parsedArguments.anchors = [
+          { id: 'graph', label: 'First reader’s partial graph region', region: { x: 0.2, y: 0.2, width: 0.2, height: 0.2 } },
+        ];
+      return response;
+    });
+    const upperBound = vi.fn(visionRequestUpperBoundUsd);
+    const crop = vi.fn(async (dataUrl: string, region: Parameters<typeof cropSourceDetail>[1]) => {
+      if (cropFails) throw new Error('Optional detail unavailable');
+      return cropSourceDetail(dataUrl, region);
+    });
+    const review = vi.fn(async () => result('review_exploration', { verdict: 'approve', findings: [] }, 1));
+    const service = createExplorationService({
+      request: request as never, review: review as never, reviewEnabled: () => true,
+      upperBound, crop, reserve: async () => randomUUID(), settle: async () => {}, enabled: () => true,
+      revalidate: async () => {},
+    });
+    await service.initialize(principal());
+    const artifact = (await service.generate(principal(), generate({
+      source: { kind: 'screenshot', dataUrl: original, label: 'Original synthetic screenshot', capturedAt: new Date().toISOString() },
+    }))).artifact;
+    const checkCalls = request.mock.calls.filter(([args]) => args.tools?.[0]?.name === 'check_reading');
+    expect(checkCalls).toHaveLength(1);
+    const check = checkCalls[0][0];
+    const content = check.input[0].content;
+    const images = content.filter((block: any) => block.type === 'input_image').map((block: any) => block.image_url);
+    expect(images[0] === original).toBe(true);
+    expect(content.filter((block: any) => block.type === 'input_text').map((block: any) => block.text).join(' ')).toContain('FULL ORIGINAL FROZEN SCREENSHOT');
+    expect(check.instructions).toContain('whole graph');
+    const preflight = upperBound.mock.calls.findIndex(([args]) => (args.tools[0] as { name?: string } | undefined)?.name === 'check_reading');
+    expect(upperBound.mock.calls[preflight][0]).toEqual(check);
+    expect(upperBound.mock.results[preflight].value).toBe(visionRequestUpperBoundUsd(check));
+    if (cropFails) expect(images.length === 1 && images[0] === original).toBe(true);
+    else {
+      const detail = await crop.mock.results.at(-1)!.value;
+      expect(detail.dataUrl !== original).toBe(true);
+      expect(images.length === 2 && images[0] === original && images[1] === detail.dataUrl).toBe(true);
+      const detailLabel = content.filter((block: any) => block.type === 'input_text').map((block: any) => block.text).join(' ');
+      expect(detailLabel).toContain('DETAIL CROP OF THE SAME FROZEN SCREENSHOT');
+      expect(detailLabel).toContain('fallible first extraction');
+      const originalOnly = { ...check, input: [{ ...check.input[0], content: content.filter((block: any) => block.type !== 'input_image' || block.image_url === original) }] };
+      expect(visionRequestUpperBoundUsd(check) - visionRequestUpperBoundUsd(originalOnly)).toBeGreaterThan(8192 * 4 / 1_000_000);
+    }
+    expect(request).toHaveBeenCalledTimes(cropFails ? 3 : 4);
+    expect(review).toHaveBeenCalledTimes(1);
+    expect(artifact.generation.calls).toBe(cropFails ? 4 : 5);
+    expect(artifact.source.readingCheck?.status).toBe('confirmed');
+    expect(JSON.stringify(artifact)).not.toContain(original);
   });
   it('corrects a weight only when Spark, looking again without Wonder’s value, agrees', async () => {
     const edge = weighted().input.edges[0];

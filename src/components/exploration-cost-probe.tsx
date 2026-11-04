@@ -55,7 +55,7 @@ export function ExplorationCostProbe({
         Change only this connection. The graph and both searches recompute from the same cost.
       </p>
       <label htmlFor="probe-cost">
-        Connection cost: <strong>{Number(value.toFixed(2))}</strong>
+        Connection cost: <strong>{value}</strong>
       </label>
       <input
         id="probe-cost"
@@ -139,7 +139,7 @@ export function ExplorationCostProbe({
           disabled={disabled}
           onClick={() => onChange(probe.criticalCost!)}
         >
-          Try the tie at {Number(probe.criticalCost.toFixed(2))}
+          Try the tie at {probe.criticalCost}
         </button>
       )}
       <p>{probe.note}</p>

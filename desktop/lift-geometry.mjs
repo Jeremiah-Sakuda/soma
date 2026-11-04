@@ -1,9 +1,11 @@
 // Geometry for lifting Soma's checked search off the slide in 3D: the string model of
-// shortest paths. A node rises to its checked distance from the start; each connection is
-// a string as long as its cost, so the strings on shortest routes are taut and the others
-// hang slack by exactly how much longer they are. Pure functions; no rendering.
+// shortest paths. Node heights and numerical slack use checked distances and costs.
+// The hanging strings are schematic: their bounded sag and curve length are visual cues,
+// not measured geometric representations of a connection's cost. Pure functions.
 
-export const fmt = (n) => (Number.isInteger(n) ? String(n) : String(Number(n.toFixed(2))));
+// Significant digits preserve small fractional costs instead of rounding a value
+// such as .0051 up to .01. Integers retain their full checked value.
+export const fmt = (n) => String(Number.isInteger(n) ? n : Number(n.toPrecision(6)));
 
 /** Camera distance at which the z = 0 plane fills `height` pixels exactly, so a flat scene
  * lands on the slide pixel for pixel. */
@@ -14,15 +16,15 @@ export function cameraDistance(height, fovDegrees) {
 /** Normalized capture point to world pixels: origin at the display centre, y up. */
 export const toWorld = (p, frame) => ({ x: p.x * frame.width - frame.width / 2, y: frame.height / 2 - p.y * frame.height });
 
-// Distances arrive rounded to two places, so smaller differences are rounding, not slack.
-const TOLERANCE = 0.011;
 /** How much longer a connection is than the climb between its ends: 0 means taut. Negative
  * only next to an estimate: the connection offers a shorter way and will lower it. */
 export function slackOf(weight, fromDistance, toDistance, directed) {
-  if (!Number.isFinite(weight) || fromDistance === null || toDistance === null) return null;
-  const climb = directed ? toDistance - fromDistance : Math.abs(toDistance - fromDistance);
-  const slack = weight - climb;
-  return Math.abs(slack) < TOLERANCE ? 0 : Number(slack.toFixed(4));
+  if (![weight, fromDistance, toDistance].every(Number.isFinite)) return null;
+  // Match the solver's addition order so a checked 0.1 + 0.2 route is exactly taut,
+  // without an absolute tolerance that would erase genuine small slack.
+  return directed
+    ? fromDistance + weight - toDistance
+    : Math.min(fromDistance, toDistance) + weight - Math.max(fromDistance, toDistance);
 }
 
 /** Region of the graph on the slide, in normalized coordinates, padded to include the
@@ -30,18 +32,19 @@ export function slackOf(weight, fromDistance, toDistance, directed) {
 export function sheetRegion(model) {
   const r = model.radius;
   // An arc's control point lies beyond the drawn curve; the curve's midpoint is on it.
-  const xs = [...model.nodes.map((n) => n.x), ...model.edges.map((e) => e.center.x)],
-    ys = [...model.nodes.map((n) => n.y), ...model.edges.map((e) => e.center.y)];
-  // The printed node circles are about one radius; leave room for their stroke and the
-  // printed costs beside the arcs, but stop short of neighbouring slide text.
-  const pad = r * 1.8;
-  const x = Math.max(0, Math.min(...xs) - pad),
-    y = Math.max(0, Math.min(...ys) - pad);
+  // Nodes need their circle margin, while an arc/cost needs only its text margin.
+  // Applying the larger node margin to a high arc can paint over the slide's title rule.
+  const nodePad = r * 1.8;
+  const edgePad = model.aspect === undefined ? nodePad : Math.max(model.font * 1.5, r * 0.6);
+  const aspect = model.aspect ?? 1;
+  const xs = [...model.nodes.flatMap((n) => [n.x - nodePad, n.x + nodePad]), ...model.edges.flatMap((e) => [e.center.x - edgePad, e.center.x + edgePad])];
+  const ys = [...model.nodes.flatMap((n) => [n.y - nodePad / aspect, n.y + nodePad / aspect]), ...model.edges.flatMap((e) => [e.center.y - edgePad / aspect, e.center.y + edgePad / aspect])];
+  const x = Math.max(0, Math.min(...xs)), y = Math.max(0, Math.min(...ys));
   return {
     x,
     y,
-    width: Math.min(1, Math.max(...xs) + pad) - x,
-    height: Math.min(1, Math.max(...ys) + pad) - y,
+    width: Math.min(1, Math.max(...xs)) - x,
+    height: Math.min(1, Math.max(...ys)) - y,
   };
 }
 
@@ -52,10 +55,10 @@ export function liftLayout(model, frame) {
   const region = sheetRegion(model);
   const regionPx = { width: region.width * frame.width, height: region.height * frame.height };
   const r = model.radius * frame.width;
-  // The highest distance in the whole search rises about four fifths of the graph's own
-  // height, so a difference of one is plainly visible as height.
+  // Use the whole search's range, including sub-unit costs, as a stable visual scale.
   const tallest = Math.max(r * 6, Math.min(frame.height * 0.36, Math.max(regionPx.height, regionPx.width * 0.5) * 0.7));
   const scale = tallest / lift.maxDistance;
+  if (!Number.isFinite(scale)) throw new RangeError('The checked distance range cannot be lifted at this display size.');
   // A node at distance 0 rests on the sheet; height above that is distance.
   const base = r * 0.78;
   const byId = new Map();

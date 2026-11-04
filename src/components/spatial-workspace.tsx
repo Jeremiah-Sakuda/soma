@@ -7,6 +7,7 @@ import type { ExplorationSpec } from '@/lib/domain/exploration';
 import type { ExplorationViewState } from '@/lib/domain/exploration-view';
 import { spatialScene, spatialPresentation, type SpatialScene } from '@/lib/domain/spatial-exploration';
 import { defaultSpatialView, type SpatialView } from '@/lib/domain/spatial-schema';
+import SpatialHeightReadout from './spatial-height-readout';
 
 const Canvas = dynamic(() => import('./spatial-canvas'), { ssr: false, loading: () => <p role="status" className="spatial-loading">Opening the spatial view…</p> });
 const Anatomy = dynamic(() => import('./anatomy-canvas'), { ssr: false, loading: () => <p role="status" className="spatial-loading">Drawing the Anatomy illustration…</p> });
@@ -88,6 +89,7 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
       <figure><figcaption>Current 3D <span>Perspective meshes</span></figcaption>{stage('three')}</figure>
       <figure><figcaption>Anatomy <span>Isometric illustration</span></figcaption>{stage('anatomy')}</figure>
     </div> : stage(anatomy ? 'anatomy' : 'three')}
+    <SpatialHeightReadout spec={spec} state={state} which={which} />
     {compare && spatial3d && <p className="spatial-detail-note">Same scene, step and selected part. Controls below update both views.</p>}
     {anatomy && spatial3d && <p className="spatial-detail-note">{hasEnclosure ? 'Cutaway opens enclosure walls in the illustration.' : authored ? 'Use separation and isolation to inspect this drawing.' : 'This illustration has no enclosure to cut away.'}{view.elevation < 0 ? ' Below-ground camera angles use ground level.' : ''}</p>}
     {authored && <p className="spatial-detail-note">Custom geometry specification · motion is illustrative, not a checked physical model</p>}

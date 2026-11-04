@@ -107,8 +107,22 @@ const isZero = (a: Q) => a.n === 0n;
 const eq = (a: Q, b: Q) => a.n === b.n && a.d === b.d;
 const bits = (v: bigint) => (v < 0n ? -v : v).toString(2).length;
 const toNumber = (a: Q) => {
-  const shift = Math.max(bits(a.n), bits(a.d)) - 1000;
-  return shift > 0 ? Number(a.n >> BigInt(shift)) / Number(a.d >> BigInt(shift)) : Number(a.n) / Number(a.d);
+  const numerator = Number(a.n), denominator = Number(a.d);
+  if (Number.isFinite(numerator) && Number.isFinite(denominator)) return numerator / denominator;
+  // Scale each side independently: shifting both by the larger side's size can turn a
+  // small denominator into zero even when the quotient itself is representable.
+  const negative = a.n < 0n, magnitude = negative ? -a.n : a.n;
+  const numeratorShift = Math.max(0, bits(magnitude) - 53), denominatorShift = Math.max(0, bits(a.d) - 53);
+  const ratio = Number(magnitude >> BigInt(numeratorShift)) / Number(a.d >> BigInt(denominatorShift));
+  const exponent = numeratorShift - denominatorShift;
+  // Apply the boundary scale last so an intermediate 2**1024 or 2**-1075 cannot
+  // overflow/underflow a representable final value (including subnormal numbers).
+  const value = exponent > 1023
+    ? (ratio * 2 ** (exponent - 1023)) * 2 ** 1023
+    : exponent < -1022
+      ? (ratio * 2 ** (exponent + 1074)) * Number.MIN_VALUE
+      : ratio * 2 ** exponent;
+  return negative ? -value : value;
 };
 const toText = (a: Q) => (a.d === 1n ? `${a.n}` : `${a.n}/${a.d}`);
 /** The decimal a number prints as, exactly: 0.1 is 1/10, not the nearest binary fraction. */
@@ -245,20 +259,20 @@ export function solveDc(raw: unknown, rawState?: Partial<DcState>): DcSolution {
     state = sanitizeState(input, rawState);
   const exact = solveExact(input, state);
   const base = { modelId: DC_MODEL_ID, modelVersion: DC_MODEL_VERSION, input, state } as const;
+  const unavailable = (reason: string): DcSolution => ({
+    ...base,
+    status: 'unsolvable',
+    reason,
+    voltages: {},
+    currents: {},
+    drops: {},
+    power: {},
+    exact: { voltages: {}, currents: {} },
+    checks: { kcl: false, sources: false, power: false },
+    steps: [],
+  });
   if (!exact)
-    return {
-      ...base,
-      status: 'unsolvable',
-      reason:
-        'No single answer exists: an ideal source is shorted or left with no path for its current.',
-      voltages: {},
-      currents: {},
-      drops: {},
-      power: {},
-      exact: { voltages: {}, currents: {} },
-      checks: { kcl: false, sources: false, power: false },
-      steps: [],
-    };
+    return unavailable('No single answer exists: an ideal source is shorted or left with no path for its current.');
   const { potentials, grounded, section, currents, value } = exact;
   const drop = (c: DcComponent) => sub(potentials.get(c.from)!, potentials.get(c.to)!);
   const open = new Set(state.open),
@@ -279,6 +293,17 @@ export function solveDc(raw: unknown, rawState?: Partial<DcState>): DcSolution {
   });
   const absorbed = new Map(input.components.map((c) => [c.id, mul(drop(c), currents.get(c.id)!)]));
   const power = isZero([...absorbed.values()].reduce(add, ZERO));
+  const displayed = [
+    ...[...grounded].map((id) => potentials.get(id)!),
+    ...currents.values(),
+    ...input.components.filter((c) => section.get(c.from) === section.get(c.to)).map(drop),
+    ...absorbed.values(),
+  ];
+  if (displayed.some((quantity) => {
+    const value = toNumber(quantity);
+    return !Number.isFinite(value) || (value === 0 && !isZero(quantity));
+  }))
+    return unavailable('The result is outside the supported numeric range. Try less extreme component values.');
   const voltages: Record<string, number | null> = {},
     exactVoltages: Record<string, string | null> = {};
   for (const n of input.nodes) {
@@ -394,6 +419,10 @@ export function probeDcValue(
     throw new Error('Maximum power applies to the varied resistor itself.');
   if (observation.kind === 'power' && typeof condition === 'object')
     throw new Error('Ask for power to vanish or peak; ask about a current or voltage reaching a value.');
+  // The power fit below uses P = I²R. An ideal source instead absorbs V·I, so its
+  // power can vanish while its current is unchanged. Keep this bounded probe to resistors.
+  if (observation.kind === 'power' && input.components.find((c) => c.id === observation.componentId)!.kind !== 'resistor')
+    throw new Error('Power investigations require a resistor.');
   const resistor = component.kind === 'resistor';
   const unit = DC_UNITS[component.kind];
   const originalValue = state.values[componentId] ?? asRead(component);
@@ -417,8 +446,16 @@ export function probeDcValue(
   if (ys.some((y) => y === null)) note = `${Quantity} has no defined value here.`;
   else {
     const fit = fitRatio(samples, ys as Q[]);
-    if (!fit) note = `${Quantity} does not depend on ${name(componentId)}.`;
-    else if (condition === 'maximum-power')
+    if (!fit) {
+      // A fixed current through the varied resistor still makes its power grow with R.
+      // It has no finite peak (and no zero for R > 0), rather than constant power.
+      const growingPower = observation.kind === 'power' && observation.componentId === componentId && !isZero(ys[0]!);
+      note = growingPower
+        ? condition === 'maximum-power'
+          ? `No resistance for ${name(componentId)} gives it a power peak; its current stays fixed, so power rises with resistance.`
+          : `No allowed value of ${name(componentId)} makes ${quantity} zero; its current stays fixed.`
+        : `${Quantity} does not depend on ${name(componentId)}.`;
+    } else if (condition === 'maximum-power')
       // The resistor's own current is α/(γ + δR), so I²R peaks where R matches the rest: R = γ/δ.
       critical = isZero(fit.delta) || !isZero(fit.beta) ? null : div(fit.gamma, fit.delta);
     else {
@@ -459,12 +496,16 @@ export function probeDcValue(
   const around = criticalValue ?? originalValue;
   const values = [originalValue, ...(resistor ? [around / 2, around, around * 2] : [around - 1, around, around + 1])];
   const cases = [...new Set(values.map((v) => Number(v.toPrecision(12))))]
-    .filter((v) => (resistor ? v > 0 && v <= 1e9 : Number.isFinite(v)))
+    .filter((v) => dcValueAllowed(component.kind, v))
     .sort((a, b) => a - b)
-    .map((value) => {
+    .flatMap((value) => {
       const p = value === criticalValue && critical ? critical : exactDecimal(value);
       const y = observeExact(input, state, observation, at(p));
-      return { value, observed: y === null ? NaN : toNumber(y) };
+      if (y === null) return [];
+      const observed = toNumber(y);
+      if (!Number.isFinite(observed) || (observed === 0 && !isZero(y)))
+        throw new Error('The investigation is outside the supported numeric range.');
+      return [{ value, observed }];
     });
   return {
     version: 'dc-probe-v1',

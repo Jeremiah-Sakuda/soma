@@ -1,6 +1,7 @@
 import type { SpatialView } from './spatial-schema';
 import { runBfs, type BfsInput, type BfsExecution, type ExplorationSpec } from './exploration';
-import { solveDc, type DcInput, type DcSolution } from './dc-circuit';
+import { solveDc, type DcInput, type DcObservation, type DcSolution } from './dc-circuit';
+import { defaultGraphControls, applyGraphControls, applyComparisonGraphControls, graphControlsEqual, type GraphControls } from './graph-state';
 
 export type ExplorationViewState = {
   step: number;
@@ -30,21 +31,17 @@ export function explorationExecution(
   state: ExplorationViewState,
 ): BfsExecution | null {
   if (spec.mode !== 'checked-bfs' && spec.mode !== 'checked-dijkstra') return null;
-  return runBfs({
-    ...spec.input,
-    start: state.start ?? spec.input.start,
-    goal: state.goal,
-    edges: spec.input.edges
-      .filter((edge) => !state.disabledEdgeIds.includes(edge.id))
-      .map((edge) =>
-        state.edgeWeights?.[edge.id] !== undefined
-          ? { ...edge, weight: state.edgeWeights[edge.id] }
-          : edge,
-      ),
-    neighborOrder: state.reversed
-      ? [...spec.input.neighborOrder].reverse()
-      : spec.input.neighborOrder,
-  });
+  return runBfs(applyGraphControls(spec.input, graphViewControls(spec.input, state)));
+}
+/** Resolve legacy nullable starts and omitted costs without accepting presentation fields. */
+function graphViewControls(input: BfsInput, state: ExplorationViewState): GraphControls {
+  return { start: state.start ?? input.start, goal: state.goal, disabledEdgeIds: state.disabledEdgeIds,
+    reversed: state.reversed, edgeWeights: state.edgeWeights ?? {} };
+}
+/** Source/experiment labeling is independent of whether the authored words match this state. */
+export function graphExperimentActive(spec: ExplorationSpec, state: ExplorationViewState): boolean {
+  return (spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') &&
+    !graphControlsEqual(graphViewControls(spec.input, state), defaultGraphControls(spec.input));
 }
 /** The circuit under the learner's experiment: open parts are `disabledEdgeIds`, changed
  * values are `edgeWeights`, so the same view state and controls serve both families. */
@@ -66,11 +63,7 @@ export function explorationInputsChanged(spec: ExplorationSpec, state: Explorati
   }
   return (
     (spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') &&
-    ((state.start ?? spec.input.start) !== spec.input.start ||
-      state.goal !== spec.input.goal ||
-      state.disabledEdgeIds.length > 0 ||
-      state.reversed ||
-      Object.keys(state.edgeWeights ?? {}).length > 0)
+    !graphControlsEqual(graphViewControls(spec.input, state), spec.writtenFor ?? defaultGraphControls(spec.input))
   );
 }
 function executionCaption(execution: BfsExecution, index: number) {
@@ -95,8 +88,53 @@ export function circuitQuantity(value: number, unit: string) {
   const plain = Number(value.toPrecision(4));
   return `${plain !== value ? '≈ ' : ''}${String(plain).replace('-', '−')} ${unit}`;
 }
+/** The solver's exact fraction beside its rounded decimal, "12/29 A ≈ 0.4138 A", when the
+ * value is not a whole number; otherwise the plain quantity. */
+export function circuitExactQuantity(exact: string | null | undefined, value: number, unit: string, magnitude = false) {
+  if (!exact?.includes('/')) return circuitQuantity(magnitude ? Math.abs(value) : value, unit);
+  const fraction = (magnitude ? exact.replace('-', '') : exact).replace('-', '−');
+  return `${fraction} ${unit} ${circuitQuantity(magnitude ? Math.abs(value) : value, unit).replace(/^(?!≈)/, '= ')}`;
+}
 const circuitName = (input: DcInput, id: string) =>
   input.nodes.find((n) => n.id === id)?.label ?? input.components.find((c) => c.id === id)?.label ?? id;
+/** The selected experiment's consequence, without repeating every newly revealed part.
+ * Decline when the observation is unavailable so the full circuit caption keeps its context. */
+export function circuitObservationCaption(solution: DcSolution, observation: DcObservation): string | null {
+  if (solution.status !== 'solved') return null;
+  const { input } = solution;
+  const voltageAt = (id: string) => {
+    const v = solution.voltages[id];
+    return typeof v === 'number' && Number.isFinite(v) ? v : null;
+  };
+  if (observation.kind === 'voltage') {
+    const node = input.nodes.find((n) => n.id === observation.nodeId), v = voltageAt(observation.nodeId);
+    return node && v !== null
+      ? `${node.label} is at ${circuitQuantity(v, 'V')} relative to ${circuitName(input, input.ground)} (ground).`
+      : null;
+  }
+  const c = input.components.find((part) => part.id === observation.componentId);
+  if (!c) return null;
+  const fromVoltage = voltageAt(c.from), toVoltage = voltageAt(c.to);
+  if (fromVoltage === null || toVoltage === null) return null;
+  if (observation.kind === 'power') {
+    const power = solution.power[c.id];
+    return Number.isFinite(power)
+      ? `${c.label} ${power < 0 ? 'supplies' : 'absorbs'} ${circuitQuantity(Math.abs(power), 'W')}.`
+      : null;
+  }
+  const current = solution.currents[c.id];
+  if (!Number.isFinite(current)) return null;
+  if (solution.state.open.includes(c.id)) return `${c.label} is open, so it carries 0 A.`;
+  if (current === 0)
+    return c.kind === 'resistor' && solution.drops[c.id] === 0
+      ? `${c.label} carries 0 A: both ends are at ${circuitQuantity(fromVoltage, 'V')}.`
+      : `${c.label} carries 0 A.`;
+  const [from, to] = current > 0 ? [c.from, c.to] : [c.to, c.from];
+  const contrast = c.kind === 'resistor'
+    ? ` ${circuitName(input, c.from)} is at ${circuitQuantity(fromVoltage, 'V')}; ${circuitName(input, c.to)} is at ${circuitQuantity(toVoltage, 'V')}.`
+    : '';
+  return `${c.label} carries ${circuitQuantity(Math.abs(current), 'A')} from ${circuitName(input, from)} to ${circuitName(input, to)}.${contrast}`;
+}
 /** Whether a part's two ends are still joined through the other connected parts. */
 function connectedWithout(solution: DcSolution, id: string) {
   const { input, state } = solution;
@@ -188,9 +226,10 @@ export function explorationVisibleCaption(
   return executionCaption(execution, state.step);
 }
 
-/** True when every number in an authored caption is one the solver produced for this run:
- * a distance at any step, an edge cost, the route's cost or length, or a step count. A
- * caption with any other number is replaced by the computed caption where it is drawn. */
+/** Number-membership filter for authored explanation disclosure. It does not prove
+ * which node, quantity or step a number describes, or validate number-free claims.
+ * Never use this filter to select checked drawing captions; compute those from
+ * the current snapshot instead. */
 export function captionIsGrounded(caption: string, executions: (BfsExecution | null)[], circuit: DcSolution | null = null) {
   const allowed = new Set<string>();
   const add = (n: number) => allowed.add(String(Number(n.toFixed(2))));
@@ -282,24 +321,5 @@ export function comparisonExecution(
 ): BfsExecution | null {
   if ((spec.mode !== 'checked-bfs' && spec.mode !== 'checked-dijkstra') || !spec.comparison)
     return null;
-  const sameWeightedGraph =
-    spec.mode === 'checked-dijkstra' &&
-    JSON.stringify({ ...spec.comparison.input, algorithm: spec.input.algorithm }) ===
-      JSON.stringify(spec.input);
-  const input = spec.comparison.input;
-  return runBfs({
-    ...input,
-    ...(sameWeightedGraph
-      ? {
-          start: state.start ?? input.start,
-          goal: state.goal,
-          neighborOrder: state.reversed ? [...input.neighborOrder].reverse() : input.neighborOrder,
-        }
-      : {}),
-    edges: input.edges
-      .filter((e) => !sameWeightedGraph || !state.disabledEdgeIds.includes(e.id))
-      .map((e) =>
-        state.edgeWeights?.[e.id] !== undefined ? { ...e, weight: state.edgeWeights[e.id] } : e,
-      ),
-  });
+  return runBfs(applyComparisonGraphControls(spec.input, spec.comparison.input, graphViewControls(spec.input, state)));
 }

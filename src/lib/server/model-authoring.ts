@@ -21,6 +21,55 @@ export const MODEL_AUTHORING =
   'Choose renderStyle from the catalog only when the part literally is that thing; otherwise renderStyle=null and a plain shape whose silhouette fits (sphere for atoms, cells, planets; cylinder for vessels and columns; box for blocks, slabs, layers, devices; torus for rings). One color per role. ' +
   'viewAction camera="perspective", other fields null. mechanism=null. Add one assumption saying the model is illustrative.';
 
+/** For the built-in engine: which part a diagram part or a step's words are about. */
+const ENGINE_WORDS: [RegExp, string[]][] = [
+  [/intake|inlet/i, ['intake_valve']],
+  [/exhaust/i, ['exhaust_valve']],
+  [/spark|ignit|plug/i, ['spark_plug']],
+  [/piston/i, ['piston']],
+  [/\brod\b|connecting/i, ['rod']],
+  [/crank/i, ['crank']],
+  [/cam\b|camshaft/i, ['intake_cam', 'exhaust_cam']],
+  [/belt|timing|chain|sprocket/i, ['timing_belt']],
+  [/mixture|charge|fuel|gas\b|air\b/i, ['charge']],
+];
+/** The crank angle a step's words point at, as a fraction of two turns. Later strokes win, so
+ * "power, then exhaust" stops on exhaust; the explanation's own order never turns it backwards. */
+function crankFromWords(text: string): number | null {
+  const marks: [RegExp, number][] = [
+    [/\b720\b|two (full )?(crank(shaft)? )?turns|second turn|both turns|cycle (repeats|ends|is complete)|four half/i, 1],
+    [/exhaust/i, 0.875],
+    [/power|expan|burn|combust/i, 0.62],
+    [/spark|ignit|\b360\b|one (full )?turn|first turn/i, 0.5],
+    [/compress|squeez/i, 0.375],
+    [/half a turn|half-turn|\b180\b/i, 0.25],
+    [/intake|draw(s|n)? in|suck/i, 0.125],
+  ];
+  for (const [re, value] of marks) if (re.test(text)) return value;
+  return null;
+}
+/** Binds the built-in engine to the explanation it illustrates: every step gets a crank angle
+ * (Muse's when given, else read from the step's own words, else spread evenly), never turning
+ * backwards, and diagram highlights light the matching engine parts. */
+function bindEngine(spatial: Panel & { objects?: { id?: unknown; renderStyle?: unknown }[] }, previous: Extract<ExplorationSpec, { mode: 'explanation' }>) {
+  const block = spatial.objects?.find((o) => o?.renderStyle === 'engine-block');
+  if (typeof block?.id !== 'string') return null;
+  const prefix = block.id.replace(/_block$/, '');
+  const given = new Map((spatial.parameterPoses ?? []).filter((p) => (p as { parameterId?: unknown }).parameterId === 'crank').map((p) => [p.stepId, (p as unknown as { value: number }).value]));
+  let last = 0;
+  spatial.parameterPoses = previous.steps.map((step, i) => {
+    // The caption says what the step shows; the narration only if the caption names no stroke.
+    const chosen = given.get(step.id) ?? crankFromWords(step.caption) ?? crankFromWords(step.narration ?? '') ?? (i + 1) / previous.steps.length;
+    last = Math.max(last, Math.min(1, Math.max(0, chosen)));
+    return { stepId: step.id, parameterId: 'crank', value: last };
+  }) as Panel['parameterPoses'];
+  const diagramText = new Map(
+    previous.scene.panels.flatMap((p) => (p.kind === 'diagram' ? p.objects.map((o) => [o.id, `${o.id} ${'label' in o ? o.label : ''} ${'text' in o ? o.text : ''}`] as const) : [])),
+  );
+  const partsFor = (text: string) => ENGINE_WORDS.flatMap(([re, roles]) => (re.test(text) ? roles.map((r) => `${prefix}_${r}`) : []));
+  return (step: Extract<ExplorationSpec, { mode: 'explanation' }>['steps'][number]) => [...new Set(step.highlightIds.flatMap((id) => partsFor(diagramText.get(id) ?? id)))];
+}
+
 type Raw = Record<string, unknown> & { scene?: { layout?: unknown; panels?: unknown[] }; steps?: unknown[]; assumptions?: unknown };
 type Panel = { id: string; kind: string; placement: { column: number; row: number; columnSpan: number }; poses?: { stepId: string }[]; parameterPoses?: { stepId: string }[] | null };
 
@@ -76,6 +125,7 @@ export function mergeModelScene(raw: unknown, previous: ExplorationSpec): unknow
   for (const pose of sp.poses ?? []) pose.objectId = rename(pose.objectId);
   if (sp.viewAction) sp.viewAction.focusObjectId = rename(sp.viewAction.focusObjectId);
   const stepIds = new Set(previous.steps.map((s) => s.id));
+  const engineParts = bindEngine(spatial, previous);
   if (Array.isArray(spatial.poses)) spatial.poses = spatial.poses.filter((p) => stepIds.has(p.stepId));
   if (Array.isArray(spatial.parameterPoses)) spatial.parameterPoses = spatial.parameterPoses.filter((p) => stepIds.has(p.stepId));
   const known = new Set<string>([
@@ -104,7 +154,7 @@ export function mergeModelScene(raw: unknown, previous: ExplorationSpec): unknow
     steps: previous.steps.map((step) => ({
       ...structuredClone(step),
       // A diagram part's model twin (id_3d) lights up with it.
-      highlightIds: [...new Set([...step.highlightIds, ...step.highlightIds.map((id) => `${id}_3d`).filter((id) => known.has(id)), ...(authored.get(step.id) ?? [])])].slice(0, 24),
+      highlightIds: [...new Set([...step.highlightIds, ...step.highlightIds.map((id) => `${id}_3d`).filter((id) => known.has(id)), ...(engineParts?.(step) ?? []), ...(authored.get(step.id) ?? [])])].slice(0, 24),
     })),
   };
 }

@@ -227,6 +227,8 @@ export function poseEngineParts<T extends { id: string; renderStyle?: string | n
       labelAt: vec(block.position, s, engineLabelPoint(role, theta)),
       // Flows and the spark show only while they act; the rest keep their own visibility.
       visible: transient ? p.open > 0.04 : o.visible,
+      // While a flow or the spark acts, it is what the moment is about.
+      ...(transient && p.open > 0.04 && 'highlighted' in o ? { highlighted: true } : {}),
     };
   });
 }

@@ -304,7 +304,7 @@ function flow(which: 'intake' | 'exhaust', theta: number): THREE.Object3D {
     new THREE.Vector3(side * 1.45, 3.18, 0.14), new THREE.Vector3(side * 0.75, 3.06, 0.14),
     new THREE.Vector3(side * 0.32, 2.82, 0.14), new THREE.Vector3(side * 0.16, 2.35, 0.14),
   ];
-  return flowArrow(which === 'intake' ? points : [...points].reverse(), which === 'intake' ? 0x6fb3ff : 0x9b8f84, open);
+  return flowArrow(which === 'intake' ? points : [...points].reverse(), which === 'intake' ? 0x6fb3ff : 0xc0703e, open);
 }
 
 function build(role: EngineRole, theta: number): THREE.Object3D {

@@ -84,3 +84,21 @@ describe('expanding and posing the engine', () => {
     for (const o of posed) expect(Math.abs(o.rotation!.z)).toBeLessThanOrEqual(180);
   });
 });
+
+describe('binding the engine to an explanation', () => {
+  it('stops each step at the stroke its caption names, never backwards, and lights matching parts', async () => {
+    const { mergeModelScene } = await import('@/lib/server/model-authoring');
+    const step = (id: string, caption: string, highlightIds: string[]) => ({ id, caption, narration: caption, highlightIds, sourceHighlightIds: [], execution: null, executionStep: null });
+    const previous = {
+      schemaVersion: 'exploration-v1', id: 'x', version: 1, mode: 'explanation', title: 'Two turns', objective: 'Why', sources: [], assumptions: [], uncertainty: [], unsupportedClaims: [], followups: [],
+      scene: { layout: 'diagram-sidebar', panels: [{ id: 'd', kind: 'diagram', title: 'Engine', placement: { column: 1, row: 1, columnSpan: 2 }, objects: [{ id: 'iv', kind: 'node', label: 'Intake valve', position: { x: 0.2, y: 0.2 } }, { id: 'pl', kind: 'node', label: 'Spark plug', position: { x: 0.5, y: 0.2 } }] }] },
+      steps: [step('a', 'Intake: the valve opens and mixture flows in.', ['iv']), step('b', 'The spark fires after one turn.', ['pl']), step('c', 'Back to intake again, for comparison.', []), step('d', 'Two full turns: the cycle is complete.', [])],
+    };
+    const raw = { mode: 'explanation', scene: { panels: [{ id: 'm', kind: 'spatial', title: 'Engine', placement: { column: 1, row: 2, columnSpan: 2 }, objects: [{ id: 'engine', label: 'Engine', description: 'Engine.', shape: 'box', renderStyle: 'engine', color: 'blue', position: { x: 0, y: 2.2, z: 0 }, size: { x: 4, y: 4.4, z: 4 }, parentId: null }], connections: [], poses: [], parameterPoses: [] }] }, steps: [] };
+    const merged = mergeModelScene(raw, previous as never) as { scene: { panels: { kind: string; parameterPoses?: { value: number }[] }[] }; steps: { highlightIds: string[] }[] };
+    const spatial = merged.scene.panels.find((p) => p.kind === 'spatial')!;
+    expect(spatial.parameterPoses!.map((p) => p.value)).toEqual([0.125, 0.5, 0.5, 1]);
+    expect(merged.steps[0].highlightIds).toContain('engine_intake_valve');
+    expect(merged.steps[1].highlightIds).toContain('engine_spark_plug');
+  });
+});

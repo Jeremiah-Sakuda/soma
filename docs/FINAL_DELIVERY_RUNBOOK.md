@@ -1,5 +1,7 @@
 # November 4 final delivery
 
+**Rehearsed November 4, 20:34 UTC:** the existing companion profile was used without an identity reset. Seven generations left five admissions at 20:33:29 UTC; $0.37661175 is the recorded Meta cost of these takes, excluding narration. A signed private 0.5.0 candidate has now recorded native graph/engine/circuit footage against the hosted app; this does not replace final notarization or distribution acceptance. [Clip indices, results and retained failures](DEMO_REHEARSALS.md). Circuit resistor edits in the current native demonstration use the panel controls and mirror into 3D; do not instruct the presenter to click 3D resistor labels. Physical mouse rotation/reset and the cold-start flat drawing fix require final candidate acceptance.
+
 **Recording allowance:** verify the allowance from the production companion’s existing session before the take. The limit is 12 reserved attempts per principal per UTC day, including failed/canceled reservations; an account shares usage across its windows/devices. A two-generation take needs two remaining slots and sufficient shared spending allowance. Do not clear cookies, rotate identities or reset ledgers. November 4’s next reset is 7 PM EST (6 PM CST), November 5 at 00:00 UTC. Source inspection alone does not confirm the running companion has 12 remaining.
 
 All deadlines below are America/New_York. [Verification](VERIFICATION.md) owns executed results; this file sequences remaining delivery. [Build plan](BUILD_PLAN.md) owns scope and [script](DEMO_VIDEO_SCRIPT.md) owns the cut.

@@ -249,6 +249,64 @@ test('a stationary cursor regains hover after a same-capture redraw without need
   await clean(page);
 });
 
+for (const viewport of [
+  { width: 1512, height: 982, dx: 0, dy: 0 },
+  { width: 900, height: 600, dx: 117, dy: 43 },
+  { width: 640, height: 480, dx: -40, dy: -25 },
+  { width: 320, height: 400, dx: 0, dy: 0 },
+]) test(`flat caption stays above compact controls at ${viewport.width}x${viewport.height} with display offset`, async ({ page }) => {
+  await open(page); await page.setViewportSize(viewport);
+  const model = structuredClone(final);
+  // Retain the checked fixture's values; put its drawing on the left to exercise
+  // the side placement, without adding any claims or changing its calculation.
+  for (const node of model.nodes) node.x *= .5;
+  for (const edge of model.edges) for (const key of ['from', 'to', 'control', 'center']) edge[key].x *= .5;
+  for (const tag of model.tags) { tag.x *= .5; tag.anchor.x *= .5; }
+  for (const weight of model.weights) weight.x *= .5;
+  const text = ('The checked values remain tied to the current experiment. The explanation must remain readable above the question bar, even when it wraps across several lines. ').repeat(2);
+  model.caption = { ...model.caption, x: .27, y: .86, anchor: 'top', text };
+  const display = await page.evaluate(({ width, height, dx, dy }) => ({ x: window.screenX + dx, y: window.screenY + dy, width, height }), viewport);
+  await draw(page, model, '2d', { display }); await advance(page);
+  const caption = page.locator('#graph-caption');
+  await expect(caption.locator('span')).toHaveText(text);
+  const box = (await caption.boundingBox())!;
+  const safeLeft = Math.max(0, viewport.dx) + 12;
+  const safeRight = Math.min(viewport.width, viewport.dx + viewport.width) - 12;
+  const safeTop = Math.max(0, viewport.dy) + 12;
+  const safeBottom = Math.min(viewport.height, viewport.dy + viewport.height) - 144;
+  expect(box.x).toBeGreaterThanOrEqual(safeLeft - 1);
+  expect(box.x + box.width).toBeLessThanOrEqual(safeRight + 1);
+  expect(box.y).toBeGreaterThanOrEqual(safeTop - 1);
+  expect(box.y + box.height).toBeLessThanOrEqual(safeBottom + 1);
+  if (viewport.width === 1512) {
+    const drawing = (await page.locator('#graph-layer').boundingBox())!;
+    expect(box.x).toBeGreaterThan(drawing.x + drawing.width);
+  }
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  expect(await page.evaluate(() => (window as any).__hovers.at(-1))).toBe(true);
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual([]);
+  if (viewport.width === 320) {
+    expect(await caption.evaluate((e) => e.scrollHeight > e.clientHeight)).toBe(true);
+    await page.mouse.wheel(0, 500); await page.waitForTimeout(100);
+    expect(await caption.evaluate((e) => e.scrollTop)).toBeGreaterThan(0);
+  }
+  await page.screenshot({ path: test.info().outputPath('flat-caption-fit.png') });
+  await clean(page);
+});
+
+test('flat caption keeps an already-fitting bottom-anchor position', async ({ page }) => {
+  await open(page);
+  const model = structuredClone(final);
+  model.caption = { ...model.caption, x: .7, y: .5, anchor: 'bottom', text: 'Checked result.' };
+  await draw(page, model, '2d'); await advance(page);
+  const box = (await page.locator('#graph-caption').boundingBox())!;
+  expect(box.x).toBeCloseTo(1120, 0);
+  expect(box.y + box.height).toBeCloseTo(450, 0);
+  await page.screenshot({ path: test.info().outputPath('flat-caption-preserved-anchor.png') });
+  await clean(page);
+});
+
 test('stationary caption hover stays neutral across a redraw', async ({ page }) => {
   await open(page); await draw(page); await advance(page);
   const card = (await page.locator('#lift-caption').boundingBox())!;

@@ -115,6 +115,31 @@ function routeSequence(m) {
   }
   return order.size === route.length ? order : new Map();
 }
+function placeFlatCaption(box, caption, layer) {
+  const margin = 12;
+  // The compact window is 104px high and starts 28px above the work-area bottom.
+  // Keep the caption above its default band, within this captured display's
+  // visible intersection with the overlay (which macOS can offset/clamp).
+  const left = Math.max(0, frame.dx) + margin;
+  const right = Math.max(left + 1, Math.min(innerWidth, frame.dx + frame.width) - margin);
+  const top = Math.max(0, frame.dy) + margin;
+  const bottom = Math.max(top + 1, Math.min(innerHeight, frame.dy + frame.height) - 132 - margin);
+  const availableWidth = right - left, availableHeight = bottom - top;
+  box.style.maxWidth = `${Math.min(330, availableWidth)}px`;
+  box.style.width = `${Math.min(Math.ceil(box.getBoundingClientRect().width), availableWidth)}px`;
+  const width = box.getBoundingClientRect().width;
+  const height = Math.min(Math.ceil(box.getBoundingClientRect().height), availableHeight);
+  box.style.height = `${height}px`;
+  const requestedX = caption.x * frame.width + frame.dx;
+  const requestedY = caption.y * frame.height + frame.dy - (caption.anchor === 'bottom' ? height : 0);
+  let x = requestedX;
+  if (requestedX < left || requestedX + width > right || requestedY < top || requestedY + height > bottom) {
+    const beside = layer.getBoundingClientRect().right + margin;
+    if (beside >= left && beside + width <= right) x = beside;
+  }
+  box.style.left = `${Math.max(left, Math.min(x, right - width))}px`;
+  box.style.top = `${Math.max(top, Math.min(requestedY, bottom - height))}px`;
+}
 function renderGraph(m) {
   clearGraph();
   hint.style.display = 'none';
@@ -210,13 +235,9 @@ function renderGraph(m) {
     // Size the card for the finished text first so it does not grow while typing.
     body.textContent = m.caption.text;
     document.body.appendChild(box);
-    box.style.width = Math.ceil(box.getBoundingClientRect().width) + 'px';
+    placeFlatCaption(box, m.caption, layer);
     body.textContent = '';
     typeCaption(body, m.caption.text);
-    box.style.left = m.caption.x * W + frame.dx + 'px';
-    if (m.caption.anchor === 'top') box.style.top = m.caption.y * H + frame.dy + 'px';
-    else box.style.bottom = innerHeight - (m.caption.y * H + frame.dy) + 'px';
-    document.body.appendChild(box);
   }
 }
 // Both lifted renderers share pointer routing. Graph actions return to the solver;
@@ -241,7 +262,8 @@ function pointerHover(event) {
     document.body.style.cursor = id === 'control:caption' ? 'default' : id && id !== 'sheet' ? 'pointer' : id ? 'grab' : '';
   } else {
     const target = document.elementFromPoint(event.clientX, event.clientY);
-    over = !document.body.classList.contains('lifted') && Boolean(target?.classList?.contains('graph-hit'));
+    over = !document.body.classList.contains('lifted')
+      && Boolean(target?.classList?.contains('graph-hit') || target?.closest?.('#graph-caption'));
   }
   if (over !== graphHover) window.somaPointOverlay.hover((graphHover = over));
 }

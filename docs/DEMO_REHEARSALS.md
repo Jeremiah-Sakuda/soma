@@ -126,3 +126,10 @@ Receipt sources: `native/2026-11-04T20-08-23.676Z/rehearsal-receipts-summary.jso
 - Complete final paired hosted/companion acceptance after the accepted source freeze; verify signing/notarization and final release identity independently of these rehearsal packages.
 - Keep raw videos, traces and failed takes. The earlier `native/2026-11-04T19-52-42.927Z/` framing preflight contains private background content and is marked **PRIVATE — DO NOT SHARE**. See `native/PRIVATE_MEDIA_NOTICE.json`. A successful clip review does not clear the entire raw recording for publication.
 - Human review and final edit selection remain outstanding. Preserve original synthetic-source labels, replay/live distinctions, illustrative-model scope and explicit cuts. No recording in this document has been publicly published as the final submission.
+
+
+### Caption repair after the final live take
+
+`8e8ac12` keeps flat captions inside the captured display and above the default compact bar. It preserves a requested placement that fits; otherwise it uses available space beside the annotations and clamps to the viewport. Long captions remain scrollable in small windows. All 25 actual-renderer browser tests passed, including five new cases covering long text, top/bottom anchors, small viewports and positive/negative display offsets. Typecheck, syntax and diff checks passed.
+
+The exact last circuit result was replayed offline in the real renderer: the complete final caption occupies x=931, y=669, width=330, height=169 and ends at y=838, above the default bar starting at y=850. The screenshot and video under `.local/caption-fit-audit/` are explicitly labeled retained-data replay with no new inference. The source background includes a captured earlier bar state; this is layout-test evidence, not a coherent live product take. The fix preserves the adopted appearance. Its 132-pixel reserved band follows the default compact position; it does not track an arbitrarily dragged bar. Final packaged acceptance must include this layout change.

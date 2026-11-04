@@ -2223,6 +2223,15 @@
 .spatial-canvas-label[data-emphasis=true] { border-color: var(--accent); color: var(--accent-hover); }
 .spatial-detail-note { margin: 9px 0 0; font-size: 12px; color: var(--muted); }
 
+/* Checked values stay readable beside either spatial renderer, without another control surface. */
+.spatial-height-readout { margin: 12px 0 4px; color: var(--ink); }
+.spatial-height-readout > p { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0 0 6px; font-size: 13px; font-weight: 600; }
+.spatial-height-readout > p > span { color: var(--muted); font-size: 12px; font-weight: 400; }
+.spatial-height-readout dl { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; }
+.spatial-height-readout dl > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 6px; min-width: 0; max-width: 100%; font-size: 16px; line-height: 1.5; }
+.spatial-height-readout dt { font-weight: 500; overflow-wrap: anywhere; }
+.spatial-height-readout dd { margin: 0; min-width: 0; overflow-wrap: anywhere; font-family: var(--font-geist-mono, monospace); font-variant-numeric: tabular-nums; }
+
 .spatial-stage-note { position: absolute; bottom: 10px; left: 12px; color: #536152; font-size: 11px; pointer-events: none; }
 .spatial-flat { width: 100%; height: 100%; }
 .spatial-loading { padding: 28px; }

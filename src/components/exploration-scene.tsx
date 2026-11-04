@@ -33,11 +33,11 @@ export {
   type ExplorationViewState,
 } from '@/lib/domain/exploration-view';
 import {
-  captionIsGrounded,
   comparisonExecution,
   graphExperimentActive,
   explorationExecution,
   explorationInputsChanged,
+  explorationStepCaption,
   explorationVisibleCaption,
   type ExplorationViewState,
 } from '@/lib/domain/exploration-view';
@@ -464,17 +464,10 @@ export function ExplorationScene({
       )
     : undefined;
   const finalStep = Math.max(execution?.steps.length ?? 1, comparison?.steps.length ?? 1) - 1;
-  // The overlay follows the visible trace: use Muse's caption only when it was written for
-  // exactly this snapshot; otherwise the computed caption describes what is drawn.
-  const overlayStep =
-    spec.mode === 'explanation'
-      ? explanation
-      : spec.steps.find((item) => item.execution === 'primary' && item.executionStep === state.step);
-  const overlayCaption =
-    !changed && overlayStep?.caption &&
-    (spec.mode === 'explanation' || captionIsGrounded(overlayStep.caption, [execution, comparison]))
-      ? overlayStep.caption
-      : explorationVisibleCaption(spec, state);
+  // The source draws the primary checked snapshot, so its printed/native caption
+  // comes from that calculation. Authored explanations stay in the journal;
+  // finding their numbers elsewhere in a trace does not establish their meaning.
+  const overlayCaption = explorationStepCaption(spec, state);
   const select = (selectedObjectId: string) => onChange({ ...state, selectedObjectId });
   const graphInput =
     spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra' ? spec.input : null;

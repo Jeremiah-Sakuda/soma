@@ -872,6 +872,12 @@
   align-items: center;
   gap: 8px;
 }
+.exploration-app .journal-save-status {
+  white-space: nowrap;
+}
+.exploration-app .journal-save[data-save-state='saved'] .journal-save-status {
+  color: var(--accent);
+}
 .exploration-app .journal-save .secondary-button {
   min-height: 44px;
   padding: 6px 14px;
@@ -1094,9 +1100,6 @@
   }
 }
 @media (max-width: 480px) {
-  .exploration-app .journal-save > .meta {
-    display: none;
-  }
   .exploration-app .journal-save .secondary-button,
   .exploration-app .journal-right .exploration-step-bar .secondary-button:has(> svg),
   .exploration-app .journal-right .exploration-step-bar .primary-button:has(> svg),
@@ -1192,13 +1195,29 @@
   }
 }
 @media (max-width: 760px) {
-  .exploration-app .journal-save > .meta {
-    display: none;
+  /* Keep a legible label in the compact target without adding a header row. */
+  .exploration-app .journal-save {
+    position: relative;
+    flex: 0 0 56px;
+    width: 56px;
+    height: 44px;
+  }
+  .exploration-app .journal-save .journal-save-status {
+    position: absolute;
+    inset-inline-start: 50%;
+    bottom: 6px;
+    transform: translateX(-50%);
+    font-size: 12px;
+    line-height: 14px;
+    pointer-events: none;
+    z-index: 1;
   }
   .exploration-app .journal-save .secondary-button {
-    width: 44px;
-    min-width: 44px;
-    padding: 0;
+    width: 56px;
+    min-width: 56px;
+    height: 44px;
+    align-items: flex-start;
+    padding: 6px 0 0;
     gap: 0;
     font-size: 0;
   }

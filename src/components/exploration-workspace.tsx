@@ -142,6 +142,8 @@ type ApiResponse = {
   streamingVoiceEnabled?: boolean;
   versions?: VersionSummary[];
 };
+const SAVE_FAILURE_MESSAGE =
+  'Soma could not save this exploration. Your changes are still here. Try again.';
 async function api(
   method = 'GET',
   body?: unknown,
@@ -212,7 +214,9 @@ async function api(
         'Soma could not use this context. Try a clearer PNG or JPEG screenshot, or ask a narrower question.',
       );
     throw new Error(
-      'Soma could not prepare a new card right now. Your last valid card is still here; you can also try the original example.',
+      method === 'PATCH' && body && typeof body === 'object' && 'action' in body && body.action === 'save'
+        ? SAVE_FAILURE_MESSAGE
+        : 'Soma could not prepare a new card right now. Your last valid card is still here; you can also try the original example.',
     );
   }
   return response.json();
@@ -709,7 +713,7 @@ export function ExplorationWorkspace() {
       setError(
         failure instanceof Error
           ? failure.message
-          : 'Save did not finish. Your card is still open.',
+          : SAVE_FAILURE_MESSAGE,
       );
     } finally {
       setSaving(false);
@@ -1538,13 +1542,24 @@ export function ExplorationWorkspace() {
                   {newContext && <span className="status-chip caution">Previous context</span>}
                 </p>
                 {artifact.version > 1 && <span className="meta">Version {artifact.version}</span>}
-                <div className="journal-save">
-                  <span className="meta">
-                    {dirty ? 'Unsaved changes' : artifact.saved ? 'Saved' : ''}
+                <div
+                  className="journal-save"
+                  data-save-state={saving ? 'saving' : dirty || !artifact.saved ? 'unsaved' : 'saved'}
+                >
+                  <span
+                    id="exploration-save-status"
+                    className="meta journal-save-status"
+                    role="status"
+                    aria-label="Exploration save status"
+                    aria-atomic="true"
+                  >
+                    {saving ? 'Saving…' : dirty || !artifact.saved ? 'Unsaved' : 'Saved'}
                   </span>
                   <button
                     type="button"
                     className="secondary-button"
+                    aria-label="Save exploration"
+                    aria-describedby="exploration-save-status"
                     disabled={saving || busy}
                     onClick={() => void save()}
                   >

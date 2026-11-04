@@ -183,10 +183,11 @@ export function ExplorationCircuitStage({
         .filter(Boolean)
         .join(' ')
     : '';
-  const grounded = authored && captionIsGrounded(authored.caption, [], solution) ? authored.caption : null;
+  const authoredCaption = authored && captionIsGrounded(authored.caption, [], solution) ? authored.caption : null;
   const computedLine = `${lead ? `${lead} ` : ''}${observed ?? computed}`;
-  // The drawing carries Muse's sentence when every number in it is the solver's.
-  const caption = grounded ?? computedLine;
+  // Printed/source/native facts always describe this calculation. Authored
+  // prose remains a separately labeled explanation, never a checked caption.
+  const caption = computedLine;
   const stepLabel =
     changed && experimenting ? 'Your experiment' : `${changed ? 'The circuit as read · ' : ''}Step ${Math.min(state.step, finalStep) + 1} of ${finalStep + 1}`;
   const layout = overlay?.layout;
@@ -322,7 +323,7 @@ export function ExplorationCircuitStage({
       <div className="exploration-caption" aria-live="polite">
         <span className="overline">{stepLabel}</span>
         <p>{solved ? computedLine : `${lead ? `${lead} ` : ''}${solution.reason}`}</p>
-        {grounded && <p className="exploration-authored-caption">Soma’s explanation: {grounded}</p>}
+        {authoredCaption && <p className="exploration-authored-caption">Soma’s explanation: {authoredCaption}</p>}
       </div>
       <details className="exploration-controls-disclosure" open={!compact}>
         <summary>Change the experiment</summary>

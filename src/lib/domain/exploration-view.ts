@@ -226,9 +226,10 @@ export function explorationVisibleCaption(
   return executionCaption(execution, state.step);
 }
 
-/** True when every number in an authored caption is one the solver produced for this run:
- * a distance at any step, an edge cost, the route's cost or length, or a step count. A
- * caption with any other number is replaced by the computed caption where it is drawn. */
+/** Number-membership filter for authored explanation disclosure. It does not prove
+ * which node, quantity or step a number describes, or validate number-free claims.
+ * Never use this filter to select checked drawing captions; compute those from
+ * the current snapshot instead. */
 export function captionIsGrounded(caption: string, executions: (BfsExecution | null)[], circuit: DcSolution | null = null) {
   const allowed = new Set<string>();
   const add = (n: number) => allowed.add(String(Number(n.toFixed(2))));

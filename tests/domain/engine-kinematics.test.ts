@@ -138,8 +138,9 @@ describe('where an explanation lifts from', () => {
   it('treats a typed question, whose focus is the whole display, as pointing at the drawing its steps return to', async () => {
     const { liftFocus } = await import('@/lib/domain/scene-lift');
     const region = liftFocus({ x: 0, y: 0, width: 1, height: 1 }, anchors, steps)!;
-    expect(region.x).toBeCloseTo(0.03);
-    expect(region.width).toBeCloseTo(0.46);
+    expect(region.x).toBeCloseTo(0.01);
+    expect(region.width).toBeCloseTo(0.5);
+    expect(region.y).toBeCloseTo(0.145);
     // Nothing located, or nothing the steps use: the middle of the screen, never the whole of it.
     expect(liftFocus({ x: 0, y: 0, width: 1, height: 1 }, [], steps)).toBeUndefined();
     expect(liftFocus({ x: 0, y: 0, width: 1, height: 1 }, anchors, [{ sourceHighlightIds: [] }])).toBeUndefined();

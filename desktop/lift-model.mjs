@@ -265,14 +265,16 @@ function fitModel() {
   const size = box.getSize(new Vector3()), center = box.getCenter(new Vector3());
   const { x, y, w, h } = s.sheetBox;
   // A tall, narrow model (an engine, a tower) may stand taller, or it would be thin.
-  const tall = size.y > 1.6 * Math.max(size.x, size.z) ? 0.66 : 0.42;
+  const standing = size.y > 1.6 * Math.max(size.x, size.z);
+  const tall = standing ? 0.6 : 0.42;
   const unit = Math.min((w * 0.86) / Math.max(1e-3, size.x), (h * 1.7) / Math.max(1e-3, size.z), (s.frame.height * tall) / Math.max(1e-3, size.y));
   s.unit = unit;
   // Rotating about x by +90° turns the model's y (up) into the sheet's normal.
   s.model.rotation.x = Math.PI / 2;
   s.model.scale.setScalar(unit);
   // The turntable sits under the model's middle; the model stands on it.
-  const cy = y + center.z * unit * 0.25;
+  // A tall model stands nearer the sheet's front edge, so its top stays below the slide's title.
+  const cy = y + center.z * unit * 0.25 - (standing ? h * 0.16 : 0);
   s.table.position.set(x, cy, 0);
   s.model.position.set(-center.x * unit, 0, -box.min.y * unit + 2);
   s.floorY = box.min.y;
@@ -524,14 +526,13 @@ function caption(data) {
   if (engine && !dial) {
     dial = document.createElement('div');
     dial.id = 'lift-turn';
-    dial.style.cssText = 'display:flex;align-items:center;gap:10px;margin:8px 0 2px;font:600 13px/1.3 -apple-system,system-ui,sans-serif;color:#2b3440';
     const arcs = [['#6fb6ff', 0], ['#3f8ff0', 90], ['#ff7a2a', 180], ['#8f857a', 270]]
       .map(([c, a]) => { const r = 15, p = (d) => [20 + r * Math.sin((d * Math.PI) / 180), 20 - r * Math.cos((d * Math.PI) / 180)];
         const [x0, y0] = p(a + 3), [x1, y1] = p(a + 87); return `<path d="M${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1}" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>`; }).join('');
-    dial.innerHTML = `<svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true" style="position:static;inset:auto;width:40px;height:40px;flex:none;overflow:visible">${arcs}<line id="lift-turn-hand" x1="20" y1="20" x2="20" y2="7" stroke="#1d2430" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="20" r="2.5" fill="#1d2430"/></svg><span id="lift-turn-text"></span>`;
+    dial.innerHTML = `<svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">${arcs}<line id="lift-turn-hand" x1="20" y1="20" x2="20" y2="7" stroke="#1d2430" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="20" r="2.5" fill="#1d2430"/></svg><span id="lift-turn-text"></span>`;
     box.insertBefore(dial, note);
   }
-  if (dial) dial.style.display = engine ? 'flex' : 'none';
+  if (dial) dial.hidden = !engine;
   title.textContent = data.caption?.stepLabel ?? data.title;
   body.textContent = data.caption?.text ?? '';
   note.textContent = data.note;
@@ -539,12 +540,13 @@ function caption(data) {
   box.style.left = Math.max(8, Math.min(r.x * f.width + f.dx, innerWidth - box.offsetWidth - 8)) + 'px';
   box.style.bottom = '';
   const below = (r.y + r.height) * f.height + f.dy + 12;
-  if (below + box.offsetHeight <= innerHeight - 12) box.style.top = below + 'px';
+  if (below + box.offsetHeight <= innerHeight - 124) box.style.top = below + 'px';
   else {
     // No room under the region: beside it, on whichever side has more space.
     const right = (r.x + r.width) * f.width + f.dx + 16, left = r.x * f.width + f.dx - box.offsetWidth - 16;
     box.style.left = (right + box.offsetWidth <= innerWidth - 8 || left < 8 ? Math.min(right, innerWidth - box.offsetWidth - 8) : left) + 'px';
-    box.style.top = Math.max(8, innerHeight - box.offsetHeight - 24) + 'px';
+    // Clear of the ask bar, which sits at the bottom of the screen.
+    box.style.top = Math.max(8, innerHeight - box.offsetHeight - 124) + 'px';
   }
 }
 
@@ -603,7 +605,7 @@ function renderFrame() {
     // Lifted, the slide's region is covered completely, so its drawing never shows twice.
     sh.paper.material.opacity = ready ? 1 : 0;
     sh.cover.material.opacity = ready && s.hasCover ? clamp01(t / 0.06) : 0;
-    sh.floor.material.opacity = 0.3 * tilt;
+    sh.floor.material.opacity = 0.14 * tilt;
   }
   const parts = [...s.parts.values()];
   const anyLit = parts.some((v) => v.data.highlighted && v.data.visible);
@@ -625,7 +627,9 @@ function renderFrame() {
     // A picked part stands out by size as well as colour.
     v.pick = approach(v.pick ?? 0, v.data.selected ? 1 : 0, dt, 0.2);
     if (Math.abs(v.pick - (v.data.selected ? 1 : 0)) > 0.01) moving = true;
-    v.inner.scale.setScalar(Math.max(0.001, clamp01(k * 1.4) * (1 + pulse) * (1 + 0.1 * v.pick)));
+    // An assembly's parts stay their size, so its joints stay joined.
+    const assembled = v.data.renderStyle?.startsWith('engine-');
+    v.inner.scale.setScalar(Math.max(0.001, clamp01(k * 1.4) * (assembled ? 1 : (1 + pulse) * (1 + 0.1 * v.pick))));
     // Parts the step is not about step back by greying, not by fading, so the slide never
     // shows through a solid part.
     // An engine's metal parts keep their own look; only the lit ones glow.
@@ -642,8 +646,12 @@ function renderFrame() {
         if ('emissiveIntensity' in mat && !(enginePart && engineChangesShape(v.data.renderStyle))) {
           const lit = v.data.selected || v.data.highlighted || v.hover;
           // A picked part glows in its own colour (its chip carries the pick colour).
-          if (lit && mat.emissive) mat.emissive.set(v.data.selected && mat.userData.baseColor ? mat.userData.baseColor : v.hover ? PICKED : enginePart && mat.userData.baseColor ? mat.userData.baseColor : ACCENT);
-          mat.emissiveIntensity = v.data.selected ? 0.5 : v.hover ? 0.18 : v.data.highlighted ? 0.18 + 0.25 * (pulse / 0.12) : 0;
+          if (lit && mat.emissive) mat.emissive.set((v.data.selected || enginePart) && mat.userData.baseColor ? mat.userData.baseColor : v.hover ? PICKED : ACCENT);
+          // On an engine a lit part brightens gently, and its big block not at all: the name says which.
+          const block = v.data.renderStyle === 'engine-block';
+          mat.emissiveIntensity = enginePart
+            ? (lit && !block ? 0.16 : 0)
+            : v.data.selected ? 0.5 : v.hover ? 0.18 : v.data.highlighted ? 0.18 + 0.25 * (pulse / 0.12) : 0;
         }
       }
     });

@@ -70,9 +70,10 @@ export function liftFocus(
     if (!best || score > best.score) best = { region: anchor.region, score };
   }
   if (!best) return undefined;
-  // A little room around the drawing, kept on the display.
-  const r = best.region, pad = 0.02, x = Math.max(0, r.x - pad), y = Math.max(0, r.y - pad);
-  return { x, y, width: Math.min(1 - x, r.width + 2 * pad), height: Math.min(1 - y, r.height + 2 * pad) };
+  // Room for the drawing's own labels, which a located region tends to clip: more at the sides
+  // and below, hardly any above, where a slide's title sits. Kept on the display.
+  const r = best.region, x = Math.max(0, r.x - 0.04), y = Math.max(0, r.y - 0.005);
+  return { x, y, width: Math.min(1 - x, r.x + r.width + 0.04 - x), height: Math.min(1 - y, r.y + r.height + 0.05 - y) };
 }
 
 export function liftRegion(focus: Region | null | undefined, aspect: number): Region {

@@ -146,7 +146,7 @@ export function engineLabelPoint(role: EngineRole, theta: number): { x: number; 
     case 'piston': return { x: 0.3, y: p.y + 0.12, z: 0.42 };
     case 'rod': { const pin = crankPin(theta), top = pistonPin(theta); return { x: pin.x * 0.6, y: pin.y + (top - pin.y) * 0.4, z: 0.08 }; }
     case 'crank': return { x: 0.16, y: -0.08, z: ENGINE.drive };
-    case 'intake_valve': case 'exhaust_valve': return { x: p.x + Math.sin(a) * 0.5, y: p.y + Math.cos(a) * 0.5, z: 0.04 };
+    case 'intake_valve': case 'exhaust_valve': return { x: p.x + Math.sin(a) * 0.3, y: p.y + Math.cos(a) * 0.3, z: 0.04 };
     case 'intake_cam': case 'exhaust_cam': return { x: p.x, y: p.y, z: ENGINE.drive };
     case 'spark_plug': return { x: 0, y: 3.7, z: 0.1 };
     case 'timing_belt': { const c = camCentre(-1); return { x: c.x - 0.33, y: c.y + 0.34, z: ENGINE.drive }; }

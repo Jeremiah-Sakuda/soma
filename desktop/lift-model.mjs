@@ -30,7 +30,7 @@ import {
 } from 'three';
 import { createSpatialPart } from '../src/components/spatial-parts';
 import { engineChangesShape } from '../src/components/engine-parts';
-import { crankTweenMs, easeCrank, engineCrank, poseEngineParts, strokeAt } from '../src/lib/domain/engine-kinematics';
+import { crankTweenMs, easeCrank, engineCrank, poseEngineParts } from '../src/lib/domain/engine-kinematics';
 import { cameraDistance, easeInOut, clamp01, riseAt, approach } from './lift-geometry.mjs';
 
 const FOV = 28;
@@ -208,7 +208,8 @@ function placeSheet(data, sheet) {
   s.hasCover = Boolean(sheet);
   const plane = new Mesh(new PlaneGeometry(w, h), paper);
   plane.position.set(x, y, 0);
-  const cover = new Mesh(new PlaneGeometry(w, h), coverMat);
+  // Its soft rim falls just outside the region, so nothing at the edge shows through.
+  const cover = new Mesh(new PlaneGeometry(w + 12, h + 12), coverMat);
   cover.position.set(x, y, -2);
   cover.renderOrder = -2;
   // A soft drop shadow under the sheet, tilting with it, gives it an edge against the slide.
@@ -256,7 +257,7 @@ function fitModel() {
   const { x, y, w, h } = s.sheetBox;
   // A tall, narrow model (an engine, a tower) may stand taller, or it would be thin.
   const standing = size.y > 1.6 * Math.max(size.x, size.z);
-  const tall = standing ? 0.6 : 0.42;
+  const tall = standing ? 0.7 : 0.42;
   const unit = Math.min((w * 0.86) / Math.max(1e-3, size.x), (h * 1.7) / Math.max(1e-3, size.z), (s.frame.height * tall) / Math.max(1e-3, size.y));
   s.unit = unit;
   // Rotating about x by +90° turns the model's y (up) into the sheet's normal.
@@ -431,7 +432,7 @@ function flushLabels() {
       l.el._h = l.el.offsetHeight;
     }
   const card = document.getElementById('lift-caption')?.getBoundingClientRect();
-  const f = s.frame, gap = 4;
+  const f = s.frame, gap = 6;
   const placed = card ? [{ x: card.left, y: card.top, w: card.width, h: card.height }] : [];
   const clear = (b) =>
     b.x >= f.dx + 4 && b.y >= f.dy + 4 && b.x + b.w <= f.dx + f.width - 4 && b.y + b.h <= f.dy + f.height - 4 &&
@@ -447,7 +448,8 @@ function flushLabels() {
       // slide's text) when there is room; else the other side; else anywhere clear.
       const left = l.x < outline.cx;
       const r = s.data.region, rx0 = r.x * f.width + f.dx, rx1 = (r.x + r.width) * f.width + f.dx;
-      const inRegion = (b) => b.x >= rx0 - 2 && b.x + b.w <= rx1 + 2;
+      // A short overhang is better than a leader crossing the whole engine.
+      const inRegion = (b) => b.x >= rx0 - 44 && b.x + b.w <= rx1 + 44;
       const rows = [0, 1, -1, 2, -2, 3, -3, 4, -4];
       const tries = (side, strict) => rows.map((dy) => ({ x: side ? outline.x0 - 18 - w : outline.x1 + 18, y: l.y - h / 2 + dy * (h + 6), w, h })).filter((b) => !strict || inRegion(b));
       const box = [...tries(left, true), ...tries(!left, true), ...tries(left, false), ...tries(!left, false)].find(clear) ?? null;
@@ -516,10 +518,12 @@ function caption(data) {
   if (engine && !dial) {
     dial = document.createElement('div');
     dial.id = 'lift-turn';
-    const arcs = [['#6fb6ff', 0], ['#3f8ff0', 90], ['#ff7a2a', 180], ['#8f857a', 270]]
-      .map(([c, a]) => { const r = 15, p = (d) => [20 + r * Math.sin((d * Math.PI) / 180), 20 - r * Math.cos((d * Math.PI) / 180)];
+    const strokes = [['intake', 'Intake', '#6fb6ff'], ['compression', 'Compression', '#3f8ff0'], ['power', 'Power', '#ff7a2a'], ['exhaust', 'Exhaust', '#8f857a']];
+    const arcs = strokes
+      .map(([, , c], i) => { const r = 15, a = i * 90, p = (d) => [20 + r * Math.sin((d * Math.PI) / 180), 20 - r * Math.cos((d * Math.PI) / 180)];
         const [x0, y0] = p(a + 3), [x1, y1] = p(a + 87); return `<path d="M${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1}" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>`; }).join('');
-    dial.innerHTML = `<svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">${arcs}<line id="lift-turn-hand" x1="20" y1="20" x2="20" y2="7" stroke="#1d2430" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="20" r="2.5" fill="#1d2430"/></svg><span id="lift-turn-text"></span>`;
+    dial.innerHTML = `<svg viewBox="0 0 40 40" aria-hidden="true">${arcs}<line id="lift-turn-hand" x1="20" y1="20" x2="20" y2="7" stroke="#1d2430" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="20" r="2.5" fill="#1d2430"/></svg><div class="lift-turn-info"><span id="lift-turn-text"></span><div class="lift-strokes">${strokes.map(([id, name]) => `<span class="lift-stroke"><i data-stroke="${id}"></i><b>${name}</b></span>`).join('')}</div></div>`;
+    dial.querySelectorAll('.lift-stroke i').forEach((bar, i) => { bar.style.background = strokes[i][2]; });
     box.insertBefore(dial, note);
   }
   if (dial) dial.hidden = !engine;
@@ -530,13 +534,13 @@ function caption(data) {
   box.style.left = Math.max(8, Math.min(r.x * f.width + f.dx, innerWidth - box.offsetWidth - 8)) + 'px';
   box.style.bottom = '';
   const below = (r.y + r.height) * f.height + f.dy + 12;
-  if (below + box.offsetHeight <= innerHeight - 124) box.style.top = below + 'px';
+  if (below + box.offsetHeight <= innerHeight - 138) box.style.top = below + 'px';
   else {
     // No room under the region: beside it, on whichever side has more space.
     const right = (r.x + r.width) * f.width + f.dx + 16, left = r.x * f.width + f.dx - box.offsetWidth - 16;
     box.style.left = (right + box.offsetWidth <= innerWidth - 8 || left < 8 ? Math.min(right, innerWidth - box.offsetWidth - 8) : left) + 'px';
     // Clear of the ask bar, which sits at the bottom of the screen.
-    box.style.top = Math.max(8, innerHeight - box.offsetHeight - 124) + 'px';
+    box.style.top = Math.max(8, innerHeight - box.offsetHeight - 138) + 'px';
   }
 }
 
@@ -585,8 +589,9 @@ function renderFrame() {
     const theta = s.crankShown * 720, hand = document.getElementById('lift-turn-hand'), text = document.getElementById('lift-turn-text');
     // The dial is the whole cycle: one sweep is two crankshaft turns.
     hand?.setAttribute('transform', `rotate(${(theta / 2).toFixed(1)} 20 20)`);
-    const stroke = strokeAt(theta);
-    if (text) text.textContent = `Crankshaft ${Math.round(theta)}° · turn ${theta > 360 ? 2 : 1} of 2 · ${stroke[0].toUpperCase()}${stroke.slice(1)} · camshaft ${Math.round(theta / 2)}°`;
+    if (text) text.textContent = `Crankshaft ${Math.round(theta)}° · turn ${theta > 360 ? 2 : 1} of 2 · camshaft ${Math.round(theta / 2)}°`;
+    // The cycle so far: each stroke's bar fills as the crank goes through it.
+    document.querySelectorAll('.lift-stroke i').forEach((bar, i) => { bar.style.width = `${clamp01((theta - i * 180) / 180) * 100}%`; });
   }
   const sheetT = clamp01(t / 0.3), sh = s.sheet;
   if (sh) {
@@ -599,6 +604,8 @@ function renderFrame() {
   }
   const parts = [...s.parts.values()];
   const anyLit = parts.some((v) => v.data.highlighted && v.data.visible);
+  // An engine's cam drive stands back, so the mechanism shows through, until a step is about it.
+  const driveLit = parts.some((v) => /^engine-(timing-belt|intake-cam|exhaust-cam)$/.test(v.data.renderStyle ?? '') && (v.data.highlighted || v.data.selected));
   for (const v of parts) {
     const k = quick ? t : clamp01(riseAt(t, v.index, parts.length));
     // Poses glide between steps; a part appears or leaves by fading where it stands.
@@ -629,7 +636,7 @@ function renderFrame() {
       if (!m.isMesh) return;
       const mats = Array.isArray(m.material) ? m.material : [m.material];
       for (const mat of mats) {
-        mat.opacity = (mat.userData.baseOpacity ?? 1) * v.fade;
+        mat.opacity = (mat.userData.baseOpacity ?? 1) * v.fade * (mat.userData.drive && !driveLit ? 0.25 : 1);
         if (mat.userData.baseColor) mat.color.copy(mat.userData.baseColor).lerp(GREY, dim ? 0.55 : 0);
         mat.depthWrite = mat.opacity > 0.95;
         // The gas, spark and flows carry their own glow.

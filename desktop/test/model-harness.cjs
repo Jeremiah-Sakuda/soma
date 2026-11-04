@@ -41,7 +41,23 @@ const out = path.resolve(outArg || '.local/model-harness');
     const display = { x: 0, y: 0, width: W, height: H };
     // FOCUS=x,y,w,h (fractions of the slide) stands in for the region the learner pointed at.
     const focus = process.env.FOCUS ? (([x, y, width, height]) => ({ x, y, width, height }))(process.env.FOCUS.split(',').map(Number)) : undefined;
-    const at = (i) => (circuit ? circuitOverlay(i, H / W) : overlayFor(spec, state, i, H / W, focus));
+    // The same search for clear edges the page does, on a small copy of the slide.
+    const inkData = process.env.FOCUS ? await page.evaluate(async (src) => {
+      const img = new Image();
+      img.src = src;
+      await img.decode();
+      const width = 256, height = Math.round((width * img.naturalHeight) / img.naturalWidth), c = document.createElement('canvas');
+      c.width = width; c.height = height;
+      const g = c.getContext('2d');
+      g.drawImage(img, 0, 0, width, height);
+      const data = g.getImageData(0, 0, width, height).data, counts = new Map();
+      for (let i = 0; i < data.length; i += 4) { const k = ((data[i] >> 4) << 8) | ((data[i + 1] >> 4) << 4) | (data[i + 2] >> 4); counts.set(k, (counts.get(k) ?? 0) + 1); }
+      const p = [...counts].sort((a, b) => b[1] - a[1])[0][0], [r, gr, b] = [(p >> 8) * 17, ((p >> 4) & 15) * 17, (p & 15) * 17], ink = [];
+      for (let i = 0; i < width * height; i++) ink.push(Math.abs(data[i * 4] - r) + Math.abs(data[i * 4 + 1] - gr) + Math.abs(data[i * 4 + 2] - b) > 60 ? 1 : 0);
+      return { width, height, ink };
+    }, `data:image/png;base64,${slide}`) : null;
+    const ink = inkData ? { ...inkData, ink: Uint8Array.from(inkData.ink) } : undefined;
+    const at = (i) => (circuit ? circuitOverlay(i, H / W) : overlayFor(spec, state, i, H / W, focus, ink));
     const first = at(0);
     const steps = circuit ? first?.steps ?? 0 : spec.mode === 'explanation' ? spec.steps.length : 0;
     if (!first) throw new Error('This answer has no 3D scene.');

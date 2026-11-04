@@ -196,6 +196,14 @@ export function expandEngine(panel: SpatialPanel): SpatialPanel {
   return next;
 }
 
+/** How long a step's turn of the crank takes on screen: a quarter turn quickly, two turns slowly. */
+export const crankTweenMs = (delta01: number) => Math.min(2800, 500 + Math.abs(delta01) * 4200);
+export const easeCrank = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
+/** The crank value an engine scene is posed at, if it has one. */
+export function engineCrank(objects: readonly { renderStyle?: string | null; parameterValues?: Record<string, number> }[]) {
+  return objects.find((o) => engineRoleOf(o.renderStyle) === 'block')?.parameterValues?.crank;
+}
+
 /** Poses every engine part in a scene at the crank parameter's value: block-relative, exact. */
 export function poseEngineParts<T extends { id: string; renderStyle?: string | null; position: SpatialVector; size: SpatialVector; rotation?: { x: number; y: number; z: number } | null; visible: boolean; parameterValues?: Record<string, number>; labelAt?: SpatialVector }>(
   objects: T[],
@@ -217,7 +225,8 @@ export function poseEngineParts<T extends { id: string; renderStyle?: string | n
       rotation: { x: 0, y: 0, z: wrap(p.rotZ) },
       parameterValues: { ...(o.parameterValues ?? {}), crank: crank01 },
       labelAt: vec(block.position, s, engineLabelPoint(role, theta)),
-      visible: o.visible && (!transient || p.open > 0.04),
+      // Flows and the spark show only while they act; the rest keep their own visibility.
+      visible: transient ? p.open > 0.04 : o.visible,
     };
   });
 }

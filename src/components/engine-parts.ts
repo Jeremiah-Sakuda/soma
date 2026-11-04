@@ -325,13 +325,31 @@ function build(role: EngineRole, theta: number): THREE.Object3D {
   }
 }
 
+/** Parts whose shape changes with the angle; every other part is the same mesh, turned or moved. */
+export const engineChangesShape = (renderStyle: string | null | undefined) => {
+  const role = engineRoleOf(renderStyle);
+  return role === 'charge' || role === 'spark' || role === 'intake_flow' || role === 'exhaust_flow';
+};
+// Built once per page: a turning crank reuses the meshes, with materials of its own.
+const templates = new Map<EngineRole, THREE.Object3D>();
+function instance(role: EngineRole, theta: number) {
+  if (role === 'charge' || role === 'spark' || role === 'intake_flow' || role === 'exhaust_flow') return build(role, theta);
+  let template = templates.get(role);
+  if (!template) templates.set(role, (template = build(role, 0)));
+  const copy = template.clone(true);
+  copy.traverse((item) => {
+    if (item instanceof THREE.Mesh) item.material = Array.isArray(item.material) ? item.material.map((m) => m.clone()) : item.material.clone();
+  });
+  return copy;
+}
+
 /** One engine part, or null when the object is not one. Highlighted parts glow faintly in their
  * own colour; a picked part glows in the selection colour. */
 export function createEnginePart(object: SpatialObject, selected: boolean): THREE.Group | null {
   const role = engineRoleOf(object.renderStyle);
   if (!role) return null;
   const theta = crankDegrees(object.parameterValues?.crank ?? 0);
-  const root = new THREE.Group(), inner = build(role, theta);
+  const root = new THREE.Group(), inner = instance(role, theta);
   root.add(inner);
   root.traverse((item) => {
     if (!(item instanceof THREE.Mesh)) return;

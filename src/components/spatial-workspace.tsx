@@ -2,7 +2,8 @@
 
 import dynamic from 'next/dynamic.js';
 import { RotateCcw, RotateCw } from 'lucide-react';
-import { Component, useMemo, useState, type ReactNode } from 'react';
+import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { crankTweenMs, easeCrank, engineCrank, poseEngineParts } from '@/lib/domain/engine-kinematics';
 import type { ExplorationSpec } from '@/lib/domain/exploration';
 import type { ExplorationViewState } from '@/lib/domain/exploration-view';
 import { spatialScene, spatialPresentation, type SpatialScene } from '@/lib/domain/spatial-exploration';
@@ -43,6 +44,34 @@ function FlatScene({ scene }: { scene: SpatialScene }) {
   </svg>;
 }
 
+/** The crank angle to show: a step's new angle is reached by turning, unless the learner is
+ * dragging the control themself or prefers reduced motion. */
+function useCrankMotion(base: SpatialScene | null) {
+  const target = base ? engineCrank(base.objects) : undefined;
+  const dragging = base?.parameters?.some((p) => p.id === 'crank' && p.overridden) ?? false;
+  const [shown, setShown] = useState(target);
+  const current = useRef(target);
+  useEffect(() => {
+    if (target === undefined) return;
+    const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const from = current.current;
+    if (dragging || reduced || from === undefined || Math.abs(target - from) < 0.004) {
+      current.current = target;
+      setShown(target);
+      return;
+    }
+    const began = performance.now(), ms = crankTweenMs(target - from);
+    let frame = requestAnimationFrame(function turn(now) {
+      const p = Math.min(1, (now - began) / ms);
+      current.current = from + (target - from) * easeCrank(p);
+      setShown(current.current);
+      if (p < 1) frame = requestAnimationFrame(turn);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [target, dragging]);
+  return target === undefined ? undefined : shown;
+}
+
 export default function SpatialWorkspace({ spec, state, onChange, which = 'primary' }: {
   spec: ExplorationSpec; state: ExplorationViewState; onChange: (state: ExplorationViewState) => void; which?: 'primary' | 'comparison';
 }) {
@@ -52,7 +81,11 @@ export default function SpatialWorkspace({ spec, state, onChange, which = 'prima
   const { spatial: _view, selectedObjectId: _selection, ...computation } = state;
   const parameterKey = JSON.stringify(view.parameters ?? {});
   const computationKey = JSON.stringify(computation);
-  const base = useMemo(() => spatialScene(spec, state, which), [spec, computationKey, parameterKey, which]);
+  const authoredBase = useMemo(() => spatialScene(spec, state, which), [spec, computationKey, parameterKey, which]);
+  const crank = useCrankMotion(authoredBase);
+  const base = useMemo(() => authoredBase && crank !== undefined && crank !== engineCrank(authoredBase.objects)
+    ? { ...authoredBase, objects: poseEngineParts(authoredBase.objects, crank), parameters: authoredBase.parameters?.map((p) => (p.id === 'crank' ? { ...p, value: crank } : p)) }
+    : authoredBase, [authoredBase, crank]);
   const scene = useMemo(() => base ? spatialPresentation(base, state) : null, [base, view.spread, view.isolate, state.selectedObjectId]);
   if (!scene || !base) return null;
   const update = (change: Partial<SpatialView>) => onChange({ ...state, spatial: { ...view, ...change } });

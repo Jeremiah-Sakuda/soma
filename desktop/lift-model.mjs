@@ -29,6 +29,8 @@ import {
   Vector2,
 } from 'three';
 import { createSpatialPart } from '../src/components/spatial-parts';
+import { engineChangesShape } from '../src/components/engine-parts';
+import { crankTweenMs, easeCrank, engineCrank, poseEngineParts } from '../src/lib/domain/engine-kinematics';
 import { cameraDistance, easeInOut, clamp01, riseAt, approach } from './lift-geometry.mjs';
 
 const FOV = 28;
@@ -294,7 +296,9 @@ function syncParts(data) {
   data.objects.forEach((o, index) => {
     seen.add(o.id);
     const shellNow = Boolean(o.shell) || data.objects.some((c) => c.parentId === o.id);
-    const look = JSON.stringify([o.shape, o.renderStyle, o.color, o.size, o.path ?? null, o.geometry ?? null, o.parameterValues ?? null, shellNow]);
+    // An engine part that only turns or slides keeps its mesh as the crank moves.
+    const engine = o.renderStyle?.startsWith('engine-');
+    const look = JSON.stringify([o.shape, o.renderStyle, o.color, o.size, o.path ?? null, o.geometry ?? null, engine && !engineChangesShape(o.renderStyle) ? null : o.parameterValues ?? null, shellNow]);
     let v = s.parts.get(o.id);
     if (v && v.look !== look) {
       dispose3d(v.mesh);
@@ -329,11 +333,13 @@ function syncParts(data) {
       s.model.add(holder);
       v.mesh = holder;
       v.inner = inner;
+      v.part = part;
       v.shadow = shadow;
       v.look = look;
       part.updateMatrixWorld(true);
       v.extent = new Box3().setFromObject(part);
     }
+    if (engine && v.part) v.part.rotation.set(0, 0, ((o.rotation?.z ?? 0) * Math.PI) / 180);
     if (v.data && v.data.highlighted !== o.highlighted && o.highlighted) v.pulseAt = clock();
     if (v.data && !v.data.visible && o.visible) v.pulseAt = clock();
     v.data = o;
@@ -520,6 +526,13 @@ function renderFrame() {
   s.yaw.rotation.z = Math.sin((now - (s.idleSince ?? now)) / 2200) * 0.14 * s.sway;
   s.table.rotation.z = s.turn * tilt;
   let moving = s.mode !== 'idle' || s.sway > 0.002;
+  if (s.crankTween) {
+    const c = s.crankTween, p = clamp01((now - c.began) / c.ms);
+    s.crankShown = c.from + (c.to - c.from) * easeCrank(p);
+    syncParts({ ...s.data, objects: poseEngineParts(s.data.objects, s.crankShown) });
+    if (p >= 1) s.crankTween = null;
+    moving = true;
+  }
   const sheetT = clamp01(t / 0.3), sh = s.sheet;
   if (sh) {
     const ready = s.sheetReady;
@@ -533,7 +546,9 @@ function renderFrame() {
   for (const v of parts) {
     const k = quick ? t : clamp01(riseAt(t, v.index, parts.length));
     // Poses glide between steps; a part appears or leaves by fading where it stands.
-    v.at.set(approach(v.at.x, v.target.x, dt, 0.35), approach(v.at.y, v.target.y, dt, 0.35), approach(v.at.z, v.target.z, dt, 0.35));
+    // An engine's parts are posed exactly at each angle; gliding them would break the joints.
+    if (v.data.renderStyle?.startsWith('engine-')) v.at.copy(v.target);
+    else v.at.set(approach(v.at.x, v.target.x, dt, 0.35), approach(v.at.y, v.target.y, dt, 0.35), approach(v.at.z, v.target.z, dt, 0.35));
     if (v.at.distanceTo(v.target) > 0.002) moving = true;
     v.fade = quick ? (v.data.visible ? 1 : 0) : approach(v.fade, v.data.visible ? 1 : 0, dt, 0.25);
     if (Math.abs(v.fade - (v.data.visible ? 1 : 0)) > 0.01) moving = true;
@@ -672,7 +687,16 @@ function update(data, frame, sheet) {
   s.pinned = anchored(data);
   if (s.pinned) fitAnchored(data);
   else s.anchors = null;
-  syncParts(data);
+  // A step that turns the engine's crank turns it on screen, rather than jumping.
+  const to = engineCrank(data.objects);
+  if (to !== undefined && s.crankShown !== undefined && Math.abs(to - s.crankShown) > 0.004 && !reducedMotion.matches) {
+    s.crankTween = { from: s.crankShown, to, began: clock(), ms: crankTweenMs(to - s.crankShown) };
+    syncParts({ ...data, objects: poseEngineParts(data.objects, s.crankShown) });
+  } else {
+    s.crankTween = null;
+    s.crankShown = to;
+    syncParts(data);
+  }
   const fitKey = data.objects.map((o) => o.id).join(',') + s.sheetKey;
   if (!s.pinned && fitKey !== s.fitKey) {
     fitModel();

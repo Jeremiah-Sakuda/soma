@@ -69,12 +69,13 @@ test('original example runs actual BFS controls, saves exact state and resumes w
   await expect(frontier.locator('li')).toHaveText(['NextA', '2B']);
   await page.getByRole('button', { name: 'Reverse neighbor order' }).click();
   await page.getByRole('button', { name: 'Next step', exact: true }).click();
-  await expect(frontier.locator('li')).toHaveText(['NextB', '2A']);
+  const currentFrontier = page.getByRole('list', { name: 'Current frontier queue', exact: true });
+  await expect(currentFrontier.locator('li')).toHaveText(['NextB', '2A']);
   await expect(page.getByText('You changed the experiment.', { exact: false })).toBeVisible();
   await page.getByText('Change a connection', { exact: true }).click();
   await page.getByRole('checkbox', { name: 'S → A', exact: true }).uncheck();
   await page.getByRole('button', { name: 'Next step', exact: true }).click();
-  await expect(frontier.locator('li')).toHaveText(['NextB']);
+  await expect(currentFrontier.locator('li')).toHaveText(['NextB']);
   await page.getByText('Select a node & inspect graph', { exact: true }).click();
   await page.getByRole('button', { name: 'Node B', exact: true }).click();
   await page.getByRole('button', { name: 'Save exploration', exact: true }).click();
@@ -84,8 +85,55 @@ test('original example runs actual BFS controls, saves exact state and resumes w
   expect(requests.some(item => item.action === 'generate')).toBe(false);
   await page.reload(); await page.getByRole('button', { name: 'Why does A come before B? Version 1 · Saved' }).click();
   await expect(page.getByRole('button', { name: 'Reverse neighbor order' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(frontier.locator('li')).toHaveText(['NextB']);
+  await expect(currentFrontier.locator('li')).toHaveText(['NextB']);
   await expect(page.getByText('Asking about: B')).toBeVisible();
+});
+
+test('recorded graph headings and accessible diagram follow C to E and restore on reset without inference or sound', async ({ page }) => {
+  const actions: string[] = [];
+  const forbidden: string[] = [];
+  await page.route('**/*', route => {
+    const request = route.request(), url = new URL(request.url());
+    if (url.hostname !== '127.0.0.1' && url.hostname !== 'localhost') {
+      forbidden.push(url.origin);
+      return route.abort();
+    }
+    const action = url.pathname === '/api/explore' && ['POST', 'PATCH'].includes(request.method())
+      ? request.postDataJSON().action : null;
+    if (action) actions.push(action);
+    if (/speech|transcri|narrat|audio/i.test(url.pathname) || action === 'generate') {
+      forbidden.push(action ?? url.pathname);
+      return route.abort();
+    }
+    return route.continue();
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/explore');
+  await page.getByRole('button', { name: 'Watch a recorded Muse run', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Lecture graph: start A, goal F', exact: true })).toBeVisible();
+
+  await page.getByRole('combobox', { name: 'Start node', exact: true }).selectOption('C');
+  await page.getByRole('combobox', { name: 'Goal node', exact: true }).selectOption('E');
+  await expect(page.getByRole('heading', { name: 'Your graph experiment', exact: true })).toBeVisible();
+  const currentGraph = page.getByRole('region', { name: 'Current graph: start C, goal E', exact: true });
+  await expect(currentGraph.getByRole('heading', { name: 'Current graph: start C, goal E', exact: true })).toBeVisible();
+  await currentGraph.getByRole('button', { name: 'Diagram', exact: true }).click();
+  await expect(currentGraph.getByRole('img', { name: /^Current graph: start C, goal E\./ })).toBeVisible();
+  const next = page.getByRole('button', { name: 'Next step', exact: true });
+  for (let step = 0; step < 12 && await next.isEnabled(); step++) await next.click();
+  await expect(next).toBeDisabled();
+  await expect(currentGraph.locator('.exploration-stage-route')).toHaveText('Route: C → E · total cost 5 · 1 edge');
+
+  await page.getByRole('button', { name: 'Back to the graph as read', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'What sends the shortest route through E?', exact: true })).toBeVisible();
+  const restored = page.getByRole('region', { name: 'Lecture graph: start A, goal F', exact: true });
+  await expect(restored.getByRole('heading', { name: 'Lecture graph: start A, goal F', exact: true })).toBeVisible();
+  await expect(restored.getByRole('img', { name: /^Lecture graph: start A, goal F\./ })).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Start node', exact: true })).toHaveValue('A');
+  await expect(page.getByRole('combobox', { name: 'Goal node', exact: true })).toHaveValue('F');
+  expect(actions).toEqual(['recording']);
+  expect(forbidden).toEqual([]);
 });
 
 test('follow-up submits selected object and current experiment state and renders a distinct generated composition', async ({ page }) => {
@@ -93,6 +141,7 @@ test('follow-up submits selected object and current experiment state and renders
   await page.getByText('Select a node & inspect graph', { exact: true }).click();
   await page.getByRole('button', { name: 'Node A', exact: true }).click();
   await page.getByRole('combobox', { name: 'Start node', exact: true }).selectOption('b');
+  await expect(page.getByRole('region', { name: 'Current graph: start B, goal Goal', exact: true })).toBeVisible();
   await page.getByLabel('Where would you like to go next?').fill('Compare the opposite neighbor order.');
   await page.getByRole('button', { name: 'Ask Soma', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Same shortest distance, different tie order', exact: true })).toBeVisible();

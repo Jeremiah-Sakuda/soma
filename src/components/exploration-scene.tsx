@@ -396,6 +396,30 @@ export function ExplorationScene({
   const { selectedObjectId: _selected, spatial: _presentation, ...motionState } = state;
   const motionKey = JSON.stringify([spec.id, spec.version, motionState]);
   const progress = useExplorationMotion(motionKey, playing, spokenProgress);
+  const titleControlsKey = JSON.stringify([
+    state.start, state.goal, state.disabledEdgeIds, state.reversed, state.edgeWeights,
+  ]);
+  // Only scientific controls change these titles. Keep the display spec stable
+  // during camera/selection/step updates so the spatial canvas can reuse geometry.
+  const displaySpec = useMemo(() => {
+    if ((spec.mode !== 'checked-bfs' && spec.mode !== 'checked-dijkstra') ||
+      !explorationInputsChanged(spec, state)) return spec;
+    const primary = explorationExecution(spec, state);
+    const secondary = comparisonExecution(spec, state);
+    const panels = spec.scene.panels.map((panel) => {
+      if (panel.kind !== 'graph' && panel.kind !== 'frontier' && panel.kind !== 'state-table')
+        return panel;
+      const computed = panel.execution === 'comparison' ? secondary : primary;
+      if (!computed) return panel;
+      const title = panel.kind === 'graph'
+        ? `Current graph: start ${nodeName(computed.input, computed.input.start)}, ${computed.input.goal === null
+            ? 'all reachable nodes'
+            : `goal ${nodeName(computed.input, computed.input.goal)}`}`
+        : panel.kind === 'frontier' ? 'Current frontier' : 'Current node costs';
+      return { ...panel, title };
+    });
+    return { ...spec, scene: { ...spec.scene, panels } };
+  }, [spec, titleControlsKey]);
   if (spec.mode === 'clarify')
     return (
       <div className="exploration-clarify">
@@ -493,7 +517,7 @@ export function ExplorationScene({
       ? `${lead}Checked route: ${names(execution.path)}, cost ${routeCost(execution.input, execution.path)}.`
       : `${lead}No route reaches ${nodeName(graphInput, state.goal)} now.`;
   })();
-  const panels = spec.scene.panels;
+  const panels = displaySpec.mode === 'clarify' ? spec.scene.panels : displaySpec.scene.panels;
   const heroDiagram =
     spec.mode === 'explanation' ? panels.find((panel) => panel.kind === 'diagram') : undefined;
   const graphs = panels.filter((panel) => panel.kind === 'graph');
@@ -520,7 +544,7 @@ export function ExplorationScene({
             <span role="status">
               Route: {computed.path?.map((id) => nodeName(computed.input, id)).join(' → ')} ·
               total cost {routeCost(computed.input, computed.path)} ·{' '}
-              {computed.path!.length - 1} edges
+              {computed.path!.length - 1} {computed.path!.length === 2 ? 'edge' : 'edges'}
             </span>
           ) : computed.modelId === 'dijkstra-nonnegative' ? (
             'Full route · lowest cost'
@@ -860,7 +884,12 @@ export function ExplorationScene({
       >
         {showSpatial ? (
           <>
-            <SpatialWorkspace spec={spec} state={state} onChange={onChange} which={comparison ? activeGraph : 'primary'} />
+            <SpatialWorkspace
+              spec={displaySpec}
+              state={state}
+              onChange={onChange}
+              which={comparison ? activeGraph : 'primary'}
+            />
             {experiment && !experimentInline && <div className="exploration-experiment-slot">{experiment}</div>}
             {panels.some((p) => !['graph', 'frontier', 'diagram', 'spatial'].includes(p.kind)) && <details className="exploration-supporting-panels">
               <summary>Steps, numbers & context</summary>

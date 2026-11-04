@@ -30,7 +30,7 @@ import {
 } from 'three';
 import { createSpatialPart } from '../src/components/spatial-parts';
 import { engineChangesShape } from '../src/components/engine-parts';
-import { crankTweenMs, easeCrank, engineCrank, poseEngineParts } from '../src/lib/domain/engine-kinematics';
+import { crankTweenMs, easeCrank, engineCrank, poseEngineParts, strokeAt } from '../src/lib/domain/engine-kinematics';
 import { cameraDistance, easeInOut, clamp01, riseAt, approach } from './lift-geometry.mjs';
 
 const FOV = 28;
@@ -257,7 +257,7 @@ function fitModel() {
   const size = box.getSize(new Vector3()), center = box.getCenter(new Vector3());
   const { x, y, w, h } = s.sheetBox;
   // A tall, narrow model (an engine, a tower) may stand taller, or it would be thin.
-  const tall = size.y > 1.6 * Math.max(size.x, size.z) ? 0.6 : 0.42;
+  const tall = size.y > 1.6 * Math.max(size.x, size.z) ? 0.66 : 0.42;
   const unit = Math.min((w * 0.86) / Math.max(1e-3, size.x), (h * 1.7) / Math.max(1e-3, size.z), (s.frame.height * tall) / Math.max(1e-3, size.y));
   s.unit = unit;
   // Rotating about x by +90° turns the model's y (up) into the sheet's normal.
@@ -401,9 +401,21 @@ function project(local) {
   out.project(s.camera);
   return { x: ((out.x + 1) / 2) * s.frame.width + s.frame.dx, y: ((1 - out.y) / 2) * s.frame.height + s.frame.dy, behind: out.z > 1 };
 }
-function placeLabel(el, local, opacity, priority) {
+function placeLabel(el, local, opacity, priority, beside = false) {
   const p = project(local);
-  s.pending.push({ el, x: p.x, y: p.y, opacity: p.behind ? 0 : opacity, priority });
+  s.pending.push({ el, x: p.x, y: p.y, opacity: p.behind ? 0 : opacity, priority, beside });
+}
+/** The engine's outline on screen, so its names can stand clear of it. */
+function engineOutline() {
+  const v = [...s.parts.values()].find((p) => p.data.renderStyle === 'engine-block');
+  if (!v?.extent) return null;
+  const e = v.extent, at = v.mesh.position;
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const x of [e.min.x, e.max.x]) for (const y of [e.min.y, e.max.y]) for (const z of [e.min.z, e.max.z]) {
+    const p = project(new Vector3(at.x + x, at.y + y, at.z + z));
+    x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y);
+  }
+  return { x0, x1, y0, y1, cx: (x0 + x1) / 2 };
 }
 /** Writes this frame's chips: each above its part if that spot is free, else beside or
  * below it; a chip with no free spot near its part is hidden unless the step is about that
@@ -425,8 +437,28 @@ function flushLabels() {
     b.x >= f.dx + 4 && b.y >= f.dy + 4 && b.x + b.w <= f.dx + f.width - 4 && b.y + b.h <= f.dy + f.height - 4 &&
     placed.every((p) => b.x + b.w + gap <= p.x || p.x + p.w + gap <= b.x || b.y + b.h + gap <= p.y || p.y + p.h + gap <= b.y);
   const lines = [];
+  const outline = shown.some((l) => l.beside) ? engineOutline() : null;
   for (const l of [...shown].sort((a, b) => b.priority - a.priority)) {
     const w = l.el._w, h = l.el._h;
+    // An engine part is named in the margin beside the engine, level with the part, with a
+    // leader to it, so no name ever covers the mechanism.
+    if (l.beside && outline) {
+      const left = l.x < outline.cx, x = left ? outline.x0 - 18 - w : outline.x1 + 18;
+      let box = null;
+      for (const dy of [0, 1, -1, 2, -2, 3, -3, 4, -4]) {
+        const b = { x, y: l.y - h / 2 + dy * (h + 6), w, h };
+        if (clear(b)) { box = b; break; }
+        const other = { ...b, x: left ? outline.x1 + 18 : outline.x0 - 18 - w };
+        if (clear(other)) { box = other; break; }
+      }
+      if (!box) { l.el.style.opacity = '0'; continue; }
+      placed.push(box);
+      l.el.style.transform = `translate(${box.x.toFixed(1)}px, ${box.y.toFixed(1)}px)`;
+      l.el.style.opacity = String(l.opacity);
+      const nx = box.x > l.x ? box.x : box.x + w, ny = box.y + h / 2;
+      lines.push(`<line x1="${nx.toFixed(1)}" y1="${ny.toFixed(1)}" x2="${l.x.toFixed(1)}" y2="${l.y.toFixed(1)}" opacity="${l.opacity.toFixed(2)}"/><circle cx="${l.x.toFixed(1)}" cy="${l.y.toFixed(1)}" r="3" opacity="${l.opacity.toFixed(2)}"/>`);
+      continue;
+    }
     // A picked part's longer chip goes beside it, so it never covers the part it describes.
     const spots = [
       ...(l.priority >= 5 ? [[14, -h / 2], [-w - 14, -h / 2]] : []),
@@ -477,7 +509,21 @@ function caption(data) {
     box.append(document.createElement('strong'), document.createElement('span'), document.createElement('small'));
     document.body.appendChild(box);
   }
-  const [title, body, note] = box.children;
+  const title = box.querySelector(':scope > strong'), body = box.querySelector(':scope > span'), note = box.querySelector(':scope > small');
+  // An engine's card also reads the crank: how far round, which turn, which stroke.
+  let dial = document.getElementById('lift-turn');
+  const engine = engineCrank(data.objects) !== undefined;
+  if (engine && !dial) {
+    dial = document.createElement('div');
+    dial.id = 'lift-turn';
+    dial.style.cssText = 'display:flex;align-items:center;gap:10px;margin:8px 0 2px;font:600 13px/1.3 -apple-system,system-ui,sans-serif;color:#2b3440';
+    const arcs = [['#6fb6ff', 0], ['#3f8ff0', 90], ['#ff7a2a', 180], ['#8f857a', 270]]
+      .map(([c, a]) => { const r = 15, p = (d) => [20 + r * Math.sin((d * Math.PI) / 180), 20 - r * Math.cos((d * Math.PI) / 180)];
+        const [x0, y0] = p(a + 3), [x1, y1] = p(a + 87); return `<path d="M${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1}" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>`; }).join('');
+    dial.innerHTML = `<svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true" style="position:static;inset:auto;width:40px;height:40px;flex:none;overflow:visible">${arcs}<line id="lift-turn-hand" x1="20" y1="20" x2="20" y2="7" stroke="#1d2430" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="20" r="2.5" fill="#1d2430"/></svg><span id="lift-turn-text"></span>`;
+    box.insertBefore(dial, note);
+  }
+  if (dial) dial.style.display = engine ? 'flex' : 'none';
   title.textContent = data.caption?.stepLabel ?? data.title;
   body.textContent = data.caption?.text ?? '';
   note.textContent = data.note;
@@ -521,7 +567,9 @@ function renderFrame() {
   s.hinge.rotation.z = BASE_YAW * tilt;
   s.hinge.position.z = s.frame.height * 0.035 * tilt;
   // Once the learner has turned it, the model holds still where they left it.
-  const swaying = s.mode === 'idle' && !quick && !s.touched && now - s.idleSince < SWAY_MS;
+  // A machine holds still between steps, so its own motion is the only motion.
+  const engine = s.data?.objects.some((o) => o.renderStyle === 'engine-block');
+  const swaying = s.mode === 'idle' && !quick && !s.touched && !engine && now - s.idleSince < SWAY_MS;
   s.sway = approach(s.sway, swaying ? 1 : 0, dt, 0.9);
   s.yaw.rotation.z = Math.sin((now - (s.idleSince ?? now)) / 2200) * 0.14 * s.sway;
   s.table.rotation.z = s.turn * tilt;
@@ -533,12 +581,20 @@ function renderFrame() {
     if (p >= 1) s.crankTween = null;
     moving = true;
   }
+  if (s.crankShown !== undefined) {
+    const theta = s.crankShown * 720, hand = document.getElementById('lift-turn-hand'), text = document.getElementById('lift-turn-text');
+    // The dial is the whole cycle: one sweep is two crankshaft turns.
+    hand?.setAttribute('transform', `rotate(${(theta / 2).toFixed(1)} 20 20)`);
+    const stroke = strokeAt(theta);
+    if (text) text.textContent = `Crankshaft ${Math.round(theta)}° · turn ${theta > 360 ? 2 : 1} of 2 · ${stroke[0].toUpperCase()}${stroke.slice(1)} · camshaft ${Math.round(theta / 2)}°`;
+  }
   const sheetT = clamp01(t / 0.3), sh = s.sheet;
   if (sh) {
     const ready = s.sheetReady;
     // The lifted slide stays nearly solid, so it never reads as a second copy of the slide.
-    sh.paper.material.opacity = ready ? 1 - 0.12 * sheetT : 0;
-    sh.cover.material.opacity = ready && s.hasCover ? 0.94 * clamp01(t / 0.06) : 0;
+    // Lifted, the slide's region is covered completely, so its drawing never shows twice.
+    sh.paper.material.opacity = ready ? 1 : 0;
+    sh.cover.material.opacity = ready && s.hasCover ? clamp01(t / 0.06) : 0;
     sh.floor.material.opacity = 0.3 * tilt;
   }
   const parts = [...s.parts.values()];
@@ -564,7 +620,9 @@ function renderFrame() {
     v.inner.scale.setScalar(Math.max(0.001, clamp01(k * 1.4) * (1 + pulse) * (1 + 0.1 * v.pick)));
     // Parts the step is not about step back by greying, not by fading, so the slide never
     // shows through a solid part.
-    const dim = anyLit && !v.data.highlighted && !v.data.selected;
+    // An engine's metal parts keep their own look; only the lit ones glow.
+    const enginePart = v.data.renderStyle?.startsWith('engine-');
+    const dim = anyLit && !v.data.highlighted && !v.data.selected && !enginePart;
     v.inner.traverse((m) => {
       if (!m.isMesh) return;
       const mats = Array.isArray(m.material) ? m.material : [m.material];
@@ -572,10 +630,11 @@ function renderFrame() {
         mat.opacity = (mat.userData.baseOpacity ?? 1) * v.fade;
         if (mat.userData.baseColor) mat.color.copy(mat.userData.baseColor).lerp(GREY, dim ? 0.55 : 0);
         mat.depthWrite = mat.opacity > 0.95;
-        if ('emissiveIntensity' in mat) {
+        // The gas, spark and flows carry their own glow.
+        if ('emissiveIntensity' in mat && !(enginePart && engineChangesShape(v.data.renderStyle))) {
           const lit = v.data.selected || v.data.highlighted || v.hover;
           // A picked part glows in its own colour (its chip carries the pick colour).
-          if (lit && mat.emissive) mat.emissive.set(v.data.selected && mat.userData.baseColor ? mat.userData.baseColor : v.hover ? PICKED : ACCENT);
+          if (lit && mat.emissive) mat.emissive.set(v.data.selected && mat.userData.baseColor ? mat.userData.baseColor : v.hover ? PICKED : enginePart ? 0xbcd6ff : ACCENT);
           mat.emissiveIntensity = v.data.selected ? 0.5 : v.hover ? 0.18 : v.data.highlighted ? 0.18 + 0.25 * (pulse / 0.12) : 0;
         }
       }
@@ -585,7 +644,9 @@ function renderFrame() {
     v.shadow.scale.set(ex * 1.25, ez * 1.25, 1);
     v.shadow.position.set((e.min.x + e.max.x) / 2, s.floorY - rise + 0.01, (e.min.z + e.max.z) / 2);
     const height = rise + e.min.y - s.floorY;
-    v.shadow.material.opacity = 0.32 * v.fade * clamp01(k) * clamp01(1 - height / 3) * (v.data.parentId ? 0 : 1);
+    // An assembly casts one shadow, from its block, not one per inner part.
+    const inner = v.data.renderStyle?.startsWith('engine-') && v.data.renderStyle !== 'engine-block';
+    v.shadow.material.opacity = 0.32 * v.fade * clamp01(k) * clamp01(1 - height / 3) * (v.data.parentId || inner ? 0 : 1);
     if (v.stem) {
       // A stem from the slide up to the part reads its height.
       const tall = Math.max(0.001, rise - s.floorY);
@@ -608,7 +669,7 @@ function renderFrame() {
     v.label.classList.toggle('is-quiet', quiet);
     // An assembly's parts are named only while the step is about them, or when pointed at.
     const named = !v.data.renderStyle?.startsWith('engine-') || v.data.highlighted || v.data.selected || v.hover;
-    placeLabel(v.label, top, named ? clamp01((k - 0.6) / 0.4) * v.fade : 0, v.data.selected || v.hover ? 5 : v.data.highlighted ? 4 : 2);
+    placeLabel(v.label, top, named ? clamp01((k - 0.6) / 0.4) * v.fade : 0, v.data.selected || v.hover ? 5 : v.data.highlighted ? 4 : 2, v.data.renderStyle?.startsWith('engine-'));
   }
   // Flows arc between the parts they join, drawn once both have risen.
   for (const v of s.links.values()) {

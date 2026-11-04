@@ -14,7 +14,7 @@ export const ENGINE = {
   bore: 0.5,
   valveTilt: 20, // degrees from vertical; intake leans left, exhaust right
   valveSeatX: 0.24,
-  valveLift: 0.13,
+  valveLift: 0.2, // drawn larger than life so an open valve reads at a glance
   /** Pent-roof chamber: its ridge, and the height of each valve seat on the roof's slope. */
   roof: 2.93,
   seatY: 2.845,
@@ -69,8 +69,11 @@ export function valveLift(which: 'intake' | 'exhaust', theta: number) {
   return t >= start && t <= start + 180 ? ENGINE.valveLift * Math.sin((Math.PI * (t - start)) / 180) ** 2 : 0;
 }
 export type Stroke = 'intake' | 'compression' | 'power' | 'exhaust';
+// 720° is the end of exhaust, not the start of the next intake.
 export const strokeAt = (theta: number): Stroke =>
-  (['intake', 'compression', 'power', 'exhaust'] as const)[Math.min(3, Math.floor((((theta % 720) + 720) % 720) / 180))];
+  (['intake', 'compression', 'power', 'exhaust'] as const)[theta >= 720 ? 3 : Math.min(3, Math.floor((((theta % 720) + 720) % 720) / 180))];
+/** What the gas in the cylinder is at each stroke. */
+export const chargeName: Record<Stroke, string> = { intake: 'Fresh fuel–air mixture', compression: 'Compressed mixture', power: 'Burning gas', exhaust: 'Burnt gas' };
 /** How brightly the spark shows: a short flash around top dead centre before power. */
 export const sparkGlow = (theta: number) => Math.max(0, 1 - Math.abs(theta - 360) / 14);
 
@@ -131,23 +134,22 @@ export function enginePose(role: EngineRole, theta: number): { x: number; y: num
   }
 }
 
-/** Where a part's name sits, in nominal units, at a crank angle. */
+/** The point on each part a name's leader ends at, in nominal units, at a crank angle. */
 export function engineLabelPoint(role: EngineRole, theta: number): { x: number; y: number; z: number } {
-  const p = enginePose(role, theta);
+  const p = enginePose(role, theta), a = rad(-p.rotZ);
   switch (role) {
-    case 'block': return { x: 0.95, y: 2.2, z: 0 };
-    case 'piston': return { x: 0, y: p.y + 0.2, z: 0.3 };
-    case 'rod': { const pin = crankPin(theta), top = pistonPin(theta); return { x: (pin.x) / 2, y: (pin.y + top) / 2, z: 0.15 }; }
-    case 'crank': return { x: -0.55, y: -0.45, z: 0.3 };
-    case 'intake_valve': return { x: p.x - 0.1, y: p.y + 0.15, z: 0.15 };
-    case 'exhaust_valve': return { x: p.x + 0.1, y: p.y + 0.15, z: 0.15 };
-    case 'intake_cam': case 'exhaust_cam': return { x: p.x, y: p.y + 0.25, z: 0 };
-    case 'spark_plug': return { x: 0, y: 3.85, z: 0 };
-    case 'timing_belt': return { x: -0.95, y: 2.0, z: 0.42 };
-    case 'charge': return { x: 0, y: (p.y + ENGINE.deck) / 2, z: 0.35 };
-    case 'spark': return { x: 0, y: ENGINE.deck - 0.1, z: 0.2 };
-    case 'intake_flow': return { x: -1.5, y: 3.45, z: 0.2 };
-    case 'exhaust_flow': return { x: 1.5, y: 3.45, z: 0.2 };
+    case 'block': return { x: 0.86, y: 1.9, z: 0 };
+    case 'piston': return { x: 0.3, y: p.y + 0.12, z: 0.42 };
+    case 'rod': { const pin = crankPin(theta), top = pistonPin(theta); return { x: pin.x * 0.6, y: pin.y + (top - pin.y) * 0.4, z: 0.08 }; }
+    case 'crank': return { x: 0.12, y: -0.3, z: 0.25 };
+    case 'intake_valve': case 'exhaust_valve': return { x: p.x + Math.sin(a) * 0.5, y: p.y + Math.cos(a) * 0.5, z: 0.04 };
+    case 'intake_cam': case 'exhaust_cam': return { x: p.x, y: p.y, z: 0.12 };
+    case 'spark_plug': return { x: 0, y: 3.7, z: 0.1 };
+    case 'timing_belt': { const c = camCentre(-1); return { x: c.x, y: c.y + 0.5, z: -0.86 }; }
+    case 'charge': return { x: 0.15, y: (p.y + ENGINE.deck) / 2, z: 0.25 };
+    case 'spark': return { x: 0, y: ENGINE.roof - 0.08, z: 0.12 };
+    case 'intake_flow': return { x: -1.0, y: 3.12, z: 0.14 };
+    case 'exhaust_flow': return { x: 1.0, y: 3.12, z: 0.14 };
   }
 }
 
@@ -225,6 +227,8 @@ export function poseEngineParts<T extends { id: string; renderStyle?: string | n
       rotation: { x: 0, y: 0, z: wrap(p.rotZ) },
       parameterValues: { ...(o.parameterValues ?? {}), crank: crank01 },
       labelAt: vec(block.position, s, engineLabelPoint(role, theta)),
+      // The gas is named for what it is at this stroke.
+      ...(role === 'charge' ? { label: chargeName[strokeAt(theta)] } : {}),
       // Flows and the spark show only while they act; the rest keep their own visibility.
       visible: transient ? p.open > 0.04 : o.visible,
       // While a flow or the spark acts, it is what the moment is about.

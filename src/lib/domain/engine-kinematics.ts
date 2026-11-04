@@ -37,21 +37,23 @@ export function engineRoleOf(renderStyle: string | null | undefined): EngineRole
   return (engineRoles as readonly string[]).includes(role) ? (role as EngineRole) : null;
 }
 
+// Names only: what each part is. Soma's cutaway makes no claim of its own about timing or
+// rates; the explanation's reviewed words carry those, and the motion illustrates them.
 const NAMES: Record<EngineRole, [string, string]> = {
-  block: ['Cylinder and head (cut away)', 'The cylinder the piston slides in and the head that closes it, cut away to show inside; the shape is illustrative.'],
-  piston: ['Piston', 'Slides down to draw in the charge and up to squeeze it; the burning gas pushes it down on the power stroke.'],
-  rod: ['Connecting rod', 'Joins the piston pin to the crank pin, turning the piston’s up-and-down into rotation.'],
-  crank: ['Crankshaft', 'Turns half a turn per piston stroke, so two full turns per four-stroke cycle.'],
-  intake_valve: ['Intake valve', 'Opens only on the intake stroke so the fresh fuel–air charge can enter.'],
-  exhaust_valve: ['Exhaust valve', 'Opens only on the exhaust stroke so the burnt gas can leave.'],
-  intake_cam: ['Intake camshaft', 'Opens the intake valve once per cycle, turning at half the crankshaft’s speed; the cam shape is illustrative.'],
-  exhaust_cam: ['Exhaust camshaft', 'Opens the exhaust valve once per cycle, turning at half the crankshaft’s speed; the cam shape is illustrative.'],
-  spark_plug: ['Spark plug', 'Fires once per cycle to ignite the compressed mixture.'],
-  timing_belt: ['Cam drive (2 : 1)', 'An illustrative drive from the crankshaft to the camshafts, drawn at the 2 : 1 ratio that turns them at half speed.'],
-  charge: ['Fuel–air charge', 'The gas in the cylinder: fresh mixture drawn in, squeezed, burning, then pushed out.'],
-  spark: ['Spark', 'The ignition that starts the power stroke.'],
-  intake_flow: ['Mixture in', 'Fresh fuel–air mixture flowing in through the open intake valve.'],
-  exhaust_flow: ['Exhaust out', 'Burnt gas pushed out through the open exhaust valve.'],
+  block: ['Cylinder and head (cut away)', 'Illustrative cylinder and head, cut away to show inside.'],
+  piston: ['Piston', 'Illustrative piston in the cylinder.'],
+  rod: ['Connecting rod', 'Illustrative connecting rod between the piston and the crankshaft.'],
+  crank: ['Crankshaft', 'Illustrative crankshaft.'],
+  intake_valve: ['Intake valve', 'Illustrative intake valve.'],
+  exhaust_valve: ['Exhaust valve', 'Illustrative exhaust valve.'],
+  intake_cam: ['Intake camshaft', 'Illustrative camshaft over the intake valve.'],
+  exhaust_cam: ['Exhaust camshaft', 'Illustrative camshaft over the exhaust valve.'],
+  spark_plug: ['Spark plug', 'Illustrative spark plug.'],
+  timing_belt: ['Cam drive', 'Illustrative drive from the crankshaft to the camshafts.'],
+  charge: ['Gas in the cylinder', 'Illustrative gas in the cylinder.'],
+  spark: ['Spark', 'Illustrative spark.'],
+  intake_flow: ['Mixture in', 'Illustrative flow in through the intake valve.'],
+  exhaust_flow: ['Exhaust out', 'Illustrative flow out through the exhaust valve.'],
 };
 export const engineNames = NAMES;
 

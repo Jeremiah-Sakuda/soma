@@ -412,10 +412,9 @@ export function ExplorationScene({
     seenLiftRequest.current = liftRequest;
     if (hasModel || !onBuildModel || modelBusy) return;
     pendingLift.current = true;
+    // No model this time: nothing lifts; the bar says so and 3D can be pressed again.
     void onBuildModel().then((ok) => {
-      if (ok) return;
-      pendingLift.current = false;
-      setView('3d');
+      if (!ok) pendingLift.current = false;
     });
   }, [liftRequest, hasModel, onBuildModel, modelBusy, setView]);
   useEffect(() => {

@@ -11,8 +11,9 @@ const COLORS = {
   rod: 0x7f8995, crank: 0x6a737e, valve: 0xb3bac2, intakeSpring: 0x4f7fc8, exhaustSpring: 0xd26b3a,
   cam: 0x5d6671, bronze: 0xc59a46, belt: 0x2c2e33, ceramic: 0xf3f0e7, steel: 0x9aa1a9,
 };
-// The cam drive runs behind the engine's back wall, so it never crosses the cutaway.
-const DRIVE_Z = -0.86;
+// The cam drive is on the engine's front face, in front of the cutaway, as on a real engine
+// with its timing cover off; its belt is half clear so the mechanism shows through.
+const DRIVE_Z = 0.6;
 const CHARGE: Record<string, number> = { intake: 0x6fb6ff, compression: 0x3f8ff0, power: 0xff7a2a, exhaust: 0x8f857a };
 
 function shape(points: [number, number][]) {
@@ -50,11 +51,40 @@ function gear(radius: number, teeth: number, depth: number, material: THREE.Mate
   g.translate(0, 0, -depth / 2);
   return new THREE.Mesh(g, material);
 }
-function mark(radius: number, at: number, z: number) {
-  const dot = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, 0.02, 20), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.6, roughness: 0.4 }));
-  dot.rotation.x = Math.PI / 2;
-  dot.position.set(0, at, z);
-  return dot;
+/** A bold white clock hand on a sprocket's face, from its hub to its rim, so each turn is
+ * easy to count. */
+function pointer(length: number, z: number) {
+  const w = Math.max(0.035, length * 0.1), s = new THREE.Shape();
+  s.moveTo(-w / 2, 0);
+  s.lineTo(w / 2, 0);
+  s.lineTo(w / 2, length * 0.72);
+  s.lineTo(w * 1.6, length * 0.72);
+  s.lineTo(0, length);
+  s.lineTo(-w * 1.6, length * 0.72);
+  s.lineTo(-w / 2, length * 0.72);
+  s.closePath();
+  const hand = new THREE.Mesh(new THREE.ShapeGeometry(s), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.7, roughness: 0.4, side: THREE.DoubleSide }));
+  hand.position.z = z;
+  return hand;
+}
+/** Diagonal hatching for cut faces, as a technical cutaway draws them. */
+let hatchTexture: THREE.CanvasTexture | null = null;
+function hatch() {
+  if (hatchTexture || typeof document === 'undefined') return hatchTexture;
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d');
+  if (!g) return null;
+  g.fillStyle = '#6f8399';
+  g.fillRect(0, 0, 64, 64);
+  g.strokeStyle = '#4c5e73';
+  g.lineWidth = 6;
+  for (let i = -64; i <= 128; i += 21) { g.beginPath(); g.moveTo(i, 64); g.lineTo(i + 64, 0); g.stroke(); }
+  hatchTexture = new THREE.CanvasTexture(c);
+  hatchTexture.wrapS = hatchTexture.wrapT = THREE.RepeatWrapping;
+  hatchTexture.repeat.set(5, 5);
+  hatchTexture.colorSpace = THREE.SRGBColorSpace;
+  return hatchTexture;
 }
 function cylinderZ(radius: number, from: number, to: number, material: THREE.Material, x = 0, y = 0, segments = 32) {
   const m = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, Math.abs(to - from), segments), material);
@@ -82,7 +112,8 @@ function flowArrow(points: THREE.Vector3[], color: number, open: number) {
 
 function block(): THREE.Object3D {
   const g = new THREE.Group();
-  const cut = new THREE.MeshStandardMaterial({ color: COLORS.section, roughness: 0.62, metalness: 0.05 });
+  const map = hatch();
+  const cut = new THREE.MeshStandardMaterial({ color: map ? 0xffffff : COLORS.section, map, roughness: 0.7, metalness: 0.02 });
   const body = metal(COLORS.aluminium, 0.46, 0.35);
   // The back half of the engine, cut through the cylinder's axis: crankcase, block and head.
   const outline: [number, number][] = [
@@ -162,24 +193,28 @@ function rod(): THREE.Object3D {
 function crank(): THREE.Object3D {
   const g = new THREE.Group();
   const m = metal(COLORS.crank, 0.32, 0.6);
-  g.add(cylinderZ(0.14, DRIVE_Z, 0.28, m));
+  g.add(cylinderZ(0.14, -0.66, DRIVE_Z, m));
   g.add(cylinderZ(0.12, -0.13, 0.13, m, 0, ENGINE.crank));
-  // Two webs, each a counterweight opposite the pin.
+  // The back web carries the counterweight; the front one is a slim arm, so the connecting
+  // rod stays in view at every angle.
   const web = new THREE.Shape();
   web.moveTo(-0.16, ENGINE.crank);
   web.absarc(0, ENGINE.crank, 0.17, Math.PI, 0, true);
   web.lineTo(0.2, 0);
-  web.absarc(0, 0, 0.56, -0.25, Math.PI + 0.25, true);
+  web.absarc(0, 0, 0.5, -0.25, Math.PI + 0.25, true);
   web.lineTo(-0.16, ENGINE.crank);
-  for (const z of [-0.2, 0.13]) {
-    const w = new THREE.Mesh(new THREE.ExtrudeGeometry(web, { depth: 0.07, bevelEnabled: true, bevelThickness: 0.012, bevelSize: 0.012, bevelSegments: 2, curveSegments: 24 }), m);
+  const arm = new THREE.Shape();
+  arm.absarc(0, ENGINE.crank, 0.15, 0, Math.PI, false);
+  arm.absarc(0, 0, 0.17, Math.PI, Math.PI * 2, false);
+  for (const [shape, z] of [[web, -0.2], [arm, 0.13]] as const) {
+    const w = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 0.07, bevelEnabled: true, bevelThickness: 0.012, bevelSize: 0.012, bevelSegments: 2, curveSegments: 24 }), m);
     w.position.z = z;
     g.add(w);
   }
-  // The small crank sprocket of the 2 : 1 timing drive, with its timing mark.
-  const sprocket = gear(0.24, 18, 0.06, metal(COLORS.bronze, 0.35, 0.6));
+  // The small crank sprocket of the 2 : 1 drive: half the cam sprockets' size.
+  const sprocket = gear(0.22, 18, 0.07, metal(COLORS.bronze, 0.35, 0.6));
   sprocket.position.z = DRIVE_Z;
-  g.add(sprocket);
+  g.add(sprocket, pointer(0.21, DRIVE_Z + 0.05));
   return g;
 }
 
@@ -216,13 +251,15 @@ function cam(): THREE.Object3D {
   const l = new THREE.Mesh(new THREE.ExtrudeGeometry(lobe, { depth: 0.2, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.012, bevelSegments: 2 }), m);
   l.position.z = -0.1;
   g.add(l);
-  g.add(cylinderZ(0.07, DRIVE_Z, 0.2, m));
+  g.add(cylinderZ(0.07, -0.58, DRIVE_Z, m));
   // The big cam sprocket, behind the cam: twice the crank's, so the cam turns once per two
   // crank turns. Its bright mark shows how far it has turned.
-  const sprocket = gear(0.46, 36, 0.06, metal(COLORS.bronze, 0.35, 0.6));
+  const sprocket = gear(0.44, 36, 0.07, metal(COLORS.bronze, 0.35, 0.6));
   sprocket.position.z = DRIVE_Z;
-  g.add(sprocket);
-  g.add(mark(0.07, 0.34, DRIVE_Z + 0.04));
+  // Its pointer starts down the valve at full lift, so after one crank turn it has gone half round.
+  const tip = pointer(0.42, DRIVE_Z + 0.05);
+  tip.rotation.z = Math.PI;
+  g.add(sprocket, tip);
   return g;
 }
 
@@ -238,20 +275,32 @@ function plug(): THREE.Object3D {
   return g;
 }
 
-function belt(): THREE.Object3D {
-  // A closed belt round the crank sprocket and both cam sprockets, on the front of the engine.
+function belt(theta: number): THREE.Object3D {
+  // A wide toothed belt round the small crank sprocket and both big cam sprockets.
   const [l, r] = [camCentre(-1), camCentre(1)];
   const around = (cx: number, cy: number, radius: number, from: number, to: number, n: number) =>
     Array.from({ length: n }, (_, i) => {
       const a = ((from + ((to - from) * i) / (n - 1)) * Math.PI) / 180;
-      return new THREE.Vector3(cx + Math.cos(a) * radius, cy + Math.sin(a) * radius, DRIVE_Z);
+      return new THREE.Vector3(cx + Math.cos(a) * radius, cy + Math.sin(a) * radius, 0);
     });
-  const points = [
-    ...around(0, 0, 0.27, 200, 340, 6),
-    ...around(r.x, r.y, 0.49, -20, 95, 7),
-    ...around(l.x, l.y, 0.49, 85, 200, 7),
-  ];
-  return tubeThrough(points, 0.03, new THREE.MeshStandardMaterial({ color: COLORS.belt, roughness: 0.7, metalness: 0.05 }), true);
+  const curve = new THREE.CatmullRomCurve3([...around(0, 0, 0.255, 200, 340, 7), ...around(r.x, r.y, 0.475, -20, 95, 8), ...around(l.x, l.y, 0.475, 85, 200, 8)], true, 'centripetal');
+  const g = new THREE.Group();
+  const rubber = new THREE.MeshStandardMaterial({ color: COLORS.belt, roughness: 0.75, metalness: 0.05, transparent: true, opacity: 0.62, depthWrite: false });
+  const band = new THREE.Mesh(new THREE.TubeGeometry(curve, 240, 0.028, 4, true), rubber);
+  band.scale.z = 3.2;
+  g.add(band);
+  const teeth = 88, tooth = new THREE.BoxGeometry(0.03, 0.045, 0.16);
+  // The teeth travel with the crank sprocket's rim.
+  const travel = ((theta * Math.PI) / 180) * 0.255 / curve.getLength();
+  for (let i = 0; i < teeth; i++) {
+    const t = (((i / teeth - travel) % 1) + 1) % 1, p = curve.getPointAt(t), d = curve.getTangentAt(t);
+    const m = new THREE.Mesh(tooth, rubber);
+    m.position.copy(p);
+    m.rotation.z = Math.atan2(d.y, d.x);
+    g.add(m);
+  }
+  g.position.z = DRIVE_Z;
+  return g;
 }
 
 function charge(theta: number): THREE.Object3D {
@@ -297,8 +346,8 @@ function flow(which: 'intake' | 'exhaust', theta: number): THREE.Object3D {
   const open = enginePose(which === 'intake' ? 'intake_flow' : 'exhaust_flow', theta).open;
   const side = which === 'intake' ? -1 : 1;
   const points = [
-    new THREE.Vector3(side * 1.45, 3.18, 0.14), new THREE.Vector3(side * 0.75, 3.06, 0.14),
-    new THREE.Vector3(side * 0.34, 2.8, 0.14), new THREE.Vector3(side * 0.22, 2.58, 0.14),
+    new THREE.Vector3(side * 1.45, 3.16, 0.14), new THREE.Vector3(side * 0.95, 3.15, 0.14), new THREE.Vector3(side * 0.6, 3.02, 0.14),
+    new THREE.Vector3(side * 0.3, 2.86, 0.14), new THREE.Vector3(side * 0.2, 2.62, 0.14),
   ];
   return flowArrow(which === 'intake' ? points : [...points].reverse(), which === 'intake' ? 0x6fb3ff : 0xc0703e, open);
 }
@@ -313,7 +362,7 @@ function build(role: EngineRole, theta: number): THREE.Object3D {
     case 'exhaust_valve': return valve(1);
     case 'intake_cam': case 'exhaust_cam': return cam();
     case 'spark_plug': return plug();
-    case 'timing_belt': return belt();
+    case 'timing_belt': return belt(theta);
     case 'charge': return charge(theta);
     case 'spark': return spark(theta);
     case 'intake_flow': return flow('intake', theta);
@@ -324,12 +373,12 @@ function build(role: EngineRole, theta: number): THREE.Object3D {
 /** Parts whose shape changes with the angle; every other part is the same mesh, turned or moved. */
 export const engineChangesShape = (renderStyle: string | null | undefined) => {
   const role = engineRoleOf(renderStyle);
-  return role === 'charge' || role === 'spark' || role === 'intake_flow' || role === 'exhaust_flow';
+  return role === 'charge' || role === 'spark' || role === 'intake_flow' || role === 'exhaust_flow' || role === 'timing_belt';
 };
 // Built once per page: a turning crank reuses the meshes, with materials of its own.
 const templates = new Map<EngineRole, THREE.Object3D>();
 function instance(role: EngineRole, theta: number) {
-  if (role === 'charge' || role === 'spark' || role === 'intake_flow' || role === 'exhaust_flow') return build(role, theta);
+  if (role === 'charge' || role === 'spark' || role === 'intake_flow' || role === 'exhaust_flow' || role === 'timing_belt') return build(role, theta);
   let template = templates.get(role);
   if (!template) templates.set(role, (template = build(role, 0)));
   const copy = template.clone(true);

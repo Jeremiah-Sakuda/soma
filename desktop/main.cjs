@@ -444,6 +444,9 @@ else {
                   : 'Lifted off your slide. Height is the checked distance from the start; taut strings are shortest routes.',
             );
           else if (payload.view === '2d' && wasLifted) status('Back on your slide.');
+          else if (payload.shown && pointAsk.liftKind === 'model')
+            // An explanation draws nothing flat; its picture is the model 3D builds.
+            status('Answered. Press 3D to see it as a model lifted off your slide; ask a follow-up, or Esc to clear.');
           else if (payload.shown)
             status(`Drawn on your screen. Ask a follow-up${compactState?.investigable ? ', ⌘↩ tests it' : ''}, Esc clears.`);
           else if (payload.dismissed) status('Cleared. Return asks with a new snapshot; Esc hides the bar.');

@@ -69,7 +69,7 @@ function bindEngine(spatial: Panel & { objects?: { id?: unknown; renderStyle?: u
   return (step: Extract<ExplorationSpec, { mode: 'explanation' }>['steps'][number]) => [...new Set(step.highlightIds.flatMap((id) => partsFor(diagramText.get(id) ?? id)))];
 }
 
-export const ENGINE_ASSUMPTION = 'The engine cutaway is Soma’s built-in illustration: its cam drive, head shape and proportions are not from the source; its motion follows the four strokes and the half-speed camshaft.';
+export const ENGINE_ASSUMPTION = 'The engine cutaway is Soma’s built-in illustration: its parts, layout, proportions and motion are illustrative, not read from the source.';
 
 type Raw = Record<string, unknown> & { scene?: { layout?: unknown; panels?: unknown[] }; steps?: unknown[]; assumptions?: unknown };
 type Panel = { id: string; kind: string; placement: { column: number; row: number; columnSpan: number }; poses?: { stepId: string }[]; parameterPoses?: { stepId: string }[] | null };

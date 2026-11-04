@@ -52,16 +52,16 @@ const TIP_LIMIT = 0.22;
 let s = null;
 
 /** A soft-edged mask, so the sheet and the hollow it leaves have no hard rectangle. */
-function feather() {
+function feather(inset = 20, blur = 12, radius = 28) {
   const c = document.createElement('canvas');
   c.width = c.height = 256;
   const g = c.getContext('2d');
   g.fillStyle = '#000';
   g.fillRect(0, 0, 256, 256);
-  g.filter = 'blur(12px)';
+  g.filter = `blur(${blur}px)`;
   g.fillStyle = '#fff';
   g.beginPath();
-  g.roundRect(20, 20, 216, 216, 28);
+  g.roundRect(inset, inset, 256 - 2 * inset, 256 - 2 * inset, radius);
   g.fill();
   return new CanvasTexture(c);
 }
@@ -174,7 +174,8 @@ function placeSheet(data, sheet) {
   const x = region.x * f.width + w / 2 - f.width / 2, y = f.height / 2 - (region.y * f.height + h / 2);
   // Both the sheet and the hollow it leaves are feathered, so neither reads as a pasted box.
   const paper = new MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, side: DoubleSide, opacity: 0, alphaMap: feather() });
-  const coverMat = new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, alphaMap: feather() });
+  // The hollow it leaves is solid to its edges, so none of the slide's drawing stays behind.
+  const coverMat = new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, alphaMap: feather(3, 2, 6) });
   if (sheet)
     new TextureLoader().load(
       sheet.dataUrl,
@@ -189,7 +190,7 @@ function placeSheet(data, sheet) {
         const g = c.getContext('2d');
         g.drawImage(texture.image, 0, 0);
         g.fillStyle = `#${tone.getHexString(SRGBColorSpace)}`;
-        g.globalAlpha = 0.5;
+        g.globalAlpha = 0.68;
         g.fillRect(0, 0, c.width, c.height);
         texture.dispose();
         const washed = new CanvasTexture(c);
@@ -212,7 +213,7 @@ function placeSheet(data, sheet) {
   s.hasCover = Boolean(sheet);
   const plane = new Mesh(new PlaneGeometry(w, h), paper);
   plane.position.set(x, y, 0);
-  const cover = new Mesh(new PlaneGeometry(w, h), coverMat);
+  const cover = new Mesh(new PlaneGeometry(w * 1.03, h * 1.03), coverMat);
   cover.position.set(x, y, -2);
   cover.renderOrder = -2;
   const floor = new Mesh(new PlaneGeometry(w * 0.95, h * 0.5), new MeshBasicMaterial({ map: s.shadowTex, transparent: true, opacity: 0, depthWrite: false }));
@@ -443,14 +444,14 @@ function flushLabels() {
     // An engine part is named in the margin beside the engine, level with the part, with a
     // leader to it, so no name ever covers the mechanism.
     if (l.beside && outline) {
-      const left = l.x < outline.cx, x = left ? outline.x0 - 18 - w : outline.x1 + 18;
-      let box = null;
-      for (const dy of [0, 1, -1, 2, -2, 3, -3, 4, -4]) {
-        const b = { x, y: l.y - h / 2 + dy * (h + 6), w, h };
-        if (clear(b)) { box = b; break; }
-        const other = { ...b, x: left ? outline.x1 + 18 : outline.x0 - 18 - w };
-        if (clear(other)) { box = other; break; }
-      }
+      // On the part's own side, within the slide region the lift covered (so never on the
+      // slide's text) when there is room; else the other side; else anywhere clear.
+      const left = l.x < outline.cx;
+      const r = s.data.region, rx0 = r.x * f.width + f.dx, rx1 = (r.x + r.width) * f.width + f.dx;
+      const inRegion = (b) => b.x >= rx0 - 2 && b.x + b.w <= rx1 + 2;
+      const rows = [0, 1, -1, 2, -2, 3, -3, 4, -4];
+      const tries = (side, strict) => rows.map((dy) => ({ x: side ? outline.x0 - 18 - w : outline.x1 + 18, y: l.y - h / 2 + dy * (h + 6), w, h })).filter((b) => !strict || inRegion(b));
+      const box = [...tries(left, true), ...tries(!left, true), ...tries(left, false), ...tries(!left, false)].find(clear) ?? null;
       if (!box) { l.el.style.opacity = '0'; continue; }
       placed.push(box);
       l.el.style.transform = `translate(${box.x.toFixed(1)}px, ${box.y.toFixed(1)}px)`;
@@ -634,7 +635,7 @@ function renderFrame() {
         if ('emissiveIntensity' in mat && !(enginePart && engineChangesShape(v.data.renderStyle))) {
           const lit = v.data.selected || v.data.highlighted || v.hover;
           // A picked part glows in its own colour (its chip carries the pick colour).
-          if (lit && mat.emissive) mat.emissive.set(v.data.selected && mat.userData.baseColor ? mat.userData.baseColor : v.hover ? PICKED : enginePart ? 0xbcd6ff : ACCENT);
+          if (lit && mat.emissive) mat.emissive.set(v.data.selected && mat.userData.baseColor ? mat.userData.baseColor : v.hover ? PICKED : enginePart && mat.userData.baseColor ? mat.userData.baseColor : ACCENT);
           mat.emissiveIntensity = v.data.selected ? 0.5 : v.hover ? 0.18 : v.data.highlighted ? 0.18 + 0.25 * (pulse / 0.12) : 0;
         }
       }

@@ -1886,11 +1886,8 @@ export function ExplorationWorkspace() {
                   liveEnabled === false || newContext
                     ? undefined
                     : async () => {
-                        const ok = await ask('Show this explanation as a 3D model.', undefined, false, undefined, undefined, true);
-                        // No model this time: the diagram itself stands up in 3D, so the view still opens.
-                        if (!ok)
-                          setState((current) => (current ? { ...current, spatial: { ...(current.spatial ?? defaultSpatialView()), mode: '3d' } } : current));
-                        return ok;
+                        // No model this time: the explanation stays as it is, with the reason shown.
+                        return ask('Show this explanation as a 3D model.', undefined, false, undefined, undefined, true);
                       }
                 }
                 circuitObservation={artifact.circuitExperiment?.observe}

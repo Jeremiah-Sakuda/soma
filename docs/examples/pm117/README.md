@@ -39,4 +39,4 @@ node scripts/serve-mechanism-comparison.mjs
 
 Detailed private run receipts: `.local/pm117/generation-r1.log`, `generation-results.json`, `geometry-checks-r2.log`, `gallery-tests-final.log`, `typecheck-final.log`, `gallery-build-final.log`, source files and paired screenshots. No main merge, push, deployment, publication or user visual acceptance is claimed.
 
-Artifact commit: [b2430c8](https://github.com/Jeremiah-Sakuda/soma/commit/b2430c8).
+Artifact commit: [5e2aa4b](https://github.com/Jeremiah-Sakuda/soma/commit/5e2aa4b).

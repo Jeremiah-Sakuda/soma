@@ -49,4 +49,4 @@ The initial nested geometry schema exceeded Meta’s ten-level limit; two attemp
 
 Earlier local failures: author instructions exceeded 8,000 characters until condensed; shared coordinates in the prepared fixture were copied independently; a geometry-intersection test gained bounding-box overlap checks for collinear edges; a normal-motion observer was corrected to watch the moving gate rather than only its stationary hinge, and waits for the existing bounded card-entry animation before checking idle work. A sandbox build was stopped after stalling; the permitted default build passed. These receipts remain in `.local/pm113/`, including `live-r1.log` through `live-r5.log`, `unit-final.log`, `browser-final.log`, `build-final.log`, `typecheck-final-r2.log`, `trace-final.log`, manifests, budget and original synthetic live artifacts.
 
-Implementation commit: [7f1fa17](https://github.com/Jeremiah-Sakuda/soma/commit/7f1fa17).
+Implementation commit: [7448550](https://github.com/Jeremiah-Sakuda/soma/commit/7448550).

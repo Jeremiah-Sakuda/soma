@@ -16,7 +16,7 @@ The native graph's first cut and early restore attempts failed before the pointe
 
 All raw takes, clip indices and exact source identities are in [DEMO_REHEARSALS.md](DEMO_REHEARSALS.md). Never use the private-background preflight folder `native/2026-11-04T19-52-42.927Z/` in the final edit. Keep provenance, original synthetic-source labels and measured shortened-wait labels. No additional generation or filming was performed for this planning update.
 
-At the November 4, 21:06 UTC follow-up, full CI passed for `bff7b10`, caption-polish runtime `dc4c9cd` ([run](https://github.com/Jeremiah-Sakuda/soma/actions/runs/41910292073)) and documentation checkpoint `2cf017c` ([run](https://github.com/Jeremiah-Sakuda/soma/actions/runs/41910991471)). The hosted polish manifest still matched. Canonical `Jeremiah-Sakuda/soma` remained PRIVATE; published download v0.4.0, v0.4.1 draft, v0.5.0 signed locally but not notarized or published. The unrelated `next-env.d.ts` edit and rejected untracked minimal mockups remain untouched. No history rewrite is part of this plan: preserve both histories per AGENTS.md. Any separate access-session proposal remains unverified here.
+At the November 4, 21:06 UTC follow-up, full CI passed for `5831a47`, caption-polish runtime `8ada5b3` ([run](https://github.com/Jeremiah-Sakuda/soma/actions/runs/41910292073)) and documentation checkpoint `07056eb` ([run](https://github.com/Jeremiah-Sakuda/soma/actions/runs/41910991471)). The hosted polish manifest still matched. Canonical `Jeremiah-Sakuda/soma` remained PRIVATE; published download v0.4.0, v0.4.1 draft, v0.5.0 signed locally but not notarized or published. The unrelated `next-env.d.ts` edit and rejected untracked minimal mockups remain untouched. No history rewrite is part of this plan: preserve both histories per AGENTS.md. Any separate access-session proposal remains unverified here.
 
 All deadlines below are America/New_York. [Verification](VERIFICATION.md) owns executed results; [build plan](BUILD_PLAN.md) owns scope.
 
@@ -24,7 +24,7 @@ All deadlines below are America/New_York. [Verification](VERIFICATION.md) owns e
 
 Codex owns the release manifest and graph interaction. Claude merges engine source only, leaving the manifest to Codex. Preserve the unrelated `next-env.d.ts` edit and both histories. Engine go/no-go is 4:30 PM; code freeze is 5:30 PM. If the engine misses its visual/provenance bar, keep the checked circuit as the second example. Use actual filmed output for the final words.
 
-Engine source `af9a223` is integrated; manifest checkpoint `412cfb9` is pushed (`soma-engine-integration-2026-11-04`). Regenerate again after remaining fixes. Neither the published 0.4.0 installer nor the previous 0.4.1 draft contains the new graph interaction. Preserve both dated artifacts. A current signed local 0.5.0 recording candidate exists; final notarization and distribution remain pending. The `soma-notary` keychain profile was available at signing preflight.
+Engine source `643c297` is integrated; manifest checkpoint `63d0bcc` is pushed (`soma-engine-integration-2026-11-04`). Regenerate again after remaining fixes. Neither the published 0.4.0 installer nor the previous 0.4.1 draft contains the new graph interaction. Preserve both dated artifacts. A current signed local 0.5.0 recording candidate exists; final notarization and distribution remain pending. The `soma-notary` keychain profile was available at signing preflight.
 
 ## After source freeze
 

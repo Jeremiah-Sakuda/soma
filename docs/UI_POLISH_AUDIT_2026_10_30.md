@@ -4,7 +4,7 @@
 
 ## What was audited
 
-- **Build:** `codex/spatial-exploration` at `e521e7d`. This is main's latest UI (PM097) plus the 3D work.
+- **Build:** `codex/spatial-exploration` at `74aa07b`. This is main's latest UI (PM097) plus the 3D work.
 - **Setup:**
   - It ran from an isolated, credential-free snapshot with live inference off, so there was no model spend.
   - Prepared examples, the recorded Muse run and the 3D examples were driven in a real browser.
@@ -16,7 +16,7 @@
   - Gemini voice playback
   - live generation and its waiting states
   - the native Electron window chrome
-  - any revisions the PM102/PM103 3D work makes after `e521e7d`
+  - any revisions the PM102/PM103 3D work makes after `74aa07b`
 
 ## Verdict
 
@@ -99,7 +99,7 @@ The counts cover visible words and interactive controls (buttons, links, inputs,
   - The mid-step states (settled fill, current outline, relaxing edge in accent) read well.
   - The priority-queue chips with costs are clear.
 
-### 4. 3D (spatial branch at `e521e7d`)
+### 4. 3D (spatial branch at `74aa07b`)
 
 PM102/PM103 is revising the visual quality right now. These findings are about framing, layout and controls, which that work may not cover.
 

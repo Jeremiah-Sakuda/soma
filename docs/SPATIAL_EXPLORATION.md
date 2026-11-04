@@ -25,7 +25,7 @@ This is a schematic spatial explanation engine, not recovery of a physically acc
 
 ## Implementation and demonstration
 
-Implemented in `7c7e045`, interaction fixes and runtime identity in `cbcdae8`, after scope/dependencies commit `ce53a70`.
+Implemented in `094f7f9`, interaction fixes and runtime identity in `b7d791f`, after scope/dependencies commit `288a28c`.
 
 - `spatial-schema.ts` defines strict primitive, pose, containment and view contracts. `spatial-exploration.ts` projects existing checked traces and applies presentation transforms without modifying the solver.
 - Client-only Three.js loads on demand. Picking, orbit, presets, clipping, separation and isolation have keyboard alternatives; explicit steps drive poses without continuous animation. Failed initialization or context loss falls back to a readable front projection with object/connection descriptions and a retry control.
@@ -55,8 +55,8 @@ Generic 3D is a bounded explanatory schematic, not an accurate reconstructed dig
 
 ## PM098 — Fresh pre-merge verification, October 30
 
-The spatial branch incorporates canonical main `dc11105` through merge commit
-`afa5675`; main itself was not changed. This acceptance run supersedes the earlier
+The spatial branch incorporates canonical main `06dcb5a` through merge commit
+`3a7506a`; main itself was not changed. This acceptance run supersedes the earlier
 partial full-browser result. All final acceptance checks below passed.
 
 Defects reproduced and corrected:
@@ -121,7 +121,7 @@ Executed evidence:
 Private receipts and logs are under `.local/pm098/`; the final live artifacts are
 in `live-1793395866881`. Browser verification uses an isolated, credential-free
 source copy on port 41898. No other chat's development server was stopped.
-The latest remote-main check still resolved to `dc11105`. Subsequent main changes
+The latest remote-main check still resolved to `06dcb5a`. Subsequent main changes
 will require an integration check before merge. No feature merge, deployment,
 push, publication, clean hosted CI claim or physical GPU acceptance is implied.
 

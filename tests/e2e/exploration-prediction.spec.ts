@@ -1,7 +1,9 @@
+import { openMoreExamples } from './example-navigation';
 import {test,expect} from '@playwright/test';
 
 test('optional supported prediction uses real routes, and persists across reload',async({page})=>{
- await page.goto('/explore');await page.getByRole('button',{name:'Try the original example',exact:true}).first().click();
+ await page.goto('/explore');await openMoreExamples(page);
+  await page.getByRole('button',{name:'Try the original example',exact:true}).first().click();
  const panel=page.getByRole('region',{name:'Optional prediction'});
  await panel.getByRole('button',{name:'Predict the next node'}).click();
  await panel.getByRole('radio',{name:'Goal',exact:true}).check();

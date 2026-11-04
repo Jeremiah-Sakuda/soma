@@ -1,9 +1,11 @@
+import { openMoreExamples } from './example-navigation';
 import { test, expect } from '@playwright/test';
 
 test.use({ launchOptions: { args: ['--enable-unsafe-swiftshader'] } });
 
 test('spatial HTTP state rejects cross-session reads/writes, forged IDs and hostile origins atomically', async ({ page, browser, baseURL }) => {
   await page.goto('/explore');
+  await openMoreExamples(page);
   await page.getByRole('button', { name: 'Open the 3D example', exact: true }).click();
   await expect(page.locator('.spatial-canvas canvas')).toHaveAttribute('data-rendered', 'true');
   const { active } = await (await page.request.get('/api/explore')).json();
@@ -41,7 +43,8 @@ test('repeated 2D/3D transitions release every previous WebGL context without ac
       return result;
     } as typeof original;
   });
-  await page.goto('/explore'); await page.getByRole('button', { name: 'Compare weighted paths', exact: true }).click();
+  await page.goto('/explore'); await openMoreExamples(page);
+  await page.getByRole('button', { name: 'Compare weighted paths', exact: true }).click();
   const count = () => page.evaluate(() => (window as unknown as { spatialContexts: WebGL2RenderingContext[] }).spatialContexts.filter((c) => !c.isContextLost()).length);
   expect(await count()).toBe(0);
   for (let cycle = 0; cycle < 6; cycle++) {
@@ -57,7 +60,8 @@ test('repeated 2D/3D transitions release every previous WebGL context without ac
 
 test('a click-sized pointer wobble leaves both the displayed camera and saved view unchanged', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('/explore'); await page.getByRole('button', { name: 'Open the 3D example', exact: true }).click();
+  await page.goto('/explore'); await openMoreExamples(page);
+  await page.getByRole('button', { name: 'Open the 3D example', exact: true }).click();
   const canvas = page.locator('.spatial-canvas canvas');
   await expect(canvas).toHaveAttribute('data-rendered', 'true'); await canvas.scrollIntoViewIfNeeded();
   const before = await canvas.screenshot();

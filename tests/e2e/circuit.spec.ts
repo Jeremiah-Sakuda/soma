@@ -1,3 +1,4 @@
+import { openMoreExamples } from './example-navigation';
 import { test, expect } from '@playwright/test';
 import { checkExploration } from '../../src/lib/domain/exploration';
 import { initialExplorationState } from '../../src/lib/domain/exploration-view';
@@ -73,6 +74,7 @@ test('a checked circuit draws on the uploaded slide and re-solves every experime
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/explore');
   // The one-click demo slide loads the same original Lecture 9 image and its question.
+  await openMoreExamples(page);
   await page.getByRole('button', { name: 'Try the Lecture 9 circuit slide (live)' }).click();
   await expect(page.locator('.exploration-ask-card textarea')).toHaveValue('Why is there no current through R5?');
   await page.getByRole('button', { name: 'Ask Soma', exact: true }).click();

@@ -1,3 +1,4 @@
+import { openMoreExamples } from './example-navigation';
 import { test, expect, type Page, type Route } from '@playwright/test';
 import {
   checkExploration,
@@ -297,6 +298,7 @@ async function setup(
           .catch(() => {});
     },
     example: async () => {
+      await openMoreExamples(page);
       await page
         .getByRole('button', { name: 'Try the original example', exact: true })
         .first()
@@ -658,6 +660,7 @@ test('one question surface and disclosed settings remain usable on keyboard and 
   page,
 }) => {
   const h = await setup(page);
+  await openMoreExamples(page);
   await page
     .getByRole('button', { name: 'Try the original example', exact: true })
     .first()

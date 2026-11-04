@@ -1,3 +1,4 @@
+import { openMoreExamples } from './example-navigation';
 import { test, expect, type Page, type Route } from '@playwright/test';
 import { checkExploration, createExampleExploration, type ExplorationSpec } from '../../src/lib/domain/exploration';
 import { initialExplorationState } from '../../src/components/exploration-scene';
@@ -48,6 +49,7 @@ async function setup(page: Page, options: { live?: boolean; delay?: boolean; fai
   return { requests,completeInitialization:async()=>{await expect.poll(()=>initialRequests.length).toBeGreaterThan(0);await Promise.all(initialRequests.splice(0).map(item=>item.route.fulfill({json:item.response})));}, completeResume:async()=>{if(pendingResume)await pendingResume.route.fulfill({json:pendingResume.response});},completeDelayed: async () => { if (pending) await pending.fulfill({ json: { artifact: fixture({ comparison: true, version: 2 }) } }).catch(() => undefined); } };
 }
 async function example(page: Page) {
+  await openMoreExamples(page);
   await page.getByRole('button', { name: 'Try the original example', exact: true }).first().click();
   await expect(page.getByRole('heading', { name: 'Why does A come before B?', exact: true })).toBeVisible();
 }
@@ -315,13 +317,13 @@ test('exploration deletion requires explicit confirmation and clears its version
 
 test('a delayed resume cannot overwrite experiment controls changed while it was loading',async({page})=>{
   const {completeResume}=await setup(page,{delayResume:true});await example(page);
-  await page.locator('.journal-explorations-menu summary').click();
+  await page.locator('.journal-explorations-menu > summary').click();
   await page.getByRole('button',{name:'Why does A come before B? Version 1',exact:true}).click();
   await page.getByRole('button',{name:'Next step',exact:true}).click();
   await completeResume();
   await expect(page.getByRole('status').filter({hasText:'Kept your newer experiment controls'})).toBeVisible();
   await expect(page.getByRole('list',{name:'First in, first out queue'}).locator('li')).toHaveText(['NextA','2B']);
-  await page.locator('.journal-explorations-menu summary').click();
+  await page.locator('.journal-explorations-menu > summary').click();
   await expect(page.getByRole('button',{name:'Why does A come before B? Version 1',exact:true})).toBeEnabled();
 });
 
@@ -344,6 +346,7 @@ test('source-reading uncertainty remains inspectable even when the generated exp
 
 test('server actions wait for guest-session initialization while local screenshot selection stays usable',async({page})=>{
   const {requests,completeInitialization}=await setup(page,{delayInit:true});
+  await openMoreExamples(page);
   const exampleButton=page.getByRole('button',{name:'Try the original example',exact:true}).first();
   await expect(exampleButton).toBeDisabled();
   await exampleButton.dispatchEvent('click');
@@ -353,6 +356,7 @@ test('server actions wait for guest-session initialization while local screensho
   await expect(page.getByRole('button',{name:'Ask Soma',exact:true})).toBeDisabled();
   expect(requests).toEqual([]);
   await completeInitialization();
+  await openMoreExamples(page);
   await expect(exampleButton).toBeEnabled();
   await exampleButton.click();
   await expect(page.getByRole('heading',{name:'Why does A come before B?',exact:true})).toBeVisible();
@@ -377,7 +381,8 @@ test('bounded explanation panels render, highlight and remain usable by keyboard
  ]},steps:[{id:'first',caption:'Start with examples.',narration:'First inspect the training examples.',highlightIds:['examples'],execution:null,executionStep:null},{id:'second',caption:'Follow the relationship.',narration:'Next follow the relationship toward predictions.',highlightIds:['process','predictions','token2'],execution:null,executionStep:null}],followups:[]};
  const rich={...artifact,...checkExploration(spec),state:initialExplorationState(spec)};
  await page.route('**/api/explore',async route=>{if(route.request().method()==='POST'&&route.request().postDataJSON().action==='example')return route.fulfill({json:{artifact:rich}});return route.fallback();});
- await page.setViewportSize({width:1280,height:720});await page.getByRole('button',{name:'Try the original example',exact:true}).first().click();
+ await page.setViewportSize({width:1280,height:720});await openMoreExamples(page);
+  await page.getByRole('button',{name:'Try the original example',exact:true}).first().click();
  await expect(page.getByRole('heading',{name:spec.title,exact:true})).toBeVisible();await page.evaluate(()=>window.scrollTo(0,0));
  await page.screenshot({path:'.local/pm040/richer-desktop.png',fullPage:true});
  await page.getByRole('button',{name:'Next explanation',exact:true}).focus();await page.keyboard.press('Enter');
@@ -394,7 +399,8 @@ test('crowded generated process labels reflow without hiding their full meaning'
  await setup(page);const a=fixture(),base=a.spec;
  const spec:ExplorationSpec={schemaVersion:base.schemaVersion,id:base.id,version:1,title:'A crowded original process',objective:'Read every processing stage.',sources:base.sources,assumptions:[],uncertainty:[],unsupportedClaims:[],mode:'explanation',scene:{layout:'stack',panels:[{id:'dense',kind:'diagram',title:'Six stages',placement:{column:1,row:1,columnSpan:2},objects:[...Array.from({length:6},(_,i)=>({id:`node${i}`,kind:'block' as const,label:`Stage ${i}: process the current value`,position:{x:.4+i*.01,y:.5}})),{id:'retry-edge',kind:'edge',from:'node0',to:'node0',directed:true,label:'retry'}]}]},steps:[{id:'inspect',caption:'Inspect the six stages.',narration:null,highlightIds:['node0'],execution:null,executionStep:null}],followups:[]};
  const rich={...a,...checkExploration(spec),state:initialExplorationState(spec)};await page.route('**/api/explore',async route=>{if(route.request().method()==='POST'&&route.request().postDataJSON().action==='example')return route.fulfill({json:{artifact:rich}});return route.fallback();});
- await page.setViewportSize({width:1280,height:900});await page.emulateMedia({reducedMotion:'reduce'});await page.getByRole('button',{name:'Try the original example',exact:true}).first().click();await expect(page.getByRole('heading',{name:'A crowded original process',exact:true})).toBeVisible();
+ await page.setViewportSize({width:1280,height:900});await page.emulateMedia({reducedMotion:'reduce'});await openMoreExamples(page);
+  await page.getByRole('button',{name:'Try the original example',exact:true}).first().click();await expect(page.getByRole('heading',{name:'A crowded original process',exact:true})).toBeVisible();
  for(const width of [1280,620,375]){await page.setViewportSize({width,height:900});await expect(page.locator('.exploration-diagram-label')).toHaveCount(6);await expect(page.locator('.exploration-panel-diagram .exploration-edge')).toHaveAttribute('d',/ C /);await expect(page.locator('.exploration-panel-diagram .exploration-edge')).not.toHaveAttribute('d',/NaN|Infinity/);
   const boxes=await page.locator('.exploration-panel-diagram foreignObject').evaluateAll(elements=>elements.map(el=>el.getBoundingClientRect().toJSON()));for(const [i,a]of boxes.entries())for(const b of boxes.slice(i+1))expect(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top).toBe(true);
   expect(await page.locator('.exploration-diagram-label').evaluateAll(els=>els.every(el=>el.scrollHeight<=el.clientHeight&&el.scrollWidth<=el.clientWidth))).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -408,6 +414,7 @@ test('generated diagram cards stay inside their canvas throughout native-width r
   const rich={...a,...checkExploration(spec),state:initialExplorationState(spec)};
   await page.route('**/api/explore',async route=>{if(route.request().method()==='POST'&&route.request().postDataJSON().action==='example')return route.fulfill({json:{artifact:rich}});return route.fallback();});
   await page.setViewportSize({width:375,height:772});
+  await openMoreExamples(page);
   await page.getByRole('button',{name:'Try the original example',exact:true}).first().click();
   await expect(page.getByRole('heading',{name:spec.title,exact:true})).toBeVisible();
   for (const width of [620,375,620]) {

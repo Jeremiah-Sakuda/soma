@@ -1,3 +1,4 @@
+import { openMoreExamples } from './example-navigation';
 import { test, expect } from '@playwright/test';
 import { checkExploration, createWeightedExample } from '../../src/lib/domain/exploration';
 import { initialExplorationState } from '../../src/lib/domain/exploration-view';
@@ -64,6 +65,7 @@ test('a revised weighted card keeps its complete graph above the native composer
   });
   await page.setViewportSize({ width: 620, height: 704 });
   await page.goto('/explore');
+  await openMoreExamples(page);
   await page.getByRole('button', { name: 'Compare weighted paths', exact: true }).click();
   await page
     .getByRole('textbox', { name: 'Where would you like to go next?' })
@@ -91,9 +93,13 @@ test('a recorded real Muse run is inspectable, manipulable and saved without liv
   await page.getByRole('button', { name: 'Watch a recorded Muse run', exact: true }).click();
   await expect(page.getByText('Recorded Muse Spark run', { exact: true })).toBeVisible();
   const pipeline = page.locator('.exploration-pipeline');
-  await expect(pipeline).toContainText('Wonder reviewed');
+  await expect(pipeline.locator('summary')).toHaveText('How it was made · Wonder reviewed');
+  await expect(pipeline.locator('summary')).toBeVisible();
+  await expect(pipeline.getByRole('link', { name: 'Inspect recorded calls and timing' })).toBeHidden();
   await pipeline.locator('summary').click();
   await expect(pipeline).toContainText('Source context reused');
+  await expect(pipeline).toContainText('Recorded run · Soma computed · Wonder reviewed.');
+  await expect(pipeline.getByRole('link', { name: 'Inspect recorded calls and timing' })).toBeVisible();
   await pipeline.getByRole('link', { name: 'Inspect recorded calls and timing' }).click();
   await expect(page.locator('#exploration-audit')).toContainText(
     'Muse Wonder advisory review: approve',
@@ -121,6 +127,7 @@ test('weighted graph costs and full node names remain separate on desktop, compa
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/explore');
+  await openMoreExamples(page);
   await page.getByRole('button', { name: 'Compare weighted paths', exact: true }).click();
   for (const width of [1280, 620, 375]) {
     await page.setViewportSize({ width, height: width === 620 ? 704 : 900 });

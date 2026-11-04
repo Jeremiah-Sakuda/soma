@@ -1,3 +1,4 @@
+import { openMoreExamples } from './example-navigation';
 import { test as base, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
@@ -127,6 +128,7 @@ test('recorded graph keeps checked step values beside both renderers and preserv
 
 test('switching inspected searches changes distance identity and values without changing the scene controls', async ({ page }) => {
   await page.goto('/explore');
+  await openMoreExamples(page);
   await page.getByRole('button', { name: 'Compare weighted paths', exact: true }).click();
   await page.getByRole('button', { name: '3D workspace', exact: true }).click();
   await finishSteps(page);

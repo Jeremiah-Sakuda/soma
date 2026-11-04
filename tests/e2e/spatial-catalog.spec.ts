@@ -1,3 +1,4 @@
+import { openMoreExamples } from './example-navigation';
 import { test, expect } from '@playwright/test';
 import { spatialRenderStyles } from '../../src/lib/domain/spatial-schema';
 import type { ExplorationArtifact } from '../../src/lib/server/exploration-types';
@@ -9,6 +10,7 @@ test('expanded part catalog renders with readable callouts, camera feedback and 
   test.setTimeout(120_000);
   const errors: string[] = []; page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/explore');
+  await openMoreExamples(page);
   await page.getByRole('button', { name: 'Open the 3D example', exact: true }).click();
   const { active: original } = await (await page.request.get('/api/explore')).json() as { active: ExplorationArtifact };
   let fixture = original;

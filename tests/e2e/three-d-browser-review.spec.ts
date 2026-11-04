@@ -1,3 +1,4 @@
+import { openMoreExamples } from './example-navigation';
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
@@ -135,6 +136,7 @@ async function measurements(page: Page) {
 test('real mechanism renderers support picking, orbit, steps, cutaway, responsive geometry and exact reopening', async ({ page }) => {
   const audit = await guard(page);
   await page.goto('/explore');
+  await openMoreExamples(page);
   await page.getByRole('button', { name: 'Open the 3D example', exact: true }).click();
   await rendered(page);
   await expect(page.getByText('3D schematic · explanation only', { exact: true })).toBeVisible();
@@ -335,6 +337,7 @@ test('recorded circuit 3D and Anatomy show voltage steps, balanced level and cur
 test('actual WebGL context loss, retry and repeated 2D switches retain step state and release old contexts', async ({ page }) => {
   const audit = await guard(page);
   await page.goto('/explore');
+  await openMoreExamples(page);
   await page.getByRole('button', { name: 'Open the 3D example', exact: true }).click();
   await rendered(page);
   await page.getByRole('button', { name: 'Next explanation', exact: true }).click();

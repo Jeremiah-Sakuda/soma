@@ -1,7 +1,9 @@
+import { openMoreExamples } from './example-navigation';
 import { test, expect } from '@playwright/test';
 
 async function saved(page: import('@playwright/test').Page, weighted = true) {
   await page.goto('/explore');
+  await openMoreExamples(page);
   await page
     .getByRole('button', {
       name: weighted ? 'Compare weighted paths' : 'Try the original example',

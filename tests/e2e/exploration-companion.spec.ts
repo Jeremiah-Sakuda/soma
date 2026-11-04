@@ -1,6 +1,8 @@
+import { openMoreExamples } from './example-navigation';
 import {test,expect} from '@playwright/test';
 test('native-size experiment, comparison and question remain together with reversible disclosure',async({page})=>{
- await page.setViewportSize({width:620,height:704});await page.goto('/explore');await page.getByRole('button',{name:'Compare weighted paths',exact:true}).click();await page.evaluate(()=>scrollTo(0,0));
+ await page.setViewportSize({width:620,height:704});await page.goto('/explore');await openMoreExamples(page);
+  await page.getByRole('button',{name:'Compare weighted paths',exact:true}).click();await page.evaluate(()=>scrollTo(0,0));
  await expect(page.locator('.exploration-panel-graph')).toHaveCount(1);
  const composer=page.getByRole('region',{name:'Ask about your context'}),graph=page.locator('.exploration-panel-graph');
  await expect(composer).toBeInViewport({ratio:1});await expect(page.getByRole('button',{name:'Find the tipping point',exact:true})).toBeInViewport({ratio:1});

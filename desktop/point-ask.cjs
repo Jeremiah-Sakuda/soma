@@ -109,6 +109,7 @@ function createPointAsk({
     }
     draw({
       type: 'graph',
+      captureId: graph.id,
       model: graph.model,
       view,
       ...(view === '3d' && sheet?.key === sheetKey() && sheet.data ? { sheet: sheet.data } : {}),
@@ -287,6 +288,9 @@ function createPointAsk({
         frame: false,
         show: false,
         focusable: false,
+        // This window deliberately stays inactive. Its first mouse-down must still
+        // reach the drawing on macOS, once the hovered shape takes the pointer.
+        acceptFirstMouse: true,
         skipTaskbar: true,
         hasShadow: false,
         alwaysOnTop: true,

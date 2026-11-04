@@ -221,7 +221,7 @@ function renderGraph(m) {
 }
 // Both lifted renderers share pointer routing. Graph actions return to the solver;
 // model parts keep their existing selection IPC. A gesture belongs to one draw epoch.
-let held = null, pointerEpoch = 0;
+let held = null, pointerEpoch = 0, lastPointer = null, lastDrawing = null;
 const activeLift = () => !document.body.classList.contains('lifted') ? null
   : window.SomaModel?.active ? window.SomaModel : window.SomaLift?.active ? window.SomaLift : null;
 function cancelHeld() {
@@ -245,7 +245,24 @@ function pointerHover(event) {
   }
   if (over !== graphHover) window.somaPointOverlay.hover((graphHover = over));
 }
+function rememberPointer(event) {
+  lastPointer = { clientX: event.clientX, clientY: event.clientY, buttons: event.buttons };
+}
+function forgetPointer() {
+  lastPointer = null;
+  cancelHeld();
+}
+function refreshStationaryHover(epoch) {
+  const point = lastPointer;
+  if (!point || point.buttons !== 0) return;
+  // show() schedules its geometry update first. Re-pick the freshly drawn scene,
+  // never the preceding edge/control, after releasing the previous gesture.
+  requestAnimationFrame(() => {
+    if (epoch === pointerEpoch && point === lastPointer && !held) pointerHover(point);
+  });
+}
 document.addEventListener('mousemove', (event) => {
+  rememberPointer(event);
   const lifted = activeLift();
   if (held && (held.renderer !== lifted || held.epoch !== pointerEpoch || event.buttons === 0)) cancelHeld();
   if (held) {
@@ -260,6 +277,7 @@ document.addEventListener('mousemove', (event) => {
   pointerHover(event);
 });
 document.addEventListener('mousedown', (event) => {
+  rememberPointer(event);
   const lifted = activeLift();
   if (!lifted || event.button !== 0 || event.detail > 1) return;
   const id = lifted.hit(event.clientX, event.clientY);
@@ -268,6 +286,7 @@ document.addEventListener('mousedown', (event) => {
   document.body.style.cursor = 'grabbing';
 });
 document.addEventListener('mouseup', (event) => {
+  rememberPointer(event);
   if (!held || event.button !== 0) return;
   const gesture = held, lifted = activeLift();
   held = null;
@@ -290,8 +309,8 @@ document.addEventListener('dblclick', (event) => {
   // gesture above; only the graph's sheet resets its view.
   if (hit && (lifted === window.SomaModel || hit === 'sheet')) lifted.resetView();
 });
-window.addEventListener('blur', cancelHeld);
-document.addEventListener('mouseleave', cancelHeld);
+window.addEventListener('blur', forgetPointer);
+document.addEventListener('mouseleave', forgetPointer);
 document.addEventListener('click', (event) => {
   if (document.body.classList.contains('lifted')) return;
   const edge = event.target?.getAttribute?.('data-edge');
@@ -316,7 +335,7 @@ function applyFrame(event) {
 for (const renderer of [window.SomaLift, window.SomaModel])
   if (renderer)
     renderer.onFail = (reason) => {
-      cancelHeld();
+      forgetPointer();
       pointerEpoch++;
       document.body.classList.remove('lifted');
       window.somaPointOverlay.liftFailed(reason);
@@ -348,12 +367,19 @@ function liftView(event) {
   else document.body.classList.remove('lifted');
 }
 window.somaPointOverlay.onDraw((event) => {
+  const sameDrawing = event.type === 'graph' && typeof event.captureId === 'string'
+    && lastDrawing?.captureId === event.captureId && lastDrawing.view === event.view
+    && JSON.stringify(lastDrawing.display) === JSON.stringify(event.display);
+  lastDrawing = event.type === 'graph'
+    ? { captureId: event.captureId, view: event.view, display: event.display } : null;
+  if (!sameDrawing) lastPointer = null;
   pointerEpoch++;
   cancelHeld();
   applyFrame(event);
   if (event.type === 'graph') {
     renderGraph(event.model);
     liftView(event);
+    if (sameDrawing) refreshStationaryHover(pointerEpoch);
     return;
   }
   if (event.type === 'graph-clear') {

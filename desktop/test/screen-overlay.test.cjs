@@ -31,7 +31,8 @@ function harness(images, options = {}) {
   child.kill = () => {};
   const sent = [], windows = [], results = [], actions = [], draws = [];
   class Window {
-    constructor() {
+    constructor(options) {
+      this.options = options;
       this.webContents = { send: (_c, p) => draws.push(p), setWindowOpenHandler() {}, on() {} };
       windows.push(this);
     }
@@ -189,6 +190,9 @@ test('a changed screen gets no overlay, and clicks are accepted only from the ov
     const id = await h.ready();
     await h.controller.screenOverlay({ id, model: model() });
     const overlay = h.windows[0];
+    assert.equal(h.draws.at(-1).captureId, id, 'hover renewal is bound to the verified capture');
+    assert.equal(overlay.options.acceptFirstMouse, true, 'the inactive overlay accepts its first macOS click');
+    assert.equal(overlay.options.focusable, false, 'clicks do not steal keyboard focus from the ask bar');
     h.controller.overlayToggle({ sender: {} }, 'AF');
     h.controller.overlayToggle({ sender: overlay.webContents }, 'ZZ');
     assert.equal(h.actions.length, 0);

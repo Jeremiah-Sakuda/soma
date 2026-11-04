@@ -62,7 +62,7 @@ async function open(page: Page, reduced = true) {
 
 async function draw(page: Page, model = final, view = '3d', options: Record<string, unknown> = {}) {
   await page.evaluate(({ model, view, options }) => (window as any).__draw({
-    type: 'graph', model, view,
+    type: 'graph', captureId: 'synthetic-capture', model, view,
     display: { x: window.screenX, y: window.screenY, width: 1600, height: 900 },
     ...options,
   }), { model, view, options });
@@ -232,6 +232,77 @@ test('dragging a lifted edge rotates the view without cutting it and survives re
   expect(await orientation(page)).toEqual(turned);
   await expect(page.locator('#lift-labels')).toContainText('F = 9');
   await page.screenshot({ path: test.info().outputPath('lift-dragged-cost-nine.png') });
+  await clean(page);
+});
+
+test('a stationary cursor regains hover after a same-capture redraw without needing a sacrificial click', async ({ page }) => {
+  await open(page); await draw(page); await advance(page);
+  const at = await edgePoint(page);
+  await page.mouse.move(at.x, at.y);
+  await page.evaluate(() => { (window as any).__hovers = []; });
+  await draw(page); await advance(page);
+  expect(await page.evaluate(() => (window as any).__hovers)).toEqual([false, true]);
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual([]);
+  // Deliberately no mouse.move/click helper: the down arrives at the still cursor.
+  await page.mouse.down(); await page.mouse.up();
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual(['DF']);
+  await clean(page);
+});
+
+test('stationary caption hover stays neutral across a redraw', async ({ page }) => {
+  await open(page); await draw(page); await advance(page);
+  const card = (await page.locator('#lift-caption').boundingBox())!;
+  const at = { x: card.x + 10, y: card.y + 10 };
+  expect(await page.evaluate(({ x, y }) => (window as any).SomaLift.hit(x, y), at)).toBe('control:caption');
+  await page.mouse.move(at.x, at.y);
+  const before = await orientation(page);
+  await page.evaluate(() => { (window as any).__hovers = []; });
+  await draw(page); await advance(page);
+  expect(await page.evaluate(() => (window as any).__hovers)).toEqual([false, true]);
+  expect(await page.evaluate(() => document.body.style.cursor)).toBe('default');
+  await page.mouse.down(); await page.mouse.up();
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual([]);
+  expect(await orientation(page)).toEqual(before);
+  await clean(page);
+});
+
+test('redraw cancels a held edge and zero-button movement still cancels a lost release', async ({ page }) => {
+  await open(page); await draw(page); await advance(page);
+  const at = await edgePoint(page);
+  await page.mouse.move(at.x, at.y); await page.mouse.down();
+  await page.evaluate(() => { (window as any).__hovers = []; });
+  await draw(page); await advance(page);
+  expect(await page.evaluate(() => (window as any).__hovers)).toEqual([false]);
+  await page.mouse.up();
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual([]);
+  await page.mouse.move(at.x + 1, at.y); await page.mouse.down();
+  await page.evaluate(({ x, y }) => document.dispatchEvent(new MouseEvent('mousemove', { clientX: x, clientY: y, buttons: 0 })), at);
+  await page.mouse.up();
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual([]);
+  await clean(page);
+});
+
+test('queued stationary hover cannot survive graph clear, source replacement, exit or blur', async ({ page }) => {
+  await open(page); await draw(page); await advance(page);
+  for (const cancel of ['clear', 'replace', 'exit', 'blur', 'mouseleave']) {
+    await draw(page); await advance(page);
+    const at = await edgePoint(page);
+    await page.mouse.move(at.x, at.y);
+    await page.evaluate(({ model, cancel }) => {
+      const w = window as any;
+      w.__hovers = [];
+      const event = { type: 'graph', captureId: 'synthetic-capture', model, view: '3d', display: { x: window.screenX, y: window.screenY, width: 1600, height: 900 } };
+      w.__draw(event);
+      if (cancel === 'clear') w.__draw({ type: 'graph-clear' });
+      else if (cancel === 'replace') w.__draw({ ...event, captureId: 'replacement-capture' });
+      else if (cancel === 'exit') w.__draw({ ...event, view: '2d' });
+      else if (cancel === 'blur') window.dispatchEvent(new Event('blur'));
+      else document.dispatchEvent(new MouseEvent('mouseleave'));
+    }, { model: final, cancel });
+    await advance(page);
+    expect(await page.evaluate(() => (window as any).__hovers)).toEqual([false]);
+    expect(await page.evaluate(() => (window as any).__toggles)).toEqual([]);
+  }
   await clean(page);
 });
 

@@ -37,7 +37,7 @@ import { ExplorationCostProbe } from './exploration-cost-probe';
 import { ExplorationCircuitProbe } from './exploration-circuit-probe';
 import type { CostProbe } from '@/lib/domain/cost-probe';
 import type { DcProbe } from '@/lib/domain/dc-circuit';
-import { circuitSolution } from '@/lib/domain/exploration-view';
+import { circuitSolution, explorationInputsChanged } from '@/lib/domain/exploration-view';
 import type { PublicExplorationApplication } from '@/lib/domain/exploration-application';
 import { ExplorationApplicationCard } from './exploration-application';
 import { ExplorationPredictionCard } from './exploration-prediction';
@@ -818,6 +818,9 @@ export function ExplorationWorkspace() {
   const publicSource = artifact?.source.publicDemo ?? (artifact?.recording
     ? { image: artifact.recording.sourceImage, presentation: artifact.recording.presentation }
     : undefined);
+  const changedSinceExplanation = artifact && state
+    ? explorationInputsChanged(artifact.spec, state)
+    : false;
   const [waitingSeconds, setWaitingSeconds] = useState(0);
   useEffect(() => {
     setWaitingSeconds(0);
@@ -1558,6 +1561,13 @@ export function ExplorationWorkspace() {
                       <CircleHelp size={15} aria-hidden="true" /> Source & assumptions
                     </summary>
                     <p>{artifact.source.summary}</p>
+                    {changedSinceExplanation && (
+                      <>
+                        <h3>Earlier explanation</h3>
+                        <p>{artifact.spec.title}</p>
+                        <p>{artifact.spec.objective}</p>
+                      </>
+                    )}
                     {artifact.source.uncertainty.length > 0 && (
                       <>
                         <h3>Source reading uncertainty</h3>
@@ -1702,10 +1712,18 @@ export function ExplorationWorkspace() {
               />
               {artifact.recording && (
                 <>
-                  <p className="exploration-recording-note">
-                    Recorded {capturedTime(artifact.recording.generatedAt)} · original synthetic
-                    source · no new visual generation. Optional narration uses your selected voice.
-                  </p>
+                  <details className="journal-recording-details">
+                    <summary>Recorded run details{publicSource?.presentation ? ' · drawing aligned' : ''}</summary>
+                    <p className="exploration-recording-note">
+                      Recorded {capturedTime(artifact.recording.generatedAt)} · original synthetic
+                      source · no new visual generation. Optional narration uses your selected voice.
+                    </p>
+                    {publicSource?.presentation && (
+                      <p className="exploration-recording-note">
+                        Replay drawing aligned to source · original recording unchanged.
+                      </p>
+                    )}
+                  </details>
                   {artifact.spec.mode !== 'explanation' && (
                     <div className="journal-recording-switch" role="group" aria-label="Recorded example">
                       <button
@@ -1724,14 +1742,14 @@ export function ExplorationWorkspace() {
                   )}
                 </>
               )}
-              {publicSource?.presentation && (
+              {publicSource?.presentation && !artifact.recording && (
                 <p className="exploration-recording-note">
-                  {artifact.recording
-                    ? 'Replay drawing aligned to source · original recording unchanged.'
-                    : 'Source drawing aligned to its original demo image.'}
+                  Source drawing aligned to its original demo image.
                 </p>
               )}
-              <h2>{artifact.spec.title}</h2>
+              <h2>{changedSinceExplanation
+                ? artifact.spec.mode === 'checked-circuit' ? 'Your circuit experiment' : 'Your graph experiment'
+                : artifact.spec.title}</h2>
               {artifact.practiceOrigin && (
                 <p className="meta">
                   Fresh practice variation · linked to your original saved exploration.{' '}
@@ -1772,7 +1790,9 @@ export function ExplorationWorkspace() {
                   </p>
                 </details>
               )}
-              <p className="exploration-objective">{artifact.spec.objective}</p>
+              <p className="exploration-objective">{changedSinceExplanation
+                ? 'The drawing and numbers reflect your changes. Ask Soma to explain this experiment.'
+                : artifact.spec.objective}</p>
               {artifact.source.uncertainty.length > 0 && (
                 <details className="journal-source-uncertainty">
                   <summary>
@@ -1834,6 +1854,7 @@ export function ExplorationWorkspace() {
                 spec={artifact.spec}
                 state={state}
                 onChange={updateState}
+                circuitObservation={artifact.circuitExperiment?.observe}
                 overlay={
                   !newContext &&
                   artifact.source.layout &&

@@ -1,6 +1,6 @@
 import type { SpatialView } from './spatial-schema';
 import { runBfs, type BfsInput, type BfsExecution, type ExplorationSpec } from './exploration';
-import { solveDc, type DcInput, type DcSolution } from './dc-circuit';
+import { solveDc, type DcInput, type DcObservation, type DcSolution } from './dc-circuit';
 import { defaultGraphControls, applyGraphControls, applyComparisonGraphControls, graphControlsEqual, type GraphControls } from './graph-state';
 
 export type ExplorationViewState = {
@@ -97,6 +97,44 @@ export function circuitExactQuantity(exact: string | null | undefined, value: nu
 }
 const circuitName = (input: DcInput, id: string) =>
   input.nodes.find((n) => n.id === id)?.label ?? input.components.find((c) => c.id === id)?.label ?? id;
+/** The selected experiment's consequence, without repeating every newly revealed part.
+ * Decline when the observation is unavailable so the full circuit caption keeps its context. */
+export function circuitObservationCaption(solution: DcSolution, observation: DcObservation): string | null {
+  if (solution.status !== 'solved') return null;
+  const { input } = solution;
+  const voltageAt = (id: string) => {
+    const v = solution.voltages[id];
+    return typeof v === 'number' && Number.isFinite(v) ? v : null;
+  };
+  if (observation.kind === 'voltage') {
+    const node = input.nodes.find((n) => n.id === observation.nodeId), v = voltageAt(observation.nodeId);
+    return node && v !== null
+      ? `${node.label} is at ${circuitQuantity(v, 'V')} relative to ${circuitName(input, input.ground)} (ground).`
+      : null;
+  }
+  const c = input.components.find((part) => part.id === observation.componentId);
+  if (!c) return null;
+  const fromVoltage = voltageAt(c.from), toVoltage = voltageAt(c.to);
+  if (fromVoltage === null || toVoltage === null) return null;
+  if (observation.kind === 'power') {
+    const power = solution.power[c.id];
+    return Number.isFinite(power)
+      ? `${c.label} ${power < 0 ? 'supplies' : 'absorbs'} ${circuitQuantity(Math.abs(power), 'W')}.`
+      : null;
+  }
+  const current = solution.currents[c.id];
+  if (!Number.isFinite(current)) return null;
+  if (solution.state.open.includes(c.id)) return `${c.label} is open, so it carries 0 A.`;
+  if (current === 0)
+    return c.kind === 'resistor' && solution.drops[c.id] === 0
+      ? `${c.label} carries 0 A: both ends are at ${circuitQuantity(fromVoltage, 'V')}.`
+      : `${c.label} carries 0 A.`;
+  const [from, to] = current > 0 ? [c.from, c.to] : [c.to, c.from];
+  const contrast = c.kind === 'resistor'
+    ? ` ${circuitName(input, c.from)} is at ${circuitQuantity(fromVoltage, 'V')}; ${circuitName(input, c.to)} is at ${circuitQuantity(toVoltage, 'V')}.`
+    : '';
+  return `${c.label} carries ${circuitQuantity(Math.abs(current), 'A')} from ${circuitName(input, from)} to ${circuitName(input, to)}.${contrast}`;
+}
 /** Whether a part's two ends are still joined through the other connected parts. */
 function connectedWithout(solution: DcSolution, id: string) {
   const { input, state } = solution;

@@ -606,3 +606,9 @@ The user authorized independent rubric reviews, implementation and thorough comp
 - **First use should demonstrate the model's work.** Recommend the recorded real Muse run, label it as recorded, retain prepared and live options, and state that checked graph search and DC circuits are the supported experiments. Opening a recording or loading a live example must not start generation or speech.
 
 Acceptance evidence is recorded in `VERIFICATION.md`. Candidate changes, hosted deployment, native acceptance, audio and final video are separate gates; a source or browser test cannot establish the others. Private review grades remain local and are not official judging outcomes.
+
+### Presentation follow-up, November 4 UTC
+
+Independent visual review found that a correct changed circuit could still display the original “balanced now” title/objective, and the experiment caption put the requested current after several unrelated quantities. Replace mismatched header wording with a current-experiment heading, preserve the original under source details, and lead a changed circuit investigation with its solver-derived watched quantity and direction. Keep full reveal text and numerical tables available. Fold extended recording/alignment information under a labeled disclosure while preserving the visible recorded mode and subject switches. These changes retain the same scientific data, model output and source bindings; no new inference or scope is added.
+
+The first committed release's existing GitHub integration reported Vercel production READY. Browser approval then declined hosted-origin access, so remote-manifest, visible hosted and complete native acceptance are still open; do not retry through another browser, native surface or raw request as a workaround. Continue authorized local verification and clearly labeled silent replay footage. Repository visibility and final submission remain unchanged.

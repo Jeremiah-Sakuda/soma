@@ -14,6 +14,7 @@ import { useExplorationMotion } from './exploration-motion';
 import { diagramRoutes, pointOnDiagramRoute } from '@/lib/domain/diagram-routing';
 import { diagramLayout, diagramEdgeLabels } from '@/lib/domain/exploration-layout';
 import { routeCost } from '@/lib/domain/cost-probe';
+import type { DcObservation } from '@/lib/domain/dc-circuit';
 import { beatProgress } from '@/lib/domain/exploration-motion';
 import {
   runBfs,
@@ -303,6 +304,7 @@ export function ExplorationScene({
   playing = false,
   spokenProgress = null,
   experiment,
+  circuitObservation,
   experimentInline = false,
   overlay,
 }: {
@@ -317,6 +319,7 @@ export function ExplorationScene({
     readingCheck?: { status: 'confirmed' | 'corrected' | 'disputed'; weighted?: boolean; nodes: number; edges: number; corrections: { edgeId: string; from: number; to: number }[]; disputes: string[] };
   };
   experiment?: ReactNode;
+  circuitObservation?: DcObservation;
   experimentInline?: boolean;
   spec: ExplorationSpec;
   state: ExplorationViewState;
@@ -412,6 +415,7 @@ export function ExplorationScene({
         screenNotice={screenNotice}
         compact={compact}
         experiment={experiment}
+        circuitObservation={circuitObservation}
         toggleRef={toggleRef}
       />
     );

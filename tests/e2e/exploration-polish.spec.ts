@@ -98,11 +98,13 @@ test('a recorded real Muse run is inspectable, manipulable and saved without liv
   await expect(page.locator('#exploration-audit')).toContainText(
     'Muse Wonder advisory review: approve',
   );
-  await expect(page.getByText('no new visual generation. Optional narration uses your selected voice.', { exact: false })).toBeVisible();
   expect(actions).toEqual(['recording']);
   // The audit opens inside the page menu; Escape closes the menu before continuing.
   await page.keyboard.press('Escape');
   await pipeline.locator('summary').click();
+  await page.locator('.journal-recording-details summary').click();
+  await expect(page.getByText('no new visual generation. Optional narration uses your selected voice.', { exact: false })).toBeVisible();
+  await page.locator('.journal-recording-details summary').click();
   await page.getByRole('button', { name: 'Next step', exact: true }).click();
   await page.getByRole('button', { name: 'Save exploration', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Saved this version' })).toBeVisible();

@@ -43,6 +43,10 @@ test('recorded graph and circuit retain receipts, manipulate silently and reopen
   const graph = page.getByRole('region', { name: 'Checked cost experiment' });
   await expect(graph).toContainText('This shortcut keeps the cheapest route away from E');
   await graph.getByRole('button', { name: 'Try the tie at 5', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Your graph experiment', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Back to the graph as read', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'What sends the shortest route through E?', exact: true })).toBeVisible();
+  await graph.getByRole('button', { name: 'Try the tie at 5', exact: true }).click();
   await expect(graph.getByRole('status')).toContainText('Dijkstra route cost: 9');
   await graph.getByRole('slider').focus();
   await page.keyboard.press('Shift+ArrowRight');
@@ -55,7 +59,7 @@ test('recorded graph and circuit retain receipts, manipulate silently and reopen
     const caption = figure.querySelector('figcaption')!.getBoundingClientRect();
     return caption.bottom <= figure.getBoundingClientRect().bottom;
   })).toBe(true);
-  await page.screenshot({ path: '.local/overnight-review/round3-recorded-graph.png', fullPage: true });
+  await page.screenshot({ path: '.local/overnight-review/round4-recorded-graph.png', fullPage: true });
   for (const width of [620, 375]) {
     await page.setViewportSize({ width, height: width === 620 ? 704 : 812 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -63,34 +67,46 @@ test('recorded graph and circuit retain receipts, manipulate silently and reopen
       const image = await overlay.locator('img').boundingBox(), marks = await overlay.locator('svg.source-overlay-layer').boundingBox();
       return Math.abs(image!.height - marks!.height);
     }).toBeLessThan(1);
-    await page.screenshot({ path: `.local/overnight-review/round3-recorded-graph-${width}.png`, fullPage: true });
+    await page.screenshot({ path: `.local/overnight-review/round4-recorded-graph-${width}.png`, fullPage: true });
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
 
   await page.getByRole('button', { name: 'Recorded circuit', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Balanced now, current in R5 if R4 changes', exact: true })).toBeVisible();
   await expect(overlay.locator('img')).toHaveAttribute('src', '/synthetic/recorded-lecture-9.png');
+  await page.locator('.journal-recording-details summary').click();
   await expect(page.getByText('Replay drawing aligned to source · original recording unchanged.', { exact: true })).toBeVisible();
+  await expect(page.locator('.journal-recording-details')).toContainText('no new visual generation');
+  await page.locator('.journal-recording-details summary').click();
   const circuit = page.getByRole('region', { name: 'Checked circuit experiment' });
   await expect(circuit.getByRole('status')).toContainText('Current in R5: exactly 0 A');
   await expect(circuit.locator('.exploration-cost-probe-why')).toContainText('Varying R4 unbalances the bridge');
   await circuit.getByRole('slider').focus();
   await page.keyboard.press('Shift+ArrowLeft');
   await expect(circuit.getByRole('status')).toContainText('from B to C');
+  await expect(page.getByRole('heading', { name: 'Your circuit experiment', exact: true })).toBeVisible();
+  await expect(page.locator('.exploration-objective')).toHaveText('The drawing and numbers reflect your changes. Ask Soma to explain this experiment.');
+  await expect(page.getByRole('heading', { name: 'Balanced now, current in R5 if R4 changes', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Back to the circuit as read', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Balanced now, current in R5 if R4 changes', exact: true })).toBeVisible();
+  await expect(circuit.getByRole('status')).toContainText('Current in R5: exactly 0 A');
+  await circuit.getByRole('slider').focus();
+  await page.keyboard.press('Shift+ArrowLeft');
   await page.getByRole('button', { name: 'Save exploration', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Saved this version' })).toBeVisible();
   expect(await overlay.evaluate(figure => {
     const caption = figure.querySelector('figcaption')!.getBoundingClientRect();
     return caption.bottom <= figure.getBoundingClientRect().bottom;
   })).toBe(true);
-  await page.screenshot({ path: '.local/overnight-review/round3-recorded-circuit.png', fullPage: true });
-  await overlay.screenshot({ path: '.local/overnight-review/round3-recorded-circuit-overlay.png' });
+  await page.screenshot({ path: '.local/overnight-review/round4-recorded-circuit.png', fullPage: true });
+  await overlay.screenshot({ path: '.local/overnight-review/round4-recorded-circuit-overlay.png' });
 
   await page.reload();
   await page.locator('.exploration-library button').filter({ hasText: 'Balanced now, current in R5' }).click();
   await expect(overlay.locator('img')).toHaveAttribute('src', '/synthetic/recorded-lecture-9.png');
   await expect(circuit.getByRole('status')).toContainText('from B to C');
   await expect(circuit.getByRole('slider')).toHaveValue('7.2');
+  await expect(page.getByRole('heading', { name: 'Your circuit experiment', exact: true })).toBeVisible();
   for (const width of [620, 375]) {
     await page.setViewportSize({ width, height: width === 620 ? 704 : 812 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -98,7 +114,7 @@ test('recorded graph and circuit retain receipts, manipulate silently and reopen
       const image = await overlay.locator('img').boundingBox(), marks = await overlay.locator('svg.source-overlay-layer').boundingBox();
       return Math.abs(image!.height - marks!.height);
     }).toBeLessThan(1);
-    await page.screenshot({ path: `.local/overnight-review/round3-recorded-circuit-${width}.png`, fullPage: true });
+    await page.screenshot({ path: `.local/overnight-review/round4-recorded-circuit-${width}.png`, fullPage: true });
   }
   expect(actions).toEqual(['recording', 'save', 'recording', 'save']);
   expect(forbidden).toEqual([]);

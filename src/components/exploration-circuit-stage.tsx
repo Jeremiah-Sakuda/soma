@@ -6,13 +6,14 @@ import SpatialWorkspace from './spatial-workspace';
 import { SourceOverlay, type SourceGraphLayout } from './source-overlay';
 import { defaultSpatialView } from '@/lib/domain/spatial-schema';
 import { circuitOverlayModel } from '@/lib/domain/circuit-overlay-model';
-import { DC_UNITS, dcValueAllowed, type DcSolution } from '@/lib/domain/dc-circuit';
+import { DC_UNITS, dcValueAllowed, type DcObservation, type DcSolution } from '@/lib/domain/dc-circuit';
 import type { ExplorationSpec } from '@/lib/domain/exploration';
 import type { SourceOverlayModel } from '@/lib/domain/source-overlay-model';
 import type { SourceAnchor } from '@/lib/domain/source-grounding';
 import {
   captionIsGrounded,
   circuitCaption,
+  circuitObservationCaption,
   circuitQuantity,
   circuitExactQuantity,
   circuitSolution,
@@ -142,6 +143,7 @@ export function ExplorationCircuitStage({
   screenNotice,
   compact,
   experiment,
+  circuitObservation,
   toggleRef,
 }: {
   spec: CircuitSpec;
@@ -153,6 +155,7 @@ export function ExplorationCircuitStage({
   screenNotice: string;
   compact: boolean;
   experiment?: ReactNode;
+  circuitObservation?: DcObservation;
   /** Receives the open/reconnect action for clicks on the companion's drawing. */
   toggleRef: MutableRefObject<(id: string) => void>;
 }) {
@@ -166,6 +169,7 @@ export function ExplorationCircuitStage({
     ? spec.steps.find((item) => item.execution === 'primary' && item.executionStep === state.step)
     : undefined;
   const computed = circuitCaption(solution, state.step);
+  const observed = changed && circuitObservation ? circuitObservationCaption(solution, circuitObservation) : null;
   // The experiment, described against the circuit as read, whenever one is set up.
   const experimenting = state.disabledEdgeIds.length > 0 || Object.keys(state.edgeWeights ?? {}).length > 0;
   const lead = experimenting
@@ -180,7 +184,7 @@ export function ExplorationCircuitStage({
         .join(' ')
     : '';
   const grounded = authored && captionIsGrounded(authored.caption, [], solution) ? authored.caption : null;
-  const computedLine = `${lead ? `${lead} ` : ''}${computed}`;
+  const computedLine = `${lead ? `${lead} ` : ''}${observed ?? computed}`;
   // The drawing carries Muse's sentence when every number in it is the solver's.
   const caption = grounded ?? computedLine;
   const stepLabel =
@@ -366,6 +370,7 @@ export function ExplorationCircuitStage({
           {solved && (
             <details>
               <summary>Checked values in a table</summary>
+              {observed && <p>{computed}</p>}
               <div className="exploration-table-scroll">
                 <table className="exploration-state-table circuit-readings">
                   <thead>

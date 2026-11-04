@@ -3290,3 +3290,12 @@ Fresh packaged verification — November 4, 20:45 UTC: retained the prior engine
 
 
 Caption follow-up: `8e8ac12` keeps the full flat explanation above the compact bar, prefers available adjacent space when the supplied placement cannot fit, and permits scrolling for long text on small screens. UI/UX Pro Max's targeted fixed-position/overlap guidance was applied while preserving the adopted appearance. All 25 actual-renderer tests, typecheck/syntax/diff checks passed; five new layout cases and the exact retained circuit replay were recorded privately with no new inference. The default-bar safe area does not follow arbitrary manual bar dragging. `f8e3453` also makes the Test it tooltip describe both graph and circuit experiments. Final package/distribution acceptance remains outstanding; all eight live takes' generation usage is unchanged at $0.43767225 excluding narration.
+
+
+## DEMO-RECORDING-READY-20261104-01 — Actual recording readiness
+
+1. Rechecked canonical main `dc4c9cd`, hosted manifest `soma-rehearsal-polish-2026-11-04` / `e215b5512843545697d6544cb61ddabcac9a4673a6d7994ab8313e9ecf36e7fb`, and current CI. CI was still running at inspection; earlier focused 86 desktop/25 renderer passes remain dated evidence.
+2. Rebuilt Developer ID signed private companion 0.5.0 with the last caption/startup/tooltip changes. Signing verification passed; extracted packaged point-ask, point-overlay JS/CSS and compact HTML match source exactly. Evidence: `.local/demo-rehearsal-20261104/native/package-recording-ready.log` and `package-recording-ready-check.json`. No model calls or quota changes; not notarized/published.
+3. Core graph/engine/circuit footage is available. Fresh full-take readiness still needs physical held-button drag/reset and microphone/system-audio preflight; the existing clips are silent. Four exploration admissions were last verified at 20:45:02.502 UTC, resetting at 7 PM EST. That does not support all three examples freshly generated with every follow-up.
+
+Deviation: rebuilt a private recording package before final freeze to include the proven caption fix; final notarized distribution remains separate. No new live acceptance or completed CI is claimed.

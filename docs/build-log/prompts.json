@@ -1904,6 +1904,13 @@
   "kind": "user",
   "prompt": "Claude is done you can continue",
   "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+},
+{
+  "id": "DEMO-RECORDING-READY-20261104-01",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "Okay js everything ready for the actual recording",
+  "timestamp_note": "Exact receipt timestamp unavailable; readiness checked November 4, 2026 UTC."
 }
 ]
 }

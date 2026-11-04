@@ -3366,3 +3366,12 @@ Deviation: none to the main three-subject visual story. Narration for the earlie
 3. User voiceover and final three-minute assembly remain pending. This is not a claim of a finished or submitted demo video.
 
 Deviation: none.
+
+
+## DEMO-FINAL-EDIT-20261104-01 — Assemble the three-minute picture edit
+
+1. Began exact180second assembly using actual native graph, engine and circuit recordings, including their slide-to-lift transitions. No new generation or replay-workspace footage is needed.
+2. Updated the voiceover copy to match the filmed generic A–F investigation and panel-controlled changes; prepared timed recording windows. User supplies the voiceover.
+3. Preparing app-sound and silent-picture exports plus independent duration/decode/frame review. Completion, final audio mix and submission remain pending at this checkpoint.
+
+Deviation: none.

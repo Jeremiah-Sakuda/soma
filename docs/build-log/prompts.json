@@ -1957,6 +1957,13 @@
       "kind": "user",
       "prompt": "Oh I see thank you for clarifying. So is all the recording done?",
       "timestamp_note": "Exact receipt timestamp unavailable; received after November 4 recording stopped."
+    },
+    {
+      "id": "DEMO-FINAL-EDIT-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Okay give me the final three minute edit and I’ll record the voiceover",
+      "timestamp_note": "Exact receipt timestamp unavailable; received during November 4 delivery preparation."
     }
   ]
 }

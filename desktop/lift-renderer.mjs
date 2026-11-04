@@ -22,6 +22,8 @@ import {
   Float32BufferAttribute,
   CatmullRomCurve3,
   Vector3,
+  Vector2,
+  Raycaster,
   Quaternion,
   Color,
   MeshPhysicalMaterial,
@@ -185,6 +187,7 @@ function build(frame) {
     nodes: new Map(), edges: new Map(), ticks: [],
     shadowTex: radialTexture('rgba(0,0,0,0.55)', 'rgba(0,0,0,0)'),
     t: 0, mode: 'enter', started: clock(), last: clock(), idleSince: null, sway: 0, pending: [],
+    userYaw: 0, userTilt: 0, userControlled: false, hovered: null,
     frame: null, layout: null, model: null, sheet: null, sheetKey: null, sheetReady: false, onExit: null, raf: 0, compiled: false,
   };
   s.onLost = (event) => {
@@ -466,6 +469,21 @@ function caption(model, layout) {
       legend.appendChild(item);
     }
     box.append(document.createElement('strong'), document.createElement('span'), document.createElement('small'), legend);
+    const controls = document.createElement('div');
+    controls.style.cssText = 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap';
+    for (const [action, text] of [['left', 'Turn left'], ['right', 'Turn right'], ['reset', 'Reset view']]) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.liftView = action;
+      button.textContent = text;
+      button.style.cssText = 'pointer-events:auto;min-height:44px;padding:6px 10px;border:1px solid #c6beb0;border-radius:8px;background:#fffdf8;color:#2b2a26;font:inherit;cursor:pointer';
+      controls.append(button);
+    }
+    box.append(controls);
+    const help = document.createElement('div');
+    help.id = 'lift-interaction-hint';
+    help.style.cssText = 'font-size:13px;margin-top:7px;min-height:2.8em';
+    box.append(help);
     document.body.appendChild(box);
   }
   const [title, body, note] = box.children;
@@ -475,6 +493,7 @@ function caption(model, layout) {
   title.textContent = model.caption?.stepLabel ?? 'Lifted off your slide';
   body.textContent = model.caption?.text ?? '';
   note.textContent = `Height is the checked ${layout.unit === 'edges' ? 'number of edges' : 'distance'} from ${source}. String lengths are schematic.`;
+  interactionHint();
   // Anchored like the flat caption, by the edge it grows away from, so a longer caption
   // never makes the card jump between steps.
   const f = s.frame, c = model.caption;
@@ -493,6 +512,33 @@ function project(local, out = new Vector3()) {
   s.content.localToWorld(out);
   out.project(s.camera);
   return { x: ((out.x + 1) / 2) * s.frame.width + s.frame.dx, y: ((1 - out.y) / 2) * s.frame.height + s.frame.dy, behind: out.z > 1 };
+}
+/** Keep the controls beside the drawing rather than covering a node or route. */
+function positionCaption() {
+  if (!s || s.t < 0.85 || s.mode === 'exit') return;
+  const box = document.getElementById('lift-caption');
+  if (!box) return;
+  const width = box.offsetWidth, height = box.offsetHeight, margin = 12;
+  const left = margin, right = Math.max(left, innerWidth - width - margin);
+  const top = margin, bottom = Math.max(top, innerHeight - height - margin);
+  const obstacles = (s.obstacles ?? []).map((p) => ({ x: p.x - p.r - 12, y: p.y - p.r - 12, width: p.r * 2 + 24, height: p.r * 2 + 24 }));
+  for (const v of [...s.nodes.values(), ...s.edges.values()]) {
+    if (Number(v.label.style.opacity) < 0.1 || !v.label.textContent) continue;
+    const r = v.label.getBoundingClientRect();
+    obstacles.push({ x: r.x - 8, y: r.y - 8, width: r.width + 16, height: r.height + 16 });
+  }
+  const score = ({ x, y }) => obstacles.reduce((sum, p) => sum
+    + Math.max(0, Math.min(x + width, p.x + p.width) - Math.max(x, p.x))
+    * Math.max(0, Math.min(y + height, p.y + p.height) - Math.max(y, p.y)), 0);
+  const previous = box.getBoundingClientRect();
+  const current = { x: Math.max(left, Math.min(previous.x, right)), y: Math.max(top, Math.min(previous.y, bottom)) };
+  if (score(current) === 0) return;
+  const candidates = [current, { x: right, y: bottom }, { x: right, y: top }, { x: left, y: top }, { x: left, y: bottom }];
+  candidates.sort((a, b) => score(a) - score(b));
+  const chosen = candidates[0];
+  box.style.bottom = '';
+  box.style.left = `${chosen.x}px`;
+  box.style.top = `${chosen.y}px`;
 }
 const scratch = new Vector3();
 /** Queues a label: `bottom` sits above its point; `side` sits beside a string, off its line. */
@@ -612,6 +658,7 @@ function drawEdges(rise, sheetT) {
       v = { meshes: [], label: tag('is-edge'), mat: null, key: '', shape: '' };
       s.edges.set(e.id, v);
     }
+    v.data = e;
     const key = `${e.kind}:${e.tone}`;
     if (v.key !== key) {
       v.mat?.dispose();
@@ -728,12 +775,12 @@ function renderFrame() {
   // The sheet tilts back with a slight settle past its angle.
   const tiltPhase = clamp01(t / 0.55);
   const tilt = easeInOut(tiltPhase) + (s.mode === 'exit' ? 0 : 0.035 * Math.sin(Math.PI * clamp01((tiltPhase - 0.7) / 0.3)));
-  s.hinge.rotation.x = -TILT * tilt;
+  s.hinge.rotation.x = -(TILT + s.userTilt) * tilt;
   s.hinge.rotation.z = BASE_YAW * tilt;
   s.hinge.position.z = s.frame.height * 0.035 * tilt;
-  const swaying = s.mode === 'idle' && !quick && now - s.idleSince < SWAY_MS;
+  const swaying = !s.userControlled && s.mode === 'idle' && !quick && now - s.idleSince < SWAY_MS;
   s.sway = approach(s.sway, swaying ? 1 : 0, dt, 0.9);
-  s.yaw.rotation.z = Math.sin((now - (s.idleSince ?? now)) / 2000) * 0.11 * s.sway;
+  s.yaw.rotation.z = s.userYaw * tilt + Math.sin((now - (s.idleSince ?? now)) / 2000) * 0.11 * s.sway;
   const sheetT = clamp01(t / 0.35);
   const sh = s.sheet;
   if (sh) {
@@ -844,6 +891,7 @@ function renderFrame() {
   }
   drawEdges(rise, sheetT);
   flushLabels();
+  positionCaption();
   if (!s.compiled) {
     s.renderer.compile(s.scene, s.camera);
     s.compiled = true;
@@ -886,6 +934,107 @@ function update(model, frame, sheet) {
   syncTicks(layout);
   caption(model, layout);
   wake();
+}
+
+// Only the current visible geometry can claim the pointer. These actions never edit
+// a graph: the overlay sends edge IDs back through the existing checked application.
+const picker = new Raycaster();
+const pointerAt = new Vector2();
+function interactive() {
+  return Boolean(s && s.mode !== 'exit' && s.t >= 0.85 && s.sheetReady);
+}
+function hit(x, y) {
+  if (!interactive() || !Number.isFinite(x) || !Number.isFinite(y)) return null;
+  const button = document.elementFromPoint(x, y)?.closest?.('[data-lift-view]');
+  if (button?.closest('#lift-caption')) return `control:${button.dataset.liftView}`;
+  // This opaque card may temporarily cross the scene while it is repositioned.
+  // Its text must never operate a hidden string or click into the PDF below it.
+  const card = document.getElementById('lift-caption')?.getBoundingClientRect();
+  if (card && x >= card.left && x <= card.right && y >= card.top && y <= card.bottom) return 'control:caption';
+  const f = s.frame;
+  if (x < f.dx || y < f.dy || x > f.dx + f.width || y > f.dy + f.height) return null;
+  // Labels are deliberately larger targets than the strings. Hidden or displaced
+  // labels do not take clicks from the source underneath the transparent window.
+  for (const [kind, entries] of [['node', s.nodes], ['edge', s.edges]]) {
+    for (const [id, value] of entries) {
+      if (Number(value.label.style.opacity) < 0.1 || !value.label.textContent) continue;
+      const r = value.label.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return `${kind}:${id}`;
+    }
+  }
+  pointerAt.set(((x - f.dx) / f.width) * 2 - 1, 1 - ((y - f.dy) / f.height) * 2);
+  s.scene.updateMatrixWorld(true);
+  picker.setFromCamera(pointerAt, s.camera);
+  const targets = [], identities = new Map();
+  for (const [id, v] of s.nodes) {
+    if (v.data.distance !== null && v.sphere.visible && v.sphere.material.opacity > 0.1) {
+      targets.push(v.sphere); identities.set(v.sphere, `node:${id}`);
+    }
+  }
+  for (const [id, v] of s.edges) {
+    if (!(v.mat?.opacity > 0.1)) continue;
+    for (const mesh of v.meshes) { targets.push(mesh); identities.set(mesh, `edge:${id}`); }
+  }
+  if (s.sheet?.paper.visible) { targets.push(s.sheet.paper); identities.set(s.sheet.paper, 'sheet'); }
+  const intersection = picker.intersectObjects(targets, false)[0];
+  return intersection ? identities.get(intersection.object) ?? null : null;
+}
+function interactionHint() {
+  if (!s) return;
+  const box = document.getElementById('lift-interaction-hint');
+  if (!box) return;
+  const id = s.hovered;
+  if (id?.startsWith('edge:')) {
+    const edge = s.edges.get(id.slice(5))?.data;
+    if (edge) {
+      const from = s.nodes.get(edge.from)?.data.label ?? edge.from;
+      const to = s.nodes.get(edge.to)?.data.label ?? edge.to;
+      box.textContent = `${from}–${to}: click to ${edge.kind === 'cut' ? 'restore' : 'remove'} this connection. Drag to turn the view.`;
+      return;
+    }
+  }
+  if (id?.startsWith('node:')) {
+    const n = s.nodes.get(id.slice(5))?.data;
+    if (n) {
+      box.textContent = `${n.label}: ${n.distance === null ? 'not reached' : `${n.tentative ? 'tentative ' : ''}${s.layout.unit === 'edges' ? 'hop count' : 'distance'} ${fmt(n.distance)}`}. Drag to turn the view.`;
+      return;
+    }
+  }
+  box.textContent = 'Click a connection to remove or restore it. Drag the sheet to turn the view.';
+}
+function hover(id) {
+  if (!s || s.hovered === id) return;
+  s.hovered = id;
+  for (const [kind, entries] of [['node', s.nodes], ['edge', s.edges]]) {
+    for (const [key, value] of entries) {
+      value.label.style.outline = id === `${kind}:${key}` ? '3px solid #5551f5' : '';
+      value.label.style.outlineOffset = id === `${kind}:${key}` ? '2px' : '';
+    }
+  }
+  interactionHint();
+}
+function drag(dx, dy) {
+  if (!interactive() || !Number.isFinite(dx) || !Number.isFinite(dy)) return;
+  // Take over at the actual current angle, without a snap when the introductory
+  // sway was still playing. Camera limits keep the paper and labels readable.
+  if (!s.userControlled) s.userYaw = s.yaw.rotation.z;
+  s.userControlled = true;
+  s.sway = 0;
+  s.userYaw = Math.max(-0.85, Math.min(0.85, s.userYaw + dx * 0.004));
+  s.userTilt = Math.max(-0.45, Math.min(0.2, s.userTilt + dy * 0.003));
+  wake();
+}
+function resetView() {
+  if (!interactive()) return;
+  s.userYaw = s.userTilt = s.sway = 0;
+  s.userControlled = true;
+  wake();
+}
+function activate(id) {
+  if (!interactive()) return;
+  if (id === 'control:left') drag(-45, 0);
+  else if (id === 'control:right') drag(45, 0);
+  else if (id === 'control:reset') resetView();
 }
 function hide(done) {
   if (!s) return done?.();
@@ -936,6 +1085,11 @@ window.SomaLift = {
   update,
   hide,
   dispose,
+  hit,
+  hover,
+  drag,
+  resetView,
+  activate,
   onFail: null,
   get active() {
     return Boolean(s);

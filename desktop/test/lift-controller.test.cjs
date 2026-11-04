@@ -16,14 +16,14 @@ function harness(extraImages = [], options = {}) {
   const child = new EventEmitter();
   child.stdout = new PassThrough();
   child.kill = () => {};
-  const results = [], draws = [], sent = [], windows = [], regions = [];
+  const results = [], draws = [], sent = [], windows = [], regions = [], mouse = [], actions = [];
   const display = { id: 1, bounds: { x: -1000, y: 0, width: 1000, height: 800 }, workArea: { x: -1000, y: 24, width: 1000, height: 776 } };
   class Window {
     constructor() {
       this.webContents = { send: (_channel, payload) => draws.push(payload), setWindowOpenHandler() {}, on() {} };
       windows.push(this);
     }
-    setIgnoreMouseEvents() {}
+    setIgnoreMouseEvents(ignore, options) { mouse.push({ ignore, options }); }
     setVisibleOnAllWorkspaces() {}
     setBounds() {}
     setContentProtection() {}
@@ -49,11 +49,13 @@ function harness(extraImages = [], options = {}) {
     compareRegion: (a, b, region) => { regions.push(region); return a === b; },
     cropImage: () => 'data:image/jpeg;base64,SHEET',
     overlayResult: (payload) => results.push(payload),
+    overlayAction: (payload) => actions.push(payload),
     ...options,
   });
   const event = (type) => child.stdout.write(JSON.stringify({ type }) + '\n');
   return {
-    controller, results, draws, shortcuts, regions,
+    controller, results, draws, shortcuts, regions, mouse, actions,
+    get overlayEvent() { return { sender: windows[0]?.webContents }; },
     get captures() { return captures; },
     async ready() {
       if (!controller.enabled) {
@@ -70,6 +72,64 @@ function harness(extraImages = [], options = {}) {
     },
   };
 }
+
+test('lifted graph hover takes and releases pointer ownership; edge clicks retain sender and membership checks', async () => {
+  const h = harness();
+  try {
+    const id = await h.ready();
+    assert.equal(h.controller.setView('3d', id), '3d');
+    const count = h.mouse.length;
+    h.controller.overlayHover({ sender: {} }, true);
+    assert.equal(h.mouse.length, count);
+    h.controller.overlayHover(h.overlayEvent, true);
+    assert.deepEqual(h.mouse.at(-1), { ignore: false, options: { forward: true } });
+    h.controller.overlayHover(h.overlayEvent, false);
+    assert.deepEqual(h.mouse.at(-1), { ignore: true, options: { forward: true } });
+    h.controller.overlayToggle({ sender: {} }, 'DF');
+    h.controller.overlayToggle(h.overlayEvent, 'foreign-edge');
+    h.controller.overlayToggle(h.overlayEvent, { id: 'DF' });
+    assert.deepEqual(h.actions, []);
+    h.controller.overlayToggle(h.overlayEvent, 'DF');
+    assert.deepEqual(h.actions, [{ id, type: 'toggle-edge', edgeId: 'DF' }]);
+    h.controller.clearScreenOverlay();
+    h.controller.overlayToggle(h.overlayEvent, 'DF');
+    assert.equal(h.actions.length, 1);
+    assert.equal(h.mouse.at(-1).ignore, true);
+  } finally { h.controller.dispose(); }
+});
+
+test('an expired lifted capture cannot intercept the mouse or mutate its experiment', async () => {
+  const h = harness();
+  const now = Date.now;
+  try {
+    const id = await h.ready();
+    h.controller.setView('3d', id);
+    Date.now = () => now() + 21 * 60 * 1000;
+    h.controller.overlayHover(h.overlayEvent, true);
+    h.controller.overlayToggle(h.overlayEvent, 'DF');
+    assert.deepEqual(h.actions, []);
+    assert.equal(h.mouse.at(-1).ignore, true);
+  } finally { Date.now = now; h.controller.dispose(); }
+});
+
+test('pointer changes are rejected while a source freshness check is pending', async () => {
+  let release;
+  const h = harness([() => new Promise((resolve) => { release = resolve; })]);
+  try {
+    const id = await h.ready();
+    h.controller.setView('3d', id);
+    h.controller.markStale();
+    const refreshing = h.controller.screenOverlay({ id, model: model() });
+    assert.equal(h.captures, 3);
+    h.controller.overlayHover(h.overlayEvent, true);
+    h.controller.overlayToggle(h.overlayEvent, 'DF');
+    assert.deepEqual(h.actions, []);
+    assert.equal(h.mouse.at(-1).ignore, true);
+    release('SLIDE'); await refreshing;
+    h.controller.overlayToggle(h.overlayEvent, 'DF');
+    assert.deepEqual(h.actions, [{ id, type: 'toggle-edge', edgeId: 'DF' }]);
+  } finally { release?.('SLIDE'); h.controller.dispose(); }
+});
 
 test('clearing and restoring the source synchronizes the panel with the native flat view', async () => {
   const h = harness();
@@ -230,5 +290,37 @@ test('a small region revision gets its own sheet instead of a rounded cache coll
     assert.notDeepEqual(regions[0], regions[1]);
     assert.deepEqual(regions[1], require('../screen-overlay.cjs').sheetRegion(next));
     assert.equal(h.controller.view, '3d');
+  } finally { h.controller.dispose(); }
+});
+
+test('a lifted click rechecks a stale source and dispatches only after the same sheet matches', async () => {
+  let release;
+  const h = harness([() => new Promise((resolve) => { release = resolve; })]);
+  try {
+    const id = await h.ready();
+    h.controller.setView('3d', id);
+    h.controller.markStale();
+    const compared = h.regions.length;
+    const click = h.controller.overlayToggle(h.overlayEvent, 'DF');
+    assert.equal(h.captures, 3);
+    assert.deepEqual(h.actions, []);
+    assert.equal(h.regions.length, compared, 'comparison awaits the fresh pixels');
+    release('SLIDE'); await click;
+    assert.deepEqual(h.regions.at(-1), sheetRegion(model()));
+    assert.deepEqual(h.actions, [{ id, type: 'toggle-edge', edgeId: 'DF' }]);
+  } finally { release?.('SLIDE'); h.controller.dispose(); }
+});
+
+test('a lifted click on a changed source clears the drawing without changing the graph', async () => {
+  const h = harness(['OTHER SLIDE']);
+  try {
+    const id = await h.ready();
+    h.controller.setView('3d', id);
+    h.controller.markStale();
+    await h.controller.overlayToggle(h.overlayEvent, 'DF');
+    assert.deepEqual(h.actions, []);
+    assert.equal(h.controller.hasDrawing(), false);
+    assert.deepEqual(h.results.at(-1), { id, shown: false, reason: 'changed' });
+    assert.equal(h.mouse.at(-1).ignore, true);
   } finally { h.controller.dispose(); }
 });

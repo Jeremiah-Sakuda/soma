@@ -8,7 +8,7 @@ What would make the route go through E? I haven’t selected a connection or tol
 
 Why does it flip right there? Soma answers using the value I just changed. I can ask about this particular experiment and keep working with it.
 
-Back to the original graph. Here’s the same search in three dimensions. Height shows the cost of reaching each node. F is at seven; the direct edge has four units of extra cost.
+The same graph lifts off the page. Height shows the cost of reaching each node. Cut D-to-F here, and F rises from seven to nine. Restore it: seven again.
 
 Now a circuit. Why is there no current through R-five? Both ends are at eight volts. Open R-two, and current starts flowing across the bridge. Then I ask when it would flow, and which way. Muse chooses R-four to vary. Below eight ohms, the current goes this way. Above eight, it turns around.
 

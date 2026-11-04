@@ -22,3 +22,6 @@ services/credential-runner
 # Local film renderers import docs/examples, which are not uploaded.
 scripts/render-engine-film.tsx
 scripts/render-motion-comparison.tsx
+
+# Native rendering harness imports test fixtures; it is not web runtime.
+desktop/test

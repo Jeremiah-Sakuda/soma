@@ -301,7 +301,7 @@ function StateTable({ execution, step }: { execution: BfsExecution; step: BfsSte
 /** Which cells of a small copy of the capture differ from its commonest colour, its paper. */
 function inkGrid(img: HTMLImageElement): InkGrid | null {
   try {
-    const width = 256, height = Math.max(8, Math.round((width * img.naturalHeight) / img.naturalWidth));
+    const width = 512, height = Math.max(8, Math.round((width * img.naturalHeight) / img.naturalWidth));
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
@@ -317,7 +317,7 @@ function inkGrid(img: HTMLImageElement): InkGrid | null {
     const [r, gr, b] = [(paper >> 8) * 17, ((paper >> 4) & 15) * 17, (paper & 15) * 17];
     const ink = new Uint8Array(width * height);
     for (let i = 0; i < ink.length; i++)
-      ink[i] = Math.abs(data[i * 4] - r) + Math.abs(data[i * 4 + 1] - gr) + Math.abs(data[i * 4 + 2] - b) > 60 ? 1 : 0;
+      ink[i] = Math.abs(data[i * 4] - r) + Math.abs(data[i * 4 + 1] - gr) + Math.abs(data[i * 4 + 2] - b) > 30 ? 1 : 0;
     return { width, height, ink };
   } catch {
     return null;

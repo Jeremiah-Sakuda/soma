@@ -125,6 +125,13 @@ export default function SpatialCanvas(props: Props) {
         const shell = object.shell || current.scene.objects.some((o) => o.parentId === object.id);
         const selected = object.id === current.selected;
         const part = createSpatialPart(object, selected, shell);
+        // An engine's cam drive is shown only while a step is about it.
+        const driveShown = current.scene.objects.some((o) => /^engine-(timing-belt|intake-cam|exhaust-cam)$/.test(o.renderStyle ?? '') && (o.highlighted || o.id === current.selected));
+        part.traverse((item) => {
+          if (!(item instanceof THREE.Mesh) || Array.isArray(item.material)) return;
+          if (item.material.userData.drive && !driveShown) item.visible = false;
+          if (item.material.userData.driveAway && driveShown) item.visible = false;
+        });
         part.traverse((item) => {
           if (!(item instanceof THREE.Mesh)) return;
           resources.push(item.geometry); selectable.push(item);

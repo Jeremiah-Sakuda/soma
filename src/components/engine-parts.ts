@@ -56,6 +56,11 @@ function drivePart<T extends THREE.Material>(material: T) {
   material.userData.drive = true;
   return material;
 }
+/** A hand shown with the cam drive (on its sprocket) or while the drive is away (on the part). */
+function drivenHand(hand: THREE.Mesh, withDrive: boolean) {
+  (hand.material as THREE.Material).userData[withDrive ? 'drive' : 'driveAway'] = true;
+  return hand;
+}
 /** A bold white clock hand on a sprocket's face, from its hub to its rim, so each turn is
  * easy to count. */
 function pointer(length: number, z: number) {
@@ -87,7 +92,7 @@ function hatch() {
   for (let i = -64; i <= 128; i += 21) { g.beginPath(); g.moveTo(i, 64); g.lineTo(i + 64, 0); g.stroke(); }
   hatchTexture = new THREE.CanvasTexture(c);
   hatchTexture.wrapS = hatchTexture.wrapT = THREE.RepeatWrapping;
-  hatchTexture.repeat.set(5, 5);
+  hatchTexture.repeat.set(3, 3);
   hatchTexture.colorSpace = THREE.SRGBColorSpace;
   return hatchTexture;
 }
@@ -219,7 +224,8 @@ function crank(): THREE.Object3D {
   // The small crank sprocket of the 2 : 1 drive: half the cam sprockets' size.
   const sprocket = gear(0.22, 18, 0.07, drivePart(metal(COLORS.bronze, 0.35, 0.6)));
   sprocket.position.z = DRIVE_Z;
-  g.add(sprocket, pointer(0.3, DRIVE_Z + 0.05));
+  // Its hand points up at top dead centre; another shows on the crank itself when the drive is away.
+  g.add(sprocket, drivenHand(pointer(0.2, DRIVE_Z + 0.05), true), drivenHand(pointer(0.46, 0.235), false));
   return g;
 }
 
@@ -242,7 +248,7 @@ function valve(side: -1 | 1, lift: number): THREE.Object3D {
   return g;
 }
 
-function cam(): THREE.Object3D {
+function cam(role: 'intake_cam' | 'exhaust_cam'): THREE.Object3D {
   const g = new THREE.Group();
   const m = metal(COLORS.cam, 0.3, 0.6);
   // The lobe: a base circle with a nose that lifts the valve over a quarter turn of the cam.
@@ -262,10 +268,12 @@ function cam(): THREE.Object3D {
   // crank turns. Its bright mark shows how far it has turned.
   const sprocket = gear(0.44, 36, 0.07, drivePart(metal(COLORS.bronze, 0.35, 0.6)));
   sprocket.position.z = DRIVE_Z;
-  // Its pointer starts down the valve at full lift, so after one crank turn it has gone half round.
-  const tip = pointer(0.42, DRIVE_Z + 0.05);
-  tip.rotation.z = Math.PI;
-  g.add(sprocket, tip);
+  // Its hand points up at 0°, like the crank's, so one crank turn leaves it pointing down.
+  const up = (-enginePose(role, 0).rotZ * Math.PI) / 180;
+  const onSprocket = pointer(0.42, DRIVE_Z + 0.05), onCam = pointer(0.3, 0.135);
+  onSprocket.rotation.z = up;
+  onCam.rotation.z = up;
+  g.add(sprocket, drivenHand(onSprocket, true), drivenHand(onCam, false));
   return g;
 }
 
@@ -314,13 +322,14 @@ function charge(theta: number): THREE.Object3D {
   const stroke = strokeAt(theta), crown = pistonPin(theta) + ENGINE.pinToCrown;
   const gap = Math.max(0.02, ENGINE.deck - crown - 0.012);
   const heat = stroke === 'power' ? Math.max(0.25, 1 - (theta - 360) / 200) : 0;
-  const color = CHARGE[stroke];
+  // Fresh charge only arrives as the intake valve opens: 0° and 720° are the same state.
+  const color = stroke === 'intake' ? new THREE.Color(CHARGE.exhaust).lerp(new THREE.Color(CHARGE.intake), Math.min(1, theta / 50)).getHex() : CHARGE[stroke];
   const material = new THREE.MeshStandardMaterial({
     color, emissive: color, emissiveIntensity: stroke === 'power' ? 0.5 + heat : stroke === 'compression' ? 0.25 + 0.3 * ((theta - 180) / 180) : 0.15,
     transparent: true, opacity: stroke === 'power' ? 0.6 + 0.25 * heat : 0.58, roughness: 0.9, depthWrite: false, side: THREE.DoubleSide,
   });
-  // The gas fills the cut-away half of the cylinder above the crown, and the pent roof.
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.49, 0.49, gap, 40, 1, false, Math.PI / 2, Math.PI), material);
+  // Whole, like the piston it sits on: the cylinder above the crown, and the pent roof.
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.49, 0.49, gap, 48, 1, true), material);
   body.position.y = 0.012 + gap / 2;
   g.add(body);
   const roof = new THREE.Shape();
@@ -329,7 +338,7 @@ function charge(theta: number): THREE.Object3D {
   roof.lineTo(0.06, ENGINE.roof - ENGINE.deck);
   roof.lineTo(-0.06, ENGINE.roof - ENGINE.deck);
   roof.closePath();
-  const cap = new THREE.Mesh(new THREE.ExtrudeGeometry(roof, { depth: 0.49, bevelEnabled: false }), material);
+  const cap = new THREE.Mesh(new THREE.ExtrudeGeometry(roof, { depth: 0.98, bevelEnabled: false }), material);
   cap.position.set(0, 0.012 + gap, -0.49);
   g.add(cap);
   return g;
@@ -359,8 +368,8 @@ function spark(theta: number): THREE.Object3D {
   g.add(new THREE.Mesh(new THREE.SphereGeometry(0.035 + 0.035 * strength, 16, 12), core));
   const map = sparkGlowTexture();
   if (map) {
-    const size = 0.5 + 0.55 * strength;
-    const halo = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshBasicMaterial({ map, transparent: true, opacity: 0.55 + 0.45 * strength, depthWrite: false }));
+    const size = 0.28 + 0.3 * strength;
+    const halo = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshBasicMaterial({ map, transparent: true, opacity: 0.55 + 0.45 * strength, depthWrite: false, blending: THREE.AdditiveBlending }));
     halo.position.z = 0.12;
     g.add(halo);
   }
@@ -371,8 +380,8 @@ function flow(which: 'intake' | 'exhaust', theta: number): THREE.Object3D {
   const open = enginePose(which === 'intake' ? 'intake_flow' : 'exhaust_flow', theta).open;
   const side = which === 'intake' ? -1 : 1;
   const points = [
-    new THREE.Vector3(side * 1.45, 3.16, 0.14), new THREE.Vector3(side * 0.95, 3.15, 0.14), new THREE.Vector3(side * 0.6, 3.02, 0.14),
-    new THREE.Vector3(side * 0.36, 2.9, 0.14), new THREE.Vector3(side * 0.27, 2.72, 0.14),
+    new THREE.Vector3(side * 1.5, 3.16, 0.05), new THREE.Vector3(side * 1.0, 3.16, 0.05), new THREE.Vector3(side * 0.62, 3.0, 0.05),
+    new THREE.Vector3(side * 0.38, 2.9, 0.05), new THREE.Vector3(side * 0.24, 2.78, 0.05),
   ];
   return flowArrow(which === 'intake' ? points : [...points].reverse(), which === 'intake' ? 0x6fb3ff : 0xc0703e, open);
 }
@@ -385,7 +394,7 @@ function build(role: EngineRole, theta: number): THREE.Object3D {
     case 'crank': return crank();
     case 'intake_valve': return valve(-1, valveLift('intake', theta));
     case 'exhaust_valve': return valve(1, valveLift('exhaust', theta));
-    case 'intake_cam': case 'exhaust_cam': return cam();
+    case 'intake_cam': case 'exhaust_cam': return cam(role);
     case 'spark_plug': return plug();
     case 'timing_belt': return belt(theta);
     case 'charge': return charge(theta);

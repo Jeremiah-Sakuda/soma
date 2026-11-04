@@ -209,7 +209,7 @@ function placeSheet(data, sheet) {
   const plane = new Mesh(new PlaneGeometry(w, h), paper);
   plane.position.set(x, y, 0);
   // Its soft rim falls just outside the region, so nothing at the edge shows through.
-  const cover = new Mesh(new PlaneGeometry(w + 12, h + 12), coverMat);
+  const cover = new Mesh(new PlaneGeometry(w + 26, h + 26), coverMat);
   cover.position.set(x, y, -2);
   cover.renderOrder = -2;
   // A soft drop shadow under the sheet, tilting with it, gives it an edge against the slide.
@@ -444,15 +444,14 @@ function flushLabels() {
     // An engine part is named in the margin beside the engine, level with the part, with a
     // leader to it, so no name ever covers the mechanism.
     if (l.beside && outline) {
-      // On the part's own side, within the slide region the lift covered (so never on the
-      // slide's text) when there is room; else the other side; else anywhere clear.
+      // Always on the part's own side if there is any room, so no leader crosses the engine;
+      // within the region the lift covered (clear of the slide's text) when it fits.
       const left = l.x < outline.cx;
       const r = s.data.region, rx0 = r.x * f.width + f.dx, rx1 = (r.x + r.width) * f.width + f.dx;
-      // A short overhang is better than a leader crossing the whole engine.
-      const inRegion = (b) => b.x >= rx0 - 44 && b.x + b.w <= rx1 + 44;
+      const inRegion = (b) => b.x >= rx0 - 2 && b.x + b.w <= rx1 + 2;
       const rows = [0, 1, -1, 2, -2, 3, -3, 4, -4];
       const tries = (side, strict) => rows.map((dy) => ({ x: side ? outline.x0 - 18 - w : outline.x1 + 18, y: l.y - h / 2 + dy * (h + 6), w, h })).filter((b) => !strict || inRegion(b));
-      const box = [...tries(left, true), ...tries(!left, true), ...tries(left, false), ...tries(!left, false)].find(clear) ?? null;
+      const box = [...tries(left, true), ...tries(left, false), ...tries(!left, true), ...tries(!left, false)].find(clear) ?? null;
       if (!box) { l.el.style.opacity = '0'; continue; }
       placed.push(box);
       l.el.style.transform = `translate(${box.x.toFixed(1)}px, ${box.y.toFixed(1)}px)`;
@@ -519,10 +518,7 @@ function caption(data) {
     dial = document.createElement('div');
     dial.id = 'lift-turn';
     const strokes = [['intake', 'Intake', '#6fb6ff'], ['compression', 'Compression', '#3f8ff0'], ['power', 'Power', '#ff7a2a'], ['exhaust', 'Exhaust', '#8f857a']];
-    const arcs = strokes
-      .map(([, , c], i) => { const r = 15, a = i * 90, p = (d) => [20 + r * Math.sin((d * Math.PI) / 180), 20 - r * Math.cos((d * Math.PI) / 180)];
-        const [x0, y0] = p(a + 3), [x1, y1] = p(a + 87); return `<path d="M${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1}" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>`; }).join('');
-    dial.innerHTML = `<svg viewBox="0 0 40 40" aria-hidden="true">${arcs}<line id="lift-turn-hand" x1="20" y1="20" x2="20" y2="7" stroke="#1d2430" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="20" r="2.5" fill="#1d2430"/></svg><div class="lift-turn-info"><span id="lift-turn-text"></span><div class="lift-strokes">${strokes.map(([id, name]) => `<span class="lift-stroke"><i data-stroke="${id}"></i><b>${name}</b></span>`).join('')}</div></div>`;
+    dial.innerHTML = `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="#d9d2c1" stroke-width="3"/><line x1="20" y1="2" x2="20" y2="8" stroke="#1d2430" stroke-width="2"/><line id="lift-turn-hand" x1="20" y1="20" x2="20" y2="7" stroke="#1d2430" stroke-width="3" stroke-linecap="round"/><circle cx="20" cy="20" r="2.8" fill="#1d2430"/></svg><div class="lift-turn-info"><span id="lift-turn-text"></span><div class="lift-strokes">${strokes.map(([id, name]) => `<span class="lift-stroke"><i data-stroke="${id}"></i><b>${name}</b></span>`).join('')}</div></div>`;
     dial.querySelectorAll('.lift-stroke i').forEach((bar, i) => { bar.style.background = strokes[i][2]; });
     box.insertBefore(dial, note);
   }
@@ -587,8 +583,8 @@ function renderFrame() {
   }
   if (s.crankShown !== undefined) {
     const theta = s.crankShown * 720, hand = document.getElementById('lift-turn-hand'), text = document.getElementById('lift-turn-text');
-    // The dial is the whole cycle: one sweep is two crankshaft turns.
-    hand?.setAttribute('transform', `rotate(${(theta / 2).toFixed(1)} 20 20)`);
+    // The needle is the crank: up at each whole turn, like the hand on the engine.
+    hand?.setAttribute('transform', `rotate(${(theta % 360).toFixed(1)} 20 20)`);
     if (text) text.textContent = `Crankshaft ${Math.round(theta)}° · turn ${theta > 360 ? 2 : 1} of 2 · camshaft ${Math.round(theta / 2)}°`;
     // The cycle so far: each stroke's bar fills as the crank goes through it.
     document.querySelectorAll('.lift-stroke i').forEach((bar, i) => { bar.style.width = `${clamp01((theta - i * 180) / 180) * 100}%`; });
@@ -604,8 +600,10 @@ function renderFrame() {
   }
   const parts = [...s.parts.values()];
   const anyLit = parts.some((v) => v.data.highlighted && v.data.visible);
-  // An engine's cam drive stands back, so the mechanism shows through, until a step is about it.
+  // An engine's cam drive is away, so the mechanism shows clearly, until a step is about it.
   const driveLit = parts.some((v) => /^engine-(timing-belt|intake-cam|exhaust-cam)$/.test(v.data.renderStyle ?? '') && (v.data.highlighted || v.data.selected));
+  s.driveShown = quick ? (driveLit ? 1 : 0) : approach(s.driveShown ?? 0, driveLit ? 1 : 0, dt, 0.2);
+  if (Math.abs(s.driveShown - (driveLit ? 1 : 0)) > 0.01) moving = true;
   for (const v of parts) {
     const k = quick ? t : clamp01(riseAt(t, v.index, parts.length));
     // Poses glide between steps; a part appears or leaves by fading where it stands.
@@ -636,7 +634,7 @@ function renderFrame() {
       if (!m.isMesh) return;
       const mats = Array.isArray(m.material) ? m.material : [m.material];
       for (const mat of mats) {
-        mat.opacity = (mat.userData.baseOpacity ?? 1) * v.fade * (mat.userData.drive && !driveLit ? 0.25 : 1);
+        mat.opacity = (mat.userData.baseOpacity ?? 1) * v.fade * (mat.userData.drive ? s.driveShown : mat.userData.driveAway ? 1 - s.driveShown : 1);
         if (mat.userData.baseColor) mat.color.copy(mat.userData.baseColor).lerp(GREY, dim ? 0.55 : 0);
         mat.depthWrite = mat.opacity > 0.95;
         // The gas, spark and flows carry their own glow.
@@ -659,7 +657,7 @@ function renderFrame() {
     const height = rise + e.min.y - s.floorY;
     // An assembly casts one shadow, from its block, not one per inner part.
     const inner = v.data.renderStyle?.startsWith('engine-') && v.data.renderStyle !== 'engine-block';
-    v.shadow.material.opacity = 0.32 * v.fade * clamp01(k) * clamp01(1 - height / 3) * (v.data.parentId || inner ? 0 : 1);
+    v.shadow.material.opacity = (v.data.renderStyle === 'engine-block' ? 0.6 : 0.32) * v.fade * clamp01(k) * clamp01(1 - height / 3) * (v.data.parentId || inner ? 0 : 1);
     if (v.stem) {
       // A stem from the slide up to the part reads its height.
       const tall = Math.max(0.001, rise - s.floorY);
@@ -826,7 +824,8 @@ function hit(clientX, clientY) {
   ray.setFromCamera(new Vector2(((clientX - f.dx) / f.width) * 2 - 1, -((clientY - f.dy) / f.height) * 2 + 1), s.camera);
   const parts = [...s.parts.values()].filter((v) => v.data.visible && v.mesh);
   const meshes = [];
-  for (const v of parts) v.inner.traverse((m) => m.isMesh && meshes.push([m, v.id]));
+  // Only what can be seen can be picked: a cam drive that is away is not in the way.
+  for (const v of parts) v.inner.traverse((m) => m.isMesh && (Array.isArray(m.material) || m.material.opacity > 0.05) && meshes.push([m, v.id]));
   const first = ray.intersectObjects(meshes.map(([m]) => m), false)[0];
   if (first) return meshes.find(([m]) => m === first.object)[1];
   return s.sheet && ray.intersectObject(s.sheet.paper, false).length ? 'sheet' : null;

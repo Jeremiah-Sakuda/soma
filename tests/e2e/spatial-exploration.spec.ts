@@ -1,3 +1,4 @@
+import { openMoreExamples } from './example-navigation';
 import { test, expect, type Page } from '@playwright/test';
 import sharp from 'sharp';
 
@@ -5,6 +6,7 @@ import sharp from 'sharp';
 test.use({ launchOptions: { args: ['--enable-unsafe-swiftshader'] } });
 async function openSpatial(page: Page) {
   await page.goto('/explore');
+  await openMoreExamples(page);
   await page.getByRole('button', { name: 'Open the 3D example', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Spatial workspace' })).toBeVisible();
 }
@@ -45,7 +47,8 @@ test('actual WebGL scene supports reversible steps, cutaway, isolation, camera a
 });
 
 test('checked spatial graphs use the actual solver and preserve the chosen representation after a graph change', async ({ page }) => {
-  await page.goto('/explore'); await page.getByRole('button', { name: 'Compare weighted paths', exact: true }).click();
+  await page.goto('/explore'); await openMoreExamples(page);
+  await page.getByRole('button', { name: 'Compare weighted paths', exact: true }).click();
   await page.getByRole('button', { name: '3D workspace', exact: true }).click(); await rendered(page);
   for (let i = 0; i < 8; i++) {
     const next = page.getByRole('button', { name: 'Next step', exact: true }); if (await next.isEnabled()) await next.click();

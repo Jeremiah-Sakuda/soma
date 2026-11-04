@@ -1834,6 +1834,41 @@
   "kind": "user",
   "prompt": "Proceed",
   "timestamp_note": "Exact receipt timestamp unavailable; work performed November 4, 2026 UTC."
+},
+{
+  "id": "UI-RESTRAINT-20261104-01",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "I want you to shift focus to the actual Soma UI. I don't want it to be cluttered with too much information Turn graphs and DC circuits into checked experiments. Other topics get visual explanations. I want it to be minimal. Use this skill x[https://github.com/emilkowalski/skills/blob/main/skills/apple-design/SKILL.md](https://github.com/emilkowalski/skills/blob/main/skills/apple-design/SKILL.md) before implementing anything make a few mockiups",
+  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+},
+{
+  "id": "UI-RESTRAINT-20261104-02",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "I meant keep the current look of it, while implementing the minimal apple feel",
+  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+},
+{
+  "id": "UI-RESTRAINT-20261104-03",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "Actually scratch that I think what we currently have is better than this. I just want to make sure we aren't overwhelming the user with too much information",
+  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+},
+{
+  "id": "UI-FRAMING-20261104-01",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "Also, our positioning and framing should not mention what we do not do. We shouldnt say for example, \"only x and y get 3D graphics\" it should be more so, 3D graphics are introduces for a few relevant topics now, with posisble expansion in the future. But that should not be in the app itself but documentation / So the line on \"Other examples get visual checks\" should not be present imo",
+  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+},
+{
+  "id": "UI-REDUCTIONS-20261104-01",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "Okay, implement the other small reductions you suggested too, especially putting the extra examples under More examples. Keep the current look.",
+  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
 }
 ]
 }

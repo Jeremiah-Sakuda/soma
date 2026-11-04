@@ -1,3 +1,4 @@
+import { openMoreExamples } from './example-navigation';
 import { test, expect, type Page } from '@playwright/test';
 import { createExampleExploration, checkExploration } from '../../src/lib/domain/exploration';
 import { initialExplorationState } from '../../src/lib/domain/exploration-view';
@@ -88,6 +89,7 @@ async function setup(page: Page, answer = true) {
     return route.fulfill({ json: { artifact: a } });
   });
   await page.goto('/explore');
+  await openMoreExamples(page);
   await page
     .getByRole('button', { name: 'Try the original example', exact: true })
     .first()

@@ -21,10 +21,10 @@ This replaces most of the badges and repeated disclaimers the old interface used
 One page:
 
 - the headline "Point Soma at something you're studying."
-- one sentence on what happens
+- direct entry actions, with topic coverage documented outside the cover
 - the source card (Share a window, Upload screenshot, preview, privacy note)
 - **"Pick up where you left off"**: your saved explorations, so a returning student resumes in one click
-- three examples: the original BFS example, weighted paths, and a recorded Muse run
+- one recorded Muse example, with the other examples under **More examples**
 - the question line
 
 There is no marketing headline above the work and no duplicate actions.
@@ -191,3 +191,10 @@ At 480 px and below, the save, previous and next controls stay icon buttons and 
 - **Old stylesheet.** `exploration.css` still carries rules for the previous layout. The journal stylesheet overrides the ones that matter. Deleting the dead rules is a separate cleanup.
 - **Unmerged branches.** `codex/capture-first-ui` (another capture-first restructuring) and `codex/spatial-exploration` (3D) are not on main. Both rewrite the same modules and will need to adopt this stylesheet and structure when they are integrated.
 - **What was checked.** The journal was checked in Chromium at 1440, 620 and 375 px with live inference off. Live generation, its waiting states, Gemini playback and the native Electron window were not exercised.
+
+
+### November 4 restraint follow-up
+
+The cover keeps its paper, fonts, ink and layout while showing one recorded example. **More examples** reveals the remaining prepared examples, live source slides and engine lab. Each retains its mode label. The same disclosure is available inside Explorations. Escape closes it and focuses its summary; choosing an item closes it.
+
+The pipeline summary is **How it was made · [actual review status]**. Its source, model, computation and review details plus the audit link remain inside. Save, sharing, warning and result status stay in context. No generated behavior or assurance is changed by the reduced copy.

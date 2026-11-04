@@ -1,3 +1,4 @@
+import { openMoreExamples } from './example-navigation';
 import {test,expect} from '@playwright/test';
 import {checkExploration,createWeightedExample} from '../../src/lib/domain/exploration';
 import {probeEdgeCost} from '../../src/lib/domain/cost-probe';
@@ -19,7 +20,8 @@ test('chosen cost experiment updates both routes, survives UI resume and follows
   else return route.fulfill({status:400,json:{code:'invalid_request'}});
   return route.fulfill({json:{artifact:active}});
  });
- await page.goto('/explore');await page.getByRole('button',{name:'Compare weighted paths',exact:true}).click();
+ await page.goto('/explore');await openMoreExamples(page);
+  await page.getByRole('button',{name:'Compare weighted paths',exact:true}).click();
  await page.getByRole('button',{name:'Find the tipping point',exact:true}).click();
  const probe=page.getByRole('region',{name:'Checked cost experiment'});
  await expect(probe).toBeVisible();expect(requests.find(r=>r.action==='generate')).toMatchObject({intent:'investigate',baseVersion:1});

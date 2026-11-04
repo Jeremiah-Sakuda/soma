@@ -1130,10 +1130,26 @@ export function ExplorationWorkspace() {
         >
           <span className="journal-example-copy">
             <span>Watch a recorded Muse run</span>
-            <small id="example-recorded-note">Start here · recorded, no generation wait</small>
+            <small id="example-recorded-note">Recorded · opens instantly</small>
           </span>
           <ArrowUpRight size={16} aria-hidden="true" />
         </button>
+      </div>
+      <details
+        className="journal-more-examples"
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            event.stopPropagation();
+            event.currentTarget.open = false;
+            event.currentTarget.querySelector('summary')?.focus();
+          }
+        }}
+        onClick={(event) => {
+          if ((event.target as Element).closest('button, a')) event.currentTarget.open = false;
+        }}
+      >
+        <summary>More examples <ChevronDown size={15} aria-hidden="true" /></summary>
+        <div className="journal-example-grid">
         <button
           type="button"
           className="exploration-example-button"
@@ -1198,6 +1214,7 @@ export function ExplorationWorkspace() {
           Lab: a Muse-drawn engine you can turn <ArrowUpRight size={16} aria-hidden="true" />
         </a>
       </div>
+      </details>
     </div>
   );
   const library = artifacts.length > 0 && (
@@ -2202,17 +2219,12 @@ export function ExplorationWorkspace() {
           <section className="journal-page journal-cover" aria-labelledby="journal-cover-title">
             <p className="overline">Your study journal</p>
             <h1 id="journal-cover-title">Point Soma at something you’re studying.</h1>
-            <p className="journal-cover-lede">
-              Turn graphs and DC circuits into checked experiments. Other topics get visual
-              explanations.
-            </p>
             {library}
             <div className="journal-cover-entry">
               {(source || capture.sharing) && sourcePanel}
               <section className="journal-cover-examples" aria-labelledby="journal-examples-title">
                 <h2 id="journal-examples-title" className="journal-cover-subhead">Try an example</h2>
                 {examples}
-                <p className="meta">Original demo material · no account needed. Live slides generate only after Ask.</p>
               </section>
               {!source && !capture.sharing && sourcePanel}
             </div>

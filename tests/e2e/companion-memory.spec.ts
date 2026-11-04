@@ -1,3 +1,4 @@
+import { openMoreExamples } from './example-navigation';
 import { test, expect, type Page } from "@playwright/test";
 import type { CompanionMemoryView } from "../../src/lib/domain/companion-memory";
 
@@ -18,6 +19,7 @@ test("goals and preferences persist in the real owned session and clear without 
   page,
 }) => {
   await page.goto("/explore");
+  await openMoreExamples(page);
   await expect(
     page
       .getByRole("button", { name: "Try the original example", exact: true })
@@ -109,6 +111,7 @@ test("failed saves and revision conflicts preserve drafts for explicit retry", a
     return route.continue();
   });
   await page.goto("/explore");
+  await openMoreExamples(page);
   await expect(
     page
       .getByRole("button", { name: "Try the original example", exact: true })
@@ -243,6 +246,7 @@ for (const width of [375, 620])
       });
     });
     await page.goto("/explore");
+    await openMoreExamples(page);
     await expect(
       page
         .getByRole("button", { name: "Try the original example", exact: true })

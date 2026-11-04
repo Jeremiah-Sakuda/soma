@@ -1,3 +1,4 @@
+import { openMoreExamples } from './example-navigation';
 import { test, expect, type Page } from '@playwright/test';
 import { checkExploration, createExampleExploration } from '../../src/lib/domain/exploration';
 import { initialExplorationState } from '../../src/lib/domain/exploration-view';
@@ -74,6 +75,7 @@ async function setup(page: Page, options: { empty?: boolean } = {}) {
   });
   await page.goto('/explore');
   if (options.empty) return;
+  await openMoreExamples(page);
   await page
     .getByRole('button', { name: 'Try the original example', exact: true })
     .first()

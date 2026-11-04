@@ -1,10 +1,12 @@
+import { openMoreExamples } from './example-navigation';
 import { test, expect, type Page } from '@playwright/test';
 import { spatialRenderStyles } from '../../src/lib/domain/spatial-schema';
 import type { ExplorationArtifact } from '../../src/lib/server/exploration-types';
 
 test.use({ launchOptions: { args: ['--enable-unsafe-swiftshader'] } });
 async function open(page: Page) {
-  await page.goto('/explore'); await page.getByRole('button', { name: 'Open the 3D example', exact: true }).click();
+  await page.goto('/explore'); await openMoreExamples(page);
+  await page.getByRole('button', { name: 'Open the 3D example', exact: true }).click();
   await page.getByRole('button', { name: 'Anatomy illustration', exact: true }).click();
   await expect(page.locator('.anatomy-canvas')).toHaveAttribute('data-rendered', 'true');
 }
@@ -119,7 +121,9 @@ test('Anatomy continues without WebGL and checked results survive switching rend
   await open(page); await expect(page.locator('.anatomy-canvas')).toHaveAttribute('data-object-count', '5');
   await page.getByRole('button', { name: 'Save exploration', exact: true }).click();
   await page.reload();
-  if (!(await page.getByRole('button', { name: 'Compare weighted paths', exact: true }).isVisible())) await page.getByText('Source & sharing', { exact: true }).click();
+  const explorations = page.locator('.journal-explorations-menu > summary');
+  if (await explorations.isVisible()) await explorations.click();
+  await openMoreExamples(page);
   await page.getByRole('button', { name: 'Compare weighted paths', exact: true }).click();
   await page.getByRole('button', { name: '3D workspace', exact: true }).click();
   await page.getByRole('button', { name: 'Anatomy illustration', exact: true }).click();

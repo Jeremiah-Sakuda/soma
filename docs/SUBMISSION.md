@@ -18,7 +18,7 @@ Soma uses Meta's Muse models to turn the diagram in front of you, starting with 
 
 ## Short description
 
-Point Soma at a lecture slide and ask a question. Muse Spark reads the diagram, a weighted graph or a resistor circuit; Wonder checks that reading against the same image when available. Soma's own solver computes on that reading and draws the result over your slide: each step, distance and route, or node voltages and component currents. Cut a connection or open a resistor and the computed result changes instantly. Ask for the tipping point and Muse picks what to test while Soma computes the boundary. Wonder reviews the explanation against the computed result; reading and prose remain fallible. Built for students first; the reading and solving underneath aren't tied to slides or to one subject.
+Point Soma at a lecture slide and ask a question. Muse Spark reads the diagram, a weighted graph or a resistor circuit; Wonder checks that reading against the same image when available. Soma's own solver computes on that reading and draws the result over your slide: each step, distance and route, or node voltages and component currents. Cut a connection or open a resistor and the computed result changes instantly. Ask for the tipping point and Muse picks what to test while Soma computes the boundary. Wonder reviews the explanation against the computed result; reading and prose remain fallible. Built for students first, with room to extend the same approach to further topics.
 
 ## Main description
 
@@ -30,7 +30,7 @@ Then you experiment. Click a connection on the slide to cut it and Soma recomput
 
 The same pattern works on a different subject. On a circuit slide, Spark reads every resistor, source and junction. Wonder checks components, values, connections and source polarity against the same image; an unresolved dispute prevents a checked circuit. Soma solves the interpreted circuit exactly by nodal analysis, in fractions, and draws it only if Kirchhoff's current law, source voltages and power balance hold exactly. Every voltage and current is available as an exact fraction beside its decimal. Open a resistor or change its value and everything updates. In the recorded hero run, asked when current would flow through R₅, Muse chose R₄; Soma found balance at exactly 8 Ω, verified it by re-solving, and computed opposite current directions on either side.
 
-We built Soma for the student with a lecture slide, but the idea underneath isn't tied to the classroom or to one subject. Muse reads a picture into a typed model, Soma's solver computes on it, and the result is drawn back onto the picture. The same questions turn up on a transit map, a network diagram or a delivery route. Today Soma checks two subjects, graph search and DC circuits, demonstrated on lecture-style material. The circuit path reuses the graph workflow; further subjects would need their own solver, reading contract and rendering.
+We built Soma around the moment a student has a question about a lecture slide. The same approach could help people explore other diagrams. Muse reads a picture into a typed model, Soma's solver computes on it, and the result is drawn back onto the picture. The same questions turn up on a transit map, a network diagram or a delivery route. The current demonstrations show checked graph search and DC circuits on lecture-style material. The circuit path reuses the graph workflow; further subjects would need their own solver, reading contract and rendering.
 
 The model reads, explains and chooses what to investigate. Soma computes and checks the consequences of that reading.
 
@@ -75,7 +75,7 @@ Product code was written during the event, beginning at kickoff on October 26, 2
 
 ## What works now and what comes next
 
-**Working product:** screenshot or screen capture → checked graph search or DC circuit drawn on the source → cut a connection or open a part, change a cost or value, and probe the tipping point → contextual follow-up with Wonder review → save and reopen; predict the next node before Soma reveals it; fresh practice for graph search. Both demo slides load with one click on the live app. Prepared examples and a browser 3D view are included: for a search, height is distance; for a circuit, height is voltage. The native overlay lifts graphs; its circuits stay flat.
+**Working product:** screenshot or screen capture → checked graph search or DC circuit drawn on the source → cut a connection or open a part, change a cost or value, and probe the tipping point → contextual follow-up with Wonder review → save and reopen; predict the next node before Soma reveals it; fresh practice for graph search. Both demo slides load with one click on the live app. Prepared examples and a browser 3D view are included: for a search, height is distance; for a circuit, height is voltage. The release source also lifts graphs, circuits and authored spatial models over the captured source. Installed-build verification is recorded separately in VERIFICATION.md.
 
 **Next:** graphs beyond the classroom with the same solver (transit, network and route maps), more checked subjects such as truss statics, each with its own solver, fresh practice for circuits, and richer source-anchored visuals.
 

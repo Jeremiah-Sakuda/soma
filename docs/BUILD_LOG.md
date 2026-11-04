@@ -3201,3 +3201,36 @@ Delivery checkpoint: pushed `9097b43` to canonical main with manifest `soma-lift
 3. Prepared `FINAL_DELIVERY_RUNBOOK.md` and updated the current handoff to the graph checkpoint; checked the repository remains private and only `.env.example` is tracked among env files. Signing preflight found one Developer ID identity and an available `soma-notary` profile. CI for exact graph checkpoint `569c8f6` is now in progress; earlier general-3D job listed all verification steps successful but overall run was still in progress. No full CI success, new signed artifact, deployment, repository publication or submission is claimed.
 
 No scope or schedule deviation. Remaining human inputs: final video URL, any required entrant/representative attestations, and explicit repository-publication authorization. Physical pointer acceptance needs a process with macOS Accessibility permission and the final signed companion. Engine decision remains 4:30 PM ET; final release follows the 5:30 PM freeze.
+
+
+## UI-RESTRAINT-20261104-01 / 02 / 03 — Keep the current look; review information density
+
+1. Read the requested emilkowalski Apple Design skill and current journal guide. Made three isolated interactive mockups; the initial visual identity change went beyond the user’s intent. Revised them with existing journal fonts/tokens and retained font licenses. User then rejected the mockups in favor of the current interface. No application, shared React, engine or release-manifest code was changed.
+2. Reviewed existing cover, examples, source panel, busy feedback, page metadata and pipeline implementation. The cover offers seven example destinations plus capture/upload, explanatory labels and the question line; saved history adds another block. The generated page can show a long pipeline summary alongside provenance. Existing Source & assumptions and audit details already use disclosures. These are code-backed density observations, not usability-study outcomes.
+3. Recommended a narrow cleanup preserving layout and identity: prioritize capture plus one clearly labeled example, put remaining examples one level deeper, remove the generic checked-subjects cover paragraph, shorten pipeline disclosure wording while preserving actual review/recorded status, and keep warnings/save/sharing state visible. No cleanup implemented because the user selected the existing UI and asked for an overload check after rejecting mockups.
+
+Deviation: abandoned the proposed visual redesign on user correction. Initial mockup checks passed six desktop/three narrow states plus cut/restore/disclosures before the theme correction; revised journal B/C views were visually inspected. These mockup checks establish no production acceptance.
+
+
+## UI-FRAMING-20261104-01 — Positive framing and contextual coverage
+
+1. Removed the cover paragraph comparing graphs/DC circuits with other topics, retaining the current journal layout and headline. This is a four-line copy deletion in the shared workspace component; no engine, scene, pointer or layout code changed.
+2. Reframed the README opening and submission/story wording around capture, explanation and exploration. Documented current 3D examples and potential expansion, while retaining technical scope/evidence boundaries in documentation and result-specific status in the app. Recorded the decision in the UI guide and decisions log; the rejected mockups remain unadopted.
+3. Updated the existing entry journey’s obsolete copy expectation to the retained headline; running its four viewport checks and keyboard source-preview case. Actual outcomes and manifest identity follow below.
+
+Deviation: none; the user explicitly requested removing the app paragraph. No universal topic/physics claim or new production capability is introduced.
+
+
+Verification follow-up: all five existing entry browser journeys passed in 9.4 seconds (1440, 1280, 620 and 375px plus keyboard source preview), with no generation requests. Inspected the actual 1440px cover capture. `git diff --check` and manifest verification passed. Manifest `soma-positive-framing-2026-11-04` covers 314 files, SHA-256 `8e3004b90e96b4778a350eb9d1e27a0ab5874286b26a8df283a5bb65359c799f`. No new installer or hosted acceptance is claimed.
+
+
+## UI-REDUCTIONS-20261104-01 — Fewer default choices, same journal
+
+1. Kept the recorded example visible and moved the six secondary example destinations into “More examples,” on the cover and inside Explorations. Reused the existing paper, typography, teal and controls; added keyboard Escape/focus return and close-on-selection. Removed the repeated generic example instructions.
+2. Shortened the pipeline summary to “How it was made” with the actual review status; preparation/source details and audit access remain inside. Updated UI/entry documentation. No scene, engine, source/model behavior or quantitative assurance changed.
+3. Five entry checks and typecheck passed; inspected actual 1440px and 375px screenshots. An independent agent is updating existing journeys to open the new disclosure before selecting examples, retaining their behavior assertions. Broader affected-journey results follow below.
+
+Deviation: none. Existing synthetic testing labels and failure/source/save/sharing state remain visible where relevant. No new inference or audio output.
+
+
+Verification/delivery follow-up: implementation committed `9805dcb`. The affected browser batch passed 102 cases and failed three tests whose navigation assumed the former always-visible examples. Corrected conditional Explorations access after reload, direct-child summary selectors with nested disclosures, and reopening More examples after source selection. All three focused reruns passed in 8.5 seconds; all 105 affected cases are covered across the two runs, not claimed as one clean first attempt. Original batch (3.6 minutes), traces/screenshots and rerun logs remain in `.local/lift-graph-interaction-review/examples-*`. Existing assertions for loading races, disabled actions, zero requests, source handling and saved state remain. The pipeline test verifies the visible review summary and reachable call audit. Typecheck, diff checks and manifest passed. Manifest `soma-quiet-entry-2026-11-04`, 314 files, SHA-256 `ed1479f04389dec57cf6a6da37e6eee1d2f6a4e75311a89aa12bb57387cd468d`. No live inference, new native package or hosted acceptance claimed.

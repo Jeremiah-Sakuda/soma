@@ -8,7 +8,7 @@ for (const viewport of [
   { width: 620, height: 704 },
   { width: 375, height: 812 },
 ]) {
-  test(`first-use examples are visible above the question dock at ${viewport.width}`, async ({ page }) => {
+  test(`first-use entry stays focused and extras are keyboard-accessible at ${viewport.width}`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.emulateMedia({ reducedMotion: 'reduce' });
     const requests: string[] = [];
@@ -16,15 +16,14 @@ for (const viewport of [
       if (request.url().includes('/api/') && request.method() !== 'GET') requests.push(request.url());
     });
     await page.goto('/explore');
-    await expect(page.getByRole('button', { name: 'Compare weighted paths', exact: true })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Watch a recorded Muse run', exact: true })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Compare weighted paths', exact: true })).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Open the 3D example', exact: true })).toBeHidden();
     await expect(page.locator('.journal-example-grid button').first()).toHaveAccessibleName('Watch a recorded Muse run');
-    await expect(page.locator('.journal-cover-lede')).toContainText('graphs and DC circuits into checked experiments');
+    await expect(page.getByRole('heading', { name: 'Point Soma at something you’re studying.' })).toBeVisible();
     const dock = await page.getByRole('region', { name: 'Ask about your context' }).boundingBox();
     for (const name of [
-      'Compare weighted paths',
       'Watch a recorded Muse run',
-      'Try the Lecture 14 slide (live)',
-      'Try the Lecture 9 circuit slide (live)',
     ]) {
       const button = page.getByRole('button', { name, exact: true });
       await expect(button).toBeInViewport({ ratio: 1 });
@@ -35,6 +34,16 @@ for (const viewport of [
         return element.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
       })).toBe(true);
     }
+    const more = page.locator('.journal-more-examples > summary');
+    await expect(more).toBeInViewport({ ratio: 1 });
+    await more.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('button', { name: 'Compare weighted paths', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Open the 3D example', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Lab: a Muse-drawn engine you can turn' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(more).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Compare weighted paths', exact: true })).toBeHidden();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(requests).toEqual([]);
     await page.screenshot({ path: `.local/overnight-review/round2-cover-${viewport.width}.png`, fullPage: true });
@@ -48,6 +57,7 @@ test('a live demo choice previews its source and question without starting gener
     if (request.url().includes('/api/') && request.method() !== 'GET') requests.push(request.url());
   });
   await page.goto('/explore');
+  await page.locator('.journal-more-examples > summary').click();
   const circuit = page.getByRole('button', { name: 'Try the Lecture 9 circuit slide (live)', exact: true });
   await expect(circuit).toBeEnabled();
   await circuit.focus();

@@ -1,3 +1,4 @@
+import { openMoreExamples } from './example-navigation';
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 const fixtures = JSON.parse(readFileSync('tests/fixtures/visual-polish-scenes.json', 'utf8'));
@@ -40,6 +41,7 @@ async function fixture(page: import('@playwright/test').Page, key: 'gradient' | 
       : r.fulfill({ json: { artifact } }),
   );
   await page.goto('/explore');
+  await openMoreExamples(page);
   await page
     .getByRole('button', { name: 'Try the original example', exact: true })
     .first()

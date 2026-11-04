@@ -1334,3 +1334,24 @@ html[data-soma-desktop] .exploration-app {
   --sidebar: rgb(234 223 203 / 0.72);
   --surface-muted: rgb(241 233 218 / 0.72);
 }
+
+/* Keep the first choice visible; reveal the rest in the same paper language. */
+.exploration-app .journal-cover .journal-examples > .journal-example-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.exploration-app .journal-more-examples > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  min-height: 44px;
+  padding: 8px 0;
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 500;
+  list-style: none;
+}
+.exploration-app .journal-more-examples > summary::-webkit-details-marker { display: none; }
+.exploration-app .journal-more-examples[open] > summary svg { transform: rotate(180deg); }
+.exploration-app .journal-more-examples .journal-example-extras { margin-top: 12px; }

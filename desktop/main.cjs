@@ -105,6 +105,10 @@ function sendCompactState() {
     visual: s.visual && Boolean(pointAsk?.hasDrawing()),
   });
 }
+/** The page's narration waits for something to look at, so it needs to know the panel is closed. */
+function syncCompactMode() {
+  if (view && !view.webContents.isDestroyed()) view.webContents.send('desktop:compact', { action: 'mode', on: compactMode });
+}
 function enterCompact() {
   if (capturing || !win) return;
   const b = compactBar();
@@ -116,6 +120,7 @@ function enterCompact() {
     b.setBounds({ x: Math.round(wa.x + (wa.width - width) / 2), y: Math.round(wa.y + wa.height - height - 28), width, height });
   }
   compactMode = true;
+  syncCompactMode();
   if (win.isVisible()) win.hide();
   // The page keeps working while hidden; its narration stays audible in compact mode.
   view.webContents.setAudioMuted(false);
@@ -138,6 +143,7 @@ function hideCompact() {
 }
 function leaveCompact() {
   compactMode = false;
+  syncCompactMode();
   bar?.hide();
   show();
   view.webContents.setAudioMuted(false);
@@ -245,6 +251,7 @@ async function capture() {
   }
   // Capturing the display opens its preview in the panel, so compact mode ends.
   compactMode = false;
+  syncCompactMode();
   bar?.hide();
   // Never photograph Soma's own drawing as part of the next slide.
   pointAsk?.clearScreenOverlay();
@@ -523,6 +530,8 @@ else {
         if (process.platform === 'darwin' && systemPreferences.getMediaAccessStatus('screen') === 'denied')
           return { ok: false, message: 'Allow Soma under Screen & System Audio Recording, then reopen Soma.' };
         compactAsking = true;
+        // A page that reloaded since the bar opened still needs to know.
+        syncCompactMode();
         sendCompactState();
         try {
           // The snapshot is of the display the bar is on, where the learner is looking.

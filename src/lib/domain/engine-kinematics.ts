@@ -73,9 +73,9 @@ export function valveLift(which: 'intake' | 'exhaust', theta: number) {
   return t >= start && t <= start + 180 ? ENGINE.valveLift * Math.sin((Math.PI * (t - start)) / 180) ** 2 : 0;
 }
 export type Stroke = 'intake' | 'compression' | 'power' | 'exhaust';
-// 720° is the end of exhaust, not the start of the next intake.
+// At a boundary, the stroke that is finishing: 180° ends intake, 720° ends exhaust.
 export const strokeAt = (theta: number): Stroke =>
-  (['intake', 'compression', 'power', 'exhaust'] as const)[theta >= 720 ? 3 : Math.min(3, Math.floor((((theta % 720) + 720) % 720) / 180))];
+  (['intake', 'compression', 'power', 'exhaust'] as const)[Math.max(0, Math.min(3, Math.ceil(theta / 180) - 1))];
 /** What the gas in the cylinder is at each stroke. */
 export const chargeName: Record<Stroke, string> = { intake: 'Fresh fuel–air mixture', compression: 'Compressed mixture', power: 'Burning gas', exhaust: 'Burnt gas' };
 /** How brightly the spark shows: a short flash around top dead centre before power. */

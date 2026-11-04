@@ -49,9 +49,10 @@ const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…`
 
 /** The region a model stands on: the learner's circled or pointed area, widened so a model
  * has room, or the middle of the capture. */
+const WORDS_ON_A_SLIDE = /list|bullet|steps|text|title|heading|caption|note|callout|box|equation|formula/i;
 /** What an explanation lifts from: where the learner pointed; for a question that pointed at
- * nothing (a typed question's focus is the whole display), the part of the source its steps
- * keep returning to, a drawing rather than a list when both are named; else nothing, which
+ * nothing (a typed question's focus is the whole display), the drawing on the source, grown from
+ * the located part its steps return to most over every part beside it; else nothing, which
  * leaves the middle of the screen. */
 export function liftFocus(
   focus: Region | null | undefined,
@@ -59,21 +60,28 @@ export function liftFocus(
   steps: readonly { sourceHighlightIds?: readonly string[] | null }[],
 ): Region | undefined {
   if (focus && (focus.width < 0.9 || focus.height < 0.9)) return focus;
-  let best: { region: Region; score: number } | null = null;
-  for (const anchor of anchors ?? []) {
-    const uses = steps.filter((s) => s.sourceHighlightIds?.includes(anchor.id)).length;
-    const area = anchor.region.width * anchor.region.height;
-    if (!uses || area < 0.04 || area > 0.8) continue;
-    const name = `${anchor.id} ${anchor.label}`;
-    const kind = /diagram|figure|schematic|cutaway|drawing|illustration|image|graph|plot|chart/i.test(name) ? 2 : /list|bullet|steps|text|title|caption|note|box|equation/i.test(name) ? 0.5 : 1;
-    const score = uses * Math.sqrt(area) * kind;
-    if (!best || score > best.score) best = { region: anchor.region, score };
-  }
+  const parts = (anchors ?? []).filter((a) => !WORDS_ON_A_SLIDE.test(`${a.id} ${a.label}`));
+  const score = (a: (typeof parts)[number]) =>
+    (steps.filter((s) => s.sourceHighlightIds?.includes(a.id)).length + 0.5) * Math.sqrt(a.region.width * a.region.height);
+  const best = [...parts].sort((a, b) => score(b) - score(a))[0];
   if (!best) return undefined;
+  let u = { x0: best.region.x, y0: best.region.y, x1: best.region.x + best.region.width, y1: best.region.y + best.region.height };
+  for (let grown = true; grown; ) {
+    grown = false;
+    for (const { region: r } of parts) {
+      const gapX = Math.max(u.x0 - (r.x + r.width), r.x - u.x1), gapY = Math.max(u.y0 - (r.y + r.height), r.y - u.y1);
+      const inside = r.x >= u.x0 && r.y >= u.y0 && r.x + r.width <= u.x1 && r.y + r.height <= u.y1;
+      if (inside || gapX > 0.05 || gapY > 0.05) continue;
+      u = { x0: Math.min(u.x0, r.x), y0: Math.min(u.y0, r.y), x1: Math.max(u.x1, r.x + r.width), y1: Math.max(u.y1, r.y + r.height) };
+      grown = true;
+    }
+  }
+  const area = (u.x1 - u.x0) * (u.y1 - u.y0);
+  if (area < 0.04 || area > 0.8) return undefined;
   // Room for the drawing's own labels, which a located region tends to clip: more at the sides
   // and below, hardly any above, where a slide's title sits. Kept on the display.
-  const r = best.region, x = Math.max(0, r.x - 0.04), y = Math.max(0, r.y - 0.005);
-  return { x, y, width: Math.min(1 - x, r.x + r.width + 0.04 - x), height: Math.min(1 - y, r.y + r.height + 0.05 - y) };
+  const x = Math.max(0, u.x0 - 0.04), y = Math.max(0, u.y0 - 0.005);
+  return { x, y, width: Math.min(1 - x, u.x1 + 0.04 - x), height: Math.min(1 - y, u.y1 + 0.05 - y) };
 }
 
 export function liftRegion(focus: Region | null | undefined, aspect: number): Region {

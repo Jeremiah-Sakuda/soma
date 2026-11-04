@@ -318,7 +318,9 @@ export function ExplorationWorkspace() {
     currentCapturedAt: string;
     previous: ExplorationCapture;
   } | null>(null);
-  const compactAction = useRef<(d: { action: string; text?: string }) => void>(() => {});
+  const compactAction = useRef<(d: { action: string; text?: string; on?: boolean }) => void>(() => {});
+  // The companion's ask bar is up and this page's panel is closed.
+  const compactMode = useRef(false);
   const [liftRequest, setLiftRequest] = useState(0);
   useEffect(() => {
     const handle = (event: Event) => {
@@ -673,7 +675,10 @@ export function ExplorationWorkspace() {
       setNewContext(false);
       setQuestion((current) => (current === submittedDraft ? '' : current));
       setNotice(model ? 'The 3D model is ready. Step through it or drag to turn it.' : 'New visual card ready. Explore it or ask a follow-up.');
-      if (spoken && (conversational || fresh)) setPlaying(true);
+      // Narration needs something to look at. With the panel closed, an explanation shows nothing
+      // until its model is lifted, and then the learner sets the pace: › steps it, ▶ narrates it.
+      const nothingShown = compactMode.current && result.artifact.spec.mode === 'explanation';
+      if (spoken && (conversational || fresh) && !nothingShown) setPlaying(true);
       return true;
     } catch (failure) {
       if (request.current?.id === id && !controller.signal.aborted)
@@ -892,7 +897,11 @@ export function ExplorationWorkspace() {
     versions.some((item) => item.id === artifact.id && item.version > artifact.version);
   // Compact mode: the companion's ask bar drives follow-ups, investigations, steps and
   // playback on the current exploration, and shows a one-line status from here.
-  compactAction.current = (d: { action: string; text?: string }) => {
+  compactAction.current = (d: { action: string; text?: string; on?: boolean }) => {
+    if (d.action === 'mode') {
+      compactMode.current = d.on === true;
+      return;
+    }
     const text = typeof d.text === 'string' ? d.text.trim().slice(0, 1000) : '';
     if (d.action === 'ask' && text) void ask(text);
     else if (d.action === 'investigate')

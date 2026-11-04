@@ -123,6 +123,18 @@ describe('reading a step for the crank angle it is about', () => {
   });
 });
 
+describe('naming the stroke at its boundary', () => {
+  it('names the stroke that is finishing, not the next one', () => {
+    expect(strokeAt(0)).toBe('intake');
+    expect(strokeAt(180)).toBe('intake');
+    expect(strokeAt(181)).toBe('compression');
+    expect(strokeAt(360)).toBe('compression');
+    expect(strokeAt(361)).toBe('power');
+    expect(strokeAt(540)).toBe('power');
+    expect(strokeAt(720)).toBe('exhaust');
+  });
+});
+
 describe('where an explanation lifts from', () => {
   const anchors = [
     { id: 'steps', label: 'Numbered steps', region: { x: 0.54, y: 0.3, width: 0.42, height: 0.4 } },
@@ -130,6 +142,22 @@ describe('where an explanation lifts from', () => {
     { id: 'title', label: 'Title', region: { x: 0, y: 0, width: 0.5, height: 0.08 } },
   ];
   const steps = [{ sourceHighlightIds: ['diagram', 'steps'] }, { sourceHighlightIds: ['steps'] }, { sourceHighlightIds: ['diagram'] }];
+  it('grows from one located part over the parts beside it, not across to the words', async () => {
+    const { liftFocus } = await import('@/lib/domain/scene-lift');
+    const region = liftFocus(
+      { x: 0, y: 0, width: 1, height: 1 },
+      [
+        { id: 'piston', label: 'Piston', region: { x: 0.12, y: 0.5, width: 0.2, height: 0.15 } },
+        { id: 'head', label: 'Cylinder head', region: { x: 0.1, y: 0.25, width: 0.26, height: 0.22 } },
+        { id: 'crank', label: 'Crank', region: { x: 0.14, y: 0.68, width: 0.2, height: 0.2 } },
+        { id: 'callout', label: 'Callout: one cycle', region: { x: 0.54, y: 0.2, width: 0.42, height: 0.2 } },
+      ],
+      [{ sourceHighlightIds: ['piston'] }],
+    )!;
+    expect(region.y).toBeCloseTo(0.245);
+    expect(region.x + region.width).toBeLessThan(0.45);
+    expect(region.y + region.height).toBeCloseTo(0.93);
+  });
   it('keeps where the learner pointed', async () => {
     const { liftFocus } = await import('@/lib/domain/scene-lift');
     const pointed = { x: 0.1, y: 0.1, width: 0.3, height: 0.3 };
@@ -141,8 +169,8 @@ describe('where an explanation lifts from', () => {
     expect(region.x).toBeCloseTo(0.01);
     expect(region.width).toBeCloseTo(0.5);
     expect(region.y).toBeCloseTo(0.145);
-    // Nothing located, or nothing the steps use: the middle of the screen, never the whole of it.
+    // Nothing but words located, or nothing at all: the middle of the screen, never the whole of it.
     expect(liftFocus({ x: 0, y: 0, width: 1, height: 1 }, [], steps)).toBeUndefined();
-    expect(liftFocus({ x: 0, y: 0, width: 1, height: 1 }, anchors, [{ sourceHighlightIds: [] }])).toBeUndefined();
+    expect(liftFocus({ x: 0, y: 0, width: 1, height: 1 }, anchors.filter((a) => a.id !== 'diagram'), steps)).toBeUndefined();
   });
 });

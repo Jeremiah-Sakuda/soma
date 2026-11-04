@@ -40,7 +40,7 @@ export function crankFromWords(text: string): number | null {
   const turn = '(crank(shaft)? )?(turn|revolution|rotation)';
   if (new RegExp(`\\b720\\b|two (full )?(crank(shaft)? )?(turns|revolutions|rotations)|(finish|complet|end)\\w* (the )?second|second (full )?${turn}s? (is )?(done|complete|finished|over)|cycle (repeats|ends|is complete)|four half`, 'i').test(text)) return 1;
   if (new RegExp(`(finish|complet|end)\\w* (the )?first|first (full )?${turn}|one (full )?${turn}\\b|\\b360\\b`, 'i').test(text)) return 0.5;
-  const strokes: [RegExp, number][] = [[/intake|draws? in|drawn in|suck/gi, 0.125], [/compress|squeez/gi, 0.375], [/spark|ignit/gi, 0.5], [/power|expan|burn|combust/gi, 0.62], [/exhaust/gi, 0.875]];
+  const strokes: [RegExp, number][] = [[/intake|draws? in|drawn in|takes? in|suck/gi, 0.125], [/compress|squeez/gi, 0.375], [/spark|ignit/gi, 0.5], [/power|expan|burn|combust/gi, 0.62], [/exhaust/gi, 0.875]];
   let last: [number, number] | null = null;
   for (const [re, value] of strokes) for (const m of text.matchAll(re)) if (!last || m.index! >= last[0]) last = [m.index!, value];
   if (last) return last[1];

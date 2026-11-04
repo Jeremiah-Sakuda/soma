@@ -2,7 +2,7 @@
 
 November 1, 2026 positioning update: students first, the capability second ([story](STORY_AND_DEMO.md)); updated November 2 for the second checked subject, DC circuits, and for the review findings of November 2–3. Supersedes the PM132 copy (kept in git history). Ready-to-edit copy for the Cerebral Valley form; exact field limits are unconfirmed. This draft does not publish or submit anything.
 
-**November 4 UTC delivery:** graphics runtime `73ae70e` and test-duration follow-up `8538cbc` use `soma-3d-2026-11-04`. The signed/notarized 0.4.1 is a private draft; the published installer remains 0.4.0. Current local renderer/controller checks and the labeled silent QA clip do not establish physical native alignment or hosted acceptance, which remain pending after the origin approval rejection. The actual service E investigation (Muse chose D–F, tie 5), source-preserving follow-up/save and circuit image-check/reversal runs remain separate evidence. Final three-minute/native footage is still pending. [Verification](VERIFICATION.md) owns the current full CI result, source identity and retained failures, including the earlier `2e82d9b` checkpoint.
+**November 4 distribution:** companion **[0.5.0](https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.5.0)** is public and Latest, with Apple notarization, staple and Gatekeeper verification. Use it with the current hosted engine; 0.4.x lacks the current explanation-model lift. The repository is public and uses the rewritten history. [Verification](VERIFICATION.md) records exact source, checksum and executed checks. Footage, final audio/video assembly and actual submission remain separate delivery items.
 
 ## Project name
 
@@ -82,9 +82,9 @@ Product code was written during the event, beginning at kickoff on October 26, 2
 ## Project links
 
 - Live app: https://soma-woad-beta.vercel.app/explore
-- Mac companion 0.4.0 (signed and notarized): https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.4.0
+- Mac companion 0.5.0 (Latest; signed and notarized): https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.5.0
 - Demo slides: `public/examples/lecture-14-dijkstra.png` (graph search) and `public/examples/lecture-9-bridge.png` (DC circuit)
-- Repository: https://github.com/Jeremiah-Sakuda/soma (to be made public before submission)
+- Repository: https://github.com/Jeremiah-Sakuda/soma (public)
 - Demo video: pending
 
 ## Short answers for judges

@@ -1,6 +1,6 @@
 # Soma desktop companion
 
-Soma turns a diagram on your screen into an experiment whose answers are computed, not guessed, starting with the slide you're studying. Explanations work over whatever you're looking at; the checked part today is graph search and DC circuits, drawn directly on the source. This macOS Apple Silicon companion uses the current hosted Soma engine; it needs an internet connection. Capture is one snapshot at a time, only when requested, with preview before any model submission.
+Soma turns a diagram on your screen into an experiment whose answers are computed, not guessed, starting with the slide you're studying. Explanations work over whatever you're looking at; the checked part today is graph search and DC circuits, drawn directly on the source. This Apple Silicon companion requires macOS 14.2 or newer and uses the current hosted Soma engine; it needs an internet connection. Capture is one snapshot at a time, only when requested, with preview before any model submission.
 
 From the repository root:
 
@@ -60,7 +60,7 @@ For a checked search: The graph's own region of your snapshot tilts back like a 
 
 The renderers are three.js (`lift-renderer.mjs` for a search, `lift-model.mjs` for circuits and models, which reuses the page's part builder), bundled into `point-overlay-3d.js` by `build-lift.cjs` (run automatically before start, package and release) because the sandboxed overlay page loads no modules. `node test/lift-harness.cjs <dir>` renders the overlay over the Lecture 14 slide in headless Chromium and saves frames of the lift, a full search and a cut, with no Electron, capture or model calls. `node test/model-harness.cjs <artifact.json> <slide.png> <dir>` does the same for any saved explanation's model (with `INTERACT=1` it also points at a part, picks it and turns the model), and `node test/model-harness.cjs circuit docs/examples/hero-circuit/lecture-9-bridge.png <dir>` for the circuit lift.
 
-The engine web release requires companion **0.5.0**, which is being prepared and is not yet a verified published download. The earlier local 0.4.1 contains the November 4 3D repairs and is signed/notarized/stapled with Gatekeeper acceptance. It has not been published or physically retested over other apps; use [the verification record](../docs/VERIFICATION.md) for exact source and artifact identity. The published 0.4.0 download remains separate.
+The current engine web release requires companion **[0.5.0](https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.5.0)**, now published as Latest. Its final archive is Developer ID signed, Apple-notarized, stapled and Gatekeeper-accepted, with SHA-256 `648b144e722d1501072f1d9241bd097dabade424777efbc13c4f53d6dad107fd`. Packaged code matches the release source; [verification](../docs/VERIFICATION.md) records exact provenance and the remaining clean-Mac/physical-permission limits. Replace older 0.4.x or rehearsal copies; the historical 0.4.1 draft remains unpublished.
 
 ## Developer ID release phases
 

@@ -644,3 +644,10 @@ The optional browser height view receives a compact printed numerical companion 
 ## November 4 — Positive positioning; coverage belongs in documentation
 
 User retained the current journal UI and requested framing around what Soma enables. Remove the cover's topic-capability comparison. Describe current examples and potential expansion in documentation, keeping actual result-specific assurance and actionable status in the app. No solver scope, model guarantee or visual redesign follows from this wording change.
+
+
+### Companion 0.5.0 publication and rewritten history — November 4 UTC
+
+The user authorized immediate Apple notarization and publication of companion 0.5.0 as Latest, confirmed the public rewritten main, and subsequently moved development logs/prompt records out of tracking. Resynchronize only as directed, keep work on rewritten ancestry, never push old branches or force a refused push, and maintain those records locally without publishing them.
+
+0.5.0's source tag is1305844, which excludes the local records and has native/runtime bytes identical to the freshly signed build. Apple accepted submission450b2d47-2267-4a6c-8eca-1f449ee98c5a. Severe local upload throttling was resolved by an exact-byte, checksum-pinned GitHub transfer job; no signing credential left Keychain. Only the final installer and checksum remain on the published release. This closes notarization/distribution; clean-Mac/physical-permission acceptance and final submission retain their separate status.

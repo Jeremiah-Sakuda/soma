@@ -1,5 +1,7 @@
 # Canonical repository — PM091
 
+**November 4 history safety:** the repository is now public with user authorization, and main uses rewritten history. Work from current origin/main; never merge or push old-history branches. If a normal push is refused, stop and report it; do not force it. Development logs and the prompt archive remain local ignored files and must not be re-added or cited as published evidence.
+
 Use only the original `Jeremiah-Sakuda/soma` repository and this working folder. Its visibility changes only with the user's authorization. Both original and imported commit histories are preserved in main; do not create a separate submission repository or use archived `.local/pm*/submission` clones for new work. `.local/pm091` contains private migration backups, not a second product repository. Historical links may name the retired repository; active release/document links must use `soma`.
 
 # Soma implementation instructions

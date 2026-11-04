@@ -1,49 +1,45 @@
 # Soma — voiceover recording copy
 
-Record against the silent three-minute picture edit. These time windows mark the matching footage, not a requirement to fill every second. Leave time for results to settle. Soma narration is a separate track that can be lowered beneath your voice.
+Read this conversationally. The existing time windows are picture cues; the video and its timing are unchanged. Pause to let the route changes and engine poses land. Record against the silent edit, then mix Soma’s audio beneath your voice as needed.
 
 ## 0:00–0:08
 
-This graph was sitting in a slide. I cut one connection, and the route changes on the slide.
+What if you could pull a diagram off the page—and experiment with it?
 
 ## 0:08–0:18
 
-Soma starts with what’s on my screen. I ask: why doesn’t it take the direct route from A to F?
+This is Soma. I’m looking at a shortest-path problem, and I want to know why it doesn’t just go straight from A to F.
 
 ## 0:18–0:38
 
-Muse Spark reads the diagram. Wonder reviews the reading. Soma computes the result: the direct edge costs eleven; the route through D costs seven.
+Muse Spark reads the diagram, and Wonder checks that it’s read it correctly. Then Soma does the math. Going straight costs eleven. Taking the route through D costs seven, even though it takes more steps.
 
 ## 0:38–1:10
 
-Now I ask it to find a tipping point. I haven’t picked a connection. Muse chooses A-to-F, and Soma checks where the routes tie. At six, the direct route wins. At seven, they tie. At eight, the longer route is cheaper.
+But when would going straight be better? I let Muse choose what to change. It picks the cost of that direct connection, and Soma works out where the answer flips. Drop it to six, and going straight wins. At seven, the routes tie. Push it up to eight, and the detour is cheaper again.
 
 ## 1:10–1:27
 
-Why does it flip right there? This answer uses the cost I just changed. The explanation stays with my experiment.
+Now I can ask, “Why does it flip right there?” Soma answers using the experiment I’ve just made, including the value I changed. I can keep exploring from there.
 
 ## 1:27–1:45
 
-Height shows each node’s checked cost. I restore the original graph, cut D-to-F: seven becomes nine. Restore the connection: seven again.
+The higher a node sits, the more it costs to reach it. When I cut this connection, the route has to go around, so the cost rises to nine. Put it back, and it drops to seven.
 
 ## 1:45–2:10
 
-*Picture cues: the engine lifts at 1:45; one turn at 1:54; the second turn at 2:00; full cycle at 2:05. Leave a short pause at each pose.*
-
-Why does a four-stroke engine need two turns? After one turn, the piston is back at the top, but the cycle isn’t finished. Muse chooses the teaching poses; Soma moves this illustrative cutaway through the second turn.
+Now take this engine. Why does it need two full turns to complete a cycle? After the first turn, the piston’s back at the top, but there’s still work to do. Muse uses this illustrative cutaway to show why the second turn matters.
 
 ## 2:10–2:38
 
-*Picture cues: lift and balanced bridge until 2:22; current one way at 2:22; exact balance at 2:28; reverse current at 2:33.*
-
-Here’s a bridge circuit. Both sides sit at eight volts, so no current crosses R-five. Muse chooses R-four to investigate. At eight ohms, it balances. Change the resistance below and above that point, and the current reverses.
+Or take this circuit. There’s no current through the middle resistor because both ends are at the same voltage. Muse picks a resistor we can change to test that. Watch the current: it flows one way, stops at the balance point, then flows the other way.
 
 ## 2:38–2:50
 
-These explanations belong to the diagram I’m looking at. I can change it, ask about what happened, and keep the result.
+I built Soma so a question about something on my screen can turn into an experiment, right where I’m looking.
 
 ## 2:50–3:00
 
-That’s Soma. Try it at the link on screen.
+That’s Soma. You can try it at the link on screen.
 
-No microphone audio is included in the computer recording. The engine is illustrative; the graph and circuit results are computed. Native engine/circuit visuals come from earlier actual recordings, and their optional app narration was recorded separately from retained playback.
+Recording notes, not spoken: the engine is an illustrative cutaway; graph and circuit results are computed. The engine and circuit footage comes from earlier native recordings. Their optional replayed narration remains separate.

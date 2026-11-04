@@ -3379,3 +3379,12 @@ Deviation: none.
 Edit-review checkpoint: the independent review found that the first assembly showed the graph already lifted but omitted its actual transition. The renderer is inserting the verified six-second native graph lift within0:18–0:38, alongside the already included engine/circuit transitions. No new recording/inference. The timed voiceover is248words, with follow-up through1:27 and cut/restore1:27–1:45 to preserve a complete app utterance.
 
 Final picture-edit checkpoint, 21:53 UTC: exported exactly 180-second silent and app-audio MP4s at 1920×1080 / 30 fps, plus a separate audio stem and matched 248-word timed voiceover. Actual native graph, engine and circuit transitions are all included. The final circuit cut was tightened to show the paper lift and voltage columns rising before control changes. Actions remain at natural speed; shortened waits are labeled. Two complete original graph utterance groups retain synchronized sound at −2 dB; separate engine/circuit replay narration is not silently mixed into the older footage. No new model calls. User voiceover/final mix and submission remain pending. Private deliverables: `.local/demo-recording-20261104/final-edit/`; raw setup and failed attempts remain outside the delivery edit.
+
+
+## DEMO-SPOKEN-REWRITE-20261104-01 — Rewrite for spoken delivery
+
+1. Replaced the opening with a direct hook about pulling a diagram off the page and experimenting with it. Rewrote the complete narration as connected spoken sentences, including the graph cut/restore passage.
+2. Preserved the demonstrated numerical outcomes and Meta roles while removing compressed technical wording such as “checked cost” and “teaching poses.” Updated plain/timed repository copies and the local delivery copies. The revision has 312 spoken words; no recorded read-through is claimed.
+3. Left both video exports, their edit decisions and all time windows unchanged as requested. No recording, inference or media regeneration.
+
+Deviation: narration wording and length change; the user will fit spoken delivery to the existing edit.

@@ -1,18 +1,20 @@
 # November 4 final delivery
 
+**Recording allowance:** verify the allowance from the production companion’s existing session before the take. The limit is 12 reserved attempts per principal per UTC day, including failed/canceled reservations; an account shares usage across its windows/devices. A two-generation take needs two remaining slots and sufficient shared spending allowance. Do not clear cookies, rotate identities or reset ledgers. November 4’s next reset is 7 PM EST (6 PM CST), November 5 at 00:00 UTC. Source inspection alone does not confirm the running companion has 12 remaining.
+
 All deadlines below are America/New_York. [Verification](VERIFICATION.md) owns executed results; this file sequences remaining delivery. [Build plan](BUILD_PLAN.md) owns scope and [script](DEMO_VIDEO_SCRIPT.md) owns the cut.
 
 ## Before the freeze
 
 Codex owns the release manifest and graph interaction. Claude merges engine source only, leaving the manifest to Codex. Preserve the unrelated `next-env.d.ts` edit and both histories. Engine go/no-go is 4:30 PM; code freeze is 5:30 PM. If the engine misses its visual/provenance bar, keep the checked circuit as the second example. Use actual filmed output for the final words.
 
-Current source checkpoint: `569c8f6`, manifest `soma-lift-interaction-2026-11-04`. Neither the published 0.4.0 installer nor the previous 0.4.1 draft contains the new graph interaction. Preserve both dated artifacts. Signing preflight found one Developer ID identity and an available `soma-notary` keychain profile; this does not establish a new signed build.
+Engine source `af9a223` is integrated; manifest checkpoint `412cfb9` is pushed (`soma-engine-integration-2026-11-04`). Regenerate again after remaining fixes. Neither the published 0.4.0 installer nor the previous 0.4.1 draft contains the new graph interaction. Preserve both dated artifacts. Signing preflight found one Developer ID identity and an available `soma-notary` keychain profile; this does not establish a new signed build.
 
 ## After source freeze
 
 1. Integrate the accepted engine changes, review the exact diff and rebuild the bundled renderer with `node desktop/build-lift.cjs`. Regenerate `public/release.json` with the final release ID using `node scripts/verify-release.mjs --write --release-id=...`, then run its verifier. Commit and push the final source identity.
 2. Check exact-commit CI and required local checks. Record failures and retries. Verify Vercel’s deployment identity and the hosted `/release.json`, then observe graph/circuit entry paths and the accepted engine path. Metadata saying READY is insufficient for UI acceptance.
-3. Preserve the earlier draft/ZIP before packaging. Choose and record the final companion version. Run `node desktop/release.cjs --sign-only`, audit packaged source identity and private-file exclusions, then `node desktop/release.cjs --notarize-only`. The existing script checks signing, submits to Apple, staples, validates the staple and checks Gatekeeper. Record ZIP SHA-256, notarization ID and exact source commit.
+3. Preserve the earlier draft/ZIP before packaging. Use companion **0.5.0** for this web release: 0.4.x does not implement its explanation-model lift. Treat hosted web acceptance and the verified 0.5.0 download as a paired delivery; do not mark either as complete from a source push alone. Run `node desktop/release.cjs --sign-only`, audit packaged source identity and private-file exclusions, then `node desktop/release.cjs --notarize-only`. The existing script checks signing, submits to Apple, staples, validates the staple and checks Gatekeeper. Record ZIP SHA-256, notarization ID and exact source commit.
 4. Test the installed signed build over the original demo source: alignment; lifted cut/restore 7→9→7; rotation and click-through; source-change rejection; circuit opening/current reversal; accepted engine parts and motion. The isolated pointer test and renderer tests cover narrower boundaries and cannot substitute for this complete journey.
 5. Publish the verified companion asset to the canonical repository release and download it back to compare checksums. Verify the product download link and final release/version wording. Preserve the prior release and original histories.
 

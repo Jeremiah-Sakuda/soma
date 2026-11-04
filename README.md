@@ -1,5 +1,7 @@
 # Soma
 
+**November 4 integration:** the new explanation-model lift and built-in four-stroke cutaway require companion **0.5.0**, currently being prepared for paired web/native release. Muse places the cutaway and chooses teaching poses; Soma supplies its illustrative parts and motion. The older download below remains a separate release; final packaging, physical verification and engine demo selection are pending. [Delivery status](docs/FINAL_DELIVERY_RUNBOOK.md).
+
 **Turn what you’re studying into something you can explore.**
 
 Soma turns what you’re studying into a visual you can explore on your screen. Meta’s Muse models read the source, explain it and choose what to investigate. Capture a diagram, ask a question, and try an idea directly on the material in front of you. In the graph and circuit examples, Soma computes routes, voltages and currents as you change connections or values.

@@ -3234,3 +3234,12 @@ Deviation: none. Existing synthetic testing labels and failure/source/save/shari
 
 
 Verification/delivery follow-up: implementation committed `9805dcb`. The affected browser batch passed 102 cases and failed three tests whose navigation assumed the former always-visible examples. Corrected conditional Explorations access after reload, direct-child summary selectors with nested disclosures, and reopening More examples after source selection. All three focused reruns passed in 8.5 seconds; all 105 affected cases are covered across the two runs, not claimed as one clean first attempt. Original batch (3.6 minutes), traces/screenshots and rerun logs remain in `.local/lift-graph-interaction-review/examples-*`. Existing assertions for loading races, disabled actions, zero requests, source handling and saved state remain. The pipeline test verifies the visible review summary and reachable call audit. Typecheck, diff checks and manifest passed. Manifest `soma-quiet-entry-2026-11-04`, 314 files, SHA-256 `ed1479f04389dec57cf6a6da37e6eee1d2f6a4e75311a89aa12bb57387cd468d`. No live inference, new native package or hosted acceptance claimed.
+
+
+## ENGINE-INTEGRATION-20261104-01 — Engine source handoff
+
+1. Fast-forwarded main to engine merge `af9a223`; regenerated/verified the manifest and pushed `412cfb9`. Preserved unrelated changes and Claude-owned engine files.
+2. Updated the compact narration, cropped-card, model-failure and illustrative-engine documentation. Prepared companion version 0.5.0; signed packaging/publication and paired hosted acceptance remain pending. The engine’s 4:30 PM ET go/no-go remains open.
+3. Investigating the double-click reset regression and adding read-only inspection of the existing session’s allowance. Source audit confirms 12 reserved attempts per principal per UTC day, not per launch; current production remaining count is not yet verified.
+
+Deviation: none. The script’s engine alternative reflects integrated source but is not promoted into the locked voiceover without the visual decision and footage. No provider call, quota reset, new native release or completed deployment is claimed.

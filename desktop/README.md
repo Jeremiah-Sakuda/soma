@@ -33,7 +33,7 @@ The smoke script launches real Electron with an original local HTML fixture; it 
 
 - **Follow-ups.** While a drawing is on screen, Return asks a follow-up about it without a new snapshot; **New snapshot** (⌘N) captures again for the next question. With nothing drawn, every question takes a snapshot.
 - **Test it** (⌘Return) asks Muse to pick the connection your question is about, and Soma computes where the route changes. It appears for a checked shortest-path graph with a goal.
-- **Steps.** ‹ › move through the drawn search and ▶ plays the narration; like the panel, stepping waits for playback to pause.
+- **Steps.** For explanations, ‹ › move to a step and speak it in full sentences. Narration waits until the model has lifted; ▶ plays through the remaining steps. For checked traces, stepping waits for playback to pause.
 - **One question at a time.** While Muse works, Return keeps your text and says so instead of starting another request.
 - **Esc** first clears the drawing (it owns Esc while shown), then hides the bar. Hiding the bar also cancels a question in flight and pauses narration. ⤢ opens the full panel and ends compact mode; **Capture display** and **Show Soma** end it too.
 
@@ -45,7 +45,9 @@ Any answer can be lifted off the slide: **3D** in the compact bar (⌘L), or **L
 
 - **A checked search (Dijkstra or breadth-first)** lifts as described below: heights are checked distances.
 - **A checked circuit**: each node rises from where it is printed to its checked voltage, on a stem, with each part a straight ramp labelled with its value. In a balanced bridge, R₅ lies flat.
-- **Any other explanation**: Muse builds a 3D model of what the explanation is about (the first lift asks for it; it is saved as a new version), and the slide region you pointed at tilts back with the model standing on it. Parts are named where they are; forces and flows are arrows; stepping through the explanation moves, reveals and lights up the parts each step is about. The model is labelled illustrative: shapes and motion are schematic, not measured.
+- **Any other explanation**: Muse builds a 3D model of what the explanation is about (the first lift asks for it; it is saved as a new version), and the diagram region tilts back as a crisp card with the model standing on it. Typed questions use that diagram region too. Parts are named where they are; forces and flows are arrows; stepping through the explanation moves, reveals and lights up the parts each step is about. The model is labelled illustrative: shapes and motion are schematic, not measured.
+
+The four-stroke engine uses Soma’s built-in cutaway. Muse chooses its placement and teaching steps; Soma assembles and poses its parts. Parts, proportions and motion are labeled illustrative. The original source slide is [Lecture 7](../docs/examples/hero-engine/lecture-7-four-stroke.png). If model creation fails, the bar reports the failure and **3D** can be pressed again; it does not substitute an upright flat diagram.
 
 A lifted model or circuit can be handled on screen: hover it and the overlay takes the pointer (anywhere else, clicks still reach your apps); drag to turn it on its own upright axis (bounded, so it never goes end-on); click a part to pick it, which selects it on the page for your next question and names its role beside it; double-click to set the view back. Parts the current step is not about grey out with quiet names, and a name that has to move away from its part gets a leader line.
 
@@ -58,7 +60,7 @@ For a checked search: The graph's own region of your snapshot tilts back like a 
 
 The renderers are three.js (`lift-renderer.mjs` for a search, `lift-model.mjs` for circuits and models, which reuses the page's part builder), bundled into `point-overlay-3d.js` by `build-lift.cjs` (run automatically before start, package and release) because the sandboxed overlay page loads no modules. `node test/lift-harness.cjs <dir>` renders the overlay over the Lecture 14 slide in headless Chromium and saves frames of the lift, a full search and a cut, with no Electron, capture or model calls. `node test/model-harness.cjs <artifact.json> <slide.png> <dir>` does the same for any saved explanation's model (with `INTERACT=1` it also points at a part, picks it and turns the model), and `node test/model-harness.cjs circuit docs/examples/hero-circuit/lecture-9-bridge.png <dir>` for the circuit lift.
 
-Local 0.4.1 contains the November 4 3D repairs and is signed/notarized/stapled with Gatekeeper acceptance. It has not been published or physically retested over other apps; use [the verification record](../docs/VERIFICATION.md) for exact source and artifact identity. The published 0.4.0 download remains separate.
+The engine web release requires companion **0.5.0**, which is being prepared and is not yet a verified published download. The earlier local 0.4.1 contains the November 4 3D repairs and is signed/notarized/stapled with Gatekeeper acceptance. It has not been published or physically retested over other apps; use [the verification record](../docs/VERIFICATION.md) for exact source and artifact identity. The published 0.4.0 download remains separate.
 
 ## Developer ID release phases
 

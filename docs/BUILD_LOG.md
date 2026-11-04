@@ -3299,3 +3299,20 @@ Caption follow-up: `8e8ac12` keeps the full flat explanation above the compact b
 3. Core graph/engine/circuit footage is available. Fresh full-take readiness still needs physical held-button drag/reset and microphone/system-audio preflight; the existing clips are silent. Four exploration admissions were last verified at 20:45:02.502 UTC, resetting at 7 PM EST. That does not support all three examples freshly generated with every follow-up.
 
 Deviation: rebuilt a private recording package before final freeze to include the proven caption fix; final notarized distribution remains separate. No new live acceptance or completed CI is claimed.
+
+
+## DEMO-FILMING-CONFIRM-20261104-01 — Filming capability, not a start request
+
+1. Confirmed ability to record/edit the computer-use footage for the user’s voiceover, based on the retained rehearsals.
+2. Preserved the explicit instruction not to start; no recording or model call was initiated.
+3. Identified the remaining physical mouse check and user voiceover; no completed final video claimed.
+
+Deviation: none; confirmation only.
+
+## DEMO-DRAG-20261104-01 — Native drag limitation
+
+1. Explained the observed automation limitation: mouse-down followed by movement with no held button causes Soma’s intended drag cancellation. No new attempt or physical success claimed.
+2. Confirmed that verified clicks, controls and model poses can supply footage without a drag shot.
+3. A filmed held-button drag still needs a reliable input method or the user’s brief physical action; recording remains stopped under the previous instruction.
+
+Deviation: none; no runtime or guard changes.

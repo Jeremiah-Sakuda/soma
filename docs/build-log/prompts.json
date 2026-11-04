@@ -1911,6 +1911,20 @@
   "kind": "user",
   "prompt": "Okay js everything ready for the actual recording",
   "timestamp_note": "Exact receipt timestamp unavailable; readiness checked November 4, 2026 UTC."
+},
+{
+  "id": "DEMO-FILMING-CONFIRM-20261104-01",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "Alright to are you able to film the actual demo video’s computer use content then I just do the voiceover? Not asking you to start just confirm yes or no, or if there’s more if need to do myself",
+  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+},
+{
+  "id": "DEMO-DRAG-20261104-01",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "Is there any way for you to do the drag or no?",
+  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
 }
 ]
 }

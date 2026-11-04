@@ -33,19 +33,18 @@ const ENGINE_WORDS: [RegExp, string[]][] = [
   [/belt|timing|chain|sprocket/i, ['timing_belt']],
   [/mixture|charge|fuel|gas\b|air\b/i, ['charge']],
 ];
-/** The crank angle a step's words point at, as a fraction of two turns. Later strokes win, so
- * "power, then exhaust" stops on exhaust; the explanation's own order never turns it backwards. */
-function crankFromWords(text: string): number | null {
-  const marks: [RegExp, number][] = [
-    [/\b720\b|two (full )?(crank(shaft)? )?(turns|revolutions|rotations)|second (full )?(crank(shaft)? )?(turn|revolution|rotation)|both turns|cycle (repeats|ends|is complete)|four half/i, 1],
-    [/exhaust/i, 0.875],
-    [/power|expan|burn|combust/i, 0.62],
-    [/spark|ignit|\b360\b|(one|first) (full )?(crank(shaft)? )?(turn|revolution|rotation)/i, 0.5],
-    [/compress|squeez/i, 0.375],
-    [/half a turn|half-turn|\b180\b/i, 0.25],
-    [/intake|draw(s|n)? in|suck/i, 0.125],
-  ];
-  for (const [re, value] of marks) if (re.test(text)) return value;
+/** The crank angle a step's words point at, as a fraction of two turns. A step that ends a turn
+ * stops at that turn's end; otherwise it stops in the middle of the last stroke it names, where
+ * that stroke's valve and gas are visible; the explanation's own order never turns it backwards. */
+export function crankFromWords(text: string): number | null {
+  const turn = '(crank(shaft)? )?(turn|revolution|rotation)';
+  if (new RegExp(`\\b720\\b|two (full )?(crank(shaft)? )?(turns|revolutions|rotations)|(finish|complet|end)\\w* (the )?second|second (full )?${turn}s? (is )?(done|complete|finished|over)|cycle (repeats|ends|is complete)|four half`, 'i').test(text)) return 1;
+  if (new RegExp(`(finish|complet|end)\\w* (the )?first|first (full )?${turn}|one (full )?${turn}\\b|\\b360\\b`, 'i').test(text)) return 0.5;
+  const strokes: [RegExp, number][] = [[/intake|draws? in|drawn in|suck/gi, 0.125], [/compress|squeez/gi, 0.375], [/spark|ignit/gi, 0.5], [/power|expan|burn|combust/gi, 0.62], [/exhaust/gi, 0.875]];
+  let last: [number, number] | null = null;
+  for (const [re, value] of strokes) for (const m of text.matchAll(re)) if (!last || m.index! >= last[0]) last = [m.index!, value];
+  if (last) return last[1];
+  if (/half a turn|half-turn|\b180\b/i.test(text)) return 0.25;
   return null;
 }
 /** Binds the built-in engine to the explanation it illustrates: every step gets a crank angle

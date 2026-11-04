@@ -102,3 +102,23 @@ describe('binding the engine to an explanation', () => {
     expect(merged.steps[1].highlightIds).toContain('engine_spark_plug');
   });
 });
+
+describe('reading a step for the crank angle it is about', () => {
+  it('ends a turn at the turn, otherwise stops mid-way through the last stroke named', async () => {
+    const { crankFromWords } = await import('@/lib/server/model-authoring');
+    const cases: [string, number | null][] = [
+      ['First turn does intake and compression.', 0.5],
+      ['Second turn does power and exhaust.', 0.875],
+      ['Four strokes equal 720 degrees, so two revolutions.', 1],
+      ['Intake moves the piston down, turning the crank about half a turn.', 0.125],
+      ['Compression moves the piston back up for the second half-turn.', 0.375],
+      ['Power pushes the piston down again, starting the second revolution.', 0.62],
+      ['Exhaust pushes the piston up, finishing 720 deg or 2 turns.', 1],
+      ['Each up or down piston move is one stroke and turns the crank about half a turn.', 0.25],
+      ['Power drives the piston down after the spark, then exhaust pushes it back up.', 0.875],
+      ['Intake down plus compression up complete the first full crankshaft revolution.', 0.5],
+      ['The valves are drawn larger here.', null],
+    ];
+    for (const [text, value] of cases) expect([text, crankFromWords(text)]).toEqual([text, value]);
+  });
+});

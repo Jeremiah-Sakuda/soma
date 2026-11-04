@@ -1876,6 +1876,20 @@
   "kind": "user",
   "prompt": "Engine merged to main at af9a223, source only. Please regenerate public/release.json (CI's manifest check fails until you do). Your files are untouched: point-overlay.js, point-ask.cjs, docs/.\n\nBehaviour changes to reflect in docs:\n- Compact bar on an explanation: ‹ › now step it and speak that step (the \"stepping waits for playback to pause\" line now applies to checked traces only). Narration waits until the model lifts; ▶ plays through the rest.\n- A typed question lifts the diagram region, not the whole display. The lifted slide is now a crisp card, not a washed one.\n- 3D no longer stands a flat diagram up when a model can't be built; the bar reports the failure and 3D can be pressed again.\n- New: built-in four-stroke cutaway. Muse places it; Soma poses it. Its parts and motion are labelled illustrative. Slide: docs/examples/hero-engine/lecture-7-four-stroke.png (original).\n- Explanation narration is now written as a tutor's full sentences.\n\nPlease check:\n- Double-click reset didn't take effect in one on-device try (point-overlay.js is yours).\n- Each session gets 12 generations per UTC day, resetting 7 PM ET. A take uses 2. Please confirm the production companion's session has its own 12 before recording.\n\nStill pending: engine go/no-go at 4:30 PM ET. The latest judges are still scoring. Companion 0.5.0 must ship with this web deploy, or \"Lift into 3D\" does nothing in 0.4.x.",
   "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+},
+{
+  "id": "DEMO-READINESS-20261104-01",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "Alright is everything that we’re going to show in the demo ready?",
+  "timestamp_note": "Exact receipt timestamp unavailable; checked November 4, 2026 UTC."
+},
+{
+  "id": "DEMO-QUOTAS-20261104-01",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "Any quotas I should know about?",
+  "timestamp_note": "Exact receipt timestamp unavailable; checked November 4, 2026 UTC."
 }
 ]
 }

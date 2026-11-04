@@ -3247,3 +3247,21 @@ Deviation: none. The script’s engine alternative reflects integrated source bu
 Verification follow-up: `d0bb5f9` documents the integration and prepares version 0.5.0; `9e92dc0` fixes double-click reset on model parts. The new real-renderer test first reproduced the unchanged camera (turn 0.52, tip 0.10), then passed with the fix. All 16 overlay-renderer cases and 18 focused controller cases passed after the fix; graph edge double-click retains one toggle and its view. The integrated engine also passed 57 focused engine/model tests, all 82 desktop tests and typecheck. Logs are private under `.local/final-delivery-check/` and the reset agent’s local review artifacts. No physical macOS reset or final signed-build acceptance is claimed. The running Electron is Claude’s separate temporary-profile development build; its usage cannot establish the production companion’s allowance.
 
 Allowance follow-up: `1b529f1` adds read-only `GET /api/explore/allowance`, resolving only an existing account/guest session and reading its exact daily ledger plus shared admission state. It does not return identity keys/cookies/financial totals, create a session/workspace/database, reserve a generation or call a model. All 27 focused route/budget/ownership cases and typecheck passed, covering UTC rollover, account-versus-guest identity, legacy count fallback, settlement, missing state, corrupt storage and failure-closed behavior. Production session quota remains unverified until this route is called inside that existing companion session after deployment. CI for `412cfb9` has passed source manifest, types, application/desktop tests, production build and isolated runtime/credential checks; browser tests were still running at inspection.
+
+
+## DEMO-READINESS-20261104-01 — Recording readiness check
+
+1. Reviewed the locked graph/circuit script and conditional engine alternative against current checks. Core calculations, Muse investigation outcomes and renderer interactions have evidence; current complete installed-build filming acceptance remains pending. Engine go/no-go and final spoken cut remain open.
+2. Found newer engine merge `5ed138d` on main with a stale manifest; fast-forwarded cleanly and refreshed it. Vercel deployment for `6a57e3d` failed because the native `desktop/test/scene-from-artifact.ts` harness imported a fixture excluded from uploads. Excluded `desktop/test` from Vercel uploads, matching its development-only purpose; no engine-owned files changed. Hosted build confirmation remains pending.
+3. Published companion is still 0.4.0, 0.4.1 is a draft, and 0.5.0 is source-only. Remaining recording gates: paired web/0.5.0 delivery, real-screen end-to-end rehearsal, session allowance and final engine decision. No new inference, audio, physical acceptance or successful deployment claimed.
+
+Deviation: release-readiness check uncovered two additional packaging/manifest issues; small fixes stay within Codex’s delivery ownership.
+
+
+## DEMO-QUOTAS-20261104-01 — Recording limits
+
+1. Confirmed source-enforced limits: 12 exploration reservations and 12 voice reservations per principal per UTC day; each admitted failed/cancelled generation still counts. New explanation/model/follow-up/investigation actions share exploration admission; graph cuts, parameter drags and camera motion do not invoke a model. The engine’s two-generation sequence is not a two-slot allowance for the full graph/circuit script.
+2. Read only the configured Firestore global budget document at 2026-11-04T19:40:45.193Z: consumed/reserved approximately $37.1184. Local configuration is $80 cap/$150 allocation, leaving approximately $42.8816 against that local cap; production cap and Meta Billing balance were not verified. Each exploration needs a $0.35 reservation, settled to known usage; unknown usage retains its reservation. No limits changed or inference performed.
+3. Production companion remaining daily count is still unverified. Reset is midnight UTC (7 PM EST on November 4). Suggested reserving attempts for the complete script and using already-generated material for local interaction rehearsals. No deployment, native verification or provider quota claim made.
+
+Deviation: none; this is a source/configuration/ledger inspection, not an increase in authorized spend.

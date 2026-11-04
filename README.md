@@ -73,9 +73,9 @@ flowchart LR
 
 ## Exploring a richer visual language
 
-On the experimental spatial branch, a recorded engine study shows actual Muse-authored vector artwork, teaching copy and visual investigation choices. Compare matching piston positions across different strokes, inspect the connecting rod and export the question/action/explanation as a standalone study file. Soma supplies constrained motion and source/artifact checks.
+An earlier recorded engine study shows actual Muse-authored vector artwork, teaching copy and visual investigation choices. Compare matching piston positions across different strokes, inspect the connecting rod and export the question/action/explanation as a standalone study file. Soma supplies constrained motion and source/artifact checks.
 
-This is a recorded local prototype alongside the canonical graph product. It is not integrated generic engine generation or cloud saving. [Engine investigations and actual evidence](docs/examples/pm126/README.md).
+That dated vector prototype remains a separate recording. The current November 4 source also integrates the illustrative 3D four-stroke cutaway described above. [Engine investigations and actual evidence](docs/examples/pm126/README.md).
 
 ## How Soma uses Meta's models
 

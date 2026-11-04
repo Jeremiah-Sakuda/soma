@@ -2,6 +2,8 @@
 
 ## Engine integration checkpoint — November 4 UTC
 
+**Follow-up fixes:** `9e92dc0` restores double-click reset on model parts while keeping graph-edge double-click to one toggle. The regression failed before the fix and passed afterward; 16 actual-overlay renderer cases and 18 controller cases passed. Integrated source passed 57 focused engine/model tests, 82 desktop cases and typecheck. These are silent local synthetic checks, not physical macOS acceptance or a live engine take. Companion 0.5.0 is versioned in source, not yet packaged/published. The production session’s remaining quota is still unverified; the active Electron uses Claude’s temporary development profile.
+
 Fast-forwarded canonical main to `af9a223` and regenerated the runtime manifest in `412cfb9`; the verifier passed and the checkpoint is pushed. This establishes source identity, not current hosted/native acceptance. Companion 0.5.0 is required for the explanation-model lift. Double-click reset regression and the existing production session’s remaining allowance are being checked. Engine selection remains the 4:30 PM ET decision. Full new-engine test results and paired final delivery are pending; earlier passes below retain their dated scope.
 
 > **November 4 cover-copy follow-up:** removed the topic-capability paragraph, preserving the journal layout. All five existing entry journeys passed (four viewport sizes and keyboard source preview; 9.4 seconds), with no generation requests. Inspected the actual desktop cover. Manifest `soma-positive-framing-2026-11-04`, 314 files, SHA-256 `8e3004b90e96b4778a350eb9d1e27a0ab5874286b26a8df283a5bb65359c799f`. Earlier graph/runtime results below remain dated evidence; native sources are unchanged by this copy edit.

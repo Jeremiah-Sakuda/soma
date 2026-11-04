@@ -1,0 +1,98 @@
+name: Publish notarized companion 0.5.0
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: soma-companion-050
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'Jeremiah-Sakuda/soma'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: Jeremiah-Sakuda/soma
+    steps:
+      - name: Download transfer inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/soma-050/base" "$RUNNER_TEMP/soma-050/transfer"
+          gh release download v0.4.0 --pattern Soma-macOS-arm64.zip --dir "$RUNNER_TEMP/soma-050/base"
+          gh release download v0.5.0 --pattern Soma-0.5.0-transfer.zip --dir "$RUNNER_TEMP/soma-050/transfer"
+      - name: Reconstruct the exact already-notarized ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/soma-050" <<'PY'
+          from pathlib import Path
+          import hashlib,json,sys,zipfile
+          root=Path(sys.argv[1])
+          base=root/'base/Soma-macOS-arm64.zip'
+          transfer=root/'transfer/Soma-0.5.0-transfer.zip'
+          target=root/'Soma-macOS-arm64.zip'
+          def digest(path):
+              h=hashlib.sha256()
+              with path.open('rb') as f:
+                  while block:=f.read(1024*1024):h.update(block)
+              return h.hexdigest()
+          expected_base='4853088e8f1d3169b63d2b46bf70e92e0b08d5d1adfa664f085fa28c86aefe91'
+          expected_transfer='e37d7f5ca3c58af56d09619925387cbd3f16f4f0bd8b79722262c291cbfa66c6'
+          expected_target='648b144e722d1501072f1d9241bd097dabade424777efbc13c4f53d6dad107fd'
+          assert digest(base)==expected_base
+          assert digest(transfer)==expected_transfer
+          with zipfile.ZipFile(transfer) as archive:
+              assert archive.getinfo('recipe.json').file_size<1024*1024
+              assert archive.getinfo('literal.bin').file_size<5*1024*1024
+              recipe=json.loads(archive.read('recipe.json'))
+              literal=archive.read('literal.bin')
+          assert recipe['format']=='soma-release-byte-transfer-v1'
+          assert recipe['baseSha256']==expected_base
+          assert recipe['targetSha256']==expected_target
+          assert recipe['targetBytes']==121436184
+          assert recipe['literalBytes']==len(literal)
+          assert len(recipe['operations'])<10000
+          total=0
+          with base.open('rb') as source,target.open('wb') as out:
+              for kind,offset,length in recipe['operations']:
+                  assert type(offset) is int and type(length) is int
+                  assert offset>=0 and length>=0
+                  if kind=='copy':
+                      assert offset+length<=base.stat().st_size
+                      source.seek(offset);block=source.read(length)
+                  elif kind=='data':
+                      assert offset+length<=len(literal)
+                      block=literal[offset:offset+length]
+                  else:raise ValueError('Unknown transfer operation')
+                  assert len(block)==length
+                  total+=length
+                  assert total<=recipe['targetBytes']
+                  out.write(block)
+          assert total==121436184
+          assert digest(target)==expected_target
+          print('Exact notarized ZIP verified:',expected_target,total)
+          PY
+      - name: Upload verified distribution archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release upload v0.5.0 "$RUNNER_TEMP/soma-050/Soma-macOS-arm64.zip"
+          gh api repos/Jeremiah-Sakuda/soma/releases/434582737 > "$RUNNER_TEMP/soma-050/release.json"
+          python3 - "$RUNNER_TEMP/soma-050/release.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          assert r['tag_name']=='v0.5.0' and r['draft'] and not r['prerelease']
+          assert r['target_commitish']=='1305844ad25e4b2758053c24ff62c62afa889772'
+          a=next(a for a in r['assets'] if a['name']=='Soma-macOS-arm64.zip')
+          assert a['state']=='uploaded' and a['size']==121436184
+          assert a['digest']=='sha256:648b144e722d1501072f1d9241bd097dabade424777efbc13c4f53d6dad107fd'
+          assert any(a['name']=='Soma-macOS-arm64.zip.sha256' and a['state']=='uploaded' for a in r['assets'])
+          PY
+      - name: Remove temporary transfer and publish as Latest
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release delete-asset v0.5.0 Soma-0.5.0-transfer.zip --yes
+          gh release edit v0.5.0 --draft=false --latest

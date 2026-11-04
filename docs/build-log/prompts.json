@@ -1820,6 +1820,20 @@
   "question": "The lifted graph is ready for handoff: clicks cut/restore edges, dragging rotates it, and the pointer safeguards passed review. Please ask Claude to leave public/release.json to me for the graph checkpoint and final release; his engine merge can bring its source changes without regenerating that file. I’ll regenerate it after each integration. Also send the engine go/no-go at 4:30 PM ET.",
   "prompt": "public/release.json now belongs to Codex, and when the engine merges it only the source comes across, so I’ll send the go/no-go at 4:30 PM ET. I’m re-rendering with the size, label and crank fixes now.",
   "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+},
+{
+  "id": "DEMO-DELIVERY-PREP-20261104-01",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "Okay so what else can you do in the meantime",
+  "timestamp_note": "Exact receipt timestamp unavailable; first prep clock check November 4, 2026 17:41:02 UTC."
+},
+{
+  "id": "DEMO-DELIVERY-PREP-20261104-02",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "Proceed",
+  "timestamp_note": "Exact receipt timestamp unavailable; work performed November 4, 2026 UTC."
 }
 ]
 }

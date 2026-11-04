@@ -14,7 +14,7 @@ The stronger limitations remain: external browser collection is selected-URL tex
 
 ## Historical audit snapshot
 
-Read-only implementation audit, October 26, 2026, after runtime `cdfc87c`. This audit made no provider calls and did not rerun tests. Prior results below refer to recorded checks in [BUILD_LOG.md](BUILD_LOG.md#L585). The subsequent P029 live scenarios are reported separately in [AGENTIC_EVALUATION.md](AGENTIC_EVALUATION.md). This file describes gaps against the existing PRD; it does not change scope or acceptance.
+Read-only implementation audit, October 26, 2026, after runtime `cdfc87c`. This audit made no provider calls and did not rerun tests. Prior results below refer to recorded checks in the build log. The subsequent P029 live scenarios are reported separately in [AGENTIC_EVALUATION.md](AGENTIC_EVALUATION.md). This file describes gaps against the existing PRD; it does not change scope or acceptance.
 
 **Soma has a working bounded Spark investigation engine, but the complete autonomous PRD loop is not implemented yet.** Model-selected source reads, diagnostics, experiment proposals, hypothesis revisions and activity selection are real runtime capabilities. Scheduled monitoring, automatic worker invocation, fully adaptive follow-up, returned-work images and general academic fact reconciliation remain incomplete.
 

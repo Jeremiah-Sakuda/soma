@@ -71,7 +71,7 @@ The models decide; the application constrains. Spark's output is validated again
 
 ## Built during the event
 
-Product code was written during the event, beginning at kickoff on October 26, 2026, after the organizers announced that hacking had officially started ([decision record](DECISIONS.md)). The submission deadline is November 4. The dated build log (`docs/BUILD_LOG.md`), verbatim prompt archive (`docs/build-log/prompts.json`) and git history record the work. Pre-event material is limited to planning documents in the first commit. A second history root (October 29) is this project's own companion work from the same week, merged here so the history stays in one place (see the README). Third-party components are listed in `THIRD_PARTY_NOTICES.md`.
+Product code was written during the event, beginning at kickoff on October 26, 2026, after the organizers announced that hacking had officially started ([decision record](DECISIONS.md)). The submission deadline is November 4. The git history records the work. Pre-event material is limited to planning documents in the first commit. A second history root (October 29) is this project's own companion work from the same week, merged here so the history stays in one place (see the README). Third-party components are listed in `THIRD_PARTY_NOTICES.md`.
 
 ## What works now and what comes next
 

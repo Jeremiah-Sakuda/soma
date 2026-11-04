@@ -30,7 +30,7 @@ This is an application audit journal. It is not a separately signed, externally 
 
 ## Verification
 
-Tests cover durable progress before provider completion, exact publication boundaries, one bounded repair, unchanged zero-call reuse, journal-outage halt, discarded diagnostic protection, current-version disclosure, account/generation isolation, history pagination, export protection and source refresh. Real Firestore checks and a hosted synthetic model check are reported with executed results in [Build Log](BUILD_LOG.md); test transport and real inference results remain separate. Operational limits and open release gates remain in [Production readiness](PRODUCTION_READINESS.md).
+Tests cover durable progress before provider completion, exact publication boundaries, one bounded repair, unchanged zero-call reuse, journal-outage halt, discarded diagnostic protection, current-version disclosure, account/generation isolation, history pagination, export protection and source refresh. Real Firestore checks and a hosted synthetic model check are reported with executed results in the build log; test transport and real inference results remain separate. Operational limits and open release gates remain in [Production readiness](PRODUCTION_READINESS.md).
 
 ## P037 architecture consolidation
 

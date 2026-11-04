@@ -25,5 +25,9 @@ firebase-debug*.log
 # Keep the credential-free setup template available in clean checkouts.
 !.env.example
 
+# The development log and prompt archive are kept locally, not published.
+/docs/BUILD_LOG.md
+/docs/build-log/
+
 # Local editor launch configuration
 /.claude/

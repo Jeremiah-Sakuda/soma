@@ -29,7 +29,7 @@ Both adaptive publications survived JSON serialize/reload. They were **in-memory
 
 Source references in the authority case were already ingested, authorized records. The model chose the registered follow-up read. This is not browser computer use. Authority context was supplied by the synthetic fixture; normal ingestion still needs the production authority/context wiring identified in the audit.
 
-These checks establish valid actions and preserved evidence in these cases. They do not establish scientific/instructional quality across subjects, actual learning improvement, robust all-course reliability or the PRD's full release gate. Earlier failures remain in [BUILD_LOG.md](BUILD_LOG.md); they were not erased or rerun as fresh evidence.
+These checks establish valid actions and preserved evidence in these cases. They do not establish scientific/instructional quality across subjects, actual learning improvement, robust all-course reliability or the PRD's full release gate. Earlier failures remain in the build log; they were not erased or rerun as fresh evidence.
 
 ## Executed checks and reproducibility
 

@@ -113,7 +113,7 @@ Details and method: [verification record](docs/VERIFICATION.md) · [general scre
 
 ## Built during the hackathon
 
-Product code was written for the Meta Global AI Developer Hackathon, beginning at kickoff on October 26, 2026. The submission deadline is November 4. The first commit (October 26, 11:10 ET) holds only pre-event planning documents. A second history root (October 29) comes from this project's own companion repository, also built during the event, and was merged here so the full build log stays in one place. Third-party packages are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The dated build log (`docs/BUILD_LOG.md`), verbatim prompt archive (`docs/build-log/prompts.json`) and git history record the work.
+Product code was written for the Meta Global AI Developer Hackathon, beginning at kickoff on October 26, 2026. The submission deadline is November 4. The first commit (October 26, 11:10 ET) holds only pre-event planning documents. A second history root (October 29) comes from this project's own companion repository, also built during the event, and was merged here so the history stays in one place. Third-party packages are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The git history records the work.
 
 - **The visual exploration engine** (`/explore`): capture or upload, Spark interpretation, the checked solver, generated scenes, manipulation, contextual follow-ups and versioned saves.
 - **Checked BFS and Dijkstra engines**, the model-chosen cost experiment, and weighted animation that replays the solver's own settlement and relaxation steps.

@@ -12,6 +12,7 @@ The native recordings use a signed **0.5.0 rehearsal candidate**, not a final no
 | Native graph, `19-54-18.972Z` | `ada3c97`; actual macOS screen, original synthetic slide in a fullscreen original-slide viewer; live Muse | Source interpretation, checked cost 7, native lift, successful later cut to 9 and restoration to 7 | `native/2026-11-04T19-54-18.972Z/native-clips.json` |
 | Native engine, `20-08-23.676Z` | `1d52f46`; actual macOS screen, original synthetic PNG in fullscreen Preview; live Muse | Source-to-model lift and four visible crankshaft poses: 0°, 360°, 630°, 720° | `native/2026-11-04T20-08-23.676Z/engine-clips.json` |
 | Native circuit, `20-18-10.826Z` | `1d52f46`; actual macOS screen, original synthetic PNG in fullscreen Preview; live Muse | Balanced native voltage lift; app-panel changes mirrored to native current/voltage; Muse chose R4 and exact balance at 8 Ω | `native/2026-11-04T20-18-10.826Z/circuit-clips.json` |
+| Fresh native cold start, `20-42-06.666Z` | `bff7b10`; newly packaged signed candidate, actual Preview source; live Muse | First flat drawing appears; final four-step annotations and free 3D lift work. Flat caption overlaps the bottom toolbar and needs the separate layout fix | `native/2026-11-04T20-42-06.666Z/events.json` and `cold-start-receipt-summary.json` |
 
 Each index records exact paths, hashes, source identity, timing and limitations. Native graph loaded hosted manifest `b41611f8a7b321a8875654d8940711ac58fd7fef1210b7be16ec4402b72069c2`; engine loaded `314195eaa8ae4501de3c98aba6807f0d1109a2e166f86f7314bd8a95b0253175`. Their distinct source versions must remain explicit when footage is combined.
 
@@ -91,9 +92,17 @@ The take's `clips/` directory contains these separate, silent, original-speed ex
 
 `clips/circuit-editorial-35s.mp4` contains the three 10-second R4 excerpts, a three-second generation-wait disclosure and two one-second cut cards. It discloses 37.582 seconds of explanation service time plus 33.489 seconds of investigation service time. All clips retain the original viewport with a provenance footer. Encoded current/balance endpoints and panel visibility were inspected; the full editorial decoded without errors. R4 controls are visible in the chosen excerpts. The R2 excerpt establishes a panel-present change and resulting native state, without claiming its exact button is readable throughout. Retain the panel-control limitation when editing.
 
+### Fresh packaged cold-start verification
+
+The `20-42-06.666Z` take uses a newly packaged signed 0.5.0 candidate at `bff7b10efc56ab8fb645890c691f7611d5c606f9`. Its hosted/local release manifest matched `f922a281a03c47d03ba492901f27f669084a72115f137187098210ead5414191` (`soma-rehearsal-recovery-2026-11-04`). It uses the same original circuit PNG in actual fullscreen Preview. The raw recording stopped normally at event-clock 194.440 seconds and remains private.
+
+A fresh live “Why is there no current through R5?” generation took 46.966 seconds of service time, four provider calls and $0.0610605. The first flat step now visibly annotates D = 0 V (`cold-start-first-flat.png`, around 94 seconds); the final step shows the node voltages and branch currents (`cold-start-final-flat.png`, around 121 seconds). The ordinary first-draw cold-start failure is therefore verified as recovered on this packaged candidate. It is not inferred from a subsequent 3D redraw.
+
+The same screenshots also reveal a separate defect: the flat explanation caption overlaps the bottom toolbar and extends beyond the visible area. These are valid cold-start evidence, **not clean flat-demo footage**. The caption-layout fix is being developed offline after this recording, without another live generation; it is not present in the filmed candidate and still requires its own verification. The later free 3D lift is visible and settled in `cold-start-lift.png`, with a readable caption. No additional editorial was created for this take; the original raw, receipt and screenshots retain both the success and the remaining defect.
+
 ## Model use and allowance checkpoint
 
-Seven admitted exploration generations produced the following retained Meta receipts. A generation can contain multiple provider calls; the daily exploration allowance counts admissions, not each provider call.
+Eight admitted exploration generations produced the following retained Meta receipts. A generation can contain multiple provider calls; the daily exploration allowance counts admissions, not each provider call.
 
 | Generation | Provider calls | Service time | Recorded cost (USD) |
 | --- | ---: | ---: | ---: |
@@ -104,15 +113,16 @@ Seven admitted exploration generations produced the following retained Meta rece
 | Engine model | 2 | 46.284 s | 0.05463850 |
 | Circuit initial explanation | 4 | 37.582 s | 0.05753700 |
 | Circuit investigation | 3 | 33.489 s | 0.04178175 |
-| **Total** | **22** | **257.076 s** | **0.37661175** |
+| Fresh packaged circuit cold start | 4 | 46.966 s | 0.06106050 |
+| **Total** | **26** | **304.042 s** | **0.43767225** |
 
-Receipt sources: `native/2026-11-04T20-08-23.676Z/rehearsal-receipts-summary.json`, plus the circuit take's `circuit-receipts-summary.json` and `circuit-investigation-summary.json`. This total excludes narration and is not the project's lifetime spend or provider billing balance. Clip encoding and the browser replay added no inference cost. The existing companion session had 12 of 12 admissions available at 19:54:21 UTC, then 7 before the circuit take. Its last recorded allowance check at **20:33:29.703 UTC showed 5 remaining** after these seven generations. This is a dated checkpoint, not a guarantee of the current remaining allowance. No allowance reset or limit increase was performed for this record.
+Receipt sources: `native/2026-11-04T20-08-23.676Z/rehearsal-receipts-summary.json`, the circuit take's `circuit-receipts-summary.json` and `circuit-investigation-summary.json`, and `native/2026-11-04T20-42-06.666Z/cold-start-receipt-summary.json` (full artifact `cold-start-circuit-v1.json`). This total excludes narration and is not the project's lifetime spend or provider billing balance. Clip encoding and the browser replay added no inference cost. The existing companion session had 12 of 12 admissions available at 19:54:21 UTC, then 7 before the circuit take and 5 before the fresh cold start. Its last recorded allowance check at **20:45:02.502 UTC showed 4 remaining** after these eight generations. This is a dated checkpoint, not a guarantee of the current remaining allowance. No allowance reset or limit increase was performed for this record.
 
 ## Failures, privacy and remaining checks
 
 - **Physical held-button drag/reset remains unverified.** Passive engine input capture showed a trusted press followed by a move with `buttons=0`, triggering the intended lost-release cancellation. An alternate Preview-target attempt delivered no overlay events. These automation attempts do not demonstrate successful physical drag or establish that a human held-button drag is broken. Keep the guard; verify with an actual held-button interaction.
 - The graph's first-click/hover issues motivated `07344ff`; its renderer/controller checks do not replace acceptance on the packaged candidate. Engine pose changes do not establish graph pointer acceptance after that fix.
-- Verify the separate cold-start flat-overlay fix on a newly packaged candidate. Preserve the failed first flat drawing in this take's evidence; later 3D success does not close that gate.
+- The fresh `bff7b10` packaged take closes the first-flat-draw recovery check. Verify the separate caption-layout fix and retain the overlapping-caption frames as evidence of the remaining defect; the later readable 3D caption does not establish flat-layout acceptance.
 - Complete final paired hosted/companion acceptance after the accepted source freeze; verify signing/notarization and final release identity independently of these rehearsal packages.
 - Keep raw videos, traces and failed takes. The earlier `native/2026-11-04T19-52-42.927Z/` framing preflight contains private background content and is marked **PRIVATE — DO NOT SHARE**. See `native/PRIVATE_MEDIA_NOTICE.json`. A successful clip review does not clear the entire raw recording for publication.
 - Human review and final edit selection remain outstanding. Preserve original synthetic-source labels, replay/live distinctions, illustrative-model scope and explicit cuts. No recording in this document has been publicly published as the final submission.

@@ -285,8 +285,10 @@ document.addEventListener('mouseup', (event) => {
 });
 document.addEventListener('dblclick', (event) => {
   const lifted = activeLift();
-  // Edge double-clicks must not toggle twice. View reset belongs to the sheet.
-  if (lifted?.hit(event.clientX, event.clientY) === 'sheet') lifted.resetView();
+  const hit = lifted?.hit(event.clientX, event.clientY);
+  // Models reset from a part or their sheet. Graph edges keep their single-toggle
+  // gesture above; only the graph's sheet resets its view.
+  if (hit && (lifted === window.SomaModel || hit === 'sheet')) lifted.resetView();
 });
 window.addEventListener('blur', cancelHeld);
 document.addEventListener('mouseleave', cancelHeld);

@@ -10,7 +10,7 @@ Now I can ask, “Why does it flip right there?” Soma answers using the experi
 
 The higher a node sits, the more it costs to reach it. When I cut this connection, the route has to go around, so the cost rises to nine. Put it back, and it drops to seven.
 
-Now take this engine. Why does it need two full turns to complete a cycle? After the first turn, the piston’s back at the top, but there’s still work to do. Muse uses this illustrative cutaway to show why the second turn matters.
+Muse Spark reads the slide and writes a structured scene plan. It chooses the placement, the parts to highlight, and the crank angle for each step. Soma validates that plan, then uses Three.js to render this built-in cutaway over the slide. For graphs and circuits, separate solvers calculate the results.
 
 Or take this circuit. There’s no current through the middle resistor because both ends are at the same voltage. Muse picks a resistor we can change to test that. Watch the current: it flows one way, stops at the balance point, then flows the other way.
 

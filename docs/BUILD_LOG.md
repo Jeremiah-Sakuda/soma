@@ -3414,3 +3414,31 @@ Deviation: none; this adds recording directions to the existing script.
 3. No media, timing or product changes; no inference or recording.
 
 Deviation: none.
+
+
+## DEMO-MISSING-ENGINE-AUDIO-20261104-01 / DEMO-MISSING-CIRCUIT-AUDIO-20261104-01 — Correct omitted app narration
+
+1. Confirmed an editing omission: the delivered app-audio MP4 contained graph narration only. Engine and circuit playback had been recorded and delivered as separate WAVs, but were not mixed into the requested video. The earlier “ready” response did not adequately surface this gap.
+2. Rebuilding the three-minute edit with actual recorded engine and circuit explanations in its soundtrack, matching their native visuals. Complete speech is preserved at normal speed; only inter-step waiting silence may be shortened. The graph section and human voiceover cues must change to fit. Old exports are retained privately.
+3. Independent review is checking each section for actual narration presence, complete semantic steps, visual alignment and the three-minute limit. Corrected output remains pending at this checkpoint. No new model calls or speech generation.
+
+Deviation: the earlier fixed picture timing is being revised to satisfy the user's correction. User voiceover must leave space for Soma's explanations.
+
+
+## DEMO-LOCK-PICTURE-20261104-01 — Preserve the Premiere timeline
+
+1. User clarified that voiceover recording is already halfway complete. Canceled the proposed retiming immediately: the existing 180-second picture, first-half narration and script timestamps are locked.
+2. Preparing an audio-only correction with complete excerpts of actual recorded engine/circuit narration in the current 1:45–2:10 and 2:10–2:38 slots. No new speech or speed changes.
+3. Existing picture and human recording remain usable. Final audio verification is pending at this checkpoint.
+
+Deviation: supersedes proposed graph shortening.
+
+## DEMO-BACKEND-AND-INPLACE-AUDIO-20261104-01 — Explain rendering and update the imported asset
+
+1. Verified backend copy against model-authoring.ts and lift-model.mjs: Muse returns the scene plan, placement, highlights and crank poses; Soma validates and renders its built-in engine through Three.js. Separate deterministic solvers handle graph/circuit results. Supplied a roughly 25-second replacement engine paragraph and updated recording copies without changing any other spoken section.
+2. User explicitly requested replacement of the same app-audio MP4 already imported into Premiere. Preparing backup, audio-only remux and atomic replacement at that exact path; preserve video and Dijkstra narration. Premiere's own media-cache refresh remains outside a filesystem replacement guarantee.
+3. The engine paragraph replaces the former spoken engine explanation; app audio should be lowered beneath the human voiceover. No picture/timing changes or new generation. Audio replacement is still pending verification.
+
+Deviation: user authorizes overwriting the imported asset, superseding the proposed separate-file-only handoff.
+
+Audio-patch verification: independent review confirms the 180-second video packet stream is exactly unchanged and the first 105 seconds of audio retain zero lag and approximately unit correlation. Engine first/last complete utterances occupy the existing 105–130 second slot; the complete circuit supply explanation occupies 132–141.8 seconds, ending before unbalanced-resistance shots. These are selected recorded excerpts, not the full longer replay tracks. Source correlation exceeds 0.99997, with no speech speed changes; full decode passes and audio peak is −2.01 dBFS. Backup is retained before replacing the original imported MP4 at the user's explicit request. Premiere may retain cached audio until it refreshes the source.

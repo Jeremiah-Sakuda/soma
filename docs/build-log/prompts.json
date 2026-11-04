@@ -2006,6 +2006,34 @@
       "kind": "user",
       "prompt": "Give this in a format I can paste into apple notes",
       "timestamp_note": "Exact receipt timestamp unavailable; plain-text formatting request."
+    },
+    {
+      "id": "DEMO-MISSING-ENGINE-AUDIO-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Wait the soma engine explanations are completely missing wtf",
+      "timestamp_note": "Exact receipt timestamp unavailable; user identified missing app narration in the assembled edit."
+    },
+    {
+      "id": "DEMO-MISSING-CIRCUIT-AUDIO-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Same with the circuit",
+      "timestamp_note": "Exact receipt timestamp unavailable; user identified missing app narration in the assembled edit."
+    },
+    {
+      "id": "DEMO-LOCK-PICTURE-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Bro I am already halfway through the voice recording on premiere pro lock in",
+      "timestamp_note": "Exact receipt timestamp unavailable; user is recording voiceover in Premiere and requires the existing picture timing."
+    },
+    {
+      "id": "DEMO-BACKEND-AND-INPLACE-AUDIO-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Also, we dont do enough to explain what's happening on the backend. You need to remember the judges may not even fully read the docs or look through the repo, so the demo video needs to explain everything Muse is doing and how the graphics are generated. Give me something I can slot over the engine example. And also for the audio, edit the original video you sent me so that the audio updates on premiere and I dont need to drop it. The one that already has the Dijstra's explanation  ",
+      "timestamp_note": "Exact receipt timestamp unavailable; user is recording voiceover in Premiere and requires the existing picture timing."
     }
   ]
 }

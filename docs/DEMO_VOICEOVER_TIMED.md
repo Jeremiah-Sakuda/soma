@@ -60,19 +60,11 @@ When I cut this connection, the route has to go around, so the cost rises to nin
 
 Put it back, and it drops to seven.
 
-## 1:45–2:10
+## 1:45–2:10 — Backend explanation
 
-*[Wait for the engine slide. Start the question as the cutaway lifts.]*
+*[Start when the engine slide appears. This replaces the former engine paragraph. Continue through the changing poses; finish before the circuit appears. Lower Soma’s engine audio beneath this voiceover so the voices do not compete.]*
 
-Now take this engine. Why does it need two full turns to complete a cycle?
-
-*[Wait for “360° · One turn” — at 1:54.]*
-
-After the first turn, the piston’s back at the top, but there’s still work to do.
-
-*[Continue as the second-turn/exhaust pose appears at 2:00. Let the completed cycle at 2:05 sit for a moment.]*
-
-Muse uses this illustrative cutaway to show why the second turn matters.
+Muse Spark reads the slide and writes a structured scene plan. It chooses the placement, the parts to highlight, and the crank angle for each step. Soma validates that plan, then uses Three.js to render this built-in cutaway over the slide. For graphs and circuits, separate solvers calculate the results.
 
 ## 2:10–2:38
 

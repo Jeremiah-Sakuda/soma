@@ -57,23 +57,32 @@ function drivePart<T extends THREE.Material>(material: T) {
   return material;
 }
 /** A hand shown with the cam drive (on its sprocket) or while the drive is away (on the part). */
-function drivenHand(hand: THREE.Mesh, withDrive: boolean) {
-  (hand.material as THREE.Material).userData[withDrive ? 'drive' : 'driveAway'] = true;
+function drivenHand(hand: THREE.Group, withDrive: boolean) {
+  hand.traverse((item) => {
+    if (item instanceof THREE.Mesh) (item.material as THREE.Material).userData[withDrive ? 'drive' : 'driveAway'] = true;
+  });
   return hand;
 }
-/** A bold white clock hand on a sprocket's face, from its hub to its rim, so each turn is
- * easy to count. */
+/** A bold white clock hand with a dark outline, readable on light and dark parts alike, so each
+ * turn is easy to count. */
 function pointer(length: number, z: number) {
-  const w = Math.max(0.035, length * 0.1), s = new THREE.Shape();
-  s.moveTo(-w / 2, 0);
-  s.lineTo(w / 2, 0);
-  s.lineTo(w / 2, length * 0.72);
-  s.lineTo(w * 1.6, length * 0.72);
-  s.lineTo(0, length);
-  s.lineTo(-w * 1.6, length * 0.72);
-  s.lineTo(-w / 2, length * 0.72);
-  s.closePath();
-  const hand = new THREE.Mesh(new THREE.ShapeGeometry(s), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.7, roughness: 0.4, side: THREE.DoubleSide }));
+  const shape = (grow: number) => {
+    const w = Math.max(0.035, length * 0.1) + grow, s = new THREE.Shape();
+    s.moveTo(-w / 2, -grow);
+    s.lineTo(w / 2, -grow);
+    s.lineTo(w / 2, length * 0.7);
+    s.lineTo(w * 1.7, length * 0.7);
+    s.lineTo(0, length + grow * 1.6);
+    s.lineTo(-w * 1.7, length * 0.7);
+    s.lineTo(-w / 2, length * 0.7);
+    s.closePath();
+    return s;
+  };
+  const hand = new THREE.Group();
+  const edge = new THREE.Mesh(new THREE.ShapeGeometry(shape(0.022)), new THREE.MeshBasicMaterial({ color: 0x1d2430, side: THREE.DoubleSide }));
+  const face = new THREE.Mesh(new THREE.ShapeGeometry(shape(0)), new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
+  face.position.z = 0.004;
+  hand.add(edge, face);
   hand.position.z = z;
   return hand;
 }
@@ -203,7 +212,9 @@ function rod(): THREE.Object3D {
 function crank(): THREE.Object3D {
   const g = new THREE.Group();
   const m = metal(COLORS.crank, 0.32, 0.6);
-  g.add(cylinderZ(0.14, -0.66, DRIVE_Z, m));
+  g.add(cylinderZ(0.14, -0.66, 0.28, m));
+  // The shaft runs on to its sprocket only while the drive is shown.
+  g.add(cylinderZ(0.14, 0.28, DRIVE_Z, drivePart(metal(COLORS.crank, 0.32, 0.6))));
   g.add(cylinderZ(0.12, -0.13, 0.13, m, 0, ENGINE.crank));
   // The back web carries the counterweight; the front one is a slim arm, so the connecting
   // rod stays in view at every angle.
@@ -225,7 +236,7 @@ function crank(): THREE.Object3D {
   const sprocket = gear(0.22, 18, 0.07, drivePart(metal(COLORS.bronze, 0.35, 0.6)));
   sprocket.position.z = DRIVE_Z;
   // Its hand points up at top dead centre; another shows on the crank itself when the drive is away.
-  g.add(sprocket, drivenHand(pointer(0.2, DRIVE_Z + 0.05), true), drivenHand(pointer(0.46, 0.235), false));
+  g.add(sprocket, drivenHand(pointer(0.2, DRIVE_Z + 0.05), true), drivenHand(pointer(0.46, 0.29), false));
   return g;
 }
 
@@ -263,14 +274,15 @@ function cam(role: 'intake_cam' | 'exhaust_cam'): THREE.Object3D {
   const l = new THREE.Mesh(new THREE.ExtrudeGeometry(lobe, { depth: 0.2, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.012, bevelSegments: 2 }), m);
   l.position.z = -0.1;
   g.add(l);
-  g.add(cylinderZ(0.07, -0.58, DRIVE_Z, m));
+  g.add(cylinderZ(0.07, -0.58, 0.16, m));
+  g.add(cylinderZ(0.07, 0.16, DRIVE_Z, drivePart(metal(COLORS.cam, 0.3, 0.6))));
   // The big cam sprocket, behind the cam: twice the crank's, so the cam turns once per two
   // crank turns. Its bright mark shows how far it has turned.
   const sprocket = gear(0.44, 36, 0.07, drivePart(metal(COLORS.bronze, 0.35, 0.6)));
   sprocket.position.z = DRIVE_Z;
   // Its hand points up at 0°, like the crank's, so one crank turn leaves it pointing down.
   const up = (-enginePose(role, 0).rotZ * Math.PI) / 180;
-  const onSprocket = pointer(0.42, DRIVE_Z + 0.05), onCam = pointer(0.3, 0.135);
+  const onSprocket = pointer(0.42, DRIVE_Z + 0.05), onCam = pointer(0.36, 0.17);
   onSprocket.rotation.z = up;
   onCam.rotation.z = up;
   g.add(sprocket, drivenHand(onSprocket, true), drivenHand(onCam, false));
@@ -332,15 +344,10 @@ function charge(theta: number): THREE.Object3D {
   const body = new THREE.Mesh(new THREE.CylinderGeometry(0.49, 0.49, gap, 48, 1, true), material);
   body.position.y = 0.012 + gap / 2;
   g.add(body);
-  const roof = new THREE.Shape();
-  roof.moveTo(-0.49, 0);
-  roof.lineTo(0.49, 0);
-  roof.lineTo(0.06, ENGINE.roof - ENGINE.deck);
-  roof.lineTo(-0.06, ENGINE.roof - ENGINE.deck);
-  roof.closePath();
-  const cap = new THREE.Mesh(new THREE.ExtrudeGeometry(roof, { depth: 0.98, bevelEnabled: false }), material);
-  cap.position.set(0, 0.012 + gap, -0.49);
-  g.add(cap);
+  // The chamber roof narrows like the head's section, and stays inside the round bore.
+  const dome = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.49, ENGINE.roof - ENGINE.deck, 48, 1, true), material);
+  dome.position.y = 0.012 + gap + (ENGINE.roof - ENGINE.deck) / 2;
+  g.add(dome);
   return g;
 }
 
@@ -368,8 +375,8 @@ function spark(theta: number): THREE.Object3D {
   g.add(new THREE.Mesh(new THREE.SphereGeometry(0.035 + 0.035 * strength, 16, 12), core));
   const map = sparkGlowTexture();
   if (map) {
-    const size = 0.28 + 0.3 * strength;
-    const halo = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshBasicMaterial({ map, transparent: true, opacity: 0.55 + 0.45 * strength, depthWrite: false, blending: THREE.AdditiveBlending }));
+    const size = 0.2 + 0.24 * strength;
+    const halo = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshBasicMaterial({ map, transparent: true, opacity: 0.4 + 0.4 * strength, depthWrite: false, blending: THREE.AdditiveBlending }));
     halo.position.z = 0.12;
     g.add(halo);
   }
@@ -431,8 +438,12 @@ export function createEnginePart(object: SpatialObject, selected: boolean): THRE
   const theta = crankDegrees(object.parameterValues?.crank ?? 0);
   const root = new THREE.Group(), inner = instance(role, theta);
   root.add(inner);
+  // Views fade parts through transparency, so painting order is explicit: flows and the spark
+  // over the block they run across, the gas over the bore it fills, hands over everything.
+  const order = role === 'spark' ? 5 : role === 'intake_flow' || role === 'exhaust_flow' ? 4 : role === 'timing_belt' ? 3 : role === 'charge' ? 2 : 0;
   root.traverse((item) => {
     if (!(item instanceof THREE.Mesh)) return;
+    item.renderOrder = item.material instanceof THREE.MeshBasicMaterial ? 6 : order;
     item.userData.objectId = object.id;
     item.castShadow = role !== 'charge' && role !== 'spark' && role !== 'intake_flow' && role !== 'exhaust_flow';
     item.receiveShadow = true;

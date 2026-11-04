@@ -349,7 +349,8 @@ function syncParts(data) {
     v.target = pin ? new Vector3(pin.x, o.position.y, pin.z) : new Vector3(o.position.x, o.position.y, o.position.z);
     // A checked height reads with its value: "B 8.394 V".
     // A picked part says what it does.
-    v.label.textContent = s.pinned && o.visible ? `${o.label} ${o.detail}` : o.selected ? `${o.label} — ${o.detail}` : o.label;
+    // An engine part's name says it all; its built-in description adds nothing on screen.
+    v.label.textContent = s.pinned && o.visible ? `${o.label} ${o.detail}` : o.selected && !o.renderStyle?.startsWith('engine-') ? `${o.label} — ${o.detail}` : o.label;
     v.label.classList.toggle('is-selected', Boolean(o.selected));
     if (s.pinned && !v.stem) {
       v.stem = new Mesh(new CylinderGeometry(0.04, 0.04, 1, 8), new MeshBasicMaterial({ color: 0x8a8f86, transparent: true, opacity: 0 }));
@@ -518,11 +519,13 @@ function caption(data) {
     dial = document.createElement('div');
     dial.id = 'lift-turn';
     const strokes = [['intake', 'Intake', '#6fb6ff'], ['compression', 'Compression', '#3f8ff0'], ['power', 'Power', '#ff7a2a'], ['exhaust', 'Exhaust', '#8f857a']];
-    dial.innerHTML = `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="#d9d2c1" stroke-width="3"/><line x1="20" y1="2" x2="20" y2="8" stroke="#1d2430" stroke-width="2"/><line id="lift-turn-hand" x1="20" y1="20" x2="20" y2="7" stroke="#1d2430" stroke-width="3" stroke-linecap="round"/><circle cx="20" cy="20" r="2.8" fill="#1d2430"/></svg><div class="lift-turn-info"><span id="lift-turn-text"></span><div class="lift-strokes">${strokes.map(([id, name]) => `<span class="lift-stroke"><i data-stroke="${id}"></i><b>${name}</b></span>`).join('')}</div></div>`;
+    dial.innerHTML = `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="#d9d2c1" stroke-width="3"/><line x1="20" y1="2" x2="20" y2="8" stroke="#1d2430" stroke-width="2"/><line id="lift-turn-hand" x1="20" y1="20" x2="20" y2="7" stroke="#1d2430" stroke-width="3" stroke-linecap="round"/><circle cx="20" cy="20" r="2.8" fill="#1d2430"/></svg><div class="lift-turn-info"><span id="lift-turn-text"></span><div class="lift-turns"><span>Turn 1</span><span>Turn 2</span></div><div class="lift-strokes">${strokes.map(([id, name]) => `<span class="lift-stroke"><i data-stroke="${id}"></i><b>${name}</b></span>`).join('')}</div></div>`;
     dial.querySelectorAll('.lift-stroke i').forEach((bar, i) => { bar.style.background = strokes[i][2]; });
     box.insertBefore(dial, note);
   }
   if (dial) dial.hidden = !engine;
+  // An engine's card keeps one height from step to step, so it doesn't jump as the crank turns.
+  box.classList.toggle('is-engine', engine);
   title.textContent = data.caption?.stepLabel ?? data.title;
   body.textContent = data.caption?.text ?? '';
   note.textContent = data.note;

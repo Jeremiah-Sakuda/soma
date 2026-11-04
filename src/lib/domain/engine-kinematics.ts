@@ -151,7 +151,7 @@ export function engineLabelPoint(role: EngineRole, theta: number): { x: number; 
     case 'spark_plug': return { x: 0, y: 3.7, z: 0.1 };
     case 'timing_belt': { const c = camCentre(-1); return { x: c.x - 0.33, y: c.y + 0.34, z: ENGINE.drive }; }
     case 'charge': return { x: 0.15, y: (p.y + ENGINE.deck) / 2, z: 0.25 };
-    case 'spark': return { x: 0, y: ENGINE.roof - 0.08, z: 0.12 };
+    case 'spark': return { x: -0.16, y: ENGINE.roof - 0.05, z: 0.12 };
     case 'intake_flow': return { x: -1.0, y: 3.12, z: 0.14 };
     case 'exhaust_flow': return { x: 1.0, y: 3.12, z: 0.14 };
   }

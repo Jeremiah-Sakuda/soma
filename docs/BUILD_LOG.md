@@ -3405,3 +3405,12 @@ Deviation: none.
 3. Kept video and timing unchanged. Clarified that the silent export is the recording reference because the optional app-audio export already contains speech in two voiceover windows. No new inference, recording or rendered video. Frame-review setup initially lacked Pillow; direct ffmpeg still extraction succeeded. No timed human read-through is claimed.
 
 Deviation: none; this adds recording directions to the existing script.
+
+
+## DEMO-NOTES-FORMAT-20261104-01 — Apple Notes copy
+
+1. Prepared plain text for direct paste into Apple Notes, with timestamps and bracketed non-spoken screen cues.
+2. Preserved the spoken script and saved a local VOICEOVER_APPLE_NOTES.txt copy beside the video.
+3. No media, timing or product changes; no inference or recording.
+
+Deviation: none.

@@ -1999,6 +1999,13 @@
       "kind": "user",
       "prompt": "Perhaps just include cues of what I should wait for to happen on screen",
       "timestamp_note": "Exact receipt timestamp unavailable; user steered the alignment review toward visual recording cues."
+    },
+    {
+      "id": "DEMO-NOTES-FORMAT-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Give this in a format I can paste into apple notes",
+      "timestamp_note": "Exact receipt timestamp unavailable; plain-text formatting request."
     }
   ]
 }

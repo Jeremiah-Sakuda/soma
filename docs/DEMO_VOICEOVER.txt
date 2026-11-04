@@ -4,7 +4,7 @@ I built Soma for questions I have while studying. Why doesn’t it take the dire
 
 Muse Spark reads the diagram. Wonder reviews that reading against the image, and Soma calculates the route. Through D costs seven; the direct edge costs eleven.
 
-What would make the route go through E? Muse chooses which connection to vary. Soma calculates where the two routes tie. Moving across that point changes the route.
+Now I ask Soma to find a tipping point. Muse chooses the direct connection. Soma calculates the tie at seven. At six, the direct route wins. At eight, the four-edge route wins.
 
 Why does it flip right there? The follow-up uses the value I just changed. I can keep asking about this particular experiment.
 

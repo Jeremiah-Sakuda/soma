@@ -133,3 +133,20 @@ Receipt sources: `native/2026-11-04T20-08-23.676Z/rehearsal-receipts-summary.jso
 `8e8ac12` keeps flat captions inside the captured display and above the default compact bar. It preserves a requested placement that fits; otherwise it uses available space beside the annotations and clamps to the viewport. Long captions remain scrollable in small windows. All 25 actual-renderer browser tests passed, including five new cases covering long text, top/bottom anchors, small viewports and positive/negative display offsets. Typecheck, syntax and diff checks passed.
 
 The exact last circuit result was replayed offline in the real renderer: the complete final caption occupies x=931, y=669, width=330, height=169 and ends at y=838, above the default bar starting at y=850. The screenshot and video under `.local/caption-fit-audit/` are explicitly labeled retained-data replay with no new inference. The source background includes a captured earlier bar state; this is layout-test evidence, not a coherent live product take. The fix preserves the adopted appearance. Its 132-pixel reserved band follows the default compact position; it does not track an arbitrarily dragged bar. Final packaged acceptance must include this layout change.
+
+
+## Actual recording with app narration — November 4, 21:22 UTC onward
+
+User authorized recording and clarified that sound means Soma narration; the user records voiceover separately. Microphone input is disabled. Private capture directory: `.local/demo-recording-20261104/graph-take-01/`. Signed local 0.5.0 candidate matches hosted `soma-rehearsal-polish-2026-11-04`; filming source HEAD `ecadc8b` adds documentation only. Preview displays the original synthetic graph PNG.
+
+Audio setup: the application-filtered capture produced silence and was retained as a failed preflight. System-output capture passed with saved-circuit playback: 48 kHz stereo, nonzero decoded narration, no dropped samples, host timestamp offsets aligned. This does not establish final-take audio quality; finalization and review remain pending.
+
+Three actual admissions used the existing production companion session, whose allowance moved from four to one remaining. Exact receipts are stored privately:
+
+| Step | Calls | Meta cost | Generation wait | Observed outcome |
+| --- | ---: | ---: | ---: | --- |
+| Initial graph | 7 | $0.13510225 | 76.254 s | Spark reading and Wonder review, six nodes/nine weights; shortest cost 7 versus direct 11. Initial selection null. |
+| Find the tipping point | 3 | $0.04492175 | 29.116 s | Generic investigation button, no selected object. Muse chose A–F; six checked interventions establish boundary 7. |
+| Contextual follow-up | 2 | $0.03477175 | 18.160 s | “Why does it flip right there?” preserves A–F=8 and no removed edges; answer explains detour 7 versus direct 8, tie 7. |
+
+Total **12 calls / $0.21479575**, excluding speech. On-screen controls were recorded at direct cost 6 (direct wins), exact 7 (tie), and 8 (detour wins). This take did not ask the proposed E-route question; script and voiceover now match the actual generic investigation and A–F choice. Version 3 was saved through the product UI. Initial narration and follow-up playback were recorded; audio acceptance and final edit are still pending. A first attempted native cut did not change the edge; retained in raw footage.

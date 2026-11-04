@@ -3328,3 +3328,23 @@ Deviation: the engine moves from a conditional alternative into the main edit pl
 
 
 Review follow-up at 21:06 UTC: full CI is now successful for `dc4c9cd` (41910292073) and `2cf017c` (41910991471), as well as earlier `bff7b10`. Hosted polish manifest still matches. Static documentation validation confirmed ten adjacent main-edit slots spanning exactly 180 seconds and voiceover counts 260 main / 270 fallback; this is not an audible timed rehearsal. No filming/inference or visibility/history change.
+
+
+## DEMO-RECORD-WITH-SOUND-20261104-01 — Start actual recording with app sound
+
+1. User explicitly started recording and requested sound, superseding the prior no-start instruction. Preparing direct system/app audio capture; microphone capture is not enabled.
+2. Preparing the existing-session allowance check and one coherent graph take; engine/circuit reuse remains the planned fallback. No new generation has run at this preparation checkpoint.
+3. Raw captures, audio verification, actual model choices, spend and failures will be retained privately and documented after the take. Completed video/audio acceptance is pending.
+
+Deviation: capture now includes app narration at the user's request; retain an audio track that can be muted under the later voiceover.
+
+
+## DEMO-APP-NARRATION-20261104-01 — Clarify the audio track
+
+1. Confirmed the requested sound is Soma's narration; the user will supply voiceover separately. Microphone capture remains disabled.
+2. First app-filtered ScreenCaptureKit preflight produced a valid but silent AAC track; retained as a failed setup. Full system-output capture then recorded real Gemini narration from an existing saved circuit: 48 kHz stereo, RMS −22.18 dB, zero dropped samples and aligned timestamps. No exploration generation used for either preflight. Raw system capture is private; final clips must exclude unrelated app sounds.
+3. Started the actual graph take after audio verification and an existing-session allowance check showing four admissions. Actual footage, model outcomes and costs remain in progress.
+
+Deviation: use verified system-output capture because the Electron-specific application filter missed narration. This is not microphone or user-voiceover recording.
+
+Recording checkpoint, 21:35 UTC: finalized the coherent graph take with 22,851 video frames, 38,964 audio buffers and zero drops. Full audio/video decode passes; decoded narration is nonzero and host/media offsets agree within four microseconds. Three admissions cost $0.21479575 across 12 Meta calls, leaving one existing-session admission. Actual unselected generic investigation chose A–F/tie7; recorded6→7→8, contextual follow-up at8, and saved version3. Restored original11 before panel-controlled D–F cut7→9→7. Two automated floating-graph click attempts did not register; raw failures retained. No physical-drag success claimed. Engine/circuit narration replay and edited clips are in progress; final voiceover belongs to the user.

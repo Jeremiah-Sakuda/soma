@@ -2,7 +2,7 @@
 
 ## Recording plan after rehearsal review
 
-The user has asked for confirmation and planning, **not to start filming**. No new capture or inference is authorized by the pasted review itself. When recording is started by the user, use the [revised three-minute script](DEMO_VIDEO_SCRIPT.md): one coherent fresh graph take, a 25-second engine beat and the existing circuit reversal. The engine and circuit are separate recorded live runs; no R2-opening detour or on-camera closer is required. A [footage-only voiceover](DEMO_VOICEOVER_FOOTAGE_ONLY.txt) is ready if fresh graph capture is unavailable; it omits the unsupported graph-investigation claim.
+The user subsequently authorized **recording now with sound**. Capture Soma audio as a separate editable track and keep microphone capture off for the computer take. Use the [revised three-minute script](DEMO_VIDEO_SCRIPT.md): one coherent fresh graph take, a 25-second engine beat and the existing circuit reversal. The engine and circuit are separate recorded live runs; no R2-opening detour or on-camera closer is required. A [footage-only voiceover](DEMO_VOICEOVER_FOOTAGE_ONLY.txt) is ready if fresh graph capture is unavailable; it omits the unsupported graph-investigation claim.
 
 Before recording:
 

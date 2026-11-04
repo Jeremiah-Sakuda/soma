@@ -86,26 +86,53 @@ export function liftFocus(
 
 /** A coarse map of where a capture has anything on it, row by row from the top left. */
 export type InkGrid = { width: number; height: number; ink: Uint8Array };
-/** Moves each edge of a region outward to the nearest blank line of the capture, so a lift never
- * slices a label in half. It reaches further sideways and below than above, where a slide's title
- * sits; an edge with no blank line in reach stays where it was. */
+/** Moves each edge of a region outward to the nearest blank line of the capture, and over any
+ * label just beyond it, so a lift never slices a label in half or leaves one stranded. It reaches
+ * further sideways and below than above, where a slide's title sits. A line drawn across the whole
+ * span, such as a title's rule, stops an edge; an edge with no blank line in reach stays put. */
 export function clearOfInk(region: Region, grid: InkGrid | null | undefined): Region {
   if (!grid?.width || !grid.height) return region;
   const { width: W, height: H, ink } = grid;
   let x0 = Math.floor(region.x * W), x1 = Math.ceil((region.x + region.width) * W) - 1;
   let y0 = Math.floor(region.y * H), y1 = Math.ceil((region.y + region.height) * H) - 1;
-  const columnBlank = (x: number) => { for (let y = Math.max(0, y0); y <= Math.min(H - 1, y1); y++) if (ink[y * W + x]) return false; return true; };
-  const rowBlank = (y: number) => { for (let x = Math.max(0, x0); x <= Math.min(W - 1, x1); x++) if (ink[y * W + x]) return false; return true; };
-  const reach = (start: number, step: number, limit: number, size: number, blank: (at: number) => boolean) => {
-    for (let at = start, n = 0; at >= 0 && at < size && n <= limit; at += step, n++) if (blank(at)) return at;
-    return start;
+  const share = (from: number, to: number, at: (i: number) => number) => {
+    let n = 0;
+    for (let i = from; i <= to; i++) n += ink[at(i)];
+    return n / Math.max(1, to - from + 1);
   };
-  const side = Math.ceil(W * 0.12), below = Math.ceil(H * 0.12), above = Math.ceil(H * 0.05);
+  const column = (x: number) => share(Math.max(0, y0), Math.min(H - 1, y1), (y) => y * W + x);
+  const row = (y: number) => share(Math.max(0, x0), Math.min(W - 1, x1), (x) => y * W + x);
+  const grow = (start: number, step: number, size: number, limit: number, gap: number, line: (at: number) => number) => {
+    const inReach = (at: number) => at >= 0 && at < size && Math.abs(at - start) <= limit;
+    const blankFrom = (from: number) => {
+      for (let at = from; inReach(at); at += step) {
+        const s = line(at);
+        if (s === 0) return at;
+        if (s >= 0.85) return null;
+      }
+      return null;
+    };
+    let edge = blankFrom(start);
+    if (edge === null) return start;
+    for (;;) {
+      let label: number | null = null;
+      for (let d = 1; d <= gap && inReach(edge + step * d); d++) {
+        const s = line(edge + step * d);
+        if (s >= 0.85) break;
+        if (s > 0) { label = edge + step * d; break; }
+      }
+      const past = label === null ? null : blankFrom(label);
+      if (past === null) return edge;
+      edge = past;
+    }
+  };
+  const side = Math.ceil(W * 0.12), below = Math.ceil(H * 0.12), above = Math.ceil(H * 0.08);
+  const gapX = Math.ceil(W * 0.035), gapY = Math.ceil(H * 0.04);
   for (let pass = 0; pass < 2; pass++) {
-    x0 = reach(x0, -1, side, W, columnBlank);
-    x1 = reach(x1, 1, side, W, columnBlank);
-    y0 = reach(y0, -1, above, H, rowBlank);
-    y1 = reach(y1, 1, below, H, rowBlank);
+    x0 = grow(x0, -1, W, side, gapX, column);
+    x1 = grow(x1, 1, W, side, gapX, column);
+    y0 = grow(y0, -1, H, above, gapY, row);
+    y1 = grow(y1, 1, H, below, gapY, row);
   }
   return { x: x0 / W, y: y0 / H, width: (x1 + 1 - x0) / W, height: (y1 + 1 - y0) / H };
 }

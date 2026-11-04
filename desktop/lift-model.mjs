@@ -208,7 +208,7 @@ function placeSheet(data, sheet) {
   s.hasCover = Boolean(sheet);
   const plane = new Mesh(new PlaneGeometry(w, h), paper);
   plane.position.set(x, y, 0);
-  const cover = new Mesh(new PlaneGeometry(w * 1.03, h * 1.03), coverMat);
+  const cover = new Mesh(new PlaneGeometry(w, h), coverMat);
   cover.position.set(x, y, -2);
   cover.renderOrder = -2;
   // A soft drop shadow under the sheet, tilting with it, gives it an edge against the slide.

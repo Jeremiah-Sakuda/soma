@@ -924,9 +924,10 @@ export function ExplorationWorkspace() {
       const last = Math.max(0, (compactStepCount(artifact.spec, state) ?? 1) - 1), by = d.action === 'next' ? 1 : -1;
       if (artifact.spec.mode === 'explanation') {
         // A step by hand speaks that step, replacing whatever was being said, then waits.
+        // updateState stops playback, so playback starts after it.
+        updateState({ ...state, explanationStep: Math.max(0, Math.min(last, state.explanationStep + by)) });
         setStepByStep(true);
         setPlaying(true);
-        updateState({ ...state, explanationStep: Math.max(0, Math.min(last, state.explanationStep + by)) });
       } else updateState({ ...state, step: Math.max(0, Math.min(last, state.step + by)) });
     } else if (d.action === 'play' && artifact) {
       setStepByStep(false);

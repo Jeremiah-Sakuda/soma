@@ -47,21 +47,38 @@ export function crankFromWords(text: string): number | null {
   if (/half a turn|half-turn|\b180\b/i.test(text)) return 0.25;
   return null;
 }
-/** Binds the built-in engine to the explanation it illustrates: every step gets a crank angle
- * (Muse's when given, else read from the step's own words, else spread evenly), never turning
- * backwards, and diagram highlights light the matching engine parts. */
+/** The crank angle each step stops at, as a fraction of two turns: Muse's when given, else what
+ * the step's caption shows, else evenly between its neighbours; never backwards. Narration is not
+ * read: it opens by stating the answer ("two turns"), which is not where the first step stands.
+ * For the same reason only the last step can reach the end of the second turn from its words. */
+export function crankStops(steps: readonly { id: string; caption: string }[], given: ReadonlyMap<string, number> = new Map()): number[] {
+  const n = steps.length, clamp = (v: number) => Math.min(1, Math.max(0, v));
+  const stops = steps.map((step, i): number | null => {
+    const chosen = given.get(step.id);
+    if (chosen !== undefined) return clamp(chosen);
+    const read = crankFromWords(step.caption);
+    return read === 1 && i < n - 1 ? null : read;
+  });
+  stops[0] ??= 0;
+  stops[n - 1] ??= 1;
+  for (let i = 1; i < n - 1; i++) {
+    if (stops[i] !== null) continue;
+    let j = i + 1;
+    while (stops[j] === null) j++;
+    stops[i] = stops[i - 1]! + (stops[j]! - stops[i - 1]!) / (j - i + 1);
+  }
+  let last = 0;
+  return stops.map((v) => (last = Math.max(last, v!)));
+}
+/** Binds the built-in engine to the explanation it illustrates: every step stops at a crank
+ * angle, and diagram highlights light the matching engine parts. */
 function bindEngine(spatial: Panel & { objects?: { id?: unknown; renderStyle?: unknown }[] }, previous: Extract<ExplorationSpec, { mode: 'explanation' }>) {
   const block = spatial.objects?.find((o) => o?.renderStyle === 'engine-block');
   if (typeof block?.id !== 'string') return null;
   const prefix = block.id.replace(/_block$/, '');
   const given = new Map((spatial.parameterPoses ?? []).filter((p) => (p as { parameterId?: unknown }).parameterId === 'crank').map((p) => [p.stepId, (p as unknown as { value: number }).value]));
-  let last = 0;
-  spatial.parameterPoses = previous.steps.map((step, i) => {
-    // The caption says what the step shows; the narration only if the caption names no stroke.
-    const chosen = given.get(step.id) ?? crankFromWords(step.caption) ?? crankFromWords(step.narration ?? '') ?? (i + 1) / previous.steps.length;
-    last = Math.max(last, Math.min(1, Math.max(0, chosen)));
-    return { stepId: step.id, parameterId: 'crank', value: last };
-  }) as Panel['parameterPoses'];
+  const stops = crankStops(previous.steps, given);
+  spatial.parameterPoses = previous.steps.map((step, i) => ({ stepId: step.id, parameterId: 'crank', value: stops[i] })) as Panel['parameterPoses'];
   const diagramText = new Map(
     previous.scene.panels.flatMap((p) => (p.kind === 'diagram' ? p.objects.map((o) => [o.id, `${o.id} ${'label' in o ? o.label : ''} ${'text' in o ? o.text : ''}`] as const) : [])),
   );

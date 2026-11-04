@@ -197,3 +197,37 @@ describe('keeping a lift clear of what is on the slide', () => {
     expect(clearOfInk({ x: 0.5, y: 0.2, width: 0.3, height: 0.6 }, null)).toEqual({ x: 0.5, y: 0.2, width: 0.3, height: 0.6 });
   });
 });
+
+describe('where each step stops the crank', () => {
+  const steps = (...captions: string[]) => captions.map((caption, i) => ({ id: `s${i}`, caption }));
+  it('does not start at the answer when the first caption states it', async () => {
+    const { crankStops } = await import('@/lib/server/model-authoring');
+    expect(crankStops(steps('It takes two full crankshaft turns.', 'The first turn does intake and compression.', 'The second turn adds power and exhaust.', 'Four strokes make 720 degrees.'))).toEqual([0, 0.5, 0.875, 1]);
+  });
+  it('spreads steps that name no stroke evenly, and keeps Muse\'s own stops', async () => {
+    const { crankStops } = await import('@/lib/server/model-authoring');
+    expect(crankStops(steps('It needs four separate moves.', 'A move is one stroke.', 'Each one is half a crank circle.', 'So here is the whole cycle.'))).toEqual([0, 1 / 3, 2 / 3, 1]);
+    expect(crankStops(steps('a', 'b'), new Map([['s0', 0.25], ['s1', 0.1]]))).toEqual([0.25, 0.25]);
+  });
+});
+
+describe('taking in a drawing\'s labels', () => {
+  const W = 40, H = 40;
+  const make = (paint: (set: (x: number, y: number) => void) => void) => {
+    const ink = new Uint8Array(W * H);
+    paint((x, y) => { ink[y * W + x] = 1; });
+    return { width: W, height: H, ink };
+  };
+  it('takes in a label just beyond a clean edge', async () => {
+    const { clearOfInk } = await import('@/lib/domain/scene-lift');
+    const grid = make((set) => { for (let x = 12; x <= 18; x++) set(x, 12); });
+    const r = clearOfInk({ x: 0.25, y: 0.35, width: 0.4, height: 0.4 }, grid);
+    expect(r.y).toBeCloseTo(11 / 40);
+  });
+  it('stops at a rule across the whole span, and leaves the words beyond it', async () => {
+    const { clearOfInk } = await import('@/lib/domain/scene-lift');
+    const grid = make((set) => { for (let x = 0; x < W; x++) set(x, 12); for (let x = 12; x <= 18; x++) set(x, 10); });
+    const r = clearOfInk({ x: 0.25, y: 0.35, width: 0.4, height: 0.4 }, grid);
+    expect(r.y).toBeCloseTo(0.35);
+  });
+});

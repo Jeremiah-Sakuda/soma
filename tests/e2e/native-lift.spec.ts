@@ -194,6 +194,9 @@ test('microcosts retain nonzero proportional heights and a readable bounded rule
 });
 
 test('repeated and interrupted lifts release their canvases and recover from GPU loss', async ({ page }) => {
+  // Keep every real RAF in both interruption cycles. Software WebGL in clean
+  // Linux CI takes longer than the default 30 seconds for this whole sequence.
+  test.setTimeout(90_000);
   await open(page, false);
   for (let i = 0; i < 2; i++) {
     await draw(page); await advance(page, 900);

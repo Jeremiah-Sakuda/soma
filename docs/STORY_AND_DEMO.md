@@ -2,7 +2,7 @@
 
 November 1, 2026 positioning update, revised November 2 for the second checked subject. This document owns how Soma is described everywhere: README, submission copy, video, desktop notes and answers to judges. It supersedes the PM129 framing (engine-led, "visual learning companion"), kept in git history. Product scope stays in the [PRD](PRD.md); this is a positioning decision, recorded in [DECISIONS.md](DECISIONS.md), not a new feature commitment.
 
-November 4 UTC alignment: the exact E investigation is demonstrated through the service (Muse chose D–F, tie 5), followed by a source-preserving explanation and exact save/reopen. Circuit image agreement and R₅ reversal also passed. Main `af0851b` fixes manual source selection being cleared by step changes, with local release identity `soma-overnight-inspect-2026-11-04`; 26 silent browser journeys, typecheck, production build and trace checks passed locally. Full [CI 41777875683](https://github.com/Jeremiah-Sakuda/soma/actions/runs/41777875683) completed successfully with 1,940 application tests (107 gated skips), 59 desktop tests and 167 browser tests (14 gated skips), with no failed steps; the GitHub-linked Vercel production deployment reports READY. The preceding `3ea3fbf` CI browser failure remains recorded. Hosted manifest/UI and native acceptance await browser approval. The private 65.36-second silent replay was captured on `3ea3fbf`, before this fix; it is not a final or public submission video. Final three-minute footage remains pending. [Verification](VERIFICATION.md) retains earlier failures and separates these evidence types.
+**November 4 UTC delivery:** graphics runtime `fb777c8` and test-duration follow-up `4ee645a` use `soma-3d-2026-11-04`. The signed/notarized 0.4.1 is a private draft; the published installer remains 0.4.0. Current local renderer/controller checks and the labeled silent QA clip do not establish physical native alignment or hosted acceptance, which remain pending after the origin approval rejection. The actual service E investigation (Muse chose D–F, tie 5), source-preserving follow-up/save and circuit image-check/reversal runs remain separate evidence. Final three-minute/native footage is still pending. [Verification](VERIFICATION.md) owns the current full CI result, source identity and retained failures, including the earlier `af0851b` checkpoint.
 
 ## The positioning
 
@@ -45,7 +45,7 @@ The planned cut follows one continuous live run on the original Lecture 14 slide
 3. **My own experiment:** cut D–F on the slide; new route, cost 9, no model call.
 4. **Muse chooses, Soma computes:** ask “What would make the route go through E?” without selecting an edge. Muse chooses a connection; Soma computes its boundary. Actual service runs chose D–F, tie 5, with a route through E above it. Use the actual take's valid choice and value; 7 belongs only to the separate A–F fallback question.
 5. **Why, checked:** the follow-up answers the experiment in progress; Muse Wonder checked the explanation against the computed trace.
-6. **The answer has a shape:** restore the graph as read, advance to its final checked step (F = 7), then lift it in 3D. Every height is a checked distance; the shortest route pulls taut and the direct edge hangs slack by exactly 4.
+6. **The answer has a shape:** restore the graph as read, advance to its final checked step (F = 7), then lift it in 3D. Every height is a checked distance; the shortest route pulls taut and the direct edge shows four units of computed extra cost. String curves are schematic; the solver supplies the height and slack numbers.
 7. **A second subject:** the Lecture 9 bridge. B = C = 8 V, so R₅ carries 0 A. Open R₂: R₅ carries 12/29 A from B to C. Restore the source, clear any selected part and ask about R₅ current; in the recorded run Muse chose R₄ and Soma verified reversal around 8 Ω. Follow the actual checked choice in a new take.
 8. **Close (on camera):** the slide didn't change; what changed is that I could ask it my question and inspect the computed consequence.
 
@@ -66,7 +66,7 @@ Save/reopen and fresh graph practice remain available for follow-up questions an
 
 ## Claims boundary
 
-- **Checked:** BFS and Dijkstra routes, distances, cuts, tipping points and the 3D heights and slack; DC circuit voltages, currents, opened parts, changed values and tipping points, solved exactly with Kirchhoff's current law checked. Everything else (explanations, mechanisms, general screenshots) is generated, labelled and reviewable.
+- **Checked:** BFS and Dijkstra routes, distances, cuts, tipping points and the numerical 3D heights/slack; string curve lengths are schematic. DC circuit voltages, currents, opened parts, changed values and tipping points are solved exactly with Kirchhoff's current law checked. Voltage-as-height is available in the browser workspace; the native circuit overlay stays flat. Everything else (explanations, mechanisms, general screenshots) is generated, labelled and reviewable.
 - **Demonstrated:** the student journey on the Lecture 14 slide, in the browser and on the real screen; the circuit journey on the Lecture 9 slide, live through the service and in the browser.
 - **Potential:** diagrams beyond the classroom; further checked subjects such as truss statics.
 - **Not claimed:** measured learning gains, adoption or time saved.

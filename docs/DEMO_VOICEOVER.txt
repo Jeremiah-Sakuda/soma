@@ -11,7 +11,7 @@ Then I ask what would send the route through E. Muse picks which connection to t
 
 When I ask why, the answer fits my experiment. Muse Wonder checked it against Soma's trace; once, it caught a mistake and sent it back.
 
-And the answer has a shape. Every height is a checked distance: the shortest route pulls tight, and the direct edge hangs slack by exactly four.
+And the answer has a shape. Every height is a checked distance. The shortest route pulls tight; the direct edge has four units of extra cost.
 
 And it isn't only graphs. On a circuit slide, Soma solves the circuit exactly: B and C both sit at eight volts, so nothing crosses the bridge. Open R-two, and about four tenths of an amp flows through R-five, a number that isn't on the slide. The slide shows the balanced case; Soma shows both sides of it. Muse picks R-four to vary, and as I drag it past the balance point, the current turns around.
 

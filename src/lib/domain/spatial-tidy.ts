@@ -1,4 +1,5 @@
 import { mechanismBounds } from './mechanism-geometry';
+import { ENGINE, engineRoleOf } from './engine-kinematics';
 import type { SpatialPanel, SpatialVector } from './spatial-schema';
 
 type Box = { min: [number, number, number]; max: [number, number, number] };
@@ -10,6 +11,11 @@ const clampSize = (n: number) => Math.max(0.1, Math.min(4, n));
 const lined = (shape: string) => shape === 'arrow' || shape === 'tube' || shape === 'sheet';
 const drawn = (o: SpatialPanel['objects'][number]) => lined(o.shape) && (o.path?.length ?? 0) >= (o.shape === 'sheet' ? 3 : 2);
 function boxOf(o: SpatialPanel['objects'][number], at: SpatialVector = o.position): Box {
+  // The built-in engine's block stands for the whole assembly at any crank angle.
+  if (engineRoleOf(o.renderStyle) === 'block') {
+    const s = o.size.x, e = ENGINE.envelope, c = [at.x, at.y, at.z];
+    return { min: [0, 1, 2].map((k) => c[k] + e.min[k] * s) as Box['min'], max: [0, 1, 2].map((k) => c[k] + e.max[k] * s) as Box['max'] };
+  }
   if (drawn(o)) {
     const d = [at.x - o.position.x, at.y - o.position.y, at.z - o.position.z], r = o.size.x / 2;
     const xs = o.path!.map((p) => [p.x + d[0], p.y + d[1], p.z + d[2]]);
@@ -60,7 +66,7 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
   const extent = () => {
     const min = [Infinity, Infinity, Infinity],
       max = [-Infinity, -Infinity, -Infinity];
-    for (const o of objects)
+    for (const o of objects.filter((o) => !engineRoleOf(o.renderStyle) || engineRoleOf(o.renderStyle) === 'block'))
       for (const at of frames(o)) {
         const b = boxOf(o, at);
         for (let i = 0; i < 3; i++) {
@@ -84,7 +90,7 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
     return Math.max(e.max[0] - e.min[0], e.max[2] - e.min[2], e.max[1] - e.min[1], 1e-3);
   })();
   for (const o of objects) {
-    if (o.geometry?.length || o.parentId || drawn(o)) continue;
+    if (o.geometry?.length || o.parentId || drawn(o) || engineRoleOf(o.renderStyle)) continue;
     const largest = Math.max(o.size.x, o.size.y, o.size.z);
     const grow = (span0 / 12) / largest;
     if (grow > 1) {
@@ -97,7 +103,7 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
   // Part from part: top-level, uncontained parts whose boxes overlap are pushed apart on the
   // floor, along the line between them; contained parts move with their container.
   // Custom-piece parts share one assembly frame by design, so they are never moved apart.
-  const top = objects.filter((o) => !o.parentId && !o.geometry?.length && !drawn(o));
+  const top = objects.filter((o) => !o.parentId && !o.geometry?.length && !drawn(o) && !engineRoleOf(o.renderStyle));
   const move = (o: SpatialPanel['objects'][number], dx: number, dz: number) => {
     const shift = (p: SpatialVector) => ({ ...p, x: p.x + dx, z: p.z + dz });
     const family = [o, ...objects.filter((c) => {

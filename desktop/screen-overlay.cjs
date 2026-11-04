@@ -36,7 +36,7 @@ function validScene(sc) {
           text(o.label, 60) &&
           text(o.detail, 120) &&
           SHAPES.includes(o.shape) &&
-          (o.renderStyle === null || (typeof o.renderStyle === 'string' && /^[a-z]{1,16}$/.test(o.renderStyle))) &&
+          (o.renderStyle === null || (typeof o.renderStyle === 'string' && /^[a-z][a-z-]{0,23}$/.test(o.renderStyle))) &&
           COLORS.includes(o.color) &&
           vec(o.position, -6, 6) &&
           vec(o.size, 0.05, 4.5) &&
@@ -47,6 +47,7 @@ function validScene(sc) {
           typeof o.highlighted === 'boolean' &&
           (o.selected === undefined || typeof o.selected === 'boolean') &&
           (o.anchor === undefined || point(o.anchor)) &&
+          (o.labelAt === undefined || vec(o.labelAt, -8, 8)) &&
           (o.path === undefined || (Array.isArray(o.path) && o.path.length >= 2 && o.path.length <= 12 && o.path.every((p) => vec(p, -6, 6)))) &&
           (o.geometry === undefined || (Array.isArray(o.geometry) && o.geometry.length <= 12 && JSON.stringify(o.geometry).length <= 24000)) &&
           (o.parameterValues === undefined ||

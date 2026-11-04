@@ -26,6 +26,8 @@ export type LiftSceneObject = {
   selected?: boolean;
   geometry?: MechanismPiece[];
   parameterValues?: Record<string, number>;
+  /** Where the part's name sits, when not above its top (an assembly's inner parts). */
+  labelAt?: Vec;
   /** Where the part stands on the capture (normalized), when it was read from the source. */
   anchor?: { x: number; y: number };
 };
@@ -78,7 +80,8 @@ export function liftScene(scene: SpatialScene, region: Region, anchors?: Map<str
     ...(selectedId && o.id === selectedId ? { selected: true } : {}),
     ...(o.path?.length ? { path: o.path.map((p) => ({ ...p })) } : {}),
     ...(o.rotation ? { rotation: { ...o.rotation } } : {}),
-    ...(o.geometry?.length ? { geometry: o.geometry, parameterValues: o.parameterValues ?? {} } : {}),
+    ...(o.geometry?.length ? { geometry: o.geometry, parameterValues: o.parameterValues ?? {} } : o.parameterValues ? { parameterValues: { ...o.parameterValues } } : {}),
+    ...(o.labelAt ? { labelAt: { ...o.labelAt } } : {}),
     ...(anchors?.has(o.id) ? { anchor: anchors.get(o.id)! } : {}),
   }));
   const ids = new Set(objects.map((o) => o.id));

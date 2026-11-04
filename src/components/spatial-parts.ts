@@ -2,11 +2,14 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import type { SpatialObject } from '@/lib/domain/spatial-exploration';
 import { pieceMesh, meshTriangles, mechanismPalette } from '@/lib/domain/mechanism-geometry';
+import { createEnginePart } from './engine-parts';
 
 export const spatialColors = { clay: 0xb56845, sage: 0x408779, blue: 0x668597, gold: 0xd4a237, violet: 0x6553cf };
 
 /** Compile validated custom surfaces or fixed catalog parts; neither is recovered construction. */
 export function createSpatialPart(object: SpatialObject, selected: boolean, shell: boolean) {
+  const engine = createEnginePart(object, selected);
+  if (engine) return engine;
   const root = new THREE.Group();
   if (object.geometry?.length) {
     for (const piece of object.geometry) {

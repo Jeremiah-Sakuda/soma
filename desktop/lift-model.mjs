@@ -254,7 +254,9 @@ function fitModel() {
   for (const v of s.parts.values()) box.union(v.extent.clone().translate(v.target));
   const size = box.getSize(new Vector3()), center = box.getCenter(new Vector3());
   const { x, y, w, h } = s.sheetBox;
-  const unit = Math.min((w * 0.86) / Math.max(1e-3, size.x), (h * 1.7) / Math.max(1e-3, size.z), (s.frame.height * 0.42) / Math.max(1e-3, size.y));
+  // A tall, narrow model (an engine, a tower) may stand taller, or it would be thin.
+  const tall = size.y > 1.6 * Math.max(size.x, size.z) ? 0.6 : 0.42;
+  const unit = Math.min((w * 0.86) / Math.max(1e-3, size.x), (h * 1.7) / Math.max(1e-3, size.z), (s.frame.height * tall) / Math.max(1e-3, size.y));
   s.unit = unit;
   // Rotating about x by +90° turns the model's y (up) into the sheet's normal.
   s.model.rotation.x = Math.PI / 2;
@@ -581,13 +583,17 @@ function renderFrame() {
     // A line is named at its middle: a message on its arrow, not on what it reaches.
     const ref = path?.length ? (path.length === 2 ? { x: (path[0].x + path[1].x) / 2, y: (path[0].y + path[1].y) / 2, z: (path[0].z + path[1].z) / 2 } : path[Math.floor(path.length / 2)]) : null;
     const lift = rise - v.at.y;
-    const top = ref
+    const top = v.data.labelAt
+      ? new Vector3(v.data.labelAt.x, v.data.labelAt.y + lift, v.data.labelAt.z)
+      : ref
       ? new Vector3(ref.x, ref.y + lift + 0.15, ref.z)
       : new Vector3(v.at.x + (e.min.x + e.max.x) / 2, rise + e.max.y + 0.12, v.at.z + (e.min.z + e.max.z) / 2);
     // Parts the step is not about keep small, quiet names.
     const quiet = anyLit && !v.data.highlighted && !v.data.selected && !v.hover;
     v.label.classList.toggle('is-quiet', quiet);
-    placeLabel(v.label, top, clamp01((k - 0.6) / 0.4) * v.fade, v.data.selected || v.hover ? 5 : v.data.highlighted ? 4 : 2);
+    // An assembly's parts are named only while the step is about them, or when pointed at.
+    const named = !v.data.renderStyle?.startsWith('engine-') || !quiet;
+    placeLabel(v.label, top, named ? clamp01((k - 0.6) / 0.4) * v.fade : 0, v.data.selected || v.hover ? 5 : v.data.highlighted ? 4 : 2);
   }
   // Flows arc between the parts they join, drawn once both have risen.
   for (const v of s.links.values()) {

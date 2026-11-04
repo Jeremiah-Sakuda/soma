@@ -1,4 +1,6 @@
 import type { ExplorationSpec } from '../domain/exploration';
+import { expandEngine } from '../domain/engine-kinematics';
+import type { SpatialPanel } from '../domain/spatial-schema';
 
 /** How Muse builds the 3D model of an existing explanation, for any subject. */
 export const MODEL_AUTHORING =
@@ -15,6 +17,7 @@ export const MODEL_AUTHORING =
   'Use connections only for named relations without a direction of travel; draw anything that moves or acts as an arrow part instead. ' +
   'Animate the explanation, and make every step change something visible: poses move or reveal parts at the step where they act, so stepping through shows the process happening (a message travelling between parties, a part produced, a car sliding up the bank). A part that only appears later has visible=false in the poses of earlier steps. A pose of an arrow, tube or sheet may give that step\'s new path, so a rod tilts as the crank turns, a force arrow grows, a string bends into a new shape, while staying attached to the parts it joins. ' +
   'Keep previous.spec step ids, captions and narration exactly; set each step\'s highlightIds to the parts that step is about. Keep the title. ' +
+  'A PISTON ENGINE (four-stroke, Otto cycle, internal combustion, a car or motorcycle engine): use Soma\'s built-in cutaway instead of building one. Add exactly ONE part {id:"engine", renderStyle:"engine", shape:"box", color:"blue", position {x:0,y:2.2,z:0}, size {x:4,y:4.4,z:4}, parentId:null}; Soma expands it into engine_block, engine_piston, engine_rod, engine_crank, engine_intake_valve, engine_exhaust_valve, engine_intake_cam, engine_exhaust_cam, engine_spark_plug, engine_timing_belt (2:1 sprockets), engine_charge (the gas), engine_spark, engine_intake_flow and engine_exhaust_flow, exactly assembled and moving together. Never build those parts yourself and never use an engine-* renderStyle. Add parameter {id:"crank", label:"Crankshaft angle", description:"0 to 720 degrees: two crankshaft turns, one four-stroke cycle.", initial:0} and, for EVERY step, one parameterPose {stepId, parameterId:"crank", value} where value = the crank angle that step is about / 720: 0 top before intake, 0.125 mid-intake (intake valve open, mixture flowing in), 0.25 bottom after intake, 0.375 mid-compression, 0.5 top of compression (spark), 0.56 early power, 0.75 bottom after power, 0.875 mid-exhaust (exhaust valve open), 1 end of the second turn. Choose the angles that show the learner\'s question (for two turns: stop at 0.5 to show one turn done with the cycle half finished). Set each step\'s highlightIds to the engine parts it is about (engine_intake_valve, engine_spark_plug, engine_crank...). Add other parts only if the explanation needs something the engine lacks. ' +
   'Choose renderStyle from the catalog only when the part literally is that thing; otherwise renderStyle=null and a plain shape whose silhouette fits (sphere for atoms, cells, planets; cylinder for vessels and columns; box for blocks, slabs, layers, devices; torus for rings). One color per role. ' +
   'viewAction camera="perspective", other fields null. mechanism=null. Add one assumption saying the model is illustrative.';
 
@@ -27,8 +30,14 @@ type Panel = { id: string; kind: string; placement: { column: number; row: numbe
 export function mergeModelScene(raw: unknown, previous: ExplorationSpec): unknown {
   if (previous.mode !== 'explanation' || !raw || typeof raw !== 'object') return raw;
   const spec = raw as Raw;
-  const spatial = (spec.scene?.panels ?? []).find((p): p is Panel => !!p && typeof p === 'object' && (p as Panel).kind === 'spatial');
+  let spatial = (spec.scene?.panels ?? []).find((p): p is Panel => !!p && typeof p === 'object' && (p as Panel).kind === 'spatial');
   if (!spatial) return raw;
+  // The built-in engine becomes its named parts before anything refers to them.
+  if (Array.isArray((spatial as unknown as SpatialPanel).objects) && Array.isArray((spatial as unknown as SpatialPanel).poses)) {
+    const expanded = expandEngine(spatial as unknown as SpatialPanel) as unknown as Panel;
+    spec.scene!.panels = spec.scene!.panels!.map((p) => (p === spatial ? expanded : p));
+    spatial = expanded;
+  }
   const kept = previous.scene.panels.filter((p) => p.kind !== 'spatial').map((p) => structuredClone(p));
   // The model spans both columns on the first free row; a full grid gives up its last row.
   const used = new Set(kept.map((p) => p.placement.row));

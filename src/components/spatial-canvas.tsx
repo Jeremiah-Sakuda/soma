@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { createSpatialPart } from './spatial-parts';
+import { ENGINE, engineRoleOf } from '@/lib/domain/engine-kinematics';
 import { placeSpatialLabel, spatialCameraDistance, type LabelRect } from './spatial-layout';
 import { mechanismBounds } from '@/lib/domain/mechanism-geometry';
 import type { SpatialScene } from '@/lib/domain/spatial-exploration';
@@ -83,6 +84,15 @@ export default function SpatialCanvas(props: Props) {
       // Stepping retains whole-scene framing; explicit isolation frames the selected assembly.
       const framing = current.view.isolate && visible.length ? visible : current.scene.objects;
       for (const object of framing) {
+        // The engine frames on its block's extent at any angle, so turning the crank never moves the camera.
+        const engineRole = engineRoleOf(object.renderStyle);
+        if (engineRole) {
+          if (engineRole !== 'block') continue;
+          const s = object.size.x, p = object.position, e = ENGINE.envelope;
+          bounds.expandByPoint(new THREE.Vector3(p.x + e.min[0] * s, p.y + e.min[1] * s, p.z + e.min[2] * s));
+          bounds.expandByPoint(new THREE.Vector3(p.x + e.max[0] * s, p.y + e.max[1] * s, p.z + e.max[2] * s));
+          continue;
+        }
         if (object.geometry?.length) {
           const b = mechanismBounds(object); bounds.expandByPoint(new THREE.Vector3(...b.min)); bounds.expandByPoint(new THREE.Vector3(...b.max)); continue;
         }
@@ -128,7 +138,7 @@ export default function SpatialCanvas(props: Props) {
           // An arrow is named at its tip, a tube or sheet at its middle.
           const path = object.path, ref = path?.length ? (object.shape === 'arrow' ? path[path.length - 1] : path[Math.floor(path.length / 2)]) : null;
           if (ref) label(object.label, new THREE.Vector3(ref.x, ref.y + 0.15, ref.z), selected ? 3 : object.highlighted ? 2 : 1);
-          else label(object.label, part.position.clone(), selected ? 3 : object.highlighted ? 2 : shell ? 0 : 1, object.id, new THREE.Box3().setFromObject(part).max.y - part.position.y);
+          else label(object.label, part.position.clone(), selected ? 3 : object.highlighted ? 2 : shell || engineRoleOf(object.renderStyle) ? 0 : 1, object.id, new THREE.Box3().setFromObject(part).max.y - part.position.y);
         }
       }
       const byId = new Map(visible.map((object) => [object.id, object]));
@@ -268,6 +278,8 @@ export default function SpatialCanvas(props: Props) {
           const before = new Map([...nodes].map(([id, node]) => [id, node.position.clone()]));
           cancelAnimationFrame(animationFrame); rebuild();
           const transitions = [...nodes].flatMap(([id, node]) => {
+            // Engine parts are posed exactly at each angle; sliding them would break the joints.
+            if (engineRoleOf(next.scene.objects.find((o) => o.id === id)?.renderStyle)) return [];
             const from = before.get(id), to = node.position.clone();
             return from && from.distanceTo(to) > 0.001 ? [{ node, from, to }] : [];
           });

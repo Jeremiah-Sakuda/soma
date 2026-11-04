@@ -39,7 +39,9 @@ const out = path.resolve(outArg || '.local/model-harness');
     await page.goto(pathToFileURL(path.join(__dirname, '../point-overlay.html')).href);
     await page.addStyleTag({ content: `html{background:#fff url(data:image/png;base64,${slide}) 0 0/100% 100% no-repeat}` });
     const display = { x: 0, y: 0, width: W, height: H };
-    const at = (i) => (circuit ? circuitOverlay(i, H / W) : overlayFor(spec, state, i, H / W));
+    // FOCUS=x,y,w,h (fractions of the slide) stands in for the region the learner pointed at.
+    const focus = process.env.FOCUS ? (([x, y, width, height]) => ({ x, y, width, height }))(process.env.FOCUS.split(',').map(Number)) : undefined;
+    const at = (i) => (circuit ? circuitOverlay(i, H / W) : overlayFor(spec, state, i, H / W, focus));
     const first = at(0);
     const steps = circuit ? first?.steps ?? 0 : spec.mode === 'explanation' ? spec.steps.length : 0;
     if (!first) throw new Error('This answer has no 3D scene.');
@@ -67,6 +69,8 @@ const out = path.resolve(outArg || '.local/model-harness');
     for (let i = 1; i < steps; i++) {
       await draw(at(i), '3d');
       await advance(1600);
+      // ALL=1 keeps every step's frame.
+      if (process.env.ALL) await shot(`screen-step${i + 1}`);
       if (i === steps - 1) await shot('screen-last');
     }
     // Interaction: point at a part, pick it, then turn the model by dragging.

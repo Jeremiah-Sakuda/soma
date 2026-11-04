@@ -12,6 +12,10 @@ export const spatialRenderStyles = [
   'housing', 'chip', 'sensor', 'indicator', 'marker',
   'battery', 'coil', 'gear', 'piston', 'turbine', 'pipe', 'vessel',
   'lens', 'membrane', 'nucleus', 'helix', 'speaker',
+  // Soma's built-in four-stroke cutaway: Muse places 'engine'; Soma expands it into these.
+  'engine', 'engine-block', 'engine-piston', 'engine-rod', 'engine-crank', 'engine-intake-valve', 'engine-exhaust-valve',
+  'engine-intake-cam', 'engine-exhaust-cam', 'engine-spark-plug', 'engine-timing-belt', 'engine-charge', 'engine-spark',
+  'engine-intake-flow', 'engine-exhaust-flow',
 ] as const;
 export const spatialPanelSchema = z.strictObject({
   id: sceneIdSchema,
@@ -96,6 +100,8 @@ export function validateSpatialPanel(panel: SpatialPanel, steps: readonly { id: 
   }
   if (pieces > 64 || faces > 4096) throw new Error('Mechanism exceeds the 64-piece or 4096-face budget.');
   for (const parameter of parameters) {
+    // The built-in engine follows its crank control.
+    if (parameter.id === 'crank' && panel.objects.some((object) => object.renderStyle?.startsWith('engine-'))) continue;
     if (!panel.objects.some(object => object.geometry?.some(piece => piece.driver?.parameterId === parameter.id && [...Object.values(piece.driver.rotation), ...Object.values(piece.driver.translation)].some(value => value !== 0))))
       throw new Error('Mechanism controls must drive at least one moving piece.');
   }

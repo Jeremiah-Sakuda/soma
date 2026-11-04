@@ -17,7 +17,7 @@ class CanvasBoundary extends Component<{ children: ReactNode; onFailure: () => v
   componentDidCatch() { this.props.onFailure(); }
   render() { return this.state.failed ? null : this.props.children; }
 }
-const palette = { clay: '#bc704f', sage: '#688674', blue: '#698aa1', gold: '#b58f43', violet: '#8a77a5' };
+const palette = { clay: '#bc704f', sage: '#688674', blue: '#698aa1', gold: '#b58f43', violet: '#8a77a5', rose: '#d98a92', red: '#b8433f', cream: '#d8ccb0', slate: '#66727f' };
 function FlatScene({ scene }: { scene: SpatialScene }) {
   const visible = scene.objects.filter((object) => object.visible);
   const extent = Math.max(3, ...scene.objects.flatMap((o) => [Math.abs(o.position.x) + o.size.x / 2, Math.abs(o.position.y) + o.size.y / 2]));
@@ -33,7 +33,9 @@ function FlatScene({ scene }: { scene: SpatialScene }) {
     {visible.map((object) => {
       const p = project(object.position.x, object.position.y), shell = scene.objects.some((o) => o.parentId === object.id);
       return <g key={object.id} data-spatial-object={object.id} data-position={JSON.stringify(object.position)}>
-        {object.shape === 'sheet' && object.path?.length ? <polygon points={object.path.map((q) => { const r = project(q.x, q.y); return `${r.x},${r.y}`; }).join(' ')} fill={palette[object.color]} fillOpacity="0.35" stroke={palette[object.color]} strokeWidth={object.highlighted ? 3 : 2} />
+        {object.shape === 'outline' && object.path?.length ? <polygon points={object.path.map((q) => { const r = project(q.x, q.y); return `${r.x},${r.y}`; }).join(' ')} fill={palette[object.color]} fillOpacity={shell ? 0.1 : 0.8} stroke={palette[object.color]} strokeWidth={object.highlighted ? 4 : 2} strokeLinejoin="round" />
+        : object.shape === 'lathe' && object.path?.length ? <polygon points={[...object.path, ...[...object.path].reverse().map((q) => ({ ...q, x: 2 * object.position.x - q.x }))].map((q) => { const r = project(q.x, q.y); return `${r.x},${r.y}`; }).join(' ')} fill={palette[object.color]} fillOpacity={shell ? 0.1 : 0.8} stroke={palette[object.color]} strokeWidth={object.highlighted ? 4 : 2} strokeLinejoin="round" />
+        : object.shape === 'sheet' && object.path?.length ? <polygon points={object.path.map((q) => { const r = project(q.x, q.y); return `${r.x},${r.y}`; }).join(' ')} fill={palette[object.color]} fillOpacity="0.35" stroke={palette[object.color]} strokeWidth={object.highlighted ? 3 : 2} />
         : object.path?.length ? <polyline points={object.path.map((q) => { const r = project(q.x, q.y); return `${r.x},${r.y}`; }).join(' ')} fill="none" stroke={palette[object.color]} strokeWidth={object.highlighted ? 6 : 4} strokeLinecap="round" markerEnd={object.shape === 'arrow' ? 'url(#spatial-flat-arrow)' : undefined} />
         : object.shape === 'sphere' || object.shape === 'torus'
           ? <ellipse cx={p.x} cy={p.y} rx={Math.max(7, object.size.x / extent * 105)} ry={Math.max(7, object.size.y / extent * 55)} fill={object.shape === 'torus' ? 'none' : palette[object.color]} fillOpacity={shell ? 0.1 : 0.8} stroke={palette[object.color]} strokeWidth={object.highlighted ? 4 : 2} />

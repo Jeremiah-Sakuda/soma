@@ -3,7 +3,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import type { SpatialObject } from '@/lib/domain/spatial-exploration';
 import { pieceMesh, meshTriangles, mechanismPalette } from '@/lib/domain/mechanism-geometry';
 
-export const spatialColors = { clay: 0xb56845, sage: 0x408779, blue: 0x668597, gold: 0xd4a237, violet: 0x6553cf };
+export const spatialColors = { clay: 0xb56845, sage: 0x408779, blue: 0x668597, gold: 0xd4a237, violet: 0x6553cf, rose: 0xd98a92, red: 0xb8433f, cream: 0xe8dcc2, slate: 0x66727f };
 
 /** Compile validated custom surfaces or fixed catalog parts; neither is recovered construction. */
 export function createSpatialPart(object: SpatialObject, selected: boolean, shell: boolean) {

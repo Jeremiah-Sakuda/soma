@@ -11,8 +11,8 @@ const STATUS = ['current', 'settled', 'waiting', 'unreached'];
 const TONE = ['path', 'relaxed', 'tree', 'struck', 'cut', 'idle'];
 const TAG_TONE = ['settled', 'current', 'tentative', 'equation', 'route'];
 
-const SHAPES = ['sphere', 'box', 'cylinder', 'torus', 'arrow', 'tube', 'sheet'];
-const COLORS = ['clay', 'sage', 'blue', 'gold', 'violet'];
+const SHAPES = ['sphere', 'box', 'cylinder', 'torus', 'arrow', 'tube', 'sheet', 'outline', 'lathe'];
+const COLORS = ['clay', 'sage', 'blue', 'gold', 'violet', 'rose', 'red', 'cream', 'slate'];
 const vec = (v, lo, hi) => v && [v.x, v.y, v.z].every((n) => Number.isFinite(n) && n >= lo && n <= hi);
 const region = (r) =>
   r && [r.x, r.y, r.width, r.height].every(Number.isFinite) && r.x >= 0 && r.y >= 0 && r.width > 0 && r.height > 0 && r.x + r.width <= 1.000001 && r.y + r.height <= 1.000001;

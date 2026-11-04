@@ -13,6 +13,11 @@ export const spatialRenderStyles = [
   'battery', 'coil', 'gear', 'piston', 'turbine', 'pipe', 'vessel',
   'lens', 'membrane', 'nucleus', 'helix', 'speaker',
 ] as const;
+// Plain hues for any subject: tissue reads rose or red, bone and paper cream, metal slate.
+export const spatialColorNames = ['clay', 'sage', 'blue', 'gold', 'violet', 'rose', 'red', 'cream', 'slate'] as const;
+export const pathShapes = ['arrow', 'tube', 'sheet', 'outline', 'lathe'] as const;
+/** The fewest path points a drawn shape needs: a line two, an outline or sheet three. */
+export const pathMinimum = (shape: string) => (shape === 'sheet' || shape === 'outline' ? 3 : 2);
 export const spatialPanelSchema = z.strictObject({
   id: sceneIdSchema,
   kind: z.literal('spatial'),
@@ -22,15 +27,18 @@ export const spatialPanelSchema = z.strictObject({
     id: sceneIdSchema,
     label: z.string().trim().min(1).max(100),
     description: z.string().trim().min(1).max(240),
-    shape: z.enum(['sphere', 'box', 'cylinder', 'torus', 'arrow', 'tube', 'sheet']),
+    shape: z.enum(['sphere', 'box', 'cylinder', 'torus', 'arrow', 'tube', 'sheet', 'outline', 'lathe']),
     // An arrow, tube or sheet runs through these points (scene coordinates, like position): an
     // arrow from its first point to its last, a tube smoothly through all of them, a sheet as
-    // the flat polygon they outline (a parallelogram, a triangle, a plane through a crystal).
+    // the flat polygon they outline (a parallelogram, a triangle, a plane through a crystal),
+    // an outline as a smooth rounded solid of that silhouette (a heart, a kidney, a lung lobe)
+    // and a lathe as the smooth surface its profile sweeps about the vertical through position
+    // (each point's x offset from position.x is the radius at its height: a flask, a bulb).
     path: z.array(spatialVectorSchema).min(2).max(12).nullable().optional(),
     // Application-owned illustrative meshes; never external assets or measured geometry.
     renderStyle: z.enum(spatialRenderStyles).nullable().optional(),
     geometry: z.array(mechanismPieceSchema).min(1).max(12).nullable().optional(),
-    color: z.enum(['clay', 'sage', 'blue', 'gold', 'violet']),
+    color: z.enum(spatialColorNames),
     position: spatialVectorSchema,
     size: z.strictObject({ x: size, y: size, z: size }),
     // Turns a plain part, in degrees about x, then y, then z: a banked road, a dipping slab.
@@ -86,9 +94,9 @@ export function validateSpatialPanel(panel: SpatialPanel, steps: readonly { id: 
   let pieces = 0, faces = 0;
   for (const object of panel.objects) {
     if (object.geometry?.length && object.renderStyle) throw new Error('Choose authored geometry or a catalog style for a part.');
-    const drawn = object.shape === 'arrow' || object.shape === 'tube' || object.shape === 'sheet';
-    if (drawn !== Boolean(object.path?.length)) throw new Error('Arrows, tubes and sheets, and only they, run through a path.');
-    if (object.shape === 'sheet' && object.path!.length < 3) throw new Error('A sheet needs at least three corners.');
+    const drawn = (pathShapes as readonly string[]).includes(object.shape);
+    if (drawn !== Boolean(object.path?.length)) throw new Error('Arrows, tubes, sheets, outlines and lathes, and only they, run through a path.');
+    if (drawn && object.path!.length < pathMinimum(object.shape)) throw new Error(`A ${object.shape} needs at least ${pathMinimum(object.shape)} points.`);
     if (object.path?.some((p, i) => i > 0 && Math.hypot(p.x - object.path![i - 1].x, p.y - object.path![i - 1].y, p.z - object.path![i - 1].z) < 0.02))
       throw new Error('Path points must be distinct.');
     pieces += object.geometry?.length ?? 0;
@@ -126,8 +134,8 @@ export function validateSpatialPanel(panel: SpatialPanel, steps: readonly { id: 
     if (!objects.has(pose.objectId) || !steps.some((step) => step.id === pose.stepId) || poses.has(key))
       throw new Error('Spatial poses require unique object and step bindings.');
     const owner = objects.get(pose.objectId)!;
-    if (pose.path?.length && owner.shape !== 'arrow' && owner.shape !== 'tube' && owner.shape !== 'sheet') throw new Error('Only arrows, tubes and sheets take a path at a step.');
-    if (pose.path?.length && owner.shape === 'sheet' && pose.path.length < 3) throw new Error('A sheet needs at least three corners.');
+    if (pose.path?.length && !(pathShapes as readonly string[]).includes(owner.shape)) throw new Error('Only arrows, tubes, sheets, outlines and lathes take a path at a step.');
+    if (pose.path?.length && pose.path.length < pathMinimum(owner.shape)) throw new Error(`A ${owner.shape} needs at least ${pathMinimum(owner.shape)} points.`);
     if (pose.path?.some((p, i) => i > 0 && Math.hypot(p.x - pose.path![i - 1].x, p.y - pose.path![i - 1].y, p.z - pose.path![i - 1].z) < 0.02))
       throw new Error('Path points must be distinct.');
     poses.add(key);

@@ -1,5 +1,5 @@
 import { mechanismBounds } from './mechanism-geometry';
-import type { SpatialPanel, SpatialVector } from './spatial-schema';
+import { pathMinimum, pathShapes, type SpatialPanel, type SpatialVector } from './spatial-schema';
 
 type Box = { min: [number, number, number]; max: [number, number, number] };
 // The model fills about this wide a stage, centred on the origin and standing on the floor.
@@ -7,9 +7,18 @@ const TARGET = 6.4,
   LIMIT = 5.8;
 const clampSize = (n: number) => Math.max(0.1, Math.min(4, n));
 
-const lined = (shape: string) => shape === 'arrow' || shape === 'tube' || shape === 'sheet';
-const drawn = (o: SpatialPanel['objects'][number]) => lined(o.shape) && (o.path?.length ?? 0) >= (o.shape === 'sheet' ? 3 : 2);
+const lined = (shape: string) => (pathShapes as readonly string[]).includes(shape);
+const drawn = (o: SpatialPanel['objects'][number]) => lined(o.shape) && (o.path?.length ?? 0) >= pathMinimum(o.shape);
+// An outline is a solid: its thickness may be a part's depth, not a line's.
+const thickness = (o: SpatialPanel['objects'][number]) => (o.shape === 'outline' ? [0.12, 2.4] : [0.06, 0.4]);
 function boxOf(o: SpatialPanel['objects'][number], at: SpatialVector = o.position): Box {
+  // A lathe sweeps its profile round the vertical through its position.
+  if (drawn(o) && o.shape === 'lathe') {
+    const d = [at.x - o.position.x, at.y - o.position.y, at.z - o.position.z];
+    const r = Math.max(...o.path!.map((p) => Math.abs(p.x - o.position.x)), 0.05);
+    const ys = o.path!.map((p) => p.y + d[1]);
+    return { min: [at.x - r, Math.min(...ys), at.z - r], max: [at.x + r, Math.max(...ys), at.z + r] };
+  }
   if (drawn(o)) {
     const d = [at.x - o.position.x, at.y - o.position.y, at.z - o.position.z], r = o.size.x / 2;
     const xs = o.path!.map((p) => [p.x + d[0], p.y + d[1], p.z + d[2]]);
@@ -42,9 +51,9 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
   for (const o of objects) {
     if (!lined(o.shape)) delete o.path;
     else o.path = (o.path ?? []).filter((p, i, all) => i === 0 || Math.hypot(p.x - all[i - 1].x, p.y - all[i - 1].y, p.z - all[i - 1].z) >= 0.02);
-    // Too few points to draw: a sheet becomes a thin slab, a line a plain rod.
+    // Too few points to draw: a sheet or outline becomes a slab, a line or lathe a plain rod.
     if (lined(o.shape) && !drawn(o)) {
-      o.shape = o.shape === 'sheet' ? 'box' : 'cylinder';
+      o.shape = o.shape === 'sheet' || o.shape === 'outline' ? 'box' : 'cylinder';
       delete o.path;
     }
     if (o.rotation && (o.geometry?.length || drawn(o))) delete o.rotation;
@@ -53,7 +62,7 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
     const owner = byId.get(pose.objectId);
     if (pose.path) pose.path = pose.path.filter((p, i, all) => i === 0 || Math.hypot(p.x - all[i - 1].x, p.y - all[i - 1].y, p.z - all[i - 1].z) >= 0.02);
     // A posed path too short to draw keeps the part's own path at that step.
-    if (pose.path && (!owner || !drawn(owner) || pose.path.length < (owner.shape === 'sheet' ? 3 : 2))) delete pose.path;
+    if (pose.path && (!owner || !drawn(owner) || pose.path.length < pathMinimum(owner.shape))) delete pose.path;
   }
   const frames = (o: SpatialPanel['objects'][number]) => [o.position, ...next.poses.filter((p) => p.objectId === o.id && !p.path?.length).map((p) => p.position)];
   const posedPaths = (o: SpatialPanel['objects'][number]) => next.poses.filter((p) => p.objectId === o.id && p.path?.length).map((p) => p.path!);
@@ -153,8 +162,9 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
     o.position = place(o.position);
     if (drawn(o)) {
       o.path = o.path!.map(place);
-      // A line's thickness stays a line's, whatever the scale.
-      const t = Math.max(0.06, Math.min(0.4, o.size.x * k));
+      // A line's thickness stays a line's, whatever the scale; an outline keeps a solid's depth.
+      const [low, high] = thickness(o);
+      const t = Math.max(low, Math.min(high, o.size.x * k));
       o.size = { x: t, y: t, z: t };
     } else o.size = { x: clampSize(o.size.x * k), y: clampSize(o.size.y * k), z: clampSize(o.size.z * k) };
   }

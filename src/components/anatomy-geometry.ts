@@ -6,7 +6,7 @@ import { faceNormal, mechanismBounds, mechanismMeshes, mechanismPalette } from '
 export type AnatomySolid = { paths: SolidPaths; color: string; depth: number; opacity: number; min: Point3; max: Point3; screen: { left: number; right: number; top: number; bottom: number } };
 export type AnatomyLine = { d: string; color: string; width: number };
 export type AnatomyPart = { object: SpatialObject; solids: AnatomySolid[]; lines: AnatomyLine[]; anchor: [number, number] };
-export const anatomyPalette = { clay: '#ad6447', sage: '#628575', blue: '#65889c', gold: '#b18a3a', violet: '#89739c' };
+export const anatomyPalette = { clay: '#ad6447', sage: '#628575', blue: '#65889c', gold: '#b18a3a', violet: '#89739c', rose: '#c98189', red: '#a9423d', cream: '#d8ccb0', slate: '#66727f' };
 // Soma uses y-up; the upstream kit uses z-up. Preserve identity and world position.
 export const anatomyPoint = ({ x, y, z }: SpatialObject['position']): Point3 => [x, z, y];
 

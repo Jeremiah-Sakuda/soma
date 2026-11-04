@@ -1,4 +1,5 @@
 import type { MechanismPiece } from './mechanism-schema';
+import type { spatialColorNames } from './spatial-schema';
 import type { SpatialScene } from './spatial-exploration';
 import type { SourceOverlayModel } from './source-overlay-model';
 
@@ -9,11 +10,11 @@ export type LiftSceneObject = {
   label: string;
   /** One short line for the part's chip: its role, or its checked value. */
   detail: string;
-  shape: 'sphere' | 'box' | 'cylinder' | 'torus' | 'arrow' | 'tube' | 'sheet';
+  shape: 'sphere' | 'box' | 'cylinder' | 'torus' | 'arrow' | 'tube' | 'sheet' | 'outline' | 'lathe';
   rotation?: Vec;
   path?: Vec[];
   renderStyle: string | null;
-  color: 'clay' | 'sage' | 'blue' | 'gold' | 'violet';
+  color: (typeof spatialColorNames)[number];
   /** Model units, y up, centred on the sheet. */
   position: Vec;
   size: Vec;

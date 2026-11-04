@@ -236,7 +236,7 @@ function crank(): THREE.Object3D {
   const sprocket = gear(0.22, 18, 0.07, drivePart(metal(COLORS.bronze, 0.35, 0.6)));
   sprocket.position.z = DRIVE_Z;
   // Its hand points up at top dead centre; another shows on the crank itself when the drive is away.
-  g.add(sprocket, drivenHand(pointer(0.2, DRIVE_Z + 0.05), true), drivenHand(pointer(0.46, 0.29), false));
+  g.add(sprocket, drivenHand(pointer(0.2, DRIVE_Z + 0.05), true), drivenHand(pointer(0.3, 0.29), false));
   return g;
 }
 
@@ -249,7 +249,7 @@ function valve(side: -1 | 1, lift: number): THREE.Object3D {
   // Its seat stays on the head, so it compresses as the valve opens.
   const spring = metal(side < 0 ? COLORS.intakeSpring : COLORS.exhaustSpring, 0.4, 0.3);
   const coil = Array.from({ length: 97 }, (_, i) => {
-    const t = i / 96, a = t * Math.PI * 2 * 5.5;
+    const t = i / 96, a = t * Math.PI * 2 * 3.5;
     return new THREE.Vector3(Math.cos(a) * 0.1, 0.62 + lift + t * (0.34 - lift), Math.sin(a) * 0.1);
   });
   g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(coil), 192, 0.016, 6, false), spring));
@@ -282,7 +282,7 @@ function cam(role: 'intake_cam' | 'exhaust_cam'): THREE.Object3D {
   sprocket.position.z = DRIVE_Z;
   // Its hand points up at 0°, like the crank's, so one crank turn leaves it pointing down.
   const up = (-enginePose(role, 0).rotZ * Math.PI) / 180;
-  const onSprocket = pointer(0.42, DRIVE_Z + 0.05), onCam = pointer(0.36, 0.17);
+  const onSprocket = pointer(0.42, DRIVE_Z + 0.05), onCam = pointer(0.2, 0.17);
   onSprocket.rotation.z = up;
   onCam.rotation.z = up;
   g.add(sprocket, drivenHand(onSprocket, true), drivenHand(onCam, false));

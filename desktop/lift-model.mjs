@@ -519,7 +519,7 @@ function caption(data) {
     dial = document.createElement('div');
     dial.id = 'lift-turn';
     const strokes = [['intake', 'Intake', '#6fb6ff'], ['compression', 'Compression', '#3f8ff0'], ['power', 'Power', '#ff7a2a'], ['exhaust', 'Exhaust', '#8f857a']];
-    dial.innerHTML = `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="#d9d2c1" stroke-width="3"/><line x1="20" y1="2" x2="20" y2="8" stroke="#1d2430" stroke-width="2"/><line id="lift-turn-hand" x1="20" y1="20" x2="20" y2="7" stroke="#1d2430" stroke-width="3" stroke-linecap="round"/><circle cx="20" cy="20" r="2.8" fill="#1d2430"/></svg><div class="lift-turn-info"><span id="lift-turn-text"></span><div class="lift-turns"><span>Turn 1</span><span>Turn 2</span></div><div class="lift-strokes">${strokes.map(([id, name]) => `<span class="lift-stroke"><i data-stroke="${id}"></i><b>${name}</b></span>`).join('')}</div></div>`;
+    dial.innerHTML = `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="#d9d2c1" stroke-width="3"/><circle id="lift-turn-ring" cx="20" cy="20" r="16" fill="none" stroke="#3f8ff0" stroke-width="3" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 20 20)"/><line x1="20" y1="2" x2="20" y2="8" stroke="#1d2430" stroke-width="2"/><line id="lift-turn-hand" x1="20" y1="20" x2="20" y2="7" stroke="#1d2430" stroke-width="3" stroke-linecap="round"/><circle cx="20" cy="20" r="2.8" fill="#1d2430"/></svg><div class="lift-turn-info"><span id="lift-turn-text"></span><div class="lift-turns"><span>Turn 1</span><span>Turn 2</span></div><div class="lift-strokes">${strokes.map(([id, name]) => `<span class="lift-stroke"><i data-stroke="${id}"></i><b>${name}</b></span>`).join('')}</div></div>`;
     dial.querySelectorAll('.lift-stroke i').forEach((bar, i) => { bar.style.background = strokes[i][2]; });
     box.insertBefore(dial, note);
   }
@@ -588,6 +588,8 @@ function renderFrame() {
     const theta = s.crankShown * 720, hand = document.getElementById('lift-turn-hand'), text = document.getElementById('lift-turn-text');
     // The needle is the crank: up at each whole turn, like the hand on the engine.
     hand?.setAttribute('transform', `rotate(${(theta % 360).toFixed(1)} 20 20)`);
+    // Its ring fills across the whole cycle: half at one turn, full at two.
+    document.getElementById('lift-turn-ring')?.setAttribute('stroke-dasharray', `${((theta / 720) * 100).toFixed(1)} 100`);
     if (text) text.textContent = `Crankshaft ${Math.round(theta)}° · turn ${theta > 360 ? 2 : 1} of 2 · camshaft ${Math.round(theta / 2)}°`;
     // The cycle so far: each stroke's bar fills as the crank goes through it.
     document.querySelectorAll('.lift-stroke i').forEach((bar, i) => { bar.style.width = `${clamp01((theta - i * 180) / 180) * 100}%`; });
@@ -655,7 +657,8 @@ function renderFrame() {
     });
     // A soft contact shadow under what stands on the floor; floating parts cast a fainter one.
     const e = v.extent, ex = e.max.x - e.min.x, ez = e.max.z - e.min.z;
-    v.shadow.scale.set(ex * 1.25, ez * 1.25, 1);
+    const spread = v.data.renderStyle === 'engine-block' ? 1.7 : 1.25;
+    v.shadow.scale.set(ex * spread, ez * spread, 1);
     v.shadow.position.set((e.min.x + e.max.x) / 2, s.floorY - rise + 0.01, (e.min.z + e.max.z) / 2);
     const height = rise + e.min.y - s.floorY;
     // An assembly casts one shadow, from its block, not one per inner part.

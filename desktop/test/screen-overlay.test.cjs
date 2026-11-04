@@ -33,18 +33,26 @@ function harness(images, options = {}) {
   class Window {
     constructor(options) {
       this.options = options;
-      this.webContents = { send: (_c, p) => draws.push(p), setWindowOpenHandler() {}, on() {} };
+      this.webContents = Object.assign(new EventEmitter(), {
+        send: (_c, p) => draws.push(p), setWindowOpenHandler() {},
+        reload: () => this.loadFile(),
+      });
       windows.push(this);
     }
     setIgnoreMouseEvents(v, o) { this.clickThrough = v; this.forward = o?.forward === true; }
     setVisibleOnAllWorkspaces() {}
-    loadFile() {}
+    loadFile() {
+      this.webContents.emit('did-start-loading');
+      if (options.rejectOverlayLoad) return Promise.reject(Error('Synthetic overlay load failed'));
+      if (!options.deferOverlayLoad) this.webContents.emit('did-finish-load');
+      return Promise.resolve();
+    }
     setBounds(b) { this.bounds = b; }
     showInactive() { this.visible = true; }
     hide() { this.visible = false; }
     setContentProtection(v) { this.protectedDuring = this.protectedDuring || v; }
-    isDestroyed() { return false; }
-    destroy() {}
+    isDestroyed() { return Boolean(this.destroyed); }
+    destroy() { this.destroyed = true; }
   }
   const shortcuts = new Map(),
     display = { id: 1, bounds: { x: 0, y: 0, width: 1000, height: 800 }, workArea: { x: 0, y: 24, width: 1000, height: 776 } };
@@ -205,6 +213,75 @@ test('a changed screen gets no overlay, and clicks are accepted only from the ov
   } finally {
     h.controller.dispose();
   }
+});
+
+async function coldCompact(h) {
+  await h.controller.askTyped('Explain this original synthetic circuit.');
+  const id = h.sent.filter((e) => e.type === 'source').at(-1).id;
+  h.controller.feedback({ id, state: 'ready' });
+  return id;
+}
+test('a cold compact overlay delivers only the latest verified draw after its page is ready', async () => {
+  const h = harness(['data:image/jpeg;base64,SLIDE'], { deferOverlayLoad: true });
+  try {
+    const id = await coldCompact(h);
+    assert.equal(h.windows.length, 0, 'typed capture does not pre-load the pointing window');
+    await h.controller.screenOverlay({ id, model: model() });
+    const latest = model({ caption: { ...model().caption, text: 'Latest checked step.' } });
+    await h.controller.screenOverlay({ id, model: latest });
+    assert.equal(h.draws.length, 0, 'no IPC is sent before the overlay has listeners');
+    h.windows[0].webContents.emit('did-finish-load');
+    assert.equal(h.draws.length, 1);
+    assert.equal(h.draws[0].captureId, id);
+    assert.equal(h.draws[0].model, latest);
+    h.windows[0].webContents.emit('did-finish-load');
+    assert.equal(h.draws.length, 1, 'a load event never replays a consumed draw');
+  } finally { h.controller.dispose(); }
+});
+test('cold overlay readiness cannot revive a cleared or superseded capture', async () => {
+  const h = harness(['data:image/jpeg;base64,SLIDE'], { deferOverlayLoad: true });
+  try {
+    const old = await coldCompact(h);
+    await h.controller.screenOverlay({ id: old, model: model() });
+    h.controller.clearScreenOverlay();
+    h.windows[0].webContents.emit('did-finish-load');
+    assert.equal(h.draws.some((d) => d.type === 'graph'), false);
+    h.windows[0].webContents.emit('did-start-loading');
+    const current = await coldCompact(h);
+    await h.controller.screenOverlay({ id: current, model: model() });
+    const replacement = await coldCompact(h);
+    await h.controller.screenOverlay({ id: replacement, model: model() });
+    h.windows[0].webContents.emit('did-finish-load');
+    const draws = h.draws.filter((d) => d.type === 'graph');
+    assert.equal(draws.length, 1);
+    assert.equal(draws[0].captureId, replacement);
+  } finally { h.controller.dispose(); }
+});
+test('load failure, renderer loss and disposal discard queued drawings without reviving them on reload', async () => {
+  for (const action of ['fail', 'reject', 'gone', 'dispose']) {
+    const h = harness(['data:image/jpeg;base64,SLIDE'], { deferOverlayLoad: true, rejectOverlayLoad: action === 'reject' });
+    try {
+      const id = await coldCompact(h);
+      await h.controller.screenOverlay({ id, model: model() });
+      const window = h.windows[0];
+      if (action === 'fail') window.webContents.emit('did-fail-load', {}, -2, 'test failure', '', true);
+      else if (action === 'gone') window.webContents.emit('render-process-gone');
+      else if (action === 'dispose') h.controller.dispose();
+      window.webContents.emit('did-finish-load');
+      assert.equal(h.draws.some((d) => d.type === 'graph'), false, action);
+      if (action !== 'dispose') assert.deepEqual(h.results.at(-1), { id, shown: false, dismissed: true });
+    } finally { h.controller.dispose(); }
+  }
+});
+test('a source marked stale before cold overlay load finishes is not replayed', async () => {
+  const h = harness(['data:image/jpeg;base64,SLIDE'], { deferOverlayLoad: true });
+  try {
+    const id = await coldCompact(h);
+    await h.controller.screenOverlay({ id, model: model() });
+    h.controller.markStale();
+    h.windows[0].webContents.emit('did-finish-load');
+    assert.equal(h.draws.some((d) => d.type === 'graph'), false);
+  } finally { h.controller.dispose(); }
 });
 
 test('turning Point & ask off clears a drawn overlay', async () => {

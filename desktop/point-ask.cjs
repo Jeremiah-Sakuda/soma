@@ -59,6 +59,8 @@ function createPointAsk({
     highlightBusy = false;
   let child = null,
     overlay = null,
+    overlayReady = false,
+    pendingDraw = null,
     enabled = false,
     current = null,
     tracking = null,
@@ -276,10 +278,14 @@ function createPointAsk({
     // macOS may keep the window off the menu bar or otherwise clamp it, so report where it
     // actually sits relative to the captured display; the renderer compensates.
     const d = overlayDisplay?.bounds;
-    overlay.webContents.send(
-      'point:draw',
-      d ? { ...payload, display: { x: d.x, y: d.y, width: d.width, height: d.height } } : payload,
-    );
+    const message = d ? { ...payload, display: { x: d.x, y: d.y, width: d.width, height: d.height } } : payload;
+    if (!overlayReady) {
+      // Compact questions create this window only when the answer arrives. Its
+      // preload listener may not exist yet: keep one current draw, not a history.
+      pendingDraw = { message, owner: current ?? overlayCapture };
+      return;
+    }
+    overlay.webContents.send('point:draw', message);
   }
   function overlayFor(display) {
     if (!overlay) {
@@ -301,14 +307,55 @@ function createPointAsk({
       overlay.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
       overlay.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
       overlay.webContents.on('will-navigate', (e) => e.preventDefault());
+      const window = overlay;
+      const activeWindow = () => overlay === window && !window.isDestroyed();
+      overlay.webContents.on('did-start-loading', () => {
+        if (activeWindow()) overlayReady = false;
+      });
+      overlay.webContents.on('did-finish-load', () => {
+        if (!activeWindow()) return;
+        overlayReady = true;
+        const queued = pendingDraw;
+        pendingDraw = null;
+        if (!queued) return;
+        const { message, owner } = queued;
+        if (message.type !== 'graph-clear' && owner !== (current ?? overlayCapture)) return;
+        if (message.type === 'tracking' && current?.phase !== 'holding') return;
+        if (message.type === 'graph' && (!graph?.verified || message.captureId !== graph.id
+          || message.model !== graph.model || overlayCapture?.id !== graph.id
+          || stale || verifying || current || Date.now() >= overlayCapture.expires)) return;
+        window.webContents.send('point:draw', message);
+      });
+      const failedLoad = () => {
+        if (!activeWindow()) return;
+        overlayReady = false;
+        const id = graph?.id;
+        clearGraph();
+        pendingDraw = null;
+        window.hide();
+        if (id) {
+          refused = id;
+          overlayResult({ id, shown: false, dismissed: true });
+        }
+      };
+      overlay.webContents.on('did-fail-load', (_event, _code, _description, _url, mainFrame) => {
+        if (mainFrame !== false) failedLoad();
+      });
       // If the overlay page dies, its drawing is gone: say so rather than keep watching it.
       overlay.webContents.on('render-process-gone', () => {
+        if (!activeWindow()) return;
+        overlayReady = false;
+        pendingDraw = null;
         const id = graph?.id;
         clearGraph();
         if (id) overlayResult({ id, shown: false, dismissed: true });
         if (overlay && !overlay.isDestroyed()) overlay.webContents.reload();
       });
-      overlay.loadFile(path.join(__dirname, 'point-overlay.html'));
+      // Catch the promise too: load failures must not become unhandled rejections.
+      overlay.loadFile(path.join(__dirname, 'point-overlay.html'))?.catch(() => {
+        // An earlier navigation's rejection must not dismiss a successful reload.
+        if (!overlayReady) failedLoad();
+      });
     }
     overlayDisplay = display;
     overlay.setAlwaysOnTop?.(true, 'screen-saver');
@@ -839,6 +886,8 @@ function createPointAsk({
     disable();
     overlay?.destroy();
     overlay = null;
+    overlayReady = false;
+    pendingDraw = null;
   }
   return {
     enable,

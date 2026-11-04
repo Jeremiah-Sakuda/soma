@@ -20,14 +20,14 @@ function harness(extraImages = [], options = {}) {
   const display = { id: 1, bounds: { x: -1000, y: 0, width: 1000, height: 800 }, workArea: { x: -1000, y: 24, width: 1000, height: 776 } };
   class Window {
     constructor() {
-      this.webContents = { send: (_channel, payload) => draws.push(payload), setWindowOpenHandler() {}, on() {} };
+      this.webContents = Object.assign(new EventEmitter(), { send: (_channel, payload) => draws.push(payload), setWindowOpenHandler() {} });
       windows.push(this);
     }
     setIgnoreMouseEvents(ignore, options) { mouse.push({ ignore, options }); }
     setVisibleOnAllWorkspaces() {}
     setBounds() {}
     setContentProtection() {}
-    loadFile() {}
+    loadFile() { this.webContents.emit('did-finish-load'); }
     showInactive() {}
     hide() {}
     isDestroyed() { return false; }

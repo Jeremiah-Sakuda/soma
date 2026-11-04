@@ -219,55 +219,79 @@ function renderGraph(m) {
     document.body.appendChild(box);
   }
 }
-// A lifted model can be held: hovering it (or its sheet) takes the pointer from the apps
-// underneath, dragging turns it, clicking a part picks it, and a double click sets the view back.
-let held = null;
-const model = () => (document.body.classList.contains('lifted') && window.SomaModel?.active ? window.SomaModel : null);
-document.addEventListener('mousemove', (event) => {
-  const lifted = model();
-  if (held && lifted) {
-    const dx = event.clientX - held.x, dy = event.clientY - held.y;
-    if (Math.hypot(event.clientX - held.startX, event.clientY - held.startY) > 4) held.moved = true;
-    if (held.moved) lifted.drag(dx, dy);
-    held.x = event.clientX;
-    held.y = event.clientY;
-    return;
-  }
+// Both lifted renderers share pointer routing. Graph actions return to the solver;
+// model parts keep their existing selection IPC. A gesture belongs to one draw epoch.
+let held = null, pointerEpoch = 0;
+const activeLift = () => !document.body.classList.contains('lifted') ? null
+  : window.SomaModel?.active ? window.SomaModel : window.SomaLift?.active ? window.SomaLift : null;
+function cancelHeld() {
+  held = null;
+  document.body.style.cursor = '';
+  window.SomaLift?.hover?.(null);
+  window.SomaModel?.hover?.(null);
+  if (graphHover) window.somaPointOverlay.hover((graphHover = false));
+}
+function pointerHover(event) {
+  const lifted = activeLift();
   let over;
   if (lifted) {
     const id = lifted.hit(event.clientX, event.clientY);
     lifted.hover(id && id !== 'sheet' ? id : null);
     over = Boolean(id);
-    document.body.style.cursor = id && id !== 'sheet' ? 'pointer' : id ? 'grab' : '';
+    document.body.style.cursor = id === 'control:caption' ? 'default' : id && id !== 'sheet' ? 'pointer' : id ? 'grab' : '';
   } else {
     const target = document.elementFromPoint(event.clientX, event.clientY);
-    over = Boolean(target?.classList?.contains('graph-hit'));
+    over = !document.body.classList.contains('lifted') && Boolean(target?.classList?.contains('graph-hit'));
   }
-  if (over !== graphHover) {
-    graphHover = over;
-    window.somaPointOverlay.hover(over);
+  if (over !== graphHover) window.somaPointOverlay.hover((graphHover = over));
+}
+document.addEventListener('mousemove', (event) => {
+  const lifted = activeLift();
+  if (held && (held.renderer !== lifted || held.epoch !== pointerEpoch || event.buttons === 0)) cancelHeld();
+  if (held) {
+    const dx = event.clientX - held.x, dy = event.clientY - held.y;
+    if (Math.hypot(event.clientX - held.startX, event.clientY - held.startY) > 4) held.moved = true;
+    if (held.moved && !held.id.startsWith('control:')) lifted.drag(dx, dy);
+    held.x = event.clientX;
+    held.y = event.clientY;
+    document.body.style.cursor = 'grabbing';
+    return;
   }
+  pointerHover(event);
 });
 document.addEventListener('mousedown', (event) => {
-  const lifted = model();
-  if (!lifted || event.button !== 0) return;
+  const lifted = activeLift();
+  if (!lifted || event.button !== 0 || event.detail > 1) return;
   const id = lifted.hit(event.clientX, event.clientY);
   if (!id) return;
-  held = { id, x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false };
+  held = { renderer: lifted, epoch: pointerEpoch, id, x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false };
   document.body.style.cursor = 'grabbing';
 });
-document.addEventListener('mouseup', () => {
-  if (!held) return;
-  const { id, moved } = held;
+document.addEventListener('mouseup', (event) => {
+  if (!held || event.button !== 0) return;
+  const gesture = held, lifted = activeLift();
   held = null;
+  const same = lifted === gesture.renderer && gesture.epoch === pointerEpoch;
+  const released = same ? lifted.hit(event.clientX, event.clientY) : null;
+  const moved = gesture.moved || Math.hypot(event.clientX - gesture.startX, event.clientY - gesture.startY) > 4;
+  if (same && !moved && released === gesture.id) {
+    if (lifted === window.SomaLift) {
+      if (released.startsWith('edge:')) window.somaPointOverlay.toggleEdge(released.slice(5));
+      else lifted.activate(released);
+    } else if (released !== 'sheet') window.somaPointOverlay.select(released);
+  }
   document.body.style.cursor = '';
-  if (!moved && id !== 'sheet') window.somaPointOverlay.select(id);
+  pointerHover(event);
 });
 document.addEventListener('dblclick', (event) => {
-  const lifted = model();
-  if (lifted && lifted.hit(event.clientX, event.clientY)) lifted.resetView();
+  const lifted = activeLift();
+  // Edge double-clicks must not toggle twice. View reset belongs to the sheet.
+  if (lifted?.hit(event.clientX, event.clientY) === 'sheet') lifted.resetView();
 });
+window.addEventListener('blur', cancelHeld);
+document.addEventListener('mouseleave', cancelHeld);
 document.addEventListener('click', (event) => {
+  if (document.body.classList.contains('lifted')) return;
   const edge = event.target?.getAttribute?.('data-edge');
   if (edge) window.somaPointOverlay.toggleEdge(edge);
 });
@@ -290,6 +314,8 @@ function applyFrame(event) {
 for (const renderer of [window.SomaLift, window.SomaModel])
   if (renderer)
     renderer.onFail = (reason) => {
+      cancelHeld();
+      pointerEpoch++;
       document.body.classList.remove('lifted');
       window.somaPointOverlay.liftFailed(reason);
     };
@@ -320,6 +346,8 @@ function liftView(event) {
   else document.body.classList.remove('lifted');
 }
 window.somaPointOverlay.onDraw((event) => {
+  pointerEpoch++;
+  cancelHeld();
   applyFrame(event);
   if (event.type === 'graph') {
     renderGraph(event.model);
@@ -341,6 +369,7 @@ window.somaPointOverlay.onDraw((event) => {
   // Pointing at new context replaces the graph. Do not leave a live 3D canvas or
   // its caption above the new selection, even if no separate clear event arrived.
   window.SomaLift?.dispose();
+  window.SomaModel?.dispose();
   document.body.classList.remove('lifted');
   clearGraph();
   hideBuddy();

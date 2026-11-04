@@ -1,3 +1,14 @@
+> **Current graph interaction checkpoint — November 4 UTC.** Root main includes Claude’s `general-3d` at `1bb35e5` (integration `2cbead8`). The following graph work is local pending commit/release; prior production and notarized artifacts below do not contain it. Final release is scheduled after the 5:30 PM ET freeze.
+
+## Lifted graph interaction — local acceptance
+
+- **14/14 actual-renderer browser cases passed** in 40.4 seconds: projected D–F picking, one toggle action, checked fixture state 7→9→7, removed-edge restoration, drag without toggling, rotation retained after recomputation, view controls, offset displays and interrupted gestures. Node positions, heights and tube geometry remain identical under camera changes.
+- **15/15 controller cases passed**, including foreign senders/unknown edges, expired captures, pending verification, delayed source checks and changed-source rejection. Model selection receives the same freshness gate. Typecheck and overlay bundle build passed. **82/82 complete desktop tests passed**, no skips/failures (36.7 seconds).
+- Independent pointer audit and visual review found two defects that were corrected: caption click-through and expired model selections. Nine viewport/rotation audit combinations had no geometry hits through the caption. Actual 1280×720 mouse tests confirm neutral caption text neither toggles nor rotates. Controls have at least 44px targets and avoid node C in the tested views.
+- **Limits:** renderer tests run the real overlay document in Chromium with checked returned-state fixtures; controller adapters are synthetic. Physical macOS click forwarding, capture alignment and the full installed companion round trip remain unverified for this candidate. No new inference or audio. Shared manifest, installer and final hosted acceptance follow integration/freeze.
+
+Private evidence: `.local/lift-graph-interaction-review/` and `.local/lifted-graph-interaction/`. Retained failing baselines are not counted as passes.
+
 > **Current local clarity candidate — November 4 UTC.** The checked-caption, numerical-readout and save-feedback checks below supersede the previous lead status. Runtime `1658b98` is pushed and reports a READY production deployment. Full CI 41846607806 passed on the test/workflow follow-up `7c213c4`: all 189 browser checks passed without retries. The earlier retried case is retained below. Earlier 3D CI remains dated evidence; hosted/physical native acceptance and the private 0.4.1 draft remain separate gates.
 
 # Verification record

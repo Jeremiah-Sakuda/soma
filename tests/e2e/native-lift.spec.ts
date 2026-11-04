@@ -32,6 +32,9 @@ async function open(page: Page, reduced = true) {
     w.__liftNow = () => w.__virtual;
     w.__failed = [];
     w.__media = [];
+    w.__hovers = [];
+    w.__toggles = [];
+    w.__selections = [];
     HTMLMediaElement.prototype.play = function () { w.__media.push('play'); return Promise.reject(Error('Silent graphics test')); };
     window.speechSynthesis.speak = () => { w.__media.push('speech'); throw Error('Silent graphics test'); };
     navigator.mediaDevices.getUserMedia = async () => { w.__media.push('microphone'); throw Error('Silent graphics test'); };
@@ -40,7 +43,10 @@ async function open(page: Page, reduced = true) {
     }
     w.somaPointOverlay = {
       onDraw: (callback: unknown) => { w.__draw = callback; },
-      hover() {}, toggleEdge() {}, liftFailed: (reason: string) => w.__failed.push(reason),
+      hover: (active: boolean) => w.__hovers.push(active),
+      toggleEdge: (id: string) => w.__toggles.push(id),
+      select: (id: string) => w.__selections.push(id),
+      liftFailed: (reason: string) => w.__failed.push(reason),
     };
     w.__advance = async (ms: number) => {
       for (let elapsed = 0; elapsed < ms;) {
@@ -68,6 +74,211 @@ async function clean(page: Page) {
   await expect(page.locator('#lift-canvas, #lift-labels, #lift-caption')).toHaveCount(0);
   expect(await page.evaluate(() => (window as any).SomaLift.active)).toBe(false);
 }
+
+// Locate a point on the real rendered tube, not the old flat SVG hit path. Using a
+// mesh's projected surface also exercises the display offset and current rotation.
+async function edgePoint(page: Page, id = 'DF') {
+  return page.evaluate((id) => {
+    const lift = (window as any).SomaLift;
+    const s = lift.debug;
+    s.scene.updateMatrixWorld(true);
+    const edge = s.edges.get(id);
+    for (const mesh of edge.meshes) {
+      const position = mesh.geometry.attributes.position;
+      for (const fraction of [0.5, 0.35, 0.65, 0.2, 0.8]) {
+        const i = Math.min(position.count - 1, Math.floor(position.count * fraction));
+        const p = mesh.position.clone().set(position.getX(i), position.getY(i), position.getZ(i));
+        mesh.localToWorld(p); p.project(s.camera);
+        const x = (p.x + 1) * s.frame.width / 2 + s.frame.dx;
+        const y = (1 - p.y) * s.frame.height / 2 + s.frame.dy;
+        if (x >= 0 && x < innerWidth && y >= 0 && y < innerHeight && lift.hit(x, y) === `edge:${id}`)
+          return { x, y };
+      }
+    }
+    throw Error(`No visible pickable point on rendered edge ${id}`);
+  }, id);
+}
+
+async function orientation(page: Page) {
+  return page.evaluate(() => {
+    const s = (window as any).SomaLift.debug;
+    return [s.hinge.rotation.x, s.hinge.rotation.y, s.hinge.rotation.z,
+      s.yaw.rotation.x, s.yaw.rotation.y, s.yaw.rotation.z];
+  });
+}
+
+async function checkedGeometry(page: Page) {
+  return page.evaluate(() => {
+    const s = (window as any).SomaLift.debug;
+    return {
+      model: JSON.stringify(s.model),
+      nodes: [...s.nodes.values()].map((node: any) => ({
+        id: node.data.id, distance: node.data.distance, height: node.sphere.position.z,
+        position: node.sphere.position.toArray(),
+      })),
+      edges: [...s.edges.entries()].map(([id, edge]: any) => ({
+        id, meshes: edge.meshes.map((mesh: any) => Array.from(mesh.geometry.attributes.position.array)),
+      })),
+    };
+  });
+}
+
+test('clicking a lifted string cuts and restores the checked route without landing', async ({ page }) => {
+  await open(page); await draw(page); await advance(page);
+  const before = await orientation(page);
+  let at = await edgePoint(page);
+  await page.mouse.move(at.x, at.y);
+  expect(await page.evaluate(() => (window as any).__hovers.at(-1))).toBe(true);
+  await page.mouse.click(at.x, at.y);
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual(['DF']);
+  // The renderer asks the application to recompute. It cannot invent a cut/result.
+  await expect(page.locator('#lift-labels')).toContainText('F = 7');
+  await draw(page, fixture.cut); await advance(page);
+  await expect(page.locator('#lift-labels')).toContainText('F = 9');
+  await expect(page.locator('#lift-labels')).toContainText('D–F removed');
+  expect(await orientation(page)).toEqual(before);
+  expect(await page.evaluate(() => (window as any).SomaLift.active)).toBe(true);
+  await page.screenshot({ path: test.info().outputPath('lift-click-cut-cost-nine.png') });
+  at = await edgePoint(page);
+  await page.mouse.move(at.x, at.y);
+  await page.mouse.click(at.x, at.y);
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual(['DF', 'DF']);
+  await draw(page); await advance(page);
+  await expect(page.locator('#lift-labels')).toContainText('F = 7');
+  expect(await orientation(page)).toEqual(before);
+  expect(await page.evaluate(() => (window as any).__selections)).toEqual([]);
+  await page.screenshot({ path: test.info().outputPath('lift-click-restored-cost-seven.png') });
+  await clean(page);
+});
+
+test('dragging a lifted edge rotates the view without cutting it and survives recomputation', async ({ page }) => {
+  await open(page); await draw(page); await advance(page);
+  const before = await orientation(page), at = await edgePoint(page);
+  const source = await checkedGeometry(page);
+  await page.mouse.move(at.x, at.y); await page.mouse.down();
+  await page.mouse.move(at.x + 70, at.y + 25, { steps: 8 }); await page.mouse.up();
+  await advance(page);
+  const turned = await orientation(page);
+  expect(turned.some((angle, i) => Math.abs(angle - before[i]) > 0.01)).toBe(true);
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual([]);
+  expect(await checkedGeometry(page)).toEqual(source);
+  await draw(page, fixture.cut); await advance(page);
+  expect(await orientation(page)).toEqual(turned);
+  await expect(page.locator('#lift-labels')).toContainText('F = 9');
+  await page.screenshot({ path: test.info().outputPath('lift-dragged-cost-nine.png') });
+  await clean(page);
+});
+
+test('lifted view buttons turn and reset without changing checked geometry or sending graph actions', async ({ page }) => {
+  await open(page); await draw(page); await advance(page);
+  const before = await orientation(page), geometry = await checkedGeometry(page);
+  const controls = page.locator('#lift-caption button[data-lift-view]');
+  await expect(controls).toHaveCount(3);
+  for (const action of ['left', 'reset', 'right', 'reset']) {
+    const button = page.locator(`#lift-caption button[data-lift-view="${action}"]`);
+    const bounds = (await button.boundingBox())!;
+    expect(bounds.height).toBeGreaterThanOrEqual(44);
+    expect(bounds.x).toBeGreaterThanOrEqual(0);
+    expect(bounds.y).toBeGreaterThanOrEqual(0);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(1600);
+    expect(bounds.y + bounds.height).toBeLessThanOrEqual(900);
+    const x = bounds.x + bounds.width / 2, y = bounds.y + bounds.height / 2;
+    expect(await page.evaluate(({ x, y }) => (window as any).SomaLift.hit(x, y), { x, y })).toBe(`control:${action}`);
+    await page.mouse.move(x, y); await page.mouse.click(x, y); await advance(page);
+    const current = await orientation(page);
+    if (action === 'reset') expect(current).toEqual(before);
+    else expect(current.some((angle, i) => Math.abs(angle - before[i]) > 0.01)).toBe(true);
+    expect(await checkedGeometry(page)).toEqual(geometry);
+  }
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual([]);
+  expect(await page.evaluate(() => (window as any).__selections)).toEqual([]);
+  const caption = (await page.locator('#lift-caption').boundingBox())!;
+  expect(caption.x).toBeGreaterThanOrEqual(0);
+  expect(caption.y).toBeGreaterThanOrEqual(0);
+  expect(caption.x + caption.width).toBeLessThanOrEqual(1600);
+  expect(caption.y + caption.height).toBeLessThanOrEqual(900);
+  await page.screenshot({ path: test.info().outputPath('lift-reset-view-controls.png') });
+  const obscured = await page.evaluate(() => {
+    const s = (window as any).SomaLift.debug;
+    const card = document.getElementById('lift-caption')!.getBoundingClientRect();
+    s.scene.updateMatrixWorld(true);
+    return [...s.nodes.values()].filter((node: any) => {
+      if (!node.sphere.visible || node.data.distance === null || node.sphere.material.opacity < 0.1) return false;
+      const point = node.sphere.getWorldPosition(node.sphere.position.clone()).project(s.camera);
+      const x = (point.x + 1) * s.frame.width / 2 + s.frame.dx;
+      const y = (1 - point.y) * s.frame.height / 2 + s.frame.dy;
+      return x >= card.left && x <= card.right && y >= card.top && y <= card.bottom;
+    }).map((node: any) => node.data.id);
+  });
+  expect(obscured, 'The interaction caption must not cover a visible graph node').toEqual([]);
+  await clean(page);
+});
+
+test('lifted edge picking uses the captured display offset and ignores empty space', async ({ page }) => {
+  await open(page);
+  await draw(page, final, '3d', { display: {
+    x: await page.evaluate(() => window.screenX + 117),
+    y: await page.evaluate(() => window.screenY + 43), width: 1200, height: 800,
+  } });
+  await advance(page);
+  const at = await edgePoint(page);
+  await page.mouse.move(at.x, at.y); await page.mouse.click(at.x, at.y);
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual(['DF']);
+  await page.mouse.move(2, 2); await page.mouse.click(2, 2);
+  expect(await page.evaluate(() => (window as any).__hovers.at(-1))).toBe(false);
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual(['DF']);
+  await clean(page);
+});
+
+test('caption text cannot click through to a hidden edge or rotate the lifted graph', async ({ page }) => {
+  await open(page); await page.setViewportSize({ width: 1280, height: 720 });
+  await draw(page, final, '3d', { display: {
+    x: await page.evaluate(() => window.screenX), y: await page.evaluate(() => window.screenY),
+    width: 1280, height: 720,
+  } });
+  await advance(page);
+  const edge = await edgePoint(page);
+  await page.mouse.move(edge.x, edge.y); await page.mouse.down();
+  await page.mouse.move(edge.x, edge.y + 60, { steps: 6 }); await page.mouse.up();
+  await advance(page);
+  const before = await orientation(page), geometry = await checkedGeometry(page);
+  const caption = (await page.locator('#lift-caption').boundingBox())!;
+  expect(caption.x).toBeGreaterThanOrEqual(0);
+  expect(caption.y).toBeGreaterThanOrEqual(0);
+  expect(caption.x + caption.width).toBeLessThanOrEqual(1280);
+  expect(caption.y + caption.height).toBeLessThanOrEqual(720);
+  // Text area rather than the three explicit view buttons. The native transparent
+  // window must consume these pointer gestures without acting on graph geometry.
+  const x = caption.x + caption.width / 2, y = caption.y + 22;
+  expect(await page.evaluate(({ x, y }) => (window as any).SomaLift.hit(x, y), { x, y })).toBe('control:caption');
+  await page.mouse.move(x, y); await page.mouse.click(x, y);
+  await page.mouse.down(); await page.mouse.move(x + 35, y + 16, { steps: 5 }); await page.mouse.up();
+  await advance(page);
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual([]);
+  expect(await page.evaluate(() => (window as any).__selections)).toEqual([]);
+  expect(await orientation(page)).toEqual(before);
+  expect(await checkedGeometry(page)).toEqual(geometry);
+  await page.screenshot({ path: test.info().outputPath('lift-caption-protected-1280.png') });
+  await clean(page);
+});
+
+test('clearing or replacing a graph during a press cancels its eventual click', async ({ page }) => {
+  await open(page); await draw(page); await advance(page);
+  let at = await edgePoint(page);
+  await page.mouse.move(at.x, at.y); await page.mouse.down();
+  await page.evaluate(() => (window as any).__draw({ type: 'graph-clear' }));
+  await page.mouse.up();
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual([]);
+  expect(await page.evaluate(() => (window as any).__hovers.at(-1))).toBe(false);
+  await draw(page); await advance(page);
+  at = await edgePoint(page);
+  await page.mouse.move(at.x, at.y); await page.mouse.down();
+  await draw(page, fixture.cut); await advance(page);
+  await page.mouse.up();
+  expect(await page.evaluate(() => (window as any).__toggles)).toEqual([]);
+  await expect(page.locator('#lift-labels')).toContainText('F = 9');
+  await clean(page);
+});
 
 test('native lift follows checked search steps, cuts and reset without inventing a route', async ({ page }) => {
   await open(page);

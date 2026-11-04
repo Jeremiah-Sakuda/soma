@@ -359,7 +359,9 @@ test('a verified drawing lifts into 3D with its own slide region as the sheet, o
     assert.equal(h.draws.at(-1).view, '3d');
     assert.equal(h.draws.at(-1).sheet.dataUrl, 'data:image/jpeg;base64,SHEET');
     h.controller.overlayHover({ sender: h.windows[0].webContents }, true);
-    assert.equal(h.windows[0].clickThrough, true, 'hovering cannot make the 3D drawing clickable');
+    assert.equal(h.windows[0].clickThrough, false, 'hovering a verified lifted graph takes the pointer for its controls');
+    h.controller.overlayHover({ sender: h.windows[0].webContents }, false);
+    assert.equal(h.windows[0].clickThrough, true, 'leaving the graph releases the source underneath');
     assert.equal(h.controller.setView('2d'), '3d', 'toggles in quick succession are ignored');
     await wait(360);
     assert.equal(h.controller.setView('2d'), '2d');
@@ -503,6 +505,12 @@ test('a lifted model can be held and its parts picked, only from the overlay and
     assert.equal(h.actions.length, 0);
     h.controller.overlaySelect({ sender: overlay.webContents }, 'medulla');
     assert.deepEqual(h.actions, [{ id, type: 'select', objectId: 'medulla' }]);
+    const now = Date.now;
+    try {
+      Date.now = () => now() + 60 * 60 * 1000;
+      await h.controller.overlaySelect({ sender: overlay.webContents }, 'medulla');
+      assert.equal(h.actions.length, 1, 'an expired model cannot select a part');
+    } finally { Date.now = now; }
   } finally {
     h.controller.dispose();
   }

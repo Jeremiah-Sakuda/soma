@@ -797,20 +797,38 @@ function createPointAsk({
     return Boolean(overlay && !overlay.isDestroyed() && event?.sender === overlay.webContents);
   }
   function overlayHover(event, active) {
-    if (!fromOverlay(event) || !graph?.verified) return;
-    // Lifted, only a model (not a search's strings) can be held and turned.
-    if (view === '3d' && active === true && !graph.model.scene) return;
+    if (!fromOverlay(event)) return;
+    // A canceled gesture must always release the transparent window, including
+    // while the source is being checked or after the old graph was cleared.
+    if (active !== true) return overlay.setIgnoreMouseEvents(true, { forward: true });
+    if (!pointerCurrent()) return;
+    if (view === '3d' && !(graph.model.scene || graph.model.lift)) return;
     overlay.setIgnoreMouseEvents(active !== true, { forward: true });
   }
+  function pointerCurrent() {
+    const c = overlayCapture;
+    return Boolean(graph?.verified && c && c.id === graph.id && Date.now() < c.expires
+      && !current && !highlightBusy && !verifying && !liftRequest);
+  }
   /** A part of the lifted model was picked: the page selects it for the next question. */
-  function overlaySelect(event, objectId) {
-    if (!fromOverlay(event) || !graph?.verified || view !== '3d' || typeof objectId !== 'string') return;
+  async function overlaySelect(event, objectId) {
+    if (!fromOverlay(event) || !pointerCurrent() || view !== '3d' || typeof objectId !== 'string') return;
     if (!graph.model.scene?.objects.some((o) => o.id === objectId)) return;
+    if (stale) {
+      const expected = graph, c = overlayCapture;
+      if (!(await recheck(c, sheetRegion(graph.model)))) return;
+      if (graph !== expected || !pointerCurrent() || stale || view !== '3d') return;
+    }
     overlayAction({ id: graph.id, type: 'select', objectId });
   }
-  function overlayToggle(event, edgeId) {
-    if (!fromOverlay(event) || !graph?.verified || typeof edgeId !== 'string') return;
+  async function overlayToggle(event, edgeId) {
+    if (!fromOverlay(event) || !pointerCurrent() || typeof edgeId !== 'string') return;
     if (!graph.model.edges.some((e) => e.id === edgeId)) return;
+    if (stale) {
+      const expected = graph, c = overlayCapture;
+      if (!(await recheck(c, view === '3d' ? sheetRegion(graph.model) : overlayRegion(graph.model)))) return;
+      if (graph !== expected || !pointerCurrent() || stale) return;
+    }
     overlayAction({ id: graph.id, type: 'toggle-edge', edgeId });
   }
   function dispose() {

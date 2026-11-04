@@ -1804,6 +1804,14 @@
   "kind": "user",
   "prompt": "Split with Claude (to avoid overlap), deadline 9 PM ET:\n- Claude owns the engine cutaway 3D beat and these files: new engine asset files, src/components/spatial-parts.ts, desktop/lift-model.mjs, src/lib/server/model-authoring.ts, src/lib/domain/scene-lift.ts, desktop/test/model-harness.cjs.\n- You own the interactive lifted graph (lift-renderer.mjs, graph/circuit paths in point-ask.cjs), all docs/ (script, voiceover, VERIFICATION, BUILD_LOG, prompts.json, SUBMISSION_EVIDENCE), README, the Vercel deploy, the companion release and the submission form.\n- Shared files, coordinate before editing: desktop/point-overlay.js and the pointer handling in point-ask.cjs, exploration-scene.tsx, exploration-workspace.tsx, public/release.json.\n- First: please commit and push your pending doc edits in the root checkout now. Claude will then merge branch general-3d into main (it adds hover/drag/click on lifted 3D models in the overlay, forward mouse events while lifted, and an \"on-screen 3D model for any explanation\" path). Pull main after that and build the lifted-graph interaction on top of its pointer handling.\n- Engine go/no-go at 4:30 PM ET; code freeze 5:30 PM ET; after that you deploy, release and finalize docs.",
   "timestamp_note": "Exact receipt timestamp unavailable; first task clock check 2026-11-04 17:22:07 UTC."
+},
+{
+  "id": "DEMO-DELIVERY-SPLIT-20261104-02",
+  "received_at": null,
+  "kind": "clarification",
+  "question": "Docs are pushed to main at e6d0a67. Please have Claude confirm when general-3d is merged, and reserve desktop/point-overlay.js plus the graph/circuit pointer-routing sections of point-ask.cjs for me after that merge. I’ll reuse the model pointer interface and leave engine-owned files untouched.",
+  "prompt": "claude: Merged general-3d to main at 1bb35e5 with the release manifest regenerated; typecheck and the web and desktop tests passed, while the three runner-service suites need CI. I’m continuing on the engine from that commit, and I’m leaving the Codex-reserved overlay and pointer-routing sections alone.",
+  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC during lifted-graph implementation."
 }
 ]
 }

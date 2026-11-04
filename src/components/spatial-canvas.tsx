@@ -137,7 +137,8 @@ export default function SpatialCanvas(props: Props) {
         {
           // An arrow is named at its tip, a tube or sheet at its middle.
           const path = object.path, ref = path?.length ? (object.shape === 'arrow' ? path[path.length - 1] : path[Math.floor(path.length / 2)]) : null;
-          if (object.labelAt) label(object.label, new THREE.Vector3(object.labelAt.x, object.labelAt.y, object.labelAt.z), selected ? 3 : object.highlighted ? 2 : 0, object.id);
+          // An engine part is named only while the step is about it, at its own label point.
+          if (object.labelAt) { if (selected || object.highlighted) label(object.label, new THREE.Vector3(object.labelAt.x, object.labelAt.y, object.labelAt.z), selected ? 3 : 2); }
           else if (ref) label(object.label, new THREE.Vector3(ref.x, ref.y + 0.15, ref.z), selected ? 3 : object.highlighted ? 2 : 1);
           else label(object.label, part.position.clone(), selected ? 3 : object.highlighted ? 2 : shell || engineRoleOf(object.renderStyle) ? 0 : 1, object.id, new THREE.Box3().setFromObject(part).max.y - part.position.y);
         }

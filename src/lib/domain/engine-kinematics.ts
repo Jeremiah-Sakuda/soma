@@ -38,16 +38,16 @@ export function engineRoleOf(renderStyle: string | null | undefined): EngineRole
 }
 
 const NAMES: Record<EngineRole, [string, string]> = {
-  block: ['Cylinder and head (cut away)', 'The cylinder the piston slides in, with the head that closes it; the front half is cut away to show inside.'],
+  block: ['Cylinder and head (cut away)', 'The cylinder the piston slides in and the head that closes it, cut away to show inside; the shape is illustrative.'],
   piston: ['Piston', 'Slides down to draw in the charge and up to squeeze it; the burning gas pushes it down on the power stroke.'],
   rod: ['Connecting rod', 'Joins the piston pin to the crank pin, turning the piston’s up-and-down into rotation.'],
-  crank: ['Crankshaft', 'Turns once for every two piston strokes: two full turns per four-stroke cycle.'],
+  crank: ['Crankshaft', 'Turns half a turn per piston stroke, so two full turns per four-stroke cycle.'],
   intake_valve: ['Intake valve', 'Opens only on the intake stroke so the fresh fuel–air charge can enter.'],
   exhaust_valve: ['Exhaust valve', 'Opens only on the exhaust stroke so the burnt gas can leave.'],
-  intake_cam: ['Intake camshaft', 'Its lobe pushes the intake valve open once per turn; it turns once for every two crankshaft turns.'],
-  exhaust_cam: ['Exhaust camshaft', 'Its lobe opens the exhaust valve once per turn, at half the crankshaft’s speed.'],
-  spark_plug: ['Spark plug', 'Fires once per cycle, at the top of the compression stroke.'],
-  timing_belt: ['Timing belt (2 : 1)', 'Links crankshaft to camshafts; the cam sprockets are twice as big, so the cams turn at half speed.'],
+  intake_cam: ['Intake camshaft', 'Opens the intake valve once per cycle, turning at half the crankshaft’s speed; the cam shape is illustrative.'],
+  exhaust_cam: ['Exhaust camshaft', 'Opens the exhaust valve once per cycle, turning at half the crankshaft’s speed; the cam shape is illustrative.'],
+  spark_plug: ['Spark plug', 'Fires once per cycle to ignite the compressed mixture.'],
+  timing_belt: ['Cam drive (2 : 1)', 'An illustrative drive from the crankshaft to the camshafts, drawn at the 2 : 1 ratio that turns them at half speed.'],
   charge: ['Fuel–air charge', 'The gas in the cylinder: fresh mixture drawn in, squeezed, burning, then pushed out.'],
   spark: ['Spark', 'The ignition that starts the power stroke.'],
   intake_flow: ['Mixture in', 'Fresh fuel–air mixture flowing in through the open intake valve.'],

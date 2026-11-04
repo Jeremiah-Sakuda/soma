@@ -607,7 +607,7 @@ function renderFrame() {
     const quiet = anyLit && !v.data.highlighted && !v.data.selected && !v.hover;
     v.label.classList.toggle('is-quiet', quiet);
     // An assembly's parts are named only while the step is about them, or when pointed at.
-    const named = !v.data.renderStyle?.startsWith('engine-') || !quiet;
+    const named = !v.data.renderStyle?.startsWith('engine-') || v.data.highlighted || v.data.selected || v.hover;
     placeLabel(v.label, top, named ? clamp01((k - 0.6) / 0.4) * v.fade : 0, v.data.selected || v.hover ? 5 : v.data.highlighted ? 4 : 2);
   }
   // Flows arc between the parts they join, drawn once both have risen.

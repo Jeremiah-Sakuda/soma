@@ -37,10 +37,10 @@ const ENGINE_WORDS: [RegExp, string[]][] = [
  * "power, then exhaust" stops on exhaust; the explanation's own order never turns it backwards. */
 function crankFromWords(text: string): number | null {
   const marks: [RegExp, number][] = [
-    [/\b720\b|two (full )?(crank(shaft)? )?turns|second turn|both turns|cycle (repeats|ends|is complete)|four half/i, 1],
+    [/\b720\b|two (full )?(crank(shaft)? )?(turns|revolutions|rotations)|second (full )?(crank(shaft)? )?(turn|revolution|rotation)|both turns|cycle (repeats|ends|is complete)|four half/i, 1],
     [/exhaust/i, 0.875],
     [/power|expan|burn|combust/i, 0.62],
-    [/spark|ignit|\b360\b|one (full )?turn|first turn/i, 0.5],
+    [/spark|ignit|\b360\b|(one|first) (full )?(crank(shaft)? )?(turn|revolution|rotation)/i, 0.5],
     [/compress|squeez/i, 0.375],
     [/half a turn|half-turn|\b180\b/i, 0.25],
     [/intake|draw(s|n)? in|suck/i, 0.125],
@@ -69,6 +69,8 @@ function bindEngine(spatial: Panel & { objects?: { id?: unknown; renderStyle?: u
   const partsFor = (text: string) => ENGINE_WORDS.flatMap(([re, roles]) => (re.test(text) ? roles.map((r) => `${prefix}_${r}`) : []));
   return (step: Extract<ExplorationSpec, { mode: 'explanation' }>['steps'][number]) => [...new Set(step.highlightIds.flatMap((id) => partsFor(diagramText.get(id) ?? id)))];
 }
+
+export const ENGINE_ASSUMPTION = 'The engine cutaway is Soma’s built-in illustration: its cam drive, head shape and proportions are not from the source; its motion follows the four strokes and the half-speed camshaft.';
 
 type Raw = Record<string, unknown> & { scene?: { layout?: unknown; panels?: unknown[] }; steps?: unknown[]; assumptions?: unknown };
 type Panel = { id: string; kind: string; placement: { column: number; row: number; columnSpan: number }; poses?: { stepId: string }[]; parameterPoses?: { stepId: string }[] | null };
@@ -139,6 +141,8 @@ export function mergeModelScene(raw: unknown, previous: ExplorationSpec): unknow
   );
   const assumptions = [
     ...previous.assumptions,
+    // Soma's own cutaway says what it adds beyond the source.
+    ...(engineParts ? [ENGINE_ASSUMPTION] : []),
     ...(Array.isArray(spec.assumptions) ? spec.assumptions.filter((a): a is string => typeof a === 'string' && !previous.assumptions.includes(a)) : []),
   ].slice(0, 6);
   return {

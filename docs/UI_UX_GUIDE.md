@@ -1,3 +1,5 @@
+**November 4 small reductions:** Keep the journal appearance. Show one recorded example on the cover; put all six secondary destinations under a native “More examples” disclosure, including inside Explorations. Preserve each item’s prepared/recorded/live label. Escape closes the disclosure and returns focus; choosing an item closes it. The preparation summary reads “How it was made” with the actual Wonder review status; details, calls and timing remain available inside. Avoid an additional generic example-instructions paragraph.
+
 **November 4 framing clarification:** Preserve the adopted journal appearance. Lead the cover with the user's action; omit the graph/circuit-versus-other-topics capability paragraph. Put topic coverage and potential expansion in documentation. Actual result provenance, review status, source warnings and save/sharing controls remain contextual UI. The discarded minimal mockups are not an adopted redesign.
 
 ## Current direction for `/explore` — the dot journal (PM114, October 30)

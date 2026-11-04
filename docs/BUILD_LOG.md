@@ -3222,3 +3222,12 @@ Deviation: none; the user explicitly requested removing the app paragraph. No un
 
 
 Verification follow-up: all five existing entry browser journeys passed in 9.4 seconds (1440, 1280, 620 and 375px plus keyboard source preview), with no generation requests. Inspected the actual 1440px cover capture. `git diff --check` and manifest verification passed. Manifest `soma-positive-framing-2026-11-04` covers 314 files, SHA-256 `8e3004b90e96b4778a350eb9d1e27a0ab5874286b26a8df283a5bb65359c799f`. No new installer or hosted acceptance is claimed.
+
+
+## UI-REDUCTIONS-20261104-01 — Fewer default choices, same journal
+
+1. Kept the recorded example visible and moved the six secondary example destinations into “More examples,” on the cover and inside Explorations. Reused the existing paper, typography, teal and controls; added keyboard Escape/focus return and close-on-selection. Removed the repeated generic example instructions.
+2. Shortened the pipeline summary to “How it was made” with the actual review status; preparation/source details and audit access remain inside. Updated UI/entry documentation. No scene, engine, source/model behavior or quantitative assurance changed.
+3. Five entry checks and typecheck passed; inspected actual 1440px and 375px screenshots. An independent agent is updating existing journeys to open the new disclosure before selecting examples, retaining their behavior assertions. Broader affected-journey results follow below.
+
+Deviation: none. Existing synthetic testing labels and failure/source/save/sharing state remain visible where relevant. No new inference or audio output.

@@ -30,16 +30,10 @@ export function ExplorationPipeline({
   const readingCheck = audit.find((item) => item.event.startsWith('reading-'));
   return (
     <details className="exploration-pipeline">
-      <summary>
-        {readingCheck?.event === 'reading-confirmed' || readingCheck?.event === 'reading-corrected' ? (
-          <>
-            Spark read <span aria-hidden="true">→</span> Wonder checked the reading{' '}
-            <span aria-hidden="true">→</span>{' '}
-          </>
-        ) : null}
-        {replay ? 'Recorded run' : 'Muse Spark composed'} <span aria-hidden="true">→</span>{' '}
-        {checked ? 'Soma computed' : 'Scene validated'} <span aria-hidden="true">→</span> {review}
-      </summary>
+      <summary>How it was made · {review}</summary>
+      <p>
+        {replay ? 'Recorded run' : 'Muse Spark composed'} · {checked ? 'Soma computed' : 'Scene validated'} · {review}.
+      </p>
       <p>
         {source}.{' '}
         {readingCheck ? `${readingCheck.detail} ` : ''}

@@ -1,6 +1,6 @@
 # Soma — three-minute recording script
 
-Updated November 4, 2026, after the filmed rehearsals and Claude's review. **The user authorized recording with sound on November 4.** This is the revised edit plan. A new coherent graph take, final voiceover and final three-minute video do not yet exist. [Rehearsal evidence](DEMO_REHEARSALS.md) owns what was actually recorded; [delivery runbook](FINAL_DELIVERY_RUNBOOK.md) owns release and submission gates.
+Updated November 4, 2026, after the filmed rehearsals and Claude's review. **The user authorized recording with sound on November 4.** This is the revised edit plan. A coherent graph take with app narration is now recorded; final user voiceover and the final three-minute edit are pending. [Rehearsal evidence](DEMO_REHEARSALS.md) owns what was actually recorded; [delivery runbook](FINAL_DELIVERY_RUNBOOK.md) owns release and submission gates.
 
 The main cut now includes a **25-second engine beat**. The R2-opening detour and on-camera pieces are removed. Jeremy records voiceover after the computer footage is assembled. The target is 3:00 including the end card; reserve natural result holds rather than speeding up interactions.
 
@@ -27,7 +27,7 @@ The main cut now includes a **25-second engine beat**. The R2-opening detour and
 | 2:38–2:50 | Hold the last useful result; optional brief return to graph/engine as explicitly separated excerpts. | “I built Soma to work with the diagram I’m already looking at, so I can try a question instead of leaving it on the page.” No new feature montage or unsupported subject. |
 | 2:50–3:00 | End card with verified working product and repository links. | “That’s Soma. You can try it at the link on screen.” Leave quiet reading time. A private repository URL is not a judge-accessible link. |
 
-[Voiceover-only copy](DEMO_VOICEOVER.txt) follows this timeline. The main copy is 260 words: approximately 108–120 seconds at 130–145 words per minute, leaving about a minute for visible actions and holds. Timing is an edit target, not a completed timed rehearsal. The final voiceover is recorded against the assembled footage.
+[Voiceover-only copy](DEMO_VOICEOVER.txt) follows this timeline. The main copy is about 270 words: approximately 112–125 seconds at 130–145 words per minute, leaving about a minute for visible actions and holds. Timing is an edit target, not a completed timed rehearsal. The final voiceover is recorded against the assembled footage.
 
 ## Values must follow the take
 
@@ -76,4 +76,6 @@ Use the separate [footage-only voiceover](DEMO_VOICEOVER_FOOTAGE_ONLY.txt), then
 
 ## Current status
 
-Real-screen graph, engine and circuit footage exists; [DEMO_REHEARSALS.md](DEMO_REHEARSALS.md) records successful actions and failures. Fresh packaged startup acceptance passed. Caption placement passed 25 actual-renderer tests and exact retained-data replay; the latest signed local package includes that fix. Physical mouse cut/restore after the pointer fix, held-button drag/reset, audible narration quality, a new coherent graph take and the final narrated/timed export remain distinct open checks. CI/release/access status is maintained in [VERIFICATION.md](VERIFICATION.md) and [FINAL_DELIVERY_RUNBOOK.md](FINAL_DELIVERY_RUNBOOK.md).
+Real-screen graph, engine and circuit footage exists; [DEMO_REHEARSALS.md](DEMO_REHEARSALS.md) records successful actions and failures. Fresh packaged startup acceptance passed. Caption placement passed 25 actual-renderer tests and exact retained-data replay; the latest signed local package includes that fix. The new coherent graph take records actual narration, model-selected A–F/tie7, contextual follow-up and panel-controlled cut/restore. Audio/video decode and synchronization pass. Automated native overlay click attempts did not register; held-button drag/reset, human listening, and the final narrated/timed export remain open checks. CI/release/access status is maintained in [VERIFICATION.md](VERIFICATION.md) and [FINAL_DELIVERY_RUNBOOK.md](FINAL_DELIVERY_RUNBOOK.md).
+
+The November4 sound pass supplies separate engine/circuit narration from retained playback. Keep their actual native source-to-lift video in the main cut; do not replace it with the app-workspace replay recording. When using the new audio over the older footage, document it as replayed narration.

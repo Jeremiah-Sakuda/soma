@@ -3348,3 +3348,21 @@ Deviation: capture now includes app narration at the user's request; retain an a
 Deviation: use verified system-output capture because the Electron-specific application filter missed narration. This is not microphone or user-voiceover recording.
 
 Recording checkpoint, 21:35 UTC: finalized the coherent graph take with 22,851 video frames, 38,964 audio buffers and zero drops. Full audio/video decode passes; decoded narration is nonzero and host/media offsets agree within four microseconds. Three admissions cost $0.21479575 across 12 Meta calls, leaving one existing-session admission. Actual unselected generic investigation chose A–F/tie7; recorded6→7→8, contextual follow-up at8, and saved version3. Restored original11 before panel-controlled D–F cut7→9→7. Two automated floating-graph click attempts did not register; raw failures retained. No physical-drag success claimed. Engine/circuit narration replay and edited clips are in progress; final voiceover belongs to the user.
+
+
+## DEMO-NATIVE-THREE-SUBJECTS-20261104-01 — Keep all three native lifts in the film
+
+1. Confirmed that graph, engine and circuit should all appear lifting from their original slides. The main script already allocates the engine25seconds and circuit28seconds; no workspace-replay video replaces those native beats.
+2. Recorded engine47.10seconds and circuit62.60seconds of actual retained-explanation narration without new exploration generation. These separate audio tracks are replayed narration; earlier native video was silent. Microphone disabled; full decode passed, zero drops, timestamp agreement within12microseconds. Fixed−3dB audio exports avoid AAC overshoot.
+3. Clean graph clips and separate narration files are exported. Native engine/circuit clean delivery copies and the delivery index are being prepared; final3minute assembly, user's voiceover and semantic listening remain pending. All raw setup/failures remain private.
+
+Deviation: none to the main three-subject visual story. Narration for the earlier engine/circuit footage is separately recorded playback and must be identified in editing provenance.
+
+
+## DEMO-RECORDING-COMPLETE-20261104-01 — Recording status
+
+1. Confirmed computer footage and actual Soma narration are recorded; both recorders and the controlled app process stopped cleanly. Microphone was disabled throughout.
+2. Clean clip exports and delivery organization continue; earlier native engine/circuit footage is retained and separate replay narration is identified. No further exploration generation is needed for this footage.
+3. User voiceover and final three-minute assembly remain pending. This is not a claim of a finished or submitted demo video.
+
+Deviation: none.

@@ -1766,186 +1766,197 @@
       "kind": "message",
       "prompt": "Continue",
       "timestamp_note": "Exact receipt timestamp unavailable. Archived during the continued review on 2026-11-04 UTC."
+    },
+    {
+      "id": "DEMO-SCRIPT-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "I want you to iterate on the demo video and script. Avoid AI writing cliches",
+      "timestamp_note": "Exact receipt timestamp unavailable; recorded retrospectively during the script revision."
+    },
+    {
+      "id": "DEMO-SCRIPT-20261104-02",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "No need for that I moreso meant the script itself. We need to convey the cool factor of the project",
+      "timestamp_note": "Exact receipt timestamp unavailable; recorded retrospectively during the script revision."
+    },
+    {
+      "id": "DEMO-3D-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": " So here's th eissue. I think the 3D example could be what sway th ejudges in the demo video. Are there any in the script?",
+      "timestamp_note": "Exact receipt timestamp unavailable; recorded during November 4 script discussion."
+    },
+    {
+      "id": "DEMO-3D-20261104-02",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Yes, maybe a second example too? Like an engine? A jet taking off? Something else entirely? The thing is, the elements on screen themselves need to be of unquestionable quality.",
+      "timestamp_note": "Exact receipt timestamp unavailable; recorded during November 4 script discussion."
+    },
+    {
+      "id": "DEMO-DELIVERY-SPLIT-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Split with Claude (to avoid overlap), deadline 9 PM ET:\n- Claude owns the engine cutaway 3D beat and these files: new engine asset files, src/components/spatial-parts.ts, desktop/lift-model.mjs, src/lib/server/model-authoring.ts, src/lib/domain/scene-lift.ts, desktop/test/model-harness.cjs.\n- You own the interactive lifted graph (lift-renderer.mjs, graph/circuit paths in point-ask.cjs), all docs/ (script, voiceover, VERIFICATION, BUILD_LOG, prompts.json, SUBMISSION_EVIDENCE), README, the Vercel deploy, the companion release and the submission form.\n- Shared files, coordinate before editing: desktop/point-overlay.js and the pointer handling in point-ask.cjs, exploration-scene.tsx, exploration-workspace.tsx, public/release.json.\n- First: please commit and push your pending doc edits in the root checkout now. Claude will then merge branch general-3d into main (it adds hover/drag/click on lifted 3D models in the overlay, forward mouse events while lifted, and an \"on-screen 3D model for any explanation\" path). Pull main after that and build the lifted-graph interaction on top of its pointer handling.\n- Engine go/no-go at 4:30 PM ET; code freeze 5:30 PM ET; after that you deploy, release and finalize docs.",
+      "timestamp_note": "Exact receipt timestamp unavailable; first task clock check 2026-11-04 17:22:07 UTC."
+    },
+    {
+      "id": "DEMO-DELIVERY-SPLIT-20261104-02",
+      "received_at": null,
+      "kind": "clarification",
+      "question": "Docs are pushed to main at e6d0a67. Please have Claude confirm when general-3d is merged, and reserve desktop/point-overlay.js plus the graph/circuit pointer-routing sections of point-ask.cjs for me after that merge. I’ll reuse the model pointer interface and leave engine-owned files untouched.",
+      "prompt": "claude: Merged general-3d to main at 1bb35e5 with the release manifest regenerated; typecheck and the web and desktop tests passed, while the three runner-service suites need CI. I’m continuing on the engine from that commit, and I’m leaving the Codex-reserved overlay and pointer-routing sections alone.",
+      "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC during lifted-graph implementation."
+    },
+    {
+      "id": "DEMO-DELIVERY-SPLIT-20261104-03",
+      "received_at": null,
+      "kind": "clarification",
+      "question": "The lifted graph is ready for handoff: clicks cut/restore edges, dragging rotates it, and the pointer safeguards passed review. Please ask Claude to leave public/release.json to me for the graph checkpoint and final release; his engine merge can bring its source changes without regenerating that file. I’ll regenerate it after each integration. Also send the engine go/no-go at 4:30 PM ET.",
+      "prompt": "public/release.json now belongs to Codex, and when the engine merges it only the source comes across, so I’ll send the go/no-go at 4:30 PM ET. I’m re-rendering with the size, label and crank fixes now.",
+      "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+    },
+    {
+      "id": "DEMO-DELIVERY-PREP-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Okay so what else can you do in the meantime",
+      "timestamp_note": "Exact receipt timestamp unavailable; first prep clock check November 4, 2026 17:41:02 UTC."
+    },
+    {
+      "id": "DEMO-DELIVERY-PREP-20261104-02",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Proceed",
+      "timestamp_note": "Exact receipt timestamp unavailable; work performed November 4, 2026 UTC."
+    },
+    {
+      "id": "UI-RESTRAINT-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "I want you to shift focus to the actual Soma UI. I don't want it to be cluttered with too much information Turn graphs and DC circuits into checked experiments. Other topics get visual explanations. I want it to be minimal. Use this skill x[https://github.com/emilkowalski/skills/blob/main/skills/apple-design/SKILL.md](https://github.com/emilkowalski/skills/blob/main/skills/apple-design/SKILL.md) before implementing anything make a few mockiups",
+      "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+    },
+    {
+      "id": "UI-RESTRAINT-20261104-02",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "I meant keep the current look of it, while implementing the minimal apple feel",
+      "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+    },
+    {
+      "id": "UI-RESTRAINT-20261104-03",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Actually scratch that I think what we currently have is better than this. I just want to make sure we aren't overwhelming the user with too much information",
+      "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+    },
+    {
+      "id": "UI-FRAMING-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Also, our positioning and framing should not mention what we do not do. We shouldnt say for example, \"only x and y get 3D graphics\" it should be more so, 3D graphics are introduces for a few relevant topics now, with posisble expansion in the future. But that should not be in the app itself but documentation / So the line on \"Other examples get visual checks\" should not be present imo",
+      "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+    },
+    {
+      "id": "UI-REDUCTIONS-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Okay, implement the other small reductions you suggested too, especially putting the extra examples under More examples. Keep the current look.",
+      "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+    },
+    {
+      "id": "ENGINE-INTEGRATION-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Engine merged to main at af9a223, source only. Please regenerate public/release.json (CI's manifest check fails until you do). Your files are untouched: point-overlay.js, point-ask.cjs, docs/.\n\nBehaviour changes to reflect in docs:\n- Compact bar on an explanation: ‹ › now step it and speak that step (the \"stepping waits for playback to pause\" line now applies to checked traces only). Narration waits until the model lifts; ▶ plays through the rest.\n- A typed question lifts the diagram region, not the whole display. The lifted slide is now a crisp card, not a washed one.\n- 3D no longer stands a flat diagram up when a model can't be built; the bar reports the failure and 3D can be pressed again.\n- New: built-in four-stroke cutaway. Muse places it; Soma poses it. Its parts and motion are labelled illustrative. Slide: docs/examples/hero-engine/lecture-7-four-stroke.png (original).\n- Explanation narration is now written as a tutor's full sentences.\n\nPlease check:\n- Double-click reset didn't take effect in one on-device try (point-overlay.js is yours).\n- Each session gets 12 generations per UTC day, resetting 7 PM ET. A take uses 2. Please confirm the production companion's session has its own 12 before recording.\n\nStill pending: engine go/no-go at 4:30 PM ET. The latest judges are still scoring. Companion 0.5.0 must ship with this web deploy, or \"Lift into 3D\" does nothing in 0.4.x.",
+      "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+    },
+    {
+      "id": "DEMO-READINESS-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Alright is everything that we’re going to show in the demo ready?",
+      "timestamp_note": "Exact receipt timestamp unavailable; checked November 4, 2026 UTC."
+    },
+    {
+      "id": "DEMO-QUOTAS-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Any quotas I should know about?",
+      "timestamp_note": "Exact receipt timestamp unavailable; checked November 4, 2026 UTC."
+    },
+    {
+      "id": "DEMO-REHEARSALS-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Yeah, I want you to do rehearsals and iterate on anything that’s broken. But because credits are limited, also record everything that you do so we have clips for the demo video",
+      "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+    },
+    {
+      "id": "DEMO-REHEARSALS-20261104-02",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Claude is done you can continue",
+      "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+    },
+    {
+      "id": "DEMO-RECORDING-READY-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Okay js everything ready for the actual recording",
+      "timestamp_note": "Exact receipt timestamp unavailable; readiness checked November 4, 2026 UTC."
+    },
+    {
+      "id": "DEMO-FILMING-CONFIRM-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Alright to are you able to film the actual demo video’s computer use content then I just do the voiceover? Not asking you to start just confirm yes or no, or if there’s more if need to do myself",
+      "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+    },
+    {
+      "id": "DEMO-DRAG-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Is there any way for you to do the drag or no?",
+      "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+    },
+    {
+      "id": "DEMO-CLAUDE-REVIEW-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Claude feedback: I'll read what's changed on `main` first: the script, the runbook, any rehearsal evidence, CI, and what's actually deployed.\n\nThe native engine take was filmed on a build that includes my latest engine commit. That's the first real-screen evidence of it, so I'll look at the actual frames rather than rely on the summary.\n\nThe engine frames on your screen look right, and I'm now checking script timing, remaining generation allowance, and release status before answering.\n\nYes. The footage itself looks good, but several things could stop you finishing a clean take. It's 4:00 PM ET. I read Codex's rehearsal record and checked stills from the engine and graph takes on your real screen; I didn't watch the videos or run anything new.\n\n## Could block the video\n1. **Your main beat has no matching take.** The script says \"I haven't selected a connection… Muse chooses D-to-F… they tie at five\". In the filmed take, D–F was already selected and Muse chose E–F, with a tie at 1. You need a new graph take with the selection cleared, or a rewritten voiceover without that claim.\n2. **You probably can't regenerate everything before 7 PM ET.** About 4 generations were left at 3:45 PM ET, and failed attempts count too. A full graph take uses 3, an engine take 2 and a circuit take 2. The limit resets at 7 PM ET, two hours before the deadline. Check the remaining count first.\n3. **The engine isn't in the script, and the script already fills 3:00.** A 25-second engine beat needs that time cut elsewhere. I'd drop the R2 opening and trim the on-camera closer.\n\n## Check by hand first (about 5 minutes, no generations)\nAutomation couldn't confirm any of these on the current build:\n- **Clicking D–F:** in the filmed take, the first cut click and an early restore click did nothing. A fix followed, but no physical click has confirmed it, and this is your cold open.\n- **Dragging to turn:** still unverified with a real held mouse button. If it fails, the graph card's Turn left/right and Reset view buttons are a fallback; the engine card doesn't have them.\n- **Microphone and sound:** every clip so far is silent, and nobody has confirmed step narration by ear.\n\n## Will affect the take\n- **Soma talks over you.** Because of the narration change, it speaks when the model lifts and on every ›. Record without system audio, or pause it.\n- **Don't click away from Soma while lifted.** Clicking the slide or another app starts re-checks every 5 seconds, and the code warns each one can make the drawing blink in a recording. Turn on Do Not Disturb too.\n- **The circuit has no clean flat footage.** One take is missing the first drawing, and the other has the caption overlapping the bar (fixed since, but not refilmed). Open on the balanced lift clip instead.\n- **Circuit resistors aren't clickable in 3D.** Use the panel controls.\n- **The slide still prints \"cost: 7\" while the overlay shows F = 9.** Say that it's your experiment.\n\n## My filming plan\n1. Do the hand checks.\n2. Spend 3 generations on the graph take.\n3. Reuse the existing engine and circuit clips, with their provenance labels, and hold the 7 PM reset as backup.\n\nDon't use the `2026-11-04T19-52-42.927Z` folder: it's marked private because your background content is visible.\n\n## Before you submit\n- The repo is still **private**, so judges can't reach its links yet.\n- 0.5.0 is signed but not notarized or published, and the public download is still 0.4.0, which can't do the new lifts.\n- The two newest CI runs were still in progress.\n- The root checkout has untracked `design-system/soma/directions/2026-11-04-minimal/` and an edited `next-env.d.ts`.\n- I didn't check whether the history rewrite the access session raised has happened.\n\nI also stopped my dev server, so nothing of mine is competing with the companion.",
+      "timestamp_note": "Exact receipt timestamp unavailable; review processed November 4, 2026 UTC. Pasted Claude feedback retained as supplied user content, not independent executed evidence."
+    },
+    {
+      "id": "DEMO-RECORD-WITH-SOUND-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Alright record now with sound",
+      "timestamp_note": "Exact receipt timestamp unavailable; recording preparation started November 4, 2026 UTC."
+    },
+    {
+      "id": "DEMO-APP-NARRATION-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Also so we’re clear, I meant sound from the app narration. I will still record the voiceover myself",
+      "timestamp_note": "Exact receipt timestamp unavailable; clarification received during November 4 recording."
+    },
+    {
+      "id": "DEMO-NATIVE-THREE-SUBJECTS-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Wait why don’t we just show the engine and circuits coming off the slides as well?",
+      "timestamp_note": "Exact receipt timestamp unavailable; received during November 4 footage export."
+    },
+    {
+      "id": "DEMO-RECORDING-COMPLETE-20261104-01",
+      "received_at": null,
+      "kind": "user",
+      "prompt": "Oh I see thank you for clarifying. So is all the recording done?",
+      "timestamp_note": "Exact receipt timestamp unavailable; received after November 4 recording stopped."
     }
-  ,
-{
-  "id": "DEMO-SCRIPT-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "I want you to iterate on the demo video and script. Avoid AI writing cliches",
-  "timestamp_note": "Exact receipt timestamp unavailable; recorded retrospectively during the script revision."
-},
-{
-  "id": "DEMO-SCRIPT-20261104-02",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "No need for that I moreso meant the script itself. We need to convey the cool factor of the project",
-  "timestamp_note": "Exact receipt timestamp unavailable; recorded retrospectively during the script revision."
-}
-,
-{
-  "id": "DEMO-3D-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": " So here's th eissue. I think the 3D example could be what sway th ejudges in the demo video. Are there any in the script?",
-  "timestamp_note": "Exact receipt timestamp unavailable; recorded during November 4 script discussion."
-},
-{
-  "id": "DEMO-3D-20261104-02",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Yes, maybe a second example too? Like an engine? A jet taking off? Something else entirely? The thing is, the elements on screen themselves need to be of unquestionable quality.",
-  "timestamp_note": "Exact receipt timestamp unavailable; recorded during November 4 script discussion."
-}
-,
-{
-  "id": "DEMO-DELIVERY-SPLIT-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Split with Claude (to avoid overlap), deadline 9 PM ET:\n- Claude owns the engine cutaway 3D beat and these files: new engine asset files, src/components/spatial-parts.ts, desktop/lift-model.mjs, src/lib/server/model-authoring.ts, src/lib/domain/scene-lift.ts, desktop/test/model-harness.cjs.\n- You own the interactive lifted graph (lift-renderer.mjs, graph/circuit paths in point-ask.cjs), all docs/ (script, voiceover, VERIFICATION, BUILD_LOG, prompts.json, SUBMISSION_EVIDENCE), README, the Vercel deploy, the companion release and the submission form.\n- Shared files, coordinate before editing: desktop/point-overlay.js and the pointer handling in point-ask.cjs, exploration-scene.tsx, exploration-workspace.tsx, public/release.json.\n- First: please commit and push your pending doc edits in the root checkout now. Claude will then merge branch general-3d into main (it adds hover/drag/click on lifted 3D models in the overlay, forward mouse events while lifted, and an \"on-screen 3D model for any explanation\" path). Pull main after that and build the lifted-graph interaction on top of its pointer handling.\n- Engine go/no-go at 4:30 PM ET; code freeze 5:30 PM ET; after that you deploy, release and finalize docs.",
-  "timestamp_note": "Exact receipt timestamp unavailable; first task clock check 2026-11-04 17:22:07 UTC."
-},
-{
-  "id": "DEMO-DELIVERY-SPLIT-20261104-02",
-  "received_at": null,
-  "kind": "clarification",
-  "question": "Docs are pushed to main at e6d0a67. Please have Claude confirm when general-3d is merged, and reserve desktop/point-overlay.js plus the graph/circuit pointer-routing sections of point-ask.cjs for me after that merge. I’ll reuse the model pointer interface and leave engine-owned files untouched.",
-  "prompt": "claude: Merged general-3d to main at 1bb35e5 with the release manifest regenerated; typecheck and the web and desktop tests passed, while the three runner-service suites need CI. I’m continuing on the engine from that commit, and I’m leaving the Codex-reserved overlay and pointer-routing sections alone.",
-  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC during lifted-graph implementation."
-},
-{
-  "id": "DEMO-DELIVERY-SPLIT-20261104-03",
-  "received_at": null,
-  "kind": "clarification",
-  "question": "The lifted graph is ready for handoff: clicks cut/restore edges, dragging rotates it, and the pointer safeguards passed review. Please ask Claude to leave public/release.json to me for the graph checkpoint and final release; his engine merge can bring its source changes without regenerating that file. I’ll regenerate it after each integration. Also send the engine go/no-go at 4:30 PM ET.",
-  "prompt": "public/release.json now belongs to Codex, and when the engine merges it only the source comes across, so I’ll send the go/no-go at 4:30 PM ET. I’m re-rendering with the size, label and crank fixes now.",
-  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
-},
-{
-  "id": "DEMO-DELIVERY-PREP-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Okay so what else can you do in the meantime",
-  "timestamp_note": "Exact receipt timestamp unavailable; first prep clock check November 4, 2026 17:41:02 UTC."
-},
-{
-  "id": "DEMO-DELIVERY-PREP-20261104-02",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Proceed",
-  "timestamp_note": "Exact receipt timestamp unavailable; work performed November 4, 2026 UTC."
-},
-{
-  "id": "UI-RESTRAINT-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "I want you to shift focus to the actual Soma UI. I don't want it to be cluttered with too much information Turn graphs and DC circuits into checked experiments. Other topics get visual explanations. I want it to be minimal. Use this skill x[https://github.com/emilkowalski/skills/blob/main/skills/apple-design/SKILL.md](https://github.com/emilkowalski/skills/blob/main/skills/apple-design/SKILL.md) before implementing anything make a few mockiups",
-  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
-},
-{
-  "id": "UI-RESTRAINT-20261104-02",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "I meant keep the current look of it, while implementing the minimal apple feel",
-  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
-},
-{
-  "id": "UI-RESTRAINT-20261104-03",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Actually scratch that I think what we currently have is better than this. I just want to make sure we aren't overwhelming the user with too much information",
-  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
-},
-{
-  "id": "UI-FRAMING-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Also, our positioning and framing should not mention what we do not do. We shouldnt say for example, \"only x and y get 3D graphics\" it should be more so, 3D graphics are introduces for a few relevant topics now, with posisble expansion in the future. But that should not be in the app itself but documentation / So the line on \"Other examples get visual checks\" should not be present imo",
-  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
-},
-{
-  "id": "UI-REDUCTIONS-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Okay, implement the other small reductions you suggested too, especially putting the extra examples under More examples. Keep the current look.",
-  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
-},
-{
-  "id": "ENGINE-INTEGRATION-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Engine merged to main at af9a223, source only. Please regenerate public/release.json (CI's manifest check fails until you do). Your files are untouched: point-overlay.js, point-ask.cjs, docs/.\n\nBehaviour changes to reflect in docs:\n- Compact bar on an explanation: ‹ › now step it and speak that step (the \"stepping waits for playback to pause\" line now applies to checked traces only). Narration waits until the model lifts; ▶ plays through the rest.\n- A typed question lifts the diagram region, not the whole display. The lifted slide is now a crisp card, not a washed one.\n- 3D no longer stands a flat diagram up when a model can't be built; the bar reports the failure and 3D can be pressed again.\n- New: built-in four-stroke cutaway. Muse places it; Soma poses it. Its parts and motion are labelled illustrative. Slide: docs/examples/hero-engine/lecture-7-four-stroke.png (original).\n- Explanation narration is now written as a tutor's full sentences.\n\nPlease check:\n- Double-click reset didn't take effect in one on-device try (point-overlay.js is yours).\n- Each session gets 12 generations per UTC day, resetting 7 PM ET. A take uses 2. Please confirm the production companion's session has its own 12 before recording.\n\nStill pending: engine go/no-go at 4:30 PM ET. The latest judges are still scoring. Companion 0.5.0 must ship with this web deploy, or \"Lift into 3D\" does nothing in 0.4.x.",
-  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
-},
-{
-  "id": "DEMO-READINESS-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Alright is everything that we’re going to show in the demo ready?",
-  "timestamp_note": "Exact receipt timestamp unavailable; checked November 4, 2026 UTC."
-},
-{
-  "id": "DEMO-QUOTAS-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Any quotas I should know about?",
-  "timestamp_note": "Exact receipt timestamp unavailable; checked November 4, 2026 UTC."
-},
-{
-  "id": "DEMO-REHEARSALS-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Yeah, I want you to do rehearsals and iterate on anything that’s broken. But because credits are limited, also record everything that you do so we have clips for the demo video",
-  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
-},
-{
-  "id": "DEMO-REHEARSALS-20261104-02",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Claude is done you can continue",
-  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
-},
-{
-  "id": "DEMO-RECORDING-READY-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Okay js everything ready for the actual recording",
-  "timestamp_note": "Exact receipt timestamp unavailable; readiness checked November 4, 2026 UTC."
-},
-{
-  "id": "DEMO-FILMING-CONFIRM-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Alright to are you able to film the actual demo video’s computer use content then I just do the voiceover? Not asking you to start just confirm yes or no, or if there’s more if need to do myself",
-  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
-},
-{
-  "id": "DEMO-DRAG-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Is there any way for you to do the drag or no?",
-  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
-},
-{
-  "id": "DEMO-CLAUDE-REVIEW-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Claude feedback: I'll read what's changed on `main` first: the script, the runbook, any rehearsal evidence, CI, and what's actually deployed.\n\nThe native engine take was filmed on a build that includes my latest engine commit. That's the first real-screen evidence of it, so I'll look at the actual frames rather than rely on the summary.\n\nThe engine frames on your screen look right, and I'm now checking script timing, remaining generation allowance, and release status before answering.\n\nYes. The footage itself looks good, but several things could stop you finishing a clean take. It's 4:00 PM ET. I read Codex's rehearsal record and checked stills from the engine and graph takes on your real screen; I didn't watch the videos or run anything new.\n\n## Could block the video\n1. **Your main beat has no matching take.** The script says \"I haven't selected a connection… Muse chooses D-to-F… they tie at five\". In the filmed take, D–F was already selected and Muse chose E–F, with a tie at 1. You need a new graph take with the selection cleared, or a rewritten voiceover without that claim.\n2. **You probably can't regenerate everything before 7 PM ET.** About 4 generations were left at 3:45 PM ET, and failed attempts count too. A full graph take uses 3, an engine take 2 and a circuit take 2. The limit resets at 7 PM ET, two hours before the deadline. Check the remaining count first.\n3. **The engine isn't in the script, and the script already fills 3:00.** A 25-second engine beat needs that time cut elsewhere. I'd drop the R2 opening and trim the on-camera closer.\n\n## Check by hand first (about 5 minutes, no generations)\nAutomation couldn't confirm any of these on the current build:\n- **Clicking D–F:** in the filmed take, the first cut click and an early restore click did nothing. A fix followed, but no physical click has confirmed it, and this is your cold open.\n- **Dragging to turn:** still unverified with a real held mouse button. If it fails, the graph card's Turn left/right and Reset view buttons are a fallback; the engine card doesn't have them.\n- **Microphone and sound:** every clip so far is silent, and nobody has confirmed step narration by ear.\n\n## Will affect the take\n- **Soma talks over you.** Because of the narration change, it speaks when the model lifts and on every ›. Record without system audio, or pause it.\n- **Don't click away from Soma while lifted.** Clicking the slide or another app starts re-checks every 5 seconds, and the code warns each one can make the drawing blink in a recording. Turn on Do Not Disturb too.\n- **The circuit has no clean flat footage.** One take is missing the first drawing, and the other has the caption overlapping the bar (fixed since, but not refilmed). Open on the balanced lift clip instead.\n- **Circuit resistors aren't clickable in 3D.** Use the panel controls.\n- **The slide still prints \"cost: 7\" while the overlay shows F = 9.** Say that it's your experiment.\n\n## My filming plan\n1. Do the hand checks.\n2. Spend 3 generations on the graph take.\n3. Reuse the existing engine and circuit clips, with their provenance labels, and hold the 7 PM reset as backup.\n\nDon't use the `2026-11-04T19-52-42.927Z` folder: it's marked private because your background content is visible.\n\n## Before you submit\n- The repo is still **private**, so judges can't reach its links yet.\n- 0.5.0 is signed but not notarized or published, and the public download is still 0.4.0, which can't do the new lifts.\n- The two newest CI runs were still in progress.\n- The root checkout has untracked `design-system/soma/directions/2026-11-04-minimal/` and an edited `next-env.d.ts`.\n- I didn't check whether the history rewrite the access session raised has happened.\n\nI also stopped my dev server, so nothing of mine is competing with the companion.",
-  "timestamp_note": "Exact receipt timestamp unavailable; review processed November 4, 2026 UTC. Pasted Claude feedback retained as supplied user content, not independent executed evidence."
-},
-{
-  "id": "DEMO-RECORD-WITH-SOUND-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Alright record now with sound",
-  "timestamp_note": "Exact receipt timestamp unavailable; recording preparation started November 4, 2026 UTC."
-},
-{
-  "id": "DEMO-APP-NARRATION-20261104-01",
-  "received_at": null,
-  "kind": "user",
-  "prompt": "Also so we’re clear, I meant sound from the app narration. I will still record the voiceover myself",
-  "timestamp_note": "Exact receipt timestamp unavailable; clarification received during November 4 recording."
-}
-]
+  ]
 }

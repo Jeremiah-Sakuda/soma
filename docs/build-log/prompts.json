@@ -1883,6 +1883,13 @@
   "kind": "user",
   "prompt": "Alright is everything that we’re going to show in the demo ready?",
   "timestamp_note": "Exact receipt timestamp unavailable; checked November 4, 2026 UTC."
+},
+{
+  "id": "DEMO-QUOTAS-20261104-01",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "Any quotas I should know about?",
+  "timestamp_note": "Exact receipt timestamp unavailable; checked November 4, 2026 UTC."
 }
 ]
 }

@@ -3256,3 +3256,12 @@ Allowance follow-up: `1b529f1` adds read-only `GET /api/explore/allowance`, reso
 3. Published companion is still 0.4.0, 0.4.1 is a draft, and 0.5.0 is source-only. Remaining recording gates: paired web/0.5.0 delivery, real-screen end-to-end rehearsal, session allowance and final engine decision. No new inference, audio, physical acceptance or successful deployment claimed.
 
 Deviation: release-readiness check uncovered two additional packaging/manifest issues; small fixes stay within Codex’s delivery ownership.
+
+
+## DEMO-QUOTAS-20261104-01 — Recording limits
+
+1. Confirmed source-enforced limits: 12 exploration reservations and 12 voice reservations per principal per UTC day; each admitted failed/cancelled generation still counts. New explanation/model/follow-up/investigation actions share exploration admission; graph cuts, parameter drags and camera motion do not invoke a model. The engine’s two-generation sequence is not a two-slot allowance for the full graph/circuit script.
+2. Read only the configured Firestore global budget document at 2026-11-04T19:40:45.193Z: consumed/reserved approximately $37.1184. Local configuration is $80 cap/$150 allocation, leaving approximately $42.8816 against that local cap; production cap and Meta Billing balance were not verified. Each exploration needs a $0.35 reservation, settled to known usage; unknown usage retains its reservation. No limits changed or inference performed.
+3. Production companion remaining daily count is still unverified. Reset is midnight UTC (7 PM EST on November 4). Suggested reserving attempts for the complete script and using already-generated material for local interaction rehearsals. No deployment, native verification or provider quota claim made.
+
+Deviation: none; this is a source/configuration/ledger inspection, not an increase in authorized spend.

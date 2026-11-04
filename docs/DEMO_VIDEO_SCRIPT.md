@@ -4,7 +4,7 @@ November 1, 2026 positioning update of the PM153 script (kept in git history), r
 
 The journey is one continuous live run on the original Lecture 14 slide (`docs/examples/hero-dijkstra/Lecture-14-Dijkstra.pdf`), followed by a planned 52-second range sequence (1:40–2:32): the 3D lift and a second live slide, the original Lecture 9 Wheatstone bridge (`docs/examples/hero-circuit/Lecture-9-Bridge.pdf`).
 
-**November 4 UTC delivery:** graphics runtime `fb777c8` and test-duration follow-up `4ee645a` use `soma-3d-2026-11-04`. The signed/notarized 0.4.1 is a private draft; the published installer remains 0.4.0. Current local renderer/controller checks and the labeled silent QA clip do not establish physical native alignment or hosted acceptance, which remain pending after the origin approval rejection. The actual service E investigation (Muse chose D–F, tie 5), source-preserving follow-up/save and circuit image-check/reversal runs remain separate evidence. Final three-minute/native footage is still pending. [Verification](VERIFICATION.md) owns the current full CI result, source identity and retained failures, including the earlier `af0851b` checkpoint.
+**November 4 UTC delivery:** current web runtime `1658b98` uses `soma-clarity-2026-11-04`, with calculation-owned source captions, printed browser-height values and compact save feedback. The native sources remain those of the signed/notarized private 0.4.1 draft; the published installer remains 0.4.0. Local renderer/controller checks and the labeled silent QA clips do not establish physical native alignment or hosted acceptance, which remain pending after the origin approval rejection. Actual service E investigation (Muse chose D–F, tie 5), source-preserving follow-up/save and circuit image-check/reversal runs remain separate evidence. Final three-minute/native footage is still pending. [Verification](VERIFICATION.md) owns current CI/deployment results, source identity and retained failures.
 
 **The promise:** your own slide becomes the explorable thing. Soma draws the checked search on the screen you are already looking at. Built for students first; the same idea reaches any diagram you can't edit.
 
@@ -13,6 +13,8 @@ The journey is one continuous live run on the original Lecture 14 slide (`docs/e
 **Voice:** Jeremy, first person, conversational. Describe the experience, not the architecture. Honest scope goes in the small on-screen labels, not in the voiceover.
 
 ## Checked facts the footage must match
+
+**Settled-frame rehearsal check:** advancing to the last checked step is not the same as the drawing finishing its animation. Wait for the full route and its final labels to settle, then hold the completed result for at least two seconds before lifting or cutting away. The silent local QA take caught a short final-source hold; its graph/circuit figures, current values and actual save/reopen were verified separately. Keep real source, current controls and printed numerical readouts legible in the chosen framing.
 
 These values come from Soma's solver and have been confirmed in live runs ([receipt](examples/hero-dijkstra/receipts/live-run.json)):
 

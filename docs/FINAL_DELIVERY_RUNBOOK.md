@@ -18,6 +18,10 @@ Engine source `af9a223` is integrated; manifest checkpoint `412cfb9` is pushed (
 4. Test the installed signed build over the original demo source: alignment; lifted cut/restore 7→9→7; rotation and click-through; source-change rejection; circuit opening/current reversal; accepted engine parts and motion. The isolated pointer test and renderer tests cover narrower boundaries and cannot substitute for this complete journey.
 5. Publish the verified companion asset to the canonical repository release and download it back to compare checksums. Verify the product download link and final release/version wording. Preserve the prior release and original histories.
 
+### Existing companion allowance preflight
+
+After deploying the allowance route, request `GET /api/explore/allowance` from the **existing production companion’s Soma page/session**, with same-origin credentials and no cache. The endpoint is read-only: it returns remaining daily slots, UTC reset, live configuration and shared-budget eligibility, without cookies, identity keys or financial totals. Missing/expired sessions return an error and are not initialized. Do not use a fresh browser to claim the companion’s count; do not export cookies or relaunch with a temporary profile. `budgetEligible` is a snapshot, not a reservation or a promise that a later request will succeed. Record the response time, actual installed version and web manifest with the take. The first generation settles before the second; check again if other sessions are running against the shared budget.
+
 ## Film and form
 
 Use the graph’s lifted cut for the cold open only after the installed-build check. Keep one coherent graph take; disclose shortened waits and actual review status. A prepared model or recorded engine keeps its provenance label. The script has a circuit fallback; do not delay the entire submission for an unaccepted engine.

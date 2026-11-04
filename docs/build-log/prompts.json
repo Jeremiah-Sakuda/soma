@@ -1890,6 +1890,20 @@
   "kind": "user",
   "prompt": "Any quotas I should know about?",
   "timestamp_note": "Exact receipt timestamp unavailable; checked November 4, 2026 UTC."
+},
+{
+  "id": "DEMO-REHEARSALS-20261104-01",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "Yeah, I want you to do rehearsals and iterate on anything that’s broken. But because credits are limited, also record everything that you do so we have clips for the demo video",
+  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
+},
+{
+  "id": "DEMO-REHEARSALS-20261104-02",
+  "received_at": null,
+  "kind": "user",
+  "prompt": "Claude is done you can continue",
+  "timestamp_note": "Exact receipt timestamp unavailable; archived November 4, 2026 UTC."
 }
 ]
 }

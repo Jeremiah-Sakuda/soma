@@ -3265,3 +3265,14 @@ Deviation: release-readiness check uncovered two additional packaging/manifest i
 3. Production companion remaining daily count is still unverified. Reset is midnight UTC (7 PM EST on November 4). Suggested reserving attempts for the complete script and using already-generated material for local interaction rehearsals. No deployment, native verification or provider quota claim made.
 
 Deviation: none; this is a source/configuration/ledger inspection, not an increase in authorized spend.
+
+
+## DEMO-REHEARSALS-20261104-01 / 02 — Record every rehearsal
+
+1. Started timestamped recordings of actual browser replay and solver interactions, retaining failed harness attempts and their videos. No paid model/audio requests used for the browser take.
+2. User confirmed Claude is done and authorized taking over the display. Preparing a private current-source 0.5.0 rehearsal candidate; retaining the older signed artifacts separately. Native filming and existing-session allowance inspection are next.
+3. All footage stays private until reviewed, with provenance distinguishing replay, new inference and actual native capture. Clips, measured spend, defects and executed results will be recorded after each take. No final release or successful native rehearsal is claimed yet.
+
+Deviation: a pre-freeze private rehearsal package is prepared to test the actual screen journey; final signed/notarized publication still follows accepted source freeze.
+
+Rehearsal checkpoint: browser replay passed graph7→9→7, circuit current reversal and exact save/reopen; full73.36s and three beatclips retained with two failed harness recordings. Signed private0.5.0 native candidate loaded actual production manifest b41611f8a7b321a8875654d8940711ac58fd7fef1210b7be16ec4402b72069c2. Existing companion guest allowance was12/12 at19:54:21Z. Native fresh graph took47.979s UI/45.572s service, five calls/$0.09191875; correct source reading, Wonder approval, visible cost7 and actual lifted cut9/restore7 recorded. Follow-up investigation choseE–F/tie1; E–F=0 producedA–C–E–F/cost6 and a subsequent answer used that changed value; version3 saved. A prior D–F selection remained during investigation, so this take does not establish unselected-context choice. Native pointer first-click/drag issues prompted07344ff (first mouse acceptance and stationaryhover after redraw):20renderer/18controller tests passed; next packaged take must verify it physically. Full raw video preserved at `.local/demo-rehearsal-20261104/native/2026-11-04T19-54-18.972Z/`. Earlier Stage Manager framing preflight retained privately and not suitable for sharing. No final notarized release claimed.

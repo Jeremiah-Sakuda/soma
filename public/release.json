@@ -1,6 +1,6 @@
 {
-  "releaseId": "soma-engine-integration-2026-11-04",
-  "sourceTreeSha256": "b41611f8a7b321a8875654d8940711ac58fd7fef1210b7be16ec4402b72069c2",
+  "releaseId": "soma-native-rehearsal-2026-11-04",
+  "sourceTreeSha256": "46d40463903db486cc0db2845c9747465766cece7c612f165efc516da561ca79",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
     "desktop/Info.plist": "a7566833b9abda71d595bb76ba892daf8c33cccb10413e3a510a1a502c0db050",
@@ -27,12 +27,12 @@
     "desktop/native/HoldShortcut.swift": "2ca329bfb8b1ee7e35231d5daf6e6aa94ee509fc8144fafb9170aeab79462a22",
     "desktop/package-lock.json": "a2b56c9cd7555bd137b6794a5c678271bcaab95b640a61ab5cc58715cc8fa826",
     "desktop/package.json": "f5a0169d5d3c422351c5a6806cdfc6334f1957ef8235dcb4efe2c8a5e0af71e6",
-    "desktop/point-ask.cjs": "a9b2303aaafe64fb7382f07cc08bcb3504a7a24779421b2df8fe5fe9ccd0cc0c",
+    "desktop/point-ask.cjs": "54e90966f11c1642e3c13dd2ce89182be30b230bcbbb7eb59247f1c1bf8abeab",
     "desktop/point-geometry.cjs": "56cb3a4d2acf2a13c45901d8aa241df1947c01a7f5eea3240d7a912ae646017c",
     "desktop/point-overlay-3d.js": "c2d0f81b359e3adc04c5d5784640355b20fba086b1d704d6fe8a82077112bf55",
     "desktop/point-overlay.css": "ca9cd1f2a8c08b75c593aa893d6a599e219795ab02120a2cbd53a19b91dd46d5",
     "desktop/point-overlay.html": "c9665bce2b787ae0e03174ab9a570e68b56e4d6283cf4f1aea54a15a72fb30d2",
-    "desktop/point-overlay.js": "3090989129dc6740855494b3f6aaf3313642cdea280518cfbf4d7745720769be",
+    "desktop/point-overlay.js": "71ba77a64250e1434ada178e9ad981c41686220495c57382d614d7cbb9fa39be",
     "desktop/point-preload.cjs": "74659fe109cfa132fd8ad0f53b7473844c9e6028a74fbcf9f9f833741ccbb781",
     "desktop/policy.cjs": "7edf2d548d183e9181a80d4107fbbd085d7e46d85195e72a7ff2197b1e04ffc3",
     "desktop/release.cjs": "9151aef764d43289745171b35d86ee9172e7f94f58368d2584285420b502a20f",

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import SpatialWorkspace from './spatial-workspace';
 import { spatialScene, supportsSpatial } from '@/lib/domain/spatial-exploration';
-import { liftRegion, liftScene, sceneOverlayModel } from '@/lib/domain/scene-lift';
+import { liftFocus, liftRegion, liftScene, sceneOverlayModel } from '@/lib/domain/scene-lift';
 import { defaultSpatialView } from '@/lib/domain/spatial-schema';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ExplorationSearchStage } from './exploration-search-stage';
@@ -357,7 +357,8 @@ export function ExplorationScene({
   // An explanation has no drawing read from the source: the companion gets its 3D scene, to
   // lift off the slide around where the learner pointed.
   const image = overlay?.image,
-    focus = overlay?.focus;
+    focus = overlay?.focus,
+    anchors = overlay?.anchors;
   const [aspect, setAspect] = useState<number | null>(null);
   useEffect(() => {
     setAspect(null);
@@ -375,7 +376,7 @@ export function ExplorationScene({
     const scene = spatialScene(spec, state);
     if (!scene?.objects.length) return null;
     const at = Math.min(state.explanationStep, spec.steps.length - 1);
-    return sceneOverlayModel(liftScene(scene, liftRegion(focus, aspect), undefined, state.selectedObjectId), {
+    return sceneOverlayModel(liftScene(scene, liftRegion(liftFocus(focus, anchors, spec.steps), aspect), undefined, state.selectedObjectId), {
       text: spec.steps[at].caption,
       stepLabel: `Step ${at + 1} of ${spec.steps.length}`,
     });

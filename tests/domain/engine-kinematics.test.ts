@@ -122,3 +122,26 @@ describe('reading a step for the crank angle it is about', () => {
     for (const [text, value] of cases) expect([text, crankFromWords(text)]).toEqual([text, value]);
   });
 });
+
+describe('where an explanation lifts from', () => {
+  const anchors = [
+    { id: 'steps', label: 'Numbered steps', region: { x: 0.54, y: 0.3, width: 0.42, height: 0.4 } },
+    { id: 'diagram', label: 'Engine diagram', region: { x: 0.05, y: 0.15, width: 0.42, height: 0.8 } },
+    { id: 'title', label: 'Title', region: { x: 0, y: 0, width: 0.5, height: 0.08 } },
+  ];
+  const steps = [{ sourceHighlightIds: ['diagram', 'steps'] }, { sourceHighlightIds: ['steps'] }, { sourceHighlightIds: ['diagram'] }];
+  it('keeps where the learner pointed', async () => {
+    const { liftFocus } = await import('@/lib/domain/scene-lift');
+    const pointed = { x: 0.1, y: 0.1, width: 0.3, height: 0.3 };
+    expect(liftFocus(pointed, anchors, steps)).toEqual(pointed);
+  });
+  it('treats a typed question, whose focus is the whole display, as pointing at the drawing its steps return to', async () => {
+    const { liftFocus } = await import('@/lib/domain/scene-lift');
+    const region = liftFocus({ x: 0, y: 0, width: 1, height: 1 }, anchors, steps)!;
+    expect(region.x).toBeCloseTo(0.03);
+    expect(region.width).toBeCloseTo(0.46);
+    // Nothing located, or nothing the steps use: the middle of the screen, never the whole of it.
+    expect(liftFocus({ x: 0, y: 0, width: 1, height: 1 }, [], steps)).toBeUndefined();
+    expect(liftFocus({ x: 0, y: 0, width: 1, height: 1 }, anchors, [{ sourceHighlightIds: [] }])).toBeUndefined();
+  });
+});

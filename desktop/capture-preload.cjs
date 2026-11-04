@@ -182,6 +182,7 @@ window.addEventListener('soma:compact-state', (event) => {
     playing: d.playing === true,
     investigable: d.investigable === true,
     buildsModel: d.buildsModel === true,
+    explanation: d.explanation === true,
     message: typeof d.message === 'string' ? d.message.slice(0, 240) : '',
   });
 });

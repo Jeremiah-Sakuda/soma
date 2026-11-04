@@ -55,8 +55,9 @@ import { ExplorationJournalLog } from './exploration-journal-log';
 import './exploration.css';
 import './exploration-journal.css';
 
-/** Steps in the checked trace on screen, for either checked family; null without one. */
+/** Steps the bar can move through: an explanation's own, or the checked trace on screen. */
 function compactStepCount(spec: ExplorationSpec, state: ExplorationViewState) {
+  if (spec.mode === 'explanation') return spec.steps.length;
   return explorationExecution(spec, state)?.steps.length ?? (circuitSolution(spec, state)?.steps.length || null);
 }
 type Artifact = {
@@ -666,8 +667,8 @@ export function ExplorationWorkspace() {
       )
         sourceMemory.current.version = result.artifact.version;
       apply(result.artifact);
-      // A model built on request opens in 3D.
-      if (model) setState((current) => (current ? { ...current, spatial: { ...(current.spatial ?? defaultSpatialView()), mode: '3d' } } : current));
+      // A model built on request opens in 3D, at the explanation's first step, for the learner to step through.
+      if (model) setState((current) => (current ? { ...current, explanationStep: 0, spatial: { ...(current.spatial ?? defaultSpatialView()), mode: '3d' } } : current));
       setCompareCapture(false);
       setNewContext(false);
       setQuestion((current) => (current === submittedDraft ? '' : current));
@@ -904,8 +905,12 @@ export function ExplorationWorkspace() {
         true,
       );
     else if ((d.action === 'next' || d.action === 'previous') && artifact && state) {
-      const last = Math.max(0, (compactStepCount(artifact.spec, state) ?? 1) - 1);
-      updateState({ ...state, step: Math.max(0, Math.min(last, state.step + (d.action === 'next' ? 1 : -1))) });
+      const last = Math.max(0, (compactStepCount(artifact.spec, state) ?? 1) - 1), by = d.action === 'next' ? 1 : -1;
+      if (artifact.spec.mode === 'explanation') {
+        // Taking a step by hand takes over from the narration.
+        flushSync(() => setPlaying(false));
+        updateState({ ...state, explanationStep: Math.max(0, Math.min(last, state.explanationStep + by)) });
+      } else updateState({ ...state, step: Math.max(0, Math.min(last, state.step + by)) });
     } else if (d.action === 'play' && artifact) setPlaying(!playing);
     else if (d.action === 'lift' && artifact?.spec.mode === 'explanation') setLiftRequest((n) => n + 1);
   };
@@ -919,13 +924,14 @@ export function ExplorationWorkspace() {
       sourceMemory.current?.id === artifact.id &&
       sourceMemory.current.capture.capturedAt === artifact.source.capturedAt &&
       !!sourceMemory.current.capture.nativeId,
-    step: compactSteps ? Math.min(state!.step, compactSteps - 1) : null,
+    step: compactSteps ? Math.min(artifact!.spec.mode === 'explanation' ? state!.explanationStep : state!.step, compactSteps - 1) : null,
     steps: compactSteps,
     playing,
     message: error || '',
     investigable:
       ((artifact?.spec.mode === 'checked-dijkstra' && !!state?.goal) || artifact?.spec.mode === 'checked-circuit') &&
       liveEnabled !== false,
+    explanation: artifact?.spec.mode === 'explanation',
     // The bar's 3D asks Muse for a model first when the explanation has none.
     buildsModel:
       artifact?.spec.mode === 'explanation' &&

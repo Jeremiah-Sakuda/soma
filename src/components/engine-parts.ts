@@ -13,7 +13,7 @@ const COLORS = {
 };
 // The cam drive is on the engine's front face, in front of the cutaway, as on a real engine
 // with its timing cover off; its belt is half clear so the mechanism shows through.
-const DRIVE_Z = 0.6;
+const DRIVE_Z = ENGINE.drive;
 const CHARGE: Record<string, number> = { intake: 0x6fb6ff, compression: 0x3f8ff0, power: 0xff7a2a, exhaust: 0x8f857a };
 
 function shape(points: [number, number][]) {

@@ -601,6 +601,7 @@ else {
         playing: payload.playing === true,
         investigable: payload.investigable === true,
         buildsModel: payload.buildsModel === true,
+        explanation: payload.explanation === true,
         message: typeof payload.message === 'string' ? payload.message.slice(0, 240) : '',
       };
       sendCompactState();

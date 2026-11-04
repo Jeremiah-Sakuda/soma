@@ -49,6 +49,32 @@ const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…`
 
 /** The region a model stands on: the learner's circled or pointed area, widened so a model
  * has room, or the middle of the capture. */
+/** What an explanation lifts from: where the learner pointed; for a question that pointed at
+ * nothing (a typed question's focus is the whole display), the part of the source its steps
+ * keep returning to, a drawing rather than a list when both are named; else nothing, which
+ * leaves the middle of the screen. */
+export function liftFocus(
+  focus: Region | null | undefined,
+  anchors: readonly { id: string; label: string; region: Region }[] | null | undefined,
+  steps: readonly { sourceHighlightIds?: readonly string[] | null }[],
+): Region | undefined {
+  if (focus && (focus.width < 0.9 || focus.height < 0.9)) return focus;
+  let best: { region: Region; score: number } | null = null;
+  for (const anchor of anchors ?? []) {
+    const uses = steps.filter((s) => s.sourceHighlightIds?.includes(anchor.id)).length;
+    const area = anchor.region.width * anchor.region.height;
+    if (!uses || area < 0.04 || area > 0.8) continue;
+    const name = `${anchor.id} ${anchor.label}`;
+    const kind = /diagram|figure|schematic|cutaway|drawing|illustration|image|graph|plot|chart/i.test(name) ? 2 : /list|bullet|steps|text|title|caption|note|box|equation/i.test(name) ? 0.5 : 1;
+    const score = uses * Math.sqrt(area) * kind;
+    if (!best || score > best.score) best = { region: anchor.region, score };
+  }
+  if (!best) return undefined;
+  // A little room around the drawing, kept on the display.
+  const r = best.region, pad = 0.02, x = Math.max(0, r.x - pad), y = Math.max(0, r.y - pad);
+  return { x, y, width: Math.min(1 - x, r.width + 2 * pad), height: Math.min(1 - y, r.height + 2 * pad) };
+}
+
 export function liftRegion(focus: Region | null | undefined, aspect: number): Region {
   const minW = 0.42, minH = Math.min(1, (minW * 0.62) / Math.max(0.2, aspect));
   const base = focus ?? { x: 0.2, y: 0.2, width: 0.6, height: 0.6 };

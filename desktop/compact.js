@@ -30,9 +30,11 @@ function render() {
     step.textContent = `${state.step + 1} / ${state.steps}`;
     step.setAttribute('aria-label', `Step ${state.step + 1} of ${state.steps}`);
   }
-  // Like the panel, stepping waits for playback to pause.
-  previous.disabled = !hasSteps || busy() || state.playing || state.step <= 0;
-  next.disabled = !hasSteps || busy() || state.playing || state.step >= state.steps - 1;
+  // Like the panel, a checked trace's stepping waits for playback to pause; an explanation's
+  // step by hand takes over from the narration.
+  const waits = state.playing && !state.explanation;
+  previous.disabled = !hasSteps || busy() || waits || state.step <= 0;
+  next.disabled = !hasSteps || busy() || waits || state.step >= state.steps - 1;
   play.disabled = !hasSteps || busy();
   play.textContent = state.playing ? '❚❚' : '▶';
   play.setAttribute('aria-label', state.playing ? 'Pause the explanation' : 'Play the explanation');

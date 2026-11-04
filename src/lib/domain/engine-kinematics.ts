@@ -20,6 +20,8 @@ export const ENGINE = {
   seatY: 2.845,
   stem: 1.05,
   camBase: 0.13,
+  /** The cam drive's plane, on the engine's front face. */
+  drive: 0.6,
   /** The whole assembly's extent at any angle, for framing and tidying. */
   envelope: { min: [-1.6, -1.05, -0.95] as const, max: [1.6, 4.45, 0.75] as const },
 } as const;
@@ -143,11 +145,11 @@ export function engineLabelPoint(role: EngineRole, theta: number): { x: number; 
     case 'block': return { x: 0.86, y: 1.9, z: 0 };
     case 'piston': return { x: 0.3, y: p.y + 0.12, z: 0.42 };
     case 'rod': { const pin = crankPin(theta), top = pistonPin(theta); return { x: pin.x * 0.6, y: pin.y + (top - pin.y) * 0.4, z: 0.08 }; }
-    case 'crank': return { x: 0.12, y: -0.3, z: 0.25 };
+    case 'crank': return { x: 0.16, y: -0.08, z: ENGINE.drive };
     case 'intake_valve': case 'exhaust_valve': return { x: p.x + Math.sin(a) * 0.5, y: p.y + Math.cos(a) * 0.5, z: 0.04 };
-    case 'intake_cam': case 'exhaust_cam': return { x: p.x, y: p.y, z: 0.12 };
+    case 'intake_cam': case 'exhaust_cam': return { x: p.x, y: p.y, z: ENGINE.drive };
     case 'spark_plug': return { x: 0, y: 3.7, z: 0.1 };
-    case 'timing_belt': { const c = camCentre(-1); return { x: c.x, y: c.y + 0.5, z: -0.86 }; }
+    case 'timing_belt': { const c = camCentre(-1); return { x: c.x - 0.33, y: c.y + 0.34, z: ENGINE.drive }; }
     case 'charge': return { x: 0.15, y: (p.y + ENGINE.deck) / 2, z: 0.25 };
     case 'spark': return { x: 0, y: ENGINE.roof - 0.08, z: 0.12 };
     case 'intake_flow': return { x: -1.0, y: 3.12, z: 0.14 };

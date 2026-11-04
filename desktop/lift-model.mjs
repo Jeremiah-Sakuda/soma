@@ -65,18 +65,25 @@ function feather(inset = 20, blur = 12, radius = 28) {
   g.fill();
   return new CanvasTexture(c);
 }
-/** The slide's paper colour, from the brightest corner of the captured region. */
+/** The slide's paper colour: the commonest colour in the captured region, so a corner that
+ * happens to catch the desktop or a window never tints the cover. */
 function paperColour(image) {
   try {
     const c = document.createElement('canvas');
-    c.width = c.height = 16;
+    c.width = c.height = 32;
     const g = c.getContext('2d', { willReadFrequently: true });
-    g.drawImage(image, 0, 0, 16, 16);
-    const data = g.getImageData(0, 0, 16, 16).data;
-    const corners = [0, 15, 240, 255].map((i) => [data[i * 4], data[i * 4 + 1], data[i * 4 + 2], data[i * 4 + 3]]).filter((p) => p[3] > 200);
-    if (!corners.length) return new Color(0xffffff);
-    const best = corners.sort((a, b) => b[0] + b[1] + b[2] - (a[0] + a[1] + a[2]))[0];
-    return new Color().setRGB(best[0] / 255, best[1] / 255, best[2] / 255, SRGBColorSpace);
+    g.drawImage(image, 0, 0, 32, 32);
+    const data = g.getImageData(0, 0, 32, 32).data, buckets = new Map();
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] < 200) continue;
+      const key = (data[i] >> 4) * 256 + (data[i + 1] >> 4) * 16 + (data[i + 2] >> 4);
+      const b = buckets.get(key) ?? { n: 0, r: 0, g: 0, b: 0 };
+      b.n++; b.r += data[i]; b.g += data[i + 1]; b.b += data[i + 2];
+      buckets.set(key, b);
+    }
+    const best = [...buckets.values()].sort((a, b) => b.n - a.n)[0];
+    if (!best) return new Color(0xffffff);
+    return new Color().setRGB(best.r / best.n / 255, best.g / best.n / 255, best.b / best.n / 255, SRGBColorSpace);
   } catch {
     return new Color(0xffffff);
   }

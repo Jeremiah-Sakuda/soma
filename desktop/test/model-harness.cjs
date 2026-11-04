@@ -73,6 +73,21 @@ const out = path.resolve(outArg || '.local/model-harness');
       if (process.env.ALL) await shot(`screen-step${i + 1}`);
       if (i === steps - 1) await shot('screen-last');
     }
+    // SECOND=1 steps back to the start and through again, reading the crank's readout at each stop.
+    if (process.env.SECOND) {
+      const readout = () => page.evaluate(() => document.getElementById('lift-turn-text')?.textContent ?? '');
+      const pass = { first: [], back: [], again: [] };
+      for (let i = 0; i < steps; i++) { await draw(at(i), '3d'); await advance(3200); pass.first.push(await readout()); }
+      for (let i = steps - 2; i >= 0; i--) { await draw(at(i), '3d'); await advance(3200); pass.back.push(await readout()); }
+      for (let i = 1; i < steps; i++) {
+        await draw(at(i), '3d');
+        await advance(500);
+        const midway = await readout();
+        await advance(2700);
+        pass.again.push([midway, await readout()]);
+      }
+      console.log(JSON.stringify(pass, null, 1));
+    }
     // Interaction: point at a part, pick it, then turn the model by dragging.
     let interaction = null;
     if (process.env.INTERACT) {

@@ -278,12 +278,19 @@ test('a delayed resume cannot overwrite experiment controls changed while it was
 
 test('source-reading uncertainty remains inspectable even when the generated explanation omits that uncertainty',async({page})=>{
   await setup(page,{uncertainSource:true});await example(page);
-  // No banner on the card; the uncertainty lives under Source & assumptions.
+  // The concise source disclosure and the full source record both retain it.
   await expect(page.getByText('Some source details need review.',{exact:false})).toHaveCount(0);
+  const warning='The arrow between A and Goal is unclear in this synthetic source.';
+  const concise=page.locator('.journal-source-uncertainty');
+  await expect(concise.locator('summary')).toHaveText('Source reading: 1 uncertainty');
+  await concise.locator('summary').click();
+  await expect(concise.getByText(warning,{exact:true})).toBeVisible();
+  await concise.locator('summary').click();
   await page.getByLabel('Page details',{exact:true}).click();
   await page.getByText('Source & assumptions',{exact:true}).click();
   await expect(page.getByRole('heading',{name:'Source reading uncertainty',exact:true})).toBeVisible();
-  await expect(page.getByText('The arrow between A and Goal is unclear in this synthetic source.',{exact:true})).toBeVisible();
+  const fullSource=page.locator('details').filter({has:page.getByRole('heading',{name:'Source reading uncertainty',exact:true})}).last();
+  await expect(fullSource.getByText(warning,{exact:true})).toBeVisible();
 });
 
 test('server actions wait for guest-session initialization while local screenshot selection stays usable',async({page})=>{

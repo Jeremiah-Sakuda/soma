@@ -269,6 +269,7 @@ export function ExplorationCircuitStage({
             {drawable && view === 'source' ? (
               <SourceOverlay
                 image={overlay!.image}
+                family="circuit"
                 build={(aspect) =>
                   circuitOverlayModel({
                     layout: { nodes: layout!.nodes, components: layout!.components ?? [] },

@@ -2,12 +2,14 @@
 
 November 1, 2026 positioning update, revised November 2 for the second checked subject. This document owns how Soma is described everywhere: README, submission copy, video, desktop notes and answers to judges. It supersedes the PM129 framing (engine-led, "visual learning companion"), kept in git history. Product scope stays in the [PRD](PRD.md); this is a positioning decision, recorded in [DECISIONS.md](DECISIONS.md), not a new feature commitment.
 
+November 4 UTC alignment: the exact E investigation is now demonstrated through the service (Muse chose D–F, tie 5), followed by a source-preserving explanation and exact save/reopen. Circuit image agreement and R₅ reversal also passed. The candidate is not deployed, and the complete native circuit sequence and final three-minute footage remain pending. [Verification](VERIFICATION.md) retains earlier failed attempts and separates these evidence types.
+
 ## The positioning
 
 **Students first, the capability second.**
 
 - **Tagline (unchanged):** Turn what you're studying into something you can explore.
-- **What Soma is:** Soma turns a diagram on your screen into an experiment whose answers are computed, not guessed. Meta's Muse models read the source and choose what to investigate; Soma's own solver computes the result and draws it back onto the source, where you can change it and see what happens.
+- **What Soma is:** Soma turns a diagram on your screen into an experiment with computed routes, voltages and currents. Meta's Muse models read the source and choose what to investigate; Soma's solver computes consequences of that reading and draws them back onto the source. Reading and explanatory prose remain fallible.
 - **Who it's for first:** students and independent learners with a worked example in front of them and a question it doesn't answer. Two subjects are checked live: graph search, which every computing student meets, and DC circuits, which every physics and engineering student meets.
 - **How far it reaches:** the checked part of the pipeline doesn't depend on the picture being a lecture slide. Nor does it depend on one subject: the circuit path reuses the same capture, reading, review, drawing and companion as graph search. Learning is where Soma starts and what it demonstrates in depth; it is not "one application of a platform".
 
@@ -17,10 +19,10 @@ November 1, 2026 positioning update, revised November 2 for the second checked s
 | --- | --- | --- |
 | Stage One theme fit: "Build for Your World" brings Meta models into a firsthand domain | Stay firsthand | Soma grew out of its builder's own study workflow; the hero is a student and a lecture slide |
 | Impact, 30%: potential, identifiable beneficiaries, significance, likelihood of use | Name who benefits and show the ceiling | A concrete beneficiary today, plus an honest account of how far the same capability reaches |
-| Demo, 25% | Pitch and footage must match | The video proves the student journey end to end; breadth is shown only where it has been run |
+| Demo, 25% | Pitch and footage must match | The planned video demonstrates the student journey; breadth is shown only where it has been run |
 | Meta tooling, 25% / technical depth, 20% | Unchanged by framing | The differentiator is the pattern: the model reads and chooses, the code computes, the answer is drawn on the source |
 
-A tutor-only framing undersells the capability and invites comparison with a crowded field of AI study tools. A platform framing ("learning is just one application") would score the platform we describe against the one domain we show, demote our best evidence to an example and weaken theme fit. The middle path keeps the demonstrated beneficiary as the hero and lets judges see the ceiling.
+Keep the student and the material in front of them central. Explain the broader potential through the shared reading, computation and interaction pattern, while distinguishing that potential from the two demonstrated subjects.
 
 ## The human problem
 
@@ -36,17 +38,18 @@ The same questions turn up wherever people reason over connections they can't ed
 
 ## The demonstration
 
-One continuous live run on the original Lecture 14 slide, drawn by the native overlay on the real Preview window, then a short look at how far it goes. The [three-minute script](DEMO_VIDEO_SCRIPT.md) owns timing and wording.
+The planned cut follows one continuous live run on the original Lecture 14 slide, drawn by the native overlay on the real Preview window, then the 3D lift and circuit. The [three-minute script](DEMO_VIDEO_SCRIPT.md) owns timing, wording and footage status.
 
 1. **The moment (on camera):** every student has sat with a slide like this.
 2. **Ask on the slide:** Point & ask, "Why doesn't it just take the direct A-to-F edge?" The checked search is drawn on the slide itself.
 3. **My own experiment:** cut D–F on the slide; new route, cost 9, no model call.
-4. **Muse chooses, Soma proves:** Muse picks the connection a question is about; Soma computes exactly where the answer flips (7).
+4. **Muse chooses, Soma computes:** ask “What would make the route go through E?” without selecting an edge. Muse chooses a connection; Soma computes its boundary. Actual service runs chose D–F, tie 5, with a route through E above it. Use the actual take's valid choice and value; 7 belongs only to the separate A–F fallback question.
 5. **Why, checked:** the follow-up answers the experiment in progress; Muse Wonder checked the explanation against the computed trace.
-6. **Keep it:** save, reopen, and a fresh problem from the same idea.
-7. **The answer has a shape:** lift the search off the slide in 3D. Every height is a checked distance; the shortest route pulls taut and the direct edge hangs slack by exactly 4.
-8. **Not only graphs:** the Lecture 9 bridge slide, run live through the same flow. Soma solves the circuit exactly: B and C both sit at 8 V, so no current crosses R₅. Open R₂ on the slide and current flows through it.
-9. **Close (on camera):** the slide didn't change; what changed is that I could ask it my question and see why, with the math checked.
+6. **The answer has a shape:** restore the graph as read, then lift it in 3D. Every height is a checked distance; the shortest route pulls taut and the direct edge hangs slack by exactly 4.
+7. **A second subject:** the Lecture 9 bridge. B = C = 8 V, so R₅ carries 0 A. Open R₂: R₅ carries 12/29 A from B to C. Restore the source and ask about R₅ current; in the recorded run Muse chose R₄ and Soma verified reversal around 8 Ω. Follow the actual checked choice in a new take.
+8. **Close (on camera):** the slide didn't change; what changed is that I could ask it my question and inspect the computed consequence.
+
+Save/reopen and fresh graph practice remain available for follow-up questions and the form, outside the current three-minute cut. Keep product narration muted during silent verification; service proof is not native footage or a timed final edit.
 
 **The emotional arc:** confusion → control → consequence → possibility.
 
@@ -55,7 +58,7 @@ One continuous live run on the original Lecture 14 slide, drawn by the native ov
 | Use | Avoid |
 | --- | --- |
 | explore, experiment, "what if", on your own slide or screen | AI tutor, study buddy, chatbot |
-| computed, checked, the code proves the answer | "accurate", "guaranteed" for anything Muse generates |
+| computed routes and circuit quantities; consequences checked on the interpreted input | claiming code proves source reading or all explanatory prose; "accurate" or "guaranteed" for anything Muse generates |
 | "starts with students", "built for students first" | "learning is just one application", "platform", "any domain" |
 | "could", "potential", "the same idea applies" for uses beyond the classroom | named user groups beyond students as if they already use Soma |
 | "two checked subjects: graph search and DC circuits" | "any subject", or calling the recorded engine lab live |

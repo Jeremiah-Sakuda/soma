@@ -93,12 +93,12 @@ test('a recorded real Muse run is inspectable, manipulable and saved without liv
   const pipeline = page.locator('.exploration-pipeline');
   await expect(pipeline).toContainText('Wonder reviewed');
   await pipeline.locator('summary').click();
-  await expect(pipeline).toContainText('Spark read the source');
+  await expect(pipeline).toContainText('Source context reused');
   await pipeline.getByRole('link', { name: 'Inspect recorded calls and timing' }).click();
   await expect(page.locator('#exploration-audit')).toContainText(
     'Muse Wonder advisory review: approve',
   );
-  await expect(page.getByText('no inference on replay.', { exact: false })).toBeVisible();
+  await expect(page.getByText('no new visual generation. Optional narration uses your selected voice.', { exact: false })).toBeVisible();
   expect(actions).toEqual(['recording']);
   // The audit opens inside the page menu; Escape closes the menu before continuing.
   await page.keyboard.press('Escape');

@@ -1,3 +1,18 @@
+# Soma visual-exploration implementation — current candidate
+
+**November 4 UTC, 2026.** Current scope is selected visible context → generated visual → checked manipulation → contextual follow-up → saved revision, for graph search and ideal DC circuits. [PRD.md](PRD.md) owns acceptance; [VERIFICATION.md](VERIFICATION.md) records executed results and retained failures. The hosted app remains `soma-circuits-review6-2026-11-03`; the changes below are implemented in the canonical checkout and await deployment.
+
+- Wonder checks circuit components, values, connections and source polarity against the original image, extending the graph image check. Blind value re-reads can resolve disagreements; unresolved circuit disputes block a checked circuit. An unavailable check stays visibly unchecked. Solvers establish consequences of the interpretation, not source or prose accuracy.
+- Graph replies retain source/base primary and comparison inputs. Application-owned `writtenFor` binds scientific controls to authored steps and effective computed traces; the current controls carry forward, and **Back to the graph as read** restores source costs and connections. Source/experiment labels are separate from whether the prose matches the displayed state.
+- Review calls allow up to 40 seconds inside the existing 90-second turn. One admitted network/HTTP 5xx retry shares the recovery allowance and existing call/spend limits; unknown usage remains reserved. Mandatory substantive review is preserved.
+- Actual November 4 UTC graph and circuit investigations are available as explicitly labeled recordings on original public synthetic images. Their output, uncertainty and generation receipts remain unchanged; later deterministic drawing alignment is separate presentation data. [Provenance](../src/lib/fixtures/RECORDINGS.md).
+
+Fresh service verification passed the exact E question (D–F, tie 5), changed-cost graph follow-up and exact save/reopen after earlier retained failures. Circuit source agreement, exact R₄ balance at 8 Ω, R₅ direction reversal and save/reopen also passed. These are disclosed demo-source runs, not broad reliability estimates. Focused domain/service/continuation checks passed; final candidate build, deployment, hosted/native acceptance and final video remain distinct gates. Testing was silent; no new audio result is claimed. The submission deadline remains November 4, 9 PM America/New_York; the user-authorized circuit extension superseded the earlier October 31 feature freeze.
+
+## Dated implementation history
+
+The entries below preserve earlier requirements and results. Their “current” labels, graph-only scope, freezes and budgets apply to their dates; the current PRD and status above take precedence.
+
 > **November 1 — positioning update:** students first, the capability second. Soma turns a diagram on your screen into an experiment whose answers are computed, not guessed, built for students first; uses beyond the classroom are potential. [STORY_AND_DEMO.md](STORY_AND_DEMO.md) owns the current wording; the October 29 framing below is kept as a record.
 
 > **PM099/PM100:** Quality-preserving responsiveness update: immediate local context receipt; optional compact continuation on an adequate visual; checked reply bound to the current primary snapshot; full generation/clarification retained; strengthened unreadable-label review. [Measurements and actual quality probes](LATENCY_AND_RESPONSIVENESS.md). New screenshot interpretation remains necessary. No reasoning reduction, unreviewed scene or new provider.

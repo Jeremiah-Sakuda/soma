@@ -3045,3 +3045,29 @@ One user instruction this session was intentionally not archived, at the user's 
 1. Read the full user-supplied participant guide/request, inspected current checkout0ec9128 and PM131–PM153 evidence, and compared with the previously inspected reference frames. Corrected the earlier PM130 baseline: source-aligned native overlay, live edge selection/checked tipping point, physical rehearsals and later releases now exist; freeze/cap were explicitly superseded by PM132. No fresh hosted/native acceptance or model benchmark claimed.
 2. Delivered [Muse ambition review](MUSE_AMBITION_REVIEW_2026_11_01.md), mapping real-world potential30%, tooling25%, technical craft20%, demo25% to strengths and specific gaps. Code confirms narrow direct-edge-biased choice, application-owned overlay choreography, and Wonder review of extracted summary/trace without original pixels. Prioritized question-directed bounded investigations, consequential source re-inspection and unfamiliar-input evidence over model-count additions. Retained actual review catch and source/latency/recorded-engine limitations.
 3. Archived the attached request verbatim, checked JSON and report links/whitespace. Recommendations only: no code/script edits, inference, new tests, budget reset, merge, deployment or publication. Existing concurrent work remains untouched. No placement prediction or invented learner-study requirement.
+
+## OVERNIGHT-REVIEW-01 — Independent review and improvement cycle
+
+1. Started three independent product, engineering, and demo reviews against the supplied rubric. Private scores and diagnostic artifacts stay in ignored `.local/overnight-review`; no placement prediction or official judging outcome is claimed.
+2. Read current release documentation and verification, preserved existing working changes, and began native/browser verification. Reviewers have reproduced numerical edge cases and identified current documentation and first-use presentation gaps; fixes and retesting are pending.
+3. Remaining inference allowance is being checked before live experiments. No release, submission, visibility change, or spend-cap increase performed.
+
+## OVERNIGHT-REVIEW-02 — Silent testing
+
+1. User requests no sound or voice for this task; notified reviewers and adopted silent testing.
+2. No microphone, narration, or audio playback will be triggered during this review.
+3. Visual, numerical, text-input, source-grounding, and documentation verification continue; audio quality will remain untested in this pass.
+
+
+## OVERNIGHT-REVIEW-03 — Temporary wakefulness
+
+1. User unlocked the Mac and requested keeping it awake; started a 24-hour `caffeinate -di -t 86400` process.
+2. This temporarily prevents idle display/system sleep without changing lock settings or disabling manual locking.
+3. Native testing resumes silently; no microphone, narration or audio playback authorized for this pass.
+
+
+## OVERNIGHT-REVIEW-04 — Resume overnight iteration
+
+1. Implemented source/base-preserving graph follow-ups, independent circuit image checks, full-original-plus-detail graph image checking, bounded review recovery with unknown-usage fencing, circuit numeric edge-case fixes and nonrounded fractional graph boundaries. Added authentic graph/circuit replay exports with separate labeled drawing alignment, source continuity and responsive first-use guidance. Current runtime is frozen as `soma-overnight-2026-11-04`, SHA-256 `9ff7d0e84c39a1145a6741db4c59840fa4d1ef18292a5826aeed24bc215b3e29` across 308 runtime/assets files; deployment is pending at this checkpoint.
+2. Release checks passed: 1,928 app tests, 107 opt-in skipped; production build, typecheck and 59 desktop tests. A silent 30-case browser batch passed 29 and exposed an ambiguous test locator after the new uncertainty disclosure duplicated the source detail; the scoped disclosure/full-source test then passed, as did five final entry checks. The final combined browser rerun and native circuit filming sequence remain pending. Earlier CUA verified a live local circuit reading and R₂ intervention; audio was not used.
+3. Retained every real attempt: first graph/circuit reviews unavailable, separate old-limit review timeout, later graph title rejection and composition HTTP failure. The fourth fresh graph attempt passed reading → unselected-edge E investigation → changed-cost follow-up → exact save/reopen; the circuit image-check/R₄ investigation/save journey passed separately. No aggregate reliability or winning-probability claim is made. Last measured shared usage was $33.91269725 of the unchanged $40 cap; no reset, visibility change, final video or submission.

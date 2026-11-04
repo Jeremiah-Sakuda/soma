@@ -45,6 +45,7 @@ import { ExplorationPlayback } from './exploration-playback';
 import { ExplorationPipeline } from './exploration-pipeline';
 import { useExplorationPointAsk } from './exploration-point-ask';
 import type { PointFocus } from '@/lib/domain/point-context';
+import type { PublicDemoImage, RecordedPresentation } from '@/lib/server/exploration-types';
 import { ExplorationVoice } from './exploration-voice';
 import { useExplorationCapture, type ExplorationCapture } from './exploration-capture';
 import type { SourceGraphLayout } from './source-overlay';
@@ -58,7 +59,12 @@ function compactStepCount(spec: ExplorationSpec, state: ExplorationViewState) {
   return explorationExecution(spec, state)?.steps.length ?? (circuitSolution(spec, state)?.steps.length || null);
 }
 type Artifact = {
-  recording?: { id: string; generatedAt: string; sourceImage: string };
+  recording?: {
+    id: string;
+    generatedAt: string;
+    sourceImage: string;
+    presentation?: RecordedPresentation;
+  };
   experiment?: CostProbe;
   circuitExperiment?: DcProbe;
   practiceOrigin?: {
@@ -100,6 +106,7 @@ type Artifact = {
     observationId?: string;
     anchors?: SourceAnchor[];
     layout?: SourceGraphLayout;
+    publicDemo?: { image: PublicDemoImage; presentation?: RecordedPresentation };
     readingCheck?: {
       status: 'confirmed' | 'corrected' | 'disputed';
       weighted?: boolean;
@@ -446,7 +453,9 @@ export function ExplorationWorkspace() {
     setNewContext(true);
     setError('');
     setNotice(
-      'New context selected. Your previous card stays available until you ask about this source.',
+      artifact
+        ? 'New context selected. Your previous card stays available until you ask about this source.'
+        : 'Source selected. Review it, then ask your question.',
     );
   }
   async function share() {
@@ -494,6 +503,7 @@ export function ExplorationWorkspace() {
         new File([blob], circuit ? 'Lecture 9 · Wheatstone bridge.png' : 'Lecture 14 · Dijkstra worked example.png', { type: 'image/png' }),
       );
       setQuestion(circuit ? 'Why is there no current through R5?' : 'Why doesn’t it just take the direct A to F edge?');
+      requestAnimationFrame(() => questionRef.current?.focus());
     } catch {
       setError('The demo slide could not be loaded. Try uploading a screenshot.');
     }
@@ -748,13 +758,13 @@ export function ExplorationWorkspace() {
       if (sequence === loadSequence.current) setSourceBusy(false);
     }
   }
-  async function openRecording(mechanism = false) {
+  async function openRecording(mechanism = false, subject: 'graph' | 'circuit' = 'graph') {
     cancel('');
     setSourceBusy(true);
     setError('');
     const sequence = ++loadSequence.current;
     try {
-      const result = await api('POST', { action: 'recording', ...(mechanism ? { mechanism: true } : {}) });
+      const result = await api('POST', { action: 'recording', ...(mechanism ? { mechanism: true } : { subject }) });
       if (sequence !== loadSequence.current) return;
       if (!result.artifact) throw new Error('The recorded run could not be opened.');
       capture.stop();
@@ -805,6 +815,9 @@ export function ExplorationWorkspace() {
   const currentSourceTime = newContext
     ? source?.capturedAt
     : (artifact?.source.capturedAt ?? source?.capturedAt);
+  const publicSource = artifact?.source.publicDemo ?? (artifact?.recording
+    ? { image: artifact.recording.sourceImage, presentation: artifact.recording.presentation }
+    : undefined);
   const [waitingSeconds, setWaitingSeconds] = useState(0);
   useEffect(() => {
     setWaitingSeconds(0);
@@ -965,7 +978,9 @@ export function ExplorationWorkspace() {
               artifact && !newContext
                 ? artifact.spec.mode === 'explanation' || artifact.spec.mode === 'clarify'
                   ? 'Ask about this explanation…'
-                  : 'Why that node? What if we change the start?'
+                  : artifact.spec.mode === 'checked-circuit'
+                    ? 'What if we open a part or change its resistance?'
+                    : 'Why that node? What if we change the start?'
                 : 'Ask about what is on your screen…'
             }
             value={question}
@@ -1080,57 +1095,85 @@ export function ExplorationWorkspace() {
   );
   const examples = (
     <div className="journal-examples" role="group" aria-label="Examples">
-      <button
-        className="exploration-example-button"
-        type="button"
-        disabled={sourceBusy || !initialized}
-        onClick={() => void example()}
-      >
-        Try the original example <ArrowUpRight size={16} aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        className="exploration-example-button"
-        disabled={sourceBusy || !initialized}
-        onClick={() => void lectureSlide()}
-      >
-        Try the Lecture 14 slide (live) <ArrowUpRight size={16} aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        className="exploration-example-button"
-        disabled={sourceBusy || !initialized}
-        onClick={() => void lectureSlide(true)}
-      >
-        Try the Lecture 9 circuit slide (live) <ArrowUpRight size={16} aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        className="exploration-example-button"
-        disabled={sourceBusy || !initialized}
-        onClick={() => void example(true)}
-      >
-        Compare weighted paths <ArrowUpRight size={16} aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        className="exploration-example-button"
-        disabled={sourceBusy || !initialized}
-        onClick={() => void example(false, true)}
-      >
-        Open the 3D example <ArrowUpRight size={16} aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        className="exploration-example-button"
-        disabled={sourceBusy || !initialized}
-        onClick={() => void openRecording()}
-      >
-        Watch a recorded Muse run <ArrowUpRight size={16} aria-hidden="true" />
-      </button>
-      <a className="exploration-example-button" href="/lab/engine/index.html">
-        Lab: a Muse-drawn engine you can turn <ArrowUpRight size={16} aria-hidden="true" />
-      </a>
+      <div className="journal-example-grid">
+        <button
+          type="button"
+          className="exploration-example-button is-recommended"
+          aria-label="Watch a recorded Muse run"
+          aria-describedby="example-recorded-note"
+          disabled={sourceBusy || !initialized}
+          onClick={() => void openRecording()}
+        >
+          <span className="journal-example-copy">
+            <span>Watch a recorded Muse run</span>
+            <small id="example-recorded-note">Start here · recorded, no generation wait</small>
+          </span>
+          <ArrowUpRight size={16} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className="exploration-example-button"
+          aria-label="Compare weighted paths"
+          aria-describedby="example-weighted-note"
+          disabled={sourceBusy || !initialized}
+          onClick={() => void example(true)}
+        >
+          <span className="journal-example-copy">
+            <span>Compare weighted paths</span>
+            <small id="example-weighted-note">Prepared · opens instantly</small>
+          </span>
+          <ArrowUpRight size={16} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className="exploration-example-button"
+          aria-label="Try the Lecture 14 slide (live)"
+          aria-describedby="example-graph-note"
+          disabled={sourceBusy || !initialized}
+          onClick={() => void lectureSlide()}
+        >
+          <span className="journal-example-copy">
+            <span>Try the Lecture 14 slide (live)</span>
+            <small id="example-graph-note">Graph · loads a slide, then Ask</small>
+          </span>
+          <ArrowUpRight size={16} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className="exploration-example-button"
+          aria-label="Try the Lecture 9 circuit slide (live)"
+          aria-describedby="example-circuit-note"
+          disabled={sourceBusy || !initialized}
+          onClick={() => void lectureSlide(true)}
+        >
+          <span className="journal-example-copy">
+            <span>Try the Lecture 9 circuit slide (live)</span>
+            <small id="example-circuit-note">Circuit · loads a slide, then Ask</small>
+          </span>
+          <ArrowUpRight size={16} aria-hidden="true" />
+        </button>
+      </div>
+      <div className="journal-example-extras">
+        <button
+          className="exploration-example-button"
+          type="button"
+          disabled={sourceBusy || !initialized}
+          onClick={() => void example()}
+        >
+          Try the original example <ArrowUpRight size={16} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className="exploration-example-button"
+          disabled={sourceBusy || !initialized}
+          onClick={() => void example(false, true)}
+        >
+          Open the 3D example <ArrowUpRight size={16} aria-hidden="true" />
+        </button>
+        <a className="exploration-example-button" href="/lab/engine/index.html">
+          Lab: a Muse-drawn engine you can turn <ArrowUpRight size={16} aria-hidden="true" />
+        </a>
+      </div>
     </div>
   );
   const library = artifacts.length > 0 && (
@@ -1183,11 +1226,11 @@ export function ExplorationWorkspace() {
       {(source?.focus || (!newContext && artifact?.source.focus)) && (
         <p className="meta">Selected region · captured when you released the shortcut.</p>
       )}
-      {artifact?.recording && !newContext && !source?.dataUrl ? (
+      {publicSource && !newContext && !source?.dataUrl ? (
         <img
           className="exploration-source-image"
-          src={artifact.recording.sourceImage}
-          alt="Original synthetic screenshot used in the recorded Spark run"
+          src={publicSource.image}
+          alt={artifact?.recording ? 'Original synthetic screenshot used in the recorded Spark run' : 'Original synthetic demo screenshot'}
         />
       ) : source?.dataUrl ? (
         <div className={source.focus ? 'exploration-point-preview' : 'exploration-upload-preview'}>
@@ -1655,11 +1698,37 @@ export function ExplorationWorkspace() {
                 generation={artifact.generation}
                 checked={artifact.validation.assurance.startsWith('checked-')}
                 replay={!!artifact.recording}
+                family={artifact.spec.mode === 'checked-circuit' ? 'circuit' : 'graph'}
               />
               {artifact.recording && (
+                <>
+                  <p className="exploration-recording-note">
+                    Recorded {capturedTime(artifact.recording.generatedAt)} · original synthetic
+                    source · no new visual generation. Optional narration uses your selected voice.
+                  </p>
+                  {artifact.spec.mode !== 'explanation' && (
+                    <div className="journal-recording-switch" role="group" aria-label="Recorded example">
+                      <button
+                        type="button"
+                        aria-pressed={artifact.spec.mode !== 'checked-circuit'}
+                        disabled={sourceBusy || busy}
+                        onClick={() => void openRecording(false, 'graph')}
+                      >Recorded graph</button>
+                      <button
+                        type="button"
+                        aria-pressed={artifact.spec.mode === 'checked-circuit'}
+                        disabled={sourceBusy || busy}
+                        onClick={() => void openRecording(false, 'circuit')}
+                      >Recorded circuit</button>
+                    </div>
+                  )}
+                </>
+              )}
+              {publicSource?.presentation && (
                 <p className="exploration-recording-note">
-                  Recorded {capturedTime(artifact.recording.generatedAt)} · original synthetic
-                  source · no inference on replay.
+                  {artifact.recording
+                    ? 'Replay drawing aligned to source · original recording unchanged.'
+                    : 'Source drawing aligned to its original demo image.'}
                 </p>
               )}
               <h2>{artifact.spec.title}</h2>
@@ -1704,6 +1773,15 @@ export function ExplorationWorkspace() {
                 </details>
               )}
               <p className="exploration-objective">{artifact.spec.objective}</p>
+              {artifact.source.uncertainty.length > 0 && (
+                <details className="journal-source-uncertainty">
+                  <summary>
+                    Source reading: {artifact.source.uncertainty.length}{' '}
+                    {artifact.source.uncertainty.length === 1 ? 'uncertainty' : 'uncertainties'}
+                  </summary>
+                  <ul>{artifact.source.uncertainty.map((item) => <li key={item}>{item}</li>)}</ul>
+                </details>
+              )}
               {earlierVersion && (
                 <p className="exploration-unavailable">
                   You are viewing an earlier version.{' '}
@@ -1768,7 +1846,14 @@ export function ExplorationWorkspace() {
                         nativeId: sourceMemory.current.capture.nativeId,
                         readingCheck: artifact.source.readingCheck,
                       }
-                    : undefined
+                    : !newContext && artifact.source.layout && publicSource
+                      ? {
+                          image: publicSource.image,
+                          layout: publicSource.presentation?.layout ?? artifact.source.layout,
+                          anchors: artifact.source.anchors,
+                          readingCheck: artifact.source.readingCheck,
+                        }
+                      : undefined
                 }
                 experiment={
                   !newContext && artifact.spec.mode === 'checked-circuit' ? (
@@ -2053,16 +2138,19 @@ export function ExplorationWorkspace() {
             <p className="overline">Your study journal</p>
             <h1 id="journal-cover-title">Point Soma at something you’re studying.</h1>
             <p className="journal-cover-lede">
-              Share a window or upload a screenshot, then ask. Soma draws an explanation you can
-              change.
+              Turn graphs and DC circuits into checked experiments. Other topics get visual
+              explanations.
             </p>
-            {sourcePanel}
             {library}
-            <h2 className="journal-cover-subhead">Or open an example</h2>
-            {examples}
-            <span className="meta">
-              Examples use original synthetic material. No account needed.
-            </span>
+            <div className="journal-cover-entry">
+              {(source || capture.sharing) && sourcePanel}
+              <section className="journal-cover-examples" aria-labelledby="journal-examples-title">
+                <h2 id="journal-examples-title" className="journal-cover-subhead">Try an example</h2>
+                {examples}
+                <p className="meta">Original demo material · no account needed. Live slides generate only after Ask.</p>
+              </section>
+              {!source && !capture.sharing && sourcePanel}
+            </div>
           </section>
         )}
         {composer}

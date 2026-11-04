@@ -15,8 +15,10 @@ export type MetaStatus = 'completed' | 'incomplete' | 'failed' | 'cancelled' | '
 export type MetaResult = { status: MetaStatus; tools: MetaToolCall[]; usage: MetaUsage; structured?: Record<string, unknown> };
 export type MetaErrorCode = 'configuration' | 'request_invalid' | 'request_limit' | 'timeout' | 'network' | 'http' | 'response_limit' | 'response_invalid' | 'usage_unavailable' | 'tool_invalid';
 export class MetaClientError extends Error {
-  constructor(public readonly code: MetaErrorCode, public readonly usage: MetaUsage | null = null, public readonly requestSent = false) {
+  readonly httpStatus?: number;
+  constructor(public readonly code: MetaErrorCode, public readonly usage: MetaUsage | null = null, public readonly requestSent = false, httpStatus?: number) {
     super(`Meta request stopped: ${code}.`); this.name = 'MetaClientError';
+    this.httpStatus = Number.isInteger(httpStatus) && httpStatus! >= 100 && httpStatus! <= 599 ? httpStatus : undefined;
   }
 }
 const nameSchema = z.string().min(1).max(64).regex(/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?$/);
@@ -45,10 +47,10 @@ function argumentsObject(raw: string, maxNodes = 500): Record<string, unknown> {
 }
 
 /** Extract billing before validating completion/output; never retain provider text or reasoning. */
-export function parseMetaResponse(raw: unknown, allowedTools: readonly string[], httpOk = true, profile: 'text' | 'vision' = 'text'): MetaResult {
+export function parseMetaResponse(raw: unknown, allowedTools: readonly string[], httpOk = true, profile: 'text' | 'vision' = 'text', httpStatus?: number): MetaResult {
   const usageResult = usageSchema.safeParse(plainObject(raw) ? raw.usage : undefined);
   const usage = usageResult.success ? usageResult.data : null;
-  if (!httpOk) throw new MetaClientError('http', usage, true);
+  if (!httpOk) throw new MetaClientError('http', usage, true, httpStatus);
   if (!usage) throw new MetaClientError('usage_unavailable', null, true);
   if (!plainObject(raw)) throw new MetaClientError('response_invalid', usage, true);
   const status = statusSchema.safeParse(raw.status);
@@ -148,8 +150,18 @@ export async function requestMetaResponse(request: MetaRequest): Promise<MetaRes
   try {
     const operation = async () => {
       const response = await fetch(META_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body, signal: controller.signal, cache: 'no-store', redirect: 'error' });
-      const raw = await readBody(response, controller.signal);
-      const result = parseMetaResponse(raw, allowedTools, response.ok);
+      let raw: unknown;
+      try { raw = await readBody(response, controller.signal); }
+      catch (error) {
+        if (!response.ok) {
+          // Gateways may send HTML or an empty error body. Keep only the actual status,
+          // never the body, while preserving body-size and timeout failure categories.
+          const code = error instanceof MetaClientError && error.code !== 'response_invalid' ? error.code : 'http';
+          throw new MetaClientError(code, error instanceof MetaClientError ? error.usage : null, true, response.status);
+        }
+        throw error;
+      }
+      const result = parseMetaResponse(raw, allowedTools, response.ok, 'text', response.status);
       if ((!request.structuredOutput && !request.jsonFallback) || result.status !== 'completed' || result.tools.length)
         return result;
       return parseMetaStructuredResult(raw, result);

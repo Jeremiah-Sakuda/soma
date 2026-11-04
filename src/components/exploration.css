@@ -2321,7 +2321,7 @@
 .source-overlay-switch [aria-pressed=true] { background: var(--accent); color: #fff; }
 .source-overlay { position: relative; margin: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #fff; box-shadow: 0 10px 30px #2a231a14; }
 .source-overlay img { display: block; width: 100%; height: auto; }
-.source-overlay-layer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.source-overlay-layer { position: absolute; inset: 0; width: 100%; height: auto; overflow: visible; }
 .source-overlay-stroke { fill: none; stroke-linecap: round; transition: stroke .35s ease, stroke-width .35s ease, opacity .35s ease; }
 .source-overlay-edge.is-idle .source-overlay-stroke { stroke: transparent; stroke-width: 0; }
 .source-overlay-edge.is-tree .source-overlay-stroke { stroke: var(--accent); stroke-width: 7; opacity: .35; }
@@ -2427,7 +2427,17 @@ div.source-overlay-onscreen > p { margin: 0; }
 
 /* The completed search shows only its result. */
 .source-overlay-layer.is-final .source-overlay-node.is-settled .source-overlay-loop { opacity: .3; }
-.source-overlay-caption { max-width: min(40%, 22em); }
+/* Browser captions need their own space: a long checked result must not be clipped by
+   the source image or hide its facts. Native overlays still use their model placement. */
+.source-overlay-caption {
+  position: static;
+  max-width: none;
+  padding: 10px 14px;
+  border-radius: 0;
+  border-width: 1px 0 0;
+  box-shadow: none;
+  font-size: 14px;
+}
 @keyframes source-overlay-settle { 0% { opacity: 0; transform: scale(.5); } 70% { opacity: 1; transform: scale(1.06); } 100% { opacity: 1; transform: scale(1); } }
 .source-overlay-tag { animation: source-overlay-settle .42s cubic-bezier(.2, .8, .2, 1) .65s both; transform-box: fill-box; transform-origin: center; }
 @media (prefers-reduced-motion: reduce) { .source-overlay-tag { animation: none; } }

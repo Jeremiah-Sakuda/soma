@@ -34,11 +34,13 @@ export {
 import {
   captionIsGrounded,
   comparisonExecution,
+  graphExperimentActive,
   explorationExecution,
   explorationInputsChanged,
   explorationVisibleCaption,
   type ExplorationViewState,
 } from '@/lib/domain/exploration-view';
+import { defaultGraphControls } from '@/lib/domain/graph-state';
 const nodeName = (input: BfsInput, id: string | null) =>
   input.nodes.find((node) => node.id === id)?.label ?? 'None';
 
@@ -418,6 +420,7 @@ export function ExplorationScene({
   const step = execution?.steps[Math.min(state.step, execution.steps.length - 1)],
     explanation = spec.steps[Math.min(state.explanationStep, spec.steps.length - 1)];
   const changed = explorationInputsChanged(spec, state),
+    experimenting = graphExperimentActive(spec, state),
     highlights = changed
       ? []
       : spec.mode === 'explanation'
@@ -438,7 +441,7 @@ export function ExplorationScene({
       ? explanation
       : spec.steps.find((item) => item.execution === 'primary' && item.executionStep === state.step);
   const overlayCaption =
-    overlayStep?.caption &&
+    !changed && overlayStep?.caption &&
     (spec.mode === 'explanation' || captionIsGrounded(overlayStep.caption, [execution, comparison]))
       ? overlayStep.caption
       : explorationVisibleCaption(spec, state);
@@ -463,7 +466,7 @@ export function ExplorationScene({
   };
   // After a learner change, the authored captions describe the original graph; say only what was computed.
   const experimentCaption = (() => {
-    if (!changed || !execution || !graphInput) return null;
+    if (!experimenting || !execution || !graphInput) return null;
     const names = (ids: readonly string[]) => ids.map((id) => nodeName(graphInput, id)).join(' → ');
     const cut = graphInput.edges
       .filter((edge) => state.disabledEdgeIds.includes(edge.id))
@@ -1015,6 +1018,21 @@ export function ExplorationScene({
                   ))}
                 </div>
               </details>
+            )}
+            {experimenting && (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => onChange({
+                  ...state,
+                  ...defaultGraphControls(spec.input),
+                  step: 0,
+                  explanationStep: 0,
+                  selectedObjectId: null,
+                })}
+              >
+                Back to the graph as read
+              </button>
             )}
             <details>
               <summary>Search state in a table</summary>

@@ -1,6 +1,7 @@
 import type { SpatialView } from './spatial-schema';
 import { runBfs, type BfsInput, type BfsExecution, type ExplorationSpec } from './exploration';
 import { solveDc, type DcInput, type DcSolution } from './dc-circuit';
+import { defaultGraphControls, applyGraphControls, applyComparisonGraphControls, graphControlsEqual, type GraphControls } from './graph-state';
 
 export type ExplorationViewState = {
   step: number;
@@ -30,21 +31,17 @@ export function explorationExecution(
   state: ExplorationViewState,
 ): BfsExecution | null {
   if (spec.mode !== 'checked-bfs' && spec.mode !== 'checked-dijkstra') return null;
-  return runBfs({
-    ...spec.input,
-    start: state.start ?? spec.input.start,
-    goal: state.goal,
-    edges: spec.input.edges
-      .filter((edge) => !state.disabledEdgeIds.includes(edge.id))
-      .map((edge) =>
-        state.edgeWeights?.[edge.id] !== undefined
-          ? { ...edge, weight: state.edgeWeights[edge.id] }
-          : edge,
-      ),
-    neighborOrder: state.reversed
-      ? [...spec.input.neighborOrder].reverse()
-      : spec.input.neighborOrder,
-  });
+  return runBfs(applyGraphControls(spec.input, graphViewControls(spec.input, state)));
+}
+/** Resolve legacy nullable starts and omitted costs without accepting presentation fields. */
+function graphViewControls(input: BfsInput, state: ExplorationViewState): GraphControls {
+  return { start: state.start ?? input.start, goal: state.goal, disabledEdgeIds: state.disabledEdgeIds,
+    reversed: state.reversed, edgeWeights: state.edgeWeights ?? {} };
+}
+/** Source/experiment labeling is independent of whether the authored words match this state. */
+export function graphExperimentActive(spec: ExplorationSpec, state: ExplorationViewState): boolean {
+  return (spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') &&
+    !graphControlsEqual(graphViewControls(spec.input, state), defaultGraphControls(spec.input));
 }
 /** The circuit under the learner's experiment: open parts are `disabledEdgeIds`, changed
  * values are `edgeWeights`, so the same view state and controls serve both families. */
@@ -66,11 +63,7 @@ export function explorationInputsChanged(spec: ExplorationSpec, state: Explorati
   }
   return (
     (spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') &&
-    ((state.start ?? spec.input.start) !== spec.input.start ||
-      state.goal !== spec.input.goal ||
-      state.disabledEdgeIds.length > 0 ||
-      state.reversed ||
-      Object.keys(state.edgeWeights ?? {}).length > 0)
+    !graphControlsEqual(graphViewControls(spec.input, state), spec.writtenFor ?? defaultGraphControls(spec.input))
   );
 }
 function executionCaption(execution: BfsExecution, index: number) {
@@ -289,24 +282,5 @@ export function comparisonExecution(
 ): BfsExecution | null {
   if ((spec.mode !== 'checked-bfs' && spec.mode !== 'checked-dijkstra') || !spec.comparison)
     return null;
-  const sameWeightedGraph =
-    spec.mode === 'checked-dijkstra' &&
-    JSON.stringify({ ...spec.comparison.input, algorithm: spec.input.algorithm }) ===
-      JSON.stringify(spec.input);
-  const input = spec.comparison.input;
-  return runBfs({
-    ...input,
-    ...(sameWeightedGraph
-      ? {
-          start: state.start ?? input.start,
-          goal: state.goal,
-          neighborOrder: state.reversed ? [...input.neighborOrder].reverse() : input.neighborOrder,
-        }
-      : {}),
-    edges: input.edges
-      .filter((e) => !sameWeightedGraph || !state.disabledEdgeIds.includes(e.id))
-      .map((e) =>
-        state.edgeWeights?.[e.id] !== undefined ? { ...e, weight: state.edgeWeights[e.id] } : e,
-      ),
-  });
+  return runBfs(applyComparisonGraphControls(spec.input, spec.comparison.input, graphViewControls(spec.input, state)));
 }

@@ -83,6 +83,7 @@ test('a checked circuit draws on the uploaded slide and re-solves every experime
   await expect(page.locator('.exploration-caption')).toContainText('Soma’s explanation: B and C both sit at 8 V');
   await expect(page.getByText('Step 4 of 4').first()).toBeVisible();
   await expect(page.locator('.journal-log')).toContainText('Circuit log');
+  await expect(page.locator('#exploration-question')).toHaveAttribute('placeholder', 'What if we open a part or change its resistance?');
   await page.screenshot({ path: '.local/circuit/page-final.png', fullPage: false });
   await overlay.screenshot({ path: '.local/circuit/overlay-final.png' });
 

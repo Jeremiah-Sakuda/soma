@@ -229,48 +229,58 @@ export async function requestMetaVisionResponse(
           cache: 'no-store',
           redirect: 'error',
         });
-        const declared = response.headers.get('content-length');
-        if (
-          declared &&
-          (!/^\d+$/.test(declared) || Number(declared) > META_MAX_RESPONSE_BYTES)
-        ) {
-          await response.body?.cancel();
-          throw new MetaClientError('response_limit', null, true);
-        }
-        const reader = response.body?.getReader();
-        if (!reader) throw new MetaClientError('response_invalid', null, true);
-        const chunks: Uint8Array[] = [];
-        let size = 0;
-        const cancel = () => {
-          void reader.cancel().catch(() => undefined);
-        };
-        controller.signal.addEventListener('abort', cancel, { once: true });
         try {
-          for (;;) {
-            if (controller.signal.aborted) throw new MetaClientError('timeout', null, true);
-            const next = await reader.read();
-            if (next.done) break;
-            size += next.value.byteLength;
-            if (size > META_MAX_RESPONSE_BYTES) {
-              await reader.cancel();
-              throw new MetaClientError('response_limit', null, true);
-            }
-            chunks.push(next.value);
+          const declared = response.headers.get('content-length');
+          if (
+            declared &&
+            (!/^\d+$/.test(declared) || Number(declared) > META_MAX_RESPONSE_BYTES)
+          ) {
+            await response.body?.cancel();
+            throw new MetaClientError('response_limit', null, true);
           }
-        } finally {
-          controller.signal.removeEventListener('abort', cancel);
-          reader.releaseLock();
+          const reader = response.body?.getReader();
+          if (!reader) throw new MetaClientError('response_invalid', null, true);
+          const chunks: Uint8Array[] = [];
+          let size = 0;
+          const cancel = () => {
+            void reader.cancel().catch(() => undefined);
+          };
+          controller.signal.addEventListener('abort', cancel, { once: true });
+          try {
+            for (;;) {
+              if (controller.signal.aborted) throw new MetaClientError('timeout', null, true);
+              const next = await reader.read();
+              if (next.done) break;
+              size += next.value.byteLength;
+              if (size > META_MAX_RESPONSE_BYTES) {
+                await reader.cancel();
+                throw new MetaClientError('response_limit', null, true);
+              }
+              chunks.push(next.value);
+            }
+          } finally {
+            controller.signal.removeEventListener('abort', cancel);
+            reader.releaseLock();
+          }
+          let value: unknown;
+          try {
+            value = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+          } catch {
+            throw new MetaClientError('response_invalid', null, true);
+          }
+          const result = parseMetaResponse(value, encoded.names, response.ok, 'vision', response.status);
+          return request.structuredOutput
+            ? parseMetaStructuredResult(value, result, 'vision')
+            : result;
+        } catch (error) {
+          if (!response.ok) {
+            // Error gateways may return HTML or no JSON at all. Retain only the
+            // actual status and safe failure category, preserving usage and bounds.
+            const code = error instanceof MetaClientError && error.code !== 'response_invalid' ? error.code : 'http';
+            throw new MetaClientError(code, error instanceof MetaClientError ? error.usage : null, true, response.status);
+          }
+          throw error;
         }
-        let value: unknown;
-        try {
-          value = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-        } catch {
-          throw new MetaClientError('response_invalid', null, true);
-        }
-        const result = parseMetaResponse(value, encoded.names, response.ok, 'vision');
-        return request.structuredOutput
-          ? parseMetaStructuredResult(value, result, 'vision')
-          : result;
       })(),
     ]);
   } catch (error) {

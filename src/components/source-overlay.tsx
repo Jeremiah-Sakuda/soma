@@ -16,6 +16,10 @@ const ROUTE_LEAD = 0.15,
 export type { SourceGraphLayout } from '@/lib/domain/source-overlay-model';
 const WIDTH = 1000;
 const STATUS_WORDS = { current: 'now', settled: 'settled', waiting: 'waiting', unreached: 'not reached' };
+const CIRCUIT_STATUS_WORDS = {
+  current: 'voltage shown now', settled: 'voltage shown',
+  waiting: 'voltage not yet shown', unreached: 'voltage undefined relative to ground',
+};
 let measureContext: CanvasRenderingContext2D | null | undefined;
 /** Real text width in the annotation hand, so tags fit their words. */
 function textWidth(text: string, font: number) {
@@ -38,11 +42,14 @@ export function SourceOverlay({
   onSelect,
   onModel,
   compact = false,
+  family = 'graph',
   build,
   ...input
 }: {
   /** The same overlay is on the learner's screen; keep this copy small. */
   compact?: boolean;
+  /** Controls accessible terminology only; the supplied model owns all geometry and facts. */
+  family?: 'graph' | 'circuit';
   image: string;
   canToggle: boolean;
   selected: string | null;
@@ -100,7 +107,7 @@ export function SourceOverlay({
     <figure className={`source-overlay${compact ? ' is-compact' : ''}`}>
       <img
         src={image}
-        alt="Your captured source, with Soma's checked search drawn over it"
+        alt={`Your captured source, with Soma's checked ${family === 'circuit' ? 'circuit' : 'search'} drawn over it`}
         onLoad={(event) => {
           const img = event.currentTarget;
           if (img.naturalWidth) setAspect(img.naturalHeight / img.naturalWidth);
@@ -111,7 +118,7 @@ export function SourceOverlay({
           viewBox={`0 0 ${WIDTH} ${height}`}
           className={`source-overlay-layer${model.final ? ' is-final' : ''}`}
           role="group"
-          aria-label={`Checked search over your source. ${input.stepLabel}`}
+          aria-label={`Checked ${family === 'circuit' ? 'circuit' : 'search'} over your source. ${input.stepLabel}`}
         >
           <defs>
             <marker id="source-overlay-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -178,7 +185,7 @@ export function SourceOverlay({
                 className={`source-overlay-node is-${node.status} ${selected === node.id ? 'is-selected' : ''}`}
                 role="button"
                 tabIndex={0}
-                aria-label={`${node.label}: ${STATUS_WORDS[node.status]}${node.distance === null ? '' : `, distance ${node.distance}`}`}
+                aria-label={`${node.label}: ${(family === 'circuit' ? CIRCUIT_STATUS_WORDS : STATUS_WORDS)[node.status]}${node.distance === null ? '' : family === 'circuit' ? `, voltage ${node.distance} V` : `, distance ${node.distance}`}`}
                 onClick={() => onSelect(node.id)}
                 onKeyDown={(event) => keyActivate(event, () => onSelect(node.id))}
               >

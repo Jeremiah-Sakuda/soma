@@ -10,6 +10,7 @@ import {
   type BfsInput,
 } from './graph-search';
 import { dcInputSchema, dcValueAllowed, solveDc, DC_MODEL_ID, DC_MODEL_VERSION, type DcInput, type DcSolution } from './dc-circuit';
+import { graphControlsSchema, defaultGraphControls, validateGraphControls, applyGraphControls, applyComparisonGraphControls } from './graph-state';
 export { bfsInputSchema, runBfs, BFS_MODEL_ID, BFS_MODEL_VERSION } from './graph-search';
 export { DC_MODEL_ID, DC_MODEL_VERSION } from './dc-circuit';
 export type { DcInput, DcSolution } from './dc-circuit';
@@ -142,6 +143,8 @@ export const explorationSpecSchema = z.discriminatedUnion('mode', [
     modelVersion: z.enum([BFS_MODEL_VERSION, 'dijkstra-nonnegative-v1']),
     input: bfsInputSchema,
     comparison: z.strictObject({ label: short, input: bfsInputSchema }).nullable(),
+    /** Controls whose effective trace the explanation describes; input remains the base graph. */
+    writtenFor: graphControlsSchema.nullable().optional(),
     scene,
     steps: z.array(step).min(1).max(12),
     controls: z
@@ -292,10 +295,7 @@ export function validateExplorationSpec(raw: unknown): ExplorationSpec {
   for (const id of objects.keys()) addId(id);
   const executions: { primary: BfsExecution; comparison?: BfsExecution } | null =
     spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra'
-      ? {
-          primary: runBfs(spec.input),
-          ...(spec.comparison ? { comparison: runBfs(spec.comparison.input) } : {}),
-        }
+      ? graphExecutions(spec)
       : null;
   if (spec.scene.panels.filter((panel) => panel.kind === 'spatial').length > 1)
     reject('Only one spatial workspace is supported.');
@@ -453,10 +453,15 @@ export function checkExploration(raw: unknown): CheckedExploration {
         'deterministic-trace',
       ],
     },
-    executions: {
-      primary: runBfs(spec.input),
-      ...(spec.comparison ? { comparison: runBfs(spec.comparison.input) } : {}),
-    },
+    executions: graphExecutions(spec),
+  };
+}
+
+function graphExecutions(spec: Extract<ExplorationSpec, { mode: 'checked-bfs' | 'checked-dijkstra' }>) {
+  const controls = validateGraphControls(spec.input, spec.writtenFor ?? defaultGraphControls(spec.input), spec.controls);
+  return {
+    primary: runBfs(applyGraphControls(spec.input, controls)),
+    ...(spec.comparison ? { comparison: runBfs(applyComparisonGraphControls(spec.input, spec.comparison.input, controls)) } : {}),
   };
 }
 

@@ -1,3 +1,29 @@
+# Soma build plan — November 4 UTC, 2026
+
+## Current release sequence
+
+Finish the selected-context → checked visual → manipulation → contextual follow-up → saved-revision journey for graph search and ideal DC circuits. Preserve the canonical `soma` repository, existing v1 records, read-only sources and actual budget limits. The user authorized circuit work beyond the former October 31 feature freeze; the submission deadline remains **November 4, 9 PM America/New_York**. [PRD.md](PRD.md) owns acceptance, [VERIFICATION.md](VERIFICATION.md) owns executed evidence, and [CODEX_HANDOFF.md](../CODEX_HANDOFF.md) identifies the current release.
+
+**Completed for the current candidate:**
+
+- Independent product, engineering and demo reviews identified concrete gaps; their remedies include circuit image cross-checking, bounded review recovery, graph source/experiment separation and truthful recording/presentation attribution. Review scores remain private and do not establish release acceptance.
+- Wonder's circuit image check, blind value re-reading, unresolved-dispute handling and review transport bounds have focused coverage. Typed graph `writtenFor` controls preserve base inputs, current experiments and restored connections through replies and saves; mandatory review and model-output binding remain enforced.
+- The fresh three-turn graph service run passed source reading, the exact unnamed-edge E question, the changed-cost follow-up and exact save/reopen. Muse chose D–F with tie 5. The circuit service run passed all six parts/polarity, independent image agreement, R₄ balance at 8 Ω, R₅ direction reversal and save/reopen. Earlier unavailable reviews, title rejection and composition failure are retained separately.
+- Original-synthetic graph/circuit investigations can replay without inference, retaining actual source readings and generation receipts; drawing alignment is separate presentation data. The first-use flow now prioritizes a real recording and states the checked subjects, with focused tests. Public product, submission and demo documents reflect the current evidence and limits.
+
+**In progress, in dependency order:**
+
+1. Freeze the candidate and run final offline, browser, desktop, typecheck and production-build checks. Record failures and follow-up checks explicitly; focused passes are not a final full-suite pass.
+2. Generate and verify a release manifest covering runtime source and public assets, including the recording images and presentation data. The existing manifest still identifies hosted review6 until replaced by a verified release.
+3. Deploy the verified candidate, then verify the actual hosted release identity and judge entry paths. No candidate deployment is established by this plan.
+4. Rehearse the relevant native graph and circuit sequence silently on the actual Mac, using typed questions and muted playback. Check overlay alignment, source restoration, current directions, controls and reopen. Keep this evidence separate from service tests and from microphone/audio quality.
+
+**Remaining delivery:** capture the actual three-minute take, captions and final edit; publish an accessible video URL; check the submitted app, companion, source and video links; complete the form and retain the actual submission receipt before the deadline. The script must use the connection and boundary Muse actually chose, with measured labels for shortened waits. Broader uses remain potential. Repository visibility changes belong at the end of the release/access sequence and require the user's authorization; do not infer authorization from this plan.
+
+## Dated plan history
+
+The entries below preserve earlier scope, sequencing and evidence. Their “current” labels, graph-only limits, 3D restrictions, budgets and October 31 freeze describe their dates; the current scope and sequence above take precedence.
+
 ## PM073 delivered continuity — October 30
 
 Fresh practice and stable saved-history order are deployed and hosted-verified. Current release/source/budget: CODEX_HANDOFF.md. Final release soma-pm073-2026-10-30-r3 is hosted-verified and clean CI 41004986055 passed; no further feature expansion is planned. Return to actual student/device testing and demo footage before the October 31 freeze. Keep the optional fresh-application beat inside the existing capture → manipulate → explain → save/revisit story.

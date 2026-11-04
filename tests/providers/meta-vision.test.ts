@@ -7,6 +7,10 @@ const tool={type:'function',name:'inspect_source',description:'Inspect original 
 const request=(overrides:Partial<MetaVisionRequest>={}):MetaVisionRequest=>({instructions:'Interpret only selected original example.',input:[{role:'user',content:[{type:'input_text',text:'What does this show?'},{type:'input_image',image_url:png}]}],tools:[tool],deadlineMs:1000,...overrides});
 const call=(args='{}')=>({type:'function_call',name:'inspect_source',call_id:'original_call',arguments:args,status:'completed'});
 const payload=(args='{}')=>({status:'completed',output:[{type:'reasoning',encrypted_content:'PRIVATE'},{type:'message',content:[{type:'output_text',text:'PRIVATE'}]},call(args)],usage:{input_tokens:200,output_tokens:70}});
+async function failure(pending: Promise<unknown>): Promise<MetaClientError> {
+  try { await pending; } catch (error) { expect(error).toBeInstanceOf(MetaClientError); return error as MetaClientError; }
+  throw new Error('Expected a bounded provider failure.');
+}
 beforeEach(()=>{vi.stubEnv('MODEL_API_KEY','original-synthetic-key');vi.stubEnv('META_API_BASE_URL','https://api.meta.ai/v1');vi.stubEnv('META_MODEL_ID','muse-spark-1.3');});
 afterEach(()=>{vi.unstubAllEnvs();vi.unstubAllGlobals();});
 describe('bounded transient screenshot and vision profile',()=>{
@@ -33,8 +37,38 @@ describe('bounded transient screenshot and vision profile',()=>{
  });
  it('retains unknown billing facts and never leaks provider failures',async()=>{
   vi.stubGlobal('fetch',vi.fn(async()=>new Response(JSON.stringify({error:{message:'PRIVATE'},usage:{input_tokens:1,output_tokens:2}}),{status:429})));
-  await expect(requestMetaVisionResponse(request())).rejects.toMatchObject({code:'http',requestSent:true,usage:{input_tokens:1,output_tokens:2}});
+  const error = await failure(requestMetaVisionResponse(request()));
+  expect(error).toMatchObject({code:'http',httpStatus:429,requestSent:true,usage:{input_tokens:1,output_tokens:2}});
+  expect(`${error.message}${JSON.stringify(error)}`).not.toContain('PRIVATE');
   vi.stubGlobal('fetch',vi.fn(async()=>new Response(JSON.stringify({...payload(),usage:undefined}))));await expect(requestMetaVisionResponse(request())).rejects.toMatchObject({code:'usage_unavailable',requestSent:true,usage:null});
+ });
+ it.each([400,401,503])('retains HTTP %s for non-JSON error bodies without retaining body text or retrying',async status=>{
+  const fetcher=vi.fn(async()=>new Response('<html>PRIVATE provider failure and source text</html>',{status}));vi.stubGlobal('fetch',fetcher);
+  const error=await failure(requestMetaVisionResponse(request()));
+  expect(error).toMatchObject({code:'http',httpStatus:status,requestSent:true,usage:null});
+  expect(`${error.message}${JSON.stringify(error)}`).not.toContain('PRIVATE');
+  expect(fetcher).toHaveBeenCalledTimes(1);
+ });
+ it('preserves structured-composition HTTP failures and valid billed usage before parsing a scene',async()=>{
+  const usage={input_tokens:120,output_tokens:0};
+  vi.stubGlobal('fetch',vi.fn(async()=>new Response(JSON.stringify({error:{message:'PRIVATE schema failure'},usage}),{status:400})));
+  const error=await failure(requestMetaVisionResponse(request({tools:[],structuredOutput:{name:'scene',schema:{type:'object',properties:{},additionalProperties:false}}})));
+  expect(error).toMatchObject({code:'http',httpStatus:400,requestSent:true,usage});
+  expect(`${error.message}${JSON.stringify(error)}`).not.toContain('PRIVATE');
+ });
+ it.each(['declared','streamed'] as const)('preserves HTTP status and the %s response-size bound',async kind=>{
+  let cancelled=false;
+  const stream=new ReadableStream({start(c){if(kind==='streamed')c.enqueue(new Uint8Array(META_MAX_RESPONSE_BYTES+1));},cancel(){cancelled=true;}});
+  vi.stubGlobal('fetch',vi.fn(async()=>new Response(stream,{status:502,headers:kind==='declared'?{'content-length':String(META_MAX_RESPONSE_BYTES+1)}:undefined})));
+  expect(await failure(requestMetaVisionResponse(request()))).toMatchObject({code:'response_limit',httpStatus:502,requestSent:true,usage:null});
+  expect(cancelled).toBe(true);
+ });
+ it('does not infer a failure status from text inside a successful HTTP response',async()=>{
+  vi.stubGlobal('fetch',vi.fn(async()=>new Response('503 PRIVATE invalid successful body')));
+  const error=await failure(requestMetaVisionResponse(request()));
+  expect(error).toMatchObject({code:'response_invalid',requestSent:true,usage:null});
+  expect(error.httpStatus).toBeUndefined();
+  expect(`${error.message}${JSON.stringify(error)}`).not.toContain('PRIVATE');
  });
  it('cancels outstanding calls and bounds dishonest streaming output',async()=>{
   const controller=new AbortController();vi.stubGlobal('fetch',vi.fn(()=>new Promise<Response>(()=>{})));const pending=requestMetaVisionResponse(request({signal:controller.signal}));controller.abort();await expect(pending).rejects.toMatchObject({code:'timeout',requestSent:true});

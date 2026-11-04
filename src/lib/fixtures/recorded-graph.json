@@ -1,0 +1,610 @@
+{
+  "spec": {
+    "schemaVersion": "exploration-v1",
+    "id": "explore_55953b1fb96b45f1a4b88f87aa039d90",
+    "version": 2,
+    "title": "What sends the shortest route through E?",
+    "objective": "Show that raising the D-F edge cost above 5 makes A-C-E-F at cost 9 the shortest route through E.",
+    "sources": [
+      {
+        "observationId": "capture_f9c6a6f7f69b4708909a24e4ec514f1e",
+        "version": 1,
+        "region": null
+      }
+    ],
+    "assumptions": [
+      "Undirected edges can be travelled either way with the shown cost.",
+      "neighborOrder was not printed, so alphabetical order is used as placeholder."
+    ],
+    "uncertainty": [
+      "Neighbor visitation order not printed; neighborOrder set alphabetically as placeholder.",
+      "Node/edge coordinates are estimated from full image, not measured."
+    ],
+    "unsupportedClaims": [],
+    "mode": "checked-dijkstra",
+    "modelId": "dijkstra-nonnegative",
+    "modelVersion": "dijkstra-nonnegative-v1",
+    "input": {
+      "nodes": [
+        {
+          "id": "A",
+          "label": "A"
+        },
+        {
+          "id": "B",
+          "label": "B"
+        },
+        {
+          "id": "C",
+          "label": "C"
+        },
+        {
+          "id": "D",
+          "label": "D"
+        },
+        {
+          "id": "E",
+          "label": "E"
+        },
+        {
+          "id": "F",
+          "label": "F"
+        }
+      ],
+      "edges": [
+        {
+          "id": "e_AB",
+          "from": "A",
+          "to": "B",
+          "weight": 4
+        },
+        {
+          "id": "e_AC",
+          "from": "A",
+          "to": "C",
+          "weight": 1
+        },
+        {
+          "id": "e_AF",
+          "from": "A",
+          "to": "F",
+          "weight": 11
+        },
+        {
+          "id": "e_BD",
+          "from": "B",
+          "to": "D",
+          "weight": 1
+        },
+        {
+          "id": "e_BC",
+          "from": "B",
+          "to": "C",
+          "weight": 2
+        },
+        {
+          "id": "e_CE",
+          "from": "C",
+          "to": "E",
+          "weight": 5
+        },
+        {
+          "id": "e_DF",
+          "from": "D",
+          "to": "F",
+          "weight": 3
+        },
+        {
+          "id": "e_DE",
+          "from": "D",
+          "to": "E",
+          "weight": 3
+        },
+        {
+          "id": "e_EF",
+          "from": "E",
+          "to": "F",
+          "weight": 3
+        }
+      ],
+      "directed": false,
+      "start": "A",
+      "goal": "F",
+      "neighborOrder": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "algorithm": "dijkstra"
+    },
+    "comparison": null,
+    "scene": {
+      "layout": "diagram-sidebar",
+      "panels": [
+        {
+          "id": "graphMain",
+          "title": "Lecture graph: start A, goal F",
+          "placement": {
+            "column": 1,
+            "row": 1,
+            "columnSpan": 1
+          },
+          "kind": "graph",
+          "execution": "primary",
+          "positions": [
+            {
+              "nodeId": "A",
+              "x": 0.08,
+              "y": 0.51
+            },
+            {
+              "nodeId": "B",
+              "x": 0.2915,
+              "y": 0.2754
+            },
+            {
+              "nodeId": "C",
+              "x": 0.2917,
+              "y": 0.7845
+            },
+            {
+              "nodeId": "D",
+              "x": 0.692,
+              "y": 0.2146
+            },
+            {
+              "nodeId": "E",
+              "x": 0.6287,
+              "y": 0.7854
+            },
+            {
+              "nodeId": "F",
+              "x": 0.92,
+              "y": 0.4745
+            }
+          ]
+        },
+        {
+          "id": "frontierMain",
+          "title": "Priority frontier · cost order",
+          "placement": {
+            "column": 2,
+            "row": 1,
+            "columnSpan": 1
+          },
+          "kind": "frontier",
+          "execution": "primary"
+        },
+        {
+          "id": "tableMain",
+          "title": "Settled distances",
+          "placement": {
+            "column": 2,
+            "row": 2,
+            "columnSpan": 1
+          },
+          "kind": "state-table",
+          "execution": "primary"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "probe_2_0",
+        "caption": "Currently C reaches E at 6, so a route through E to F would cost 9.",
+        "narration": "With current costs, A-C-E is 1+5=6, plus E-F 3 gives 9 for A-C-E-F.",
+        "highlightIds": [
+          "C",
+          "E",
+          "e_CE",
+          "F",
+          "e_EF"
+        ],
+        "execution": "primary",
+        "executionStep": 2
+      },
+      {
+        "id": "probe_2_1",
+        "caption": "Currently D improves F to 7, which beats the 9 via E.",
+        "narration": "With D-F edge cost 3, A-C-B-D-F is 1+2+1+3=7, cheaper than 9 via E.",
+        "highlightIds": [
+          "D",
+          "F",
+          "e_DF",
+          "e_BD"
+        ],
+        "execution": "primary",
+        "executionStep": 4
+      },
+      {
+        "id": "probe_2_2",
+        "caption": "F settles at 7 via A-C-B-D-F; E is not on this current shortest route.",
+        "narration": "Current whole-path cost 7 avoids E; the direct edge cost 11 is also higher.",
+        "highlightIds": [
+          "A",
+          "C",
+          "B",
+          "D",
+          "F",
+          "e_AC",
+          "e_BC",
+          "e_BD",
+          "e_DF"
+        ],
+        "execution": "primary",
+        "executionStep": 6
+      },
+      {
+        "id": "probe_2_3",
+        "caption": "F settles at 7 now; any higher D-F cost is hypothetical.",
+        "narration": "Hypothetically at D-F cost 5 both routes total 9, an equal-cost tie. Hypothetically above 5, sampled outcome is A-C-E-F at 9 beating via D-F.",
+        "highlightIds": [
+          "D",
+          "F",
+          "e_DF",
+          "C",
+          "E",
+          "e_CE",
+          "e_EF"
+        ],
+        "execution": "primary",
+        "executionStep": 6
+      }
+    ],
+    "controls": [
+      "step",
+      "replay",
+      "set-start",
+      "set-goal",
+      "toggle-edge",
+      "set-weight"
+    ],
+    "followups": [
+      "What if the C-E edge cost were lowered instead of raising D-F?",
+      "Why can two different routes both cost 9 at the tie?"
+    ]
+  },
+  "question": "What would make the route go through E?",
+  "source": {
+    "observationId": "capture_f9c6a6f7f69b4708909a24e4ec514f1e",
+    "version": 1,
+    "kind": "screenshot",
+    "label": "Lecture 14 · Dijkstra (original demo slide)",
+    "capturedAt": "2026-11-04T03:12:44.971Z",
+    "summary": "Slide shows Dijkstra single-source shortest paths, start A goal F, undirected weights as costs. Steps: dist[A]=0 others infinity, repeatedly settle smallest unsettled dist, relax edges dist[v]=min(dist[v],dist[u]+w) until F settled. Direct A-F edge cost is 11. Cheaper indirect route A-C (1) + C-B (2) + B-D (1) + D-F (3) = 7, stated as shortest A->F cost 7. Hence direct edge is relaxed but never the minimal settled path.",
+    "uncertainty": [
+      "Neighbor visitation order not printed; neighborOrder set alphabetically as placeholder.",
+      "Node/edge coordinates are estimated from full image, not measured."
+    ],
+    "imageSha256": "515f4259b058a6b08465aa0f8e4d7e9b23838eb0240a99d3e945c586c894f918",
+    "anchors": [
+      {
+        "id": "title",
+        "label": "Dijkstra worked example title",
+        "region": {
+          "x": 0.05,
+          "y": 0.11,
+          "width": 0.6,
+          "height": 0.08
+        }
+      },
+      {
+        "id": "graph",
+        "label": "Undirected weighted graph A-F",
+        "region": {
+          "x": 0.08,
+          "y": 0.29,
+          "width": 0.52,
+          "height": 0.5
+        }
+      },
+      {
+        "id": "direct-edge",
+        "label": "Direct A-F edge weight 11",
+        "region": {
+          "x": 0.1,
+          "y": 0.29,
+          "width": 0.48,
+          "height": 0.25
+        }
+      },
+      {
+        "id": "steps",
+        "label": "Dijkstra steps 1-4 instructions",
+        "region": {
+          "x": 0.64,
+          "y": 0.31,
+          "width": 0.31,
+          "height": 0.32
+        }
+      },
+      {
+        "id": "result",
+        "label": "Shortest A to F cost 7",
+        "region": {
+          "x": 0.642,
+          "y": 0.65,
+          "width": 0.22,
+          "height": 0.05
+        }
+      }
+    ],
+    "layout": {
+      "nodes": [
+        {
+          "nodeId": "A",
+          "x": 0.10674999999999998,
+          "y": 0.544111111111111
+        },
+        {
+          "nodeId": "B",
+          "x": 0.22570312500000003,
+          "y": 0.4121944444444445
+        },
+        {
+          "nodeId": "C",
+          "x": 0.2258625,
+          "y": 0.6985555555555556
+        },
+        {
+          "nodeId": "D",
+          "x": 0.45103125,
+          "y": 0.37794444444444447
+        },
+        {
+          "nodeId": "E",
+          "x": 0.41540625,
+          "y": 0.6990777777777779
+        },
+        {
+          "nodeId": "F",
+          "x": 0.579265625,
+          "y": 0.5241444444444444
+        }
+      ],
+      "edgeLabels": [
+        {
+          "edgeId": "e_AB",
+          "x": 0.16537812500000001,
+          "y": 0.43149444444444446
+        },
+        {
+          "edgeId": "e_AC",
+          "x": 0.163609375,
+          "y": 0.6116944444444444
+        },
+        {
+          "edgeId": "e_AF",
+          "x": 0.319259375,
+          "y": 0.30144444444444446
+        },
+        {
+          "edgeId": "e_BD",
+          "x": 0.346675,
+          "y": 0.36264444444444444
+        },
+        {
+          "edgeId": "e_BC",
+          "x": 0.2582375,
+          "y": 0.5351944444444444
+        },
+        {
+          "edgeId": "e_CE",
+          "x": 0.34490625,
+          "y": 0.7264444444444444
+        },
+        {
+          "edgeId": "e_DF",
+          "x": 0.5129374999999999,
+          "y": 0.43319444444444444
+        },
+        {
+          "edgeId": "e_DE",
+          "x": 0.46429687500000005,
+          "y": 0.5334944444444444
+        },
+        {
+          "edgeId": "e_EF",
+          "x": 0.5200125,
+          "y": 0.6116944444444444
+        }
+      ]
+    },
+    "readingCheck": {
+      "model": "muse-wonder-1.0",
+      "status": "confirmed",
+      "weighted": true,
+      "nodes": 6,
+      "edges": 9,
+      "corrections": [],
+      "disputes": []
+    }
+  },
+  "generation": {
+    "mode": "live",
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "calls": 3,
+    "usage": {
+      "input_tokens": 13745,
+      "output_tokens": 3776
+    },
+    "costUsd": 0.05105125,
+    "elapsedMs": 47589,
+    "checks": [
+      "schema",
+      "references",
+      "dijkstra-input",
+      "deterministic-trace"
+    ],
+    "audit": [
+      {
+        "event": "source-reused",
+        "call": 0,
+        "detail": "Reused the owned source interpretation and current checked controls for an explanatory follow-up."
+      },
+      {
+        "event": "cost-probed",
+        "call": 1,
+        "detail": "Muse chose e_DF for this question: This shortcut keeps the cheapest route away from E, so testing without it reveals the path through E.. Application checked 6 cost interventions; exact boundary 5."
+      },
+      {
+        "event": "model-computed",
+        "call": 1,
+        "detail": "Checked dijkstra-nonnegative trace with 7 snapshots."
+      },
+      {
+        "event": "review-approved",
+        "call": 3,
+        "detail": "Muse Wonder advisory review: approve."
+      },
+      {
+        "event": "scene-validated",
+        "call": 3,
+        "detail": "Typed scene, source versions and checked model references validated."
+      }
+    ],
+    "timings": [
+      {
+        "call": 1,
+        "stage": "interpretation",
+        "durationMs": 22670
+      },
+      {
+        "call": 2,
+        "stage": "composition",
+        "durationMs": 16650
+      },
+      {
+        "call": 3,
+        "stage": "review",
+        "durationMs": 6069
+      }
+    ]
+  },
+  "createdAt": "2026-11-04T03:13:45.220Z",
+  "updatedAt": "2026-11-04T03:14:33.839Z",
+  "state": {
+    "step": 0,
+    "explanationStep": 0,
+    "start": "A",
+    "goal": "F",
+    "disabledEdgeIds": [],
+    "reversed": false,
+    "selectedObjectId": null
+  },
+  "experiment": {
+    "version": "cost-probe-v1",
+    "edgeId": "e_DF",
+    "originalCost": 3,
+    "criticalCost": 5,
+    "alternativeCost": 9,
+    "alternativePath": [
+      "A",
+      "C",
+      "E",
+      "F"
+    ],
+    "rationale": "This shortcut keeps the cheapest route away from E, so testing without it reveals the path through E.",
+    "note": "The cheapest route uses D–F while it costs less than 5. At 5 the best route avoiding it costs the same; above that, the route avoids it. Ties can choose different equal-cost paths.",
+    "cases": [
+      {
+        "value": 0,
+        "bfsCost": 11,
+        "dijkstraCost": 4,
+        "bfsPath": [
+          "A",
+          "F"
+        ],
+        "dijkstraPath": [
+          "A",
+          "C",
+          "B",
+          "D",
+          "F"
+        ]
+      },
+      {
+        "value": 3,
+        "bfsCost": 11,
+        "dijkstraCost": 7,
+        "bfsPath": [
+          "A",
+          "F"
+        ],
+        "dijkstraPath": [
+          "A",
+          "C",
+          "B",
+          "D",
+          "F"
+        ]
+      },
+      {
+        "value": 4,
+        "bfsCost": 11,
+        "dijkstraCost": 8,
+        "bfsPath": [
+          "A",
+          "F"
+        ],
+        "dijkstraPath": [
+          "A",
+          "C",
+          "B",
+          "D",
+          "F"
+        ]
+      },
+      {
+        "value": 5,
+        "bfsCost": 11,
+        "dijkstraCost": 9,
+        "bfsPath": [
+          "A",
+          "F"
+        ],
+        "dijkstraPath": [
+          "A",
+          "C",
+          "B",
+          "D",
+          "F"
+        ]
+      },
+      {
+        "value": 6,
+        "bfsCost": 11,
+        "dijkstraCost": 9,
+        "bfsPath": [
+          "A",
+          "F"
+        ],
+        "dijkstraPath": [
+          "A",
+          "C",
+          "E",
+          "F"
+        ]
+      },
+      {
+        "value": 7,
+        "bfsCost": 11,
+        "dijkstraCost": 9,
+        "bfsPath": [
+          "A",
+          "F"
+        ],
+        "dijkstraPath": [
+          "A",
+          "C",
+          "E",
+          "F"
+        ]
+      }
+    ]
+  }
+}

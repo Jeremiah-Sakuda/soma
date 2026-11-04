@@ -253,3 +253,16 @@ Prepare a coherent engine-led three-minute script and ready-to-edit submission c
 ### November1 — PM130 proposed demo polish and rehearsal priorities
 
 [Demo wow plan](DEMO_WOW_PLAN.md): rehearse one actual native source→visual→intervention→contextual explanation→saved reopen journey, then improve compact presentation, causal motion and interruptible narration before final capture. Includes a small fresh-source development check and an explicitly labeled recorded-engine segment. Time boxes and candidate cut are proposals, not completed implementation, new P0 scope, freeze exceptions or publication authorization. Current PM129 script remains baseline until the revised sequence is rehearsed.
+
+
+## November 4 final delivery sequence — user-approved ownership
+
+This sequence supersedes earlier freeze proposals for the final demo work. All times are America/New_York.
+
+1. **Before 4:30 PM:** Claude finishes and evaluates the engine cutaway. Codex owns lifted graph interaction, documentation and final delivery. The `general-3d` dependency was integrated into main at `2cbead8`; graph interaction is committed at `d9b37d6`, with manifest/docs checkpoint `9097b43`. Local results are in [VERIFICATION.md](VERIFICATION.md).
+2. **4:30 PM engine go/no-go:** include the engine only if its source-to-model provenance, motion, labels, joints and visual clarity meet the script acceptance bar. Otherwise retain the checked circuit as the second subject. No engine acceptance is established by this plan.
+3. **5:30 PM code freeze:** integrate accepted source changes, regenerate the Codex-owned release manifest and run final integrated checks. Preserve failed attempts and clearly identify any unfinished physical acceptance.
+4. **After freeze:** Codex verifies the Vercel production release, builds/signs/notarizes and verifies the companion, then finalizes script, evidence, README and submission form using the actual released identities. Do not mistake automatic deployment metadata for observed product acceptance.
+5. **Before 9 PM:** complete the final video/link and submission review. The final video URL and any required participant attestations must come from the user. Repository visibility changes still require explicit user authorization.
+
+Claude owns engine assets, `spatial-parts.ts`, `lift-model.mjs`, `model-authoring.ts`, `scene-lift.ts` and the model harness. Codex owns graph rendering and the reserved overlay/pointer routing, all documentation, README and `public/release.json`. Coordinate React workspace/scene changes before editing. Claude will merge engine source without regenerating the manifest.

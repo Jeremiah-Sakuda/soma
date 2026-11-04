@@ -52,7 +52,7 @@ The recording copy below assumes the verified D–F / tie 5 and R₄ / balance 8
 | 2:30–2:47 | Jeremy on camera beside the settled circuit result. No extra feature montage. Keep the last useful result visible. | I built this for my lectures. The useful part is being able to try the question as soon as I have it, on the diagram I’m already looking at. | Soma · checked graph search and DC circuits |
 | 2:47–3:00 | End card with verified product/repository links. Say the line, then leave quiet time to read. Credit only the models actually used in the take. | That’s Soma. You can try it at the link on screen. | Built during the Meta Global AI Developer Hackathon · Muse Spark / Wonder / Voice Transcribe when used |
 
-[Voiceover-only recording copy](DEMO_VOICEOVER.txt). The current spoken copy is **276 words** (whitespace count). At 130–145 words per minute, the words occupy roughly 116–129 seconds, leaving the rest for actions, result holds and the end card. This is a planning estimate, not a timed rehearsal.
+[Voiceover-only recording copy](DEMO_VOICEOVER.txt). The current spoken copy is **276 words** (whitespace count). At 130–145 words per minute, the words occupy roughly 114–127 seconds, leaving the rest for actions, result holds and the end card. This is a planning estimate, not a timed rehearsal.
 
 ### Match the words to the take
 

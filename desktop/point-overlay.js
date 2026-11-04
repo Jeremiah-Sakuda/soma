@@ -219,13 +219,53 @@ function renderGraph(m) {
     document.body.appendChild(box);
   }
 }
+// A lifted model can be held: hovering it (or its sheet) takes the pointer from the apps
+// underneath, dragging turns it, clicking a part picks it, and a double click sets the view back.
+let held = null;
+const model = () => (document.body.classList.contains('lifted') && window.SomaModel?.active ? window.SomaModel : null);
 document.addEventListener('mousemove', (event) => {
-  const target = document.elementFromPoint(event.clientX, event.clientY);
-  const over = Boolean(target?.classList?.contains('graph-hit'));
+  const lifted = model();
+  if (held && lifted) {
+    const dx = event.clientX - held.x, dy = event.clientY - held.y;
+    if (Math.hypot(event.clientX - held.startX, event.clientY - held.startY) > 4) held.moved = true;
+    if (held.moved) lifted.drag(dx, dy);
+    held.x = event.clientX;
+    held.y = event.clientY;
+    return;
+  }
+  let over;
+  if (lifted) {
+    const id = lifted.hit(event.clientX, event.clientY);
+    lifted.hover(id && id !== 'sheet' ? id : null);
+    over = Boolean(id);
+    document.body.style.cursor = id && id !== 'sheet' ? 'pointer' : id ? 'grab' : '';
+  } else {
+    const target = document.elementFromPoint(event.clientX, event.clientY);
+    over = Boolean(target?.classList?.contains('graph-hit'));
+  }
   if (over !== graphHover) {
     graphHover = over;
     window.somaPointOverlay.hover(over);
   }
+});
+document.addEventListener('mousedown', (event) => {
+  const lifted = model();
+  if (!lifted || event.button !== 0) return;
+  const id = lifted.hit(event.clientX, event.clientY);
+  if (!id) return;
+  held = { id, x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false };
+  document.body.style.cursor = 'grabbing';
+});
+document.addEventListener('mouseup', () => {
+  if (!held) return;
+  const { id, moved } = held;
+  held = null;
+  document.body.style.cursor = '';
+  if (!moved && id !== 'sheet') window.somaPointOverlay.select(id);
+});
+document.addEventListener('dblclick', (event) => {
+  const lifted = model();
+  if (lifted && lifted.hit(event.clientX, event.clientY)) lifted.resetView();
 });
 document.addEventListener('click', (event) => {
   const edge = event.target?.getAttribute?.('data-edge');
@@ -247,13 +287,20 @@ function applyFrame(event) {
 // returns exactly where the sheet lands.
 // A lift that fails after starting (lost GPU context, an error mid-frame) drops back to the
 // flat sketch and tells the companion, which updates the controls.
-if (window.SomaLift)
-  window.SomaLift.onFail = (reason) => {
-    document.body.classList.remove('lifted');
-    window.somaPointOverlay.liftFailed(reason);
-  };
+for (const renderer of [window.SomaLift, window.SomaModel])
+  if (renderer)
+    renderer.onFail = (reason) => {
+      document.body.classList.remove('lifted');
+      window.somaPointOverlay.liftFailed(reason);
+    };
+// A checked search lifts as strings and heights; any other answer lifts as its 3D model.
 function liftView(event) {
-  const lift = window.SomaLift;
+  // A checked circuit carries its scene beside the drawing; a search carries its lift.
+  const scene = Boolean(event.model?.scene && !event.model.lift);
+  const lift = scene ? window.SomaModel : window.SomaLift;
+  // Switching between the two kinds: the other one lands first.
+  (scene ? window.SomaLift : window.SomaModel)?.dispose();
+  if (scene && event.view === '3d') event = { ...event, model: { ...event.model.scene, caption: event.model.caption } };
   if (event.view === '3d' && !lift) {
     // The 3D bundle did not load: stay flat and say so.
     document.body.classList.remove('lifted');
@@ -281,6 +328,7 @@ window.somaPointOverlay.onDraw((event) => {
   }
   if (event.type === 'graph-clear') {
     window.SomaLift?.dispose();
+    window.SomaModel?.dispose();
     document.body.classList.remove('lifted');
     clearGraph();
     hideBuddy();

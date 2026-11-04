@@ -28,7 +28,7 @@ describe('bounded transient screenshot and vision profile',()=>{
  });
  it('rejects unsafe replay, external images, oversized tools and duplicate tool calls before a request',async()=>{
   const fetcher=vi.fn();vi.stubGlobal('fetch',fetcher);
-  const invalid=[request({input:[{role:'user',content:[{type:'input_image',image_url:'https://private.example/image'}]}]}),request({input:[{type:'function_call_output',call_id:'orphan',output:'{}'}]}),request({tools:[{...tool,parameters:{type:'string'}}]}),request({instructions:'x'.repeat(12_001)}),request({input:[call(),{type:'function_call_output',call_id:'original_call',output:'{}'},call(),{type:'function_call_output',call_id:'original_call',output:'{}'}]})];
+  const invalid=[request({input:[{role:'user',content:[{type:'input_image',image_url:'https://private.example/image'}]}]}),request({input:[{type:'function_call_output',call_id:'orphan',output:'{}'}]}),request({tools:[{...tool,parameters:{type:'string'}}]}),request({instructions:'x'.repeat(16_001)}),request({input:[call(),{type:'function_call_output',call_id:'original_call',output:'{}'},call(),{type:'function_call_output',call_id:'original_call',output:'{}'}]})];
   for(const value of invalid)await expect(requestMetaVisionResponse(value)).rejects.toMatchObject({requestSent:false});expect(fetcher).not.toHaveBeenCalled();
  });
  it('allows bounded scene arguments only in vision profile while preserving text limits',()=>{
@@ -88,6 +88,7 @@ it('bounds the explicit mechanism output profile while preserving ordinary visio
   const fetcher = vi.fn(async () => new Response(JSON.stringify(payload()))); vi.stubGlobal('fetch', fetcher);
   await requestMetaVisionResponse(request({ maxOutputTokens: 6144, reasoningEffort: 'minimal' }));
   expect(JSON.parse(String((fetcher.mock.calls[0] as unknown as [string, RequestInit])[1].body))).toMatchObject({ max_output_tokens: 6144, reasoning: { effort: 'minimal' } });
-  await expect(requestMetaVisionResponse(request({ maxOutputTokens: 6145 }))).rejects.toMatchObject({ code: 'request_invalid', requestSent: false });
+  // A whole 3D model may use up to 16k; beyond that is refused before any request.
+  await expect(requestMetaVisionResponse(request({ maxOutputTokens: 16_385 }))).rejects.toMatchObject({ code: 'request_invalid', requestSent: false });
   expect(fetcher).toHaveBeenCalledTimes(1);
 });

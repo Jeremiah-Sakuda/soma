@@ -11,6 +11,63 @@ const STATUS = ['current', 'settled', 'waiting', 'unreached'];
 const TONE = ['path', 'relaxed', 'tree', 'struck', 'cut', 'idle'];
 const TAG_TONE = ['settled', 'current', 'tentative', 'equation', 'route'];
 
+const SHAPES = ['sphere', 'box', 'cylinder', 'torus', 'arrow', 'tube', 'sheet'];
+const COLORS = ['clay', 'sage', 'blue', 'gold', 'violet'];
+const vec = (v, lo, hi) => v && [v.x, v.y, v.z].every((n) => Number.isFinite(n) && n >= lo && n <= hi);
+const region = (r) =>
+  r && [r.x, r.y, r.width, r.height].every(Number.isFinite) && r.x >= 0 && r.y >= 0 && r.width > 0 && r.height > 0 && r.x + r.width <= 1.000001 && r.y + r.height <= 1.000001;
+/** Every number a renderer reads is finite and bounded; custom pieces are bounded in count
+ * and size. The overlay page builds meshes only from these values. */
+function validScene(sc) {
+  return Boolean(
+    sc &&
+      typeof sc === 'object' &&
+      ['model', 'height'].includes(sc.kind) &&
+      text(sc.title, 80) &&
+      text(sc.note, 240) &&
+      region(sc.region) &&
+      Array.isArray(sc.objects) &&
+      sc.objects.length >= 1 &&
+      sc.objects.length <= 24 &&
+      new Set(sc.objects.map((o) => o?.id)).size === sc.objects.length &&
+      sc.objects.every(
+        (o) =>
+          id(o?.id) &&
+          text(o.label, 60) &&
+          text(o.detail, 120) &&
+          SHAPES.includes(o.shape) &&
+          (o.renderStyle === null || (typeof o.renderStyle === 'string' && /^[a-z]{1,16}$/.test(o.renderStyle))) &&
+          COLORS.includes(o.color) &&
+          vec(o.position, -6, 6) &&
+          vec(o.size, 0.05, 4.5) &&
+          (o.parentId === null || id(o.parentId)) &&
+          (o.shell === undefined || typeof o.shell === 'boolean') &&
+          (o.rotation === undefined || vec(o.rotation, -180, 180)) &&
+          typeof o.visible === 'boolean' &&
+          typeof o.highlighted === 'boolean' &&
+          (o.selected === undefined || typeof o.selected === 'boolean') &&
+          (o.anchor === undefined || point(o.anchor)) &&
+          (o.path === undefined || (Array.isArray(o.path) && o.path.length >= 2 && o.path.length <= 12 && o.path.every((p) => vec(p, -6, 6)))) &&
+          (o.geometry === undefined || (Array.isArray(o.geometry) && o.geometry.length <= 12 && JSON.stringify(o.geometry).length <= 24000)) &&
+          (o.parameterValues === undefined ||
+            (o.parameterValues && typeof o.parameterValues === 'object' && Object.values(o.parameterValues).every((n) => Number.isFinite(n) && n >= 0 && n <= 1))),
+      ) &&
+      Array.isArray(sc.connections) &&
+      sc.connections.length <= 24 &&
+      sc.connections.every(
+        (c) =>
+          id(c?.id) &&
+          id(c.from) &&
+          id(c.to) &&
+          c.from !== c.to &&
+          sc.objects.some((o) => o.id === c.from) &&
+          sc.objects.some((o) => o.id === c.to) &&
+          text(c.label, 60) &&
+          ['directed', 'active', 'highlighted'].every((k) => typeof c[k] === 'boolean'),
+      ),
+  );
+}
+
 function validOverlayModel(m) {
   return Boolean(
     m &&
@@ -24,7 +81,9 @@ function validOverlayModel(m) {
       m.font > 0 &&
       m.font <= 0.05 &&
       Array.isArray(m.nodes) &&
-      m.nodes.length >= 2 &&
+      // An answer with no drawing read from the source carries only a 3D scene.
+      (m.nodes.length >= 2 || (m.nodes.length === 0 && m.scene !== undefined)) &&
+      (m.scene === undefined || validScene(m.scene)) &&
       m.nodes.length <= 12 &&
       m.nodes.every(
         (n) =>
@@ -101,6 +160,8 @@ function validOverlayModel(m) {
 
 /** Normalized source region including nodes and arc/cost centers, padded in capture pixels. */
 function overlayRegion(m) {
+  // A scene-only model's region is the area its sheet lifts from.
+  if (!m.nodes.length) return m.scene.region;
   const xs = [...m.nodes.map((n) => n.x), ...m.edges.map((e) => e.center.x)],
     ys = [...m.nodes.map((n) => n.y), ...m.edges.map((e) => e.center.y)],
     padX = m.radius * 1.5, padY = padX / (m.aspect ?? 1);
@@ -148,6 +209,7 @@ function regionMatches(nativeImage, originalDataUrl, freshDataUrl, region, toler
 /** Region of the slide that lifts as a sheet in 3D: the nodes and the drawn arcs, padded to
  * include the printed node circles. Mirrors sheetRegion in lift-geometry.mjs. */
 function sheetRegion(m) {
+  if (m.scene && !m.nodes.length) return m.scene.region;
   const nodePad = m.radius * 1.8;
   const edgePad = m.aspect === undefined ? nodePad : Math.max(m.font * 1.5, m.radius * 0.6);
   const aspect = m.aspect ?? 1;

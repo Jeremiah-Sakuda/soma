@@ -137,7 +137,7 @@ function createPointAsk({
       liftRequest = null;
       if (view === '2d') overlayResult({ id: graph.id, shown: true, view });
     }
-    if (next === view || !graph.model.lift) return view;
+    if (next === view || !(graph.model.lift || graph.model.scene)) return view;
     if (Date.now() >= c.expires) {
       clearGraph();
       overlayResult({ id: c.id, shown: false, reason: 'cleared' });
@@ -193,8 +193,9 @@ function createPointAsk({
     // changed. Not on a timer regardless: each check briefly protects Soma's windows, which
     // screen recorders and shares honour, so a recorded demo would blink.
     if (view === '3d') liftWatch = setInterval(() => void watchLifted(c), LIFT_CHECK_MS);
-    // Lifted, the drawing is not clickable; flat, its connections can be cut again.
-    overlay.setIgnoreMouseEvents(true, view === '3d' ? undefined : { forward: true });
+    // Pointer moves reach the drawing in either view: flat, its connections can be cut; lifted,
+    // a model can be turned and its parts picked. Clicks pass through until it is hovered.
+    overlay.setIgnoreMouseEvents(true, { forward: true });
     drawGraph();
     overlayResult({ id: graph.id, shown: true, view });
     return view;
@@ -685,7 +686,8 @@ function createPointAsk({
     // A model update replaces the scene a pending lift was checked for.
     liftRequest = null;
     graph = { id: c.id, model: event.model, verified };
-    if (view === '3d' && !graph.model.lift) {
+    // A step of a lifted search, circuit or model stays lifted; anything else lands.
+    if (view === '3d' && !(graph.model.lift || graph.model.scene)) {
       view = '2d';
       sheet = null;
       clearInterval(liftWatch);
@@ -736,7 +738,8 @@ function createPointAsk({
     restartIdle(c);
     clearTimeout(hideTimer);
     overlayFor(c.display);
-    overlay.setIgnoreMouseEvents(true, view === '3d' ? undefined : { forward: true });
+    // Lifted or flat, pointer moves reach the drawing; clicks pass through until it is hovered.
+    overlay.setIgnoreMouseEvents(true, { forward: true });
     const failure = drawGraph();
     overlayResult({ id: c.id, shown: true, view, ...(failure ? { reason: failure } : liftRequest && view === '2d' ? { reason: 'checking' } : {}) });
   }
@@ -794,8 +797,16 @@ function createPointAsk({
     return Boolean(overlay && !overlay.isDestroyed() && event?.sender === overlay.webContents);
   }
   function overlayHover(event, active) {
-    if (!fromOverlay(event) || !graph?.verified || view === '3d') return;
+    if (!fromOverlay(event) || !graph?.verified) return;
+    // Lifted, only a model (not a search's strings) can be held and turned.
+    if (view === '3d' && active === true && !graph.model.scene) return;
     overlay.setIgnoreMouseEvents(active !== true, { forward: true });
+  }
+  /** A part of the lifted model was picked: the page selects it for the next question. */
+  function overlaySelect(event, objectId) {
+    if (!fromOverlay(event) || !graph?.verified || view !== '3d' || typeof objectId !== 'string') return;
+    if (!graph.model.scene?.objects.some((o) => o.id === objectId)) return;
+    overlayAction({ id: graph.id, type: 'select', objectId });
   }
   function overlayToggle(event, edgeId) {
     if (!fromOverlay(event) || !graph?.verified || typeof edgeId !== 'string') return;
@@ -810,6 +821,7 @@ function createPointAsk({
   return {
     enable,
     disable,
+    overlaySelect,
     askTyped,
     hasDrawing,
     compactActive,
@@ -818,9 +830,15 @@ function createPointAsk({
     get view() {
       return view;
     },
-    /** Whether the drawing on screen can lift into 3D (a checked graph search). */
+    /** What a lift shows: a search's checked distances, a circuit's checked voltages, or an
+     * illustrative model. */
+    get liftKind() {
+      if (!graph?.verified) return null;
+      return graph.model.lift ? 'search' : graph.model.scene?.kind === 'height' ? 'circuit' : graph.model.scene ? 'model' : null;
+    },
+    /** Whether the drawing on screen can lift into 3D: a checked graph search, or any answer's 3D scene. */
     get liftable() {
-      return Boolean(graph?.verified && graph.model.lift);
+      return Boolean(graph?.verified && (graph.model.lift || graph.model.scene));
     },
     clearScreenOverlay,
     markStale,

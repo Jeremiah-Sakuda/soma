@@ -1,4 +1,6 @@
 import { spatialViewSchema, spatialPanelSchema, defaultSpatialView, spatialRenderStyles } from '../domain/spatial-schema';
+import { MODEL_AUTHORING, mergeModelScene } from './model-authoring';
+import { tidySpatialPanel } from '../domain/spatial-tidy';
 import { MECHANISM_AUTHORING, spatialAuthorPanelSchema, mechanismAuthoringSchema, bindMechanismAuthoring } from './mechanism-authoring';
 import { createMechanismExample, MECHANISM_EXAMPLE_SOURCE } from '../domain/mechanism-example';
 import { supportsSpatial, applySpatialViewAction, spatialScene } from '../domain/spatial-exploration';
@@ -133,7 +135,7 @@ export const generateExplorationSchema = z
     predictionId: z.uuid().optional(),
     applicationId: z.uuid().optional(),
     intent: z
-      .enum(['auto', 'explain', 'focus', 'modify', 'compare', 'investigate'])
+      .enum(['auto', 'explain', 'focus', 'modify', 'compare', 'investigate', 'model'])
       .default('auto'),
     source: sourceSchema.optional(),
     previousImage: z.string().max(710_000).optional(),
@@ -188,6 +190,21 @@ export const explanationAuthorSceneSchema = explorationSpecSchema.options[1].sha
       .max(3),
   },
 );
+/** The same scene without a spatial panel, for a first answer. */
+export const explanationFlatSceneSchema = explanationAuthorSceneSchema.extend({
+  panels: z
+    .array(
+      z.discriminatedUnion('kind', [
+        explorationPanelSchema.options[0],
+        explorationPanelSchema.options[1],
+        explorationPanelSchema.options[2],
+        explorationPanelSchema.options[7],
+        explorationPanelSchema.options[8],
+      ]),
+    )
+    .min(1)
+    .max(3),
+});
 export function needsExplorationReview(spec: ExplorationSpec, learnerObservation = false) {
   return (
     spec.mode === 'checked-dijkstra' ||
@@ -700,8 +717,11 @@ function typedCall(result: MetaResult, name: string): MetaToolCall {
     result.status !== 'completed' ||
     result.tools.length !== 1 ||
     result.tools[0].name !== name
-  )
+  ) {
+    if (process.env.SOMA_DEBUG_FAILURES === 'true')
+      console.warn('[soma] untyped result', JSON.stringify({ status: result.status, tools: result.tools.map((t) => t.name), structured: Boolean(result.structured), usage: result.usage }));
     throw new ExplorationError('generation_invalid');
+  }
   return result.tools[0];
 }
 function toolHistory(call: MetaToolCall, output: unknown) {
@@ -1295,6 +1315,9 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           )
             throw new ExplorationError('revision_conflict');
         }
+        // A 3D model is built for an existing explanation, on the same source.
+        if (request.intent === 'model' && (previous?.spec.mode !== 'explanation' || request.source || request.applicationId))
+          throw new ExplorationError('invalid_request');
         if (request.applicationId) {
           applicationObservation = session.applications?.find(
             (a) => a.id === request.applicationId,
@@ -1403,7 +1426,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         // the whole turn, so one slow call no longer ends a turn that has time left.
         deadlineMs: Math.min(45_000, deadline - Date.now()),
         signal,
-        maxOutputTokens: 6144,
+        // A whole 3D model, with its reasoning, needs more room than a 2D scene.
+        maxOutputTokens: request.intent === 'model' && structuredOutput ? 16_384 : 6144,
         ...(mechanismBudget ? { reasoningEffort: 'minimal' as const } : {}),
         maxImages: 3,
         ...(model !== META_MODEL ? { model, reasoningEffort: 'minimal' as const, maxOutputTokens: 1536 } : {}),
@@ -1474,7 +1498,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         !!previous &&
         !request.source &&
         previous.spec.mode !== 'clarify' &&
-        ['auto', 'explain', 'focus', 'investigate'].includes(request.intent);
+        ['auto', 'explain', 'focus', 'investigate', 'model'].includes(request.intent);
       const currentComparison =
         previous && currentState ? comparisonExecution(previous.spec, currentState) : null;
       const context = {
@@ -2360,7 +2384,11 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         }
       }
       const circuitCopy = circuit && circuitSolved ? circuitCopySchema(circuit, circuitSolved) : null;
-      const sceneInstructions = `${experiment ? 'A checked cost experiment is supplied. Keep checked-dijkstra and include set-weight in controls. Preserve the supplied current primary and comparison graph inputs; the application exposes hypothetical interventions separately. Existing edgeWeights are hypothetical overrides, not new source facts. Explain the verified cases. criticalCost, when present, is an exact tie for that connection (direct or not); when it is null, the cases are checked samples and the note says why no boundary exists.' : ''} ${genericInstructions} Compose a source-specific scene using compose_exploration. ${MECHANISM_AUTHORING} Optional renderStyle: ${spatialRenderStyles.join("/")}, or null, only when a catalog illustration fits. Absolute coordinates and detail/counts are schematic, not observations. parentId means containment. Label inferred parts as assumptions. Preserve existing IDs, labels, geometry and current pose. viewAction changes only camera/slice/spread/isolation/focusObjectId when explicitly requested; other fields null. Checked graphs retain graph panels; the app supplies spatial projection. For source-specific explanations, prefer one dominant mechanism with a small set of clearly labeled parts, 3-4 meaningful steps and explicit highlighted node/edge IDs for the causal transition in each step. Keep captions and narration concise (one short sentence each). Preserve source qualifiers such as almost all, usually and may, as well as signs, negations and direction. Label contextual claims. Never guess unreadable source labels/curve styles, even in a clarification. Distinguish a new schematic based on visible text from an unreadable source figure. Prefer 1-2 panels, at most three; include only the parts needed for this question. If the capture shows only one part of a broader question, explain the visible part and label the unseen part as contextual explanation; never invent unseen diagrams or values. Every arrow is a claim: its label and destination must agree with the stated intermediate numerical state; do not skip from a partial update to a limiting/final state. Use the application-bound diagram-sidebar layout; panels must occupy distinct grid cells, column 1 or 2, spans within two columns, rows 1-4. For explanation mode every step MUST set both execution and executionStep to JSON null; there is no checked trace. Never use an integer index or primary execution for explanation mode. ${reuse ? 'This is a context-preserving follow-up, including auto: preserve the computational mode and the supplied current checked primary and comparison inputs; If the question requests a different primary experiment, explain how to apply the visible controls or return a clarification; a question alone cannot silently apply parameter edits. Keep the current trace step and unchanged object positions. Focus on the selected object when supplied.' : ''} Set schemaVersion="exploration-v1". Required spec id=${`explore_${artifactId.replaceAll('-', '')}`} and version=${version}; every source reference must match observationId=${source.observationId}, version=${source.version}. If a checked graph was supplied, primary input MUST exactly match that graph. Comparison input may be an explicitly described experiment and is independently checked. Preserve every input the user did not ask to change: goal, direction, nodes, edges, neighbor order and start. Changing only the start never changes the goal or graph. Explicitly describe every intended parameter change in assumptions; do not quietly invent a second variable to make an experiment more interesting. Bind explanatory steps to the supplied execution snapshots; A checked scene MUST include a primary graph and at least one frontier or state-table panel. A comparison requires its own graph panel. Do not claim source prose is computationally verified. ${previous ? 'Preserve existing object IDs for unchanged meaning and explain the requested change, using the supplied current controls and checked trace as the experiment context.' : ''}`;
+      const previousSpatial = reuse && previous?.spec.mode === 'explanation'
+        ? previous.spec.scene.panels.find((panel) => panel.kind === 'spatial') : undefined;
+      const modelIntent = request.intent === 'model' && previous?.spec.mode === 'explanation';
+      const mechanismIntent = !computed && (modelIntent || /\b(3[- ]?d|isometric|mechanism|geometry|hinged?|spatial|cutaway)\b/i.test(request.question));
+      const sceneInstructions = `${experiment ? 'A checked cost experiment is supplied. Keep checked-dijkstra and include set-weight in controls. Preserve the supplied current primary and comparison graph inputs; the application exposes hypothetical interventions separately. Existing edgeWeights are hypothetical overrides, not new source facts. Explain the verified cases. criticalCost, when present, is an exact tie for that connection (direct or not); when it is null, the cases are checked samples and the note says why no boundary exists.' : ''} ${genericInstructions} Compose a source-specific scene using compose_exploration. ${(mechanismIntent && !modelIntent) || previousSpatial ? MECHANISM_AUTHORING : 'mechanism=null.'} Optional renderStyle: ${spatialRenderStyles.join("/")}, or null, only when a catalog illustration fits. Absolute coordinates and detail/counts are schematic, not observations. parentId means containment. Label inferred parts as assumptions. Preserve existing IDs, labels, geometry and current pose. viewAction changes only camera/slice/spread/isolation/focusObjectId when explicitly requested; other fields null. Checked graphs retain graph panels; the app supplies spatial projection. For source-specific explanations, prefer one dominant mechanism with a small set of clearly labeled parts, 3-4 meaningful steps and explicit highlighted node/edge IDs for the causal transition in each step. Keep captions and narration concise (one short sentence each). Preserve source qualifiers such as almost all, usually and may, as well as signs, negations and direction. Label contextual claims. Never guess unreadable source labels/curve styles, even in a clarification. Distinguish a new schematic based on visible text from an unreadable source figure. Prefer 1-2 panels, at most three; include only the parts needed for this question. If the capture shows only one part of a broader question, explain the visible part and label the unseen part as contextual explanation; never invent unseen diagrams or values. Every arrow is a claim: its label and destination must agree with the stated intermediate numerical state; do not skip from a partial update to a limiting/final state. Use the application-bound diagram-sidebar layout; panels must occupy distinct grid cells, column 1 or 2, spans within two columns, rows 1-4. For explanation mode every step MUST set both execution and executionStep to JSON null; there is no checked trace. Never use an integer index or primary execution for explanation mode. ${reuse ? 'This is a context-preserving follow-up, including auto: preserve the computational mode and the supplied current checked primary and comparison inputs; If the question requests a different primary experiment, explain how to apply the visible controls or return a clarification; a question alone cannot silently apply parameter edits. Keep the current trace step and unchanged object positions. Focus on the selected object when supplied.' : ''} Set schemaVersion="exploration-v1". Required spec id=${`explore_${artifactId.replaceAll('-', '')}`} and version=${version}; every source reference must match observationId=${source.observationId}, version=${source.version}. If a checked graph was supplied, primary input MUST exactly match that graph. Comparison input may be an explicitly described experiment and is independently checked. Preserve every input the user did not ask to change: goal, direction, nodes, edges, neighbor order and start. Changing only the start never changes the goal or graph. Explicitly describe every intended parameter change in assumptions; do not quietly invent a second variable to make an experiment more interesting. Bind explanatory steps to the supplied execution snapshots; A checked scene MUST include a primary graph and at least one frontier or state-table panel. A comparison requires its own graph panel. Do not claim source prose is computationally verified. ${previous ? 'Preserve existing object IDs for unchanged meaning and explain the requested change, using the supplied current controls and checked trace as the experiment context.' : ''}`;
       let history: unknown[] = [
         {
           role: 'user',
@@ -2420,9 +2448,6 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           .length(1),
       };
       const clarifySchema = explorationSpecSchema.options[2].extend(turnBinding);
-      const previousSpatial = reuse && previous?.spec.mode === 'explanation'
-        ? previous.spec.scene.panels.find((panel) => panel.kind === 'spatial') : undefined;
-      const mechanismIntent = !computed && /\b(3[- ]?d|isometric|mechanism|geometry|hinged?|spatial|cutaway)\b/i.test(request.question);
       const turnSpecSchema = computed
         ? z.discriminatedUnion('mode', [
             explorationSpecSchema.options[0].omit({ writtenFor: true }).extend({
@@ -2441,12 +2466,19 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         : z.discriminatedUnion('mode', [
             explorationSpecSchema.options[1].extend({
               ...turnBinding,
-              scene: previousSpatial || mechanismIntent ? explanationAuthorSceneSchema.extend({ panels: z.array(spatialAuthorPanelSchema).length(1) }) : explanationAuthorSceneSchema,
+              // A first answer is drawn in 2D; its 3D model is built on request (intent model)
+              // or when the question asks for 3D. A model, once built, stays with follow-ups.
+              scene: mechanismIntent && !previousSpatial
+                ? explanationAuthorSceneSchema.extend({ panels: z.array(spatialAuthorPanelSchema).length(1) })
+                : previousSpatial
+                  ? explanationAuthorSceneSchema
+                  : explanationFlatSceneSchema,
             }),
             clarifySchema,
           ]);
       const canContinue =
         reuse &&
+        !modelIntent &&
         !experiment &&
         !circuitCopy &&
         previous?.spec.mode !== 'clarify' &&
@@ -2546,7 +2578,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
           const wire = z
             .strictObject({ spec: z.unknown(), mechanism: mechanismAuthoringSchema.nullable().optional() })
             .parse(proposal.parsedArguments);
-          const raw = wire.spec;
+          const raw = modelIntent && previous ? mergeModelScene(wire.spec, previous.spec) : wire.spec;
           const isContinuation =
             raw && typeof raw === 'object' && 'mode' in raw && raw.mode === 'continue';
           if (isContinuation && (!canContinue || !previous || previous.spec.mode === 'clarify'))
@@ -2560,7 +2592,14 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
                   comparison: currentComparison?.input ?? null,
                 })
               : explorationSpecSchema.parse(raw);
-          if (!isContinuation) bindMechanismAuthoring(candidate, wire.mechanism);
+          // A model built on request uses plain and catalog shapes, which read cleanly at any
+          // size; custom pieces are kept for an explicit request.
+          // Pieces bind only to a spatial panel; an answer drawn in 2D has none to bind to.
+          const spatialHere = candidate.mode === 'explanation' && candidate.scene.panels.some((p) => p.kind === 'spatial');
+          if (!isContinuation) bindMechanismAuthoring(candidate, modelIntent || !spatialHere ? null : wire.mechanism);
+          // A new model is arranged to read at a glance; a kept one keeps its positions.
+          if (!isContinuation && !previousSpatial && candidate.mode === 'explanation')
+            candidate.scene.panels = candidate.scene.panels.map((p) => (p.kind === 'spatial' ? tidySpatialPanel(p) : p));
           if (isContinuation)
             audit.push({
               event: 'scene-continued',
@@ -2626,6 +2665,7 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
         : experiment
         ? `${genericInstructions} Use compose_cost_experiment. The existing graph, layout, controls, source and model bindings are preserved by the application. You author concise objective, trace-bound captions/narration and useful follow-ups from the supplied checked cost experiment. Use visible node labels in learner-facing words; never mention tool names, schema fields or internal IDs. Distinguish a direct edge cost from a whole path cost. At the critical tie, state equal total cost; equal costs do not guarantee the same chosen path. Describe recorded sampled paths as sampled outcomes. Captions describe their bound current trace snapshot; any other cost must be explicitly hypothetical. traceIndex must reference checkedExecution. highlightIds must name existing graph nodes or edges. Distinguish the original current cost from hypothetical interventions. Do not claim a global boundary when criticalCost is null. No invented measurements or mastery claims.`
         : sceneInstructions +
+          (modelIntent ? ` ${MODEL_AUTHORING}` : '') +
           (canContinue && computed
             ? ` A compact checked reply must contain exactly ONE step, execution="primary" and executionStep=${currentState?.step ?? 0}, so its answer is heard on the currently visible snapshot. Explain this actual state. Label any prediction or later/final outcome explicitly; never describe it as already visible. Use a full spec instead if this cannot answer the question faithfully.`
             : '') +
@@ -2640,13 +2680,25 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
       for (let attempt = 0; attempt < 3; attempt++) {
         stage = 'composition';
         progress(attempt === 0 ? 'building-visual' : 'repairing-visual');
-        const authored = await call(
-          history,
-          [],
-          composeInstructions + ' Return only the schema-constrained JSON object; never prose.',
-          { name: 'soma_visual', schema: composeTool.parameters },
-          !computed && (!!previousSpatial || mechanismIntent),
-        );
+        const compose = (quick: boolean) =>
+          call(
+            history,
+            [],
+            composeInstructions + ' Return only the schema-constrained JSON object; never prose.',
+            { name: 'soma_visual', schema: composeTool.parameters },
+            quick,
+          );
+        let authored: MetaResult;
+        try {
+          // A model built on request gets the author's full reasoning first.
+          // A repair of a model only fixes named defects, so it can be quick and fit the time left.
+          authored = await compose(modelIntent ? attempt > 0 : !computed && (!!previousSpatial || mechanismIntent));
+        } catch (error) {
+          // Out of time thinking about a whole model: one quicker attempt with what is left.
+          if (!(modelIntent && error instanceof MetaClientError && error.code === 'timeout' && deadline - Date.now() > 25_000)) throw error;
+          audit.push({ event: 'model-retried', call: calls, detail: 'The 3D model took too long to compose; one quicker attempt requested.' });
+          authored = await compose(true);
+        }
         let proposal: AuthorProposal;
         if (
           authored.status === 'completed' &&
@@ -3180,6 +3232,8 @@ export function createExplorationService(overrides: Partial<ExplorationDependenc
               : error instanceof MetaClientError && error.code === 'timeout'
                 ? 'timeout'
                 : 'generation_invalid';
+      if (process.env.SOMA_DEBUG_FAILURES === 'true')
+        console.warn('[soma] generation failed', JSON.stringify({ code, stage, issues: failureIssues.length ? failureIssues : validationFacts(error), message: String((error as Error)?.message ?? error).slice(0, 600), audit: audit.slice(-6) }));
       try {
         await deps.store.mutate(
           principal,

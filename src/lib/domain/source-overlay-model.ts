@@ -1,4 +1,5 @@
 import type { BfsExecution, BfsInput } from './graph-search';
+import type { LiftScene } from './scene-lift';
 
 export type SourceGraphLayout = {
   nodes: { nodeId: string; x: number; y: number }[];
@@ -46,6 +47,8 @@ export type SourceOverlayModel = {
   /** Scale for the 3D lift: heights are checked distances, so they need the run's largest
    * value, including tentative estimates. */
   lift?: { directed: boolean; source: string; goal: string | null; maxDistance: number; unit: 'cost' | 'edges' };
+  /** Any other answer's 3D view, for the companion to lift off the slide. */
+  scene?: LiftScene;
 };
 
 const CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫'];

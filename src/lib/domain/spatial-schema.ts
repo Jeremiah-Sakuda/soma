@@ -22,15 +22,21 @@ export const spatialPanelSchema = z.strictObject({
     id: sceneIdSchema,
     label: z.string().trim().min(1).max(100),
     description: z.string().trim().min(1).max(240),
-    shape: z.enum(['sphere', 'box', 'cylinder', 'torus']),
+    shape: z.enum(['sphere', 'box', 'cylinder', 'torus', 'arrow', 'tube', 'sheet']),
+    // An arrow, tube or sheet runs through these points (scene coordinates, like position): an
+    // arrow from its first point to its last, a tube smoothly through all of them, a sheet as
+    // the flat polygon they outline (a parallelogram, a triangle, a plane through a crystal).
+    path: z.array(spatialVectorSchema).min(2).max(12).nullable().optional(),
     // Application-owned illustrative meshes; never external assets or measured geometry.
     renderStyle: z.enum(spatialRenderStyles).nullable().optional(),
     geometry: z.array(mechanismPieceSchema).min(1).max(12).nullable().optional(),
     color: z.enum(['clay', 'sage', 'blue', 'gold', 'violet']),
     position: spatialVectorSchema,
     size: z.strictObject({ x: size, y: size, z: size }),
+    // Turns a plain part, in degrees about x, then y, then z: a banked road, a dipping slab.
+    rotation: z.strictObject({ x: z.number().finite().min(-180).max(180), y: z.number().finite().min(-180).max(180), z: z.number().finite().min(-180).max(180) }).nullable().optional(),
     parentId: sceneIdSchema.nullable(),
-  })).min(1).max(16),
+  })).min(1).max(24),
   connections: z.array(z.strictObject({
     id: sceneIdSchema, from: sceneIdSchema, to: sceneIdSchema,
     label: z.string().trim().min(1).max(100), directed: z.boolean(),
@@ -38,6 +44,8 @@ export const spatialPanelSchema = z.strictObject({
   poses: z.array(z.strictObject({
     stepId: sceneIdSchema, objectId: sceneIdSchema,
     position: spatialVectorSchema, visible: z.boolean(),
+    // An arrow or tube can take a new path at this step: a rod tilting, an arrow growing.
+    path: z.array(spatialVectorSchema).min(2).max(12).nullable().optional(),
   })).max(48),
   parameters: z.array(mechanismParameterSchema).max(3).nullable().optional(),
   parameterPoses: z.array(z.strictObject({ stepId: sceneIdSchema, parameterId: sceneIdSchema, value: z.number().finite().min(0).max(1) })).max(24).nullable().optional(),
@@ -78,6 +86,11 @@ export function validateSpatialPanel(panel: SpatialPanel, steps: readonly { id: 
   let pieces = 0, faces = 0;
   for (const object of panel.objects) {
     if (object.geometry?.length && object.renderStyle) throw new Error('Choose authored geometry or a catalog style for a part.');
+    const drawn = object.shape === 'arrow' || object.shape === 'tube' || object.shape === 'sheet';
+    if (drawn !== Boolean(object.path?.length)) throw new Error('Arrows, tubes and sheets, and only they, run through a path.');
+    if (object.shape === 'sheet' && object.path!.length < 3) throw new Error('A sheet needs at least three corners.');
+    if (object.path?.some((p, i) => i > 0 && Math.hypot(p.x - object.path![i - 1].x, p.y - object.path![i - 1].y, p.z - object.path![i - 1].z) < 0.02))
+      throw new Error('Path points must be distinct.');
     pieces += object.geometry?.length ?? 0;
     faces += validateMechanism(object.geometry ?? [], parameters);
   }
@@ -112,6 +125,11 @@ export function validateSpatialPanel(panel: SpatialPanel, steps: readonly { id: 
     const key = `${pose.stepId}:${pose.objectId}`;
     if (!objects.has(pose.objectId) || !steps.some((step) => step.id === pose.stepId) || poses.has(key))
       throw new Error('Spatial poses require unique object and step bindings.');
+    const owner = objects.get(pose.objectId)!;
+    if (pose.path?.length && owner.shape !== 'arrow' && owner.shape !== 'tube' && owner.shape !== 'sheet') throw new Error('Only arrows, tubes and sheets take a path at a step.');
+    if (pose.path?.length && owner.shape === 'sheet' && pose.path.length < 3) throw new Error('A sheet needs at least three corners.');
+    if (pose.path?.some((p, i) => i > 0 && Math.hypot(p.x - pose.path![i - 1].x, p.y - pose.path![i - 1].y, p.z - pose.path![i - 1].z) < 0.02))
+      throw new Error('Path points must be distinct.');
     poses.add(key);
   }
 }

@@ -3,6 +3,8 @@
 import { useState, type MutableRefObject, type ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import SpatialWorkspace from './spatial-workspace';
+import { spatialScene } from '@/lib/domain/spatial-exploration';
+import { liftScene } from '@/lib/domain/scene-lift';
 import { SourceOverlay, type SourceGraphLayout } from './source-overlay';
 import { defaultSpatialView } from '@/lib/domain/spatial-schema';
 import { circuitOverlayModel } from '@/lib/domain/circuit-overlay-model';
@@ -145,7 +147,10 @@ export function ExplorationCircuitStage({
   experiment,
   circuitObservation,
   toggleRef,
+  lift,
 }: {
+  /** Lifting the on-screen drawing into 3D, when the companion can. */
+  lift?: { liftable: boolean; lifted: boolean; toggle: () => void };
   spec: CircuitSpec;
   state: ExplorationViewState;
   onChange: (next: ExplorationViewState) => void;
@@ -266,17 +271,24 @@ export function ExplorationCircuitStage({
             {onScreen && (
               <div className="source-overlay-onscreen">
                 <p role="status">
-                  Drawn on your screen, over the window you captured.
-                  {spec.controls.includes('open-component') ? ' Click a part there to open it;' : ''} Esc hides it.
+                  {lift?.lifted
+                    ? 'Lifted off your slide in 3D: each node stands at its checked voltage, so current runs downhill.'
+                    : `Drawn on your screen, over the window you captured.${spec.controls.includes('open-component') ? ' Click a part there to open it;' : ''}`}{' '}
+                  Esc hides it.
                 </p>
+                {lift?.liftable && (
+                  <button type="button" className="source-overlay-lift" aria-pressed={lift.lifted} onClick={lift.toggle}>
+                    Lift into 3D
+                  </button>
+                )}
               </div>
             )}
             {drawable && view === 'source' ? (
               <SourceOverlay
                 image={overlay!.image}
                 family="circuit"
-                build={(aspect) =>
-                  circuitOverlayModel({
+                build={(aspect) => {
+                  const drawn = circuitOverlayModel({
                     layout: { nodes: layout!.nodes, components: layout!.components ?? [] },
                     solution,
                     index: state.step,
@@ -284,8 +296,17 @@ export function ExplorationCircuitStage({
                     stepLabel,
                     aspect,
                     obstacles: (overlay!.anchors ?? []).map((a) => a.region),
-                  })
-                }
+                  });
+                  // The companion can lift it: each node rises from where it is printed to its
+                  // checked voltage.
+                  const scene = drawn && spatialScene(spec, state);
+                  if (!drawn || !scene) return drawn;
+                  const anchors = new Map(layout!.nodes.map((n) => [n.nodeId, { x: n.x, y: n.y }]));
+                  const xs = layout!.nodes.map((n) => n.x), ys = layout!.nodes.map((n) => n.y), pad = 0.06;
+                  const x = Math.max(0, Math.min(...xs) - pad), y = Math.max(0, Math.min(...ys) - pad);
+                  const region = { x, y, width: Math.min(1, Math.max(...xs) + pad) - x, height: Math.min(1, Math.max(...ys) + pad) - y };
+                  return { ...drawn, scene: liftScene(scene, region, anchors, state.selectedObjectId) };
+                }}
                 canToggle={spec.controls.includes('open-component')}
                 selected={state.selectedObjectId}
                 stepLabel={stepLabel}

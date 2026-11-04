@@ -6,6 +6,8 @@ import type { MechanismParameter } from './mechanism-schema';
 
 export type SpatialObject = SpatialPanel['objects'][number] & {
   visible: boolean; highlighted: boolean; status: string;
+  /** Holds other parts, so it is drawn see-through. */
+  shell?: boolean;
   parameterValues?: Record<string, number>;
 };
 export type SpatialConnection = SpatialPanel['connections'][number] & { active: boolean; highlighted: boolean };
@@ -121,19 +123,22 @@ export function spatialScene(spec: ExplorationSpec, state: ExplorationViewState,
     for (const step of spec.steps.slice(0, stepIndex + 1)) for (const pose of spatial.parameterPoses ?? []) if (pose.stepId === step.id) parameterValues[pose.parameterId] = pose.value;
     Object.assign(parameterValues, state.spatial?.parameters ?? {});
   }
-  if (spatial?.kind === 'spatial') return {
+  if (spatial?.kind === 'spatial') return withShells({
     title: spatial.title, assurance: 'schematic',
     parameters: (spatial.parameters ?? []).map(p => ({ ...p, value: parameterValues[p.id], overridden: state.spatial?.parameters?.[p.id] !== undefined })),
     objects: spatial.objects.map((object) => {
-      let position = object.position, visible = true;
+      let position = object.position, visible = true, posed: typeof object.path = null;
       for (const step of spec.steps.slice(0, stepIndex + 1)) {
         const pose = spatial.poses.find((p) => p.stepId === step.id && p.objectId === object.id);
-        if (pose) { position = pose.position; visible = pose.visible; }
+        if (pose) { position = pose.position; visible = pose.visible; posed = pose.path?.length ? pose.path : posed; }
       }
-      return { ...object, position, ...(object.geometry?.length ? { parameterValues } : {}), visible, highlighted: highlights.includes(object.id), status: visible ? 'Visible' : 'Hidden at this step' };
+      // An arrow or tube takes its latest posed path, or moves with its pose as a whole.
+      const shift = { x: position.x - object.position.x, y: position.y - object.position.y, z: position.z - object.position.z };
+      const path = posed ? posed.map((p) => ({ ...p })) : object.path?.map((p) => ({ x: p.x + shift.x, y: p.y + shift.y, z: p.z + shift.z }));
+      return { ...object, position, ...(path ? { path } : {}), ...(object.geometry?.length ? { parameterValues } : {}), visible, highlighted: highlights.includes(object.id), status: visible ? 'Visible' : 'Hidden at this step' };
     }),
     connections: spatial.connections.map((edge) => ({ ...edge, active: true, highlighted: highlights.includes(edge.id) })),
-  };
+  });
   const diagram = spec.scene.panels.find((panel) => panel.kind === 'diagram');
   if (diagram?.kind !== 'diagram') return null;
   return {
@@ -147,6 +152,26 @@ export function spatialScene(spec: ExplorationSpec, state: ExplorationViewState,
       highlighted: highlights.includes(o.id), status: 'Visible',
     })),
     connections: diagram.objects.filter((o) => o.kind === 'edge').map((o) => ({ ...o, active: true, highlighted: highlights.includes(o.id) })),
+  };
+}
+
+/** A solid part that another part sits inside (a medulla around its loop, a cell around its
+ * nucleus) is drawn see-through even when the author did not mark it as a container. */
+function withShells(scene: SpatialScene): SpatialScene {
+  const solid = (o: SpatialObject) => !o.geometry?.length && !o.path?.length && o.shape !== 'torus';
+  const centre = (o: SpatialObject) => (o.path?.length ? o.path[Math.floor(o.path.length / 2)] : o.position);
+  const inside = (box: SpatialObject, p: { x: number; y: number; z: number }) =>
+    (['x', 'y', 'z'] as const).every((k) => Math.abs(p[k] - box.position[k]) < box.size[k] / 2 * 0.95);
+  const volume = (o: SpatialObject) => o.size.x * o.size.y * o.size.z;
+  return {
+    ...scene,
+    objects: scene.objects.map((o) => ({
+      ...o,
+      shell: scene.objects.some((c) => c.parentId === o.id) ||
+        (solid(o) && scene.objects.some((c) => c.id !== o.id && c.visible && (
+          // A tube, arrow or sheet passing through it, or a smaller part sitting in it.
+          c.path?.length ? c.path.some((p) => inside(o, p)) : volume(c) < volume(o) * 0.6 && inside(o, centre(c))))),
+    })),
   };
 }
 

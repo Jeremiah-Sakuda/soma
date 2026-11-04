@@ -88,12 +88,13 @@ function encode(request: MetaVisionRequest) {
       tools.some((item) => item.parameters.type !== 'object')
     )
       throw new Error();
-    const instructions = z.string().min(1).max(12_000).parse(request.instructions);
+    // A whole 3D model is the longest instruction and output Soma asks for.
+    const instructions = z.string().min(1).max(16_000).parse(request.instructions);
     const maxTokens = z
       .number()
       .int()
       .min(1)
-      .max(6144)
+      .max(16_384)
       .parse(request.maxOutputTokens ?? 4096);
     const pending = new Set<string>(),
       seen = new Set<string>();

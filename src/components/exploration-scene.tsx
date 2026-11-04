@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import SpatialWorkspace from './spatial-workspace';
-import { supportsSpatial } from '@/lib/domain/spatial-exploration';
+import { spatialScene, supportsSpatial } from '@/lib/domain/spatial-exploration';
+import { liftRegion, liftScene, sceneOverlayModel } from '@/lib/domain/scene-lift';
 import { defaultSpatialView } from '@/lib/domain/spatial-schema';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ExplorationSearchStage } from './exploration-search-stage';
@@ -307,14 +308,25 @@ export function ExplorationScene({
   circuitObservation,
   experimentInline = false,
   overlay,
+  onBuildModel,
+  modelBusy = false,
+  liftRequest = 0,
 }: {
+  /** Builds a 3D model of an explanation that has none yet (a new version). */
+  onBuildModel?: () => Promise<boolean>;
+  modelBusy?: boolean;
+  /** Counts the companion bar's requests to lift an explanation that has no model yet. */
+  liftRequest?: number;
   /** The learner's capture and where it drew the graph; present only while the pixels are in memory. */
   overlay?: {
     image: string;
-    /** A circuit's layout also places each part by its two drawn ends. */
-    layout: SourceGraphLayout & { components?: { componentId: string; x1: number; y1: number; x2: number; y2: number }[] };
+    /** Where the source drew its graph; absent for answers with no drawing read from the source.
+     * A circuit's layout also places each part by its two drawn ends. */
+    layout?: SourceGraphLayout & { components?: { componentId: string; x1: number; y1: number; x2: number; y2: number }[] };
     anchors?: SourceAnchor[];
     nativeId?: string;
+    /** The learner's pointed or circled area of the capture. */
+    focus?: { x: number; y: number; width: number; height: number };
     /** Muse Wonder's independent check of the reading drawn here. */
     readingCheck?: { status: 'confirmed' | 'corrected' | 'disputed'; weighted?: boolean; nodes: number; edges: number; corrections: { edgeId: string; from: number; to: number }[]; disputes: string[] };
   };
@@ -337,15 +349,81 @@ export function ExplorationScene({
   const mirror = useCallback(
     (model: SourceOverlayModel | null) => {
       if (!nativeId) return;
-      setLiftable(Boolean(model?.lift));
+      setLiftable(Boolean(model?.lift || model?.scene));
       window.dispatchEvent(new CustomEvent('soma:screen-overlay', { detail: { id: nativeId, model } }));
     },
     [nativeId],
   );
+  // An explanation has no drawing read from the source: the companion gets its 3D scene, to
+  // lift off the slide around where the learner pointed.
+  const image = overlay?.image,
+    focus = overlay?.focus;
+  const [aspect, setAspect] = useState<number | null>(null);
+  useEffect(() => {
+    setAspect(null);
+    if (!nativeId || !image || spec.mode !== 'explanation') return;
+    let live = true;
+    const img = new Image();
+    img.onload = () => live && img.naturalWidth && setAspect(img.naturalHeight / img.naturalWidth);
+    img.src = image;
+    return () => {
+      live = false;
+    };
+  }, [image, nativeId, spec.mode]);
+  const sceneModel = (() => {
+    if (!nativeId || !aspect || spec.mode !== 'explanation') return null;
+    const scene = spatialScene(spec, state);
+    if (!scene?.objects.length) return null;
+    const at = Math.min(state.explanationStep, spec.steps.length - 1);
+    return sceneOverlayModel(liftScene(scene, liftRegion(focus, aspect), undefined, state.selectedObjectId), {
+      text: spec.steps[at].caption,
+      stepLabel: `Step ${at + 1} of ${spec.steps.length}`,
+    });
+  })();
+  const sceneKey = spec.mode === 'explanation' ? JSON.stringify(sceneModel) : null;
+  useEffect(() => {
+    if (sceneKey !== null) mirror(sceneKey === 'null' ? null : (JSON.parse(sceneKey) as SourceOverlayModel));
+  }, [sceneKey, mirror]);
+  const explaining = spec.mode === 'explanation';
+  useEffect(() => (explaining ? () => mirror(null) : undefined), [explaining, mirror]);
   const toggleRef = useRef<(edgeId: string) => void>(() => {});
+  const selectRef = useRef<(id: string) => void>(() => {});
+  selectRef.current = (id: string) => onChange({ ...state, selectedObjectId: state.selectedObjectId === id ? null : id });
   const [onScreen, setOnScreen] = useState(false);
   // Whether the companion has lifted the on-screen drawing into 3D.
   const [lifted, setLifted] = useState(false);
+  const setView = useCallback(
+    (view: '2d' | '3d') => window.dispatchEvent(new CustomEvent('soma:screen-overlay-view', { detail: { id: nativeId, view } })),
+    [nativeId],
+  );
+  // Asked to lift before the model existed: lift once it arrives on screen.
+  const pendingLift = useRef(false);
+  const hasModel = spec.mode === 'explanation' && spec.scene.panels.some((p) => p.kind === 'spatial');
+  // The part picked on the model, by name.
+  const pickedPart =
+    spec.mode === 'explanation'
+      ? spec.scene.panels.flatMap((p) => (p.kind === 'spatial' ? p.objects : [])).find((o) => o.id === state.selectedObjectId)?.label
+      : undefined;
+  // The companion's 3D button on an explanation with no model: build it, then lift it. If no
+  // model comes back, the diagram itself stands up, as on the page.
+  const seenLiftRequest = useRef(liftRequest);
+  useEffect(() => {
+    if (liftRequest === seenLiftRequest.current) return;
+    seenLiftRequest.current = liftRequest;
+    if (hasModel || !onBuildModel || modelBusy) return;
+    pendingLift.current = true;
+    void onBuildModel().then((ok) => {
+      if (ok) return;
+      pendingLift.current = false;
+      setView('3d');
+    });
+  }, [liftRequest, hasModel, onBuildModel, modelBusy, setView]);
+  useEffect(() => {
+    if (pendingLift.current && hasModel && liftable && onScreen && !lifted) {
+      pendingLift.current = false;
+      setView('3d');
+    }
+  }, [hasModel, liftable, onScreen, lifted, setView]);
   useEffect(() => {
     setOnScreen(false);
     setLifted(false);
@@ -378,6 +456,8 @@ export function ExplorationScene({
     const listen = (event: Event) => {
       const d = (event as CustomEvent).detail;
       if (d?.id === nativeId && d.type === 'toggle-edge' && typeof d.edgeId === 'string') toggleRef.current(d.edgeId);
+      // A part picked on the lifted model is selected here too, for the next question.
+      if (d?.id === nativeId && d.type === 'select' && typeof d.objectId === 'string') selectRef.current(d.objectId);
     };
     window.addEventListener('soma:screen-overlay-action', listen);
     return () => window.removeEventListener('soma:screen-overlay-action', listen);
@@ -435,7 +515,7 @@ export function ExplorationScene({
         spec={spec}
         state={state}
         onChange={onChange}
-        overlay={overlay}
+        overlay={overlay?.layout ? { ...overlay, layout: overlay.layout } : undefined}
         mirror={mirror}
         onScreen={onScreen}
         screenNotice={screenNotice}
@@ -443,6 +523,7 @@ export function ExplorationScene({
         experiment={experiment}
         circuitObservation={circuitObservation}
         toggleRef={toggleRef}
+        lift={{ liftable, lifted, toggle: () => setView(lifted ? '2d' : '3d') }}
       />
     );
   const execution = explorationExecution(spec, state),
@@ -628,7 +709,7 @@ export function ExplorationScene({
             <p>{panel.text}</p>
           </aside>
         )}
-        {panel.kind === 'graph' && overlay && graphInput && panel.execution === 'primary' && (
+        {panel.kind === 'graph' && overlay?.layout && graphInput && panel.execution === 'primary' && (
           <div className="source-overlay-switch" role="group" aria-label="Where to draw the search">
             <button type="button" aria-pressed={overlayView === 'source'} onClick={() => setOverlayView('source')}>
               On your source
@@ -640,7 +721,7 @@ export function ExplorationScene({
         )}
         {panel.kind === 'graph' &&
           computation &&
-          (overlay && graphInput && overlayView === 'source' && panel.execution === 'primary' ? (
+          (overlay?.layout && graphInput && overlayView === 'source' && panel.execution === 'primary' ? (
             <>
             {overlay.readingCheck && (
               <p className={`source-reading-check is-${overlay.readingCheck.status}`} role="status">
@@ -689,7 +770,7 @@ export function ExplorationScene({
             )}
             <SourceOverlay
               image={overlay.image}
-              layout={overlay.layout}
+              layout={overlay.layout!}
               graph={graphInput}
               execution={computation}
               index={state.step}
@@ -793,6 +874,36 @@ export function ExplorationScene({
   return (
     <>
 
+      {spec.mode === 'explanation' && (onScreen || screenNotice) && (
+        <div className="source-overlay-onscreen">
+          <p role="status">
+            {screenNotice && !(onScreen && lifted)
+              ? screenNotice
+              : lifted
+                ? `Lifted off your slide as a 3D model. ${pickedPart ? `${pickedPart} is selected: your next question is about it.` : 'Drag it to turn it, click a part to ask about it, double-click to set the view back.'} Esc hides it.`
+                : 'On your screen, over the window you captured. Esc hides it.'}
+          </p>
+          {onScreen && (liftable || !spatialPanel) && onBuildModel !== undefined && (
+            <button
+              type="button"
+              className="source-overlay-lift"
+              aria-pressed={lifted}
+              disabled={modelBusy}
+              onClick={() => {
+                if (spatialPanel) setView(lifted ? '2d' : '3d');
+                else {
+                  pendingLift.current = true;
+                  void onBuildModel().then((ok) => {
+                    if (!ok) pendingLift.current = false;
+                  });
+                }
+              }}
+            >
+              {modelBusy ? 'Building the 3D model…' : 'Lift into 3D'}
+            </button>
+          )}
+        </div>
+      )}
       {spec.mode === 'explanation' && (
         <div className="exploration-explanation-navigation">
           <div className="exploration-step-bar">
@@ -942,7 +1053,14 @@ export function ExplorationScene({
           panels.map(renderPanel)
         )}
       </div>
-      {supportsSpatial(spec) && <div className="spatial-mode-switch" role="group" aria-label="Visual representation">
+      {spec.mode === 'explanation' && !spatialPanel && onBuildModel && (
+        <div className="spatial-mode-switch" role="group" aria-label="Visual representation">
+          <button type="button" className="spatial-build" disabled={modelBusy} onClick={() => { revealScene.current = true; void onBuildModel(); }}>
+            {modelBusy ? 'Building the 3D model…' : 'See it in 3D'}
+          </button>
+        </div>
+      )}
+      {supportsSpatial(spec) && (spec.mode !== 'explanation' || spatialPanel || !onBuildModel) && <div className="spatial-mode-switch" role="group" aria-label="Visual representation">
         <button type="button" aria-pressed={spatialMode === '2d'} onClick={() => { revealScene.current = spatialMode !== '2d'; onChange({ ...state, spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '2d' } }); }}>2D view</button>
         <button type="button" aria-pressed={spatialMode === '3d'} onClick={() => { revealScene.current = spatialMode !== '3d'; onChange({ ...state, spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '3d' } }); }}>3D workspace</button>
       </div>}

@@ -1,5 +1,6 @@
 'use client';
 import { CompanionMemory } from './companion-memory';
+import { defaultSpatialView } from '@/lib/domain/spatial-schema';
 import { readExplorationStream } from '@/lib/client/exploration-stream';
 import {
   explorationProgressLabel,
@@ -317,6 +318,7 @@ export function ExplorationWorkspace() {
     previous: ExplorationCapture;
   } | null>(null);
   const compactAction = useRef<(d: { action: string; text?: string }) => void>(() => {});
+  const [liftRequest, setLiftRequest] = useState(0);
   useEffect(() => {
     const handle = (event: Event) => {
       const d = (event as CustomEvent).detail;
@@ -545,6 +547,7 @@ export function ExplorationWorkspace() {
     investigate = false,
     practice?: { artifact: Artifact; applicationId: string },
     fresh?: ExplorationCapture,
+    model = false,
   ) {
     const base = practice?.artifact ?? artifact;
     const baseState = practice?.artifact.state ?? state;
@@ -607,7 +610,7 @@ export function ExplorationWorkspace() {
       ...(practice ? { applicationId: practice.applicationId } : {}),
       requestId: id,
       question: draft.trim(),
-      intent: investigate ? 'investigate' : 'auto',
+      intent: model ? 'model' : investigate ? 'investigate' : 'auto',
       ...(pair
         ? {
             previousImage: sourceMemory.current!.capture.dataUrl,
@@ -663,10 +666,12 @@ export function ExplorationWorkspace() {
       )
         sourceMemory.current.version = result.artifact.version;
       apply(result.artifact);
+      // A model built on request opens in 3D.
+      if (model) setState((current) => (current ? { ...current, spatial: { ...(current.spatial ?? defaultSpatialView()), mode: '3d' } } : current));
       setCompareCapture(false);
       setNewContext(false);
       setQuestion((current) => (current === submittedDraft ? '' : current));
-      setNotice('New visual card ready. Explore it or ask a follow-up.');
+      setNotice(model ? 'The 3D model is ready. Step through it or drag to turn it.' : 'New visual card ready. Explore it or ask a follow-up.');
       if (spoken && (conversational || fresh)) setPlaying(true);
       return true;
     } catch (failure) {
@@ -902,6 +907,7 @@ export function ExplorationWorkspace() {
       const last = Math.max(0, (compactStepCount(artifact.spec, state) ?? 1) - 1);
       updateState({ ...state, step: Math.max(0, Math.min(last, state.step + (d.action === 'next' ? 1 : -1))) });
     } else if (d.action === 'play' && artifact) setPlaying(!playing);
+    else if (d.action === 'lift' && artifact?.spec.mode === 'explanation') setLiftRequest((n) => n + 1);
   };
   const compactSteps = artifact && state ? compactStepCount(artifact.spec, state) : null;
   // `step` is the shown step's index and `steps` the count. `visual` means this card belongs to
@@ -919,6 +925,11 @@ export function ExplorationWorkspace() {
     message: error || '',
     investigable:
       ((artifact?.spec.mode === 'checked-dijkstra' && !!state?.goal) || artifact?.spec.mode === 'checked-circuit') &&
+      liveEnabled !== false,
+    // The bar's 3D asks Muse for a model first when the explanation has none.
+    buildsModel:
+      artifact?.spec.mode === 'explanation' &&
+      !artifact.spec.scene.panels.some((p) => p.kind === 'spatial') &&
       liveEnabled !== false,
   });
   useEffect(() => {
@@ -1869,10 +1880,23 @@ export function ExplorationWorkspace() {
                 spec={artifact.spec}
                 state={state}
                 onChange={updateState}
+                modelBusy={busy}
+                liftRequest={liftRequest}
+                onBuildModel={
+                  liveEnabled === false || newContext
+                    ? undefined
+                    : async () => {
+                        const ok = await ask('Show this explanation as a 3D model.', undefined, false, undefined, undefined, true);
+                        // No model this time: the diagram itself stands up in 3D, so the view still opens.
+                        if (!ok)
+                          setState((current) => (current ? { ...current, spatial: { ...(current.spatial ?? defaultSpatialView()), mode: '3d' } } : current));
+                        return ok;
+                      }
+                }
                 circuitObservation={artifact.circuitExperiment?.observe}
                 overlay={
                   !newContext &&
-                  artifact.source.layout &&
+                  (artifact.source.layout || artifact.spec.mode === 'explanation') &&
                   sourceMemory.current?.id === artifact.id &&
                   sourceMemory.current.capture.capturedAt === artifact.source.capturedAt
                     ? {
@@ -1880,6 +1904,7 @@ export function ExplorationWorkspace() {
                         layout: artifact.source.layout,
                         anchors: artifact.source.anchors,
                         nativeId: sourceMemory.current.capture.nativeId,
+                        focus: artifact.source.focus?.region,
                         readingCheck: artifact.source.readingCheck,
                       }
                     : !newContext && artifact.source.layout && publicSource

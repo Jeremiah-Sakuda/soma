@@ -1,6 +1,66 @@
-> **Current status — November 4 UTC, 2026.** The candidate has passed the fresh graph reading → exact E investigation → changed-cost explanation → save/reopen service sequence, and the circuit image-check/investigation/save sequence described below. It is **not deployed**. Hosted release remains `soma-circuits-review6-2026-11-03`, with its recorded 1,824 offline tests, 107 opt-in skips and 169 browser journeys. The existing manifest identifies that release, not this candidate. Dated records below retain their original counts, branch names and outcomes; old links into the retired repository may no longer resolve.
+> **Current status — November 4 UTC, 2026.** Main `af0851b` identifies `soma-overnight-inspect-2026-11-04`. Its GitHub-linked Vercel production deployment reports **READY**. The 26 local silent browser journeys passed. Full CI `41777875683` succeeded on this exact source: 1,940 application tests (107 gated skips), 59 desktop tests and 167 browser tests (14 gated skips), with no failed steps. Types, build, manifest, trace and adversarial checks passed. Hosted manifest/UI and current native acceptance remain unverified while browser approval is pending. The preceding `3ea3fbf` CI failed one browser test; that failure, earlier green checkpoints and failed service attempts remain separate records below.
 
 # Verification record
+
+## Current delivery checkpoint — `af0851b`, November 4 UTC
+
+| Evidence | Recorded result |
+| --- | --- |
+| Canonical source | `af0851b2e4980480cced11aeacabf3b227ea63ce` committed and pushed to main in the original private `Jeremiah-Sakuda/soma` repository. Visibility is unchanged. |
+| Current local checks | 26 silent browser journeys passed, including four new source-selection lifecycle cases; these four are part of the 26, not additional passes. Typecheck and production build passed. The trace covered 1,224 files and two links with zero private mappings. |
+| Release identity | `soma-overnight-inspect-2026-11-04`; 308 runtime and public asset files; SHA-256 `1786188f126c46163ee1a9a9d5ad2dfec85d166c8f4cf48fdad7f57cf949862f`. |
+| Deployment report | Inspection of `dpl_GYrKggdtAgsxh6kKVPpMEcf6s2TK` reports READY, production, with `soma-woad-beta.vercel.app` among its aliases. No hosted-origin content was requested. |
+| Full CI | [Run 41777875683](https://github.com/Jeremiah-Sakuda/soma/actions/runs/41777875683) **succeeded** on exact source `af0851b2e4980480cced11aeacabf3b227ea63ce`, with no failed steps: 1,940 application tests passed (107 gated skips), 59 desktop tests passed, and 167 browser tests passed (14 gated skips; 6.7 minutes). Types, build, manifest, trace and adversarial checks passed. The unchanged `point-ask.spec.ts:382` case passed on its first attempt in 2.8 seconds. |
+| Hosted/native acceptance | Hosted manifest/UI and native access remain approval-blocked. No alternate access or origin request establishes current hosted behavior. |
+
+The source-selection fix preserves the manually pinned region and its status while explanation steps change. A true capture/pixel, native ID, canonical anchor or source-reference change resets that selection; the source-reference key uses validated `spec.sources`. The user can return to automatic selection, and feedback from an old selection is ignored. The unchanged failing browser case passed in the current full CI, while the preceding failed run remains recorded below. The latest private rehearsal was captured before this fix and cannot verify it. Subsequent documentation-only commits do not change runtime `af0851b` or its manifest identity.
+
+## Earlier delivery checkpoint — `3ea3fbf`, November 4 UTC
+
+| Evidence | Recorded result |
+| --- | --- |
+| Canonical source | `3ea3fbf900044019c1d98c6c87735e04a47379e4` committed and pushed to main in the original private `Jeremiah-Sakuda/soma` repository. Visibility is unchanged. |
+| Current local checks | 81 focused tests and 31 silent browser journeys passed; typecheck and production build passed. The trace check covered 1,224 files and two links, with zero private mappings. These are the executed focused checks, not a new full-suite count. |
+| Release identity | `soma-overnight-labels-2026-11-04`; 308 runtime and public asset files; SHA-256 `a5e00132b90ff8da4a915e9c800ecf946dc139e743c48fa2d3dcf791bc6a0f22`. |
+| Deployment report | GitHub's Vercel status is successful for `3ea3fbf`. Inspection of `dpl_9ZWe5gkCh4SAbmxLGgeWnbbWjooR` reports READY, production, with `soma-woad-beta.vercel.app` among its aliases. |
+| Full CI | [Run 41775137859](https://github.com/Jeremiah-Sakuda/soma/actions/runs/41775137859) **failed** in `test:e2e`: 1,940 application tests passed (107 gated skips), 59 desktop tests passed, and browser checks recorded 162 passes, one failure and 14 gated skips. Typecheck, build and trace succeeded. |
+| Hosted/native acceptance | No hosted manifest, UI or native request occurred after the declined hosted-origin approval. The metadata report does not establish visible hosted behavior; approval remains pending. |
+
+The reproduced label defect is fixed: changed graph controls now show current graph, frontier and node-cost titles, with matching headings, accessibility names and spatial labels. Matching the authored controls or resetting restores the original titles. Display memoization preserves geometry reuse for camera-only changes; specs and model output are unchanged. Single-edge label grammar is corrected.
+
+The browser failure was `tests/e2e/point-ask.spec.ts:382`: **Point on screen** became disabled after manual source-region selection. The component's active-ID effect reset that manual selection during step progression. The failed run remains evidence; the new fix above passed its separate full CI, including this unchanged case.
+
+A second private local replay, `Soma-silent-walkthrough-v2.mp4`, was captured on `3ea3fbf` before the source-selection fix: 65.36 seconds, 1440×1080 H.264 at 25 fps, no audio, SHA-256 `571bc3213a7a6fba616836f41317ac919e6362f5cc83abc0bf13d5e188fde54f`. It shows control changes through the tie, the fully revealed B = C = 8 V / R₅ = 0 A state, direction reversal and saved reopen. It used replay with no new inference or speech and remains private, not a final/public video or hosted/native verification. The earlier 54.28-second recording remains in its `06b147d` checkpoint below.
+
+## Earlier delivery checkpoint — `06b147d`, November 4 UTC
+
+| Evidence | Recorded result |
+| --- | --- |
+| Canonical source | `06b147d64f3da3fe8e2a30d02399cc895e3ecccf` committed and pushed to main in the original private `Jeremiah-Sakuda/soma` repository. Visibility is unchanged. |
+| Local application checks | 1,939 passed; 107 opt-in or environment-gated cases skipped. |
+| Local desktop/browser checks | 45 silent browser checks passed; the unchanged desktop suite retains 59 passes. These are not the full native circuit sequence on the current production origin. |
+| Build and types | Production build and typecheck passed. |
+| Release identity | `soma-overnight-polish-2026-11-04`; 308 runtime and public asset files; SHA-256 `e11ec992fc9a1173680a98abbdffa40bbd32ca7d0bc923729f59c3fa6b391356`. The local manifest is verified against this source. |
+| Deployment report | GitHub's Vercel status is successful. API inspection of `dpl_9Zv55seE8rji8dABdm8StRK9VjZS` reports READY, production, with canonical alias `soma-woad-beta.vercel.app`. The deployment used the existing GitHub-linked path; a direct CLI deployment was not authorized or used. |
+| Clean CI | [Run 41772055951](https://github.com/Jeremiah-Sakuda/soma/actions/runs/41772055951) completed successfully for `06b147d`, including 162 browser tests (14 opt-in/environment-gated cases skipped), with no failed steps. |
+| Hosted/native acceptance | The hosted-origin browser request was declined. No hosted manifest fetch or alternate-browser/native workaround followed; approval is pending. The deployment report therefore establishes neither the visible hosted fingerprint nor current hosted UI/native behavior. |
+| Private local rehearsal | A 54.28-second, 1920×1080 H.264 MP4 was captured on `06b147d` with no audio and a burned-in replay/no-new-inference label. It is private local replay footage, not a final or public submission video, and establishes no hosted/native or audio result. |
+
+The release's circuit header hides the original title/objective when current controls differ from the explanation's `writtenFor` binding; the unchanged wording remains available under **Earlier explanation**. The computed caption leads with the watched circuit quantity, while the complete step remains in the values disclosure. Recording details are folded, with the presentation-alignment label still visible. These are presentation changes; the recorded model output and solver remain unchanged.
+
+The source also preserves fractional graph-probe precision and supplies Wonder with the full original graph image plus any available detail crop, so an extraction crop cannot stand in for the entire source. The earlier 37.7-second silent circuit generation was local browser evidence, not native acceptance. No new audio, completed three-minute video or submission receipt is claimed. This checkpoint predates the latest graph-label correction.
+
+## Earlier delivery checkpoint — `2f7a751`, November 4 UTC
+
+| Evidence | Recorded result |
+| --- | --- |
+| Canonical source | `2f7a751dec02540bbd3a1bf366573a546b56ae56` pushed to main in the original private repository. |
+| Local checks | 1,928 application tests passed; 107 opt-in or environment-gated cases skipped. 59 desktop tests, 30 silent browser checks, production build and typecheck passed. |
+| Release identity | `soma-overnight-2026-11-04`; 308 runtime and public asset files; SHA-256 `9ff7d0e84c39a1145a6741db4c59840fa4d1ef18292a5826aeed24bc215b3e29`. The local manifest matched that source. |
+| Deployment report | The existing GitHub-linked Vercel path completed; inspection of `dpl_4KuRufNy74acuuZHKLJzksm59fus` reported READY, production, with `soma-woad-beta.vercel.app` among its aliases. |
+| Clean CI | [Run 41770064220](https://github.com/Jeremiah-Sakuda/soma/actions/runs/41770064220) completed successfully for `2f7a751`, including 162 browser tests. |
+
+This earlier checkpoint preceded the circuit presentation correction. Its counts, fingerprint and CI outcome are retained separately from the current release; none of these checkpoints has current hosted/native acceptance evidence.
 
 ## Overnight candidate — November 4 UTC
 
@@ -16,11 +76,11 @@ These are development checks on the already disclosed original Lecture 14 and Le
 
 The circuit reading and investigation in the second batch took 35.221 and 36.578 seconds. A separate silent local browser generation also completed with the circuit image check; manually opening R₂ showed approximately 0.4138 A from B to C through R₅. These individual runs do not establish the complete native circuit filming sequence or typical latency.
 
-**Implemented and checked offline:** typed graph `writtenFor` controls keep source/base primary and comparison inputs separate from the active experiment. Effective traces bind step validation and review; new replies carry current controls; resetting restores original costs and connections and pauses mismatched wording. Model-supplied changes cannot authorize a different graph. Focused checks passed: 79 domain/rendering cases, 65 service cases, and 9 continuation cases. The last two stale continuation assertions from the wider run were corrected to test retained base inputs and application-owned titles; final full-suite/build results remain a separate gate at this snapshot.
+**Implemented and checked offline:** typed graph `writtenFor` controls keep source/base primary and comparison inputs separate from the active experiment. Effective traces bind step validation and review; new replies carry current controls; resetting restores original costs and connections and pauses mismatched wording. Model-supplied changes cannot authorize a different graph. Focused checks passed: 79 domain/rendering cases, 65 service cases, and 9 continuation cases. Two stale continuation assertions were corrected to test retained base inputs and application-owned titles; the later full local checks and build passed at the delivery checkpoint above.
 
 Circuit image checking covers components, values, connections and polarity; blind value re-reading, agreed correction, unresolved-dispute refusal and unavailable-check reporting have focused service/reconciliation tests. The live run establishes agreement on the hero slide, not live correction of every disagreement branch. Explanation review now has up to 40 seconds per call within the unchanged 90-second turn. One network/HTTP 5xx retry shares the existing recovery allowance and must fit remaining calls, wall time and reserved spend; no substantive verdict is bypassed. A longer deadline and bounded retry are implementation changes, not demonstrated reliability improvements.
 
-**Recordings and release:** [recorded graph/circuit provenance](../src/lib/fixtures/RECORDINGS.md) identifies the actual second-batch investigations, exact original public source images and retained generation receipts. Separate deterministic presentation files align replay drawing without rewriting the model's original coordinates, uncertainty or output. Private captures remain transient. The candidate release-fingerprint generator now includes public assets as well as runtime source; a new manifest match, deployment, hosted/native acceptance and final video are not established by these service checks. All overnight testing described here was silent.
+**Recordings and release:** [recorded graph/circuit provenance](../src/lib/fixtures/RECORDINGS.md) identifies the actual second-batch investigations, exact original public source images and retained generation receipts. Separate deterministic presentation files align replay drawing without rewriting the model's original coordinates, uncertainty or output. Private captures remain transient. The release-fingerprint generator includes public assets as well as runtime source; local verification and the deployment report are recorded separately above. Hosted/native acceptance and final video do not follow from these service checks. All overnight testing described here was silent.
 
 Headline results from executed checks on clean checkouts and on production. These are small development samples, not reliability rates:
 

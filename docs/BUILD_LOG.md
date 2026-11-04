@@ -3388,3 +3388,20 @@ Final picture-edit checkpoint, 21:53 UTC: exported exactly 180-second silent and
 3. Left both video exports, their edit decisions and all time windows unchanged as requested. No recording, inference or media regeneration.
 
 Deviation: narration wording and length change; the user will fit spoken delivery to the existing edit.
+
+
+## DEMO-VIDEO-PATH-20261104-01 / DEMO-VIDEO-FINDER-20261104-01 — Locate the existing export (retrospective)
+
+1. Supplied the existing app-audio MP4 path, then revealed that file in Finder at the user's request.
+2. No recording, model calls or media changes.
+3. No additional verification or release action was performed by those file-location responses.
+
+Deviation: none.
+
+## DEMO-SCRIPT-ALIGNMENT-20261104-01 / DEMO-SCRIPT-CUES-20261104-01 — Add visual recording cues
+
+1. Compared the spoken copy with the final edit decision list and fresh frames at the graph values and cut/restore transitions. The story matches; exact vocal synchronization still depends on delivery.
+2. Added non-spoken “wait for” cues throughout the timed recording copy: panel cost 6/7/8, D–F removal/restoration, engine 360°/630°/720°, and circuit flow/balance/reversal. Updated the local delivery copy. Verified that all spoken words remain exactly unchanged after whitespace normalization.
+3. Kept video and timing unchanged. Clarified that the silent export is the recording reference because the optional app-audio export already contains speech in two voiceover windows. No new inference, recording or rendered video. Frame-review setup initially lacked Pillow; direct ffmpeg still extraction succeeded. No timed human read-through is claimed.
+
+Deviation: none; this adds recording directions to the existing script.

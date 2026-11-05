@@ -8,7 +8,12 @@ import { liftScene } from '@/lib/domain/scene-lift';
 import { SourceOverlay, type SourceGraphLayout } from './source-overlay';
 import { defaultSpatialView } from '@/lib/domain/spatial-schema';
 import { circuitOverlayModel } from '@/lib/domain/circuit-overlay-model';
-import { DC_UNITS, dcValueAllowed, type DcObservation, type DcSolution } from '@/lib/domain/dc-circuit';
+import {
+  DC_UNITS,
+  dcValueAllowed,
+  type DcObservation,
+  type DcSolution,
+} from '@/lib/domain/dc-circuit';
 import type { ExplorationSpec } from '@/lib/domain/exploration';
 import type { SourceOverlayModel } from '@/lib/domain/source-overlay-model';
 import type { SourceAnchor } from '@/lib/domain/source-grounding';
@@ -65,12 +70,25 @@ function ValueField({
 
 /** The circuit as a plain diagram, at the positions where the source drew its nodes. Used
  * when the capture is not in memory, or by choice. Every number comes from the solution. */
-function CircuitDiagram({ spec, solution, index }: { spec: CircuitSpec; solution: DcSolution; index: number }) {
+function CircuitDiagram({
+  spec,
+  solution,
+  index,
+}: {
+  spec: CircuitSpec;
+  solution: DcSolution;
+  index: number;
+}) {
   const panel = spec.scene.panels.find((p) => p.kind === 'circuit');
   if (panel?.kind !== 'circuit') return null;
   const xs = panel.positions.map((p) => p.x),
     ys = panel.positions.map((p) => p.y);
-  const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const [minX, maxX, minY, maxY] = [
+    Math.min(...xs),
+    Math.max(...xs),
+    Math.min(...ys),
+    Math.max(...ys),
+  ];
   const W = 640,
     H = 380,
     pad = 70;
@@ -84,7 +102,12 @@ function CircuitDiagram({ spec, solution, index }: { spec: CircuitSpec; solution
   const step = solution.steps[Math.min(index, solution.steps.length - 1)];
   const seen = new Map<string, number>();
   return (
-    <svg className="circuit-diagram" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Checked circuit diagram">
+    <svg
+      className="circuit-diagram"
+      viewBox={`0 0 ${W} ${H}`}
+      role="img"
+      aria-label="Checked circuit diagram"
+    >
       {spec.input.components.map((c) => {
         const a = at(c.from),
           b = at(c.to),
@@ -94,13 +117,21 @@ function CircuitDiagram({ spec, solution, index }: { spec: CircuitSpec; solution
         // Parallel parts between the same two nodes bow apart so each stays visible.
         const bow = k === 0 ? 0 : (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 46;
         const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
-        const mid = { x: (a.x + b.x) / 2 + (-(b.y - a.y) / len) * bow, y: (a.y + b.y) / 2 + ((b.x - a.x) / len) * bow };
+        const mid = {
+          x: (a.x + b.x) / 2 + (-(b.y - a.y) / len) * bow,
+          y: (a.y + b.y) / 2 + ((b.x - a.x) / len) * bow,
+        };
         const open = solution.state.open.includes(c.id),
           shown = step?.revealedComponents.includes(c.id) && !open;
         const current = solution.currents[c.id] ?? 0;
         return (
-          <g key={c.id} className={`circuit-part is-${c.kind}${open ? ' is-open' : ''}${shown && current !== 0 ? ' is-carrying' : ''}`}>
-            <path d={`M ${a.x} ${a.y} Q ${2 * mid.x - (a.x + b.x) / 2} ${2 * mid.y - (a.y + b.y) / 2} ${b.x} ${b.y}`} />
+          <g
+            key={c.id}
+            className={`circuit-part is-${c.kind}${open ? ' is-open' : ''}${shown && current !== 0 ? ' is-carrying' : ''}`}
+          >
+            <path
+              d={`M ${a.x} ${a.y} Q ${2 * mid.x - (a.x + b.x) / 2} ${2 * mid.y - (a.y + b.y) / 2} ${b.x} ${b.y}`}
+            />
             <text x={mid.x} y={mid.y - 10} textAnchor="middle">
               {c.label} · {value(solution.state.values[c.id] ?? c.value)} {DC_UNITS[c.kind]}
             </text>
@@ -174,12 +205,16 @@ export function ExplorationCircuitStage({
     ? spec.steps.find((item) => item.execution === 'primary' && item.executionStep === state.step)
     : undefined;
   const computed = circuitCaption(solution, state.step);
-  const observed = changed && circuitObservation ? circuitObservationCaption(solution, circuitObservation) : null;
+  const observed =
+    changed && circuitObservation ? circuitObservationCaption(solution, circuitObservation) : null;
   // The experiment, described against the circuit as read, whenever one is set up.
-  const experimenting = state.disabledEdgeIds.length > 0 || Object.keys(state.edgeWeights ?? {}).length > 0;
+  const experimenting =
+    state.disabledEdgeIds.length > 0 || Object.keys(state.edgeWeights ?? {}).length > 0;
   const lead = experimenting
     ? [
-        state.disabledEdgeIds.length ? `You opened ${state.disabledEdgeIds.map(name).join(', ')}.` : '',
+        state.disabledEdgeIds.length
+          ? `You opened ${state.disabledEdgeIds.map(name).join(', ')}.`
+          : '',
         ...Object.entries(state.edgeWeights ?? {}).map(([id, v]) => {
           const c = spec.input.components.find((x) => x.id === id)!;
           return `${c.label} is now ${value(v)} ${DC_UNITS[c.kind]} (was ${value(c.value)}).`;
@@ -188,15 +223,22 @@ export function ExplorationCircuitStage({
         .filter(Boolean)
         .join(' ')
     : '';
-  const authoredCaption = authored && captionIsGrounded(authored.caption, [], solution) ? authored.caption : null;
+  const authoredCaption =
+    authored && captionIsGrounded(authored.caption, [], solution) ? authored.caption : null;
   const computedLine = `${lead ? `${lead} ` : ''}${observed ?? computed}`;
   // Printed/source/native facts always describe this calculation. Authored
   // prose remains a separately labeled explanation, never a checked caption.
   const caption = computedLine;
   const stepLabel =
-    changed && experimenting ? 'Your experiment' : `${changed ? 'The circuit as read · ' : ''}Step ${Math.min(state.step, finalStep) + 1} of ${finalStep + 1}`;
+    changed && experimenting
+      ? 'Your experiment'
+      : `${changed ? 'The circuit as read · ' : ''}Step ${Math.min(state.step, finalStep) + 1} of ${finalStep + 1}`;
   const layout = overlay?.layout;
-  const drawable = Boolean(overlay && layout?.components?.length && spec.input.nodes.every((n) => layout.nodes.some((p) => p.nodeId === n.id)));
+  const drawable = Boolean(
+    overlay &&
+    layout?.components?.length &&
+    spec.input.nodes.every((n) => layout.nodes.some((p) => p.nodeId === n.id)),
+  );
   const spatial = state.spatial?.mode === '3d';
   const toggle = (id: string) => {
     if (!spec.controls.includes('open-component')) return;
@@ -204,7 +246,9 @@ export function ExplorationCircuitStage({
     const next = {
       ...state,
       selectedObjectId: id,
-      disabledEdgeIds: open ? state.disabledEdgeIds.filter((x) => x !== id) : [...state.disabledEdgeIds, id],
+      disabledEdgeIds: open
+        ? state.disabledEdgeIds.filter((x) => x !== id)
+        : [...state.disabledEdgeIds, id],
     };
     // Show the checked consequence at once: every node revealed.
     onChange({ ...next, step: Math.max(0, (circuitSolution(spec, next)?.steps.length ?? 1) - 1) });
@@ -248,17 +292,36 @@ export function ExplorationCircuitStage({
           </div>
         </div>
       )}
-      <div className="exploration-scene exploration-layout-diagram-sidebar" aria-label="Checked circuit">
+      <div
+        className="exploration-scene exploration-layout-diagram-sidebar"
+        aria-label="Checked circuit"
+      >
         {spatial ? (
           <SpatialWorkspace spec={spec} state={state} onChange={onChange} which="primary" />
         ) : (
-          <section className="exploration-panel exploration-panel-circuit" style={{ gridColumn: '1 / span 2' }} aria-label="Checked circuit">
+          <section
+            className="exploration-panel exploration-panel-circuit"
+            style={{ gridColumn: '1 / span 2' }}
+            aria-label="Checked circuit"
+          >
             {drawable && (
-              <div className="source-overlay-switch" role="group" aria-label="Where to draw the circuit">
-                <button type="button" aria-pressed={view === 'source'} onClick={() => setView('source')}>
+              <div
+                className="source-overlay-switch"
+                role="group"
+                aria-label="Where to draw the circuit"
+              >
+                <button
+                  type="button"
+                  aria-pressed={view === 'source'}
+                  onClick={() => setView('source')}
+                >
                   On your source
                 </button>
-                <button type="button" aria-pressed={view === 'diagram'} onClick={() => setView('diagram')}>
+                <button
+                  type="button"
+                  aria-pressed={view === 'diagram'}
+                  onClick={() => setView('diagram')}
+                >
                   Diagram
                 </button>
               </div>
@@ -277,7 +340,12 @@ export function ExplorationCircuitStage({
                   Esc hides it.
                 </p>
                 {lift?.liftable && (
-                  <button type="button" className="source-overlay-lift" aria-pressed={lift.lifted} onClick={lift.toggle}>
+                  <button
+                    type="button"
+                    className="source-overlay-lift"
+                    aria-pressed={lift.lifted}
+                    onClick={lift.toggle}
+                  >
                     Lift into 3D
                   </button>
                 )}
@@ -302,10 +370,21 @@ export function ExplorationCircuitStage({
                   const scene = drawn && spatialScene(spec, state);
                   if (!drawn || !scene) return drawn;
                   const anchors = new Map(layout!.nodes.map((n) => [n.nodeId, { x: n.x, y: n.y }]));
-                  const xs = layout!.nodes.map((n) => n.x), ys = layout!.nodes.map((n) => n.y), pad = 0.06;
-                  const x = Math.max(0, Math.min(...xs) - pad), y = Math.max(0, Math.min(...ys) - pad);
-                  const region = { x, y, width: Math.min(1, Math.max(...xs) + pad) - x, height: Math.min(1, Math.max(...ys) + pad) - y };
-                  return { ...drawn, scene: liftScene(scene, region, anchors, state.selectedObjectId) };
+                  const xs = layout!.nodes.map((n) => n.x),
+                    ys = layout!.nodes.map((n) => n.y),
+                    pad = 0.06;
+                  const x = Math.max(0, Math.min(...xs) - pad),
+                    y = Math.max(0, Math.min(...ys) - pad);
+                  const region = {
+                    x,
+                    y,
+                    width: Math.min(1, Math.max(...xs) + pad) - x,
+                    height: Math.min(1, Math.max(...ys) + pad) - y,
+                  };
+                  return {
+                    ...drawn,
+                    scene: liftScene(scene, region, anchors, state.selectedObjectId),
+                  };
                 }}
                 canToggle={spec.controls.includes('open-component')}
                 selected={state.selectedObjectId}
@@ -317,7 +396,9 @@ export function ExplorationCircuitStage({
               />
             ) : (
               <>
-                {drawable === false && !overlay && <h3>{spec.scene.panels.find((p) => p.kind === 'circuit')?.title}</h3>}
+                {drawable === false && !overlay && (
+                  <h3>{spec.scene.panels.find((p) => p.kind === 'circuit')?.title}</h3>
+                )}
                 <CircuitDiagram spec={spec} solution={solution} index={state.step} />
               </>
             )}
@@ -329,14 +410,24 @@ export function ExplorationCircuitStage({
         <button
           type="button"
           aria-pressed={!spatial}
-          onClick={() => onChange({ ...state, spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '2d' } })}
+          onClick={() =>
+            onChange({
+              ...state,
+              spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '2d' },
+            })
+          }
         >
           2D view
         </button>
         <button
           type="button"
           aria-pressed={spatial}
-          onClick={() => onChange({ ...state, spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '3d' } })}
+          onClick={() =>
+            onChange({
+              ...state,
+              spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '3d' },
+            })
+          }
         >
           Voltage as height
         </button>
@@ -344,12 +435,17 @@ export function ExplorationCircuitStage({
       <div className="exploration-caption" aria-live="polite">
         <span className="overline">{stepLabel}</span>
         <p>{solved ? computedLine : `${lead ? `${lead} ` : ''}${solution.reason}`}</p>
-        {authoredCaption && <p className="exploration-authored-caption">Soma’s explanation: {authoredCaption}</p>}
+        {authoredCaption && (
+          <p className="exploration-authored-caption">Soma’s explanation: {authoredCaption}</p>
+        )}
       </div>
       <details className="exploration-controls-disclosure" open={!compact}>
         <summary>Change the experiment</summary>
         <div className="exploration-controls" aria-label="Circuit controls">
-          <p className="meta">Soma re-solves the circuit for every change, with no model call. Your source stays unchanged.</p>
+          <p className="meta">
+            Soma re-solves the circuit for every change, with no model call. Your source stays
+            unchanged.
+          </p>
           <div className="circuit-controls">
             {spec.input.components.map((c) => {
               const open = state.disabledEdgeIds.includes(c.id);
@@ -358,7 +454,8 @@ export function ExplorationCircuitStage({
                 <div key={c.id} className={`circuit-control${open ? ' is-open' : ''}`}>
                   {spec.controls.includes('open-component') && (
                     <label>
-                      <input type="checkbox" checked={!open} onChange={() => toggle(c.id)} /> {c.label}
+                      <input type="checkbox" checked={!open} onChange={() => toggle(c.id)} />{' '}
+                      {c.label}
                     </label>
                   )}
                   {spec.controls.includes('set-value') && (
@@ -383,7 +480,10 @@ export function ExplorationCircuitStage({
               className="secondary-button"
               onClick={() => {
                 const asRead = { ...state, disabledEdgeIds: [], edgeWeights: {} };
-                onChange({ ...asRead, step: Math.max(0, (circuitSolution(spec, asRead)?.steps.length ?? 1) - 1) });
+                onChange({
+                  ...asRead,
+                  step: Math.max(0, (circuitSolution(spec, asRead)?.steps.length ?? 1) - 1),
+                });
               }}
             >
               Back to the circuit as read
@@ -407,7 +507,8 @@ export function ExplorationCircuitStage({
                     {spec.input.components.map((c) => {
                       const i = solution.currents[c.id] ?? 0;
                       const [a, b] = i >= 0 ? [c.from, c.to] : [c.to, c.from];
-                      const node = (id: string) => spec.input.nodes.find((n) => n.id === id)?.label ?? id;
+                      const node = (id: string) =>
+                        spec.input.nodes.find((n) => n.id === id)?.label ?? id;
                       return (
                         <tr key={c.id}>
                           <th scope="row">{c.label}</th>
@@ -416,7 +517,11 @@ export function ExplorationCircuitStage({
                               ? 'open'
                               : `${value(solution.state.values[c.id] ?? c.value)} ${DC_UNITS[c.kind]}`}
                           </td>
-                          <td>{i === 0 ? '0 A' : `${circuitExactQuantity(solution.exact.currents[c.id], i, 'A', true)}, ${node(a)} → ${node(b)}`}</td>
+                          <td>
+                            {i === 0
+                              ? '0 A'
+                              : `${circuitExactQuantity(solution.exact.currents[c.id], i, 'A', true)}, ${node(a)} → ${node(b)}`}
+                          </td>
                           <td>
                             {solution.drops[c.id] === null
                               ? 'not fixed (its ends are cut apart)'
@@ -431,7 +536,11 @@ export function ExplorationCircuitStage({
                         <td colSpan={3}>
                           {solution.voltages[n.id] === null
                             ? 'Cut off from ground'
-                            : circuitExactQuantity(solution.exact.voltages[n.id], solution.voltages[n.id]!, 'V')}
+                            : circuitExactQuantity(
+                                solution.exact.voltages[n.id],
+                                solution.voltages[n.id]!,
+                                'V',
+                              )}
                           {n.id === spec.input.ground ? ' (ground)' : ''}
                         </td>
                       </tr>
@@ -442,7 +551,8 @@ export function ExplorationCircuitStage({
             </details>
           )}
           <p className="meta">
-            Ideal DC circuit · exact nodal analysis · Kirchhoff’s current law and every source voltage checked exactly.
+            Ideal DC circuit · exact nodal analysis · Kirchhoff’s current law and every source
+            voltage checked exactly.
           </p>
         </div>
       </details>

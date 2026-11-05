@@ -12,7 +12,11 @@ import { heroCircuitLayout } from '../fixtures/hero-circuit';
 
 // The original Lecture 9 bridge slide, asked the way a student would. Opt-in, real provider,
 // bounded by the application's own spend cap.
-const plain = (label: string) => label.replace(/[₀-₉]/g, (d) => String(d.charCodeAt(0) - 0x2080)).replace(/\s+/g, '').toUpperCase();
+const plain = (label: string) =>
+  label
+    .replace(/[₀-₉]/g, (d) => String(d.charCodeAt(0) - 0x2080))
+    .replace(/\s+/g, '')
+    .toUpperCase();
 const expected: Record<string, { ends: [string, string]; value: number }> = {
   R1: { ends: ['A', 'B'], value: 2 },
   R2: { ends: ['B', 'D'], value: 4 },
@@ -29,12 +33,20 @@ it.skipIf(process.env.SOMA_CIRCUIT_LIVE !== 'true')(
     const folder = process.env.SOMA_CIRCUIT_OUTPUT || '.local/circuit/live';
     mkdirSync(folder, { recursive: true });
     const id = randomBytes(32).toString('hex'),
-      principal: ExplorationPrincipal = { kind: 'guest', id, workspaceId: id, generation: id, key: 'guest-' + id };
+      principal: ExplorationPrincipal = {
+        kind: 'guest',
+        id,
+        workspaceId: id,
+        generation: id,
+        key: 'guest-' + id,
+      };
     let calls = 0;
     const records: Record<string, unknown>[] = [],
-      ledger = async () => Number((await getServerFirestore().doc('somaBudget/global').get()).data()?.consumed ?? 0),
+      ledger = async () =>
+        Number((await getServerFirestore().doc('somaBudget/global').get()).data()?.consumed ?? 0),
       save = () => writeFileSync(folder + '/results.json', JSON.stringify(records, null, 2)),
-      dump = (name: string, value: unknown) => writeFileSync(`${folder}/${name}.json`, JSON.stringify(value, null, 2));
+      dump = (name: string, value: unknown) =>
+        writeFileSync(`${folder}/${name}.json`, JSON.stringify(value, null, 2));
     const service = createExplorationService({
       reviewEnabled: () => true,
       request: async (args) => {
@@ -48,14 +60,18 @@ it.skipIf(process.env.SOMA_CIRCUIT_LIVE !== 'true')(
         return r;
       },
     });
-    const png = await sharp(readFileSync('docs/examples/hero-circuit/lecture-9-bridge.png')).resize({ width: 1600 }).png().toBuffer();
+    const png = await sharp(readFileSync('docs/examples/hero-circuit/lecture-9-bridge.png'))
+      .resize({ width: 1600 })
+      .png()
+      .toBuffer();
     records.push({
       phase: 'preflight',
       at: new Date().toISOString(),
       before: await ledger(),
       cap: Number(process.env.META_APP_SPEND_CAP_USD),
       sourceSha256: createHash('sha256').update(png).digest('hex'),
-      scope: 'original circuit slide, real-provider service run; not hosted UI or held-out evidence',
+      scope:
+        'original circuit slide, real-provider service run; not hosted UI or held-out evidence',
     });
     save();
     try {
@@ -93,13 +109,19 @@ it.skipIf(process.env.SOMA_CIRCUIT_LIVE !== 'true')(
         const part = input.components.find((c) => plain(c.label) === label);
         if (!part) mismatches.push(`${label} missing`);
         else {
-          if (part.kind !== 'resistor' || part.value !== want.value) mismatches.push(`${label} read as ${part.kind} ${part.value}`);
+          if (part.kind !== 'resistor' || part.value !== want.value)
+            mismatches.push(`${label} read as ${part.kind} ${part.value}`);
           if ([node(part.from), node(part.to)].sort().join() !== [...want.ends].sort().join())
             mismatches.push(`${label} joins ${node(part.from)}–${node(part.to)}`);
         }
       }
       const battery = input.components.filter((c) => c.kind === 'voltage-source');
-      if (battery.length !== 1 || battery[0].value !== 12 || node(battery[0].to) !== 'A' || node(battery[0].from) !== 'D')
+      if (
+        battery.length !== 1 ||
+        battery[0].value !== 12 ||
+        node(battery[0].to) !== 'A' ||
+        node(battery[0].from) !== 'D'
+      )
         mismatches.push(`battery read as ${JSON.stringify(battery)}`);
       if (input.components.length !== 6) mismatches.push(`${input.components.length} parts`);
       if (node(input.ground) !== 'D') mismatches.push(`ground ${node(input.ground)}`);
@@ -116,10 +138,15 @@ it.skipIf(process.env.SOMA_CIRCUIT_LIVE !== 'true')(
       );
       const partErrors = Object.fromEntries(
         heroCircuitLayout.components.map((m) => {
-          const part = input.components.find((c) => (m.componentId === 'V1' ? c.kind === 'voltage-source' : plain(c.label) === m.componentId));
+          const part = input.components.find((c) =>
+            m.componentId === 'V1' ? c.kind === 'voltage-source' : plain(c.label) === m.componentId,
+          );
           const read = part && layout?.components?.find((p) => p.componentId === part.id);
           if (!read) return [m.componentId, null];
-          const mid = (p: { x1: number; y1: number; x2: number; y2: number }) => ({ x: (p.x1 + p.x2) / 2, y: (p.y1 + p.y2) / 2 });
+          const mid = (p: { x1: number; y1: number; x2: number; y2: number }) => ({
+            x: (p.x1 + p.x2) / 2,
+            y: (p.y1 + p.y2) / 2,
+          });
           return [m.componentId, error(mid(read), mid(m))];
         }),
       );
@@ -153,7 +180,10 @@ it.skipIf(process.env.SOMA_CIRCUIT_LIVE !== 'true')(
           costUsd: probed.generation.costUsd,
           elapsedMs: probed.generation.elapsedMs,
           experiment: probed.circuitExperiment ?? null,
-          steps: probed.spec.mode === 'checked-circuit' ? probed.spec.steps.map((s) => `${s.executionStep}: ${s.caption}`) : [],
+          steps:
+            probed.spec.mode === 'checked-circuit'
+              ? probed.spec.steps.map((s) => `${s.executionStep}: ${s.caption}`)
+              : [],
           audit: probed.generation.audit.map((a) => `${a.event}: ${a.detail}`),
         });
         save();
@@ -161,7 +191,9 @@ it.skipIf(process.env.SOMA_CIRCUIT_LIVE !== 'true')(
       records.push({ phase: 'final', ledger: await ledger() });
       save();
       expect(mismatches).toEqual([]);
-      expect(solution.exact.currents[input.components.find((c) => plain(c.label) === 'R5')!.id]).toBe('0');
+      expect(
+        solution.exact.currents[input.components.find((c) => plain(c.label) === 'R5')!.id],
+      ).toBe('0');
     } finally {
       save();
     }

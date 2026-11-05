@@ -3,7 +3,13 @@ const { spawn } = require('node:child_process');
 const { createInterface } = require('node:readline');
 const { randomUUID } = require('node:crypto');
 const { selectFocus, pointPanelBounds } = require('./point-geometry.cjs');
-const { validOverlayModel, overlayRegion, regionMatches, sheetRegion, cropCapture } = require('./screen-overlay.cjs');
+const {
+  validOverlayModel,
+  overlayRegion,
+  regionMatches,
+  sheetRegion,
+  cropCapture,
+} = require('./screen-overlay.cjs');
 const OVERLAY_RETENTION_MS = 20 * 60 * 1000;
 // With no update for this long the learner has likely moved on; stop drawing over the screen.
 const OVERLAY_IDLE_MS = 3 * 60 * 1000;
@@ -87,13 +93,16 @@ function createPointAsk({
   }
   function restartIdle(c) {
     clearTimeout(idleTimer);
-    idleTimer = setTimeout(() => {
-      if (graph?.id !== c.id) return;
-      // A lifted scene is being looked at, not forgotten: keep it until the capture expires.
-      if (view === '3d' && Date.now() < c.expires) return restartIdle(c);
-      clearGraph();
-      overlayResult({ id: c.id, shown: false, dismissed: true });
-    }, Math.min(OVERLAY_IDLE_MS, c.expires - Date.now()));
+    idleTimer = setTimeout(
+      () => {
+        if (graph?.id !== c.id) return;
+        // A lifted scene is being looked at, not forgotten: keep it until the capture expires.
+        if (view === '3d' && Date.now() < c.expires) return restartIdle(c);
+        clearGraph();
+        overlayResult({ id: c.id, shown: false, dismissed: true });
+      },
+      Math.min(OVERLAY_IDLE_MS, c.expires - Date.now()),
+    );
   }
   /** Draws the verified graph in the current view. Every 3D draw carries the sheet (the
    * capture's graph region), so a scene rebuilt for any reason still covers the slide; the
@@ -123,7 +132,11 @@ function createPointAsk({
   function cutSheet(c) {
     try {
       const region = sheetRegion(graph.model);
-      sheet = { id: graph.id, key: sheetKey(), data: { dataUrl: cropImage(c.snapshot.dataUrl, region), region } };
+      sheet = {
+        id: graph.id,
+        key: sheetKey(),
+        data: { dataUrl: cropImage(c.snapshot.dataUrl, region), region },
+      };
       return true;
     } catch {
       return false;
@@ -134,7 +147,15 @@ function createPointAsk({
   function setView(next, id) {
     if (!['2d', '3d'].includes(next)) return view;
     const c = overlayCapture;
-    if (!graph?.verified || !c || graph.id !== c.id || (id && id !== graph.id) || !overlay || overlay.isDestroyed()) return view;
+    if (
+      !graph?.verified ||
+      !c ||
+      graph.id !== c.id ||
+      (id && id !== graph.id) ||
+      !overlay ||
+      overlay.isDestroyed()
+    )
+      return view;
     // Setting the already-flat view must also cancel a lift that is still checking.
     if (next === '2d' && liftRequest) {
       liftRequest = null;
@@ -162,19 +183,31 @@ function createPointAsk({
         // Let an existing owned re-check finish, then verify the entire sheet that will
         // cover the source. No overlapping captures, extra polling or stale lift.
         if (preceding) await preceding;
-        if (liftRequest !== request || overlayCapture !== c || graph !== request.graph || !graph.verified) return;
+        if (
+          liftRequest !== request ||
+          overlayCapture !== c ||
+          graph !== request.graph ||
+          !graph.verified
+        )
+          return;
         if (preceding) overlayResult({ id: c.id, shown: true, view: '2d', reason: 'checking' });
         const ok = await recheck(c, sheetRegion(request.graph.model));
         if (liftRequest !== request) return;
         liftRequest = null;
-        if (!ok || overlayCapture !== c || graph !== request.graph || !graph.verified || Date.now() >= c.expires) return;
+        if (
+          !ok ||
+          overlayCapture !== c ||
+          graph !== request.graph ||
+          !graph.verified ||
+          Date.now() >= c.expires
+        )
+          return;
         // Another blur during the capture requires another deliberate lift request.
         if (stale) {
           overlayResult({ id: c.id, shown: true, view: '2d' });
           return;
         }
-        if (setView('3d', c.id) !== '3d')
-          overlayResult({ id: c.id, shown: true, view: '2d' });
+        if (setView('3d', c.id) !== '3d') overlayResult({ id: c.id, shown: true, view: '2d' });
       })();
       return view;
     }
@@ -212,7 +245,12 @@ function createPointAsk({
     overlay.setIgnoreMouseEvents(true, { forward: true });
     // A 3D draw may already be on its way; redraw flat so both sides agree.
     drawGraph();
-    overlayResult({ id: graph.id, shown: true, view, reason: reason === 'sheet' ? 'sheet' : 'webgl' });
+    overlayResult({
+      id: graph.id,
+      shown: true,
+      view,
+      reason: reason === 'sheet' ? 'sheet' : 'webgl',
+    });
   }
   // Set when the learner may have changed the screen by hand (Soma's panel lost focus).
   let stale = false,
@@ -243,7 +281,8 @@ function createPointAsk({
         clearTimeout(timer);
       }
     } finally {
-      if (--shielding === 0 && overlay && !overlay.isDestroyed()) overlay.setContentProtection?.(false);
+      if (--shielding === 0 && overlay && !overlay.isDestroyed())
+        overlay.setContentProtection?.(false);
     }
   }
   /** A new snapshot is about to be taken: the drawing belongs to the previous one. */
@@ -278,7 +317,9 @@ function createPointAsk({
     // macOS may keep the window off the menu bar or otherwise clamp it, so report where it
     // actually sits relative to the captured display; the renderer compensates.
     const d = overlayDisplay?.bounds;
-    const message = d ? { ...payload, display: { x: d.x, y: d.y, width: d.width, height: d.height } } : payload;
+    const message = d
+      ? { ...payload, display: { x: d.x, y: d.y, width: d.width, height: d.height } }
+      : payload;
     if (!overlayReady) {
       // Compact questions create this window only when the answer arrives. Its
       // preload listener may not exist yet: keep one current draw, not a history.
@@ -321,9 +362,18 @@ function createPointAsk({
         const { message, owner } = queued;
         if (message.type !== 'graph-clear' && owner !== (current ?? overlayCapture)) return;
         if (message.type === 'tracking' && current?.phase !== 'holding') return;
-        if (message.type === 'graph' && (!graph?.verified || message.captureId !== graph.id
-          || message.model !== graph.model || overlayCapture?.id !== graph.id
-          || stale || verifying || current || Date.now() >= overlayCapture.expires)) return;
+        if (
+          message.type === 'graph' &&
+          (!graph?.verified ||
+            message.captureId !== graph.id ||
+            message.model !== graph.model ||
+            overlayCapture?.id !== graph.id ||
+            stale ||
+            verifying ||
+            current ||
+            Date.now() >= overlayCapture.expires)
+        )
+          return;
         window.webContents.send('point:draw', message);
       });
       const failedLoad = () => {
@@ -384,7 +434,8 @@ function createPointAsk({
   async function askTyped(text, onDisplay) {
     const question = typeof text === 'string' ? text.trim().slice(0, 1000) : '';
     if (!question) return { ok: false, message: 'Type a question first.' };
-    if (!available()) return { ok: false, message: 'Soma is still loading. Try again in a moment.' };
+    if (!available())
+      return { ok: false, message: 'Soma is still loading. Try again in a moment.' };
     if (current) return { ok: false, message: 'Muse is still working on your last question.' };
     stop('', false);
     overlayCapture = null;
@@ -526,10 +577,7 @@ function createPointAsk({
       hideTimer = setTimeout(hideOverlay, 1500);
     } catch {
       if (current === s)
-        stop(
-          'Capture failed. Your previous visual is kept; try Capture display or upload.',
-          true,
-        );
+        stop('Capture failed. Your previous visual is kept; try Capture display or upload.', true);
     }
   }
   async function enable() {
@@ -608,7 +656,9 @@ function createPointAsk({
     if (['error', 'cancelled'].includes(event.state)) {
       stop(
         event.message ||
-          (current.compact ? 'That question did not go through. Try again.' : 'Point & ask stopped. Your previous visual is kept.'),
+          (current.compact
+            ? 'That question did not go through. Try again.'
+            : 'Point & ask stopped. Your previous visual is kept.'),
         true,
       );
       return;
@@ -627,7 +677,12 @@ function createPointAsk({
         // With the panel closed, an answer that is not drawn would otherwise go unseen.
         status('Muse answered. Drawing it on your screen…');
         setTimeout(() => {
-          if (overlayCapture?.id === answered.id && graph?.id !== answered.id && refused !== answered.id && !current)
+          if (
+            overlayCapture?.id === answered.id &&
+            graph?.id !== answered.id &&
+            refused !== answered.id &&
+            !current
+          )
             status('This answer can’t be drawn on your screen. Open it with ⤢.');
         }, 8000);
       } else status('Visual ready. Explore it or ask a follow-up.');
@@ -635,8 +690,7 @@ function createPointAsk({
       current.text = 'Listening · release to ask';
       status('Listening · release Control–Option–Space to ask.');
     } else if (event.state === 'transcribing') status('Transcribing your question…');
-    else if (event.state === 'generating')
-      status('Muse is preparing the selected explanation…');
+    else if (event.state === 'generating') status('Muse is preparing the selected explanation…');
   }
   async function highlight(event) {
     const c = lastCapture;
@@ -665,14 +719,7 @@ function createPointAsk({
           a.region.x + a.region.width <= 1.000001 &&
           a.region.y + a.region.height <= 1.000001,
       );
-    if (
-      highlightBusy ||
-      !valid ||
-      !c ||
-      c.id !== event.id ||
-      Date.now() > c.expires ||
-      current
-    ) {
+    if (highlightBusy || !valid || !c || c.id !== event.id || Date.now() > c.expires || current) {
       highlightResult({ id: event?.id, shown: false });
       return;
     }
@@ -792,13 +839,27 @@ function createPointAsk({
     // Lifted or flat, pointer moves reach the drawing; clicks pass through until it is hovered.
     overlay.setIgnoreMouseEvents(true, { forward: true });
     const failure = drawGraph();
-    overlayResult({ id: c.id, shown: true, view, ...(failure ? { reason: failure } : liftRequest && view === '2d' ? { reason: 'checking' } : {}) });
+    overlayResult({
+      id: c.id,
+      shown: true,
+      view,
+      ...(failure
+        ? { reason: failure }
+        : liftRequest && view === '2d'
+          ? { reason: 'checking' }
+          : {}),
+    });
   }
   /** Re-checks the slide behind a drawing after the learner may have changed it. Takes the
    * drawing down and returns false if the graph's region no longer matches. */
   async function recheck(c, region = overlayRegion(graph.model), tolerateOnce = false) {
     let resolveDone;
-    const check = { capture: c, done: new Promise((resolve) => { resolveDone = resolve; }) };
+    const check = {
+      capture: c,
+      done: new Promise((resolve) => {
+        resolveDone = resolve;
+      }),
+    };
     activeRecheck = check;
     verifying = true;
     stale = false;
@@ -815,7 +876,13 @@ function createPointAsk({
       resolveDone();
     }
     // A newer capture's first model arrived while this check ran; verify it now.
-    if (graph && !graph.verified && overlayCapture && graph.id === overlayCapture.id && graph.id !== c.id)
+    if (
+      graph &&
+      !graph.verified &&
+      overlayCapture &&
+      graph.id === overlayCapture.id &&
+      graph.id !== c.id
+    )
       void screenOverlay({ id: graph.id, model: graph.model });
     if (overlayCapture !== c || graph?.id !== c.id) return false;
     if (!ok && tolerateOnce) return false;
@@ -829,7 +896,16 @@ function createPointAsk({
   // A passing banner or tooltip can differ for one check; a changed slide differs for two.
   let liftMisses = 0;
   async function watchLifted(c) {
-    if (view !== '3d' || !stale || verifying || current || overlayCapture !== c || graph?.id !== c.id || !graph.verified) return;
+    if (
+      view !== '3d' ||
+      !stale ||
+      verifying ||
+      current ||
+      overlayCapture !== c ||
+      graph?.id !== c.id ||
+      !graph.verified
+    )
+      return;
     await checkLifted(c);
   }
   /** Checks the whole covered region; a single miss is tolerated. Returns whether it matched. */
@@ -858,15 +934,25 @@ function createPointAsk({
   }
   function pointerCurrent() {
     const c = overlayCapture;
-    return Boolean(graph?.verified && c && c.id === graph.id && Date.now() < c.expires
-      && !current && !highlightBusy && !verifying && !liftRequest);
+    return Boolean(
+      graph?.verified &&
+      c &&
+      c.id === graph.id &&
+      Date.now() < c.expires &&
+      !current &&
+      !highlightBusy &&
+      !verifying &&
+      !liftRequest,
+    );
   }
   /** A part of the lifted model was picked: the page selects it for the next question. */
   async function overlaySelect(event, objectId) {
-    if (!fromOverlay(event) || !pointerCurrent() || view !== '3d' || typeof objectId !== 'string') return;
+    if (!fromOverlay(event) || !pointerCurrent() || view !== '3d' || typeof objectId !== 'string')
+      return;
     if (!graph.model.scene?.objects.some((o) => o.id === objectId)) return;
     if (stale) {
-      const expected = graph, c = overlayCapture;
+      const expected = graph,
+        c = overlayCapture;
       if (!(await recheck(c, sheetRegion(graph.model)))) return;
       if (graph !== expected || !pointerCurrent() || stale || view !== '3d') return;
     }
@@ -876,8 +962,12 @@ function createPointAsk({
     if (!fromOverlay(event) || !pointerCurrent() || typeof edgeId !== 'string') return;
     if (!graph.model.edges.some((e) => e.id === edgeId)) return;
     if (stale) {
-      const expected = graph, c = overlayCapture;
-      if (!(await recheck(c, view === '3d' ? sheetRegion(graph.model) : overlayRegion(graph.model)))) return;
+      const expected = graph,
+        c = overlayCapture;
+      if (
+        !(await recheck(c, view === '3d' ? sheetRegion(graph.model) : overlayRegion(graph.model)))
+      )
+        return;
       if (graph !== expected || !pointerCurrent() || stale) return;
     }
     overlayAction({ id: graph.id, type: 'toggle-edge', edgeId });
@@ -905,7 +995,13 @@ function createPointAsk({
      * illustrative model. */
     get liftKind() {
       if (!graph?.verified) return null;
-      return graph.model.lift ? 'search' : graph.model.scene?.kind === 'height' ? 'circuit' : graph.model.scene ? 'model' : null;
+      return graph.model.lift
+        ? 'search'
+        : graph.model.scene?.kind === 'height'
+          ? 'circuit'
+          : graph.model.scene
+            ? 'model'
+            : null;
     },
     /** Whether the drawing on screen can lift into 3D: a checked graph search, or any answer's 3D scene. */
     get liftable() {

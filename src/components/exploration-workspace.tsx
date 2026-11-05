@@ -58,7 +58,10 @@ import './exploration-journal.css';
 /** Steps the bar can move through: an explanation's own, or the checked trace on screen. */
 function compactStepCount(spec: ExplorationSpec, state: ExplorationViewState) {
   if (spec.mode === 'explanation') return spec.steps.length;
-  return explorationExecution(spec, state)?.steps.length ?? (circuitSolution(spec, state)?.steps.length || null);
+  return (
+    explorationExecution(spec, state)?.steps.length ??
+    (circuitSolution(spec, state)?.steps.length || null)
+  );
 }
 type Artifact = {
   recording?: {
@@ -88,7 +91,12 @@ type Artifact = {
   updatedAt: string;
   spec: ExplorationSpec;
   validation: {
-    assurance: 'checked-bfs' | 'checked-dijkstra' | 'checked-circuit' | 'explanation-only' | 'needs-clarification';
+    assurance:
+      | 'checked-bfs'
+      | 'checked-dijkstra'
+      | 'checked-circuit'
+      | 'explanation-only'
+      | 'needs-clarification';
     modelVersion: string | null;
     checks: string[];
   };
@@ -179,8 +187,7 @@ async function api(
   }
   if (!response.ok) {
     const payload: unknown = await response.json().catch(() => null);
-    const code =
-      payload && typeof payload === 'object' && 'code' in payload ? payload.code : null;
+    const code = payload && typeof payload === 'object' && 'code' in payload ? payload.code : null;
     if (code === 'busy')
       throw new Error(
         'Another exploration is still running. Keep exploring this card and try again shortly.',
@@ -216,7 +223,11 @@ async function api(
         'Soma could not use this context. Try a clearer PNG or JPEG screenshot, or ask a narrower question.',
       );
     throw new Error(
-      method === 'PATCH' && body && typeof body === 'object' && 'action' in body && body.action === 'save'
+      method === 'PATCH' &&
+        body &&
+        typeof body === 'object' &&
+        'action' in body &&
+        body.action === 'save'
         ? SAVE_FAILURE_MESSAGE
         : 'Soma could not prepare a new card right now. Your last valid card is still here; you can also try the original example.',
     );
@@ -256,9 +267,7 @@ export function ExplorationWorkspace() {
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
-  const [applicationHistory, setApplicationHistory] = useState<PublicExplorationApplication[]>(
-    [],
-  );
+  const [applicationHistory, setApplicationHistory] = useState<PublicExplorationApplication[]>([]);
   const [predictionHistory, setPredictionHistory] = useState<ExplorationPrediction[]>([]);
   const capture = useExplorationCapture(),
     uploadRef = useRef<HTMLInputElement>(null);
@@ -318,7 +327,9 @@ export function ExplorationWorkspace() {
     currentCapturedAt: string;
     previous: ExplorationCapture;
   } | null>(null);
-  const compactAction = useRef<(d: { action: string; text?: string; on?: boolean }) => void>(() => {});
+  const compactAction = useRef<(d: { action: string; text?: string; on?: boolean }) => void>(
+    () => {},
+  );
   // The companion's ask bar is up and this page's panel is closed.
   const compactMode = useRef(false);
   // Narrating one step at a time, because the learner is stepping by hand.
@@ -478,9 +489,7 @@ export function ExplorationWorkspace() {
       chooseSource(null);
       setNotice('Window selected. No frame is sent until you choose Ask Soma.');
     } catch {
-      setError(
-        'Window sharing was not started. You can try again or upload a screenshot instead.',
-      );
+      setError('Window sharing was not started. You can try again or upload a screenshot instead.');
     } finally {
       setSourceBusy(false);
     }
@@ -495,9 +504,7 @@ export function ExplorationWorkspace() {
       capture.stop();
       chooseSource(next);
     } catch (failure) {
-      setError(
-        failure instanceof Error ? failure.message : 'This screenshot could not be read.',
-      );
+      setError(failure instanceof Error ? failure.message : 'This screenshot could not be read.');
     } finally {
       setSourceBusy(false);
       if (uploadRef.current) uploadRef.current.value = '';
@@ -506,14 +513,26 @@ export function ExplorationWorkspace() {
   /** Loads an original demo slide as a source; asking still runs live. */
   async function lectureSlide(circuit = false) {
     try {
-      const blob = await fetch(circuit ? '/examples/lecture-9-bridge.png' : '/examples/lecture-14-dijkstra.png').then((r) => {
+      const blob = await fetch(
+        circuit ? '/examples/lecture-9-bridge.png' : '/examples/lecture-14-dijkstra.png',
+      ).then((r) => {
         if (!r.ok) throw new Error();
         return r.blob();
       });
       await upload(
-        new File([blob], circuit ? 'Lecture 9 · Wheatstone bridge.png' : 'Lecture 14 · Dijkstra worked example.png', { type: 'image/png' }),
+        new File(
+          [blob],
+          circuit
+            ? 'Lecture 9 · Wheatstone bridge.png'
+            : 'Lecture 14 · Dijkstra worked example.png',
+          { type: 'image/png' },
+        ),
       );
-      setQuestion(circuit ? 'Why is there no current through R5?' : 'Why doesn’t it just take the direct A to F edge?');
+      setQuestion(
+        circuit
+          ? 'Why is there no current through R5?'
+          : 'Why doesn’t it just take the direct A to F edge?',
+      );
       requestAnimationFrame(() => questionRef.current?.focus());
     } catch {
       setError('The demo slide could not be loaded. Try uploading a screenshot.');
@@ -580,9 +599,7 @@ export function ExplorationWorkspace() {
       }
     } catch (failure) {
       setError(
-        failure instanceof Error
-          ? failure.message
-          : 'Capture failed. Upload a screenshot instead.',
+        failure instanceof Error ? failure.message : 'Capture failed. Upload a screenshot instead.',
       );
       return false;
     }
@@ -605,9 +622,7 @@ export function ExplorationWorkspace() {
       sourceMemory.current.capture.capturedAt === base.source.capturedAt
     );
     const followup = base && !newContext && !fresh;
-    setPendingSource(
-      !followup && selected ? { capture: selected, question: draft.trim() } : null,
-    );
+    setPendingSource(!followup && selected ? { capture: selected, question: draft.trim() } : null);
     const submittedDraft = draft;
     const payload = {
       action: 'generate',
@@ -672,11 +687,24 @@ export function ExplorationWorkspace() {
         sourceMemory.current.version = result.artifact.version;
       apply(result.artifact);
       // A model built on request opens in 3D, at the explanation's first step, for the learner to step through.
-      if (model) setState((current) => (current ? { ...current, explanationStep: 0, spatial: { ...(current.spatial ?? defaultSpatialView()), mode: '3d' } } : current));
+      if (model)
+        setState((current) =>
+          current
+            ? {
+                ...current,
+                explanationStep: 0,
+                spatial: { ...(current.spatial ?? defaultSpatialView()), mode: '3d' },
+              }
+            : current,
+        );
       setCompareCapture(false);
       setNewContext(false);
       setQuestion((current) => (current === submittedDraft ? '' : current));
-      setNotice(model ? 'The 3D model is ready. Step through it or drag to turn it.' : 'New visual card ready. Explore it or ask a follow-up.');
+      setNotice(
+        model
+          ? 'The 3D model is ready. Step through it or drag to turn it.'
+          : 'New visual card ready. Explore it or ask a follow-up.',
+      );
       // Narration needs something to look at. With the panel closed, an explanation shows nothing
       // until its model is lifted; then each step is spoken as the learner reaches it.
       const nothingShown = compactMode.current && result.artifact.spec.mode === 'explanation';
@@ -720,19 +748,13 @@ export function ExplorationWorkspace() {
       });
       if (epoch.current !== before) return;
       if (viewSequence.current !== beforeView) {
-        setNotice(
-          'Saved the earlier state. Your newer changes are still here and remain unsaved.',
-        );
+        setNotice('Saved the earlier state. Your newer changes are still here and remain unsaved.');
         return;
       }
       if (result.artifact) apply(result.artifact);
       setNotice('Saved this version and your exact experiment state.');
     } catch (failure) {
-      setError(
-        failure instanceof Error
-          ? failure.message
-          : SAVE_FAILURE_MESSAGE,
-      );
+      setError(failure instanceof Error ? failure.message : SAVE_FAILURE_MESSAGE);
     } finally {
       setSaving(false);
     }
@@ -786,7 +808,10 @@ export function ExplorationWorkspace() {
     setError('');
     const sequence = ++loadSequence.current;
     try {
-      const result = await api('POST', { action: 'recording', ...(mechanism ? { mechanism: true } : { subject }) });
+      const result = await api('POST', {
+        action: 'recording',
+        ...(mechanism ? { mechanism: true } : { subject }),
+      });
       if (sequence !== loadSequence.current) return;
       if (!result.artifact) throw new Error('The recorded run could not be opened.');
       capture.stop();
@@ -837,12 +862,13 @@ export function ExplorationWorkspace() {
   const currentSourceTime = newContext
     ? source?.capturedAt
     : (artifact?.source.capturedAt ?? source?.capturedAt);
-  const publicSource = artifact?.source.publicDemo ?? (artifact?.recording
-    ? { image: artifact.recording.sourceImage, presentation: artifact.recording.presentation }
-    : undefined);
-  const changedSinceExplanation = artifact && state
-    ? explorationInputsChanged(artifact.spec, state)
-    : false;
+  const publicSource =
+    artifact?.source.publicDemo ??
+    (artifact?.recording
+      ? { image: artifact.recording.sourceImage, presentation: artifact.recording.presentation }
+      : undefined);
+  const changedSinceExplanation =
+    artifact && state ? explorationInputsChanged(artifact.spec, state) : false;
   const [waitingSeconds, setWaitingSeconds] = useState(0);
   useEffect(() => {
     setWaitingSeconds(0);
@@ -894,14 +920,20 @@ export function ExplorationWorkspace() {
         })() ??
         state.selectedObjectId)
       : state?.selectedObjectId && artifact?.spec.mode === 'checked-circuit'
-        ? ([...artifact.spec.input.nodes, ...artifact.spec.input.components].find((x) => x.id === state.selectedObjectId)?.label ?? state.selectedObjectId)
-      : artifact?.spec.mode === 'explanation' ? artifact.spec.scene.panels.flatMap((panel) =>
-          panel.kind === 'spatial' ? panel.objects.map((o) => ({ id: o.id, label: o.label })) : []
-        ).find((o) => o.id === state?.selectedObjectId)?.label ?? state?.selectedObjectId
-      : state?.selectedObjectId;
+        ? ([...artifact.spec.input.nodes, ...artifact.spec.input.components].find(
+            (x) => x.id === state.selectedObjectId,
+          )?.label ?? state.selectedObjectId)
+        : artifact?.spec.mode === 'explanation'
+          ? (artifact.spec.scene.panels
+              .flatMap((panel) =>
+                panel.kind === 'spatial'
+                  ? panel.objects.map((o) => ({ id: o.id, label: o.label }))
+                  : [],
+              )
+              .find((o) => o.id === state?.selectedObjectId)?.label ?? state?.selectedObjectId)
+          : state?.selectedObjectId;
   const earlierVersion =
-    artifact &&
-    versions.some((item) => item.id === artifact.id && item.version > artifact.version);
+    artifact && versions.some((item) => item.id === artifact.id && item.version > artifact.version);
   // Compact mode: the companion's ask bar drives follow-ups, investigations, steps and
   // playback on the current exploration, and shows a one-line status from here.
   compactAction.current = (d: { action: string; text?: string; on?: boolean }) => {
@@ -921,19 +953,23 @@ export function ExplorationWorkspace() {
         true,
       );
     else if ((d.action === 'next' || d.action === 'previous') && artifact && state) {
-      const last = Math.max(0, (compactStepCount(artifact.spec, state) ?? 1) - 1), by = d.action === 'next' ? 1 : -1;
+      const last = Math.max(0, (compactStepCount(artifact.spec, state) ?? 1) - 1),
+        by = d.action === 'next' ? 1 : -1;
       if (artifact.spec.mode === 'explanation') {
         // A step by hand speaks that step, replacing whatever was being said, then waits.
         // updateState stops playback, so playback starts after it.
-        updateState({ ...state, explanationStep: Math.max(0, Math.min(last, state.explanationStep + by)) });
+        updateState({
+          ...state,
+          explanationStep: Math.max(0, Math.min(last, state.explanationStep + by)),
+        });
         setStepByStep(true);
         setPlaying(true);
       } else updateState({ ...state, step: Math.max(0, Math.min(last, state.step + by)) });
     } else if (d.action === 'play' && artifact) {
       setStepByStep(false);
       setPlaying(!playing);
-    }
-    else if (d.action === 'lift' && artifact?.spec.mode === 'explanation') setLiftRequest((n) => n + 1);
+    } else if (d.action === 'lift' && artifact?.spec.mode === 'explanation')
+      setLiftRequest((n) => n + 1);
   };
   const compactSteps = artifact && state ? compactStepCount(artifact.spec, state) : null;
   // `step` is the shown step's index and `steps` the count. `visual` means this card belongs to
@@ -945,12 +981,18 @@ export function ExplorationWorkspace() {
       sourceMemory.current?.id === artifact.id &&
       sourceMemory.current.capture.capturedAt === artifact.source.capturedAt &&
       !!sourceMemory.current.capture.nativeId,
-    step: compactSteps ? Math.min(artifact!.spec.mode === 'explanation' ? state!.explanationStep : state!.step, compactSteps - 1) : null,
+    step: compactSteps
+      ? Math.min(
+          artifact!.spec.mode === 'explanation' ? state!.explanationStep : state!.step,
+          compactSteps - 1,
+        )
+      : null,
     steps: compactSteps,
     playing,
     message: error || '',
     investigable:
-      ((artifact?.spec.mode === 'checked-dijkstra' && !!state?.goal) || artifact?.spec.mode === 'checked-circuit') &&
+      ((artifact?.spec.mode === 'checked-dijkstra' && !!state?.goal) ||
+        artifact?.spec.mode === 'checked-circuit') &&
       liveEnabled !== false,
     explanation: artifact?.spec.mode === 'explanation',
     // The bar's 3D asks Muse for a model first when the explanation has none.
@@ -960,7 +1002,9 @@ export function ExplorationWorkspace() {
       liveEnabled !== false,
   });
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent('soma:compact-state', { detail: JSON.parse(compactStatus) }));
+    window.dispatchEvent(
+      new CustomEvent('soma:compact-state', { detail: JSON.parse(compactStatus) }),
+    );
   }, [compactStatus]);
   const versionHistory =
     artifact && versions.length > 1 ? (
@@ -1095,9 +1139,7 @@ export function ExplorationWorkspace() {
             </button>
           )}
         </div>
-        <span className="meta journal-composer-hint">
-          Recordings go to Meta for transcription.
-        </span>
+        <span className="meta journal-composer-hint">Recordings go to Meta for transcription.</span>
       </form>
       {pointAsk.status && (
         <div className="exploration-point-status">
@@ -1169,97 +1211,99 @@ export function ExplorationWorkspace() {
           if ((event.target as Element).closest('button, a')) event.currentTarget.open = false;
         }}
       >
-        <summary>More examples <ChevronDown size={15} aria-hidden="true" /></summary>
+        <summary>
+          More examples <ChevronDown size={15} aria-hidden="true" />
+        </summary>
         <div className="journal-example-grid">
-        <button
-          type="button"
-          className="exploration-example-button"
-          aria-label="Compare weighted paths"
-          aria-describedby="example-weighted-note"
-          disabled={sourceBusy || !initialized}
-          onClick={() => void example(true)}
-        >
-          <span className="journal-example-copy">
-            <span>Compare weighted paths</span>
-            <small id="example-weighted-note">Prepared · opens instantly</small>
-          </span>
-          <ArrowUpRight size={16} aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          className="exploration-example-button"
-          aria-label="Try the Lecture 14 slide (live)"
-          aria-describedby="example-graph-note"
-          disabled={sourceBusy || !initialized}
-          onClick={() => void lectureSlide()}
-        >
-          <span className="journal-example-copy">
-            <span>Try the Lecture 14 slide (live)</span>
-            <small id="example-graph-note">Graph · loads a slide, then Ask</small>
-          </span>
-          <ArrowUpRight size={16} aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          className="exploration-example-button"
-          aria-label="Try the Lecture 9 circuit slide (live)"
-          aria-describedby="example-circuit-note"
-          disabled={sourceBusy || !initialized}
-          onClick={() => void lectureSlide(true)}
-        >
-          <span className="journal-example-copy">
-            <span>Try the Lecture 9 circuit slide (live)</span>
-            <small id="example-circuit-note">Circuit · loads a slide, then Ask</small>
-          </span>
-          <ArrowUpRight size={16} aria-hidden="true" />
-        </button>
-      </div>
-      <div className="journal-example-extras">
-        <button
-          className="exploration-example-button"
-          type="button"
-          disabled={sourceBusy || !initialized}
-          onClick={() => void example()}
-        >
-          Try the original example <ArrowUpRight size={16} aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          className="exploration-example-button"
-          disabled={sourceBusy || !initialized}
-          onClick={() => void example(false, true)}
-        >
-          Open the 3D example <ArrowUpRight size={16} aria-hidden="true" />
-        </button>
-        <a className="exploration-example-button" href="/lab/engine/index.html">
-          Lab: a Muse-drawn engine you can turn <ArrowUpRight size={16} aria-hidden="true" />
-        </a>
-      </div>
+          <button
+            type="button"
+            className="exploration-example-button"
+            aria-label="Compare weighted paths"
+            aria-describedby="example-weighted-note"
+            disabled={sourceBusy || !initialized}
+            onClick={() => void example(true)}
+          >
+            <span className="journal-example-copy">
+              <span>Compare weighted paths</span>
+              <small id="example-weighted-note">Prepared · opens instantly</small>
+            </span>
+            <ArrowUpRight size={16} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="exploration-example-button"
+            aria-label="Try the Lecture 14 slide (live)"
+            aria-describedby="example-graph-note"
+            disabled={sourceBusy || !initialized}
+            onClick={() => void lectureSlide()}
+          >
+            <span className="journal-example-copy">
+              <span>Try the Lecture 14 slide (live)</span>
+              <small id="example-graph-note">Graph · loads a slide, then Ask</small>
+            </span>
+            <ArrowUpRight size={16} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="exploration-example-button"
+            aria-label="Try the Lecture 9 circuit slide (live)"
+            aria-describedby="example-circuit-note"
+            disabled={sourceBusy || !initialized}
+            onClick={() => void lectureSlide(true)}
+          >
+            <span className="journal-example-copy">
+              <span>Try the Lecture 9 circuit slide (live)</span>
+              <small id="example-circuit-note">Circuit · loads a slide, then Ask</small>
+            </span>
+            <ArrowUpRight size={16} aria-hidden="true" />
+          </button>
+        </div>
+        <div className="journal-example-extras">
+          <button
+            className="exploration-example-button"
+            type="button"
+            disabled={sourceBusy || !initialized}
+            onClick={() => void example()}
+          >
+            Try the original example <ArrowUpRight size={16} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="exploration-example-button"
+            disabled={sourceBusy || !initialized}
+            onClick={() => void example(false, true)}
+          >
+            Open the 3D example <ArrowUpRight size={16} aria-hidden="true" />
+          </button>
+          <a className="exploration-example-button" href="/lab/engine/index.html">
+            Lab: a Muse-drawn engine you can turn <ArrowUpRight size={16} aria-hidden="true" />
+          </a>
+        </div>
       </details>
     </div>
   );
   const library = artifacts.length > 0 && (
     <section className="exploration-library">
-                  <h2>Pick up where you left off</h2>
-                  {artifacts.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      aria-current={artifact?.id === item.id ? 'true' : undefined}
-                      disabled={sourceBusy || saving}
-                      onClick={() => void resume(item.id)}
-                    >
-                      <span>
-                        <strong>{item.spec.title}</strong>
-                        <small>
-                          Version {item.version}
-                          {item.saved ? ' · Saved' : ''}
-                        </small>
-                      </span>
-                      <ChevronRight size={16} aria-hidden="true" />
-                    </button>
-                  ))}
-                </section>
+      <h2>Pick up where you left off</h2>
+      {artifacts.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          aria-current={artifact?.id === item.id ? 'true' : undefined}
+          disabled={sourceBusy || saving}
+          onClick={() => void resume(item.id)}
+        >
+          <span>
+            <strong>{item.spec.title}</strong>
+            <small>
+              Version {item.version}
+              {item.saved ? ' · Saved' : ''}
+            </small>
+          </span>
+          <ChevronRight size={16} aria-hidden="true" />
+        </button>
+      ))}
+    </section>
   );
   const sourcePanel = (
     <section className="exploration-source-card">
@@ -1292,7 +1336,11 @@ export function ExplorationWorkspace() {
         <img
           className="exploration-source-image"
           src={publicSource.image}
-          alt={artifact?.recording ? 'Original synthetic screenshot used in the recorded Spark run' : 'Original synthetic demo screenshot'}
+          alt={
+            artifact?.recording
+              ? 'Original synthetic screenshot used in the recorded Spark run'
+              : 'Original synthetic demo screenshot'
+          }
         />
       ) : source?.dataUrl ? (
         <div className={source.focus ? 'exploration-point-preview' : 'exploration-upload-preview'}>
@@ -1318,19 +1366,25 @@ export function ExplorationWorkspace() {
         <div className="exploration-example-source">
           <span className="overline">Original example</span>
           <h3>
-            {artifact.spec.mode === 'explanation' ? artifact.spec.title : artifact.spec.mode === 'checked-dijkstra'
-              ? 'Fewest edges or lowest cost?'
-              : 'A small search problem'}
+            {artifact.spec.mode === 'explanation'
+              ? artifact.spec.title
+              : artifact.spec.mode === 'checked-dijkstra'
+                ? 'Fewest edges or lowest cost?'
+                : 'A small search problem'}
           </h3>
           <p>
-            {artifact.spec.mode === 'explanation' ? artifact.source.summary : artifact.spec.mode === 'checked-dijkstra'
-              ? 'Compare two routes through the same weighted graph.'
-              : 'Find a route through a graph. Watch the queue decide which node comes next.'}
+            {artifact.spec.mode === 'explanation'
+              ? artifact.source.summary
+              : artifact.spec.mode === 'checked-dijkstra'
+                ? 'Compare two routes through the same weighted graph.'
+                : 'Find a route through a graph. Watch the queue decide which node comes next.'}
           </p>
           <span>
-            {artifact.spec.mode === 'explanation' ? 'Original schematic · explanation only' : artifact.spec.mode === 'checked-dijkstra'
-              ? 'Weighted · Dijkstra and BFS'
-              : 'Unweighted · breadth-first search'}
+            {artifact.spec.mode === 'explanation'
+              ? 'Original schematic · explanation only'
+              : artifact.spec.mode === 'checked-dijkstra'
+                ? 'Weighted · Dijkstra and BFS'
+                : 'Unweighted · breadth-first search'}
           </span>
         </div>
       ) : (
@@ -1353,8 +1407,8 @@ export function ExplorationWorkspace() {
       )}
       {capture.sharing && (
         <p className="exploration-sharing-note">
-          Your first Ask sends one frame. Refresh snapshot selects updated context; never
-          continuous uploads.
+          Your first Ask sends one frame. Refresh snapshot selects updated context; never continuous
+          uploads.
         </p>
       )}
       <div className="exploration-source-actions">
@@ -1456,7 +1510,9 @@ export function ExplorationWorkspace() {
             <CompanionMemory
               sessionReady={initialized}
               artifact={
-                artifact ? { id: artifact.id, version: artifact.version, saved: artifact.saved } : null
+                artifact
+                  ? { id: artifact.id, version: artifact.version, saved: artifact.saved }
+                  : null
               }
               onOpen={(id, version) => {
                 void resume(id, version);
@@ -1587,19 +1643,21 @@ export function ExplorationWorkspace() {
                     {artifact.validation.assurance === 'checked-circuit'
                       ? 'Checked circuit computation'
                       : artifact.validation.assurance === 'checked-dijkstra'
-                      ? 'Checked Dijkstra computation'
-                      : artifact.validation.assurance === 'checked-bfs'
-                        ? 'Checked BFS computation'
-                        : artifact.validation.assurance === 'needs-clarification'
-                          ? 'Needs clarification'
-                          : 'Explanatory visual'}
+                        ? 'Checked Dijkstra computation'
+                        : artifact.validation.assurance === 'checked-bfs'
+                          ? 'Checked BFS computation'
+                          : artifact.validation.assurance === 'needs-clarification'
+                            ? 'Needs clarification'
+                            : 'Explanatory visual'}
                   </span>
                   {newContext && <span className="status-chip caution">Previous context</span>}
                 </p>
                 {artifact.version > 1 && <span className="meta">Version {artifact.version}</span>}
                 <div
                   className="journal-save"
-                  data-save-state={saving ? 'saving' : dirty || !artifact.saved ? 'unsaved' : 'saved'}
+                  data-save-state={
+                    saving ? 'saving' : dirty || !artifact.saved ? 'unsaved' : 'saved'
+                  }
                 >
                   <span
                     id="exploration-save-status"
@@ -1732,7 +1790,9 @@ export function ExplorationWorkspace() {
                         ))}
                       </ol>
                     ) : (
-                      <p>Original authored material; no runtime model investigation was performed.</p>
+                      <p>
+                        Original authored material; no runtime model investigation was performed.
+                      </p>
                     )}
                     <p className="meta">
                       These are recorded actions and validation facts, not private model reasoning.
@@ -1741,7 +1801,9 @@ export function ExplorationWorkspace() {
                   <div className="exploration-delete">
                     {deleteConfirmation ? (
                       <div role="group" aria-label="Confirm exploration deletion">
-                        <p>Delete this exploration and all its saved versions? This cannot be undone.</p>
+                        <p>
+                          Delete this exploration and all its saved versions? This cannot be undone.
+                        </p>
                         <div className="action-row">
                           <button
                             type="button"
@@ -1783,10 +1845,13 @@ export function ExplorationWorkspace() {
               {artifact.recording && (
                 <>
                   <details className="journal-recording-details">
-                    <summary>Recorded run details{publicSource?.presentation ? ' · drawing aligned' : ''}</summary>
+                    <summary>
+                      Recorded run details{publicSource?.presentation ? ' · drawing aligned' : ''}
+                    </summary>
                     <p className="exploration-recording-note">
                       Recorded {capturedTime(artifact.recording.generatedAt)} · original synthetic
-                      source · no new visual generation. Optional narration uses your selected voice.
+                      source · no new visual generation. Optional narration uses your selected
+                      voice.
                     </p>
                     {publicSource?.presentation && (
                       <p className="exploration-recording-note">
@@ -1795,19 +1860,27 @@ export function ExplorationWorkspace() {
                     )}
                   </details>
                   {artifact.spec.mode !== 'explanation' && (
-                    <div className="journal-recording-switch" role="group" aria-label="Recorded example">
+                    <div
+                      className="journal-recording-switch"
+                      role="group"
+                      aria-label="Recorded example"
+                    >
                       <button
                         type="button"
                         aria-pressed={artifact.spec.mode !== 'checked-circuit'}
                         disabled={sourceBusy || busy}
                         onClick={() => void openRecording(false, 'graph')}
-                      >Recorded graph</button>
+                      >
+                        Recorded graph
+                      </button>
                       <button
                         type="button"
                         aria-pressed={artifact.spec.mode === 'checked-circuit'}
                         disabled={sourceBusy || busy}
                         onClick={() => void openRecording(false, 'circuit')}
-                      >Recorded circuit</button>
+                      >
+                        Recorded circuit
+                      </button>
                     </div>
                   )}
                 </>
@@ -1817,9 +1890,13 @@ export function ExplorationWorkspace() {
                   Source drawing aligned to its original demo image.
                 </p>
               )}
-              <h2>{changedSinceExplanation
-                ? artifact.spec.mode === 'checked-circuit' ? 'Your circuit experiment' : 'Your graph experiment'
-                : artifact.spec.title}</h2>
+              <h2>
+                {changedSinceExplanation
+                  ? artifact.spec.mode === 'checked-circuit'
+                    ? 'Your circuit experiment'
+                    : 'Your graph experiment'
+                  : artifact.spec.title}
+              </h2>
               {artifact.practiceOrigin && (
                 <p className="meta">
                   Fresh practice variation · linked to your original saved exploration.{' '}
@@ -1860,16 +1937,22 @@ export function ExplorationWorkspace() {
                   </p>
                 </details>
               )}
-              <p className="exploration-objective">{changedSinceExplanation
-                ? 'The drawing and numbers reflect your changes. Ask Soma to explain this experiment.'
-                : artifact.spec.objective}</p>
+              <p className="exploration-objective">
+                {changedSinceExplanation
+                  ? 'The drawing and numbers reflect your changes. Ask Soma to explain this experiment.'
+                  : artifact.spec.objective}
+              </p>
               {artifact.source.uncertainty.length > 0 && (
                 <details className="journal-source-uncertainty">
                   <summary>
                     Source reading: {artifact.source.uncertainty.length}{' '}
                     {artifact.source.uncertainty.length === 1 ? 'uncertainty' : 'uncertainties'}
                   </summary>
-                  <ul>{artifact.source.uncertainty.map((item) => <li key={item}>{item}</li>)}</ul>
+                  <ul>
+                    {artifact.source.uncertainty.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
                 </details>
               )}
               {earlierVersion && (
@@ -1935,7 +2018,14 @@ export function ExplorationWorkspace() {
                     ? undefined
                     : async () => {
                         // No model this time: the explanation stays as it is, with the reason shown.
-                        return ask('Show this explanation as a 3D model.', undefined, false, undefined, undefined, true);
+                        return ask(
+                          'Show this explanation as a 3D model.',
+                          undefined,
+                          false,
+                          undefined,
+                          undefined,
+                          true,
+                        );
                       }
                 }
                 circuitObservation={artifact.circuitExperiment?.observe}
@@ -1972,7 +2062,9 @@ export function ExplorationWorkspace() {
                             open: state.disabledEdgeIds,
                             shorted: [],
                             values: Object.fromEntries(
-                              Object.entries(state.edgeWeights ?? {}).filter(([id]) => id !== artifact.circuitExperiment!.componentId),
+                              Object.entries(state.edgeWeights ?? {}).filter(
+                                ([id]) => id !== artifact.circuitExperiment!.componentId,
+                              ),
                             ),
                           }}
                           value={
@@ -1983,10 +2075,21 @@ export function ExplorationWorkspace() {
                           onChange={(value) => {
                             const id = artifact.circuitExperiment!.componentId;
                             const weights = { ...(state.edgeWeights ?? {}), [id]: value };
-                            if (artifact.spec.mode === 'checked-circuit' && artifact.spec.input.components.find((c) => c.id === id)?.value === value) delete weights[id];
+                            if (
+                              artifact.spec.mode === 'checked-circuit' &&
+                              artifact.spec.input.components.find((c) => c.id === id)?.value ===
+                                value
+                            )
+                              delete weights[id];
                             const next = { ...state, edgeWeights: weights, explanationStep: 0 };
                             // Show the checked consequence at once: every node revealed.
-                            updateState({ ...next, step: Math.max(0, (circuitSolution(artifact.spec, next)?.steps.length ?? 1) - 1) });
+                            updateState({
+                              ...next,
+                              step: Math.max(
+                                0,
+                                (circuitSolution(artifact.spec, next)?.steps.length ?? 1) - 1,
+                              ),
+                            });
                           }}
                         />
                       )}
@@ -2013,92 +2116,94 @@ export function ExplorationWorkspace() {
                         </button>
                       )}
                     </>
-                  ) : !newContext &&
-                  artifact.spec.mode === 'checked-dijkstra' && (
-                    <>
-                      {artifact.experiment ? (
-                        <ExplorationCostProbe
-                          probe={artifact.experiment}
-                          input={{
-                            ...artifact.spec.input,
-                            start: state.start ?? artifact.spec.input.start,
-                            goal: state.goal,
-                            edges: artifact.spec.input.edges
-                              .filter((e) => !state.disabledEdgeIds.includes(e.id))
-                              .map((e) =>
-                                e.id !== artifact.experiment!.edgeId &&
-                                state.edgeWeights?.[e.id] !== undefined
-                                  ? { ...e, weight: state.edgeWeights[e.id] }
-                                  : e,
-                              ),
-                            neighborOrder: state.reversed
-                              ? [...artifact.spec.input.neighborOrder].reverse()
-                              : artifact.spec.input.neighborOrder,
-                          }}
-                          value={
-                            state.edgeWeights?.[artifact.experiment.edgeId] ??
-                            artifact.spec.input.edges.find(
-                              (e) => e.id === artifact.experiment!.edgeId,
-                            )?.weight ??
-                            1
-                          }
-                          disabled={sourceBusy}
-                          onChange={(value) =>
-                            updateState({
-                              ...state,
-                              // Show the checked consequence at once: the completed search.
-                              step: Math.max(
-                                0,
-                                (explorationExecution(artifact.spec, {
-                                  ...state,
-                                  edgeWeights: {
-                                    ...(state.edgeWeights ?? {}),
-                                    [artifact.experiment!.edgeId]: value,
-                                  },
-                                })?.steps.length ?? 1) - 1,
-                              ),
-                              explanationStep: 0,
-                              edgeWeights: {
-                                ...(state.edgeWeights ?? {}),
-                                [artifact.experiment!.edgeId]: value,
-                              },
-                            })
-                          }
-                        />
-                      ) : null}
-                      {(question.trim() || !artifact.experiment) && (
-                        <button
-                          type="button"
-                          className="secondary-button"
-                          title={
-                            liveEnabled === false
-                              ? 'Investigating needs live generation, which is off here.'
-                              : !state.goal
-                                ? 'Choose a goal to investigate route costs.'
-                                : question.trim()
-                                  ? 'Muse picks the connection your question is about; Soma computes exactly where the route changes.'
-                                  : undefined
-                          }
-                          disabled={
-                            busy ||
-                            sourceBusy ||
-                            liveEnabled === false ||
-                            !!earlierVersion ||
-                            !state.goal
-                          }
-                          onClick={() =>
-                            void ask(
-                              question.trim() ||
-                                'Choose an informative connection and investigate where fewest edges and lowest cost agree or diverge. Use the checked intervention results to explain the boundary, preserve the original graph and expose a hypothetical cost control.',
-                              undefined,
-                              true,
-                            )
-                          }
-                        >
-                          {question.trim() ? 'Investigate my question' : 'Find the tipping point'}
-                        </button>
-                      )}
-                    </>
+                  ) : (
+                    !newContext &&
+                    artifact.spec.mode === 'checked-dijkstra' && (
+                      <>
+                        {artifact.experiment ? (
+                          <ExplorationCostProbe
+                            probe={artifact.experiment}
+                            input={{
+                              ...artifact.spec.input,
+                              start: state.start ?? artifact.spec.input.start,
+                              goal: state.goal,
+                              edges: artifact.spec.input.edges
+                                .filter((e) => !state.disabledEdgeIds.includes(e.id))
+                                .map((e) =>
+                                  e.id !== artifact.experiment!.edgeId &&
+                                  state.edgeWeights?.[e.id] !== undefined
+                                    ? { ...e, weight: state.edgeWeights[e.id] }
+                                    : e,
+                                ),
+                              neighborOrder: state.reversed
+                                ? [...artifact.spec.input.neighborOrder].reverse()
+                                : artifact.spec.input.neighborOrder,
+                            }}
+                            value={
+                              state.edgeWeights?.[artifact.experiment.edgeId] ??
+                              artifact.spec.input.edges.find(
+                                (e) => e.id === artifact.experiment!.edgeId,
+                              )?.weight ??
+                              1
+                            }
+                            disabled={sourceBusy}
+                            onChange={(value) =>
+                              updateState({
+                                ...state,
+                                // Show the checked consequence at once: the completed search.
+                                step: Math.max(
+                                  0,
+                                  (explorationExecution(artifact.spec, {
+                                    ...state,
+                                    edgeWeights: {
+                                      ...(state.edgeWeights ?? {}),
+                                      [artifact.experiment!.edgeId]: value,
+                                    },
+                                  })?.steps.length ?? 1) - 1,
+                                ),
+                                explanationStep: 0,
+                                edgeWeights: {
+                                  ...(state.edgeWeights ?? {}),
+                                  [artifact.experiment!.edgeId]: value,
+                                },
+                              })
+                            }
+                          />
+                        ) : null}
+                        {(question.trim() || !artifact.experiment) && (
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            title={
+                              liveEnabled === false
+                                ? 'Investigating needs live generation, which is off here.'
+                                : !state.goal
+                                  ? 'Choose a goal to investigate route costs.'
+                                  : question.trim()
+                                    ? 'Muse picks the connection your question is about; Soma computes exactly where the route changes.'
+                                    : undefined
+                            }
+                            disabled={
+                              busy ||
+                              sourceBusy ||
+                              liveEnabled === false ||
+                              !!earlierVersion ||
+                              !state.goal
+                            }
+                            onClick={() =>
+                              void ask(
+                                question.trim() ||
+                                  'Choose an informative connection and investigate where fewest edges and lowest cost agree or diverge. Use the checked intervention results to explain the boundary, preserve the original graph and expose a hypothetical cost control.',
+                                undefined,
+                                true,
+                              )
+                            }
+                          >
+                            {question.trim() ? 'Investigate my question' : 'Find the tipping point'}
+                          </button>
+                        )}
+                      </>
+                    )
                   )
                 }
               />
@@ -2186,7 +2291,10 @@ export function ExplorationWorkspace() {
                           version: artifact.version,
                           operation: 'explore',
                         });
-                        if (sequence !== loadSequence.current || beforeView !== viewSequence.current)
+                        if (
+                          sequence !== loadSequence.current ||
+                          beforeView !== viewSequence.current
+                        )
                           return;
                         if (!result.artifact) throw new Error('Could not open the fresh example.');
                         flushSync(() => {
@@ -2248,7 +2356,9 @@ export function ExplorationWorkspace() {
             <div className="journal-cover-entry">
               {(source || capture.sharing) && sourcePanel}
               <section className="journal-cover-examples" aria-labelledby="journal-examples-title">
-                <h2 id="journal-examples-title" className="journal-cover-subhead">Try an example</h2>
+                <h2 id="journal-examples-title" className="journal-cover-subhead">
+                  Try an example
+                </h2>
                 {examples}
               </section>
               {!source && !capture.sharing && sourcePanel}

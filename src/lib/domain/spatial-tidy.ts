@@ -9,15 +9,22 @@ const TARGET = 6.4,
 const clampSize = (n: number) => Math.max(0.1, Math.min(4, n));
 
 const lined = (shape: string) => shape === 'arrow' || shape === 'tube' || shape === 'sheet';
-const drawn = (o: SpatialPanel['objects'][number]) => lined(o.shape) && (o.path?.length ?? 0) >= (o.shape === 'sheet' ? 3 : 2);
+const drawn = (o: SpatialPanel['objects'][number]) =>
+  lined(o.shape) && (o.path?.length ?? 0) >= (o.shape === 'sheet' ? 3 : 2);
 function boxOf(o: SpatialPanel['objects'][number], at: SpatialVector = o.position): Box {
   // The built-in engine's block stands for the whole assembly at any crank angle.
   if (engineRoleOf(o.renderStyle) === 'block') {
-    const s = o.size.x, e = ENGINE.envelope, c = [at.x, at.y, at.z];
-    return { min: [0, 1, 2].map((k) => c[k] + e.min[k] * s) as Box['min'], max: [0, 1, 2].map((k) => c[k] + e.max[k] * s) as Box['max'] };
+    const s = o.size.x,
+      e = ENGINE.envelope,
+      c = [at.x, at.y, at.z];
+    return {
+      min: [0, 1, 2].map((k) => c[k] + e.min[k] * s) as Box['min'],
+      max: [0, 1, 2].map((k) => c[k] + e.max[k] * s) as Box['max'],
+    };
   }
   if (drawn(o)) {
-    const d = [at.x - o.position.x, at.y - o.position.y, at.z - o.position.z], r = o.size.x / 2;
+    const d = [at.x - o.position.x, at.y - o.position.y, at.z - o.position.z],
+      r = o.size.x / 2;
     const xs = o.path!.map((p) => [p.x + d[0], p.y + d[1], p.z + d[2]]);
     return {
       min: [0, 1, 2].map((k) => Math.min(...xs.map((p) => p[k])) - r) as Box['min'],
@@ -47,7 +54,11 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
   // An arrow or tube needs its path; a path on any other shape is dropped.
   for (const o of objects) {
     if (!lined(o.shape)) delete o.path;
-    else o.path = (o.path ?? []).filter((p, i, all) => i === 0 || Math.hypot(p.x - all[i - 1].x, p.y - all[i - 1].y, p.z - all[i - 1].z) >= 0.02);
+    else
+      o.path = (o.path ?? []).filter(
+        (p, i, all) =>
+          i === 0 || Math.hypot(p.x - all[i - 1].x, p.y - all[i - 1].y, p.z - all[i - 1].z) >= 0.02,
+      );
     // Too few points to draw: a sheet becomes a thin slab, a line a plain rod.
     if (lined(o.shape) && !drawn(o)) {
       o.shape = o.shape === 'sheet' ? 'box' : 'cylinder';
@@ -57,16 +68,30 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
   }
   for (const pose of next.poses) {
     const owner = byId.get(pose.objectId);
-    if (pose.path) pose.path = pose.path.filter((p, i, all) => i === 0 || Math.hypot(p.x - all[i - 1].x, p.y - all[i - 1].y, p.z - all[i - 1].z) >= 0.02);
+    if (pose.path)
+      pose.path = pose.path.filter(
+        (p, i, all) =>
+          i === 0 || Math.hypot(p.x - all[i - 1].x, p.y - all[i - 1].y, p.z - all[i - 1].z) >= 0.02,
+      );
     // A posed path too short to draw keeps the part's own path at that step.
-    if (pose.path && (!owner || !drawn(owner) || pose.path.length < (owner.shape === 'sheet' ? 3 : 2))) delete pose.path;
+    if (
+      pose.path &&
+      (!owner || !drawn(owner) || pose.path.length < (owner.shape === 'sheet' ? 3 : 2))
+    )
+      delete pose.path;
   }
-  const frames = (o: SpatialPanel['objects'][number]) => [o.position, ...next.poses.filter((p) => p.objectId === o.id && !p.path?.length).map((p) => p.position)];
-  const posedPaths = (o: SpatialPanel['objects'][number]) => next.poses.filter((p) => p.objectId === o.id && p.path?.length).map((p) => p.path!);
+  const frames = (o: SpatialPanel['objects'][number]) => [
+    o.position,
+    ...next.poses.filter((p) => p.objectId === o.id && !p.path?.length).map((p) => p.position),
+  ];
+  const posedPaths = (o: SpatialPanel['objects'][number]) =>
+    next.poses.filter((p) => p.objectId === o.id && p.path?.length).map((p) => p.path!);
   const extent = () => {
     const min = [Infinity, Infinity, Infinity],
       max = [-Infinity, -Infinity, -Infinity];
-    for (const o of objects.filter((o) => !engineRoleOf(o.renderStyle) || engineRoleOf(o.renderStyle) === 'block'))
+    for (const o of objects.filter(
+      (o) => !engineRoleOf(o.renderStyle) || engineRoleOf(o.renderStyle) === 'block',
+    ))
       for (const at of frames(o)) {
         const b = boxOf(o, at);
         for (let i = 0; i < 3; i++) {
@@ -92,24 +117,37 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
   for (const o of objects) {
     if (o.geometry?.length || o.parentId || drawn(o) || engineRoleOf(o.renderStyle)) continue;
     const largest = Math.max(o.size.x, o.size.y, o.size.z);
-    const grow = (span0 / 12) / largest;
+    const grow = span0 / 12 / largest;
     if (grow > 1) {
-      o.size = { x: clampSize(o.size.x * grow), y: clampSize(o.size.y * grow), z: clampSize(o.size.z * grow) };
+      o.size = {
+        x: clampSize(o.size.x * grow),
+        y: clampSize(o.size.y * grow),
+        z: clampSize(o.size.z * grow),
+      };
       for (const child of objects)
         if (child.parentId === o.id && !child.geometry?.length)
-          child.size = { x: clampSize(child.size.x * grow), y: clampSize(child.size.y * grow), z: clampSize(child.size.z * grow) };
+          child.size = {
+            x: clampSize(child.size.x * grow),
+            y: clampSize(child.size.y * grow),
+            z: clampSize(child.size.z * grow),
+          };
     }
   }
   // Part from part: top-level, uncontained parts whose boxes overlap are pushed apart on the
   // floor, along the line between them; contained parts move with their container.
   // Custom-piece parts share one assembly frame by design, so they are never moved apart.
-  const top = objects.filter((o) => !o.parentId && !o.geometry?.length && !drawn(o) && !engineRoleOf(o.renderStyle));
+  const top = objects.filter(
+    (o) => !o.parentId && !o.geometry?.length && !drawn(o) && !engineRoleOf(o.renderStyle),
+  );
   const move = (o: SpatialPanel['objects'][number], dx: number, dz: number) => {
     const shift = (p: SpatialVector) => ({ ...p, x: p.x + dx, z: p.z + dz });
-    const family = [o, ...objects.filter((c) => {
-      for (let p = c.parentId; p; p = byId.get(p)?.parentId ?? null) if (p === o.id) return true;
-      return false;
-    })];
+    const family = [
+      o,
+      ...objects.filter((c) => {
+        for (let p = c.parentId; p; p = byId.get(p)?.parentId ?? null) if (p === o.id) return true;
+        return false;
+      }),
+    ];
     for (const member of family) {
       member.position = shift(member.position);
       if (member.path) member.path = member.path.map(shift);
@@ -126,11 +164,15 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
       for (let j = i + 1; j < top.length; j++) {
         const a = boxOf(top[i]),
           b = boxOf(top[j]);
-        const over = [0, 1, 2].map((k) => Math.min(a.max[k], b.max[k]) - Math.max(a.min[k], b.min[k]));
+        const over = [0, 1, 2].map(
+          (k) => Math.min(a.max[k], b.max[k]) - Math.max(a.min[k], b.min[k]),
+        );
         // Attached parts touch or overlap a little (a clamp on a string, a piston in its bore);
         // only parts stacked on nearly the same spot, as when an author leaves several at the
         // origin, are moved apart.
-        const size = Math.min(...[0, 2].map((k) => Math.min(a.max[k] - a.min[k], b.max[k] - b.min[k])));
+        const size = Math.min(
+          ...[0, 2].map((k) => Math.min(a.max[k] - a.min[k], b.max[k] - b.min[k])),
+        );
         let dx = (b.min[0] + b.max[0] - a.min[0] - a.max[0]) / 2,
           dz = (b.min[2] + b.max[2] - a.min[2] - a.max[2]) / 2;
         if (over.some((v) => v <= 0) || Math.hypot(dx, dz) > size * 0.3) continue;
@@ -145,8 +187,20 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
   }
   // One uniform scale and shift: fill the stage, centre it, stand it on the floor.
   const e = extent();
-  const span = Math.max(e.max[0] - e.min[0], e.max[2] - e.min[2], (e.max[1] - e.min[1]) * 1.2, 1e-3);
-  const k = Math.min(TARGET / span, 4 / Math.max(...objects.filter((o) => !drawn(o)).map((o) => Math.max(o.size.x, o.size.y, o.size.z)), 0.1));
+  const span = Math.max(
+    e.max[0] - e.min[0],
+    e.max[2] - e.min[2],
+    (e.max[1] - e.min[1]) * 1.2,
+    1e-3,
+  );
+  const k = Math.min(
+    TARGET / span,
+    4 /
+      Math.max(
+        ...objects.filter((o) => !drawn(o)).map((o) => Math.max(o.size.x, o.size.y, o.size.z)),
+        0.1,
+      ),
+  );
   const cx = (e.min[0] + e.max[0]) / 2,
     cz = (e.min[2] + e.max[2]) / 2,
     floor = e.min[1];
@@ -162,7 +216,12 @@ export function tidySpatialPanel(panel: SpatialPanel): SpatialPanel {
       // A line's thickness stays a line's, whatever the scale.
       const t = Math.max(0.06, Math.min(0.4, o.size.x * k));
       o.size = { x: t, y: t, z: t };
-    } else o.size = { x: clampSize(o.size.x * k), y: clampSize(o.size.y * k), z: clampSize(o.size.z * k) };
+    } else
+      o.size = {
+        x: clampSize(o.size.x * k),
+        y: clampSize(o.size.y * k),
+        z: clampSize(o.size.z * k),
+      };
   }
   for (const pose of next.poses) {
     pose.position = place(pose.position);

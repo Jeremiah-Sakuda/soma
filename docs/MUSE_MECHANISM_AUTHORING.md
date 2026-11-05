@@ -1,4 +1,4 @@
-# Muse mechanism authoring — PM113
+# Muse mechanism authoring
 
 October 30, experimental `codex/spatial-exploration`. The user adopted richer bounded geometry and motion after clarifying that changing Three.js to Anatomy alone did not expand Muse’s authorship. This extends the same private Soma application; it does not add a checked science domain or authorize a main merge.
 

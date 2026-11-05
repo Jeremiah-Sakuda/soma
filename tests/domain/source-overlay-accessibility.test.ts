@@ -8,17 +8,32 @@ import { heroCircuit, heroCircuitLayout } from '../fixtures/hero-circuit';
 
 // Represent the image's completed onLoad state without a browser, screen reader, or audio.
 vi.mock('react', async (original) => ({
-  ...await original<typeof import('react')>(),
+  ...(await original<typeof import('react')>()),
   useState: () => [0.5625, () => {}],
 }));
 
 function render(family?: 'graph' | 'circuit', open: string[] = []) {
   const solution = solveDc(heroCircuit, { open });
-  return renderToStaticMarkup(createElement(SourceOverlay, {
-    image: 'data:image/png;base64,AAAA', family,
-    build: (aspect: number) => circuitOverlayModel({ layout: heroCircuitLayout, solution, index: 99, caption: null, stepLabel: 'Final step', aspect }),
-    canToggle: false, selected: null, stepLabel: 'Final step', onToggleEdge() {}, onSelect() {},
-  }));
+  return renderToStaticMarkup(
+    createElement(SourceOverlay, {
+      image: 'data:image/png;base64,AAAA',
+      family,
+      build: (aspect: number) =>
+        circuitOverlayModel({
+          layout: heroCircuitLayout,
+          solution,
+          index: 99,
+          caption: null,
+          stepLabel: 'Final step',
+          aspect,
+        }),
+      canToggle: false,
+      selected: null,
+      stepLabel: 'Final step',
+      onToggleEdge() {},
+      onSelect() {},
+    }),
+  );
 }
 
 it('names a circuit overlay and its revealed/floating voltages without graph-search terminology', () => {
@@ -27,7 +42,9 @@ it('names a circuit overlay and its revealed/floating voltages without graph-sea
   expect(html).toContain('aria-label="Checked circuit over your source. Final step"');
   expect(html).toContain('aria-label="A: voltage shown"');
   expect(html).not.toMatch(/aria-label="[^"]*(?:search|settled|distance)/);
-  expect(render('circuit', ['R1', 'R2', 'R5'])).toContain('aria-label="B: voltage undefined relative to ground"');
+  expect(render('circuit', ['R1', 'R2', 'R5'])).toContain(
+    'aria-label="B: voltage undefined relative to ground"',
+  );
 });
 
 it('retains graph-search accessible wording by default', () => {

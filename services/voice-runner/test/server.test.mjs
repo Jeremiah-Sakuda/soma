@@ -25,9 +25,7 @@ async function harness({ deny = false } = {}) {
       p.send = (x) => {
         p.sent.push(x);
         if (typeof x === 'string' && JSON.parse(x).authorization)
-          setImmediate(() =>
-            p.emit('message', Buffer.from('{"sessionId":"synthetic"}'), false),
-          );
+          setImmediate(() => p.emit('message', Buffer.from('{"sessionId":"synthetic"}'), false));
       };
       p.close = () => {};
       providers.push(p);

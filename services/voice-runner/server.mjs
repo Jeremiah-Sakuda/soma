@@ -23,11 +23,7 @@ export function createVoiceRunner({
     res.end(JSON.stringify({ ready: req.url === '/health' }));
   });
   server.on('upgrade', (req, socket, head) => {
-    if (
-      req.url !== '/stream' ||
-      !origins.includes(req.headers.origin) ||
-      peers.size >= maximum
-    ) {
+    if (req.url !== '/stream' || !origins.includes(req.headers.origin) || peers.size >= maximum) {
       socket.end('HTTP/1.1 403 Forbidden\r\n\r\n');
       return;
     }

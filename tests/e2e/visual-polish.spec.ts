@@ -42,10 +42,7 @@ async function fixture(page: import('@playwright/test').Page, key: 'gradient' | 
   );
   await page.goto('/explore');
   await openMoreExamples(page);
-  await page
-    .getByRole('button', { name: 'Try the original example', exact: true })
-    .first()
-    .click();
+  await page.getByRole('button', { name: 'Try the original example', exact: true }).first().click();
   await page.getByRole('heading', { name: artifact.spec.title, exact: true }).waitFor();
   return artifact;
 }
@@ -82,13 +79,9 @@ test('general explanations can be stepped without waiting for voice and keep the
   await page.setViewportSize({ width: 620, height: 704 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await fixture(page, 'gradient');
-  await expect(
-    page.getByRole('button', { name: 'Next explanation', exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Next explanation', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Next explanation', exact: true }).click();
-  await expect(
-    page.getByRole('status').filter({ hasText: 'Explanation 2 of 3' }),
-  ).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Explanation 2 of 3' })).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Previous explanation', exact: true }),
   ).toBeEnabled();
@@ -103,9 +96,7 @@ for (const key of ['gradient', 'weighted'] as const) {
     await page.evaluate(() => scrollTo(0, 0));
     const svg = page
       .locator(
-        key === 'gradient'
-          ? '.exploration-panel-diagram svg'
-          : '.exploration-panel-graph > svg',
+        key === 'gradient' ? '.exploration-panel-diagram svg' : '.exploration-panel-graph > svg',
       )
       .first();
     await page.screenshot({ path: `/tmp/soma-pm075-${key}-desktop.png` });
@@ -136,8 +127,7 @@ for (const width of [620, 375])
       expect((await label.boundingBox())!.height).toBeGreaterThan(20);
       expect(
         await label.evaluate(
-          (el) =>
-            parseFloat(getComputedStyle(el).fontSize) * el.closest('svg')!.getScreenCTM()!.a,
+          (el) => parseFloat(getComputedStyle(el).fontSize) * el.closest('svg')!.getScreenCTM()!.a,
         ),
       ).toBeGreaterThanOrEqual(12);
     }

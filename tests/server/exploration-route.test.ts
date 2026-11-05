@@ -1,53 +1,324 @@
-import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
-import {mkdtempSync,rmSync} from 'node:fs';
-import {tmpdir} from 'node:os';
-import {join} from 'node:path';
-import {randomUUID} from 'node:crypto';
-import {createExampleExploration} from '../../src/lib/domain/exploration';
-import {closeExplorationStore} from '../../src/lib/server/exploration-store';
-const provider=vi.hoisted(()=>({request:vi.fn()}));
-vi.mock('../../src/lib/server/meta-vision',async importOriginal=>({...await importOriginal<typeof import('../../src/lib/server/meta-vision')>(),requestMetaVisionResponse:provider.request}));
-vi.mock('../../src/lib/server/account',async importOriginal=>({...await importOriginal<typeof import('../../src/lib/server/account')>(),verifyAccountSession:vi.fn(async()=>null)}));
-import {GET,POST,PATCH,DELETE} from '../../src/app/api/explore/route';
-let directory:string,cookie:string;
-function request(method:string,body?:unknown,extra:{cookie?:string;origin?:string;url?:string}={}){return new Request(extra.url??'http://localhost:3000/api/explore',{method,headers:{'content-type':'application/json',origin:extra.origin??'http://localhost:3000',cookie:extra.cookie??cookie},...(body===undefined?{}:{body:JSON.stringify(body)})});}
-function completed(name:string,args:unknown){return{status:'completed',tools:[{type:'function_call',name,arguments:JSON.stringify(args),call_id:`call_${randomUUID()}`,parsedArguments:args}],usage:{input_tokens:100,output_tokens:200}};}
-beforeEach(async()=>{directory=mkdtempSync(join(tmpdir(),'soma-explore-route-'));vi.stubEnv('SOMA_PERSISTENCE','local-synthetic');vi.stubEnv('SOMA_EXPLORATION_DB_PATH',join(directory,'explore.sqlite'));vi.stubEnv('SOMA_BUDGET_DB_PATH',join(directory,'budget.sqlite'));vi.stubEnv('SOMA_LIVE_INFERENCE','true');vi.stubEnv('MODEL_API_KEY','synthetic-key-never-used-for-network');vi.stubEnv('META_ALLOCATION_USD','150');vi.stubEnv('META_APP_SPEND_CAP_USD','5');vi.stubEnv('VERCEL','');cookie='';provider.request.mockReset();provider.request.mockImplementation(async input=>{if(!input.instructions.includes('Required spec id=')){const spec=createExampleExploration();if(spec.mode!=='checked-bfs')throw new Error();return completed('inspect_source',{summary:'Original synthetic BFS graph',uncertainty:[],graph:spec.input});}const context=JSON.parse(input.input[0].content);const match=/Required spec id=([^ ]+) and version=(\d+)/.exec(input.instructions)!;const spec=createExampleExploration({observationId:context.source.observationId,version:context.source.version,region:null});spec.id=match[1];spec.version=Number(match[2]);return completed('compose_exploration',{spec});});const initial=await GET(request('GET'));expect(initial.status).toBe(200);cookie=initial.headers.get('set-cookie')!.split(';')[0];});
-afterEach(()=>{closeExplorationStore();vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});});
-describe('exploration HTTP ownership and complete route pipeline',()=>{
- it('opens a selected recorded subject as an owned editable copy without provider calls', async () => {
-   const response = await POST(request('POST', { action: 'recording', subject: 'graph' }));
-   expect(response.status).toBe(200);
-   const { artifact } = await response.json();
-   expect(artifact.recording).toBeDefined();
-   expect(artifact.generation.mode).toBe('live');
-   const state = { ...artifact.state, step: 1 };
-   expect((await PATCH(request('PATCH', { action: 'save', artifactId: artifact.id, version: 1, state }))).status).toBe(200);
-   const reopened = await (await GET(request('GET', undefined, { url: `http://localhost:3000/api/explore?artifactId=${artifact.id}` }))).json();
-   expect(reopened.active.state).toEqual(state);
-   expect(reopened.active.generation).toEqual(artifact.generation);
-   const other = await GET(request('GET', undefined, { cookie: '' }));
-   const otherCookie = other.headers.get('set-cookie')!.split(';')[0];
-   expect((await GET(request('GET', undefined, { cookie: otherCookie, url: `http://localhost:3000/api/explore?artifactId=${artifact.id}` }))).status).toBe(404);
-   expect(provider.request).not.toHaveBeenCalled();
- });
- it('rejects unknown or ambiguous recording selectors before provider or artifact work', async () => {
-   for (const body of [
-     { action: 'recording', subject: 'unknown' },
-     { action: 'recording', subject: 'graph', mechanism: true },
-     { action: 'recording', subject: 'circuit', fixturePath: '/private/source' },
-   ]) expect((await POST(request('POST', body))).status).toBe(400);
-   expect((await (await GET(request('GET'))).json()).artifacts).toEqual([]);
-   expect(provider.request).not.toHaveBeenCalled();
- });
- it('establishes a private cookie and creates a labeled original example without provider spend',async()=>{const initial=await GET(request('GET'));expect(initial.headers.get('cache-control')).toBe('private, no-store');expect(cookie).toMatch(/^soma_explore=[a-f0-9]{64}$/);const response=await POST(request('POST',{action:'example'}));const data=await response.json();expect(response.status).toBe(200);expect(data.artifact.generation.mode).toBe('prepared-example');expect(data.artifact.generation.costUsd).toBe(0);expect(provider.request).not.toHaveBeenCalled();});
- it('generates, saves modified interaction state and resumes the exact scene through public handlers',async()=>{const response=await POST(request('POST',{action:'generate',requestId:randomUUID(),question:'Why is A next?',source:{kind:'example',label:'Original example',capturedAt:new Date().toISOString()}}));expect(response.status).toBe(200);const {artifact}=await response.json();expect(artifact.generation.mode).toBe('live');expect(provider.request).toHaveBeenCalledTimes(2);const state={...artifact.state,step:1,start:'b',goal:'x',reversed:true,selectedObjectId:'b'};const saved=await PATCH(request('PATCH',{action:'save',artifactId:artifact.id,version:1,state}));expect(saved.status).toBe(200);const resumed=await GET(request('GET',undefined,{url:`http://localhost:3000/api/explore?artifactId=${artifact.id}`}));const body=await resumed.json();expect(body.active.state).toEqual(state);expect(body.active.spec).toEqual(artifact.spec);});
- it('rejects cross-origin mutation, missing cookies, and invalid account sessions without a guest downgrade',async()=>{expect((await POST(request('POST',{action:'example'},{origin:'https://attacker.invalid'}))).status).toBe(403);expect((await POST(request('POST',{action:'example'},{cookie:''}))).status).toBe(401);const invalid=await GET(request('GET',undefined,{cookie:'soma_account=invalid; '+cookie}));expect(invalid.status).toBe(401);expect((await invalid.json()).code).toBe('account_required');expect(provider.request).not.toHaveBeenCalled();});
- it('prevents another guest from reading or modifying an artifact by guessing its ID',async()=>{const {artifact}=await(await POST(request('POST',{action:'example'}))).json();const other=await GET(request('GET',undefined,{cookie:''}));const otherCookie=other.headers.get('set-cookie')!.split(';')[0];const read=await GET(request('GET',undefined,{cookie:otherCookie,url:`http://localhost:3000/api/explore?artifactId=${artifact.id}`}));expect(read.status).toBe(404);const save=await PATCH(request('PATCH',{action:'save',artifactId:artifact.id,version:1,state:artifact.state},{cookie:otherCookie}));expect(save.status).toBe(404);});
- it('rejects invalid images and foreign state IDs before calling the model, then deletes only owned history',async()=>{const image=await POST(request('POST',{action:'generate',requestId:randomUUID(),question:'Explain',source:{kind:'screenshot',label:'Bad input',capturedAt:new Date().toISOString(),dataUrl:'https://private.invalid/image'}}));expect(image.status).toBe(422);const {artifact}=await(await POST(request('POST',{action:'example'}))).json();const saved=await PATCH(request('PATCH',{action:'save',artifactId:artifact.id,version:1,state:{...artifact.state,selectedObjectId:'foreign'}}));expect(saved.status).toBe(400);expect(provider.request).not.toHaveBeenCalled();expect((await DELETE(request('DELETE',{artifactId:artifact.id}))).status).toBe(200);expect((await(await GET(request('GET'))).json()).artifacts).toEqual([]);});
- it('rejects replay of a completed request ID without repeating model calls',async()=>{const body={action:'generate',requestId:randomUUID(),question:'Explain BFS',source:{kind:'example',label:'Original',capturedAt:new Date().toISOString()}};expect((await POST(request('POST',body))).status).toBe(200);expect((await POST(request('POST',body))).status).toBe(409);expect(provider.request).toHaveBeenCalledTimes(2);});
- it('rejects a delayed generation when cancellation arrived first through the HTTP route',async()=>{const requestId=randomUUID();expect((await POST(request('POST',{action:'cancel',requestId}))).status).toBe(200);const response=await POST(request('POST',{action:'generate',requestId,question:'Explain BFS',source:{kind:'example',label:'Original',capturedAt:new Date().toISOString()}}));expect(response.status).toBe(409);expect((await response.json()).code).toBe('cancelled');expect(provider.request).not.toHaveBeenCalled();});
- it('resumes saved version one after version two and rejects malformed version selectors',async()=>{const {artifact}=await(await POST(request('POST',{action:'example'}))).json();await PATCH(request('PATCH',{action:'save',artifactId:artifact.id,version:1,state:artifact.state}));expect((await POST(request('POST',{action:'generate',requestId:randomUUID(),artifactId:artifact.id,baseVersion:1,question:'Explain the frontier'}))).status).toBe(200);const resumed=await GET(request('GET',undefined,{url:`http://localhost:3000/api/explore?artifactId=${artifact.id}&version=1`}));const result=await resumed.json();expect(result.active.version).toBe(1);expect(result.active.saved).toBe(true);expect(result.versions.map((item:{version:number})=>item.version)).toEqual([2,1]);expect((await GET(request('GET',undefined,{url:'http://localhost:3000/api/explore?version=1'}))).status).toBe(400);expect((await GET(request('GET',undefined,{url:`http://localhost:3000/api/explore?artifactId=${artifact.id}&version=-1`}))).status).toBe(400);});
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { createExampleExploration } from '../../src/lib/domain/exploration';
+import { closeExplorationStore } from '../../src/lib/server/exploration-store';
+const provider = vi.hoisted(() => ({ request: vi.fn() }));
+vi.mock('../../src/lib/server/meta-vision', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../src/lib/server/meta-vision')>()),
+  requestMetaVisionResponse: provider.request,
+}));
+vi.mock('../../src/lib/server/account', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../src/lib/server/account')>()),
+  verifyAccountSession: vi.fn(async () => null),
+}));
+import { GET, POST, PATCH, DELETE } from '../../src/app/api/explore/route';
+let directory: string, cookie: string;
+function request(
+  method: string,
+  body?: unknown,
+  extra: { cookie?: string; origin?: string; url?: string } = {},
+) {
+  return new Request(extra.url ?? 'http://localhost:3000/api/explore', {
+    method,
+    headers: {
+      'content-type': 'application/json',
+      origin: extra.origin ?? 'http://localhost:3000',
+      cookie: extra.cookie ?? cookie,
+    },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+  });
+}
+function completed(name: string, args: unknown) {
+  return {
+    status: 'completed',
+    tools: [
+      {
+        type: 'function_call',
+        name,
+        arguments: JSON.stringify(args),
+        call_id: `call_${randomUUID()}`,
+        parsedArguments: args,
+      },
+    ],
+    usage: { input_tokens: 100, output_tokens: 200 },
+  };
+}
+beforeEach(async () => {
+  directory = mkdtempSync(join(tmpdir(), 'soma-explore-route-'));
+  vi.stubEnv('SOMA_PERSISTENCE', 'local-synthetic');
+  vi.stubEnv('SOMA_EXPLORATION_DB_PATH', join(directory, 'explore.sqlite'));
+  vi.stubEnv('SOMA_BUDGET_DB_PATH', join(directory, 'budget.sqlite'));
+  vi.stubEnv('SOMA_LIVE_INFERENCE', 'true');
+  vi.stubEnv('MODEL_API_KEY', 'synthetic-key-never-used-for-network');
+  vi.stubEnv('META_ALLOCATION_USD', '150');
+  vi.stubEnv('META_APP_SPEND_CAP_USD', '5');
+  vi.stubEnv('VERCEL', '');
+  cookie = '';
+  provider.request.mockReset();
+  provider.request.mockImplementation(async (input) => {
+    if (!input.instructions.includes('Required spec id=')) {
+      const spec = createExampleExploration();
+      if (spec.mode !== 'checked-bfs') throw new Error();
+      return completed('inspect_source', {
+        summary: 'Original synthetic BFS graph',
+        uncertainty: [],
+        graph: spec.input,
+      });
+    }
+    const context = JSON.parse(input.input[0].content);
+    const match = /Required spec id=([^ ]+) and version=(\d+)/.exec(input.instructions)!;
+    const spec = createExampleExploration({
+      observationId: context.source.observationId,
+      version: context.source.version,
+      region: null,
+    });
+    spec.id = match[1];
+    spec.version = Number(match[2]);
+    return completed('compose_exploration', { spec });
+  });
+  const initial = await GET(request('GET'));
+  expect(initial.status).toBe(200);
+  cookie = initial.headers.get('set-cookie')!.split(';')[0];
+});
+afterEach(() => {
+  closeExplorationStore();
+  vi.unstubAllEnvs();
+  rmSync(directory, { recursive: true, force: true });
+});
+describe('exploration HTTP ownership and complete route pipeline', () => {
+  it('opens a selected recorded subject as an owned editable copy without provider calls', async () => {
+    const response = await POST(request('POST', { action: 'recording', subject: 'graph' }));
+    expect(response.status).toBe(200);
+    const { artifact } = await response.json();
+    expect(artifact.recording).toBeDefined();
+    expect(artifact.generation.mode).toBe('live');
+    const state = { ...artifact.state, step: 1 };
+    expect(
+      (
+        await PATCH(
+          request('PATCH', { action: 'save', artifactId: artifact.id, version: 1, state }),
+        )
+      ).status,
+    ).toBe(200);
+    const reopened = await (
+      await GET(
+        request('GET', undefined, {
+          url: `http://localhost:3000/api/explore?artifactId=${artifact.id}`,
+        }),
+      )
+    ).json();
+    expect(reopened.active.state).toEqual(state);
+    expect(reopened.active.generation).toEqual(artifact.generation);
+    const other = await GET(request('GET', undefined, { cookie: '' }));
+    const otherCookie = other.headers.get('set-cookie')!.split(';')[0];
+    expect(
+      (
+        await GET(
+          request('GET', undefined, {
+            cookie: otherCookie,
+            url: `http://localhost:3000/api/explore?artifactId=${artifact.id}`,
+          }),
+        )
+      ).status,
+    ).toBe(404);
+    expect(provider.request).not.toHaveBeenCalled();
+  });
+  it('rejects unknown or ambiguous recording selectors before provider or artifact work', async () => {
+    for (const body of [
+      { action: 'recording', subject: 'unknown' },
+      { action: 'recording', subject: 'graph', mechanism: true },
+      { action: 'recording', subject: 'circuit', fixturePath: '/private/source' },
+    ])
+      expect((await POST(request('POST', body))).status).toBe(400);
+    expect((await (await GET(request('GET'))).json()).artifacts).toEqual([]);
+    expect(provider.request).not.toHaveBeenCalled();
+  });
+  it('establishes a private cookie and creates a labeled original example without provider spend', async () => {
+    const initial = await GET(request('GET'));
+    expect(initial.headers.get('cache-control')).toBe('private, no-store');
+    expect(cookie).toMatch(/^soma_explore=[a-f0-9]{64}$/);
+    const response = await POST(request('POST', { action: 'example' }));
+    const data = await response.json();
+    expect(response.status).toBe(200);
+    expect(data.artifact.generation.mode).toBe('prepared-example');
+    expect(data.artifact.generation.costUsd).toBe(0);
+    expect(provider.request).not.toHaveBeenCalled();
+  });
+  it('generates, saves modified interaction state and resumes the exact scene through public handlers', async () => {
+    const response = await POST(
+      request('POST', {
+        action: 'generate',
+        requestId: randomUUID(),
+        question: 'Why is A next?',
+        source: {
+          kind: 'example',
+          label: 'Original example',
+          capturedAt: new Date().toISOString(),
+        },
+      }),
+    );
+    expect(response.status).toBe(200);
+    const { artifact } = await response.json();
+    expect(artifact.generation.mode).toBe('live');
+    expect(provider.request).toHaveBeenCalledTimes(2);
+    const state = {
+      ...artifact.state,
+      step: 1,
+      start: 'b',
+      goal: 'x',
+      reversed: true,
+      selectedObjectId: 'b',
+    };
+    const saved = await PATCH(
+      request('PATCH', { action: 'save', artifactId: artifact.id, version: 1, state }),
+    );
+    expect(saved.status).toBe(200);
+    const resumed = await GET(
+      request('GET', undefined, {
+        url: `http://localhost:3000/api/explore?artifactId=${artifact.id}`,
+      }),
+    );
+    const body = await resumed.json();
+    expect(body.active.state).toEqual(state);
+    expect(body.active.spec).toEqual(artifact.spec);
+  });
+  it('rejects cross-origin mutation, missing cookies, and invalid account sessions without a guest downgrade', async () => {
+    expect(
+      (await POST(request('POST', { action: 'example' }, { origin: 'https://attacker.invalid' })))
+        .status,
+    ).toBe(403);
+    expect((await POST(request('POST', { action: 'example' }, { cookie: '' }))).status).toBe(401);
+    const invalid = await GET(
+      request('GET', undefined, { cookie: 'soma_account=invalid; ' + cookie }),
+    );
+    expect(invalid.status).toBe(401);
+    expect((await invalid.json()).code).toBe('account_required');
+    expect(provider.request).not.toHaveBeenCalled();
+  });
+  it('prevents another guest from reading or modifying an artifact by guessing its ID', async () => {
+    const { artifact } = await (await POST(request('POST', { action: 'example' }))).json();
+    const other = await GET(request('GET', undefined, { cookie: '' }));
+    const otherCookie = other.headers.get('set-cookie')!.split(';')[0];
+    const read = await GET(
+      request('GET', undefined, {
+        cookie: otherCookie,
+        url: `http://localhost:3000/api/explore?artifactId=${artifact.id}`,
+      }),
+    );
+    expect(read.status).toBe(404);
+    const save = await PATCH(
+      request(
+        'PATCH',
+        { action: 'save', artifactId: artifact.id, version: 1, state: artifact.state },
+        { cookie: otherCookie },
+      ),
+    );
+    expect(save.status).toBe(404);
+  });
+  it('rejects invalid images and foreign state IDs before calling the model, then deletes only owned history', async () => {
+    const image = await POST(
+      request('POST', {
+        action: 'generate',
+        requestId: randomUUID(),
+        question: 'Explain',
+        source: {
+          kind: 'screenshot',
+          label: 'Bad input',
+          capturedAt: new Date().toISOString(),
+          dataUrl: 'https://private.invalid/image',
+        },
+      }),
+    );
+    expect(image.status).toBe(422);
+    const { artifact } = await (await POST(request('POST', { action: 'example' }))).json();
+    const saved = await PATCH(
+      request('PATCH', {
+        action: 'save',
+        artifactId: artifact.id,
+        version: 1,
+        state: { ...artifact.state, selectedObjectId: 'foreign' },
+      }),
+    );
+    expect(saved.status).toBe(400);
+    expect(provider.request).not.toHaveBeenCalled();
+    expect((await DELETE(request('DELETE', { artifactId: artifact.id }))).status).toBe(200);
+    expect((await (await GET(request('GET'))).json()).artifacts).toEqual([]);
+  });
+  it('rejects replay of a completed request ID without repeating model calls', async () => {
+    const body = {
+      action: 'generate',
+      requestId: randomUUID(),
+      question: 'Explain BFS',
+      source: { kind: 'example', label: 'Original', capturedAt: new Date().toISOString() },
+    };
+    expect((await POST(request('POST', body))).status).toBe(200);
+    expect((await POST(request('POST', body))).status).toBe(409);
+    expect(provider.request).toHaveBeenCalledTimes(2);
+  });
+  it('rejects a delayed generation when cancellation arrived first through the HTTP route', async () => {
+    const requestId = randomUUID();
+    expect((await POST(request('POST', { action: 'cancel', requestId }))).status).toBe(200);
+    const response = await POST(
+      request('POST', {
+        action: 'generate',
+        requestId,
+        question: 'Explain BFS',
+        source: { kind: 'example', label: 'Original', capturedAt: new Date().toISOString() },
+      }),
+    );
+    expect(response.status).toBe(409);
+    expect((await response.json()).code).toBe('cancelled');
+    expect(provider.request).not.toHaveBeenCalled();
+  });
+  it('resumes saved version one after version two and rejects malformed version selectors', async () => {
+    const { artifact } = await (await POST(request('POST', { action: 'example' }))).json();
+    await PATCH(
+      request('PATCH', {
+        action: 'save',
+        artifactId: artifact.id,
+        version: 1,
+        state: artifact.state,
+      }),
+    );
+    expect(
+      (
+        await POST(
+          request('POST', {
+            action: 'generate',
+            requestId: randomUUID(),
+            artifactId: artifact.id,
+            baseVersion: 1,
+            question: 'Explain the frontier',
+          }),
+        )
+      ).status,
+    ).toBe(200);
+    const resumed = await GET(
+      request('GET', undefined, {
+        url: `http://localhost:3000/api/explore?artifactId=${artifact.id}&version=1`,
+      }),
+    );
+    const result = await resumed.json();
+    expect(result.active.version).toBe(1);
+    expect(result.active.saved).toBe(true);
+    expect(result.versions.map((item: { version: number }) => item.version)).toEqual([2, 1]);
+    expect(
+      (await GET(request('GET', undefined, { url: 'http://localhost:3000/api/explore?version=1' })))
+        .status,
+    ).toBe(400);
+    expect(
+      (
+        await GET(
+          request('GET', undefined, {
+            url: `http://localhost:3000/api/explore?artifactId=${artifact.id}&version=-1`,
+          }),
+        )
+      ).status,
+    ).toBe(400);
+  });
   it('keeps fresh answers hidden through HTTP and enforces ownership and immutable answer/reveal semantics', async () => {
     const { artifact } = await (
       await POST(request('POST', { action: 'example', weighted: true }))

@@ -1,0 +1,13 @@
+node_modules/
+**/node_modules/
+.local/
+.next/
+**/package-lock.json
+# Generated lift bundle; edit its source, then run desktop build:lift.
+desktop/point-overlay-3d.js
+# Original recorded provider output and frozen evaluation data retain exact bytes.
+src/lib/fixtures/*.json
+tests/fixtures/**/*.json
+docs/examples/**/*.json
+# Published static render bundles are generated artifacts.
+public/lab/

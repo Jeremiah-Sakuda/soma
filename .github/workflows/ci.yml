@@ -12,6 +12,8 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: Verify handwritten source formatting
+        run: npm run format:check
       - name: Install pinned isolated browser-runner dependencies
         run: npm ci --prefix services/browser-runner --ignore-scripts
       - name: Install pinned isolated credential-runner dependencies

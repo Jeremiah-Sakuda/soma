@@ -8,12 +8,16 @@ import { heroCircuit, heroCircuitLayout } from '../fixtures/hero-circuit';
 
 // Scripted provider/API fixture over the original Lecture 9 slide. The actual solver, overlay
 // and React controls run in Chromium; this does not establish live inference.
-test('a checked circuit draws on the uploaded slide and re-solves every experiment in the page', async ({ page }) => {
+test('a checked circuit draws on the uploaded slide and re-solves every experiment in the page', async ({
+  page,
+}) => {
   let active: Record<string, unknown> | null = null;
   const requests: any[] = [];
   await page.route('**/api/explore**', async (route) => {
     if (route.request().method() === 'GET')
-      return route.fulfill({ json: { active, artifacts: active ? [active] : [], versions: [], liveEnabled: true } });
+      return route.fulfill({
+        json: { active, artifacts: active ? [active] : [], versions: [], liveEnabled: true },
+      });
     const body = route.request().postDataJSON();
     requests.push(body);
     if (body.action === 'generate' && body.intent === 'investigate')
@@ -21,7 +25,14 @@ test('a checked circuit draws on the uploaded slide and re-solves every experime
         ...active!,
         version: 2,
         state: body.state,
-        circuitExperiment: probeDcValue(heroCircuit, undefined, 'R4', { kind: 'current', componentId: 'R5' }, 'zero', 'R₄ sets the voltage at C, the far end of R₅.'),
+        circuitExperiment: probeDcValue(
+          heroCircuit,
+          undefined,
+          'R4',
+          { kind: 'current', componentId: 'R5' },
+          'zero',
+          'R₄ sets the voltage at C, the far end of R₅.',
+        ),
       };
     else if (body.action === 'generate') {
       const spec = circuitSpec({
@@ -36,8 +47,18 @@ test('a checked circuit draws on the uploaded slide and re-solves every experime
           objective: 'See that B and C sit at the same voltage.',
           assumptions: [],
           steps: [
-            { traceIndex: 0, caption: 'D is ground, at 0 V.', narration: 'Start from ground.', highlightIds: ['D'] },
-            { traceIndex: 3, caption: 'B and C both sit at 8 V, so R₅ carries no current.', narration: 'Equal voltages, no current.', highlightIds: ['B', 'C', 'R5'] },
+            {
+              traceIndex: 0,
+              caption: 'D is ground, at 0 V.',
+              narration: 'Start from ground.',
+              highlightIds: ['D'],
+            },
+            {
+              traceIndex: 3,
+              caption: 'B and C both sit at 8 V, so R₅ carries no current.',
+              narration: 'Equal voltages, no current.',
+              highlightIds: ['B', 'C', 'R5'],
+            },
           ],
           followups: ['What if R₂ burns out?'],
         },
@@ -59,9 +80,22 @@ test('a checked circuit draws on the uploaded slide and re-solves every experime
           capturedAt: body.source.capturedAt,
           summary: 'A Wheatstone bridge.',
           uncertainty: [],
-          layout: { nodes: heroCircuitLayout.nodes, edgeLabels: [], components: heroCircuitLayout.components },
+          layout: {
+            nodes: heroCircuitLayout.nodes,
+            edgeLabels: [],
+            components: heroCircuitLayout.components,
+          },
         },
-        generation: { mode: 'live', provider: 'meta', model: 'muse-spark-1.3', calls: 2, costUsd: 0, elapsedMs: 1000, checks: checked.validation.checks, audit: [] },
+        generation: {
+          mode: 'live',
+          provider: 'meta',
+          model: 'muse-spark-1.3',
+          calls: 2,
+          costUsd: 0,
+          elapsedMs: 1000,
+          checks: checked.validation.checks,
+          audit: [],
+        },
         state: { ...initialExplorationState(checked.spec), step: 3, explanationStep: 1 },
         saved: false,
       };
@@ -76,16 +110,23 @@ test('a checked circuit draws on the uploaded slide and re-solves every experime
   // The one-click demo slide loads the same original Lecture 9 image and its question.
   await openMoreExamples(page);
   await page.getByRole('button', { name: 'Try the Lecture 9 circuit slide (live)' }).click();
-  await expect(page.locator('.exploration-ask-card textarea')).toHaveValue('Why is there no current through R5?');
+  await expect(page.locator('.exploration-ask-card textarea')).toHaveValue(
+    'Why is there no current through R5?',
+  );
   await page.getByRole('button', { name: 'Ask Soma', exact: true }).click();
   const overlay = page.locator('figure.source-overlay');
   await expect(overlay).toBeVisible();
   await expect(overlay.locator('.source-overlay-tag', { hasText: 'B = 8 V' })).toBeVisible();
   await expect(overlay.locator('.source-overlay-tag', { hasText: 'R₅: 0 A' })).toBeVisible();
-  await expect(page.locator('.exploration-caption')).toContainText('Soma’s explanation: B and C both sit at 8 V');
+  await expect(page.locator('.exploration-caption')).toContainText(
+    'Soma’s explanation: B and C both sit at 8 V',
+  );
   await expect(page.getByText('Step 4 of 4').first()).toBeVisible();
   await expect(page.locator('.journal-log')).toContainText('Circuit log');
-  await expect(page.locator('#exploration-question')).toHaveAttribute('placeholder', 'What if we open a part or change its resistance?');
+  await expect(page.locator('#exploration-question')).toHaveAttribute(
+    'placeholder',
+    'What if we open a part or change its resistance?',
+  );
   await page.screenshot({ path: '.local/circuit/page-final.png', fullPage: false });
   await overlay.screenshot({ path: '.local/circuit/overlay-final.png' });
 
@@ -95,11 +136,15 @@ test('a checked circuit draws on the uploaded slide and re-solves every experime
 
   await page.getByRole('checkbox', { name: 'R₂' }).uncheck();
   await expect(page.locator('.exploration-caption')).toContainText('You opened R₂.');
-  await expect(overlay.locator('.source-overlay-tag', { hasText: /R₅ ≈ 0\.4138 A →/ })).toBeVisible();
+  await expect(
+    overlay.locator('.source-overlay-tag', { hasText: /R₅ ≈ 0\.4138 A →/ }),
+  ).toBeVisible();
   // The table gives the solver's exact fraction beside the rounded value.
   await page.getByText('Checked values in a table').click();
   const readings = page.locator('table.circuit-readings');
-  await expect(readings.getByRole('row', { name: /^R₅ / })).toContainText('12/29 A ≈ 0.4138 A, B → C');
+  await expect(readings.getByRole('row', { name: /^R₅ / })).toContainText(
+    '12/29 A ≈ 0.4138 A, B → C',
+  );
   await expect(readings.getByRole('row', { name: /^Node C / })).toContainText('264/29 V ≈ 9.103 V');
   await page.getByText('Checked values in a table').click();
   await overlay.screenshot({ path: '.local/circuit/overlay-open-r2.png' });

@@ -20,7 +20,21 @@ function buildNative() {
     ],
     { stdio: 'inherit' },
   );
-  execFileSync('xcrun',['swiftc','-O','-module-cache-path',path.join(path.dirname(output),'module-cache'),'-target',`${process.arch === 'arm64' ? 'arm64' : 'x86_64'}-apple-macos14.2`,path.join(__dirname,'native/ComputerControl.swift'),'-o',path.join(path.dirname(output),'computer-control')],{stdio:'inherit'});
+  execFileSync(
+    'xcrun',
+    [
+      'swiftc',
+      '-O',
+      '-module-cache-path',
+      path.join(path.dirname(output), 'module-cache'),
+      '-target',
+      `${process.arch === 'arm64' ? 'arm64' : 'x86_64'}-apple-macos14.2`,
+      path.join(__dirname, 'native/ComputerControl.swift'),
+      '-o',
+      path.join(path.dirname(output), 'computer-control'),
+    ],
+    { stdio: 'inherit' },
+  );
   return output;
 }
 if (require.main === module) buildNative();

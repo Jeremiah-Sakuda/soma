@@ -90,10 +90,7 @@ async function setup(page: Page, answer = true) {
   });
   await page.goto('/explore');
   await openMoreExamples(page);
-  await page
-    .getByRole('button', { name: 'Try the original example', exact: true })
-    .first()
-    .click();
+  await page.getByRole('button', { name: 'Try the original example', exact: true }).first().click();
   await expect(page.getByRole('heading', { name: spec.title, exact: true })).toBeVisible();
   return { bytes: () => bytes, finals: () => finals, payloads };
 }

@@ -9,10 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createExplorationService } from '../../src/lib/server/exploration';
-import {
-  closeExplorationStore,
-  explorationStore,
-} from '../../src/lib/server/exploration-store';
+import { closeExplorationStore, explorationStore } from '../../src/lib/server/exploration-store';
 import { checkExploration, createExampleExploration } from '../../src/lib/domain/exploration';
 import {
   explorationContinuationSchema,
@@ -181,9 +178,14 @@ it.each([false, true])(
     if (out.spec.mode === 'clarify' || h.a.spec.mode === 'clarify') throw Error('fixture');
     expect(out.spec.scene).toEqual({
       ...h.a.spec.scene,
-      panels: h.a.spec.scene.panels.map((panel) => panel.kind === 'graph'
-        ? { ...panel, title: panel.execution === 'primary' ? 'Current experiment' : 'Comparison experiment' }
-        : panel),
+      panels: h.a.spec.scene.panels.map((panel) =>
+        panel.kind === 'graph'
+          ? {
+              ...panel,
+              title: panel.execution === 'primary' ? 'Current experiment' : 'Comparison experiment',
+            }
+          : panel,
+      ),
     });
     expect(out.spec.sources).toEqual(h.a.spec.sources);
     expect(out.source).toEqual(h.a.source);
@@ -254,15 +256,24 @@ it('preserves changed weights, disabled connections, no goal and the paired comp
   h.turn.state.goal = null;
   const turn = { ...h.turn, state: { ...h.turn.state, edgeWeights: { sg: 2 } } };
   const out = (await h.service.generate(owner, turn)).artifact;
-  if (out.spec.mode !== 'checked-dijkstra' || h.a.spec.mode !== 'checked-dijkstra') throw Error('Expected weighted source');
+  if (out.spec.mode !== 'checked-dijkstra' || h.a.spec.mode !== 'checked-dijkstra')
+    throw Error('Expected weighted source');
   expect(out.spec.input).toEqual(h.a.spec.input);
   expect(out.spec.comparison?.input).toEqual(h.a.spec.comparison?.input);
   expect(out.spec.input.goal).toBe('g');
   expect(out.spec.input.edges.find((e) => e.id === 'sg')?.weight).toBe(10);
   expect(out.spec.input.edges.some((e) => e.id === 'sa')).toBe(true);
   expect(out.executions!.primary.input).toEqual(explorationExecution(h.a.spec, turn.state)?.input);
-  expect(out.executions!.comparison?.input).toEqual(comparisonExecution(h.a.spec, turn.state)?.input);
-  expect(out.spec.writtenFor).toEqual({ start: turn.state.start, goal: null, disabledEdgeIds: ['sa'], reversed: true, edgeWeights: { sg: 2 } });
+  expect(out.executions!.comparison?.input).toEqual(
+    comparisonExecution(h.a.spec, turn.state)?.input,
+  );
+  expect(out.spec.writtenFor).toEqual({
+    start: turn.state.start,
+    goal: null,
+    disabledEdgeIds: ['sa'],
+    reversed: true,
+    edgeWeights: { sg: 2 },
+  });
   expect(out.state).toMatchObject(turn.state);
   expect(explorationExecution(out.spec, out.state)).toEqual(out.executions!.primary);
   expect(comparisonExecution(out.spec, out.state)).toEqual(out.executions!.comparison);
@@ -311,7 +322,7 @@ it('binds a checked compact answer to one current primary snapshot, while ordina
     contract.safeParse({ ...reply, steps: [{ ...reply.steps[0], execution: 'comparison' }] })
       .success,
   ).toBe(false);
-  expect(
-    contract.safeParse({ ...reply, steps: [...reply.steps, ...reply.steps] }).success,
-  ).toBe(false);
+  expect(contract.safeParse({ ...reply, steps: [...reply.steps, ...reply.steps] }).success).toBe(
+    false,
+  );
 });

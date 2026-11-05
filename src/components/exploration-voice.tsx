@@ -73,9 +73,9 @@ export function ExplorationVoice({
     setMicrophone(
       Boolean(
         typeof navigator.mediaDevices?.getUserMedia === 'function' &&
-          typeof MediaRecorder !== 'undefined' &&
-          typeof window.AudioContext === 'function' &&
-          typeof window.OfflineAudioContext === 'function',
+        typeof MediaRecorder !== 'undefined' &&
+        typeof window.AudioContext === 'function' &&
+        typeof window.OfflineAudioContext === 'function',
       ),
     );
   }, []);

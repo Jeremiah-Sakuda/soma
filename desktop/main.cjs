@@ -95,7 +95,15 @@ function compactBar() {
  * search is actually drawn on screen, so follow-ups never go to an undrawn card. */
 function sendCompactState() {
   if (!bar || bar.isDestroyed()) return;
-  const s = compactState ?? { busy: false, visual: false, step: null, steps: null, playing: false, investigable: false, message: '' };
+  const s = compactState ?? {
+    busy: false,
+    visual: false,
+    step: null,
+    steps: null,
+    playing: false,
+    investigable: false,
+    message: '',
+  };
   bar.webContents.send('compact:state', {
     ...s,
     busy: s.busy || compactAsking || Boolean(compactPending) || Boolean(pointAsk?.compactActive()),
@@ -108,7 +116,8 @@ function sendCompactState() {
 }
 /** The page's narration waits for something to look at, so it needs to know the panel is closed. */
 function syncCompactMode() {
-  if (view && !view.webContents.isDestroyed()) view.webContents.send('desktop:compact', { action: 'mode', on: compactMode });
+  if (view && !view.webContents.isDestroyed())
+    view.webContents.send('desktop:compact', { action: 'mode', on: compactMode });
 }
 function enterCompact() {
   if (capturing || !win) return;
@@ -116,9 +125,17 @@ function enterCompact() {
   const { width, height } = b.getBounds();
   const cursor = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
   // Keep where the learner dragged the bar unless it is on another display or not shown yet.
-  if (!b.isVisible() && (!compactMode || screen.getDisplayMatching(b.getBounds()).id !== cursor.id)) {
+  if (
+    !b.isVisible() &&
+    (!compactMode || screen.getDisplayMatching(b.getBounds()).id !== cursor.id)
+  ) {
     const wa = cursor.workArea;
-    b.setBounds({ x: Math.round(wa.x + (wa.width - width) / 2), y: Math.round(wa.y + wa.height - height - 28), width, height });
+    b.setBounds({
+      x: Math.round(wa.x + (wa.width - width) / 2),
+      y: Math.round(wa.y + wa.height - height - 28),
+      width,
+      height,
+    });
   }
   compactMode = true;
   syncCompactMode();
@@ -139,7 +156,11 @@ function hideCompact() {
   bar?.hide();
   // Hand the keyboard back to the app the learner was using. Not while Point & ask is on:
   // a hidden app could not show its hold-gesture trail or drawing.
-  if (process.platform === 'darwin' && !pointAsk?.enabled && !BrowserWindow.getAllWindows().some((w) => w !== bar && w.isVisible()))
+  if (
+    process.platform === 'darwin' &&
+    !pointAsk?.enabled &&
+    !BrowserWindow.getAllWindows().some((w) => w !== bar && w.isVisible())
+  )
     app.hide();
 }
 function leaveCompact() {
@@ -152,10 +173,10 @@ function leaveCompact() {
 function trustedBar(event) {
   return Boolean(
     bar &&
-      !bar.isDestroyed() &&
-      event.sender === bar.webContents &&
-      event.senderFrame === bar.webContents.mainFrame &&
-      event.senderFrame.url === compactURL,
+    !bar.isDestroyed() &&
+    event.sender === bar.webContents &&
+    event.senderFrame === bar.webContents.mainFrame &&
+    event.senderFrame.url === compactURL,
   );
 }
 /** Why the hosted page cannot take a compact question right now, or null when it can. */
@@ -183,7 +204,8 @@ async function excludeWindows(fn) {
   try {
     return await fn();
   } finally {
-    if (--excluding === 0) for (const w of [win, bar]) if (w && !w.isDestroyed()) w.setContentProtection(false);
+    if (--excluding === 0)
+      for (const w of [win, bar]) if (w && !w.isDestroyed()) w.setContentProtection(false);
   }
 }
 function pause() {
@@ -354,7 +376,9 @@ else {
     // Soma's local windows (toolbar, ask bar, overlay) use the default session and need no
     // device or other permissions.
     session.defaultSession.setPermissionCheckHandler(() => false);
-    session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+    session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) =>
+      callback(false),
+    );
     const ses = view.webContents.session;
     ses.setPermissionCheckHandler(
       (contents, permission, requestingOrigin, details) =>
@@ -400,7 +424,8 @@ else {
       // packaged app always uses its own signed helper.
       helperPath: app.isPackaged
         ? path.join(process.resourcesPath, 'hold-shortcut')
-        : process.env.SOMA_TEST_HOLD_HELPER || path.join(__dirname, 'node_modules/.cache/soma/hold-shortcut'),
+        : process.env.SOMA_TEST_HOLD_HELPER ||
+          path.join(__dirname, 'node_modules/.cache/soma/hold-shortcut'),
       available: () => trustedPage(view.webContents.getURL(), origin),
       send: (payload) => view.webContents.send('desktop:point-ask', payload),
       status,
@@ -439,10 +464,14 @@ else {
           ...(payload.reason ? { reason: payload.reason } : {}),
         });
         if (compactMode && bar?.isVisible()) {
-          if (payload.reason === 'checking') status('Checking that your slide is still the same before lifting…');
-          else if (payload.reason === 'cleared') status('Drawing cleared. Return asks with a new snapshot; Esc hides the bar.');
-          else if (payload.reason === 'webgl') status('This Mac could not draw in 3D, so the drawing stays flat on your slide.');
-          else if (payload.reason === 'sheet') status('Soma could not lift this drawing, so it stays flat on your slide.');
+          if (payload.reason === 'checking')
+            status('Checking that your slide is still the same before lifting…');
+          else if (payload.reason === 'cleared')
+            status('Drawing cleared. Return asks with a new snapshot; Esc hides the bar.');
+          else if (payload.reason === 'webgl')
+            status('This Mac could not draw in 3D, so the drawing stays flat on your slide.');
+          else if (payload.reason === 'sheet')
+            status('Soma could not lift this drawing, so it stays flat on your slide.');
           else if (payload.view === '3d')
             status(
               pointAsk.liftKind === 'model'
@@ -454,13 +483,23 @@ else {
           else if (payload.view === '2d' && wasLifted) status('Back on your slide.');
           else if (payload.shown && pointAsk.liftKind === 'model')
             // An explanation draws nothing flat; its picture is the model 3D builds.
-            status('Answered. Press 3D to see it as a model lifted off your slide; ask a follow-up, or Esc to clear.');
+            status(
+              'Answered. Press 3D to see it as a model lifted off your slide; ask a follow-up, or Esc to clear.',
+            );
           else if (payload.shown)
-            status(`Drawn on your screen. Ask a follow-up${compactState?.investigable ? ', ⌘↩ tests it' : ''}, Esc clears.`);
-          else if (payload.dismissed) status('Cleared. Return asks with a new snapshot; Esc hides the bar.');
-          else if (payload.reason === 'invalid') status('This answer can’t be drawn on your screen. Open it with ⤢.');
-          else if (payload.reason === 'changed') status('Your slide changed, so Soma took the drawing down. Press Return for a new snapshot.');
-          else status('Your screen changed before Soma could draw. Press Return for a new snapshot.');
+            status(
+              `Drawn on your screen. Ask a follow-up${compactState?.investigable ? ', ⌘↩ tests it' : ''}, Esc clears.`,
+            );
+          else if (payload.dismissed)
+            status('Cleared. Return asks with a new snapshot; Esc hides the bar.');
+          else if (payload.reason === 'invalid')
+            status('This answer can’t be drawn on your screen. Open it with ⤢.');
+          else if (payload.reason === 'changed')
+            status(
+              'Your slide changed, so Soma took the drawing down. Press Return for a new snapshot.',
+            );
+          else
+            status('Your screen changed before Soma could draw. Press Return for a new snapshot.');
           sendCompactState();
         }
       },
@@ -476,19 +515,38 @@ else {
     });
     // The page asks to lift its drawing into 3D or set it back down.
     ipcMain.on('desktop:screen-overlay-view', (event, payload) => {
-      if (trusted(event) && payload && typeof payload.id === 'string' && ['2d', '3d'].includes(payload.view)) {
+      if (
+        trusted(event) &&
+        payload &&
+        typeof payload.id === 'string' &&
+        ['2d', '3d'].includes(payload.view)
+      ) {
         pointAsk.setView(payload.view, payload.id);
         sendCompactState();
       }
     });
     ipcMain.on('overlay:toggle-edge', (event, edgeId) => pointAsk.overlayToggle(event, edgeId));
     ipcMain.on('overlay:select', (event, objectId) => pointAsk.overlaySelect(event, objectId));
-    computerControl = createComputerControl({BrowserWindow,ipcMain,globalShortcut,session:ses,origin,
-      helperPath: app.isPackaged ? path.join(process.resourcesPath,'computer-control') : path.join(__dirname,'node_modules/.cache/soma/computer-control'),
-      stopPoint:()=>pointAsk.disable(),status,accessibility:()=>process.platform==='darwin'&&systemPreferences.isTrustedAccessibilityClient(true),
+    computerControl = createComputerControl({
+      BrowserWindow,
+      ipcMain,
+      globalShortcut,
+      session: ses,
+      origin,
+      helperPath: app.isPackaged
+        ? path.join(process.resourcesPath, 'computer-control')
+        : path.join(__dirname, 'node_modules/.cache/soma/computer-control'),
+      stopPoint: () => pointAsk.disable(),
+      status,
+      accessibility: () =>
+        process.platform === 'darwin' && systemPreferences.isTrustedAccessibilityClient(true),
       // After a completed plan the local control page may request the existing
       // single-snapshot capture; hosted content gets no capture or execution bridge.
-      capture:()=>{pointAsk.stop('');return capture();}});
+      capture: () => {
+        pointAsk.stop('');
+        return capture();
+      },
+    });
     ipcMain.on('desktop:source-highlight', (event, payload) => {
       if (trusted(event)) void pointAsk.highlight(payload);
     });
@@ -519,7 +577,8 @@ else {
       if (!trustedBar(event)) throw new Error('Untrusted ask bar.');
       const text = typeof payload?.text === 'string' ? payload.text.trim().slice(0, 1000) : '';
       const mode = payload?.mode;
-      if (!['snapshot', 'followup', 'investigate'].includes(mode)) throw new Error('Unknown ask mode.');
+      if (!['snapshot', 'followup', 'investigate'].includes(mode))
+        throw new Error('Unknown ask mode.');
       const unavailable = explorationUnavailable();
       if (unavailable) return { ok: false, message: unavailable };
       // One question at a time: a second Return must not cancel or race the first.
@@ -528,22 +587,32 @@ else {
       if (mode !== 'investigate' && !text) return { ok: false, message: 'Type a question first.' };
       computerControl?.stop('Computer task ended.');
       if (mode === 'snapshot') {
-        if (process.platform === 'darwin' && systemPreferences.getMediaAccessStatus('screen') === 'denied')
-          return { ok: false, message: 'Allow Soma under Screen & System Audio Recording, then reopen Soma.' };
+        if (
+          process.platform === 'darwin' &&
+          systemPreferences.getMediaAccessStatus('screen') === 'denied'
+        )
+          return {
+            ok: false,
+            message: 'Allow Soma under Screen & System Audio Recording, then reopen Soma.',
+          };
         compactAsking = true;
         // A page that reloaded since the bar opened still needs to know.
         syncCompactMode();
         sendCompactState();
         try {
           // The snapshot is of the display the bar is on, where the learner is looking.
-          const display = bar && !bar.isDestroyed() ? screen.getDisplayMatching(bar.getBounds()) : undefined;
+          const display =
+            bar && !bar.isDestroyed() ? screen.getDisplayMatching(bar.getBounds()) : undefined;
           const result = await pointAsk.askTyped(text, display);
           // Hiding the bar cancelled it; nothing to report.
           if (!result.ok && !bar?.isVisible()) return { ok: false, message: '' };
           // When the page refused the question, its own reason is the useful one.
           return result.message
             ? result
-            : { ok: false, message: compactState?.message || 'That question did not go through. Try again.' };
+            : {
+                ok: false,
+                message: compactState?.message || 'That question did not go through. Try again.',
+              };
         } finally {
           compactAsking = false;
           sendCompactState();
@@ -551,18 +620,35 @@ else {
       }
       // Follow-ups and investigations need the checked search to be on screen.
       if (!pointAsk.hasDrawing())
-        return { ok: false, message: 'Nothing is drawn right now. Press Return to ask with a new snapshot.' };
+        return {
+          ok: false,
+          message: 'Nothing is drawn right now. Press Return to ask with a new snapshot.',
+        };
       if (mode === 'investigate' && !compactState?.investigable)
-        return { ok: false, message: 'Test it works on a checked shortest-path graph with a goal.' };
-      view.webContents.send('desktop:compact', { action: mode === 'investigate' ? 'investigate' : 'ask', text });
+        return {
+          ok: false,
+          message: 'Test it works on a checked shortest-path graph with a goal.',
+        };
+      view.webContents.send('desktop:compact', {
+        action: mode === 'investigate' ? 'investigate' : 'ask',
+        text,
+      });
       // Until the page reports the request, a second Return is refused here.
-      compactPending = { started: false, message: compactState?.message ?? '', timer: setTimeout(() => endPending(), 8000) };
+      compactPending = {
+        started: false,
+        message: compactState?.message ?? '',
+        timer: setTimeout(() => endPending(), 8000),
+      };
       sendCompactState();
-      return { ok: true, message: mode === 'investigate' ? 'Muse is choosing what to test…' : 'Muse is answering…' };
+      return {
+        ok: true,
+        message: mode === 'investigate' ? 'Muse is choosing what to test…' : 'Muse is answering…',
+      };
     });
     ipcMain.handle('compact:control', async (event, action) => {
       if (!trustedBar(event)) throw new Error('Untrusted ask bar.');
-      if (['previous', 'next', 'play'].includes(action)) view.webContents.send('desktop:compact', { action });
+      if (['previous', 'next', 'play'].includes(action))
+        view.webContents.send('desktop:compact', { action });
       else if (action === 'lift') {
         if (!pointAsk.hasDrawing()) return false;
         // An explanation with no model yet: the page asks Muse to build one, then lifts it.
@@ -575,8 +661,7 @@ else {
         const shown = pointAsk.setView(pointAsk.view === '3d' ? '2d' : '3d');
         sendCompactState();
         return shown;
-      }
-      else if (action === 'hide') hideCompact();
+      } else if (action === 'hide') hideCompact();
       else if (action === 'expand') leaveCompact();
       else throw new Error('Unknown control.');
       return true;
@@ -596,7 +681,9 @@ else {
           compactPending.timer = setTimeout(endPending, 300000);
         } else if (
           compactPending.started ||
-          (typeof payload.message === 'string' && payload.message && payload.message !== compactPending.message)
+          (typeof payload.message === 'string' &&
+            payload.message &&
+            payload.message !== compactPending.message)
         ) {
           // Finished, or refused with an error before it ever started.
           clearTimeout(compactPending.timer);
@@ -618,7 +705,8 @@ else {
     });
     ipcMain.handle('desktop:action', async (event, action) => {
       if (!trusted(event, true)) throw new Error('Untrusted desktop control.');
-      if (['point','capture','hide','reload'].includes(action)) computerControl?.stop('Computer task ended.');
+      if (['point', 'capture', 'hide', 'reload'].includes(action))
+        computerControl?.stop('Computer task ended.');
       if (action === 'point') {
         if (!pointAsk.enabled && process.platform === 'darwin') {
           if (systemPreferences.getMediaAccessStatus('screen') === 'denied')
@@ -627,9 +715,7 @@ else {
             systemPreferences.getMediaAccessStatus('microphone') !== 'granted' &&
             !(await systemPreferences.askForMediaAccess('microphone'))
           )
-            throw Error(
-              'Allow Soma microphone access in System Settings, or use typed questions.',
-            );
+            throw Error('Allow Soma microphone access in System Settings, or use typed questions.');
         }
         return pointAsk.enable();
       } else if (action === 'capture') {

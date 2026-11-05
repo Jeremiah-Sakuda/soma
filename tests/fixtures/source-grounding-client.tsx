@@ -3,7 +3,9 @@ import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';
 import { ExplorationSourceGrounding } from '../../src/components/exploration-source-grounding';
 
-export type SourceGroundingFixtureProps = Parameters<typeof ExplorationSourceGrounding>[0] & { sourceKey: string };
+export type SourceGroundingFixtureProps = Parameters<typeof ExplorationSourceGrounding>[0] & {
+  sourceKey: string;
+};
 
 declare global {
   interface Window {
@@ -17,7 +19,8 @@ declare global {
 function SourceGroundingFixture() {
   const [props, setProps] = useState(window.__groundingInitial);
   useEffect(() => {
-    window.__setGroundingProps = (next) => flushSync(() => setProps((current) => ({ ...current, ...next })));
+    window.__setGroundingProps = (next) =>
+      flushSync(() => setProps((current) => ({ ...current, ...next })));
   }, []);
   const { sourceKey, ...grounding } = props;
   return <ExplorationSourceGrounding key={sourceKey} {...grounding} />;

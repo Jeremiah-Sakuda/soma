@@ -95,11 +95,15 @@ test('a recorded real Muse run is inspectable, manipulable and saved without liv
   const pipeline = page.locator('.exploration-pipeline');
   await expect(pipeline.locator('summary')).toHaveText('How it was made · Wonder reviewed');
   await expect(pipeline.locator('summary')).toBeVisible();
-  await expect(pipeline.getByRole('link', { name: 'Inspect recorded calls and timing' })).toBeHidden();
+  await expect(
+    pipeline.getByRole('link', { name: 'Inspect recorded calls and timing' }),
+  ).toBeHidden();
   await pipeline.locator('summary').click();
   await expect(pipeline).toContainText('Source context reused');
   await expect(pipeline).toContainText('Recorded run · Soma computed · Wonder reviewed.');
-  await expect(pipeline.getByRole('link', { name: 'Inspect recorded calls and timing' })).toBeVisible();
+  await expect(
+    pipeline.getByRole('link', { name: 'Inspect recorded calls and timing' }),
+  ).toBeVisible();
   await pipeline.getByRole('link', { name: 'Inspect recorded calls and timing' }).click();
   await expect(page.locator('#exploration-audit')).toContainText(
     'Muse Wonder advisory review: approve',
@@ -109,7 +113,11 @@ test('a recorded real Muse run is inspectable, manipulable and saved without liv
   await page.keyboard.press('Escape');
   await pipeline.locator('summary').click();
   await page.locator('.journal-recording-details summary').click();
-  await expect(page.getByText('no new visual generation. Optional narration uses your selected voice.', { exact: false })).toBeVisible();
+  await expect(
+    page.getByText('no new visual generation. Optional narration uses your selected voice.', {
+      exact: false,
+    }),
+  ).toBeVisible();
   await page.locator('.journal-recording-details summary').click();
   await page.getByRole('button', { name: 'Next step', exact: true }).click();
   await page.getByRole('button', { name: 'Save exploration', exact: true }).click();

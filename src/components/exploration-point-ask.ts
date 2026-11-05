@@ -77,7 +77,12 @@ export function useExplorationPointAsk(options: {
           .trim()
           .slice(0, 1000);
         callbacks.current.interrupt();
-        active.current = { id: d.id, ended: false, submitted: false, ...(typed ? { text: typed } : {}) };
+        active.current = {
+          id: d.id,
+          ended: false,
+          submitted: false,
+          ...(typed ? { text: typed } : {}),
+        };
         setSessionId(d.id);
         if (typed) {
           setStatus('Point or circle, then release to ask your typed question.');
@@ -114,9 +119,7 @@ export function useExplorationPointAsk(options: {
         }
         void (async () => {
           try {
-            const bytes = Uint8Array.from(atob(d.dataUrl.split(',')[1]), (c) =>
-              c.charCodeAt(0),
-            );
+            const bytes = Uint8Array.from(atob(d.dataUrl.split(',')[1]), (c) => c.charCodeAt(0));
             const source = await callbacks.current.prepare(
               new File([bytes], 'Pointed display.jpg', { type: 'image/jpeg' }),
             );
@@ -134,9 +137,7 @@ export function useExplorationPointAsk(options: {
           } catch {
             if (active.current === s) {
               cancel('The selected display could not be prepared.');
-              callbacks.current.error(
-                'Capture failed. Type a question or upload a screenshot.',
-              );
+              callbacks.current.error('Capture failed. Type a question or upload a screenshot.');
             }
           }
         })();

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,80}$/);
 const text = (length: number) => z.string().trim().min(1).max(length);
@@ -24,7 +24,7 @@ const relationship = z
     id,
     from: id,
     to: id,
-    kind: z.enum(["related", "prerequisite", "contrast", "transfer"]),
+    kind: z.enum(['related', 'prerequisite', 'contrast', 'transfer']),
     reason: text(400),
     refs: z.array(memoryReferenceSchema).min(1).max(4),
   })
@@ -45,36 +45,31 @@ export const companionMemoryProposalSchema = z
     nextActivity: recommendation.optional(),
   })
   .strict();
-export type CompanionMemoryProposal = z.infer<
-  typeof companionMemoryProposalSchema
->;
+export type CompanionMemoryProposal = z.infer<typeof companionMemoryProposalSchema>;
 export type MemoryGoal = {
   id: string;
   revision: number;
-  kind: "goal" | "preference";
+  kind: 'goal' | 'preference';
   text: string;
   createdAt: string;
-  provenance: "self-report";
+  provenance: 'self-report';
 };
-export type MemoryConcept = Omit<z.infer<typeof concept>, "refs"> & {
+export type MemoryConcept = Omit<z.infer<typeof concept>, 'refs'> & {
   refs: BoundMemoryReference[];
   revision: number;
   createdAt: string;
-  provenance: "model-proposal" | "user-correction";
+  provenance: 'model-proposal' | 'user-correction';
 };
-export type MemoryRelationship = Omit<z.infer<typeof relationship>, "refs"> & {
+export type MemoryRelationship = Omit<z.infer<typeof relationship>, 'refs'> & {
   refs: BoundMemoryReference[];
   revision: number;
   createdAt: string;
-  provenance: "model-proposal";
+  provenance: 'model-proposal';
 };
-export type MemoryRecommendation = Omit<
-  z.infer<typeof recommendation>,
-  "refs"
-> & {
+export type MemoryRecommendation = Omit<z.infer<typeof recommendation>, 'refs'> & {
   refs: BoundMemoryReference[];
   createdAt: string;
-  provenance: "model-proposal";
+  provenance: 'model-proposal';
 };
 export type CompanionMemory = {
   schemaVersion: 1;
@@ -86,14 +81,14 @@ export type CompanionMemory = {
 };
 export type MemoryEvidence = {
   id: string;
-  kind: "prediction" | "application";
+  kind: 'prediction' | 'application';
   ref: BoundMemoryReference;
   recordedAt: string;
   answer: string;
   reason: string;
   matches: boolean;
-  exposure: "diagram-visible-practice" | "fresh-problem-reference-available";
-  assistance: "diagram-visible" | "hint" | "reference-available";
+  exposure: 'diagram-visible-practice' | 'fresh-problem-reference-available';
+  assistance: 'diagram-visible' | 'hint' | 'reference-available';
   revealedBeforeAnswer: boolean;
 };
 export type CompanionMemoryView = {
@@ -104,26 +99,26 @@ export type CompanionMemoryView = {
   evidence: MemoryEvidence[];
   nextActivity?: MemoryRecommendation;
 };
-export const companionMemoryCommandSchema = z.discriminatedUnion("action", [
+export const companionMemoryCommandSchema = z.discriminatedUnion('action', [
   z
     .object({
-      action: z.literal("upsert-goal"),
+      action: z.literal('upsert-goal'),
       revision: z.number().int().nonnegative(),
       id: id.optional(),
-      kind: z.enum(["goal", "preference"]),
+      kind: z.enum(['goal', 'preference']),
       text: text(500),
     })
     .strict(),
   z
     .object({
-      action: z.literal("delete-goal"),
+      action: z.literal('delete-goal'),
       revision: z.number().int().nonnegative(),
       id,
     })
     .strict(),
   z
     .object({
-      action: z.literal("correct-concept"),
+      action: z.literal('correct-concept'),
       revision: z.number().int().nonnegative(),
       id,
       label: text(100),
@@ -132,25 +127,23 @@ export const companionMemoryCommandSchema = z.discriminatedUnion("action", [
     .strict(),
   z
     .object({
-      action: z.literal("delete-concept"),
+      action: z.literal('delete-concept'),
       revision: z.number().int().nonnegative(),
       id,
     })
     .strict(),
   z
     .object({
-      action: z.literal("delete-relationship"),
+      action: z.literal('delete-relationship'),
       revision: z.number().int().nonnegative(),
       id,
     })
     .strict(),
   z
     .object({
-      action: z.literal("reset"),
+      action: z.literal('reset'),
       revision: z.number().int().nonnegative(),
     })
     .strict(),
 ]);
-export type CompanionMemoryCommand = z.infer<
-  typeof companionMemoryCommandSchema
->;
+export type CompanionMemoryCommand = z.infer<typeof companionMemoryCommandSchema>;

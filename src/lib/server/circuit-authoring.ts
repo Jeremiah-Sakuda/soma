@@ -8,7 +8,15 @@ const unit = z.number().finite().min(0).max(1);
 export const circuitLayoutReadSchema = z.strictObject({
   nodes: z.array(z.strictObject({ nodeId: z.string().min(1).max(48), x: unit, y: unit })).max(10),
   components: z
-    .array(z.strictObject({ componentId: z.string().min(1).max(48), x1: unit, y1: unit, x2: unit, y2: unit }))
+    .array(
+      z.strictObject({
+        componentId: z.string().min(1).max(48),
+        x1: unit,
+        y1: unit,
+        x2: unit,
+        y2: unit,
+      }),
+    )
     .max(16),
 });
 export type CircuitLayoutRead = z.infer<typeof circuitLayoutReadSchema>;
@@ -19,7 +27,10 @@ export const CIRCUIT_READING =
 const text = z.string().trim().min(1).max(360);
 /** Muse writes the words; the application binds them to the solved circuit. */
 export function circuitCopySchema(input: DcInput, solution: DcSolution) {
-  const ids = [...input.nodes.map((n) => n.id), ...input.components.map((c) => c.id)] as [string, ...string[]];
+  const ids = [...input.nodes.map((n) => n.id), ...input.components.map((c) => c.id)] as [
+    string,
+    ...string[],
+  ];
   return z.strictObject({
     title: z.string().trim().min(1).max(100),
     objective: text,
@@ -27,7 +38,11 @@ export function circuitCopySchema(input: DcInput, solution: DcSolution) {
     steps: z
       .array(
         z.strictObject({
-          traceIndex: z.number().int().min(0).max(Math.max(0, solution.steps.length - 1)),
+          traceIndex: z
+            .number()
+            .int()
+            .min(0)
+            .max(Math.max(0, solution.steps.length - 1)),
           caption: text,
           narration: text,
           highlightIds: z.array(z.enum(ids)).max(12),
@@ -77,7 +92,12 @@ export function circuitSpec({
       y: p ? p.y : 0.5 + 0.38 * Math.sin(angle),
     };
   });
-  const taken = new Set([...input.nodes.map((n) => n.id), ...input.components.map((c) => c.id), 'circuit-primary', 'circuit-steps']);
+  const taken = new Set([
+    ...input.nodes.map((n) => n.id),
+    ...input.components.map((c) => c.id),
+    'circuit-primary',
+    'circuit-steps',
+  ]);
   return {
     schemaVersion: 'exploration-v1',
     id,
@@ -109,7 +129,12 @@ export function circuitSpec({
           placement: { column: 1, row: 1, columnSpan: 2 },
           positions,
         },
-        { id: 'circuit-steps', kind: 'steps', title: 'Step by step', placement: { column: 1, row: 2, columnSpan: 2 } },
+        {
+          id: 'circuit-steps',
+          kind: 'steps',
+          title: 'Step by step',
+          placement: { column: 1, row: 2, columnSpan: 2 },
+        },
       ],
     },
     steps: copy.steps.map((item, index) => {

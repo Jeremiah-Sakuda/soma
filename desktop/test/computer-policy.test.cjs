@@ -1,16 +1,187 @@
-const {test}=require('node:test');const assert=require('node:assert/strict');
-const {validateObservation,validatePlan,checkStep,createTask,assertLive,KEYS}=require('../computer-policy.cjs');
-const observation=()=>({pid:42,app:'Synthetic settings',window:'c'.repeat(64),fingerprint:'a'.repeat(64),controls:[{id:0,role:'AXTextField',label:'Display name'},{id:1,role:'AXButton',label:'Save'}]});
-const type=(text='Mira')=>({kind:'type',target:0,text,key:'',effect:'Set the requested name',consequential:false});
-const click=(target=1)=>({kind:'click',target,text:'',key:'',effect:'Save the name',consequential:false});
-const key=(k='right')=>({kind:'key',target:-1,text:'',key:k,effect:'Next slide',consequential:false});
-const plan=(...steps)=>({kind:'plan',reason:'Plan',steps});
-test('native observations exclude sensitive targets, reject spoofed IDs and need a window identity',()=>{for(const label of ['Password','API token','Verification code','Credit card'])assert.throws(()=>validateObservation({...observation(),controls:[{id:0,role:'AXTextField',label}]}));assert.throws(()=>validateObservation({...observation(),controls:[{id:17,role:'AXButton',label:'Save'}]}));assert.throws(()=>validateObservation({...observation(),window:undefined}));});
-test('every plan step must be an exact bounded field value or known control',()=>{const o=observation();const ok=validatePlan(plan(type(),click()),o);assert.equal(ok.steps[0].text,'Mira');assert.deepEqual(ok.steps.map(s=>[s.role,s.label]),[['AXTextField','Display name'],['AXButton','Save']]);for(const bad of [type('x\n'),type('x\t'),type('x'.repeat(501)),type(''),{...click(),target:0},{...type(),target:1},click(20),{...click(),kind:'shell'},{...click(),text:'x'},{...click(),key:'right'}])assert.throws(()=>validatePlan(plan(type(),bad),o));});
-test('navigation keys are a closed allowlist without controls, text or modifiers',()=>{const o=observation();assert.equal(validatePlan(plan(key('page_down')),o).steps[0].label,'Page Down');assert.deepEqual(Object.keys(KEYS).sort(),['down','left','page_down','page_up','right','up']);for(const k of ['','space','return','tab','escape','cmd+right','a','__proto__','toString'])assert.throws(()=>validatePlan(plan(key(k)),o),undefined,k);assert.throws(()=>validatePlan(plan({...key(),target:0}),o));assert.throws(()=>validatePlan(plan({...key(),text:'x'}),o));});
-test('plans are 1-5 steps and bounded by the remaining task actions',()=>{const o=observation();assert.throws(()=>validatePlan(plan(),o));assert.throws(()=>validatePlan(plan(...Array(6).fill(key())),o));assert.throws(()=>validatePlan(plan(key(),key()),o,1),/allows 1/);assert.equal(validatePlan({kind:'done',reason:'Done',steps:[]},o).steps.length,0);assert.throws(()=>validatePlan({kind:'clarify',reason:'?',steps:[key()]},o));});
-test('send/submit/delete/purchase presses always need their own approval and may only be the single final step',()=>{const o=observation();o.controls.push({id:2,role:'AXButton',label:'Send'},{id:3,role:'AXButton',label:'Delete draft'},{id:4,role:'AXButton',label:'Bold'});assert.equal(validatePlan(plan(type(),click(2)),o).steps[1].consequential,true);assert.equal(validatePlan(plan(type(),click(1)),o).steps[1].consequential,true,'Save commits a change');assert.equal(validatePlan(plan(type(),click(4)),o).steps[1].consequential,false);assert.throws(()=>validatePlan(plan(click(2),type()),o),/final/);assert.throws(()=>validatePlan(plan(type(),click(3),click(2)),o),/final/);assert.equal(validatePlan(plan({...type(),consequential:true}),o).steps[0].consequential,true);});
-test('coursework hand-in controls are refused outright',()=>{const o=observation();o.controls.push({id:2,role:'AXButton',label:'Turn In'},{id:3,role:'AXButton',label:'Submit quiz'},{id:4,role:'AXButton',label:'Submit'});for(const t of [2,3,4])assert.throws(()=>validatePlan(plan(click(t)),o),/coursework/);});
-test('authority expires and does not allow unbounded chained tasks',()=>{const task=createTask(observation(),1000);assertLive(task,1001);assert.throws(()=>assertLive(task,121001));task.steps=5;assert.throws(()=>assertLive(task,1001));});
-test('duplicate control names cannot be approved ambiguously and script apps are blocked',()=>{const o=observation();o.controls.push({id:2,role:'AXButton',label:'Save'});assert.throws(()=>validatePlan(plan(click(1)),o),/Ambiguous/);for(const app of ['Terminal','iTerm2','Script Editor','Visual Studio Code'])assert.throws(()=>validateObservation({...observation(),app}));assert.throws(()=>validatePlan(plan(type('javascript:alert(1)')),observation()));});
-test('each step re-checks process, window identity, unchanged state and a unique bound target',()=>{const o=observation();const [t,c]=validatePlan(plan(type(),click()),o).steps;assert.deepEqual(checkStep(c,o,o),{ok:true,target:1});const shifted={...o,controls:[{id:0,role:'AXButton',label:'New'},{id:1,role:'AXTextField',label:'Display name'},{id:2,role:'AXButton',label:'Save'}]};assert.deepEqual(checkStep(c,shifted,shifted),{ok:true,target:2});assert.match(checkStep(t,o,{...o,pid:43}).reason,/different app/);assert.match(checkStep(t,o,{...o,window:'d'.repeat(64)}).reason,/window/);assert.match(checkStep(t,o,{...o,fingerprint:'b'.repeat(64)}).reason,/changed/);const gone={...o,controls:[o.controls[0]]};assert.match(checkStep(c,gone,gone).reason,/no longer/);const dup={...o,controls:[...o.controls,{id:2,role:'AXButton',label:'Save'}]};assert.match(checkStep(c,dup,dup).reason,/unique/);assert.deepEqual(checkStep(validatePlan(plan(key()),o).steps[0],o,o),{ok:true,target:-1});});
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const {
+  validateObservation,
+  validatePlan,
+  checkStep,
+  createTask,
+  assertLive,
+  KEYS,
+} = require('../computer-policy.cjs');
+const observation = () => ({
+  pid: 42,
+  app: 'Synthetic settings',
+  window: 'c'.repeat(64),
+  fingerprint: 'a'.repeat(64),
+  controls: [
+    { id: 0, role: 'AXTextField', label: 'Display name' },
+    { id: 1, role: 'AXButton', label: 'Save' },
+  ],
+});
+const type = (text = 'Mira') => ({
+  kind: 'type',
+  target: 0,
+  text,
+  key: '',
+  effect: 'Set the requested name',
+  consequential: false,
+});
+const click = (target = 1) => ({
+  kind: 'click',
+  target,
+  text: '',
+  key: '',
+  effect: 'Save the name',
+  consequential: false,
+});
+const key = (k = 'right') => ({
+  kind: 'key',
+  target: -1,
+  text: '',
+  key: k,
+  effect: 'Next slide',
+  consequential: false,
+});
+const plan = (...steps) => ({ kind: 'plan', reason: 'Plan', steps });
+test('native observations exclude sensitive targets, reject spoofed IDs and need a window identity', () => {
+  for (const label of ['Password', 'API token', 'Verification code', 'Credit card'])
+    assert.throws(() =>
+      validateObservation({ ...observation(), controls: [{ id: 0, role: 'AXTextField', label }] }),
+    );
+  assert.throws(() =>
+    validateObservation({
+      ...observation(),
+      controls: [{ id: 17, role: 'AXButton', label: 'Save' }],
+    }),
+  );
+  assert.throws(() => validateObservation({ ...observation(), window: undefined }));
+});
+test('every plan step must be an exact bounded field value or known control', () => {
+  const o = observation();
+  const ok = validatePlan(plan(type(), click()), o);
+  assert.equal(ok.steps[0].text, 'Mira');
+  assert.deepEqual(
+    ok.steps.map((s) => [s.role, s.label]),
+    [
+      ['AXTextField', 'Display name'],
+      ['AXButton', 'Save'],
+    ],
+  );
+  for (const bad of [
+    type('x\n'),
+    type('x\t'),
+    type('x'.repeat(501)),
+    type(''),
+    { ...click(), target: 0 },
+    { ...type(), target: 1 },
+    click(20),
+    { ...click(), kind: 'shell' },
+    { ...click(), text: 'x' },
+    { ...click(), key: 'right' },
+  ])
+    assert.throws(() => validatePlan(plan(type(), bad), o));
+});
+test('navigation keys are a closed allowlist without controls, text or modifiers', () => {
+  const o = observation();
+  assert.equal(validatePlan(plan(key('page_down')), o).steps[0].label, 'Page Down');
+  assert.deepEqual(Object.keys(KEYS).sort(), [
+    'down',
+    'left',
+    'page_down',
+    'page_up',
+    'right',
+    'up',
+  ]);
+  for (const k of [
+    '',
+    'space',
+    'return',
+    'tab',
+    'escape',
+    'cmd+right',
+    'a',
+    '__proto__',
+    'toString',
+  ])
+    assert.throws(() => validatePlan(plan(key(k)), o), undefined, k);
+  assert.throws(() => validatePlan(plan({ ...key(), target: 0 }), o));
+  assert.throws(() => validatePlan(plan({ ...key(), text: 'x' }), o));
+});
+test('plans are 1-5 steps and bounded by the remaining task actions', () => {
+  const o = observation();
+  assert.throws(() => validatePlan(plan(), o));
+  assert.throws(() => validatePlan(plan(...Array(6).fill(key())), o));
+  assert.throws(() => validatePlan(plan(key(), key()), o, 1), /allows 1/);
+  assert.equal(validatePlan({ kind: 'done', reason: 'Done', steps: [] }, o).steps.length, 0);
+  assert.throws(() => validatePlan({ kind: 'clarify', reason: '?', steps: [key()] }, o));
+});
+test('send/submit/delete/purchase presses always need their own approval and may only be the single final step', () => {
+  const o = observation();
+  o.controls.push(
+    { id: 2, role: 'AXButton', label: 'Send' },
+    { id: 3, role: 'AXButton', label: 'Delete draft' },
+    { id: 4, role: 'AXButton', label: 'Bold' },
+  );
+  assert.equal(validatePlan(plan(type(), click(2)), o).steps[1].consequential, true);
+  assert.equal(
+    validatePlan(plan(type(), click(1)), o).steps[1].consequential,
+    true,
+    'Save commits a change',
+  );
+  assert.equal(validatePlan(plan(type(), click(4)), o).steps[1].consequential, false);
+  assert.throws(() => validatePlan(plan(click(2), type()), o), /final/);
+  assert.throws(() => validatePlan(plan(type(), click(3), click(2)), o), /final/);
+  assert.equal(
+    validatePlan(plan({ ...type(), consequential: true }), o).steps[0].consequential,
+    true,
+  );
+});
+test('coursework hand-in controls are refused outright', () => {
+  const o = observation();
+  o.controls.push(
+    { id: 2, role: 'AXButton', label: 'Turn In' },
+    { id: 3, role: 'AXButton', label: 'Submit quiz' },
+    { id: 4, role: 'AXButton', label: 'Submit' },
+  );
+  for (const t of [2, 3, 4]) assert.throws(() => validatePlan(plan(click(t)), o), /coursework/);
+});
+test('authority expires and does not allow unbounded chained tasks', () => {
+  const task = createTask(observation(), 1000);
+  assertLive(task, 1001);
+  assert.throws(() => assertLive(task, 121001));
+  task.steps = 5;
+  assert.throws(() => assertLive(task, 1001));
+});
+test('duplicate control names cannot be approved ambiguously and script apps are blocked', () => {
+  const o = observation();
+  o.controls.push({ id: 2, role: 'AXButton', label: 'Save' });
+  assert.throws(() => validatePlan(plan(click(1)), o), /Ambiguous/);
+  for (const app of ['Terminal', 'iTerm2', 'Script Editor', 'Visual Studio Code'])
+    assert.throws(() => validateObservation({ ...observation(), app }));
+  assert.throws(() => validatePlan(plan(type('javascript:alert(1)')), observation()));
+});
+test('each step re-checks process, window identity, unchanged state and a unique bound target', () => {
+  const o = observation();
+  const [t, c] = validatePlan(plan(type(), click()), o).steps;
+  assert.deepEqual(checkStep(c, o, o), { ok: true, target: 1 });
+  const shifted = {
+    ...o,
+    controls: [
+      { id: 0, role: 'AXButton', label: 'New' },
+      { id: 1, role: 'AXTextField', label: 'Display name' },
+      { id: 2, role: 'AXButton', label: 'Save' },
+    ],
+  };
+  assert.deepEqual(checkStep(c, shifted, shifted), { ok: true, target: 2 });
+  assert.match(checkStep(t, o, { ...o, pid: 43 }).reason, /different app/);
+  assert.match(checkStep(t, o, { ...o, window: 'd'.repeat(64) }).reason, /window/);
+  assert.match(checkStep(t, o, { ...o, fingerprint: 'b'.repeat(64) }).reason, /changed/);
+  const gone = { ...o, controls: [o.controls[0]] };
+  assert.match(checkStep(c, gone, gone).reason, /no longer/);
+  const dup = { ...o, controls: [...o.controls, { id: 2, role: 'AXButton', label: 'Save' }] };
+  assert.match(checkStep(c, dup, dup).reason, /unique/);
+  assert.deepEqual(checkStep(validatePlan(plan(key()), o).steps[0], o, o), {
+    ok: true,
+    target: -1,
+  });
+});

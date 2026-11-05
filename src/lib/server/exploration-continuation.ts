@@ -1,9 +1,5 @@
 import { z } from 'zod';
-import {
-  explorationSpecSchema,
-  type ExplorationSpec,
-  type BfsInput,
-} from '../domain/exploration';
+import { explorationSpecSchema, type ExplorationSpec, type BfsInput } from '../domain/exploration';
 
 const explanatory = explorationSpecSchema.options[1].shape;
 /** Only narration/emphasis is authored here. Source, diagram geometry, controls
@@ -55,8 +51,7 @@ export function continueExploration(
     if (!binding.input) throw new Error('Checked continuation requires current input');
     spec.input = structuredClone(binding.input);
     if (spec.comparison) {
-      if (!binding.comparison)
-        throw new Error('Comparison continuation requires current input');
+      if (!binding.comparison) throw new Error('Comparison continuation requires current input');
       spec.comparison.input = structuredClone(binding.comparison);
     }
   }

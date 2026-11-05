@@ -107,9 +107,17 @@ async function readResponse(response: Response, signal: AbortSignal): Promise<un
 /** 16-bit mono PCM at 24 kHz, however the model spells it ("audio/L16;codec=pcm;rate=24000",
  * "audio/l16; rate=24000; channels=1"). */
 function pcm24k(mimeType: string): boolean {
-  const [type, ...params] = mimeType.toLowerCase().split(';').map((part) => part.trim());
+  const [type, ...params] = mimeType
+    .toLowerCase()
+    .split(';')
+    .map((part) => part.trim());
   const values = Object.fromEntries(params.map((p) => p.split('=').map((x) => x.trim())));
-  return type === 'audio/l16' && values.rate === '24000' && (values.channels ?? '1') === '1' && (values.codec ?? 'pcm') === 'pcm';
+  return (
+    type === 'audio/l16' &&
+    values.rate === '24000' &&
+    (values.channels ?? '1') === '1' &&
+    (values.codec ?? 'pcm') === 'pcm'
+  );
 }
 export function parseGeminiSpeech(raw: unknown): Uint8Array {
   const parsed = z
@@ -123,7 +131,9 @@ export function parseGeminiSpeech(raw: unknown): Uint8Array {
                 .array(
                   z.object({
                     inlineData: z.object({
-                      mimeType: z.string().refine((value) => value === 'audio/wav' || pcm24k(value)),
+                      mimeType: z
+                        .string()
+                        .refine((value) => value === 'audio/wav' || pcm24k(value)),
                       data: z
                         .string()
                         .min(4)

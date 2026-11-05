@@ -129,9 +129,7 @@ export function diagramRoutes(panel: Diagram, layout: ReturnType<typeof diagramL
 }
 export function pointOnDiagramRoute(points: DiagramPoint[], progress: number): DiagramPoint {
   if (!points.length) return { x: 0, y: 0 };
-  const lengths = points
-      .slice(1)
-      .map((p, i) => Math.hypot(p.x - points[i].x, p.y - points[i].y)),
+  const lengths = points.slice(1).map((p, i) => Math.hypot(p.x - points[i].x, p.y - points[i].y)),
     total = lengths.reduce((a, b) => a + b, 0);
   let remaining = Math.max(0, Math.min(1, progress)) * total;
   for (let i = 0; i < lengths.length; i++) {

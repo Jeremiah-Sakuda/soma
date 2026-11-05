@@ -27,8 +27,20 @@ export const ENGINE = {
 } as const;
 
 export const engineRoles = [
-  'block', 'piston', 'rod', 'crank', 'intake_valve', 'exhaust_valve', 'intake_cam', 'exhaust_cam',
-  'spark_plug', 'timing_belt', 'charge', 'spark', 'intake_flow', 'exhaust_flow',
+  'block',
+  'piston',
+  'rod',
+  'crank',
+  'intake_valve',
+  'exhaust_valve',
+  'intake_cam',
+  'exhaust_cam',
+  'spark_plug',
+  'timing_belt',
+  'charge',
+  'spark',
+  'intake_flow',
+  'exhaust_flow',
 ] as const;
 export type EngineRole = (typeof engineRoles)[number];
 export const engineStyle = (role: EngineRole) => `engine-${role.replace(/_/g, '-')}` as const;
@@ -42,7 +54,10 @@ export function engineRoleOf(renderStyle: string | null | undefined): EngineRole
 // Names only: what each part is. Soma's cutaway makes no claim of its own about timing or
 // rates; the explanation's reviewed words carry those, and the motion illustrates them.
 const NAMES: Record<EngineRole, [string, string]> = {
-  block: ['Cylinder and head (cut away)', 'Illustrative cylinder and head, cut away to show inside.'],
+  block: [
+    'Cylinder and head (cut away)',
+    'Illustrative cylinder and head, cut away to show inside.',
+  ],
   piston: ['Piston', 'Illustrative piston in the cylinder.'],
   rod: ['Connecting rod', 'Illustrative connecting rod between the piston and the crankshaft.'],
   crank: ['Crankshaft', 'Illustrative crankshaft.'],
@@ -64,59 +79,95 @@ const rad = (deg: number) => (deg * Math.PI) / 180;
 export const crankDegrees = (value01: number) => Math.max(0, Math.min(1, value01)) * 720;
 export function pistonPin(theta: number) {
   const a = rad(theta);
-  return ENGINE.crank * Math.cos(a) + Math.sqrt(ENGINE.rod ** 2 - (ENGINE.crank * Math.sin(a)) ** 2);
+  return (
+    ENGINE.crank * Math.cos(a) + Math.sqrt(ENGINE.rod ** 2 - (ENGINE.crank * Math.sin(a)) ** 2)
+  );
 }
-export const crankPin = (theta: number) => ({ x: ENGINE.crank * Math.sin(rad(theta)), y: ENGINE.crank * Math.cos(rad(theta)) });
+export const crankPin = (theta: number) => ({
+  x: ENGINE.crank * Math.sin(rad(theta)),
+  y: ENGINE.crank * Math.cos(rad(theta)),
+});
 /** Idealized lift: each valve opens over its own half-turn, smoothly, and is shut otherwise. */
 export function valveLift(which: 'intake' | 'exhaust', theta: number) {
-  const t = ((theta % 720) + 720) % 720, start = which === 'intake' ? 0 : 540;
-  return t >= start && t <= start + 180 ? ENGINE.valveLift * Math.sin((Math.PI * (t - start)) / 180) ** 2 : 0;
+  const t = ((theta % 720) + 720) % 720,
+    start = which === 'intake' ? 0 : 540;
+  return t >= start && t <= start + 180
+    ? ENGINE.valveLift * Math.sin((Math.PI * (t - start)) / 180) ** 2
+    : 0;
 }
 export type Stroke = 'intake' | 'compression' | 'power' | 'exhaust';
 // At a boundary, the stroke that is finishing: 180° ends intake, 720° ends exhaust.
 export const strokeAt = (theta: number): Stroke =>
-  (['intake', 'compression', 'power', 'exhaust'] as const)[Math.max(0, Math.min(3, Math.ceil(theta / 180) - 1))];
+  (['intake', 'compression', 'power', 'exhaust'] as const)[
+    Math.max(0, Math.min(3, Math.ceil(theta / 180) - 1))
+  ];
 /** What the gas in the cylinder is at each stroke. */
-export const chargeName: Record<Stroke, string> = { intake: 'Fresh fuel–air mixture', compression: 'Compressed mixture', power: 'Burning gas', exhaust: 'Burnt gas' };
+export const chargeName: Record<Stroke, string> = {
+  intake: 'Fresh fuel–air mixture',
+  compression: 'Compressed mixture',
+  power: 'Burning gas',
+  exhaust: 'Burnt gas',
+};
 /** How brightly the spark shows: a short flash around top dead centre before power. */
 export const sparkGlow = (theta: number) => Math.max(0, 1 - Math.abs(theta - 360) / 14);
 
 /** Where each camshaft turns: on its valve's axis, just above the stem. */
 export function camCentre(side: -1 | 1) {
-  const tilt = rad(ENGINE.valveTilt), reach = ENGINE.stem + ENGINE.camBase + 0.03;
-  return { x: side * ENGINE.valveSeatX + side * Math.sin(tilt) * reach, y: ENGINE.seatY + Math.cos(tilt) * reach };
+  const tilt = rad(ENGINE.valveTilt),
+    reach = ENGINE.stem + ENGINE.camBase + 0.03;
+  return {
+    x: side * ENGINE.valveSeatX + side * Math.sin(tilt) * reach,
+    y: ENGINE.seatY + Math.cos(tilt) * reach,
+  };
 }
 /** Into [-180, 180], as stored rotations are. */
 const wrap = (deg: number) => ((((deg + 180) % 360) + 360) % 360) - 180;
 
 /** Pose of one part at a crank angle, in nominal units about the crank axis. */
-export function enginePose(role: EngineRole, theta: number): { x: number; y: number; z: number; rotZ: number; open: number } {
+export function enginePose(
+  role: EngineRole,
+  theta: number,
+): { x: number; y: number; z: number; rotZ: number; open: number } {
   // A valve opens by sliding down its own tilted axis, into the chamber.
   const valveAxis = (side: -1 | 1, lift: number) => {
     const tilt = rad(ENGINE.valveTilt);
-    return { x: side * ENGINE.valveSeatX - side * Math.sin(tilt) * lift, y: ENGINE.seatY - Math.cos(tilt) * lift, rotZ: -side * ENGINE.valveTilt };
+    return {
+      x: side * ENGINE.valveSeatX - side * Math.sin(tilt) * lift,
+      y: ENGINE.seatY - Math.cos(tilt) * lift,
+      rotZ: -side * ENGINE.valveTilt,
+    };
   };
   switch (role) {
     case 'piston':
       return { x: 0, y: pistonPin(theta), z: 0, rotZ: 0, open: 0 };
     case 'rod': {
-      const pin = crankPin(theta), top = pistonPin(theta);
+      const pin = crankPin(theta),
+        top = pistonPin(theta);
       // The rod's frame is at the crank pin, pointing up the rod.
-      return { x: pin.x, y: pin.y, z: 0, rotZ: (Math.atan2(pin.x, top - pin.y) * 180) / Math.PI, open: 0 };
+      return {
+        x: pin.x,
+        y: pin.y,
+        z: 0,
+        rotZ: (Math.atan2(pin.x, top - pin.y) * 180) / Math.PI,
+        open: 0,
+      };
     }
     case 'crank':
       return { x: 0, y: 0, z: 0, rotZ: -theta, open: 0 };
     case 'intake_valve': {
-      const lift = valveLift('intake', theta), v = valveAxis(-1, lift);
+      const lift = valveLift('intake', theta),
+        v = valveAxis(-1, lift);
       return { ...v, z: 0, open: lift / ENGINE.valveLift };
     }
     case 'exhaust_valve': {
-      const lift = valveLift('exhaust', theta), v = valveAxis(1, lift);
+      const lift = valveLift('exhaust', theta),
+        v = valveAxis(1, lift);
       return { ...v, z: 0, open: lift / ENGINE.valveLift };
     }
     case 'intake_cam':
     case 'exhaust_cam': {
-      const side = role === 'intake_cam' ? -1 : 1, c = camCentre(side);
+      const side = role === 'intake_cam' ? -1 : 1,
+        c = camCentre(side);
       // Half the crank's speed; the lobe points down the valve stem at full lift.
       const peak = role === 'intake_cam' ? 90 : 630;
       return { x: c.x, y: c.y, z: 0, rotZ: -(theta - peak) / 2 - side * ENGINE.valveTilt, open: 0 };
@@ -139,34 +190,67 @@ export function enginePose(role: EngineRole, theta: number): { x: number; y: num
 }
 
 /** The point on each part a name's leader ends at, in nominal units, at a crank angle. */
-export function engineLabelPoint(role: EngineRole, theta: number): { x: number; y: number; z: number } {
-  const p = enginePose(role, theta), a = rad(-p.rotZ);
+export function engineLabelPoint(
+  role: EngineRole,
+  theta: number,
+): { x: number; y: number; z: number } {
+  const p = enginePose(role, theta),
+    a = rad(-p.rotZ);
   switch (role) {
-    case 'block': return { x: 0.86, y: 1.9, z: 0 };
-    case 'piston': return { x: 0.3, y: p.y + 0.12, z: 0.42 };
-    case 'rod': { const pin = crankPin(theta), top = pistonPin(theta); return { x: pin.x * 0.6, y: pin.y + (top - pin.y) * 0.4, z: 0.08 }; }
-    case 'crank': return { x: 0.16, y: -0.08, z: ENGINE.drive };
-    case 'intake_valve': case 'exhaust_valve': return { x: p.x + Math.sin(a) * 0.3, y: p.y + Math.cos(a) * 0.3, z: 0.04 };
-    case 'intake_cam': case 'exhaust_cam': return { x: p.x, y: p.y, z: ENGINE.drive };
-    case 'spark_plug': return { x: 0, y: 3.7, z: 0.1 };
-    case 'timing_belt': { const c = camCentre(-1); return { x: c.x - 0.33, y: c.y + 0.34, z: ENGINE.drive }; }
-    case 'charge': return { x: 0.15, y: (p.y + ENGINE.deck) / 2, z: 0.25 };
-    case 'spark': return { x: -0.06, y: ENGINE.roof - 0.07, z: 0.12 };
-    case 'intake_flow': return { x: -1.0, y: 3.12, z: 0.14 };
-    case 'exhaust_flow': return { x: 1.0, y: 3.12, z: 0.14 };
+    case 'block':
+      return { x: 0.86, y: 1.9, z: 0 };
+    case 'piston':
+      return { x: 0.3, y: p.y + 0.12, z: 0.42 };
+    case 'rod': {
+      const pin = crankPin(theta),
+        top = pistonPin(theta);
+      return { x: pin.x * 0.6, y: pin.y + (top - pin.y) * 0.4, z: 0.08 };
+    }
+    case 'crank':
+      return { x: 0.16, y: -0.08, z: ENGINE.drive };
+    case 'intake_valve':
+    case 'exhaust_valve':
+      return { x: p.x + Math.sin(a) * 0.3, y: p.y + Math.cos(a) * 0.3, z: 0.04 };
+    case 'intake_cam':
+    case 'exhaust_cam':
+      return { x: p.x, y: p.y, z: ENGINE.drive };
+    case 'spark_plug':
+      return { x: 0, y: 3.7, z: 0.1 };
+    case 'timing_belt': {
+      const c = camCentre(-1);
+      return { x: c.x - 0.33, y: c.y + 0.34, z: ENGINE.drive };
+    }
+    case 'charge':
+      return { x: 0.15, y: (p.y + ENGINE.deck) / 2, z: 0.25 };
+    case 'spark':
+      return { x: -0.06, y: ENGINE.roof - 0.07, z: 0.12 };
+    case 'intake_flow':
+      return { x: -1.0, y: 3.12, z: 0.14 };
+    case 'exhaust_flow':
+      return { x: 1.0, y: 3.12, z: 0.14 };
   }
 }
 
 type Authored = SpatialPanel['objects'][number];
-const vec = (v: SpatialVector, s: number, d: { x: number; y: number; z: number }): SpatialVector => ({ x: v.x + s * d.x, y: v.y + s * d.y, z: v.z + s * d.z });
+const vec = (
+  v: SpatialVector,
+  s: number,
+  d: { x: number; y: number; z: number },
+): SpatialVector => ({ x: v.x + s * d.x, y: v.y + s * d.y, z: v.z + s * d.z });
 
 /** Replaces each authored `engine` part with Soma's named parts, in place, and makes sure the
  * panel has the crank control they follow. Part IDs are the engine's ID plus the role
  * (engine -> engine_piston), so a step can highlight exactly the parts it is about. */
 export function expandEngine(panel: SpatialPanel): SpatialPanel {
-  const engines = panel.objects.filter((o) => o.renderStyle === ('engine' as Authored['renderStyle']));
+  const engines = panel.objects.filter(
+    (o) => o.renderStyle === ('engine' as Authored['renderStyle']),
+  );
   if (!engines.length) return panel;
-  const next: SpatialPanel = { ...panel, objects: [], poses: panel.poses.filter((p) => !engines.some((e) => e.id === p.objectId)) };
+  const next: SpatialPanel = {
+    ...panel,
+    objects: [],
+    poses: panel.poses.filter((p) => !engines.some((e) => e.id === p.objectId)),
+  };
   for (const o of panel.objects) {
     if (!engines.includes(o)) {
       next.objects.push(o);
@@ -175,7 +259,11 @@ export function expandEngine(panel: SpatialPanel): SpatialPanel {
     // One uniform scale: the authored height becomes the assembly's height.
     const height = ENGINE.envelope.max[1] - ENGINE.envelope.min[1];
     const s = Math.max(0.2, Math.min(1.2, Math.max(o.size.x, o.size.y, o.size.z) / height));
-    const base = { x: o.position.x, y: o.position.y - (o.size.y / 2) - ENGINE.envelope.min[1] * s, z: o.position.z };
+    const base = {
+      x: o.position.x,
+      y: o.position.y - o.size.y / 2 - ENGINE.envelope.min[1] * s,
+      z: o.position.z,
+    };
     for (const role of engineRoles) {
       const at = enginePose(role, 0);
       next.objects.push({
@@ -193,12 +281,23 @@ export function expandEngine(panel: SpatialPanel): SpatialPanel {
   }
   if (!(next.parameters ?? []).some((p) => p.id === 'crank'))
     next.parameters = [
-      { id: 'crank', label: 'Crankshaft angle', description: '0 to 720 degrees: two full crankshaft turns, one complete four-stroke cycle.', initial: 0 },
+      {
+        id: 'crank',
+        label: 'Crankshaft angle',
+        description: '0 to 720 degrees: two full crankshaft turns, one complete four-stroke cycle.',
+        initial: 0,
+      },
       ...(next.parameters ?? []),
     ].slice(0, 3);
   // Highlights and focus naming the whole engine point at its block.
-  if (next.viewAction?.focusObjectId && engines.some((e) => e.id === next.viewAction!.focusObjectId))
-    next.viewAction = { ...next.viewAction, focusObjectId: `${next.viewAction.focusObjectId}_block` };
+  if (
+    next.viewAction?.focusObjectId &&
+    engines.some((e) => e.id === next.viewAction!.focusObjectId)
+  )
+    next.viewAction = {
+      ...next.viewAction,
+      focusObjectId: `${next.viewAction.focusObjectId}_block`,
+    };
   return next;
 }
 
@@ -206,16 +305,30 @@ export function expandEngine(panel: SpatialPanel): SpatialPanel {
 export const crankTweenMs = (delta01: number) => Math.min(2800, 500 + Math.abs(delta01) * 4200);
 export const easeCrank = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 /** The crank value an engine scene is posed at, if it has one. */
-export function engineCrank(objects: readonly { renderStyle?: string | null; parameterValues?: Record<string, number> }[]) {
+export function engineCrank(
+  objects: readonly { renderStyle?: string | null; parameterValues?: Record<string, number> }[],
+) {
   return objects.find((o) => engineRoleOf(o.renderStyle) === 'block')?.parameterValues?.crank;
 }
 
 /** Poses every engine part in a scene at the crank parameter's value: block-relative, exact. */
-export function poseEngineParts<T extends { id: string; renderStyle?: string | null; position: SpatialVector; size: SpatialVector; rotation?: { x: number; y: number; z: number } | null; visible: boolean; parameterValues?: Record<string, number>; labelAt?: SpatialVector }>(
-  objects: T[],
-  crank01: number,
-): T[] {
-  const blocks = new Map(objects.filter((o) => engineRoleOf(o.renderStyle) === 'block').map((o) => [o.id.replace(/_block$/, ''), o]));
+export function poseEngineParts<
+  T extends {
+    id: string;
+    renderStyle?: string | null;
+    position: SpatialVector;
+    size: SpatialVector;
+    rotation?: { x: number; y: number; z: number } | null;
+    visible: boolean;
+    parameterValues?: Record<string, number>;
+    labelAt?: SpatialVector;
+  },
+>(objects: T[], crank01: number): T[] {
+  const blocks = new Map(
+    objects
+      .filter((o) => engineRoleOf(o.renderStyle) === 'block')
+      .map((o) => [o.id.replace(/_block$/, ''), o]),
+  );
   if (!blocks.size) return objects;
   const theta = crankDegrees(crank01);
   return objects.map((o) => {
@@ -223,7 +336,8 @@ export function poseEngineParts<T extends { id: string; renderStyle?: string | n
     if (!role) return o;
     const block = blocks.get(o.id.slice(0, o.id.length - role.length - 1));
     if (!block) return o;
-    const s = block.size.x, p = enginePose(role, theta);
+    const s = block.size.x,
+      p = enginePose(role, theta);
     const transient = role === 'spark' || role === 'intake_flow' || role === 'exhaust_flow';
     return {
       ...o,

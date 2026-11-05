@@ -1,7 +1,28 @@
 // Rewrites narration for a voice: the notation a slide or caption uses reads well but is
 // spoken badly ("F ≤ 11 → 7", "the A–F edge", "dist[v]"). Pure and conservative: it only
 // touches notation and small whole numbers, never the wording itself.
-const UNITS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+const UNITS = [
+  'zero',
+  'one',
+  'two',
+  'three',
+  'four',
+  'five',
+  'six',
+  'seven',
+  'eight',
+  'nine',
+  'ten',
+  'eleven',
+  'twelve',
+  'thirteen',
+  'fourteen',
+  'fifteen',
+  'sixteen',
+  'seventeen',
+  'eighteen',
+  'nineteen',
+];
 const TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
 function numberWords(n: number): string {
   if (n < 20) return UNITS[n];

@@ -76,10 +76,7 @@ async function setup(page: Page, options: { empty?: boolean } = {}) {
   await page.goto('/explore');
   if (options.empty) return;
   await openMoreExamples(page);
-  await page
-    .getByRole('button', { name: 'Try the original example', exact: true })
-    .first()
-    .click();
+  await page.getByRole('button', { name: 'Try the original example', exact: true }).first().click();
   await page.getByRole('heading', { name: a.spec.title, exact: true }).waitFor();
   await page.locator('#exploration-question').fill('Explain this current graph.');
   await page.getByRole('button', { name: 'Ask Soma', exact: true }).click();
@@ -102,9 +99,7 @@ test('real stage messages preserve the current diagram until the complete revisi
   await expect(
     page.getByText('Muse Spark is reading your selected source…', { exact: false }),
   ).toBeVisible();
-  expect(await page.evaluate(() => (window as any).__requestAccept)).toBe(
-    'application/x-ndjson',
-  );
+  expect(await page.evaluate(() => (window as any).__requestAccept)).toBe('application/x-ndjson');
   await emit(page, {
     type: 'progress',
     progress: { phase: 'reviewing-visual', elapsedMs: 4000 },
@@ -119,9 +114,7 @@ test('real stage messages preserve the current diagram until the complete revisi
   await expect(
     page.getByRole('heading', { name: 'Reviewed synthetic revision', exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Cancel request', exact: true })).toHaveCount(
-    0,
-  );
+  await expect(page.getByRole('button', { name: 'Cancel request', exact: true })).toHaveCount(0);
 });
 
 test('cancel and streamed failure keep the original visual and question available on a phone', async ({
@@ -137,9 +130,7 @@ test('cancel and streamed failure keep the original visual and question availabl
   await expect(
     page.getByRole('heading', { name: 'Original synthetic graph', exact: true }),
   ).toBeVisible();
-  await expect(page.locator('#exploration-question')).toHaveValue(
-    'Explain this current graph.',
-  );
+  await expect(page.locator('#exploration-question')).toHaveValue('Explain this current graph.');
   await expect(page.getByRole('button', { name: 'Ask Soma', exact: true })).toBeVisible();
   expect(await page.evaluate(() => (window as any).__progressRequests)).toBe(1);
   await page.getByRole('button', { name: 'Ask Soma', exact: true }).click();
@@ -150,9 +141,7 @@ test('cancel and streamed failure keep the original visual and question availabl
   await expect(
     page.getByRole('heading', { name: 'Original synthetic graph', exact: true }),
   ).toBeVisible();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-    true,
-  );
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
 test('an interrupted response keeps the draft and last visual with a clear recovery message', async ({
@@ -163,12 +152,8 @@ test('an interrupted response keeps the draft and last visual with a clear recov
     page.getByText('Muse Spark is reading your selected source…', { exact: false }),
   ).toBeVisible();
   await page.evaluate(() => (window as any).__visualStream.close());
-  await expect(page.locator('.exploration-error')).toContainText(
-    'last card and question are kept',
-  );
-  await expect(page.locator('#exploration-question')).toHaveValue(
-    'Explain this current graph.',
-  );
+  await expect(page.locator('.exploration-error')).toContainText('last card and question are kept');
+  await expect(page.locator('#exploration-question')).toHaveValue('Explain this current graph.');
   await expect(
     page.getByRole('heading', { name: 'Original synthetic graph', exact: true }),
   ).toBeVisible();
@@ -210,9 +195,7 @@ test('a fresh screenshot is visible locally while its first explanation is still
     page.getByRole('heading', { name: 'Original synthetic graph', exact: true }),
   ).toBeVisible();
   await page.setViewportSize({ width: 375, height: 704 });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-    true,
-  );
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('button', { name: 'Cancel request', exact: true }).click();
   await expect(receipt).toHaveCount(0);
   await emit(page, { type: 'result', result: { artifact: make(2) } }, true).catch(() => {});
@@ -238,13 +221,11 @@ test('the first pending explanation opens the focused workspace with the local r
     x.fillText('Original synthetic first source', 20, 80);
     return c.toDataURL('image/png').split(',')[1];
   });
-  await page
-    .locator('input[type=file]')
-    .setInputFiles({
-      name: 'first-source.png',
-      mimeType: 'image/png',
-      buffer: Buffer.from(png, 'base64'),
-    });
+  await page.locator('input[type=file]').setInputFiles({
+    name: 'first-source.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(png, 'base64'),
+  });
   await page.locator('#exploration-question').fill('Explain this new source.');
   await page.evaluate(() => {
     (window as any).__suppressInitialProgress = true;

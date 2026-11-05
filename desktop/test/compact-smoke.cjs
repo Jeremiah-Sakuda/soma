@@ -30,8 +30,11 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     assert.ok(toolbar, 'Native toolbar loaded');
     await toolbar.waitForSelector('#compact');
     await app.evaluate(async ({ BrowserWindow }) => {
-      const v = BrowserWindow.getAllWindows().find((w) => w.webContents.getURL().endsWith('toolbar.html')).contentView.children[0];
-      if (v.webContents.isLoading()) await new Promise((r) => v.webContents.once('did-finish-load', r));
+      const v = BrowserWindow.getAllWindows().find((w) =>
+        w.webContents.getURL().endsWith('toolbar.html'),
+      ).contentView.children[0];
+      if (v.webContents.isLoading())
+        await new Promise((r) => v.webContents.once('did-finish-load', r));
     });
     const windows = () =>
       app.evaluate(({ BrowserWindow }) => {
@@ -51,9 +54,16 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     await wait(200);
     assert.deepEqual(await windows(), { panel: false, bar: true }, 'the bar replaces the panel');
     const safety = await app.evaluate(({ BrowserWindow }) => {
-      const w = BrowserWindow.getAllWindows().find((x) => x.webContents.getURL().endsWith('compact.html'));
+      const w = BrowserWindow.getAllWindows().find((x) =>
+        x.webContents.getURL().endsWith('compact.html'),
+      );
       const p = w.webContents.getLastWebPreferences();
-      return { top: w.isAlwaysOnTop(), node: p.nodeIntegration, sandbox: p.sandbox, isolation: p.contextIsolation };
+      return {
+        top: w.isAlwaysOnTop(),
+        node: p.nodeIntegration,
+        sandbox: p.sandbox,
+        isolation: p.contextIsolation,
+      };
     });
     assert.deepEqual(safety, { top: true, node: false, sandbox: true, isolation: true });
     assert.equal(await bar.evaluate(() => typeof require + typeof process), 'undefinedundefined');
@@ -62,9 +72,11 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     assert.equal(await bar.textContent('#status'), 'Type a question first.');
     // The page claims a visual, but nothing is drawn on screen: no steps, no Test it, no follow-up mode.
     await app.evaluate(({ BrowserWindow }) =>
-      BrowserWindow.getAllWindows().find((w) => w.webContents.getURL().endsWith('toolbar.html')).contentView.children[0].webContents.executeJavaScript(
-        `window.dispatchEvent(new CustomEvent('soma:compact-state',{detail:{busy:false,visual:true,step:0,steps:5,playing:false,investigable:true,message:''}}))`,
-      ),
+      BrowserWindow.getAllWindows()
+        .find((w) => w.webContents.getURL().endsWith('toolbar.html'))
+        .contentView.children[0].webContents.executeJavaScript(
+          `window.dispatchEvent(new CustomEvent('soma:compact-state',{detail:{busy:false,visual:true,step:0,steps:5,playing:false,investigable:true,message:''}}))`,
+        ),
     );
     await wait(200);
     const ui = await bar.evaluate(() => ({
@@ -73,27 +85,43 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
       fresh: document.getElementById('fresh').hidden,
       placeholder: document.getElementById('question').placeholder,
     }));
-    assert.deepEqual(ui, { steps: true, test: true, fresh: true, placeholder: 'Ask about your screen…' });
+    assert.deepEqual(ui, {
+      steps: true,
+      test: true,
+      fresh: true,
+      placeholder: 'Ask about your screen…',
+    });
     // A busy page refuses a new question instead of racing it.
     await app.evaluate(({ BrowserWindow }) =>
-      BrowserWindow.getAllWindows().find((w) => w.webContents.getURL().endsWith('toolbar.html')).contentView.children[0].webContents.executeJavaScript(
-        `window.dispatchEvent(new CustomEvent('soma:compact-state',{detail:{busy:true,visual:false,step:null,steps:null,playing:false,investigable:false,message:''}}))`,
-      ),
+      BrowserWindow.getAllWindows()
+        .find((w) => w.webContents.getURL().endsWith('toolbar.html'))
+        .contentView.children[0].webContents.executeJavaScript(
+          `window.dispatchEvent(new CustomEvent('soma:compact-state',{detail:{busy:true,visual:false,step:null,steps:null,playing:false,investigable:false,message:''}}))`,
+        ),
     );
     await wait(200);
     await bar.fill('#question', 'Why not the direct edge?');
     await bar.press('#question', 'Enter');
     assert.equal(await bar.textContent('#status'), 'Muse is still working on your last question.');
-    assert.equal(await bar.inputValue('#question'), 'Why not the direct edge?', 'the refused question is kept');
-    assert.equal(await bar.evaluate(() => document.getElementById('bar').getAttribute('aria-busy')), 'true');
+    assert.equal(
+      await bar.inputValue('#question'),
+      'Why not the direct edge?',
+      'the refused question is kept',
+    );
+    assert.equal(
+      await bar.evaluate(() => document.getElementById('bar').getAttribute('aria-busy')),
+      'true',
+    );
     // Expand returns to the panel; the page's error state reaches the bar on reopening.
     await bar.click('#expand');
     await wait(200);
     assert.deepEqual(await windows(), { panel: true, bar: false });
     await app.evaluate(({ BrowserWindow }) =>
-      BrowserWindow.getAllWindows().find((w) => w.webContents.getURL().endsWith('toolbar.html')).contentView.children[0].webContents.executeJavaScript(
-        `window.dispatchEvent(new CustomEvent('soma:compact-state',{detail:{busy:false,visual:false,step:null,steps:null,playing:false,investigable:false,message:'Muse could not read that screen.'}}))`,
-      ),
+      BrowserWindow.getAllWindows()
+        .find((w) => w.webContents.getURL().endsWith('toolbar.html'))
+        .contentView.children[0].webContents.executeJavaScript(
+          `window.dispatchEvent(new CustomEvent('soma:compact-state',{detail:{busy:false,visual:false,step:null,steps:null,playing:false,investigable:false,message:'Muse could not read that screen.'}}))`,
+        ),
     );
     await toolbar.click('#compact');
     await wait(300);
@@ -107,9 +135,32 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     await bar.press('#question', 'Escape');
     await wait(200);
     assert.deepEqual(await windows(), { panel: false, bar: false });
-    assert.deepEqual(await app.evaluate(({ BrowserWindow }) =>
-      BrowserWindow.getAllWindows().find((w) => w.webContents.getURL().endsWith('toolbar.html')).contentView.children[0].webContents.executeJavaScript('window.compactEvents')), []);
-    console.log(JSON.stringify({ passed: true, checks: ['bar replaces panel', 'bar sandbox/isolation', 'empty question refused', 'undrawn visual hides steps and follow-ups', 'busy refusal keeps the question', 'expand restores panel', 'state synced on reopen', 'activate shows bar in compact mode', 'Escape hides bar'], osCapture: 'not exercised', providerCalls: 0 }));
+    assert.deepEqual(
+      await app.evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows()
+          .find((w) => w.webContents.getURL().endsWith('toolbar.html'))
+          .contentView.children[0].webContents.executeJavaScript('window.compactEvents'),
+      ),
+      [],
+    );
+    console.log(
+      JSON.stringify({
+        passed: true,
+        checks: [
+          'bar replaces panel',
+          'bar sandbox/isolation',
+          'empty question refused',
+          'undrawn visual hides steps and follow-ups',
+          'busy refusal keeps the question',
+          'expand restores panel',
+          'state synced on reopen',
+          'activate shows bar in compact mode',
+          'Escape hides bar',
+        ],
+        osCapture: 'not exercised',
+        providerCalls: 0,
+      }),
+    );
   } finally {
     if (app) await app.close();
     await new Promise((r) => server.close(r));

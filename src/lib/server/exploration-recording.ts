@@ -10,9 +10,12 @@ import { publicDemoSource } from './public-demo-source';
 export type RecordedExplorationFixture = Pick<
   ExplorationArtifact,
   'spec' | 'question' | 'source' | 'generation' | 'createdAt'
-> & Partial<Pick<ExplorationArtifact, 'updatedAt' | 'state' | 'experiment' | 'circuitExperiment'>>;
+> &
+  Partial<Pick<ExplorationArtifact, 'updatedAt' | 'state' | 'experiment' | 'circuitExperiment'>>;
 
-export function recordedFixtureFromArtifact(artifact: RecordedExplorationFixture): RecordedExplorationFixture {
+export function recordedFixtureFromArtifact(
+  artifact: RecordedExplorationFixture,
+): RecordedExplorationFixture {
   if (artifact.generation.mode !== 'live' || artifact.generation.provider !== 'meta')
     throw new Error('A recording must retain an actual completed Meta generation.');
   const s = artifact.source;
@@ -25,7 +28,14 @@ export function recordedFixtureFromArtifact(artifact: RecordedExplorationFixture
     summary: s.summary,
     uncertainty: structuredClone(s.uncertainty),
   };
-  for (const field of ['imageSha256', 'anchors', 'layout', 'detailRegion', 'readingCheck', 'circuitReadingCheck'] as const) {
+  for (const field of [
+    'imageSha256',
+    'anchors',
+    'layout',
+    'detailRegion',
+    'readingCheck',
+    'circuitReadingCheck',
+  ] as const) {
     if (s[field] !== undefined) Object.assign(source, { [field]: structuredClone(s[field]) });
   }
   const g = artifact.generation;
@@ -43,13 +53,17 @@ export function recordedFixtureFromArtifact(artifact: RecordedExplorationFixture
       elapsedMs: g.elapsedMs,
       checks: [...g.checks],
       audit: g.audit.map(({ event, call, detail }) => ({ event, call, detail })),
-      ...(g.timings ? { timings: g.timings.map(({ call, stage, durationMs }) => ({ call, stage, durationMs })) } : {}),
+      ...(g.timings
+        ? { timings: g.timings.map(({ call, stage, durationMs }) => ({ call, stage, durationMs })) }
+        : {}),
     },
     createdAt: artifact.createdAt,
     ...(artifact.updatedAt ? { updatedAt: artifact.updatedAt } : {}),
     ...(artifact.state ? { state: structuredClone(artifact.state) } : {}),
     ...(artifact.experiment ? { experiment: structuredClone(artifact.experiment) } : {}),
-    ...(artifact.circuitExperiment ? { circuitExperiment: structuredClone(artifact.circuitExperiment) } : {}),
+    ...(artifact.circuitExperiment
+      ? { circuitExperiment: structuredClone(artifact.circuitExperiment) }
+      : {}),
   };
 }
 
@@ -67,12 +81,14 @@ export function createRecordedExploration(
   } = {},
 ): ExplorationArtifact {
   const fixture = recordedFixtureFromArtifact(recorded);
-  if (options.presentation && (
-    (options.presentation.kind === 'circuit-drawing-alignment-v1'
+  if (
+    options.presentation &&
+    ((options.presentation.kind === 'circuit-drawing-alignment-v1'
       ? fixture.spec.mode !== 'checked-circuit'
       : !['checked-bfs', 'checked-dijkstra'].includes(fixture.spec.mode)) ||
-    options.presentation.sourceImageSha256 !== fixture.source.imageSha256
-  )) throw new Error('Replay presentation must match its recorded source.');
+      options.presentation.sourceImageSha256 !== fixture.source.imageSha256)
+  )
+    throw new Error('Replay presentation must match its recorded source.');
   const publicDemo = publicDemoSource(recording, fixture.source, options.presentation);
   const id = randomUUID();
   const now = options.now ?? new Date().toISOString();
@@ -90,7 +106,10 @@ export function createRecordedExploration(
     version: source.version,
   }));
   const checked = checkExploration(raw);
-  const state = validateState(checked.spec, options.state ?? fixture.state ?? initialExplorationState(checked.spec));
+  const state = validateState(
+    checked.spec,
+    options.state ?? fixture.state ?? initialExplorationState(checked.spec),
+  );
   return {
     ...checked,
     id,
@@ -105,7 +124,9 @@ export function createRecordedExploration(
     recording: {
       ...recording,
       generatedAt: fixture.updatedAt ?? fixture.createdAt,
-      ...(publicDemo.presentation ? { presentation: structuredClone(publicDemo.presentation) } : {}),
+      ...(publicDemo.presentation
+        ? { presentation: structuredClone(publicDemo.presentation) }
+        : {}),
     },
     state,
     saved: false,

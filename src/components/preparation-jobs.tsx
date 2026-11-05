@@ -1,13 +1,106 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import type { WorkspaceResponse } from '@/lib/domain/types';
-type Job={id:string;topic:string;status:'queued'|'generating'|'checking'|'ready'|'failed'|'stale';updatedAt:string;lessonId?:string;notice?:string};
-export function PreparationJobs({revision,onUpdate,openLesson}:{revision:number;onUpdate:(data:WorkspaceResponse)=>void;openLesson:(id:string)=>void}){
- const [jobs,setJobs]=useState<Job[]>([]),[busy,setBusy]=useState(''),[error,setError]=useState('');
- const refresh=useCallback(async()=>{try{const response=await fetch('/api/jobs');const data=await response.json();if(!response.ok)throw new Error(data.error||'Preparation status is unavailable.');setJobs(data.jobs??[]);}catch(err){setError(err instanceof Error?err.message:'Preparation status unavailable.');}},[]);
- useEffect(()=>{void refresh();},[refresh,revision]);
- useEffect(()=>{if(!busy&&!jobs.some(j=>j.status==='generating'||j.status==='checking'))return;const timer=setInterval(()=>void refresh(),2000);return()=>clearInterval(timer);},[busy,jobs,refresh]);
- async function run(id:string){setBusy(id);setError('');try{const response=await fetch('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId:id})});const data=await response.json();if(!response.ok)throw new Error(data.error||'Preparation could not be completed.');if(data.workspace)onUpdate(data);await refresh();}catch(err){setError(err instanceof Error?err.message:'Preparation could not be completed.');await refresh();}finally{setBusy('');}}
- if(!jobs.length&&!error)return null;
- return <section className="card preparation-jobs"><div className="section-heading"><h2>Preparing from your material</h2><button className="text-button" onClick={()=>void refresh()}>Refresh status</button></div><p className="meta">Imports queue preparation. Run a saved job here to use live Spark within the configured budget.</p>{jobs.map(job=><article className="preparation-job" key={job.id}><div><strong>{job.topic}</strong><p className="meta">{job.status==='generating'?'Preparing':job.status[0].toUpperCase()+job.status.slice(1)}{busy===job.id?' · Request in progress':''}</p>{job.notice&&<p>{job.notice}</p>}</div>{job.status==='queued'&&<button className="secondary-button" disabled={!!busy} onClick={()=>void run(job.id)}>Prepare now</button>}{job.status==='ready'&&job.lessonId&&<button className="primary-button" onClick={()=>openLesson(job.lessonId!)}>Open lesson</button>}</article>)}{error&&<p role="alert" className="inline-error">{error}</p>}</section>;
+type Job = {
+  id: string;
+  topic: string;
+  status: 'queued' | 'generating' | 'checking' | 'ready' | 'failed' | 'stale';
+  updatedAt: string;
+  lessonId?: string;
+  notice?: string;
+};
+export function PreparationJobs({
+  revision,
+  onUpdate,
+  openLesson,
+}: {
+  revision: number;
+  onUpdate: (data: WorkspaceResponse) => void;
+  openLesson: (id: string) => void;
+}) {
+  const [jobs, setJobs] = useState<Job[]>([]),
+    [busy, setBusy] = useState(''),
+    [error, setError] = useState('');
+  const refresh = useCallback(async () => {
+    try {
+      const response = await fetch('/api/jobs');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Preparation status is unavailable.');
+      setJobs(data.jobs ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Preparation status unavailable.');
+    }
+  }, []);
+  useEffect(() => {
+    void refresh();
+  }, [refresh, revision]);
+  useEffect(() => {
+    if (!busy && !jobs.some((j) => j.status === 'generating' || j.status === 'checking')) return;
+    const timer = setInterval(() => void refresh(), 2000);
+    return () => clearInterval(timer);
+  }, [busy, jobs, refresh]);
+  async function run(id: string) {
+    setBusy(id);
+    setError('');
+    try {
+      const response = await fetch('/api/jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId: id }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Preparation could not be completed.');
+      if (data.workspace) onUpdate(data);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Preparation could not be completed.');
+      await refresh();
+    } finally {
+      setBusy('');
+    }
+  }
+  if (!jobs.length && !error) return null;
+  return (
+    <section className="card preparation-jobs">
+      <div className="section-heading">
+        <h2>Preparing from your material</h2>
+        <button className="text-button" onClick={() => void refresh()}>
+          Refresh status
+        </button>
+      </div>
+      <p className="meta">
+        Imports queue preparation. Run a saved job here to use live Spark within the configured
+        budget.
+      </p>
+      {jobs.map((job) => (
+        <article className="preparation-job" key={job.id}>
+          <div>
+            <strong>{job.topic}</strong>
+            <p className="meta">
+              {job.status === 'generating'
+                ? 'Preparing'
+                : job.status[0].toUpperCase() + job.status.slice(1)}
+              {busy === job.id ? ' · Request in progress' : ''}
+            </p>
+            {job.notice && <p>{job.notice}</p>}
+          </div>
+          {job.status === 'queued' && (
+            <button className="secondary-button" disabled={!!busy} onClick={() => void run(job.id)}>
+              Prepare now
+            </button>
+          )}
+          {job.status === 'ready' && job.lessonId && (
+            <button className="primary-button" onClick={() => openLesson(job.lessonId!)}>
+              Open lesson
+            </button>
+          )}
+        </article>
+      ))}
+      {error && (
+        <p role="alert" className="inline-error">
+          {error}
+        </p>
+      )}
+    </section>
+  );
 }

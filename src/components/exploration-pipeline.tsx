@@ -32,13 +32,17 @@ export function ExplorationPipeline({
     <details className="exploration-pipeline">
       <summary>How it was made · {review}</summary>
       <p>
-        {replay ? 'Recorded run' : 'Muse Spark composed'} · {checked ? 'Soma computed' : 'Scene validated'} · {review}.
+        {replay ? 'Recorded run' : 'Muse Spark composed'} ·{' '}
+        {checked ? 'Soma computed' : 'Scene validated'} · {review}.
       </p>
       <p>
-        {source}.{' '}
-        {readingCheck ? `${readingCheck.detail} ` : ''}
-        {has('cost-probed') ? `Muse chose the ${family === 'circuit' ? 'component and quantity' : 'connection'} to investigate; Soma computed the supported cases and checked whether a boundary exists. ` : ''}
-        {has('investigation-declined') ? `Muse found no supported single-${family === 'circuit' ? 'component' : 'connection'} investigation for this question, so no new experiment was run. ` : ''}
+        {source}. {readingCheck ? `${readingCheck.detail} ` : ''}
+        {has('cost-probed')
+          ? `Muse chose the ${family === 'circuit' ? 'component and quantity' : 'connection'} to investigate; Soma computed the supported cases and checked whether a boundary exists. `
+          : ''}
+        {has('investigation-declined')
+          ? `Muse found no supported single-${family === 'circuit' ? 'component' : 'connection'} investigation for this question, so no new experiment was run. `
+          : ''}
         {has('review-rejected')
           ? 'Wonder requested a correction before this version was accepted. '
           : ''}
@@ -50,8 +54,8 @@ export function ExplorationPipeline({
       </p>
       {has('cost-probe-unavailable') && (
         <p>
-          The earlier intervention is unavailable with these controls. This explanation
-          preserves the current experiment.
+          The earlier intervention is unavailable with these controls. This explanation preserves
+          the current experiment.
         </p>
       )}
       <a

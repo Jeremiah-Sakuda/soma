@@ -36,16 +36,20 @@ export function ExplorationJournalLog({
           );
   const note = authored ? authored.narration || authored.caption : null;
   // Without an explanation written for this exact step, the step is told once, in print.
-  const printed = !note && !changed && spec.mode !== 'explanation' ? explorationStepCaption(spec, state) : null;
+  const printed =
+    !note && !changed && spec.mode !== 'explanation' ? explorationStepCaption(spec, state) : null;
   const execution = explorationExecution(spec, state);
   const step = execution?.steps[Math.min(state.step, execution.steps.length - 1)];
-  const previous = execution?.steps[Math.max(0, Math.min(state.step, execution.steps.length - 1) - 1)];
+  const previous =
+    execution?.steps[Math.max(0, Math.min(state.step, execution.steps.length - 1) - 1)];
   const weighted = execution?.modelId === 'dijkstra-nonnegative';
   const finished = step && step.status !== 'searching' && step.status !== 'ready';
   const rows =
     execution && step
       ? [
-          ...step.expanded.filter((id) => id !== step.current).map((id) => ({ id, mark: 'settled' as Mark })),
+          ...step.expanded
+            .filter((id) => id !== step.current)
+            .map((id) => ({ id, mark: 'settled' as Mark })),
           ...(step.current ? [{ id: step.current, mark: 'now' as Mark }] : []),
           ...step.queue
             .filter((id) => id !== step.current && !step.expanded.includes(id))
@@ -53,7 +57,8 @@ export function ExplorationJournalLog({
           ...execution.input.nodes
             .map((node) => node.id)
             .filter(
-              (id) => id !== step.current && !step.expanded.includes(id) && !step.queue.includes(id),
+              (id) =>
+                id !== step.current && !step.expanded.includes(id) && !step.queue.includes(id),
             )
             .map((id) => ({ id, mark: 'unreached' as Mark })),
         ]
@@ -61,8 +66,7 @@ export function ExplorationJournalLog({
   const name = (id: string) => execution?.input.nodes.find((node) => node.id === id)?.label ?? id;
   const value = (id: string, mark: Mark) => {
     const current = step?.distances[id];
-    if (current === undefined)
-      return mark === 'unreached' && finished ? 'unreached' : '—';
+    if (current === undefined) return mark === 'unreached' && finished ? 'unreached' : '—';
     const before = previous?.distances[id];
     return before !== undefined && before !== current && state.step > 0 ? (
       <>
@@ -74,14 +78,34 @@ export function ExplorationJournalLog({
   };
   // A circuit's log: each node's checked voltage and each part's current, as the steps reveal them.
   const circuit = circuitSolution(spec, state);
-  const cstep = circuit?.status === 'solved' ? circuit.steps[Math.min(state.step, circuit.steps.length - 1)] : null;
+  const cstep =
+    circuit?.status === 'solved'
+      ? circuit.steps[Math.min(state.step, circuit.steps.length - 1)]
+      : null;
   const circuitRows =
     circuit && cstep && spec.mode === 'checked-circuit'
       ? [
           ...spec.input.nodes.map((n) => {
             const v = circuit.voltages[n.id];
-            const mark: Mark = v === null ? 'unreached' : cstep.node === n.id ? 'now' : cstep.revealedNodes.includes(n.id) ? 'settled' : 'waiting';
-            return { id: n.id, name: n.label, mark, value: mark === 'settled' || mark === 'now' ? circuitQuantity(v!, 'V') : mark === 'unreached' ? 'cut off' : '—' };
+            const mark: Mark =
+              v === null
+                ? 'unreached'
+                : cstep.node === n.id
+                  ? 'now'
+                  : cstep.revealedNodes.includes(n.id)
+                    ? 'settled'
+                    : 'waiting';
+            return {
+              id: n.id,
+              name: n.label,
+              mark,
+              value:
+                mark === 'settled' || mark === 'now'
+                  ? circuitQuantity(v!, 'V')
+                  : mark === 'unreached'
+                    ? 'cut off'
+                    : '—',
+            };
           }),
           ...spec.input.components
             .filter((c) => cstep.revealedComponents.includes(c.id))
@@ -89,12 +113,18 @@ export function ExplorationJournalLog({
               id: c.id,
               name: c.label,
               mark: 'settled' as Mark,
-              value: circuit.state.open.includes(c.id) ? 'open' : circuitQuantity(Math.abs(circuit.currents[c.id]), 'A'),
+              value: circuit.state.open.includes(c.id)
+                ? 'open'
+                : circuitQuantity(Math.abs(circuit.currents[c.id]), 'A'),
             })),
         ]
       : [];
   const writer =
-    provenance === 'prepared' ? 'the example’s author' : provenance === 'recorded' ? 'Muse (recorded run)' : 'Muse';
+    provenance === 'prepared'
+      ? 'the example’s author'
+      : provenance === 'recorded'
+        ? 'Muse (recorded run)'
+        : 'Muse';
   return (
     <div className="journal-log">
       {circuitRows.length > 0 && (
@@ -110,7 +140,13 @@ export function ExplorationJournalLog({
                   {signifier[row.mark]}
                 </span>
                 <span className="sr-only">
-                  {row.mark === 'now' ? 'Now:' : row.mark === 'settled' ? 'Known:' : row.mark === 'waiting' ? 'Not yet:' : 'Cut off:'}
+                  {row.mark === 'now'
+                    ? 'Now:'
+                    : row.mark === 'settled'
+                      ? 'Known:'
+                      : row.mark === 'waiting'
+                        ? 'Not yet:'
+                        : 'Cut off:'}
                 </span>
                 <span className="journal-log-name">{row.name}</span>
                 <span className="journal-log-leader" aria-hidden="true" />

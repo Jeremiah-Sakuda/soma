@@ -1,6 +1,11 @@
 import type { DcSolution } from './dc-circuit';
 import { circuitQuantity } from './exploration-view';
-import { tagBox, type OverlayStatus, type OverlayTagTone, type SourceOverlayModel } from './source-overlay-model';
+import {
+  tagBox,
+  type OverlayStatus,
+  type OverlayTagTone,
+  type SourceOverlayModel,
+} from './source-overlay-model';
 
 /** Normalized image coordinates of the interpreted circuit: one point on each node's wire,
  * and each component's two ends as drawn. */
@@ -49,7 +54,9 @@ export function circuitOverlayModel({
     finished = !solved || at >= steps.length - 1;
   const revealedNodes = new Set(solved ? step.revealedNodes : []),
     revealedParts = new Set(solved ? step.revealedComponents : []);
-  const fresh = new Set(solved ? step.revealedComponents.filter((id) => !before?.revealedComponents.includes(id)) : []);
+  const fresh = new Set(
+    solved ? step.revealedComponents.filter((id) => !before?.revealedComponents.includes(id)) : [],
+  );
   const open = new Set(solution.state.open);
 
   const points = [...nodes.values()];
@@ -107,7 +114,17 @@ export function circuitOverlayModel({
     if (value === undefined || value === c.value || !pair) return [];
     const unit = c.kind === 'resistor' ? 'Ω' : c.kind === 'voltage-source' ? 'V' : 'A';
     const mid = norm({ x: (pair[0].x + pair[1].x) / 2, y: (pair[0].y + pair[1].y) / 2 });
-    return [{ edgeId: c.id, x: mid.x, y: mid.y, text: `${Number(c.value.toPrecision(4))} → ${Number(value.toPrecision(4))} ${unit}`.slice(0, 24) }];
+    return [
+      {
+        edgeId: c.id,
+        x: mid.x,
+        y: mid.y,
+        text: `${Number(c.value.toPrecision(4))} → ${Number(value.toPrecision(4))} ${unit}`.slice(
+          0,
+          24,
+        ),
+      },
+    ];
   });
   const modelNodes: SourceOverlayModel['nodes'] = input.nodes.map((n) => {
     const p = layout.nodes.find((x) => x.nodeId === n.id)!;
@@ -137,8 +154,22 @@ export function circuitOverlayModel({
       };
     }),
     ...obstacles
-      .filter((o) => !points.some((p) => p.x >= o.x * W && p.x <= (o.x + o.width) * W && p.y >= o.y * H && p.y <= (o.y + o.height) * H))
-      .map((o) => ({ x: (o.x + o.width / 2) * W, y: (o.y + o.height / 2) * H, w: o.width * W, h: o.height * H })),
+      .filter(
+        (o) =>
+          !points.some(
+            (p) =>
+              p.x >= o.x * W &&
+              p.x <= (o.x + o.width) * W &&
+              p.y >= o.y * H &&
+              p.y <= (o.y + o.height) * H,
+          ),
+      )
+      .map((o) => ({
+        x: (o.x + o.width / 2) * W,
+        y: (o.y + o.height / 2) * H,
+        w: o.width * W,
+        h: o.height * H,
+      })),
   ];
   const centre = {
     x: points.reduce((s, p) => s + p.x, 0) / points.length,
@@ -146,13 +177,22 @@ export function circuitOverlayModel({
   };
   const overlap = (b: Box) =>
     blocked.reduce((sum, o) => {
-      const ox = Math.min(o.x + o.w / 2, b.x + b.w / 2 + 3) - Math.max(o.x - o.w / 2, b.x - b.w / 2 - 3),
-        oy = Math.min(o.y + o.h / 2, b.y + b.h / 2 + 2) - Math.max(o.y - o.h / 2, b.y - b.h / 2 - 2);
+      const ox =
+          Math.min(o.x + o.w / 2, b.x + b.w / 2 + 3) - Math.max(o.x - o.w / 2, b.x - b.w / 2 - 3),
+        oy =
+          Math.min(o.y + o.h / 2, b.y + b.h / 2 + 2) - Math.max(o.y - o.h / 2, b.y - b.h / 2 - 2);
       return ox > 0 && oy > 0 ? sum + ox * oy : sum;
     }, 0);
-  const inside = (b: Box) => b.x - b.w / 2 >= 2 && b.x + b.w / 2 <= W - 2 && b.y - b.h / 2 >= 2 && b.y + b.h / 2 <= H - 2;
+  const inside = (b: Box) =>
+    b.x - b.w / 2 >= 2 && b.x + b.w / 2 <= W - 2 && b.y - b.h / 2 >= 2 && b.y + b.h / 2 <= H - 2;
   const tags: SourceOverlayModel['tags'] = [];
-  const place = (id: string, text: string, tone: OverlayTagTone, anchor: Point, curved: boolean) => {
+  const place = (
+    id: string,
+    text: string,
+    tone: OverlayTagTone,
+    anchor: Point,
+    curved: boolean,
+  ) => {
     if (tags.length >= 12) return;
     const { w, h } = tagBox(text, font);
     const base = Math.atan2(anchor.y - centre.y, anchor.x - centre.x || 0.001);
@@ -168,7 +208,10 @@ export function circuitOverlayModel({
     const fits = candidates.filter((c) => inside({ ...c, w, h }));
     const spot =
       fits.find((c) => overlap({ ...c, w, h }) === 0) ??
-      fits.reduce<Point | null>((best, c) => (!best || overlap({ ...c, w, h }) < overlap({ ...best, w, h }) ? c : best), null) ??
+      fits.reduce<Point | null>(
+        (best, c) => (!best || overlap({ ...c, w, h }) < overlap({ ...best, w, h }) ? c : best),
+        null,
+      ) ??
       candidates[0];
     blocked.push({ ...spot, w, h });
     tags.push({
@@ -193,7 +236,13 @@ export function circuitOverlayModel({
       const angle = Math.atan2(b.y - a.y, b.x - a.x);
       const arrow = ARROWS[((Math.round(angle / (Math.PI / 4)) % 8) + 8) % 8];
       const amount = circuitQuantity(Math.abs(current), 'A');
-      place(`current-${id}`, `${c.label}${amount.startsWith('≈') ? ' ' : ': '}${amount} ${arrow}`, fresh.has(id) && !finished ? 'equation' : 'route', mid, true);
+      place(
+        `current-${id}`,
+        `${c.label}${amount.startsWith('≈') ? ' ' : ': '}${amount} ${arrow}`,
+        fresh.has(id) && !finished ? 'equation' : 'route',
+        mid,
+        true,
+      );
     };
     const nodeTag = (id: string) => {
       const v = solution.voltages[id];
@@ -231,8 +280,22 @@ export function circuitOverlayModel({
     callouts: [],
     caption: text
       ? underneath
-        ? { text, stepLabel, x: left, y: Math.min(0.86, (bottom + font * 0.8) / H), anchor: 'top', font: font / W }
-        : { text, stepLabel, x: left, y: Math.max(0.02, (top - font * 0.8) / H), anchor: 'bottom', font: font / W }
+        ? {
+            text,
+            stepLabel,
+            x: left,
+            y: Math.min(0.86, (bottom + font * 0.8) / H),
+            anchor: 'top',
+            font: font / W,
+          }
+        : {
+            text,
+            stepLabel,
+            x: left,
+            y: Math.max(0.02, (top - font * 0.8) / H),
+            anchor: 'bottom',
+            font: font / W,
+          }
       : null,
   };
 }

@@ -119,11 +119,7 @@ function encode(request: MetaVisionRequest) {
         const parsed: unknown = JSON.parse(item.arguments);
         if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error();
       }
-      if (
-        'type' in item &&
-        item.type === 'function_call_output' &&
-        !pending.delete(item.call_id)
-      )
+      if ('type' in item && item.type === 'function_call_output' && !pending.delete(item.call_id))
         throw new Error();
       return item;
     });
@@ -146,9 +142,7 @@ function encode(request: MetaVisionRequest) {
         : z
             .strictObject({
               name: z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/),
-              schema: z
-                .record(z.string(), z.unknown())
-                .refine((value) => value.type === 'object'),
+              schema: z.record(z.string(), z.unknown()).refine((value) => value.type === 'object'),
             })
             .parse(request.structuredOutput);
     const common = {
@@ -195,9 +189,7 @@ export function visionRequestUpperBoundUsd(request: MetaVisionRequest): number {
 }
 /** Isolated image profile: v1 text callers retain their original byte/schema
  * bounds. Only inline PNG/JPEG is accepted; no URL fetch or provider file ID. */
-export async function requestMetaVisionResponse(
-  request: MetaVisionRequest,
-): Promise<MetaResult> {
+export async function requestMetaVisionResponse(request: MetaVisionRequest): Promise<MetaResult> {
   if (
     !process.env.MODEL_API_KEY ||
     (process.env.META_API_BASE_URL || 'https://api.meta.ai/v1') !== 'https://api.meta.ai/v1' ||
@@ -232,10 +224,7 @@ export async function requestMetaVisionResponse(
         });
         try {
           const declared = response.headers.get('content-length');
-          if (
-            declared &&
-            (!/^\d+$/.test(declared) || Number(declared) > META_MAX_RESPONSE_BYTES)
-          ) {
+          if (declared && (!/^\d+$/.test(declared) || Number(declared) > META_MAX_RESPONSE_BYTES)) {
             await response.body?.cancel();
             throw new MetaClientError('response_limit', null, true);
           }
@@ -269,7 +258,13 @@ export async function requestMetaVisionResponse(
           } catch {
             throw new MetaClientError('response_invalid', null, true);
           }
-          const result = parseMetaResponse(value, encoded.names, response.ok, 'vision', response.status);
+          const result = parseMetaResponse(
+            value,
+            encoded.names,
+            response.ok,
+            'vision',
+            response.status,
+          );
           return request.structuredOutput
             ? parseMetaStructuredResult(value, result, 'vision')
             : result;
@@ -277,8 +272,16 @@ export async function requestMetaVisionResponse(
           if (!response.ok) {
             // Error gateways may return HTML or no JSON at all. Retain only the
             // actual status and safe failure category, preserving usage and bounds.
-            const code = error instanceof MetaClientError && error.code !== 'response_invalid' ? error.code : 'http';
-            throw new MetaClientError(code, error instanceof MetaClientError ? error.usage : null, true, response.status);
+            const code =
+              error instanceof MetaClientError && error.code !== 'response_invalid'
+                ? error.code
+                : 'http';
+            throw new MetaClientError(
+              code,
+              error instanceof MetaClientError ? error.usage : null,
+              true,
+              response.status,
+            );
           }
           throw error;
         }

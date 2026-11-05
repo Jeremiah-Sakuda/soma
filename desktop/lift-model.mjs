@@ -30,7 +30,12 @@ import {
 } from 'three';
 import { createSpatialPart } from '../src/components/spatial-parts';
 import { engineChangesShape } from '../src/components/engine-parts';
-import { crankTweenMs, easeCrank, engineCrank, poseEngineParts } from '../src/lib/domain/engine-kinematics';
+import {
+  crankTweenMs,
+  easeCrank,
+  engineCrank,
+  poseEngineParts,
+} from '../src/lib/domain/engine-kinematics';
 import { cameraDistance, easeInOut, clamp01, riseAt, approach } from './lift-geometry.mjs';
 
 const FOV = 28;
@@ -40,7 +45,8 @@ const BASE_YAW = -0.32;
 const ENTER_MS = 2600;
 const EXIT_MS = 900;
 const SWAY_MS = 9000;
-const clock = () => (typeof window.__liftNow === 'function' ? window.__liftNow() : performance.now());
+const clock = () =>
+  typeof window.__liftNow === 'function' ? window.__liftNow() : performance.now();
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const ACCENT = 0xd8572a;
 // A part the learner picked.
@@ -73,17 +79,26 @@ function paperColour(image) {
     c.width = c.height = 32;
     const g = c.getContext('2d', { willReadFrequently: true });
     g.drawImage(image, 0, 0, 32, 32);
-    const data = g.getImageData(0, 0, 32, 32).data, buckets = new Map();
+    const data = g.getImageData(0, 0, 32, 32).data,
+      buckets = new Map();
     for (let i = 0; i < data.length; i += 4) {
       if (data[i + 3] < 200) continue;
       const key = (data[i] >> 4) * 256 + (data[i + 1] >> 4) * 16 + (data[i + 2] >> 4);
       const b = buckets.get(key) ?? { n: 0, r: 0, g: 0, b: 0 };
-      b.n++; b.r += data[i]; b.g += data[i + 1]; b.b += data[i + 2];
+      b.n++;
+      b.r += data[i];
+      b.g += data[i + 1];
+      b.b += data[i + 2];
       buckets.set(key, b);
     }
     const best = [...buckets.values()].sort((a, b) => b.n - a.n)[0];
     if (!best) return new Color(0xffffff);
-    return new Color().setRGB(best.r / best.n / 255, best.g / best.n / 255, best.b / best.n / 255, SRGBColorSpace);
+    return new Color().setRGB(
+      best.r / best.n / 255,
+      best.g / best.n / 255,
+      best.b / best.n / 255,
+      SRGBColorSpace,
+    );
   } catch {
     return new Color(0xffffff);
   }
@@ -113,8 +128,17 @@ function build(frame) {
   let renderer;
   try {
     const dpr = Math.min(2, devicePixelRatio || 1);
-    const ratio = frame.width * frame.height * dpr * dpr > 9e6 ? Math.max(1, Math.sqrt(9e6 / (frame.width * frame.height))) : dpr;
-    renderer = new WebGLRenderer({ canvas, alpha: true, antialias: ratio < 1.75, premultipliedAlpha: true, powerPreference: 'low-power' });
+    const ratio =
+      frame.width * frame.height * dpr * dpr > 9e6
+        ? Math.max(1, Math.sqrt(9e6 / (frame.width * frame.height)))
+        : dpr;
+    renderer = new WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: ratio < 1.75,
+      premultipliedAlpha: true,
+      powerPreference: 'low-power',
+    });
     renderer.setPixelRatio(ratio);
   } catch (error) {
     canvas.remove();
@@ -130,19 +154,50 @@ function build(frame) {
   const fill = new DirectionalLight(0xbad9ec, 0.9);
   scene.add(key, fill);
   // table: a turntable on the sheet, so a drag turns the model about its own upright axis.
-  const hinge = new Group(), yaw = new Group(), content = new Group(), table = new Group(), model = new Group();
+  const hinge = new Group(),
+    yaw = new Group(),
+    content = new Group(),
+    table = new Group(),
+    model = new Group();
   hinge.add(yaw);
   yaw.add(content);
   content.add(table);
   table.add(model);
   scene.add(hinge);
   s = {
-    canvas, labels, renderer, scene, camera, key, fill, hinge, yaw, content, table, model,
-    parts: new Map(), links: new Map(), shadowTex: shadowTexture(), pending: [],
+    canvas,
+    labels,
+    renderer,
+    scene,
+    camera,
+    key,
+    fill,
+    hinge,
+    yaw,
+    content,
+    table,
+    model,
+    parts: new Map(),
+    links: new Map(),
+    shadowTex: shadowTexture(),
+    pending: [],
     // The learner's own turn and tip of the model, from dragging it.
-    turn: 0, tip: 0, held: false,
-    t: 0, mode: 'enter', started: clock(), last: clock(), idleSince: null, sway: 0,
-    frame: null, data: null, sheet: null, sheetKey: null, sheetReady: false, onExit: null, raf: 0,
+    turn: 0,
+    tip: 0,
+    held: false,
+    t: 0,
+    mode: 'enter',
+    started: clock(),
+    last: clock(),
+    idleSince: null,
+    sway: 0,
+    frame: null,
+    data: null,
+    sheet: null,
+    sheetKey: null,
+    sheetReady: false,
+    onExit: null,
+    raf: 0,
   };
   s.onLost = (event) => {
     event.preventDefault();
@@ -153,9 +208,21 @@ function build(frame) {
 }
 
 function resize(frame) {
-  if (s.frame && s.frame.width === frame.width && s.frame.height === frame.height && s.frame.dx === frame.dx && s.frame.dy === frame.dy) return;
+  if (
+    s.frame &&
+    s.frame.width === frame.width &&
+    s.frame.height === frame.height &&
+    s.frame.dx === frame.dx &&
+    s.frame.dy === frame.dy
+  )
+    return;
   s.frame = { ...frame };
-  Object.assign(s.canvas.style, { left: frame.dx + 'px', top: frame.dy + 'px', width: frame.width + 'px', height: frame.height + 'px' });
+  Object.assign(s.canvas.style, {
+    left: frame.dx + 'px',
+    top: frame.dy + 'px',
+    width: frame.width + 'px',
+    height: frame.height + 'px',
+  });
   s.renderer.setSize(frame.width, frame.height, false);
   const d = cameraDistance(frame.height, FOV);
   s.camera.aspect = frame.width / frame.height;
@@ -176,13 +243,28 @@ function placeSheet(data, sheet) {
   if (s.sheet) for (const o of Object.values(s.sheet)) dispose3d(o);
   s.sheetKey = key;
   s.sheetReady = false;
-  const region = sheet?.region ?? data.region, f = s.frame;
-  const w = region.width * f.width, h = region.height * f.height;
-  const x = region.x * f.width + w / 2 - f.width / 2, y = f.height / 2 - (region.y * f.height + h / 2);
+  const region = sheet?.region ?? data.region,
+    f = s.frame;
+  const w = region.width * f.width,
+    h = region.height * f.height;
+  const x = region.x * f.width + w / 2 - f.width / 2,
+    y = f.height / 2 - (region.y * f.height + h / 2);
   // The sheet is the slide itself, crisp to its edges.
-  const paper = new MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, side: DoubleSide, opacity: 0 });
+  const paper = new MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    depthWrite: false,
+    side: DoubleSide,
+    opacity: 0,
+  });
   // The hollow it leaves is solid to its edges, so none of the slide's drawing stays behind.
-  const coverMat = new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, alphaMap: feather(3, 2, 6) });
+  const coverMat = new MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    alphaMap: feather(3, 2, 6),
+  });
   if (sheet)
     new TextureLoader().load(
       sheet.dataUrl,
@@ -213,7 +295,16 @@ function placeSheet(data, sheet) {
   cover.position.set(x, y, -2);
   cover.renderOrder = -2;
   // A soft drop shadow under the sheet, tilting with it, gives it an edge against the slide.
-  const floor = new Mesh(new PlaneGeometry(w * 1.08, h * 1.08), new MeshBasicMaterial({ color: 0x1d2430, alphaMap: feather(10, 8, 12), transparent: true, opacity: 0, depthWrite: false }));
+  const floor = new Mesh(
+    new PlaneGeometry(w * 1.08, h * 1.08),
+    new MeshBasicMaterial({
+      color: 0x1d2430,
+      alphaMap: feather(10, 8, 12),
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    }),
+  );
   floor.position.set(x, y - h * 0.012, -0.5);
   floor.renderOrder = -1;
   s.scene.add(cover);
@@ -246,19 +337,30 @@ function fitAnchored(data) {
   s.model.position.set(-s.sheetBox.x, -s.sheetBox.y, 2);
   s.floorY = 0;
   s.anchors = new Map(
-    data.objects.map((o) => [o.id, { x: (o.anchor.x * f.width - f.width / 2) / unit, z: -(f.height / 2 - o.anchor.y * f.height) / unit }]),
+    data.objects.map((o) => [
+      o.id,
+      {
+        x: (o.anchor.x * f.width - f.width / 2) / unit,
+        z: -(f.height / 2 - o.anchor.y * f.height) / unit,
+      },
+    ]),
   );
 }
 function fitModel() {
   // The parts' real extents: custom pieces carry their own layout inside the part.
   const box = new Box3();
   for (const v of s.parts.values()) box.union(v.extent.clone().translate(v.target));
-  const size = box.getSize(new Vector3()), center = box.getCenter(new Vector3());
+  const size = box.getSize(new Vector3()),
+    center = box.getCenter(new Vector3());
   const { x, y, w, h } = s.sheetBox;
   // A tall, narrow model (an engine, a tower) may stand taller, or it would be thin.
   const standing = size.y > 1.6 * Math.max(size.x, size.z);
   const tall = standing ? 0.7 : 0.42;
-  const unit = Math.min((w * 0.86) / Math.max(1e-3, size.x), (h * 1.7) / Math.max(1e-3, size.z), (s.frame.height * tall) / Math.max(1e-3, size.y));
+  const unit = Math.min(
+    (w * 0.86) / Math.max(1e-3, size.x),
+    (h * 1.7) / Math.max(1e-3, size.z),
+    (s.frame.height * tall) / Math.max(1e-3, size.y),
+  );
   s.unit = unit;
   // Rotating about x by +90° turns the model's y (up) into the sheet's normal.
   s.model.rotation.x = Math.PI / 2;
@@ -299,14 +401,32 @@ function syncParts(data) {
     const shellNow = Boolean(o.shell) || data.objects.some((c) => c.parentId === o.id);
     // An engine part that only turns or slides keeps its mesh as the crank moves.
     const engine = o.renderStyle?.startsWith('engine-');
-    const look = JSON.stringify([o.shape, o.renderStyle, o.color, o.size, o.path ?? null, o.geometry ?? null, engine && !engineChangesShape(o.renderStyle) ? null : o.parameterValues ?? null, shellNow]);
+    const look = JSON.stringify([
+      o.shape,
+      o.renderStyle,
+      o.color,
+      o.size,
+      o.path ?? null,
+      o.geometry ?? null,
+      engine && !engineChangesShape(o.renderStyle) ? null : (o.parameterValues ?? null),
+      shellNow,
+    ]);
     let v = s.parts.get(o.id);
     if (v && v.look !== look) {
       dispose3d(v.mesh);
       v.mesh = null;
     }
     if (!v) {
-      v = { id: o.id, label: tag('is-node is-part'), look: '', mesh: null, at: new Vector3(o.position.x, o.position.y, o.position.z), fade: 0, pulseAt: -1e9, index };
+      v = {
+        id: o.id,
+        label: tag('is-node is-part'),
+        look: '',
+        mesh: null,
+        at: new Vector3(o.position.x, o.position.y, o.position.z),
+        fade: 0,
+        pulseAt: -1e9,
+        index,
+      };
       s.parts.set(o.id, v);
     }
     if (!v.mesh) {
@@ -315,7 +435,8 @@ function syncParts(data) {
       // drawn from the holder's origin, which carries the position and any pose.
       const part = createSpatialPart(o, false, shell);
       part.position.set(0, 0, 0);
-      const holder = new Group(), inner = new Group();
+      const holder = new Group(),
+        inner = new Group();
       inner.add(part);
       holder.add(inner);
       part.traverse((m) => {
@@ -327,7 +448,15 @@ function syncParts(data) {
           if (mat.color) mat.userData.baseColor = mat.color.clone();
         }
       });
-      const shadow = new Mesh(new PlaneGeometry(1, 1), new MeshBasicMaterial({ map: s.shadowTex, transparent: true, depthWrite: false, opacity: 0 }));
+      const shadow = new Mesh(
+        new PlaneGeometry(1, 1),
+        new MeshBasicMaterial({
+          map: s.shadowTex,
+          transparent: true,
+          depthWrite: false,
+          opacity: 0,
+        }),
+      );
       shadow.rotation.x = -Math.PI / 2;
       shadow.userData.isShadow = true;
       holder.add(shadow);
@@ -346,18 +475,31 @@ function syncParts(data) {
     v.data = o;
     v.index = index;
     const pin = s.anchors?.get(o.id);
-    v.target = pin ? new Vector3(pin.x, o.position.y, pin.z) : new Vector3(o.position.x, o.position.y, o.position.z);
+    v.target = pin
+      ? new Vector3(pin.x, o.position.y, pin.z)
+      : new Vector3(o.position.x, o.position.y, o.position.z);
     // A checked height reads with its value: "B 8.394 V".
     // A picked part says what it does.
     // An engine part's name says it all; its built-in description adds nothing on screen.
-    v.label.textContent = s.pinned && o.visible ? `${o.label} ${o.detail}` : o.selected && !o.renderStyle?.startsWith('engine-') ? `${o.label} — ${o.detail}` : o.label;
+    v.label.textContent =
+      s.pinned && o.visible
+        ? `${o.label} ${o.detail}`
+        : o.selected && !o.renderStyle?.startsWith('engine-')
+          ? `${o.label} — ${o.detail}`
+          : o.label;
     v.label.classList.toggle('is-selected', Boolean(o.selected));
     if (s.pinned && !v.stem) {
-      v.stem = new Mesh(new CylinderGeometry(0.04, 0.04, 1, 8), new MeshBasicMaterial({ color: 0x8a8f86, transparent: true, opacity: 0 }));
+      v.stem = new Mesh(
+        new CylinderGeometry(0.04, 0.04, 1, 8),
+        new MeshBasicMaterial({ color: 0x8a8f86, transparent: true, opacity: 0 }),
+      );
       s.model.add(v.stem);
     }
     // A step about many parts lights them all; only a few get the emphasised chip.
-    v.label.classList.toggle('is-current', o.highlighted && data.objects.filter((x) => x.highlighted && x.visible).length <= 3);
+    v.label.classList.toggle(
+      'is-current',
+      o.highlighted && data.objects.filter((x) => x.highlighted && x.visible).length <= 3,
+    );
   });
   for (const [key, v] of s.parts)
     if (!seen.has(key)) {
@@ -378,7 +520,12 @@ function syncLinks(data) {
     seen.add(c.id);
     let v = s.links.get(c.id);
     if (!v) {
-      const mat = new MeshStandardMaterial({ color: 0x8a8f86, roughness: 0.5, transparent: true, opacity: 0 });
+      const mat = new MeshStandardMaterial({
+        color: 0x8a8f86,
+        roughness: 0.5,
+        transparent: true,
+        opacity: 0,
+      });
       const head = new Mesh(new ConeGeometry(1, 2.4, 14), mat);
       s.model.add(head);
       v = { id: c.id, mat, tube: null, head, label: tag('is-edge'), key: '' };
@@ -401,7 +548,11 @@ function project(local) {
   const out = local.clone();
   s.model.localToWorld(out);
   out.project(s.camera);
-  return { x: ((out.x + 1) / 2) * s.frame.width + s.frame.dx, y: ((1 - out.y) / 2) * s.frame.height + s.frame.dy, behind: out.z > 1 };
+  return {
+    x: ((out.x + 1) / 2) * s.frame.width + s.frame.dx,
+    y: ((1 - out.y) / 2) * s.frame.height + s.frame.dy,
+    behind: out.z > 1,
+  };
 }
 function placeLabel(el, local, opacity, priority, beside = false) {
   const p = project(local);
@@ -411,12 +562,21 @@ function placeLabel(el, local, opacity, priority, beside = false) {
 function engineOutline() {
   const v = [...s.parts.values()].find((p) => p.data.renderStyle === 'engine-block');
   if (!v?.extent) return null;
-  const e = v.extent, at = v.mesh.position;
-  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-  for (const x of [e.min.x, e.max.x]) for (const y of [e.min.y, e.max.y]) for (const z of [e.min.z, e.max.z]) {
-    const p = project(new Vector3(at.x + x, at.y + y, at.z + z));
-    x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y);
-  }
+  const e = v.extent,
+    at = v.mesh.position;
+  let x0 = Infinity,
+    x1 = -Infinity,
+    y0 = Infinity,
+    y1 = -Infinity;
+  for (const x of [e.min.x, e.max.x])
+    for (const y of [e.min.y, e.max.y])
+      for (const z of [e.min.z, e.max.z]) {
+        const p = project(new Vector3(at.x + x, at.y + y, at.z + z));
+        x0 = Math.min(x0, p.x);
+        x1 = Math.max(x1, p.x);
+        y0 = Math.min(y0, p.y);
+        y1 = Math.max(y1, p.y);
+      }
   return { x0, x1, y0, y1, cx: (x0 + x1) / 2 };
 }
 /** Writes this frame's chips: each above its part if that spot is free, else beside or
@@ -433,38 +593,80 @@ function flushLabels() {
       l.el._h = l.el.offsetHeight;
     }
   const card = document.getElementById('lift-caption')?.getBoundingClientRect();
-  const f = s.frame, gap = 6;
+  const f = s.frame,
+    gap = 6;
   const placed = card ? [{ x: card.left, y: card.top, w: card.width, h: card.height }] : [];
   const clear = (b) =>
-    b.x >= f.dx + 4 && b.y >= f.dy + 4 && b.x + b.w <= f.dx + f.width - 4 && b.y + b.h <= f.dy + f.height - 4 &&
-    placed.every((p) => b.x + b.w + gap <= p.x || p.x + p.w + gap <= b.x || b.y + b.h + gap <= p.y || p.y + p.h + gap <= b.y);
+    b.x >= f.dx + 4 &&
+    b.y >= f.dy + 4 &&
+    b.x + b.w <= f.dx + f.width - 4 &&
+    b.y + b.h <= f.dy + f.height - 4 &&
+    placed.every(
+      (p) =>
+        b.x + b.w + gap <= p.x ||
+        p.x + p.w + gap <= b.x ||
+        b.y + b.h + gap <= p.y ||
+        p.y + p.h + gap <= b.y,
+    );
   const lines = [];
   const outline = shown.some((l) => l.beside) ? engineOutline() : null;
   for (const l of [...shown].sort((a, b) => b.priority - a.priority)) {
-    const w = l.el._w, h = l.el._h;
+    const w = l.el._w,
+      h = l.el._h;
     // An engine part is named in the margin beside the engine, level with the part, with a
     // leader to it, so no name ever covers the mechanism.
     if (l.beside && outline) {
       // Always on the part's own side if there is any room, so no leader crosses the engine;
       // within the region the lift covered (clear of the slide's text) when it fits.
       const left = l.x < outline.cx;
-      const r = s.data.region, rx0 = r.x * f.width + f.dx, rx1 = (r.x + r.width) * f.width + f.dx;
+      const r = s.data.region,
+        rx0 = r.x * f.width + f.dx,
+        rx1 = (r.x + r.width) * f.width + f.dx;
       const inRegion = (b) => b.x >= rx0 - 2 && b.x + b.w <= rx1 + 2;
       const rows = [0, 1, -1, 2, -2, 3, -3, 4, -4];
-      const tries = (side, strict) => rows.map((dy) => ({ x: side ? outline.x0 - 18 - w : outline.x1 + 18, y: l.y - h / 2 + dy * (h + 6), w, h })).filter((b) => !strict || inRegion(b));
-      const box = [...tries(left, true), ...tries(left, false), ...tries(!left, true), ...tries(!left, false)].find(clear) ?? null;
-      if (!box) { l.el.style.opacity = '0'; continue; }
+      const tries = (side, strict) =>
+        rows
+          .map((dy) => ({
+            x: side ? outline.x0 - 18 - w : outline.x1 + 18,
+            y: l.y - h / 2 + dy * (h + 6),
+            w,
+            h,
+          }))
+          .filter((b) => !strict || inRegion(b));
+      const box =
+        [
+          ...tries(left, true),
+          ...tries(left, false),
+          ...tries(!left, true),
+          ...tries(!left, false),
+        ].find(clear) ?? null;
+      if (!box) {
+        l.el.style.opacity = '0';
+        continue;
+      }
       placed.push(box);
       l.el.style.transform = `translate(${box.x.toFixed(1)}px, ${box.y.toFixed(1)}px)`;
       l.el.style.opacity = String(l.opacity);
-      const nx = box.x > l.x ? box.x : box.x + w, ny = box.y + h / 2;
-      lines.push(`<line x1="${nx.toFixed(1)}" y1="${ny.toFixed(1)}" x2="${l.x.toFixed(1)}" y2="${l.y.toFixed(1)}" opacity="${l.opacity.toFixed(2)}"/><circle cx="${l.x.toFixed(1)}" cy="${l.y.toFixed(1)}" r="3" opacity="${l.opacity.toFixed(2)}"/>`);
+      const nx = box.x > l.x ? box.x : box.x + w,
+        ny = box.y + h / 2;
+      lines.push(
+        `<line x1="${nx.toFixed(1)}" y1="${ny.toFixed(1)}" x2="${l.x.toFixed(1)}" y2="${l.y.toFixed(1)}" opacity="${l.opacity.toFixed(2)}"/><circle cx="${l.x.toFixed(1)}" cy="${l.y.toFixed(1)}" r="3" opacity="${l.opacity.toFixed(2)}"/>`,
+      );
       continue;
     }
     // A picked part's longer chip goes beside it, so it never covers the part it describes.
     const spots = [
-      ...(l.priority >= 5 ? [[14, -h / 2], [-w - 14, -h / 2]] : []),
-      [-w / 2, -h - 6], [14, -h / 2], [-w - 14, -h / 2], [-w / 2, 10], [-w / 2, -2 * h - 10],
+      ...(l.priority >= 5
+        ? [
+            [14, -h / 2],
+            [-w - 14, -h / 2],
+          ]
+        : []),
+      [-w / 2, -h - 6],
+      [14, -h / 2],
+      [-w - 14, -h / 2],
+      [-w / 2, 10],
+      [-w / 2, -2 * h - 10],
     ];
     let box = null;
     for (const [ox, oy] of spots) {
@@ -478,13 +680,23 @@ function flushLabels() {
     if (!box && l.priority >= 4)
       for (let r = 40; r <= 160 && !box; r += 24)
         for (let a = 0; a < 8 && !box; a++) {
-          const b = { x: l.x + Math.cos(a * Math.PI / 4 - Math.PI / 2) * r - w / 2, y: l.y + Math.sin(a * Math.PI / 4 - Math.PI / 2) * r - h / 2, w, h };
+          const b = {
+            x: l.x + Math.cos((a * Math.PI) / 4 - Math.PI / 2) * r - w / 2,
+            y: l.y + Math.sin((a * Math.PI) / 4 - Math.PI / 2) * r - h / 2,
+            w,
+            h,
+          };
           if (clear(b)) box = b;
         }
     if (!box && l.priority >= 4) {
       // Must be shown: the nearest spot kept on the display.
       const [ox, oy] = spots[0];
-      box = { x: Math.max(f.dx + 4, Math.min(l.x + ox, f.dx + f.width - w - 4)), y: Math.max(f.dy + 4, Math.min(l.y + oy, f.dy + f.height - h - 4)), w, h };
+      box = {
+        x: Math.max(f.dx + 4, Math.min(l.x + ox, f.dx + f.width - w - 4)),
+        y: Math.max(f.dy + 4, Math.min(l.y + oy, f.dy + f.height - h - 4)),
+        w,
+        h,
+      };
     }
     if (!box) {
       l.el.style.opacity = '0';
@@ -494,8 +706,12 @@ function flushLabels() {
     l.el.style.transform = `translate(${box.x.toFixed(1)}px, ${box.y.toFixed(1)}px)`;
     l.el.style.opacity = String(l.opacity);
     // A chip not touching its point gets a short leader back to it.
-    const nx = Math.max(box.x, Math.min(l.x, box.x + w)), ny = Math.max(box.y, Math.min(l.y, box.y + h));
-    if (Math.hypot(nx - l.x, ny - l.y) > 12) lines.push(`<line x1="${nx.toFixed(1)}" y1="${ny.toFixed(1)}" x2="${l.x.toFixed(1)}" y2="${l.y.toFixed(1)}" opacity="${l.opacity.toFixed(2)}"/><circle cx="${l.x.toFixed(1)}" cy="${l.y.toFixed(1)}" r="2.5" opacity="${l.opacity.toFixed(2)}"/>`);
+    const nx = Math.max(box.x, Math.min(l.x, box.x + w)),
+      ny = Math.max(box.y, Math.min(l.y, box.y + h));
+    if (Math.hypot(nx - l.x, ny - l.y) > 12)
+      lines.push(
+        `<line x1="${nx.toFixed(1)}" y1="${ny.toFixed(1)}" x2="${l.x.toFixed(1)}" y2="${l.y.toFixed(1)}" opacity="${l.opacity.toFixed(2)}"/><circle cx="${l.x.toFixed(1)}" cy="${l.y.toFixed(1)}" r="2.5" opacity="${l.opacity.toFixed(2)}"/>`,
+      );
   }
   const svg = document.getElementById('lift-leaders');
   if (svg) svg.innerHTML = lines.join('');
@@ -508,19 +724,32 @@ function caption(data) {
     box = document.createElement('div');
     box.id = 'lift-caption';
     box.setAttribute('aria-hidden', 'true');
-    box.append(document.createElement('strong'), document.createElement('span'), document.createElement('small'));
+    box.append(
+      document.createElement('strong'),
+      document.createElement('span'),
+      document.createElement('small'),
+    );
     document.body.appendChild(box);
   }
-  const title = box.querySelector(':scope > strong'), body = box.querySelector(':scope > span'), note = box.querySelector(':scope > small');
+  const title = box.querySelector(':scope > strong'),
+    body = box.querySelector(':scope > span'),
+    note = box.querySelector(':scope > small');
   // An engine's card also reads the crank: how far round, which turn, which stroke.
   let dial = document.getElementById('lift-turn');
   const engine = engineCrank(data.objects) !== undefined;
   if (engine && !dial) {
     dial = document.createElement('div');
     dial.id = 'lift-turn';
-    const strokes = [['intake', 'Intake', '#6fb6ff'], ['compression', 'Compression', '#3f8ff0'], ['power', 'Power', '#ff7a2a'], ['exhaust', 'Exhaust', '#8f857a']];
+    const strokes = [
+      ['intake', 'Intake', '#6fb6ff'],
+      ['compression', 'Compression', '#3f8ff0'],
+      ['power', 'Power', '#ff7a2a'],
+      ['exhaust', 'Exhaust', '#8f857a'],
+    ];
     dial.innerHTML = `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="#d9d2c1" stroke-width="3"/><circle id="lift-turn-ring" cx="20" cy="20" r="16" fill="none" stroke="#3f8ff0" stroke-width="3" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 20 20)"/><line x1="20" y1="2" x2="20" y2="8" stroke="#1d2430" stroke-width="2"/><line id="lift-turn-hand" x1="20" y1="20" x2="20" y2="7" stroke="#1d2430" stroke-width="3" stroke-linecap="round"/><circle cx="20" cy="20" r="2.8" fill="#1d2430"/></svg><div class="lift-turn-info"><span id="lift-turn-text"></span><div class="lift-turns"><span>Turn 1</span><span>Turn 2</span></div><div class="lift-strokes">${strokes.map(([id, name]) => `<span class="lift-stroke"><i data-stroke="${id}"></i><b>${name}</b></span>`).join('')}</div></div>`;
-    dial.querySelectorAll('.lift-stroke i').forEach((bar, i) => { bar.style.background = strokes[i][2]; });
+    dial.querySelectorAll('.lift-stroke i').forEach((bar, i) => {
+      bar.style.background = strokes[i][2];
+    });
     box.insertBefore(dial, note);
   }
   if (dial) dial.hidden = !engine;
@@ -529,15 +758,21 @@ function caption(data) {
   title.textContent = data.caption?.stepLabel ?? data.title;
   body.textContent = data.caption?.text ?? '';
   note.textContent = data.note;
-  const f = s.frame, r = data.region;
-  box.style.left = Math.max(8, Math.min(r.x * f.width + f.dx, innerWidth - box.offsetWidth - 8)) + 'px';
+  const f = s.frame,
+    r = data.region;
+  box.style.left =
+    Math.max(8, Math.min(r.x * f.width + f.dx, innerWidth - box.offsetWidth - 8)) + 'px';
   box.style.bottom = '';
   const below = (r.y + r.height) * f.height + f.dy + 12;
   if (below + box.offsetHeight <= innerHeight - 138) box.style.top = below + 'px';
   else {
     // No room under the region: beside it, on whichever side has more space.
-    const right = (r.x + r.width) * f.width + f.dx + 16, left = r.x * f.width + f.dx - box.offsetWidth - 16;
-    box.style.left = (right + box.offsetWidth <= innerWidth - 8 || left < 8 ? Math.min(right, innerWidth - box.offsetWidth - 8) : left) + 'px';
+    const right = (r.x + r.width) * f.width + f.dx + 16,
+      left = r.x * f.width + f.dx - box.offsetWidth - 16;
+    box.style.left =
+      (right + box.offsetWidth <= innerWidth - 8 || left < 8
+        ? Math.min(right, innerWidth - box.offsetWidth - 8)
+        : left) + 'px';
     // Clear of the ask bar, which sits at the bottom of the screen.
     box.style.top = Math.max(8, innerHeight - box.offsetHeight - 138) + 'px';
   }
@@ -565,36 +800,48 @@ function renderFrame() {
   }
   const t = s.t;
   const tiltPhase = clamp01(t / 0.5);
-  const tilt = easeInOut(tiltPhase) + (s.mode === 'exit' ? 0 : 0.03 * Math.sin(Math.PI * clamp01((tiltPhase - 0.7) / 0.3)));
+  const tilt =
+    easeInOut(tiltPhase) +
+    (s.mode === 'exit' ? 0 : 0.03 * Math.sin(Math.PI * clamp01((tiltPhase - 0.7) / 0.3)));
   s.hinge.rotation.x = -TILT * tilt + s.tip * tilt;
   s.hinge.rotation.z = BASE_YAW * tilt;
   s.hinge.position.z = s.frame.height * 0.035 * tilt;
   // Once the learner has turned it, the model holds still where they left it.
   // A machine holds still between steps, so its own motion is the only motion.
   const engine = s.data?.objects.some((o) => o.renderStyle === 'engine-block');
-  const swaying = s.mode === 'idle' && !quick && !s.touched && !engine && now - s.idleSince < SWAY_MS;
+  const swaying =
+    s.mode === 'idle' && !quick && !s.touched && !engine && now - s.idleSince < SWAY_MS;
   s.sway = approach(s.sway, swaying ? 1 : 0, dt, 0.9);
   s.yaw.rotation.z = Math.sin((now - (s.idleSince ?? now)) / 2200) * 0.14 * s.sway;
   s.table.rotation.z = s.turn * tilt;
   let moving = s.mode !== 'idle' || s.sway > 0.002;
   if (s.crankTween) {
-    const c = s.crankTween, p = clamp01((now - c.began) / c.ms);
+    const c = s.crankTween,
+      p = clamp01((now - c.began) / c.ms);
     s.crankShown = c.from + (c.to - c.from) * easeCrank(p);
     syncParts({ ...s.data, objects: poseEngineParts(s.data.objects, s.crankShown) });
     if (p >= 1) s.crankTween = null;
     moving = true;
   }
   if (s.crankShown !== undefined) {
-    const theta = s.crankShown * 720, hand = document.getElementById('lift-turn-hand'), text = document.getElementById('lift-turn-text');
+    const theta = s.crankShown * 720,
+      hand = document.getElementById('lift-turn-hand'),
+      text = document.getElementById('lift-turn-text');
     // The needle is the crank: up at each whole turn, like the hand on the engine.
     hand?.setAttribute('transform', `rotate(${(theta % 360).toFixed(1)} 20 20)`);
     // Its ring fills across the whole cycle: half at one turn, full at two.
-    document.getElementById('lift-turn-ring')?.setAttribute('stroke-dasharray', `${((theta / 720) * 100).toFixed(1)} 100`);
-    if (text) text.textContent = `Crankshaft ${Math.round(theta)}° · turn ${theta > 360 ? 2 : 1} of 2 · camshaft ${Math.round(theta / 2)}°`;
+    document
+      .getElementById('lift-turn-ring')
+      ?.setAttribute('stroke-dasharray', `${((theta / 720) * 100).toFixed(1)} 100`);
+    if (text)
+      text.textContent = `Crankshaft ${Math.round(theta)}° · turn ${theta > 360 ? 2 : 1} of 2 · camshaft ${Math.round(theta / 2)}°`;
     // The cycle so far: each stroke's bar fills as the crank goes through it.
-    document.querySelectorAll('.lift-stroke i').forEach((bar, i) => { bar.style.width = `${clamp01((theta - i * 180) / 180) * 100}%`; });
+    document.querySelectorAll('.lift-stroke i').forEach((bar, i) => {
+      bar.style.width = `${clamp01((theta - i * 180) / 180) * 100}%`;
+    });
   }
-  const sheetT = clamp01(t / 0.3), sh = s.sheet;
+  const sheetT = clamp01(t / 0.3),
+    sh = s.sheet;
   if (sh) {
     const ready = s.sheetReady;
     // The lifted slide stays nearly solid, so it never reads as a second copy of the slide.
@@ -606,15 +853,28 @@ function renderFrame() {
   const parts = [...s.parts.values()];
   const anyLit = parts.some((v) => v.data.highlighted && v.data.visible);
   // An engine's cam drive is away, so the mechanism shows clearly, until a step is about it.
-  const driveLit = parts.some((v) => /^engine-(timing-belt|intake-cam|exhaust-cam)$/.test(v.data.renderStyle ?? '') && (v.data.highlighted || v.data.selected));
-  s.driveShown = quick ? (driveLit ? 1 : 0) : approach(s.driveShown ?? 0, driveLit ? 1 : 0, dt, 0.2);
+  const driveLit = parts.some(
+    (v) =>
+      /^engine-(timing-belt|intake-cam|exhaust-cam)$/.test(v.data.renderStyle ?? '') &&
+      (v.data.highlighted || v.data.selected),
+  );
+  s.driveShown = quick
+    ? driveLit
+      ? 1
+      : 0
+    : approach(s.driveShown ?? 0, driveLit ? 1 : 0, dt, 0.2);
   if (Math.abs(s.driveShown - (driveLit ? 1 : 0)) > 0.01) moving = true;
   for (const v of parts) {
     const k = quick ? t : clamp01(riseAt(t, v.index, parts.length));
     // Poses glide between steps; a part appears or leaves by fading where it stands.
     // An engine's parts are posed exactly at each angle; gliding them would break the joints.
     if (v.data.renderStyle?.startsWith('engine-')) v.at.copy(v.target);
-    else v.at.set(approach(v.at.x, v.target.x, dt, 0.35), approach(v.at.y, v.target.y, dt, 0.35), approach(v.at.z, v.target.z, dt, 0.35));
+    else
+      v.at.set(
+        approach(v.at.x, v.target.x, dt, 0.35),
+        approach(v.at.y, v.target.y, dt, 0.35),
+        approach(v.at.z, v.target.z, dt, 0.35),
+      );
     if (v.at.distanceTo(v.target) > 0.002) moving = true;
     v.fade = quick ? (v.data.visible ? 1 : 0) : approach(v.fade, v.data.visible ? 1 : 0, dt, 0.25);
     if (Math.abs(v.fade - (v.data.visible ? 1 : 0)) > 0.01) moving = true;
@@ -629,7 +889,9 @@ function renderFrame() {
     if (Math.abs(v.pick - (v.data.selected ? 1 : 0)) > 0.01) moving = true;
     // An assembly's parts stay their size, so its joints stay joined.
     const assembled = v.data.renderStyle?.startsWith('engine-');
-    v.inner.scale.setScalar(Math.max(0.001, clamp01(k * 1.4) * (assembled ? 1 : (1 + pulse) * (1 + 0.1 * v.pick))));
+    v.inner.scale.setScalar(
+      Math.max(0.001, clamp01(k * 1.4) * (assembled ? 1 : (1 + pulse) * (1 + 0.1 * v.pick))),
+    );
     // Parts the step is not about step back by greying, not by fading, so the slide never
     // shows through a solid part.
     // An engine's metal parts keep their own look; only the lit ones glow.
@@ -639,31 +901,58 @@ function renderFrame() {
       if (!m.isMesh) return;
       const mats = Array.isArray(m.material) ? m.material : [m.material];
       for (const mat of mats) {
-        mat.opacity = (mat.userData.baseOpacity ?? 1) * v.fade * (mat.userData.drive ? s.driveShown : mat.userData.driveAway ? 1 - s.driveShown : 1);
-        if (mat.userData.baseColor) mat.color.copy(mat.userData.baseColor).lerp(GREY, dim ? 0.55 : 0);
+        mat.opacity =
+          (mat.userData.baseOpacity ?? 1) *
+          v.fade *
+          (mat.userData.drive ? s.driveShown : mat.userData.driveAway ? 1 - s.driveShown : 1);
+        if (mat.userData.baseColor)
+          mat.color.copy(mat.userData.baseColor).lerp(GREY, dim ? 0.55 : 0);
         mat.depthWrite = mat.opacity > 0.95;
         // The gas, spark and flows carry their own glow.
         if ('emissiveIntensity' in mat && !(enginePart && engineChangesShape(v.data.renderStyle))) {
           const lit = v.data.selected || v.data.highlighted || v.hover;
           // A picked part glows in its own colour (its chip carries the pick colour).
-          if (lit && mat.emissive) mat.emissive.set((v.data.selected || enginePart) && mat.userData.baseColor ? mat.userData.baseColor : v.hover ? PICKED : ACCENT);
+          if (lit && mat.emissive)
+            mat.emissive.set(
+              (v.data.selected || enginePart) && mat.userData.baseColor
+                ? mat.userData.baseColor
+                : v.hover
+                  ? PICKED
+                  : ACCENT,
+            );
           // On an engine a lit part brightens gently, and its big block not at all: the name says which.
           const block = v.data.renderStyle === 'engine-block';
           mat.emissiveIntensity = enginePart
-            ? (lit && !block ? 0.16 : 0)
-            : v.data.selected ? 0.5 : v.hover ? 0.18 : v.data.highlighted ? 0.18 + 0.25 * (pulse / 0.12) : 0;
+            ? lit && !block
+              ? 0.16
+              : 0
+            : v.data.selected
+              ? 0.5
+              : v.hover
+                ? 0.18
+                : v.data.highlighted
+                  ? 0.18 + 0.25 * (pulse / 0.12)
+                  : 0;
         }
       }
     });
     // A soft contact shadow under what stands on the floor; floating parts cast a fainter one.
-    const e = v.extent, ex = e.max.x - e.min.x, ez = e.max.z - e.min.z;
+    const e = v.extent,
+      ex = e.max.x - e.min.x,
+      ez = e.max.z - e.min.z;
     const spread = v.data.renderStyle === 'engine-block' ? 1.7 : 1.25;
     v.shadow.scale.set(ex * spread, ez * spread, 1);
     v.shadow.position.set((e.min.x + e.max.x) / 2, s.floorY - rise + 0.01, (e.min.z + e.max.z) / 2);
     const height = rise + e.min.y - s.floorY;
     // An assembly casts one shadow, from its block, not one per inner part.
-    const inner = v.data.renderStyle?.startsWith('engine-') && v.data.renderStyle !== 'engine-block';
-    v.shadow.material.opacity = (v.data.renderStyle === 'engine-block' ? 0.6 : 0.32) * v.fade * clamp01(k) * clamp01(1 - height / 3) * (v.data.parentId || inner ? 0 : 1);
+    const inner =
+      v.data.renderStyle?.startsWith('engine-') && v.data.renderStyle !== 'engine-block';
+    v.shadow.material.opacity =
+      (v.data.renderStyle === 'engine-block' ? 0.6 : 0.32) *
+      v.fade *
+      clamp01(k) *
+      clamp01(1 - height / 3) *
+      (v.data.parentId || inner ? 0 : 1);
     if (v.stem) {
       // A stem from the slide up to the part reads its height.
       const tall = Math.max(0.001, rise - s.floorY);
@@ -674,29 +963,54 @@ function renderFrame() {
     // An arrow is named at its tip, a tube or sheet at its middle; anything else above its top.
     const path = v.data.path;
     // A line is named at its middle: a message on its arrow, not on what it reaches.
-    const ref = path?.length ? (path.length === 2 ? { x: (path[0].x + path[1].x) / 2, y: (path[0].y + path[1].y) / 2, z: (path[0].z + path[1].z) / 2 } : path[Math.floor(path.length / 2)]) : null;
+    const ref = path?.length
+      ? path.length === 2
+        ? {
+            x: (path[0].x + path[1].x) / 2,
+            y: (path[0].y + path[1].y) / 2,
+            z: (path[0].z + path[1].z) / 2,
+          }
+        : path[Math.floor(path.length / 2)]
+      : null;
     const lift = rise - v.at.y;
     const top = v.data.labelAt
       ? new Vector3(v.data.labelAt.x, v.data.labelAt.y + lift, v.data.labelAt.z)
       : ref
-      ? new Vector3(ref.x, ref.y + lift + 0.15, ref.z)
-      : new Vector3(v.at.x + (e.min.x + e.max.x) / 2, rise + e.max.y + 0.12, v.at.z + (e.min.z + e.max.z) / 2);
+        ? new Vector3(ref.x, ref.y + lift + 0.15, ref.z)
+        : new Vector3(
+            v.at.x + (e.min.x + e.max.x) / 2,
+            rise + e.max.y + 0.12,
+            v.at.z + (e.min.z + e.max.z) / 2,
+          );
     // Parts the step is not about keep small, quiet names.
     const quiet = anyLit && !v.data.highlighted && !v.data.selected && !v.hover;
     v.label.classList.toggle('is-quiet', quiet);
     // An assembly's parts are named only while the step is about them, or when pointed at.
-    const named = !v.data.renderStyle?.startsWith('engine-') || v.data.highlighted || v.data.selected || v.hover;
-    placeLabel(v.label, top, named ? clamp01((k - 0.6) / 0.4) * v.fade : 0, v.data.selected || v.hover ? 5 : v.data.highlighted ? 4 : 2, v.data.renderStyle?.startsWith('engine-'));
+    const named =
+      !v.data.renderStyle?.startsWith('engine-') ||
+      v.data.highlighted ||
+      v.data.selected ||
+      v.hover;
+    placeLabel(
+      v.label,
+      top,
+      named ? clamp01((k - 0.6) / 0.4) * v.fade : 0,
+      v.data.selected || v.hover ? 5 : v.data.highlighted ? 4 : 2,
+      v.data.renderStyle?.startsWith('engine-'),
+    );
   }
   // Flows arc between the parts they join, drawn once both have risen.
   for (const v of s.links.values()) {
-    const a = s.parts.get(v.data.from), b = s.parts.get(v.data.to);
+    const a = s.parts.get(v.data.from),
+      b = s.parts.get(v.data.to);
     if (!a || !b) continue;
     const centre = (v) => v.mesh.position.clone().add(v.extent.getCenter(new Vector3()));
     const reach = (v) => Math.min(...v.extent.getSize(new Vector3()).toArray()) * 0.5;
-    const pa = centre(a), pb = centre(b);
+    const pa = centre(a),
+      pb = centre(b);
     const span = pa.distanceTo(pb);
-    const ra = reach(a), rb = reach(b);
+    const ra = reach(a),
+      rb = reach(b);
     if (span < ra + rb + 0.05) {
       v.mat.opacity = 0;
       if (v.tube) v.tube.visible = false;
@@ -704,11 +1018,20 @@ function renderFrame() {
     }
     // From surface to surface, not centre to centre.
     const dir = pb.clone().sub(pa).normalize();
-    const from = pa.clone().add(dir.clone().multiplyScalar(ra * 0.9)), to = pb.clone().sub(dir.clone().multiplyScalar(rb * 1.05));
+    const from = pa.clone().add(dir.clone().multiplyScalar(ra * 0.9)),
+      to = pb.clone().sub(dir.clone().multiplyScalar(rb * 1.05));
     // A checked quantity's links are straight ramps between heights; a model's flows arc.
     const curve = arc(from, to, s.pinned ? 0 : Math.min(1.2, span * 0.22));
     const radius = (v.data.highlighted ? 0.05 : 0.03) * Math.max(1, span / 4);
-    const key = [from, to].map((p) => p.toArray().map((n) => n.toFixed(2)).join(',')).join(';') + radius.toFixed(3);
+    const key =
+      [from, to]
+        .map((p) =>
+          p
+            .toArray()
+            .map((n) => n.toFixed(2))
+            .join(','),
+        )
+        .join(';') + radius.toFixed(3);
     if (key !== v.key) {
       if (v.tube) dispose3d(v.tube);
       v.tube = new Mesh(new TubeGeometry(curve, 24, radius, 8, false), v.mat);
@@ -722,7 +1045,8 @@ function renderFrame() {
     v.mat.opacity = (v.data.active ? 0.9 : 0.3) * shown;
     v.head.visible = v.data.directed;
     if (v.data.directed) {
-      const end = curve.getPoint(1), tangent = curve.getTangent(1).normalize();
+      const end = curve.getPoint(1),
+        tangent = curve.getTangent(1).normalize();
       v.head.scale.setScalar(radius * 2.4);
       v.head.position.copy(end);
       v.head.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), tangent);
@@ -767,7 +1091,12 @@ function update(data, frame, sheet) {
   else s.anchors = null;
   // A step that turns the engine's crank turns it on screen, rather than jumping.
   const to = engineCrank(data.objects);
-  if (to !== undefined && s.crankShown !== undefined && Math.abs(to - s.crankShown) > 0.004 && !reducedMotion.matches) {
+  if (
+    to !== undefined &&
+    s.crankShown !== undefined &&
+    Math.abs(to - s.crankShown) > 0.004 &&
+    !reducedMotion.matches
+  ) {
     s.crankTween = { from: s.crankShown, to, began: clock(), ms: crankTweenMs(to - s.crankShown) };
     syncParts({ ...data, objects: poseEngineParts(data.objects, s.crankShown) });
   } else {
@@ -827,12 +1156,24 @@ const ray = new Raycaster();
 function hit(clientX, clientY) {
   if (!s || s.mode === 'exit' || s.t < 0.6) return null;
   const f = s.frame;
-  ray.setFromCamera(new Vector2(((clientX - f.dx) / f.width) * 2 - 1, -((clientY - f.dy) / f.height) * 2 + 1), s.camera);
+  ray.setFromCamera(
+    new Vector2(((clientX - f.dx) / f.width) * 2 - 1, -((clientY - f.dy) / f.height) * 2 + 1),
+    s.camera,
+  );
   const parts = [...s.parts.values()].filter((v) => v.data.visible && v.mesh);
   const meshes = [];
   // Only what can be seen can be picked: a cam drive that is away is not in the way.
-  for (const v of parts) v.inner.traverse((m) => m.isMesh && (Array.isArray(m.material) || m.material.opacity > 0.05) && meshes.push([m, v.id]));
-  const first = ray.intersectObjects(meshes.map(([m]) => m), false)[0];
+  for (const v of parts)
+    v.inner.traverse(
+      (m) =>
+        m.isMesh &&
+        (Array.isArray(m.material) || m.material.opacity > 0.05) &&
+        meshes.push([m, v.id]),
+    );
+  const first = ray.intersectObjects(
+    meshes.map(([m]) => m),
+    false,
+  )[0];
   if (first) return meshes.find(([m]) => m === first.object)[1];
   return s.sheet && ray.intersectObject(s.sheet.paper, false).length ? 'sheet' : null;
 }

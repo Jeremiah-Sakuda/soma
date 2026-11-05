@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import SpatialWorkspace from './spatial-workspace';
 import { spatialScene, supportsSpatial } from '@/lib/domain/spatial-exploration';
-import { clearOfInk, liftFocus, liftRegion, liftScene, sceneOverlayModel, type InkGrid } from '@/lib/domain/scene-lift';
+import {
+  clearOfInk,
+  liftFocus,
+  liftRegion,
+  liftScene,
+  sceneOverlayModel,
+  type InkGrid,
+} from '@/lib/domain/scene-lift';
 import { defaultSpatialView } from '@/lib/domain/spatial-schema';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ExplorationSearchStage } from './exploration-search-stage';
@@ -86,9 +93,7 @@ function DiagramPanel({
     [panel, layout, routes],
   );
   const markerId = useId().replace(/[^a-z0-9]/gi, '');
-  const nodes = panel.objects.filter(
-    (object) => object.kind === 'node' || object.kind === 'block',
-  );
+  const nodes = panel.objects.filter((object) => object.kind === 'node' || object.kind === 'block');
   const pos = (id: string) => layout.positions.find((node) => node.id === id)!;
   return (
     <div ref={container} className="exploration-diagram-container">
@@ -301,14 +306,16 @@ function StateTable({ execution, step }: { execution: BfsExecution; step: BfsSte
 /** Which cells of a small copy of the capture differ from its commonest colour, its paper. */
 function inkGrid(img: HTMLImageElement): InkGrid | null {
   try {
-    const width = 512, height = Math.max(8, Math.round((width * img.naturalHeight) / img.naturalWidth));
+    const width = 512,
+      height = Math.max(8, Math.round((width * img.naturalHeight) / img.naturalWidth));
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
     const g = canvas.getContext('2d', { willReadFrequently: true });
     if (!g) return null;
     g.drawImage(img, 0, 0, width, height);
-    const data = g.getImageData(0, 0, width, height).data, counts = new Map<number, number>();
+    const data = g.getImageData(0, 0, width, height).data,
+      counts = new Map<number, number>();
     for (let i = 0; i < data.length; i += 4) {
       const key = ((data[i] >> 4) << 8) | ((data[i + 1] >> 4) << 4) | (data[i + 2] >> 4);
       counts.set(key, (counts.get(key) ?? 0) + 1);
@@ -317,7 +324,11 @@ function inkGrid(img: HTMLImageElement): InkGrid | null {
     const [r, gr, b] = [(paper >> 8) * 17, ((paper >> 4) & 15) * 17, (paper & 15) * 17];
     const ink = new Uint8Array(width * height);
     for (let i = 0; i < ink.length; i++)
-      ink[i] = Math.abs(data[i * 4] - r) + Math.abs(data[i * 4 + 1] - gr) + Math.abs(data[i * 4 + 2] - b) > 30 ? 1 : 0;
+      ink[i] =
+        Math.abs(data[i * 4] - r) + Math.abs(data[i * 4 + 1] - gr) + Math.abs(data[i * 4 + 2] - b) >
+        30
+          ? 1
+          : 0;
     return { width, height, ink };
   } catch {
     return null;
@@ -348,13 +359,22 @@ export function ExplorationScene({
     image: string;
     /** Where the source drew its graph; absent for answers with no drawing read from the source.
      * A circuit's layout also places each part by its two drawn ends. */
-    layout?: SourceGraphLayout & { components?: { componentId: string; x1: number; y1: number; x2: number; y2: number }[] };
+    layout?: SourceGraphLayout & {
+      components?: { componentId: string; x1: number; y1: number; x2: number; y2: number }[];
+    };
     anchors?: SourceAnchor[];
     nativeId?: string;
     /** The learner's pointed or circled area of the capture. */
     focus?: { x: number; y: number; width: number; height: number };
     /** Muse Wonder's independent check of the reading drawn here. */
-    readingCheck?: { status: 'confirmed' | 'corrected' | 'disputed'; weighted?: boolean; nodes: number; edges: number; corrections: { edgeId: string; from: number; to: number }[]; disputes: string[] };
+    readingCheck?: {
+      status: 'confirmed' | 'corrected' | 'disputed';
+      weighted?: boolean;
+      nodes: number;
+      edges: number;
+      corrections: { edgeId: string; from: number; to: number }[];
+      disputes: string[];
+    };
   };
   experiment?: ReactNode;
   circuitObservation?: DcObservation;
@@ -376,7 +396,9 @@ export function ExplorationScene({
     (model: SourceOverlayModel | null) => {
       if (!nativeId) return;
       setLiftable(Boolean(model?.lift || model?.scene));
-      window.dispatchEvent(new CustomEvent('soma:screen-overlay', { detail: { id: nativeId, model } }));
+      window.dispatchEvent(
+        new CustomEvent('soma:screen-overlay', { detail: { id: nativeId, model } }),
+      );
     },
     [nativeId],
   );
@@ -408,34 +430,50 @@ export function ExplorationScene({
     const scene = spatialScene(spec, state);
     if (!scene?.objects.length) return null;
     const at = Math.min(state.explanationStep, spec.steps.length - 1);
-    return sceneOverlayModel(liftScene(scene, clearOfInk(liftRegion(liftFocus(focus, anchors, spec.steps), aspect), ink), undefined, state.selectedObjectId), {
-      text: spec.steps[at].caption,
-      stepLabel: `Step ${at + 1} of ${spec.steps.length}`,
-    });
+    return sceneOverlayModel(
+      liftScene(
+        scene,
+        clearOfInk(liftRegion(liftFocus(focus, anchors, spec.steps), aspect), ink),
+        undefined,
+        state.selectedObjectId,
+      ),
+      {
+        text: spec.steps[at].caption,
+        stepLabel: `Step ${at + 1} of ${spec.steps.length}`,
+      },
+    );
   })();
   const sceneKey = spec.mode === 'explanation' ? JSON.stringify(sceneModel) : null;
   useEffect(() => {
-    if (sceneKey !== null) mirror(sceneKey === 'null' ? null : (JSON.parse(sceneKey) as SourceOverlayModel));
+    if (sceneKey !== null)
+      mirror(sceneKey === 'null' ? null : (JSON.parse(sceneKey) as SourceOverlayModel));
   }, [sceneKey, mirror]);
   const explaining = spec.mode === 'explanation';
   useEffect(() => (explaining ? () => mirror(null) : undefined), [explaining, mirror]);
   const toggleRef = useRef<(edgeId: string) => void>(() => {});
   const selectRef = useRef<(id: string) => void>(() => {});
-  selectRef.current = (id: string) => onChange({ ...state, selectedObjectId: state.selectedObjectId === id ? null : id });
+  selectRef.current = (id: string) =>
+    onChange({ ...state, selectedObjectId: state.selectedObjectId === id ? null : id });
   const [onScreen, setOnScreen] = useState(false);
   // Whether the companion has lifted the on-screen drawing into 3D.
   const [lifted, setLifted] = useState(false);
   const setView = useCallback(
-    (view: '2d' | '3d') => window.dispatchEvent(new CustomEvent('soma:screen-overlay-view', { detail: { id: nativeId, view } })),
+    (view: '2d' | '3d') =>
+      window.dispatchEvent(
+        new CustomEvent('soma:screen-overlay-view', { detail: { id: nativeId, view } }),
+      ),
     [nativeId],
   );
   // Asked to lift before the model existed: lift once it arrives on screen.
   const pendingLift = useRef(false);
-  const hasModel = spec.mode === 'explanation' && spec.scene.panels.some((p) => p.kind === 'spatial');
+  const hasModel =
+    spec.mode === 'explanation' && spec.scene.panels.some((p) => p.kind === 'spatial');
   // The part picked on the model, by name.
   const pickedPart =
     spec.mode === 'explanation'
-      ? spec.scene.panels.flatMap((p) => (p.kind === 'spatial' ? p.objects : [])).find((o) => o.id === state.selectedObjectId)?.label
+      ? spec.scene.panels
+          .flatMap((p) => (p.kind === 'spatial' ? p.objects : []))
+          .find((o) => o.id === state.selectedObjectId)?.label
       : undefined;
   // The companion's 3D button on an explanation with no model: build it, then lift it. If no
   // model comes back, the diagram itself stands up, as on the page.
@@ -469,16 +507,18 @@ export function ExplorationScene({
         d.reason === 'checking'
           ? 'Checking that your slide is still the same before lifting…'
           : d.reason === 'changed'
-          ? 'Your slide changed, so Soma took the drawing off your screen. Capture again to draw on the new one.'
-          : d.reason === 'moved'
-            ? 'Your screen changed before Soma could draw on it, so the drawing stays here. Ask again to draw on what is there now.'
-          : d.reason === 'webgl'
-            ? 'This Mac could not draw in 3D, so the drawing stays flat on your slide.'
-            : d.reason === 'sheet'
-              ? 'Soma could not lift this drawing, so it stays flat on your slide.'
-              : '',
+            ? 'Your slide changed, so Soma took the drawing off your screen. Capture again to draw on the new one.'
+            : d.reason === 'moved'
+              ? 'Your screen changed before Soma could draw on it, so the drawing stays here. Ask again to draw on what is there now.'
+              : d.reason === 'webgl'
+                ? 'This Mac could not draw in 3D, so the drawing stays flat on your slide.'
+                : d.reason === 'sheet'
+                  ? 'Soma could not lift this drawing, so it stays flat on your slide.'
+                  : '',
       );
-      setLifted((was) => (d.shown !== true ? false : d.view === '3d' ? true : d.view === '2d' ? false : was));
+      setLifted((was) =>
+        d.shown !== true ? false : d.view === '3d' ? true : d.view === '2d' ? false : was,
+      );
     };
     window.addEventListener('soma:screen-overlay-result', listen);
     return () => window.removeEventListener('soma:screen-overlay-result', listen);
@@ -487,18 +527,24 @@ export function ExplorationScene({
     if (!nativeId) return;
     const listen = (event: Event) => {
       const d = (event as CustomEvent).detail;
-      if (d?.id === nativeId && d.type === 'toggle-edge' && typeof d.edgeId === 'string') toggleRef.current(d.edgeId);
+      if (d?.id === nativeId && d.type === 'toggle-edge' && typeof d.edgeId === 'string')
+        toggleRef.current(d.edgeId);
       // A part picked on the lifted model is selected here too, for the next question.
-      if (d?.id === nativeId && d.type === 'select' && typeof d.objectId === 'string') selectRef.current(d.objectId);
+      if (d?.id === nativeId && d.type === 'select' && typeof d.objectId === 'string')
+        selectRef.current(d.objectId);
     };
     window.addEventListener('soma:screen-overlay-action', listen);
     return () => window.removeEventListener('soma:screen-overlay-action', listen);
   }, [nativeId]);
   const [compact, setCompact] = useState(false),
     [activeGraph, setActiveGraph] = useState<'primary' | 'comparison'>('primary');
-  const sceneElement = useRef<HTMLDivElement>(null), revealScene = useRef(false);
+  const sceneElement = useRef<HTMLDivElement>(null),
+    revealScene = useRef(false);
   useEffect(() => {
-    if (revealScene.current) { revealScene.current = false; sceneElement.current?.scrollIntoView({ block: 'start', behavior: 'instant' }); }
+    if (revealScene.current) {
+      revealScene.current = false;
+      sceneElement.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    }
   }, [state.spatial?.mode]);
   useEffect(() => {
     const media = matchMedia('(max-width:760px)');
@@ -511,13 +557,20 @@ export function ExplorationScene({
   const motionKey = JSON.stringify([spec.id, spec.version, motionState]);
   const progress = useExplorationMotion(motionKey, playing, spokenProgress);
   const titleControlsKey = JSON.stringify([
-    state.start, state.goal, state.disabledEdgeIds, state.reversed, state.edgeWeights,
+    state.start,
+    state.goal,
+    state.disabledEdgeIds,
+    state.reversed,
+    state.edgeWeights,
   ]);
   // Only scientific controls change these titles. Keep the display spec stable
   // during camera/selection/step updates so the spatial canvas can reuse geometry.
   const displaySpec = useMemo(() => {
-    if ((spec.mode !== 'checked-bfs' && spec.mode !== 'checked-dijkstra') ||
-      !explorationInputsChanged(spec, state)) return spec;
+    if (
+      (spec.mode !== 'checked-bfs' && spec.mode !== 'checked-dijkstra') ||
+      !explorationInputsChanged(spec, state)
+    )
+      return spec;
     const primary = explorationExecution(spec, state);
     const secondary = comparisonExecution(spec, state);
     const panels = spec.scene.panels.map((panel) => {
@@ -525,11 +578,16 @@ export function ExplorationScene({
         return panel;
       const computed = panel.execution === 'comparison' ? secondary : primary;
       if (!computed) return panel;
-      const title = panel.kind === 'graph'
-        ? `Current graph: start ${nodeName(computed.input, computed.input.start)}, ${computed.input.goal === null
-            ? 'all reachable nodes'
-            : `goal ${nodeName(computed.input, computed.input.goal)}`}`
-        : panel.kind === 'frontier' ? 'Current frontier' : 'Current node costs';
+      const title =
+        panel.kind === 'graph'
+          ? `Current graph: start ${nodeName(computed.input, computed.input.start)}, ${
+              computed.input.goal === null
+                ? 'all reachable nodes'
+                : `goal ${nodeName(computed.input, computed.input.goal)}`
+            }`
+          : panel.kind === 'frontier'
+            ? 'Current frontier'
+            : 'Current node costs';
       return { ...panel, title };
     });
     return { ...spec, scene: { ...spec.scene, panels } };
@@ -568,13 +626,10 @@ export function ExplorationScene({
       ? []
       : spec.mode === 'explanation'
         ? explanation.highlightIds
-        : (spec.steps.find(
-            (item) => item.execution !== null && item.executionStep === state.step,
-          )?.highlightIds ?? []);
+        : (spec.steps.find((item) => item.execution !== null && item.executionStep === state.step)
+            ?.highlightIds ?? []);
   const authoredStep = !changed
-    ? spec.steps.find(
-        (item) => item.execution === 'primary' && item.executionStep === state.step,
-      )
+    ? spec.steps.find((item) => item.execution === 'primary' && item.executionStep === state.step)
     : undefined;
   const finalStep = Math.max(execution?.steps.length ?? 1, comparison?.steps.length ?? 1) - 1;
   // The source draws the primary checked snapshot, so its printed/native caption
@@ -597,7 +652,11 @@ export function ExplorationScene({
     onChange({ ...next, step: run ? run.steps.length - 1 : 0 });
   };
   toggleRef.current = (edgeId: string) => {
-    if (spec.mode !== 'explanation' && spec.controls.includes('toggle-edge') && graphInput?.edges.some((e) => e.id === edgeId))
+    if (
+      spec.mode !== 'explanation' &&
+      spec.controls.includes('toggle-edge') &&
+      graphInput?.edges.some((e) => e.id === edgeId)
+    )
       toggleEdge(edgeId);
   };
   // After a learner change, the authored captions describe the original graph; say only what was computed.
@@ -616,11 +675,15 @@ export function ExplorationScene({
         (edge) =>
           `${nodeName(graphInput, edge.from)}–${nodeName(graphInput, edge.to)} now costs ${state.edgeWeights![edge.id]} (was ${edge.weight ?? 1})`,
       );
-    const lead = [cut.length ? `You cut ${cut.join(', ')}.` : '', costs.length ? `${costs.join('; ')}.` : '']
+    const lead = [
+      cut.length ? `You cut ${cut.join(', ')}.` : '',
+      costs.length ? `${costs.join('; ')}.` : '',
+    ]
       .filter(Boolean)
       .map((part) => part + ' ')
       .join('');
-    if (!state.goal) return `${lead}The search now reaches ${execution.visitOrder.length} of ${graphInput.nodes.length} nodes.`;
+    if (!state.goal)
+      return `${lead}The search now reaches ${execution.visitOrder.length} of ${graphInput.nodes.length} nodes.`;
     return execution.path
       ? `${lead}Checked route: ${names(execution.path)}, cost ${routeCost(execution.input, execution.path)}.`
       : `${lead}No route reaches ${nodeName(graphInput, state.goal)} now.`;
@@ -650,9 +713,9 @@ export function ExplorationScene({
         <span className="meta">
           {current.status === 'found' ? (
             <span role="status">
-              Route: {computed.path?.map((id) => nodeName(computed.input, id)).join(' → ')} ·
-              total cost {routeCost(computed.input, computed.path)} ·{' '}
-              {computed.path!.length - 1} {computed.path!.length === 2 ? 'edge' : 'edges'}
+              Route: {computed.path?.map((id) => nodeName(computed.input, id)).join(' → ')} · total
+              cost {routeCost(computed.input, computed.path)} · {computed.path!.length - 1}{' '}
+              {computed.path!.length === 2 ? 'edge' : 'edges'}
             </span>
           ) : computed.modelId === 'dijkstra-nonnegative' ? (
             'Full route · lowest cost'
@@ -697,8 +760,7 @@ export function ExplorationScene({
         {(spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') &&
           ['sequence', 'matrix', 'diagram', 'callout'].includes(panel.kind) && (
             <p className="meta">
-              Illustration for this explanation. The search controls update the graph and
-              frontier.
+              Illustration for this explanation. The search controls update the graph and frontier.
             </p>
           )}
         {panel.kind === 'sequence' && (
@@ -735,93 +797,115 @@ export function ExplorationScene({
         )}
         {panel.kind === 'callout' && (
           <aside className={`exploration-callout ${panel.tone}`}>
-            <span className="overline">
-              {panel.tone === 'idea' ? 'Key idea' : 'Assumption'}
-            </span>
+            <span className="overline">{panel.tone === 'idea' ? 'Key idea' : 'Assumption'}</span>
             <p>{panel.text}</p>
           </aside>
         )}
-        {panel.kind === 'graph' && overlay?.layout && graphInput && panel.execution === 'primary' && (
-          <div className="source-overlay-switch" role="group" aria-label="Where to draw the search">
-            <button type="button" aria-pressed={overlayView === 'source'} onClick={() => setOverlayView('source')}>
-              On your source
-            </button>
-            <button type="button" aria-pressed={overlayView === 'diagram'} onClick={() => setOverlayView('diagram')}>
-              Diagram
-            </button>
-          </div>
-        )}
+        {panel.kind === 'graph' &&
+          overlay?.layout &&
+          graphInput &&
+          panel.execution === 'primary' && (
+            <div
+              className="source-overlay-switch"
+              role="group"
+              aria-label="Where to draw the search"
+            >
+              <button
+                type="button"
+                aria-pressed={overlayView === 'source'}
+                onClick={() => setOverlayView('source')}
+              >
+                On your source
+              </button>
+              <button
+                type="button"
+                aria-pressed={overlayView === 'diagram'}
+                onClick={() => setOverlayView('diagram')}
+              >
+                Diagram
+              </button>
+            </div>
+          )}
         {panel.kind === 'graph' &&
           computation &&
-          (overlay?.layout && graphInput && overlayView === 'source' && panel.execution === 'primary' ? (
+          (overlay?.layout &&
+          graphInput &&
+          overlayView === 'source' &&
+          panel.execution === 'primary' ? (
             <>
-            {overlay.readingCheck && (
-              <p className={`source-reading-check is-${overlay.readingCheck.status}`} role="status">
-                {overlay.readingCheck.status === 'confirmed'
-                  ? `Muse Wonder checked Spark’s reading against your slide and confirmed all ${overlay.readingCheck.nodes} nodes and ${overlay.readingCheck.edges} ${overlay.readingCheck.weighted === false ? 'connections' : 'weights'}.`
-                  : overlay.readingCheck.status === 'corrected'
-                    ? `Muse Wonder caught ${overlay.readingCheck.corrections.length} misread weight${overlay.readingCheck.corrections.length === 1 ? '' : 's'}; Spark looked again and agreed: ${overlay.readingCheck.corrections
-                        .map((c) => {
-                          const e = graphInput.edges.find((x) => x.id === c.edgeId);
-                          const n = (id?: string) => graphInput.nodes.find((x) => x.id === id)?.label ?? id ?? c.edgeId;
-                          return `${n(e?.from)}–${n(e?.to)} is ${c.to}, not ${c.from}`;
-                        })
-                        .join('; ')}.`
-                    : `Check before trusting this route. ${overlay.readingCheck.disputes.join(' ')}`}
-              </p>
-            )}
-            {screenNotice && !(onScreen && lifted) && (
-              <p className="source-overlay-onscreen" role="status">
-                {screenNotice}
-              </p>
-            )}
-            {onScreen && (
-              <div className="source-overlay-onscreen">
-                <p role="status">
-                  {lifted
-                    ? 'Lifted off your slide in 3D: height is the checked distance from the start, and the shortest routes pull their strings taut.'
-                    : `Drawn on your screen, over the window you captured.${spec.mode !== 'explanation' && spec.controls.includes('toggle-edge') ? ' Click a connection there to cut it;' : ''}`}{' '}
-                  Esc hides it.
+              {overlay.readingCheck && (
+                <p
+                  className={`source-reading-check is-${overlay.readingCheck.status}`}
+                  role="status"
+                >
+                  {overlay.readingCheck.status === 'confirmed'
+                    ? `Muse Wonder checked Spark’s reading against your slide and confirmed all ${overlay.readingCheck.nodes} nodes and ${overlay.readingCheck.edges} ${overlay.readingCheck.weighted === false ? 'connections' : 'weights'}.`
+                    : overlay.readingCheck.status === 'corrected'
+                      ? `Muse Wonder caught ${overlay.readingCheck.corrections.length} misread weight${overlay.readingCheck.corrections.length === 1 ? '' : 's'}; Spark looked again and agreed: ${overlay.readingCheck.corrections
+                          .map((c) => {
+                            const e = graphInput.edges.find((x) => x.id === c.edgeId);
+                            const n = (id?: string) =>
+                              graphInput.nodes.find((x) => x.id === id)?.label ?? id ?? c.edgeId;
+                            return `${n(e?.from)}–${n(e?.to)} is ${c.to}, not ${c.from}`;
+                          })
+                          .join('; ')}.`
+                      : `Check before trusting this route. ${overlay.readingCheck.disputes.join(' ')}`}
                 </p>
-                {/* Outside the live region, so its name is not re-announced with each status. */}
-                {spec.mode !== 'explanation' && liftable && (
-                  <button
-                    type="button"
-                    className="source-overlay-lift"
-                    aria-pressed={lifted}
-                    onClick={() =>
-                      window.dispatchEvent(
-                        new CustomEvent('soma:screen-overlay-view', { detail: { id: nativeId, view: lifted ? '2d' : '3d' } }),
-                      )
-                    }
-                  >
-                    Lift into 3D
-                  </button>
-                )}
-              </div>
-            )}
-            <SourceOverlay
-              image={overlay.image}
-              layout={overlay.layout!}
-              graph={graphInput}
-              execution={computation}
-              index={state.step}
-              disabledEdgeIds={state.disabledEdgeIds}
-              weights={state.edgeWeights}
-              canToggle={spec.mode !== 'explanation' && spec.controls.includes('toggle-edge')}
-              selected={state.selectedObjectId}
-              caption={experimentCaption ?? overlayCaption}
-              stepLabel={
-                experimentCaption
-                  ? 'Your experiment'
-                  : `Round ${Math.min(state.step, finalStep) + 1} of ${finalStep + 1}`
-              }
-              obstacles={(overlay.anchors ?? []).map((a) => a.region)}
-              onModel={mirror}
-              onToggleEdge={toggleEdge}
-              onSelect={select}
-              compact={onScreen}
-            />
+              )}
+              {screenNotice && !(onScreen && lifted) && (
+                <p className="source-overlay-onscreen" role="status">
+                  {screenNotice}
+                </p>
+              )}
+              {onScreen && (
+                <div className="source-overlay-onscreen">
+                  <p role="status">
+                    {lifted
+                      ? 'Lifted off your slide in 3D: height is the checked distance from the start, and the shortest routes pull their strings taut.'
+                      : `Drawn on your screen, over the window you captured.${spec.mode !== 'explanation' && spec.controls.includes('toggle-edge') ? ' Click a connection there to cut it;' : ''}`}{' '}
+                    Esc hides it.
+                  </p>
+                  {/* Outside the live region, so its name is not re-announced with each status. */}
+                  {spec.mode !== 'explanation' && liftable && (
+                    <button
+                      type="button"
+                      className="source-overlay-lift"
+                      aria-pressed={lifted}
+                      onClick={() =>
+                        window.dispatchEvent(
+                          new CustomEvent('soma:screen-overlay-view', {
+                            detail: { id: nativeId, view: lifted ? '2d' : '3d' },
+                          }),
+                        )
+                      }
+                    >
+                      Lift into 3D
+                    </button>
+                  )}
+                </div>
+              )}
+              <SourceOverlay
+                image={overlay.image}
+                layout={overlay.layout!}
+                graph={graphInput}
+                execution={computation}
+                index={state.step}
+                disabledEdgeIds={state.disabledEdgeIds}
+                weights={state.edgeWeights}
+                canToggle={spec.mode !== 'explanation' && spec.controls.includes('toggle-edge')}
+                selected={state.selectedObjectId}
+                caption={experimentCaption ?? overlayCaption}
+                stepLabel={
+                  experimentCaption
+                    ? 'Your experiment'
+                    : `Round ${Math.min(state.step, finalStep) + 1} of ${finalStep + 1}`
+                }
+                obstacles={(overlay.anchors ?? []).map((a) => a.region)}
+                onModel={mirror}
+                onToggleEdge={toggleEdge}
+                onSelect={select}
+                compact={onScreen}
+              />
             </>
           ) : (
             <ExplorationSearchStage
@@ -905,7 +989,6 @@ export function ExplorationScene({
   };
   return (
     <>
-
       {spec.mode === 'explanation' && (onScreen || screenNotice) && (
         <div className="source-overlay-onscreen">
           <p role="status">
@@ -1028,11 +1111,19 @@ export function ExplorationScene({
               onChange={onChange}
               which={comparison ? activeGraph : 'primary'}
             />
-            {experiment && !experimentInline && <div className="exploration-experiment-slot">{experiment}</div>}
-            {panels.some((p) => !['graph', 'frontier', 'diagram', 'spatial'].includes(p.kind)) && <details className="exploration-supporting-panels">
-              <summary>Steps, numbers & context</summary>
-              <div className="exploration-scene">{panels.filter((p) => !['graph', 'frontier', 'diagram', 'spatial'].includes(p.kind)).map(renderPanel)}</div>
-            </details>}
+            {experiment && !experimentInline && (
+              <div className="exploration-experiment-slot">{experiment}</div>
+            )}
+            {panels.some((p) => !['graph', 'frontier', 'diagram', 'spatial'].includes(p.kind)) && (
+              <details className="exploration-supporting-panels">
+                <summary>Steps, numbers & context</summary>
+                <div className="exploration-scene">
+                  {panels
+                    .filter((p) => !['graph', 'frontier', 'diagram', 'spatial'].includes(p.kind))
+                    .map(renderPanel)}
+                </div>
+              </details>
+            )}
           </>
         ) : heroDiagram ? (
           <>
@@ -1087,15 +1178,49 @@ export function ExplorationScene({
       </div>
       {spec.mode === 'explanation' && !spatialPanel && onBuildModel && (
         <div className="spatial-mode-switch" role="group" aria-label="Visual representation">
-          <button type="button" className="spatial-build" disabled={modelBusy} onClick={() => { revealScene.current = true; void onBuildModel(); }}>
+          <button
+            type="button"
+            className="spatial-build"
+            disabled={modelBusy}
+            onClick={() => {
+              revealScene.current = true;
+              void onBuildModel();
+            }}
+          >
             {modelBusy ? 'Building the 3D model…' : 'See it in 3D'}
           </button>
         </div>
       )}
-      {supportsSpatial(spec) && (spec.mode !== 'explanation' || spatialPanel || !onBuildModel) && <div className="spatial-mode-switch" role="group" aria-label="Visual representation">
-        <button type="button" aria-pressed={spatialMode === '2d'} onClick={() => { revealScene.current = spatialMode !== '2d'; onChange({ ...state, spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '2d' } }); }}>2D view</button>
-        <button type="button" aria-pressed={spatialMode === '3d'} onClick={() => { revealScene.current = spatialMode !== '3d'; onChange({ ...state, spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '3d' } }); }}>3D workspace</button>
-      </div>}
+      {supportsSpatial(spec) && (spec.mode !== 'explanation' || spatialPanel || !onBuildModel) && (
+        <div className="spatial-mode-switch" role="group" aria-label="Visual representation">
+          <button
+            type="button"
+            aria-pressed={spatialMode === '2d'}
+            onClick={() => {
+              revealScene.current = spatialMode !== '2d';
+              onChange({
+                ...state,
+                spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '2d' },
+              });
+            }}
+          >
+            2D view
+          </button>
+          <button
+            type="button"
+            aria-pressed={spatialMode === '3d'}
+            onClick={() => {
+              revealScene.current = spatialMode !== '3d';
+              onChange({
+                ...state,
+                spatial: { ...(state.spatial ?? defaultSpatialView()), mode: '3d' },
+              });
+            }}
+          >
+            3D workspace
+          </button>
+        </div>
+      )}
       {execution && (
         <div className="exploration-caption" aria-live="polite">
           <span className="overline">
@@ -1201,13 +1326,15 @@ export function ExplorationScene({
               <button
                 type="button"
                 className="secondary-button"
-                onClick={() => onChange({
-                  ...state,
-                  ...defaultGraphControls(spec.input),
-                  step: 0,
-                  explanationStep: 0,
-                  selectedObjectId: null,
-                })}
+                onClick={() =>
+                  onChange({
+                    ...state,
+                    ...defaultGraphControls(spec.input),
+                    step: 0,
+                    explanationStep: 0,
+                    selectedObjectId: null,
+                  })
+                }
               >
                 Back to the graph as read
               </button>

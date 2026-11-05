@@ -1,22 +1,169 @@
-import {useState} from 'react';
-import {X} from 'lucide-react';
-import {EngineScene} from '../pm121/lib/EngineScene';
-import {enginePose,type EngineFilm} from '../pm121/lib/engine';
-import {useModal} from '../pm125/ReviewDialogs';
-import {validateRecordedInvestigation,preparedQuestions} from './investigation';
+import { useState } from 'react';
+import { X } from 'lucide-react';
+import { EngineScene } from '../pm121/lib/EngineScene';
+import { enginePose, type EngineFilm } from '../pm121/lib/engine';
+import { useModal } from '../pm125/ReviewDialogs';
+import { validateRecordedInvestigation, preparedQuestions } from './investigation';
 import raw from './recorded/investigations.json';
 import author from './recorded/author-1.json';
 import review from './recorded/review-1.json';
 import receipt from './recorded/generation-receipt.json';
-import {downloadStudySnapshot} from './StudySnapshot';
-export function RecordedInvestigation({film,onClose}:{film:EngineFilm;onClose:()=>void}){
- const {ref,close}=useModal(onClose),[id,setId]=useState<string>('two-turns'),[shown,setShown]=useState(false),question=preparedQuestions.find(a=>a.id===id)!;
- const recorded=(()=>{try{return validateRecordedInvestigation(raw,author,review,film);}catch{return null;}})(),probe=recorded?.investigations.find(a=>a.id===id);
- const angles=probe&&shown?(probe.action==='compare-turns'?[probe.observedDegrees,probe.targetDegrees]:[probe.targetDegrees]):[question.degrees];
- return <dialog ref={ref} className="review-dialog investigation-dialog" aria-labelledby="investigation-heading" onCancel={e=>{e.preventDefault();close();}}><header><div><p className="eyebrow">Recorded Muse investigation</p><h2 id="investigation-heading">A question. A revealing move.</h2></div><button className="icon-button" aria-label="Close recorded investigation" onClick={close}><X size={18} aria-hidden="true"/></button></header>
- <p className="recorded-intro">Three prepared questions on the original synthetic source. These are actual recorded Spark decisions, not live answers to your current pose. Your engine is paused behind this view.</p><div className="recorded-questions" role="group" aria-label="Prepared investigation questions">{preparedQuestions.map((q,i)=><button key={q.id} aria-pressed={id===q.id} onClick={()=>{setId(q.id);setShown(false);}}>0{i+1} {['Two turns','Two upstrokes','Connected motion'][i]}</button>)}</div>
- <p className="recorded-context">Prepared question · recorded context {question.degrees}°</p><h3>{question.question}</h3>{probe?<><p><strong>What Muse chose:</strong> {probe.action==='compare-turns'?`Compare ${probe.observedDegrees}° with ${probe.targetDegrees}°`:`Inspect the ${probe.part} at ${probe.targetDegrees}°`}</p><p className="probe-objective">{shown?probe.explanation:probe.objective}</p><button className="discovery-return snapshot-export" aria-pressed={shown} onClick={()=>setShown(!shown)}>{shown?'Return to recorded starting pose':'Show Muse’s investigation'}</button></>:<p role="status">Recorded investigation unavailable. Manual exploration remains available.</p>}
- <div className="discovery-grid" data-investigation-shown={shown} data-scenes={angles.length}>{angles.map((a,i)=>{const p=enginePose(a);return <section key={i}><div><strong>{film.strokes[p.phase].name}</strong><span>{a}°</span></div><EngineScene film={film} degrees={a} compact labels={false} selected={shown?probe?.part:null}/><div className="discovery-valves"><span>Intake: <strong>{p.intakeLift>.01?'Open':'Closed'}</strong></span><span>Exhaust: <strong>{p.exhaustLift>.01?'Open':'Closed'}</strong></span></div></section>;})}</div>
- {shown&&probe&&<div className="recorded-explanation"><p>{probe.explanation}</p><button className="discovery-return" onClick={()=>downloadStudySnapshot(film,probe.observedDegrees,probe)}>Save Muse investigation</button><blockquote>{probe.sourceQuote}</blockquote><small>Quoted source fact above; poses and valve states computed by Soma. Illustrative motion, not calculated thermodynamics.</small></div>}
- <details><summary>Recorded decision and advisory review</summary><p>Spark authored the action selection, observation objective and explanation. Soma checks action/part IDs, source identity and one-turn geometry. Wonder's approval is advisory, not certification.</p><p>This operation: {receipt.calls} calls · ${receipt.costUsd.toFixed(8)} · {receipt.elapsedMs/1000}s including application work. No new calls during playback. Accepted recorded advisory: {review.structured.approved?'approved':'rejected'}.</p><pre>{JSON.stringify(probe,null,2)}</pre></details><p className="discovery-scope">No diagnosis, assessment or learning-record write. No canonical engine follow-up/save integration.</p><button className="discovery-return" onClick={close}>Back to my engine</button></dialog>;
+import { downloadStudySnapshot } from './StudySnapshot';
+export function RecordedInvestigation({
+  film,
+  onClose,
+}: {
+  film: EngineFilm;
+  onClose: () => void;
+}) {
+  const { ref, close } = useModal(onClose),
+    [id, setId] = useState<string>('two-turns'),
+    [shown, setShown] = useState(false),
+    question = preparedQuestions.find((a) => a.id === id)!;
+  const recorded = (() => {
+      try {
+        return validateRecordedInvestigation(raw, author, review, film);
+      } catch {
+        return null;
+      }
+    })(),
+    probe = recorded?.investigations.find((a) => a.id === id);
+  const angles =
+    probe && shown
+      ? probe.action === 'compare-turns'
+        ? [probe.observedDegrees, probe.targetDegrees]
+        : [probe.targetDegrees]
+      : [question.degrees];
+  return (
+    <dialog
+      ref={ref}
+      className="review-dialog investigation-dialog"
+      aria-labelledby="investigation-heading"
+      onCancel={(e) => {
+        e.preventDefault();
+        close();
+      }}
+    >
+      <header>
+        <div>
+          <p className="eyebrow">Recorded Muse investigation</p>
+          <h2 id="investigation-heading">A question. A revealing move.</h2>
+        </div>
+        <button className="icon-button" aria-label="Close recorded investigation" onClick={close}>
+          <X size={18} aria-hidden="true" />
+        </button>
+      </header>
+      <p className="recorded-intro">
+        Three prepared questions on the original synthetic source. These are actual recorded Spark
+        decisions, not live answers to your current pose. Your engine is paused behind this view.
+      </p>
+      <div
+        className="recorded-questions"
+        role="group"
+        aria-label="Prepared investigation questions"
+      >
+        {preparedQuestions.map((q, i) => (
+          <button
+            key={q.id}
+            aria-pressed={id === q.id}
+            onClick={() => {
+              setId(q.id);
+              setShown(false);
+            }}
+          >
+            0{i + 1} {['Two turns', 'Two upstrokes', 'Connected motion'][i]}
+          </button>
+        ))}
+      </div>
+      <p className="recorded-context">Prepared question · recorded context {question.degrees}°</p>
+      <h3>{question.question}</h3>
+      {probe ? (
+        <>
+          <p>
+            <strong>What Muse chose:</strong>{' '}
+            {probe.action === 'compare-turns'
+              ? `Compare ${probe.observedDegrees}° with ${probe.targetDegrees}°`
+              : `Inspect the ${probe.part} at ${probe.targetDegrees}°`}
+          </p>
+          <p className="probe-objective">{shown ? probe.explanation : probe.objective}</p>
+          <button
+            className="discovery-return snapshot-export"
+            aria-pressed={shown}
+            onClick={() => setShown(!shown)}
+          >
+            {shown ? 'Return to recorded starting pose' : 'Show Muse’s investigation'}
+          </button>
+        </>
+      ) : (
+        <p role="status">
+          Recorded investigation unavailable. Manual exploration remains available.
+        </p>
+      )}
+      <div className="discovery-grid" data-investigation-shown={shown} data-scenes={angles.length}>
+        {angles.map((a, i) => {
+          const p = enginePose(a);
+          return (
+            <section key={i}>
+              <div>
+                <strong>{film.strokes[p.phase].name}</strong>
+                <span>{a}°</span>
+              </div>
+              <EngineScene
+                film={film}
+                degrees={a}
+                compact
+                labels={false}
+                selected={shown ? probe?.part : null}
+              />
+              <div className="discovery-valves">
+                <span>
+                  Intake: <strong>{p.intakeLift > 0.01 ? 'Open' : 'Closed'}</strong>
+                </span>
+                <span>
+                  Exhaust: <strong>{p.exhaustLift > 0.01 ? 'Open' : 'Closed'}</strong>
+                </span>
+              </div>
+            </section>
+          );
+        })}
+      </div>
+      {shown && probe && (
+        <div className="recorded-explanation">
+          <p>{probe.explanation}</p>
+          <button
+            className="discovery-return"
+            onClick={() => downloadStudySnapshot(film, probe.observedDegrees, probe)}
+          >
+            Save Muse investigation
+          </button>
+          <blockquote>{probe.sourceQuote}</blockquote>
+          <small>
+            Quoted source fact above; poses and valve states computed by Soma. Illustrative motion,
+            not calculated thermodynamics.
+          </small>
+        </div>
+      )}
+      <details>
+        <summary>Recorded decision and advisory review</summary>
+        <p>
+          Spark authored the action selection, observation objective and explanation. Soma checks
+          action/part IDs, source identity and one-turn geometry. Wonder's approval is advisory, not
+          certification.
+        </p>
+        <p>
+          This operation: {receipt.calls} calls · ${receipt.costUsd.toFixed(8)} ·{' '}
+          {receipt.elapsedMs / 1000}s including application work. No new calls during playback.
+          Accepted recorded advisory: {review.structured.approved ? 'approved' : 'rejected'}.
+        </p>
+        <pre>{JSON.stringify(probe, null, 2)}</pre>
+      </details>
+      <p className="discovery-scope">
+        No diagnosis, assessment or learning-record write. No canonical engine follow-up/save
+        integration.
+      </p>
+      <button className="discovery-return" onClick={close}>
+        Back to my engine
+      </button>
+    </dialog>
+  );
 }

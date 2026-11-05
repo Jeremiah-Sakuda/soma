@@ -40,37 +40,67 @@ const liveReadStretched = {
 };
 const slide = async (width = 1600) =>
   'data:image/png;base64,' +
-  (await sharp(readFileSync('docs/examples/hero-circuit/lecture-9-bridge.png')).resize({ width }).png().toBuffer()).toString('base64');
-const px = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot((a.x - b.x) * 1920, (a.y - b.y) * 1080);
-const mid = (c: { x1: number; y1: number; x2: number; y2: number }) => ({ x: (c.x1 + c.x2) / 2, y: (c.y1 + c.y2) / 2 });
+  (
+    await sharp(readFileSync('docs/examples/hero-circuit/lecture-9-bridge.png'))
+      .resize({ width })
+      .png()
+      .toBuffer()
+  ).toString('base64');
+const px = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+  Math.hypot((a.x - b.x) * 1920, (a.y - b.y) * 1080);
+const mid = (c: { x1: number; y1: number; x2: number; y2: number }) => ({
+  x: (c.x1 + c.x2) / 2,
+  y: (c.y1 + c.y2) / 2,
+});
 
 describe('a circuit reading snapped onto its own drawing', () => {
   it.each([
     ['first live read', liveRead],
     ['stretched second live read', liveReadStretched],
-  ])('moves every node onto its junction dot and every part onto its body (%s)', async (_, read) => {
-    const { layout, snappedNodes, refinedParts } = await snapCircuitToDrawing(await slide(), read);
-    expect(snappedNodes).toBe(4);
-    expect(refinedParts).toBe(6);
-    for (const truth of heroCircuitLayout.nodes)
-      expect(px(layout.nodes.find((n) => n.nodeId === truth.nodeId)!, truth)).toBeLessThan(6);
-    for (const truth of heroCircuitLayout.components) {
-      const got = layout.components.find((c) => c.componentId === truth.componentId)!;
-      expect(px(mid(got), mid(truth))).toBeLessThan(12);
-      // Each end lands within a stroke or two of where the body starts and stops; the battery's
-      // printed + sign beside its plates can stretch its top end a little.
-      const limit = truth.componentId === 'V1' ? 26 : 10;
-      expect(px({ x: got.x1, y: got.y1 }, { x: truth.x1, y: truth.y1 })).toBeLessThan(limit);
-      expect(px({ x: got.x2, y: got.y2 }, { x: truth.x2, y: truth.y2 })).toBeLessThan(limit);
-    }
-  });
+  ])(
+    'moves every node onto its junction dot and every part onto its body (%s)',
+    async (_, read) => {
+      const { layout, snappedNodes, refinedParts } = await snapCircuitToDrawing(
+        await slide(),
+        read,
+      );
+      expect(snappedNodes).toBe(4);
+      expect(refinedParts).toBe(6);
+      for (const truth of heroCircuitLayout.nodes)
+        expect(
+          px(
+            layout.nodes.find((n) => n.nodeId === truth.nodeId)!,
+            truth,
+          ),
+        ).toBeLessThan(6);
+      for (const truth of heroCircuitLayout.components) {
+        const got = layout.components.find((c) => c.componentId === truth.componentId)!;
+        expect(px(mid(got), mid(truth))).toBeLessThan(12);
+        // Each end lands within a stroke or two of where the body starts and stops; the battery's
+        // printed + sign beside its plates can stretch its top end a little.
+        const limit = truth.componentId === 'V1' ? 26 : 10;
+        expect(px({ x: got.x1, y: got.y1 }, { x: truth.x1, y: truth.y1 })).toBeLessThan(limit);
+        expect(px({ x: got.x2, y: got.y2 }, { x: truth.x2, y: truth.y2 })).toBeLessThan(limit);
+      }
+    },
+  );
 
   it('works at a smaller capture and leaves an accurate reading where it is', async () => {
     const small = await snapCircuitToDrawing(await slide(1200), liveRead);
     for (const truth of heroCircuitLayout.nodes)
-      expect(px(small.layout.nodes.find((n) => n.nodeId === truth.nodeId)!, truth)).toBeLessThan(8);
+      expect(
+        px(
+          small.layout.nodes.find((n) => n.nodeId === truth.nodeId)!,
+          truth,
+        ),
+      ).toBeLessThan(8);
     const exact = await snapCircuitToDrawing(await slide(), heroCircuitLayout);
     for (const truth of heroCircuitLayout.components)
-      expect(px(mid(exact.layout.components.find((c) => c.componentId === truth.componentId)!), mid(truth))).toBeLessThan(12);
+      expect(
+        px(
+          mid(exact.layout.components.find((c) => c.componentId === truth.componentId)!),
+          mid(truth),
+        ),
+      ).toBeLessThan(12);
   });
 });

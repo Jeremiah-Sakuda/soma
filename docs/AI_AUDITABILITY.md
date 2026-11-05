@@ -1,10 +1,10 @@
 # AI auditability
 
-Implemented October 26, 2026. Soma records application activity and short model-stated purposes in a durable, owner-scoped journal. A stated purpose is an explanation supplied by the model, not evidence of its hidden internal reasoning.
+The earlier course workspace records application activity and short model-stated purposes in a durable, owner-scoped journal. A stated purpose is an explanation supplied by the model, not evidence of its hidden internal reasoning.
 
-## What the student sees
+## Course-workspace journal
 
-Open **AI activity** in the study workspace. The compact disclosure preserves the Ready Card as the main action. It shows source checks, preparation, investigations and post-response adaptation; expand a run to inspect its events, evidence versions, validation/repair outcomes, model/engine versions, usage and final state. Live source checks are distinguished from live model execution, reused prepared work and synthetic mode. Source provenance is separate: a live model can operate over synthetic demo sources.
+Open **AI activity** in the study workspace. This journal is separate from the exploration card’s model/computation trace. It shows source checks, preparation, investigations and post-response adaptation; expand a run to inspect its events, evidence versions, validation/repair outcomes, model/engine versions, usage and final state. Live source checks are distinguished from live model execution, reused prepared work and synthetic mode. Source provenance is separate: a live model can operate over synthetic demo sources.
 
 The application reports actions it actually observed, separately from Spark's proposed actions and stated purposes. Proposed or validated work is not labeled published until the workspace commit succeeds. Missing stated purposes stay unrecorded. Historical runs are not backfilled with invented explanations.
 
@@ -30,7 +30,7 @@ This is an application audit journal. It is not a separately signed, externally 
 
 ## Verification
 
-Tests cover durable progress before provider completion, exact publication boundaries, one bounded repair, unchanged zero-call reuse, journal-outage halt, discarded diagnostic protection, current-version disclosure, account/generation isolation, history pagination, export protection and source refresh. Real Firestore checks and a hosted synthetic model check are reported with executed results in the build log; test transport and real inference results remain separate. Operational limits and open release gates remain in [Production readiness](PRODUCTION_READINESS.md).
+Tests cover durable progress before provider completion, exact publication boundaries, one bounded repair, unchanged zero-call reuse, journal-outage halt, discarded diagnostic protection, current-version disclosure, account/generation isolation, history pagination, export protection and source refresh. Executed current-release checks are recorded in [verification](VERIFICATION.md); test transport and real inference results remain separate. Operational limits and open release gates remain in [Production readiness](PRODUCTION_READINESS.md).
 
 ## P037 architecture consolidation
 

@@ -63,7 +63,8 @@ const EXIT_MS = 1000;
 // A slow turn shows the depth, then stops so the scene can rest (and stop rendering).
 const SWAY_MS = 9000;
 // A test harness may drive the clock to capture exact frames.
-const clock = () => (typeof window.__liftNow === 'function' ? window.__liftNow() : performance.now());
+const clock = () =>
+  typeof window.__liftNow === 'function' ? window.__liftNow() : performance.now();
 const COLOR = {
   source: 0xf2b632,
   settled: 0x1f9e78,
@@ -87,7 +88,8 @@ let s = null;
 function radialTexture(inner, outer) {
   const c = document.createElement('canvas');
   c.width = c.height = 128;
-  const g = c.getContext('2d'), grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  const g = c.getContext('2d'),
+    grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
   grad.addColorStop(0, inner);
   grad.addColorStop(1, outer);
   g.fillStyle = grad;
@@ -116,7 +118,9 @@ function paperColour(image) {
     const g = c.getContext('2d', { willReadFrequently: true });
     g.drawImage(image, 0, 0, 16, 16);
     const data = g.getImageData(0, 0, 16, 16).data;
-    const corners = [0, 15, 240, 255].map((i) => [data[i * 4], data[i * 4 + 1], data[i * 4 + 2], data[i * 4 + 3]]).filter((p) => p[3] > 200);
+    const corners = [0, 15, 240, 255]
+      .map((i) => [data[i * 4], data[i * 4 + 1], data[i * 4 + 2], data[i * 4 + 3]])
+      .filter((p) => p[3] > 200);
     if (!corners.length) return new Color(0xffffff);
     const best = corners.sort((a, b) => b[0] + b[1] + b[2] - (a[0] + a[1] + a[2]))[0];
     return new Color().setRGB(best[0] / 255, best[1] / 255, best[2] / 255, SRGBColorSpace);
@@ -131,7 +135,15 @@ function tag(className) {
   return el;
 }
 function material(color, extra = {}) {
-  return new MeshPhysicalMaterial({ color, roughness: 0.3, metalness: 0.05, clearcoat: 0.85, clearcoatRoughness: 0.18, transparent: true, ...extra });
+  return new MeshPhysicalMaterial({
+    color,
+    roughness: 0.3,
+    metalness: 0.05,
+    clearcoat: 0.85,
+    clearcoatRoughness: 0.18,
+    transparent: true,
+    ...extra,
+  });
 }
 /** A node keeps its colour; being current is shown by a halo, not a recolour. */
 function nodeColor(n) {
@@ -162,8 +174,17 @@ function build(frame) {
     // Full-display transparent canvas: skip multisampling where the pixel ratio already
     // smooths edges, and cap very large surfaces.
     const dpr = Math.min(2, devicePixelRatio || 1);
-    const ratio = frame.width * frame.height * dpr * dpr > 9e6 ? Math.max(1, Math.sqrt(9e6 / (frame.width * frame.height))) : dpr;
-    renderer = new WebGLRenderer({ canvas, alpha: true, antialias: ratio < 1.75, premultipliedAlpha: true, powerPreference: 'low-power' });
+    const ratio =
+      frame.width * frame.height * dpr * dpr > 9e6
+        ? Math.max(1, Math.sqrt(9e6 / (frame.width * frame.height)))
+        : dpr;
+    renderer = new WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: ratio < 1.75,
+      premultipliedAlpha: true,
+      powerPreference: 'low-power',
+    });
     renderer.setPixelRatio(ratio);
   } catch (error) {
     canvas.remove();
@@ -178,17 +199,47 @@ function build(frame) {
   const key = new DirectionalLight(0xffffff, 1.7);
   const rim = new DirectionalLight(0xffe2c4, 0.7);
   scene.add(key, rim);
-  const hinge = new Group(), yaw = new Group(), content = new Group();
+  const hinge = new Group(),
+    yaw = new Group(),
+    content = new Group();
   hinge.add(yaw);
   yaw.add(content);
   scene.add(hinge);
   s = {
-    canvas, labels, renderer, scene, camera, key, rim, hinge, yaw, content,
-    nodes: new Map(), edges: new Map(), ticks: [],
+    canvas,
+    labels,
+    renderer,
+    scene,
+    camera,
+    key,
+    rim,
+    hinge,
+    yaw,
+    content,
+    nodes: new Map(),
+    edges: new Map(),
+    ticks: [],
     shadowTex: radialTexture('rgba(0,0,0,0.55)', 'rgba(0,0,0,0)'),
-    t: 0, mode: 'enter', started: clock(), last: clock(), idleSince: null, sway: 0, pending: [],
-    userYaw: 0, userTilt: 0, userControlled: false, hovered: null,
-    frame: null, layout: null, model: null, sheet: null, sheetKey: null, sheetReady: false, onExit: null, raf: 0, compiled: false,
+    t: 0,
+    mode: 'enter',
+    started: clock(),
+    last: clock(),
+    idleSince: null,
+    sway: 0,
+    pending: [],
+    userYaw: 0,
+    userTilt: 0,
+    userControlled: false,
+    hovered: null,
+    frame: null,
+    layout: null,
+    model: null,
+    sheet: null,
+    sheetKey: null,
+    sheetReady: false,
+    onExit: null,
+    raf: 0,
+    compiled: false,
   };
   s.onLost = (event) => {
     event.preventDefault();
@@ -198,9 +249,21 @@ function build(frame) {
   resize(frame);
 }
 function resize(frame) {
-  if (s.frame && s.frame.width === frame.width && s.frame.height === frame.height && s.frame.dx === frame.dx && s.frame.dy === frame.dy) return;
+  if (
+    s.frame &&
+    s.frame.width === frame.width &&
+    s.frame.height === frame.height &&
+    s.frame.dx === frame.dx &&
+    s.frame.dy === frame.dy
+  )
+    return;
   s.frame = { ...frame };
-  Object.assign(s.canvas.style, { left: frame.dx + 'px', top: frame.dy + 'px', width: frame.width + 'px', height: frame.height + 'px' });
+  Object.assign(s.canvas.style, {
+    left: frame.dx + 'px',
+    top: frame.dy + 'px',
+    width: frame.width + 'px',
+    height: frame.height + 'px',
+  });
   s.renderer.setSize(frame.width, frame.height, false);
   const d = cameraDistance(frame.height, FOV);
   s.camera.aspect = frame.width / frame.height;
@@ -243,8 +306,20 @@ function placeSheet(layout, sheet) {
     h = region.height * f.height,
     x = region.x * f.width + w / 2 - f.width / 2,
     y = f.height / 2 - (region.y * f.height + h / 2);
-  const paper = new MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, side: DoubleSide, alphaMap: vignette(), opacity: 0 });
-  const coverMat = new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false });
+  const paper = new MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    depthWrite: false,
+    side: DoubleSide,
+    alphaMap: vignette(),
+    opacity: 0,
+  });
+  const coverMat = new MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+  });
   if (sheet) {
     new TextureLoader().load(
       sheet.dataUrl,
@@ -274,8 +349,10 @@ function placeSheet(layout, sheet) {
   plane.position.set(x, y, 0);
   const edge = new LineLoop(
     new BufferGeometry().setFromPoints([
-      new Vector3(x - w / 2, y - h / 2, 0.5), new Vector3(x + w / 2, y - h / 2, 0.5),
-      new Vector3(x + w / 2, y + h / 2, 0.5), new Vector3(x - w / 2, y + h / 2, 0.5),
+      new Vector3(x - w / 2, y - h / 2, 0.5),
+      new Vector3(x + w / 2, y - h / 2, 0.5),
+      new Vector3(x + w / 2, y + h / 2, 0.5),
+      new Vector3(x - w / 2, y + h / 2, 0.5),
     ]),
     new LineBasicMaterial({ color: 0x8c8577, transparent: true, opacity: 0 }),
   );
@@ -284,17 +361,37 @@ function placeSheet(layout, sheet) {
   cover.position.set(x, y, -2);
   cover.renderOrder = -2;
   // A tight shadow just below and right of the lifted sheet, not a haze across the slide.
-  const floor = new Mesh(new PlaneGeometry(w * 0.95, h * 0.45), new MeshBasicMaterial({ map: radialTexture('rgba(0,0,0,0.5)', 'rgba(0,0,0,0)'), transparent: true, opacity: 0, depthWrite: false }));
+  const floor = new Mesh(
+    new PlaneGeometry(w * 0.95, h * 0.45),
+    new MeshBasicMaterial({
+      map: radialTexture('rgba(0,0,0,0.5)', 'rgba(0,0,0,0)'),
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    }),
+  );
   floor.position.set(x + r * 0.4, y - h * 0.42, -1);
   floor.renderOrder = -1;
   // A ruler at the front-left corner of the sheet reads off each node's height. At the
   // front it stands lowest on screen, so even the tallest estimate keeps clear of the slide
   // above the graph.
   const rulerAt = { x: x - w / 2 + r * 1.2, y: y - h / 2 + r * 1.2 };
-  const ruler = new Mesh(new CylinderGeometry(r * 0.05, r * 0.05, 1, 8), new MeshBasicMaterial({ color: COLOR.ruler, transparent: true, opacity: 0 }));
+  const ruler = new Mesh(
+    new CylinderGeometry(r * 0.05, r * 0.05, 1, 8),
+    new MeshBasicMaterial({ color: COLOR.ruler, transparent: true, opacity: 0 }),
+  );
   ruler.rotation.x = Math.PI / 2;
   ruler.position.set(rulerAt.x, rulerAt.y, 0);
-  const level = new Line(new BufferGeometry().setFromPoints([new Vector3(), new Vector3()]), new LineDashedMaterial({ color: COLOR.current, dashSize: r * 0.35, gapSize: r * 0.25, transparent: true, opacity: 0 }));
+  const level = new Line(
+    new BufferGeometry().setFromPoints([new Vector3(), new Vector3()]),
+    new LineDashedMaterial({
+      color: COLOR.current,
+      dashSize: r * 0.35,
+      gapSize: r * 0.25,
+      transparent: true,
+      opacity: 0,
+    }),
+  );
   s.scene.add(cover, floor);
   s.content.add(plane, edge, ruler, level);
   s.sheet = { paper: plane, edge, cover, floor, ruler, level };
@@ -305,8 +402,13 @@ function placeSheet(layout, sheet) {
 
 /** Even steps for the ruler (1, 2, 5, 10, …) giving at most about twelve ticks. */
 function tickStep(top) {
-  const raw = top / 12, power = 10 ** Math.floor(Math.log10(raw));
-  return [1, 2, 5, 10].map((m) => m * power).find((step) => step > 0 && Number.isFinite(step) && step >= raw) ?? top;
+  const raw = top / 12,
+    power = 10 ** Math.floor(Math.log10(raw));
+  return (
+    [1, 2, 5, 10]
+      .map((m) => m * power)
+      .find((step) => step > 0 && Number.isFinite(step) && step >= raw) ?? top
+  );
 }
 /** Evenly spaced ticks over the whole search's range, the same at every step, so the ruler
  * reads as a fixed scale from the first step. */
@@ -326,7 +428,10 @@ function syncTicks(layout) {
   }
   const r = layout.radius;
   s.ticks = values.map((value) => {
-    const mesh = new Mesh(new CylinderGeometry(r * 0.04, r * 0.04, r * 0.7, 6), new MeshBasicMaterial({ color: COLOR.ruler, transparent: true, opacity: 0 }));
+    const mesh = new Mesh(
+      new CylinderGeometry(r * 0.04, r * 0.04, r * 0.7, 6),
+      new MeshBasicMaterial({ color: COLOR.ruler, transparent: true, opacity: 0 }),
+    );
     mesh.rotation.z = Math.PI / 2;
     s.content.add(mesh);
     const label = tag('is-tick');
@@ -362,25 +467,88 @@ function syncNodes(layout) {
     seen.add(n.id);
     let v = s.nodes.get(n.id);
     if (!v) {
-      const sphere = new Mesh(new SphereGeometry(r * 0.78, 40, 24), material(nodeColor(n), { emissive: new Color(COLOR.current), emissiveIntensity: 0 }));
-      const halo = new Mesh(new TorusGeometry(r * 1.12, r * 0.09, 12, 48), new MeshBasicMaterial({ color: COLOR.current, transparent: true, opacity: 0 }));
+      const sphere = new Mesh(
+        new SphereGeometry(r * 0.78, 40, 24),
+        material(nodeColor(n), { emissive: new Color(COLOR.current), emissiveIntensity: 0 }),
+      );
+      const halo = new Mesh(
+        new TorusGeometry(r * 1.12, r * 0.09, 12, 48),
+        new MeshBasicMaterial({ color: COLOR.current, transparent: true, opacity: 0 }),
+      );
       // An outline where the node was, turned to face the viewer: "was here", not a second node.
-      const ghost = new Mesh(new TorusGeometry(r * 0.78, r * 0.05, 8, 40), new MeshBasicMaterial({ color: COLOR.ghost, transparent: true, opacity: 0, depthWrite: false }));
+      const ghost = new Mesh(
+        new TorusGeometry(r * 0.78, r * 0.05, 8, 40),
+        new MeshBasicMaterial({
+          color: COLOR.ghost,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+        }),
+      );
       // From the old height to the new while a distance changes.
-      const trail = new Line(new BufferGeometry().setFromPoints([new Vector3(), new Vector3()]), new LineDashedMaterial({ color: COLOR.ghost, dashSize: r * 0.25, gapSize: r * 0.18, transparent: true, opacity: 0 }));
-      const pillar = new Mesh(new CylinderGeometry(r * 0.055, r * 0.055, 1, 10), new MeshBasicMaterial({ color: nodeColor(n), transparent: true, opacity: 0.6 }));
+      const trail = new Line(
+        new BufferGeometry().setFromPoints([new Vector3(), new Vector3()]),
+        new LineDashedMaterial({
+          color: COLOR.ghost,
+          dashSize: r * 0.25,
+          gapSize: r * 0.18,
+          transparent: true,
+          opacity: 0,
+        }),
+      );
+      const pillar = new Mesh(
+        new CylinderGeometry(r * 0.055, r * 0.055, 1, 10),
+        new MeshBasicMaterial({ color: nodeColor(n), transparent: true, opacity: 0.6 }),
+      );
       pillar.rotation.x = Math.PI / 2;
-      const foot = new Mesh(new RingGeometry(r * 0.95, r * 1.15, 48), new MeshBasicMaterial({ color: nodeColor(n), transparent: true, opacity: 0, side: DoubleSide, depthWrite: false }));
-      const shadow = new Mesh(new CircleGeometry(r * 1.2, 32), new MeshBasicMaterial({ map: s.shadowTex, transparent: true, opacity: 0, depthWrite: false }));
+      const foot = new Mesh(
+        new RingGeometry(r * 0.95, r * 1.15, 48),
+        new MeshBasicMaterial({
+          color: nodeColor(n),
+          transparent: true,
+          opacity: 0,
+          side: DoubleSide,
+          depthWrite: false,
+        }),
+      );
+      const shadow = new Mesh(
+        new CircleGeometry(r * 1.2, 32),
+        new MeshBasicMaterial({
+          map: s.shadowTex,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+        }),
+      );
       for (const o of [shadow, foot, pillar, ghost, trail, sphere, halo]) s.content.add(o);
       sphere.renderOrder = pillar.renderOrder = halo.renderOrder = 3;
-      v = { sphere, halo, ghost, trail, pillar, foot, shadow, notches: [], label: tag('is-node'), h: 0, target: 0, change: null, pulseAt: -Infinity, data: null };
+      v = {
+        sphere,
+        halo,
+        ghost,
+        trail,
+        pillar,
+        foot,
+        shadow,
+        notches: [],
+        label: tag('is-node'),
+        h: 0,
+        target: 0,
+        change: null,
+        pulseAt: -Infinity,
+        data: null,
+      };
       s.nodes.set(n.id, v);
     }
     // A distance that changes (an estimate coming down, or a cut raising a route) leaves a
     // ghost at the old height, so the change reads.
     if (v.data && v.data.distance !== null && n.distance !== null && n.distance !== v.data.distance)
-      v.change = { from: v.data.distance, sign: v.data.tentative ? '≤' : '=', height: v.h, at: now };
+      v.change = {
+        from: v.data.distance,
+        sign: v.data.tentative ? '≤' : '=',
+        height: v.h,
+        at: now,
+      };
     // Settled now: its label says so at once rather than replaying the last change.
     else if (v.data?.tentative && !n.tentative) v.change = null;
     else if (newStep) v.change = null;
@@ -392,7 +560,8 @@ function syncNodes(layout) {
     v.sphere.material.color.setHex(color);
     v.pillar.material.color.setHex(color);
     v.foot.material.color.setHex(n.status === 'current' ? COLOR.current : color);
-    for (const o of [v.sphere, v.halo, v.ghost, v.pillar, v.foot, v.shadow]) o.position.set(n.x, n.y, o.position.z);
+    for (const o of [v.sphere, v.halo, v.ghost, v.pillar, v.foot, v.shadow])
+      o.position.set(n.x, n.y, o.position.z);
     if (n.distance === null) v.change = null;
     v.foot.position.z = 0.6;
     v.shadow.position.z = 0.3;
@@ -400,10 +569,16 @@ function syncNodes(layout) {
     v.sphere.visible = v.pillar.visible = lifted;
     // A notch on the stem at each whole unit, so a height can be counted where perspective
     // makes a near, tall node look no higher than a far, short one.
-    const units = lifted && layout.maxDistance <= 20 && layout.scale >= 9 ? Math.floor(Math.min(n.distance, layout.maxDistance) + 1e-9) : 0;
+    const units =
+      lifted && layout.maxDistance <= 20 && layout.scale >= 9
+        ? Math.floor(Math.min(n.distance, layout.maxDistance) + 1e-9)
+        : 0;
     notchGeometry ??= new TorusGeometry(r * 0.13, r * 0.03, 6, 20);
     while (v.notches.length < units) {
-      const m = new Mesh(notchGeometry, new MeshBasicMaterial({ color, transparent: true, opacity: 0 }));
+      const m = new Mesh(
+        notchGeometry,
+        new MeshBasicMaterial({ color, transparent: true, opacity: 0 }),
+      );
       m.userData.sharedGeometry = true;
       m.renderOrder = 3;
       s.content.add(m);
@@ -431,7 +606,8 @@ function syncNodes(layout) {
 }
 
 function disposeNode(v) {
-  for (const o of [v.sphere, v.halo, v.ghost, v.trail, v.pillar, v.foot, v.shadow]) disposeObject(o);
+  for (const o of [v.sphere, v.halo, v.ghost, v.trail, v.pillar, v.foot, v.shadow])
+    disposeObject(o);
   for (const m of v.notches) {
     s.content.remove(m);
     m.material.dispose();
@@ -441,7 +617,8 @@ function disposeNode(v) {
 
 /** Moves a two-point dashed line in place (no new GPU buffers per frame). */
 function setSegment(line, a, b) {
-  const geo = line.geometry, pos = geo.attributes.position;
+  const geo = line.geometry,
+    pos = geo.attributes.position;
   pos.setXYZ(0, a.x, a.y, a.z);
   pos.setXYZ(1, b.x, b.y, b.z);
   pos.needsUpdate = true;
@@ -460,7 +637,14 @@ function caption(model, layout) {
     box.setAttribute('aria-hidden', 'true');
     const legend = document.createElement('div');
     legend.className = 'lift-legend';
-    for (const [cls, text] of [['start', ''], ['path', 'shortest route'], ['taut', 'taut: no slack'], ['slack', 'slack: extra cost n'], ['estimate', 'estimate, may drop'], ['ghost', 'old height']]) {
+    for (const [cls, text] of [
+      ['start', ''],
+      ['path', 'shortest route'],
+      ['taut', 'taut: no slack'],
+      ['slack', 'slack: extra cost n'],
+      ['estimate', 'estimate, may drop'],
+      ['ghost', 'old height'],
+    ]) {
       const item = document.createElement('span');
       const swatch = document.createElement('i');
       swatch.className = `is-${cls}`;
@@ -468,15 +652,25 @@ function caption(model, layout) {
       if (cls === 'start') box.startItem = item;
       legend.appendChild(item);
     }
-    box.append(document.createElement('strong'), document.createElement('span'), document.createElement('small'), legend);
+    box.append(
+      document.createElement('strong'),
+      document.createElement('span'),
+      document.createElement('small'),
+      legend,
+    );
     const controls = document.createElement('div');
     controls.style.cssText = 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap';
-    for (const [action, text] of [['left', 'Turn left'], ['right', 'Turn right'], ['reset', 'Reset view']]) {
+    for (const [action, text] of [
+      ['left', 'Turn left'],
+      ['right', 'Turn right'],
+      ['reset', 'Reset view'],
+    ]) {
       const button = document.createElement('button');
       button.type = 'button';
       button.dataset.liftView = action;
       button.textContent = text;
-      button.style.cssText = 'pointer-events:auto;min-height:44px;padding:6px 10px;border:1px solid #c6beb0;border-radius:8px;background:#fffdf8;color:#2b2a26;font:inherit;cursor:pointer';
+      button.style.cssText =
+        'pointer-events:auto;min-height:44px;padding:6px 10px;border:1px solid #c6beb0;border-radius:8px;background:#fffdf8;color:#2b2a26;font:inherit;cursor:pointer';
       controls.append(button);
     }
     box.append(controls);
@@ -496,11 +690,15 @@ function caption(model, layout) {
   interactionHint();
   // Anchored like the flat caption, by the edge it grows away from, so a longer caption
   // never makes the card jump between steps.
-  const f = s.frame, c = model.caption;
-  box.style.left = Math.max(8, Math.min((c ? c.x * f.width : 24) + f.dx - 20, innerWidth - box.offsetWidth - 8)) + 'px';
+  const f = s.frame,
+    c = model.caption;
+  box.style.left =
+    Math.max(8, Math.min((c ? c.x * f.width : 24) + f.dx - 20, innerWidth - box.offsetWidth - 8)) +
+    'px';
   if (c && c.anchor === 'top') {
     box.style.bottom = '';
-    box.style.top = Math.max(8, Math.min(c.y * f.height + f.dy, innerHeight - box.offsetHeight - 12)) + 'px';
+    box.style.top =
+      Math.max(8, Math.min(c.y * f.height + f.dy, innerHeight - box.offsetHeight - 12)) + 'px';
   } else {
     box.style.top = '';
     box.style.bottom = Math.max(12, innerHeight - (f.dy + f.height) + 12) + 'px';
@@ -511,29 +709,56 @@ function project(local, out = new Vector3()) {
   out.copy(local);
   s.content.localToWorld(out);
   out.project(s.camera);
-  return { x: ((out.x + 1) / 2) * s.frame.width + s.frame.dx, y: ((1 - out.y) / 2) * s.frame.height + s.frame.dy, behind: out.z > 1 };
+  return {
+    x: ((out.x + 1) / 2) * s.frame.width + s.frame.dx,
+    y: ((1 - out.y) / 2) * s.frame.height + s.frame.dy,
+    behind: out.z > 1,
+  };
 }
 /** Keep the controls beside the drawing rather than covering a node or route. */
 function positionCaption() {
   if (!s || s.t < 0.85 || s.mode === 'exit') return;
   const box = document.getElementById('lift-caption');
   if (!box) return;
-  const width = box.offsetWidth, height = box.offsetHeight, margin = 12;
-  const left = margin, right = Math.max(left, innerWidth - width - margin);
-  const top = margin, bottom = Math.max(top, innerHeight - height - margin);
-  const obstacles = (s.obstacles ?? []).map((p) => ({ x: p.x - p.r - 12, y: p.y - p.r - 12, width: p.r * 2 + 24, height: p.r * 2 + 24 }));
+  const width = box.offsetWidth,
+    height = box.offsetHeight,
+    margin = 12;
+  const left = margin,
+    right = Math.max(left, innerWidth - width - margin);
+  const top = margin,
+    bottom = Math.max(top, innerHeight - height - margin);
+  const obstacles = (s.obstacles ?? []).map((p) => ({
+    x: p.x - p.r - 12,
+    y: p.y - p.r - 12,
+    width: p.r * 2 + 24,
+    height: p.r * 2 + 24,
+  }));
   for (const v of [...s.nodes.values(), ...s.edges.values()]) {
     if (Number(v.label.style.opacity) < 0.1 || !v.label.textContent) continue;
     const r = v.label.getBoundingClientRect();
     obstacles.push({ x: r.x - 8, y: r.y - 8, width: r.width + 16, height: r.height + 16 });
   }
-  const score = ({ x, y }) => obstacles.reduce((sum, p) => sum
-    + Math.max(0, Math.min(x + width, p.x + p.width) - Math.max(x, p.x))
-    * Math.max(0, Math.min(y + height, p.y + p.height) - Math.max(y, p.y)), 0);
+  const score = ({ x, y }) =>
+    obstacles.reduce(
+      (sum, p) =>
+        sum +
+        Math.max(0, Math.min(x + width, p.x + p.width) - Math.max(x, p.x)) *
+          Math.max(0, Math.min(y + height, p.y + p.height) - Math.max(y, p.y)),
+      0,
+    );
   const previous = box.getBoundingClientRect();
-  const current = { x: Math.max(left, Math.min(previous.x, right)), y: Math.max(top, Math.min(previous.y, bottom)) };
+  const current = {
+    x: Math.max(left, Math.min(previous.x, right)),
+    y: Math.max(top, Math.min(previous.y, bottom)),
+  };
   if (score(current) === 0) return;
-  const candidates = [current, { x: right, y: bottom }, { x: right, y: top }, { x: left, y: top }, { x: left, y: bottom }];
+  const candidates = [
+    current,
+    { x: right, y: bottom },
+    { x: right, y: top },
+    { x: left, y: top },
+    { x: left, y: bottom },
+  ];
   candidates.sort((a, b) => score(a) - score(b));
   const chosen = candidates[0];
   box.style.bottom = '';
@@ -546,8 +771,10 @@ function placeLabel(el, local, opacity, priority, side = null, edge = false) {
   const p = project(local, scratch);
   let { x, y } = p;
   if (side) {
-    const a = project(side[0], new Vector3()), b = project(side[1], new Vector3());
-    let nx = -(b.y - a.y), ny = b.x - a.x;
+    const a = project(side[0], new Vector3()),
+      b = project(side[1], new Vector3());
+    let nx = -(b.y - a.y),
+      ny = b.x - a.x;
     const len = Math.hypot(nx, ny) || 1;
     nx /= len;
     ny /= len;
@@ -571,7 +798,9 @@ function flushLabels() {
       l.el._w = l.el.offsetWidth;
       l.el._h = l.el.offsetHeight;
     }
-  const ys = separateLabels(shown.map((l) => ({ x: l.x, y: l.y, w: l.el._w, h: l.el._h, priority: l.priority })));
+  const ys = separateLabels(
+    shown.map((l) => ({ x: l.x, y: l.y, w: l.el._w, h: l.el._h, priority: l.priority })),
+  );
   shown.forEach((l, i) => {
     // A string's label pushed far from its string would read as another's: hide it instead.
     const strayed = l.edge && Math.abs(ys[i] - l.y) > 26;
@@ -585,16 +814,22 @@ function flushLabels() {
  * whose label would not sit on a node. */
 function labelIndex(points, el) {
   const obstacles = s.obstacles ?? [];
-  const w = el._w || 60, h = el._h || 22;
+  const w = el._w || 60,
+    h = el._h || 22;
   for (const i of [12, 9, 15, 7, 17, 5, 19]) {
     // Where placeLabel would put this label's box, beside the string.
-    const a = project(points[i - 3], new Vector3()), b = project(points[i + 3], new Vector3()), p = project(points[i], scratch);
-    let nx = -(b.y - a.y), ny = b.x - a.x;
+    const a = project(points[i - 3], new Vector3()),
+      b = project(points[i + 3], new Vector3()),
+      p = project(points[i], scratch);
+    let nx = -(b.y - a.y),
+      ny = b.x - a.x;
     const len = Math.hypot(nx, ny) || 1;
     if (ny > 0) [nx, ny] = [-nx, -ny];
-    const cx = p.x + (nx / len) * 14, bottom = p.y + (ny / len) * 14 + 9;
+    const cx = p.x + (nx / len) * 14,
+      bottom = p.y + (ny / len) * 14 + 9;
     const clear = obstacles.every((o) => {
-      const dx = Math.max(cx - w / 2 - o.x, 0, o.x - (cx + w / 2)), dy = Math.max(bottom - h - o.y, 0, o.y - bottom);
+      const dx = Math.max(cx - w / 2 - o.x, 0, o.x - (cx + w / 2)),
+        dy = Math.max(bottom - h - o.y, 0, o.y - bottom);
       return Math.hypot(dx, dy) > o.r + 3;
     });
     if (clear) return i;
@@ -603,10 +838,14 @@ function labelIndex(points, el) {
 }
 function edgeMaterial(kind, tone) {
   if (kind === 'cut') return new MeshBasicMaterial({ color: COLOR.removed, transparent: true });
-  if (kind === 'pull') return material(COLOR.pull, { emissive: new Color(COLOR.pull), emissiveIntensity: 0.3 });
-  if (tone === 'path') return material(COLOR.path, { emissive: new Color(COLOR.path), emissiveIntensity: 0.35 });
-  if (kind === 'tentative') return material(COLOR.tentative, { roughness: 0.6, clearcoat: 0.2, opacity: 0.45 });
-  if (kind === 'taut') return material(COLOR.taut, { emissive: new Color(COLOR.taut), emissiveIntensity: 0.12 });
+  if (kind === 'pull')
+    return material(COLOR.pull, { emissive: new Color(COLOR.pull), emissiveIntensity: 0.3 });
+  if (tone === 'path')
+    return material(COLOR.path, { emissive: new Color(COLOR.path), emissiveIntensity: 0.35 });
+  if (kind === 'tentative')
+    return material(COLOR.tentative, { roughness: 0.6, clearcoat: 0.2, opacity: 0.45 });
+  if (kind === 'taut')
+    return material(COLOR.taut, { emissive: new Color(COLOR.taut), emissiveIntensity: 0.12 });
   return material(COLOR.slack, { roughness: 0.55, clearcoat: 0.3, opacity: 0.9 });
 }
 function tubeGeometry(points, radius) {
@@ -620,7 +859,8 @@ function tube(points, radius, mat) {
 }
 /** Reshapes a string's tube without reallocating its GPU buffers (same segment count). */
 function reshape(mesh, points, radius) {
-  const next = tubeGeometry(points, radius), geo = mesh.geometry;
+  const next = tubeGeometry(points, radius),
+    geo = mesh.geometry;
   for (const name of ['position', 'normal']) {
     geo.attributes[name].array.set(next.attributes[name].array);
     geo.attributes[name].needsUpdate = true;
@@ -632,15 +872,21 @@ const coneGeometry = new Map();
 let notchGeometry = null;
 /** A small arrowhead near the end of a directed string, pointing along it. */
 function arrow(points, radius, mat) {
-  if (!coneGeometry.has(radius)) coneGeometry.set(radius, new ConeGeometry(radius * 2.6, radius * 6, 12));
+  if (!coneGeometry.has(radius))
+    coneGeometry.set(radius, new ConeGeometry(radius * 2.6, radius * 6, 12));
   const cone = new Mesh(coneGeometry.get(radius), mat);
   cone.userData.shared = true;
   return pointArrow(cone, points);
 }
 function pointArrow(cone, points) {
-  const i = Math.floor(points.length * 0.82), p = points[i], q = points[Math.min(points.length - 1, i + 1)];
+  const i = Math.floor(points.length * 0.82),
+    p = points[i],
+    q = points[Math.min(points.length - 1, i + 1)];
   cone.position.set(p.x, p.y, p.z);
-  cone.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(q.x - p.x, q.y - p.y, q.z - p.z).normalize());
+  cone.quaternion.setFromUnitVectors(
+    new Vector3(0, 1, 0),
+    new Vector3(q.x - p.x, q.y - p.y, q.z - p.z).normalize(),
+  );
   return cone;
 }
 
@@ -649,7 +895,9 @@ function drawEdges(rise, sheetT) {
   const r = s.layout.radius;
   // During an experiment, strings to nodes off the checked route step back with them.
   const experiment = s.layout.edges.some((e) => e.kind === 'cut');
-  const onRoute = new Set(s.layout.edges.filter((e) => e.tone === 'path').flatMap((e) => [e.from, e.to]));
+  const onRoute = new Set(
+    s.layout.edges.filter((e) => e.tone === 'path').flatMap((e) => [e.from, e.to]),
+  );
   const keep = new Set();
   for (const e of s.layout.edges) {
     keep.add(e.id);
@@ -669,9 +917,12 @@ function drawEdges(rise, sheetT) {
       clearMeshes(v);
       v.label.className = `lift-tag is-edge is-${e.kind}${e.tone === 'path' ? ' is-path' : ''}`;
     }
-    const A = s.nodes.get(e.from), B = s.nodes.get(e.to);
-    const ra = A.data.distance === null ? 0 : rise(e.from), rb = B.data.distance === null ? 0 : rise(e.to);
-    const a = { x: A.data.x, y: A.data.y, z: A.h * ra }, b = { x: B.data.x, y: B.data.y, z: B.h * rb };
+    const A = s.nodes.get(e.from),
+      B = s.nodes.get(e.to);
+    const ra = A.data.distance === null ? 0 : rise(e.from),
+      rb = B.data.distance === null ? 0 : rise(e.to);
+    const a = { x: A.data.x, y: A.data.y, z: A.h * ra },
+      b = { x: B.data.x, y: B.data.y, z: B.h * rb };
     const k = Math.min(ra, rb);
     if (e.kind === 'flat') {
       // Not settled at either end: the connection stays as printed on the sheet.
@@ -680,17 +931,33 @@ function drawEdges(rise, sheetT) {
       v.label.style.opacity = 0;
       continue;
     }
-    let labelAt, side = null, opacity;
+    let labelAt,
+      side = null,
+      opacity;
     if (e.kind === 'cut') {
       // Removed: a dashed line on the sheet between the two printed circles.
       const shape = `cut:${a.x}:${a.y}:${b.x}:${b.y}:${r}`;
       if (v.shape !== shape) {
         clearMeshes(v);
-        const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
-        const from = r * 0.95, to = len - r * 0.95, dash = r * 0.4, gap = r * 0.25;
+        const dx = b.x - a.x,
+          dy = b.y - a.y,
+          len = Math.hypot(dx, dy) || 1;
+        const from = r * 0.95,
+          to = len - r * 0.95,
+          dash = r * 0.4,
+          gap = r * 0.25;
         for (let d = from; d < to; d += dash + gap) {
           const e2 = Math.min(to, d + dash);
-          v.meshes.push(tube([{ x: a.x + (dx * d) / len, y: a.y + (dy * d) / len, z: 1 }, { x: a.x + (dx * e2) / len, y: a.y + (dy * e2) / len, z: 1 }], r * 0.07, v.mat));
+          v.meshes.push(
+            tube(
+              [
+                { x: a.x + (dx * d) / len, y: a.y + (dy * d) / len, z: 1 },
+                { x: a.x + (dx * e2) / len, y: a.y + (dy * e2) / len, z: 1 },
+              ],
+              r * 0.07,
+              v.mat,
+            ),
+          );
         }
         for (const m of v.meshes) s.content.add(m);
         v.shape = shape;
@@ -701,11 +968,13 @@ function drawEdges(rise, sheetT) {
       opacity = sheetT;
     } else {
       // Slack hangs by its amount; a string too slack for its height rests on the sheet.
-      const sag = sagDepth(Math.max(0, e.slack ?? 0), s.layout.scale, s.layout.tallest, r * 0.45) * k;
+      const sag =
+        sagDepth(Math.max(0, e.slack ?? 0), s.layout.scale, s.layout.tallest, r * 0.45) * k;
       const points = stringPoints(a, b, sag, 24, r * 0.12);
       const shape = `${a.x}:${a.y}:${b.x}:${b.y}:${a.z.toFixed(1)}:${b.z.toFixed(1)}:${sag.toFixed(1)}:${r}:${e.directed}`;
       if (shape !== v.shape) {
-        const radius = r * (e.tone === 'path' ? 0.17 : e.kind === 'taut' || e.kind === 'pull' ? 0.11 : 0.042);
+        const radius =
+          r * (e.tone === 'path' ? 0.17 : e.kind === 'taut' || e.kind === 'pull' ? 0.11 : 0.042);
         // While heights glide, the same tube is reshaped in place; a new kind rebuilds it.
         if (v.meshes.length && v.radius === radius && v.directed === e.directed) {
           reshape(v.meshes[0], points, radius);
@@ -721,16 +990,28 @@ function drawEdges(rise, sheetT) {
         v.shape = shape;
       }
       // A string appears as its nodes leave the sheet, so the slide is untouched at first.
-      const dim = experiment && e.tone !== 'path' && !(onRoute.has(e.from) && onRoute.has(e.to)) ? 0.35 : 1;
+      const dim =
+        experiment && e.tone !== 'path' && !(onRoute.has(e.from) && onRoute.has(e.to)) ? 0.35 : 1;
       v.mat.opacity = v.baseOpacity * clamp01(k * 2.5) * dim;
       v.label.textContent = e.label;
       const i = labelIndex(points, v.label);
       labelAt = points[i];
-      side = [new Vector3(points[i - 3].x, points[i - 3].y, points[i - 3].z), new Vector3(points[i + 3].x, points[i + 3].y, points[i + 3].z)];
+      side = [
+        new Vector3(points[i - 3].x, points[i - 3].y, points[i - 3].z),
+        new Vector3(points[i + 3].x, points[i + 3].y, points[i + 3].z),
+      ];
       opacity = clamp01((k - 0.6) / 0.4) * (e.kind === 'tentative' ? 0.8 : 1) * (dim < 1 ? 0.5 : 1);
     }
-    const priority = e.kind === 'cut' || e.kind === 'pull' || e.tone === 'path' ? 2 : e.kind === 'slack' ? 1.5 : 1;
-    placeLabel(v.label, new Vector3(labelAt.x, labelAt.y, labelAt.z), opacity, priority, side, true);
+    const priority =
+      e.kind === 'cut' || e.kind === 'pull' || e.tone === 'path' ? 2 : e.kind === 'slack' ? 1.5 : 1;
+    placeLabel(
+      v.label,
+      new Vector3(labelAt.x, labelAt.y, labelAt.z),
+      opacity,
+      priority,
+      side,
+      true,
+    );
   }
   for (const [id, v] of s.edges)
     if (!keep.has(id)) {
@@ -774,13 +1055,16 @@ function renderFrame() {
   const t = s.t;
   // The sheet tilts back with a slight settle past its angle.
   const tiltPhase = clamp01(t / 0.55);
-  const tilt = easeInOut(tiltPhase) + (s.mode === 'exit' ? 0 : 0.035 * Math.sin(Math.PI * clamp01((tiltPhase - 0.7) / 0.3)));
+  const tilt =
+    easeInOut(tiltPhase) +
+    (s.mode === 'exit' ? 0 : 0.035 * Math.sin(Math.PI * clamp01((tiltPhase - 0.7) / 0.3)));
   s.hinge.rotation.x = -(TILT + s.userTilt) * tilt;
   s.hinge.rotation.z = BASE_YAW * tilt;
   s.hinge.position.z = s.frame.height * 0.035 * tilt;
   const swaying = !s.userControlled && s.mode === 'idle' && !quick && now - s.idleSince < SWAY_MS;
   s.sway = approach(s.sway, swaying ? 1 : 0, dt, 0.9);
-  s.yaw.rotation.z = s.userYaw * tilt + Math.sin((now - (s.idleSince ?? now)) / 2000) * 0.11 * s.sway;
+  s.yaw.rotation.z =
+    s.userYaw * tilt + Math.sin((now - (s.idleSince ?? now)) / 2000) * 0.11 * s.sway;
   const sheetT = clamp01(t / 0.35);
   const sh = s.sheet;
   if (sh) {
@@ -793,16 +1077,23 @@ function renderFrame() {
     sh.floor.material.opacity = 0.3 * tilt;
   }
   // Nodes leave the sheet in order of distance; a change of distance glides.
-  const lifted = [...s.nodes.values()].filter((v) => v.data.distance !== null).sort((x, y) => x.data.distance - y.data.distance);
+  const lifted = [...s.nodes.values()]
+    .filter((v) => v.data.distance !== null)
+    .sort((x, y) => x.data.distance - y.data.distance);
   const rank = new Map(lifted.map((v, i) => [v.data.id, i]));
   const rise = (id) => (quick ? t : clamp01(riseAt(t, rank.get(id) ?? 0, lifted.length)));
   const r = s.layout.radius;
   let moving = s.mode !== 'idle' || s.sway > 0.002;
   const experiment = s.layout.edges.some((e) => e.kind === 'cut');
-  const onRoute = new Set(s.layout.edges.filter((e) => e.tone === 'path').flatMap((e) => [e.from, e.to]));
+  const onRoute = new Set(
+    s.layout.edges.filter((e) => e.tone === 'path').flatMap((e) => [e.from, e.to]),
+  );
   // Content-space rotation that faces the camera, for outlines drawn flat to the viewer.
   s.content.updateWorldMatrix(true, false);
-  const facing = s.content.getWorldQuaternion(new Quaternion()).invert().multiply(s.camera.quaternion);
+  const facing = s.content
+    .getWorldQuaternion(new Quaternion())
+    .invert()
+    .multiply(s.camera.quaternion);
   let current = null;
   for (const v of s.nodes.values()) {
     v.h = quick ? v.target : approach(v.h, v.target, dt, 0.5);
@@ -832,13 +1123,18 @@ function renderFrame() {
     v.sphere.material.opacity = (v.data.tentative ? 0.55 : 1) * dim;
     v.pillar.material.opacity = (v.data.tentative ? 0.3 : 0.6) * dim;
     // The node this step settles flashes warm for a moment.
-    const flash = !quick && pulseAge >= 0 && pulseAge < 2.5 ? Math.sin((Math.PI * pulseAge) / 2.5) : 0;
+    const flash =
+      !quick && pulseAge >= 0 && pulseAge < 2.5 ? Math.sin((Math.PI * pulseAge) / 2.5) : 0;
     v.sphere.material.emissiveIntensity = 0.55 * flash;
     v.foot.material.opacity = (v.data.distance === null ? 0.25 : 0.7) * sheetT;
-    v.shadow.material.opacity = 0.75 * Math.min(1, k) * (1 - Math.min(0.45, z / (s.layout.tallest * 2.5))) * dim;
+    v.shadow.material.opacity =
+      0.75 * Math.min(1, k) * (1 - Math.min(0.45, z / (s.layout.tallest * 2.5))) * dim;
     const isCurrent = v.data.status === 'current';
     v.halo.position.z = z;
-    v.halo.material.opacity = isCurrent ? clamp01(k * 1.6) * (quick ? 0.9 : 0.65 + 0.3 * Math.sin(now / 220) * s.sway + 0.2 * (1 - s.sway)) : 0;
+    v.halo.material.opacity = isCurrent
+      ? clamp01(k * 1.6) *
+        (quick ? 0.9 : 0.65 + 0.3 * Math.sin(now / 220) * s.sway + 0.2 * (1 - s.sway))
+      : 0;
     if (isCurrent) current = { v, z };
     let changing = false;
     if (v.change) {
@@ -850,23 +1146,40 @@ function renderFrame() {
         v.ghost.position.z = v.change.height * k;
         v.ghost.quaternion.copy(facing);
         v.ghost.material.opacity = 0.6 * fade;
-        setSegment(v.trail, { x: v.data.x, y: v.data.y, z: v.change.height * k }, { x: v.data.x, y: v.data.y, z });
+        setSegment(
+          v.trail,
+          { x: v.data.x, y: v.data.y, z: v.change.height * k },
+          { x: v.data.x, y: v.data.y, z },
+        );
         v.trail.material.opacity = 0.9 * fade;
       } else v.change = null;
     }
     if (!changing) v.ghost.material.opacity = v.trail.material.opacity = 0;
     const n = v.data;
     v.label.textContent =
-      n.distance === null ? '' : changing ? `${n.label} ${v.change.sign} ${fmt(v.change.from)} → ${fmt(n.distance)}` : `${n.label} ${n.tentative ? '≤' : '='} ${fmt(n.distance)}`;
+      n.distance === null
+        ? ''
+        : changing
+          ? `${n.label} ${v.change.sign} ${fmt(v.change.from)} → ${fmt(n.distance)}`
+          : `${n.label} ${n.tentative ? '≤' : '='} ${fmt(n.distance)}`;
     v.label.classList.toggle('is-drop', changing);
     const priority = isCurrent || n.goal || changing ? 4 : 3;
-    placeLabel(v.label, new Vector3(n.x, n.y, z + r * 1.05), (n.distance === null ? 0 : clamp01((k - 0.5) / 0.5)) * (dim < 1 ? 0.6 : 1), priority);
+    placeLabel(
+      v.label,
+      new Vector3(n.x, n.y, z + r * 1.05),
+      (n.distance === null ? 0 : clamp01((k - 0.5) / 0.5)) * (dim < 1 ? 0.6 : 1),
+      priority,
+    );
   }
   // Where each sphere sits on screen, so string labels can keep off them.
   s.obstacles = [...s.nodes.values()]
     .filter((v) => v.sphere.visible && v.sphere.scale.x > 0.2)
     .map((v) => {
-      const c = project(v.sphere.position, new Vector3()), e = project(new Vector3(v.sphere.position.x + r * 0.78, v.sphere.position.y, v.sphere.position.z), new Vector3());
+      const c = project(v.sphere.position, new Vector3()),
+        e = project(
+          new Vector3(v.sphere.position.x + r * 0.78, v.sphere.position.y, v.sphere.position.z),
+          new Vector3(),
+        );
       return { x: c.x, y: c.y, r: Math.hypot(e.x - c.x, e.y - c.y) * v.sphere.scale.x };
     });
   // Ruler: appears once the sheet has mostly tilted, ticks at settled heights, and a level
@@ -882,10 +1195,19 @@ function renderFrame() {
       const z = s.layout.base + tick.value * s.layout.scale;
       tick.mesh.position.set(at.x - r * 0.35, at.y, z);
       tick.mesh.material.opacity = 0.7 * rulerT;
-      placeLabel(tick.label, new Vector3(at.x - r * 0.9, at.y, z - r * 0.25), clamp01((t - 0.55) / 0.3), 0.5);
+      placeLabel(
+        tick.label,
+        new Vector3(at.x - r * 0.9, at.y, z - r * 0.25),
+        clamp01((t - 0.55) / 0.3),
+        0.5,
+      );
     }
     if (current && current.v.data.distance !== null) {
-      setSegment(sh.level, { x: current.v.data.x, y: current.v.data.y, z: current.z }, { x: at.x, y: at.y, z: current.z });
+      setSegment(
+        sh.level,
+        { x: current.v.data.x, y: current.v.data.y, z: current.z },
+        { x: at.x, y: at.y, z: current.z },
+      );
       sh.level.material.opacity = 0.95 * clamp01((t - 0.7) / 0.3);
     } else sh.level.material.opacity = 0;
   }
@@ -950,12 +1272,16 @@ function hit(x, y) {
   // This opaque card may temporarily cross the scene while it is repositioned.
   // Its text must never operate a hidden string or click into the PDF below it.
   const card = document.getElementById('lift-caption')?.getBoundingClientRect();
-  if (card && x >= card.left && x <= card.right && y >= card.top && y <= card.bottom) return 'control:caption';
+  if (card && x >= card.left && x <= card.right && y >= card.top && y <= card.bottom)
+    return 'control:caption';
   const f = s.frame;
   if (x < f.dx || y < f.dy || x > f.dx + f.width || y > f.dy + f.height) return null;
   // Labels are deliberately larger targets than the strings. Hidden or displaced
   // labels do not take clicks from the source underneath the transparent window.
-  for (const [kind, entries] of [['node', s.nodes], ['edge', s.edges]]) {
+  for (const [kind, entries] of [
+    ['node', s.nodes],
+    ['edge', s.edges],
+  ]) {
     for (const [id, value] of entries) {
       if (Number(value.label.style.opacity) < 0.1 || !value.label.textContent) continue;
       const r = value.label.getBoundingClientRect();
@@ -965,19 +1291,27 @@ function hit(x, y) {
   pointerAt.set(((x - f.dx) / f.width) * 2 - 1, 1 - ((y - f.dy) / f.height) * 2);
   s.scene.updateMatrixWorld(true);
   picker.setFromCamera(pointerAt, s.camera);
-  const targets = [], identities = new Map();
+  const targets = [],
+    identities = new Map();
   for (const [id, v] of s.nodes) {
     if (v.data.distance !== null && v.sphere.visible && v.sphere.material.opacity > 0.1) {
-      targets.push(v.sphere); identities.set(v.sphere, `node:${id}`);
+      targets.push(v.sphere);
+      identities.set(v.sphere, `node:${id}`);
     }
   }
   for (const [id, v] of s.edges) {
     if (!(v.mat?.opacity > 0.1)) continue;
-    for (const mesh of v.meshes) { targets.push(mesh); identities.set(mesh, `edge:${id}`); }
+    for (const mesh of v.meshes) {
+      targets.push(mesh);
+      identities.set(mesh, `edge:${id}`);
+    }
   }
-  if (s.sheet?.paper.visible) { targets.push(s.sheet.paper); identities.set(s.sheet.paper, 'sheet'); }
+  if (s.sheet?.paper.visible) {
+    targets.push(s.sheet.paper);
+    identities.set(s.sheet.paper, 'sheet');
+  }
   const intersection = picker.intersectObjects(targets, false)[0];
-  return intersection ? identities.get(intersection.object) ?? null : null;
+  return intersection ? (identities.get(intersection.object) ?? null) : null;
 }
 function interactionHint() {
   if (!s) return;
@@ -1005,7 +1339,10 @@ function interactionHint() {
 function hover(id) {
   if (!s || s.hovered === id) return;
   s.hovered = id;
-  for (const [kind, entries] of [['node', s.nodes], ['edge', s.edges]]) {
+  for (const [kind, entries] of [
+    ['node', s.nodes],
+    ['edge', s.edges],
+  ]) {
     for (const [key, value] of entries) {
       value.label.style.outline = id === `${kind}:${key}` ? '3px solid #5551f5' : '';
       value.label.style.outlineOffset = id === `${kind}:${key}` ? '2px' : '';

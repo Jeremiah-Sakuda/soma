@@ -3,7 +3,10 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { createExplorationService, validateExplorationViewState } from '../../src/lib/server/exploration';
+import {
+  createExplorationService,
+  validateExplorationViewState,
+} from '../../src/lib/server/exploration';
 import { explorationInputsChanged } from '../../src/lib/domain/exploration-view';
 import { circuitSpec } from '../../src/lib/server/circuit-authoring';
 import { closeExplorationStore } from '../../src/lib/server/exploration-store';
@@ -22,7 +25,15 @@ const owner: ExplorationPrincipal = {
 function result(name: string, value: unknown, index: number): MetaResult {
   return {
     status: 'completed',
-    tools: [{ type: 'function_call', name, arguments: JSON.stringify(value), call_id: `call-${index}`, parsedArguments: value as Record<string, unknown> }],
+    tools: [
+      {
+        type: 'function_call',
+        name,
+        arguments: JSON.stringify(value),
+        call_id: `call-${index}`,
+        parsedArguments: value as Record<string, unknown>,
+      },
+    ],
     usage: { input_tokens: 100, output_tokens: 200 },
   };
 }
@@ -35,7 +46,8 @@ function script(copy?: (context: any) => unknown) {
       return result(
         'inspect_source',
         {
-          summary: 'A Wheatstone bridge: a 12 V battery across R1–R2 and R3–R4, with R5 between B and C.',
+          summary:
+            'A Wheatstone bridge: a 12 V battery across R1–R2 and R3–R4, with R5 between B and C.',
           uncertainty: [],
           graph: null,
           nodePositions: null,
@@ -53,7 +65,13 @@ function script(copy?: (context: any) => unknown) {
     if (request.instructions.includes('choose_circuit_investigation'))
       return result(
         'choose_circuit_investigation',
-        { componentId: 'R4', watch: 'current', targetId: 'R5', condition: 'zero', reason: 'R₄ sets the voltage at C, the far end of R₅.' },
+        {
+          componentId: 'R4',
+          watch: 'current',
+          targetId: 'R5',
+          condition: 'zero',
+          reason: 'R₄ sets the voltage at C, the far end of R₅.',
+        },
         index,
       );
     if (request.instructions.includes('Return only check_circuit_reading.'))
@@ -67,7 +85,12 @@ function script(copy?: (context: any) => unknown) {
         objective: 'See that B and C sit at the same voltage.',
         assumptions: [],
         steps: [
-          { traceIndex: 0, caption: 'D is ground, at 0 V.', narration: 'Start from ground.', highlightIds: ['D'] },
+          {
+            traceIndex: 0,
+            caption: 'D is ground, at 0 V.',
+            narration: 'Start from ground.',
+            highlightIds: ['D'],
+          },
           {
             traceIndex: 3,
             caption: 'B and C both sit at 8 V, so R₅ carries no current.',
@@ -101,7 +124,7 @@ const service = (request = script(), review?: ReturnType<typeof vi.fn>, imageSha
     reserve: async () => randomUUID(),
     settle: async () => {},
     enabled: () => true,
-    validateImage: vi.fn(() => imageSha256 ? { sha256: imageSha256 } : undefined) as never,
+    validateImage: vi.fn(() => (imageSha256 ? { sha256: imageSha256 } : undefined)) as never,
     revalidate: async () => {},
     ...(review ? { review: review as never, reviewEnabled: () => true } : {}),
   });
@@ -120,7 +143,9 @@ const screenshot = (question = 'Why is there no current through R5?') => ({
 describe('a circuit read from a slide becomes a checked circuit', () => {
   it('keeps an approved public source and alignment across live follow-ups, then resets them on a fresh capture', async () => {
     const request = script();
-    const review = vi.fn(async () => result('review_exploration', { verdict: 'approve', findings: [] }, 99));
+    const review = vi.fn(async () =>
+      result('review_exploration', { verdict: 'approve', findings: [] }, 99),
+    );
     // Even a new capture with the same pixels must not inherit public-demo provenance.
     const soma = service(request, review, recordedCircuit.source.imageSha256);
     await soma.initialize(owner);
@@ -130,10 +155,15 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
     expect(request).not.toHaveBeenCalled();
     expect(review).not.toHaveBeenCalled();
     const original = structuredClone(first);
-    const second = (await soma.generate(owner, {
-      action: 'generate', requestId: randomUUID(), question: 'Why is R5 current zero?',
-      artifactId: first.id, baseVersion: first.version,
-    })).artifact;
+    const second = (
+      await soma.generate(owner, {
+        action: 'generate',
+        requestId: randomUUID(),
+        question: 'Why is R5 current zero?',
+        artifactId: first.id,
+        baseVersion: first.version,
+      })
+    ).artifact;
     expect(second.recording).toBeUndefined();
     expect(second.generation).toMatchObject({ mode: 'live', provider: 'meta', calls: 2 });
     expect(second.generation).not.toEqual(first.generation);
@@ -143,10 +173,16 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
     expect(first).toEqual(original);
     await soma.save(owner, second.id, second.version, second.state);
     closeExplorationStore();
-    expect((await soma.read(owner, second.id)).active?.source.publicDemo).toEqual(first.source.publicDemo);
-    const third = (await soma.generate(owner, {
-      ...screenshot(), artifactId: second.id, baseVersion: second.version,
-    })).artifact;
+    expect((await soma.read(owner, second.id)).active?.source.publicDemo).toEqual(
+      first.source.publicDemo,
+    );
+    const third = (
+      await soma.generate(owner, {
+        ...screenshot(),
+        artifactId: second.id,
+        baseVersion: second.version,
+      })
+    ).artifact;
     expect(third.source.imageSha256).toBe(first.source.imageSha256);
     expect(third.source.observationId).not.toBe(first.source.observationId);
     expect(third.source.publicDemo).toBeUndefined();
@@ -159,9 +195,12 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
     const soma = service(request);
     await soma.initialize(owner);
     const capture = screenshot();
-    await expect(soma.generate(owner, {
-      ...capture, source: { ...capture.source, publicDemo: { image: '/synthetic/recorded-lecture-9.png' } },
-    })).rejects.toMatchObject({ code: 'invalid_request' });
+    await expect(
+      soma.generate(owner, {
+        ...capture,
+        source: { ...capture.source, publicDemo: { image: '/synthetic/recorded-lecture-9.png' } },
+      }),
+    ).rejects.toMatchObject({ code: 'invalid_request' });
     expect(request).not.toHaveBeenCalled();
   });
 
@@ -180,8 +219,12 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
     expect(artifact.spec.steps.map((s) => s.executionStep)).toEqual([0, 3]);
     expect(artifact.source.layout?.components).toHaveLength(6);
     expect(artifact.generation.calls).toBe(2);
-    expect(artifact.generation.audit.map((a) => a.detail).join(' ')).toContain('Checked dc-nodal solution');
-    const composerContext = JSON.parse((request.mock.calls[1][0].input[0] as { content: string }).content);
+    expect(artifact.generation.audit.map((a) => a.detail).join(' ')).toContain(
+      'Checked dc-nodal solution',
+    );
+    const composerContext = JSON.parse(
+      (request.mock.calls[1][0].input[0] as { content: string }).content,
+    );
     expect(composerContext.checkedCircuit.currents.R1).toBe(2);
     expect(request.mock.calls[0][0].instructions).toContain('electrically distinct junctions');
   });
@@ -190,8 +233,22 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
     const soma = service();
     await soma.initialize(owner);
     const { spec } = (await soma.generate(owner, screenshot() as never)).artifact;
-    const base = { step: 3, explanationStep: 0, start: null, goal: null, disabledEdgeIds: [], reversed: false, selectedObjectId: null };
-    expect(validateExplorationViewState(spec, { ...base, disabledEdgeIds: ['R2'], edgeWeights: { R4: 10 } })).toMatchObject({
+    const base = {
+      step: 3,
+      explanationStep: 0,
+      start: null,
+      goal: null,
+      disabledEdgeIds: [],
+      reversed: false,
+      selectedObjectId: null,
+    };
+    expect(
+      validateExplorationViewState(spec, {
+        ...base,
+        disabledEdgeIds: ['R2'],
+        edgeWeights: { R4: 10 },
+      }),
+    ).toMatchObject({
       disabledEdgeIds: ['R2'],
     });
     for (const bad of [
@@ -239,7 +296,9 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
     if (second.spec.mode !== 'checked-circuit') throw new Error('mode');
     expect(second.spec.writtenFor).toEqual({ open: ['R2'], values: {} });
     expect(explorationInputsChanged(second.spec, second.state)).toBe(false);
-    expect(explorationInputsChanged(second.spec, { ...second.state, disabledEdgeIds: [] })).toBe(true);
+    expect(explorationInputsChanged(second.spec, { ...second.state, disabledEdgeIds: [] })).toBe(
+      true,
+    );
     const context = JSON.parse((request.mock.calls[2][0].input[0] as { content: string }).content);
     expect(context.checkedCircuit.currents.R2).toBe(0);
     expect(context.checkedCircuit.currents.R5).toBeGreaterThan(0);
@@ -248,7 +307,9 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
   });
 
   it('sends the solved circuit to Muse Wonder for review', async () => {
-    const review = vi.fn(async () => result('review_exploration', { verdict: 'approve', findings: [] }, 9));
+    const review = vi.fn(async () =>
+      result('review_exploration', { verdict: 'approve', findings: [] }, 9),
+    );
     const soma = service(script(), review);
     await soma.initialize(owner);
     const artifact = (await soma.generate(owner, screenshot() as never)).artifact;
@@ -262,26 +323,57 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
   it('repairs a misread resistance only after Wonder sees the pixels and Spark independently agrees', async () => {
     const base = script((context) => {
       expect(context.source.circuitReadingCheck).toMatchObject({
-        status: 'corrected', corrections: [{ componentId: 'R4', from: 8, to: 10 }],
+        status: 'corrected',
+        corrections: [{ componentId: 'R4', from: 8, to: 10 }],
       });
-      expect(context.source.summary).toContain('Source value corrections supersede any earlier values');
+      expect(context.source.summary).toContain(
+        'Source value corrections supersede any earlier values',
+      );
       expect(context.source.summary).toContain('R₄: 8 → 10 ohms');
       return {
-      title: 'A changed bridge balance', objective: 'Inspect the corrected resistance.', assumptions: [],
-      steps: [{ traceIndex: 0, caption: 'D is ground, at 0 V.', narration: 'Start at ground.', highlightIds: ['D'] }],
-      followups: [],
+        title: 'A changed bridge balance',
+        objective: 'Inspect the corrected resistance.',
+        assumptions: [],
+        steps: [
+          {
+            traceIndex: 0,
+            caption: 'D is ground, at 0 V.',
+            narration: 'Start at ground.',
+            highlightIds: ['D'],
+          },
+        ],
+        followups: [],
       };
     });
     const request = vi.fn(async (args: any) => {
       const name = args.tools?.[0]?.name;
       if (name === 'check_circuit_reading') {
         expect(args.model).toBe('muse-wonder-1.0');
-        expect(args.input[0].content).toContainEqual({ type: 'input_image', image_url: 'data:image/png;base64,AAAA' });
-        return result(name, { verdict: 'disagree', issues: [{ componentId: 'R4', kind: 'value', value: 10, note: 'The printed value is ten ohms.' }] }, 2);
+        expect(args.input[0].content).toContainEqual({
+          type: 'input_image',
+          image_url: 'data:image/png;base64,AAAA',
+        });
+        return result(
+          name,
+          {
+            verdict: 'disagree',
+            issues: [
+              {
+                componentId: 'R4',
+                kind: 'value',
+                value: 10,
+                note: 'The printed value is ten ohms.',
+              },
+            ],
+          },
+          2,
+        );
       }
       if (name === 'recheck_circuit_values') {
         const text = JSON.parse(args.input[0].content[0].text);
-        expect(text.components).toEqual([{ id: 'R4', label: 'R₄', kind: 'resistor', from: 'C', to: 'D' }]);
+        expect(text.components).toEqual([
+          { id: 'R4', label: 'R₄', kind: 'resistor', from: 'C', to: 'D' },
+        ]);
         expect(JSON.stringify(text)).not.toContain('value');
         return result(name, { values: [{ componentId: 'R4', value: 10 }] }, 3);
       }
@@ -291,9 +383,14 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
       const context = JSON.parse((args.input[0] as { content: string }).content);
       expect(context.source).toContain('R₄: 8 → 10 ohms');
       expect(context.checked.circuitReadingCheck).toMatchObject({
-        status: 'corrected', corrections: [{ componentId: 'R4', from: 8, to: 10 }],
+        status: 'corrected',
+        corrections: [{ componentId: 'R4', from: 8, to: 10 }],
       });
-      expect(context.checked.checkedCircuit.input.components.find((part: { id: string }) => part.id === 'R4').value).toBe(10);
+      expect(
+        context.checked.checkedCircuit.input.components.find(
+          (part: { id: string }) => part.id === 'R4',
+        ).value,
+      ).toBe(10);
       return result('review_exploration', { verdict: 'approve', findings: [] }, 9);
     });
     const soma = service(request as never, review);
@@ -302,48 +399,79 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
     expect(artifact.spec.mode).toBe('checked-circuit');
     expect(artifact.circuit?.input.components.find((p) => p.id === 'R4')?.value).toBe(10);
     expect(artifact.circuit?.currents.R5).not.toBe(0);
-    expect(artifact.source.circuitReadingCheck).toMatchObject({ status: 'corrected', corrections: [{ componentId: 'R4', from: 8, to: 10 }] });
+    expect(artifact.source.circuitReadingCheck).toMatchObject({
+      status: 'corrected',
+      corrections: [{ componentId: 'R4', from: 8, to: 10 }],
+    });
     expect(artifact.generation.calls).toBeLessThanOrEqual(8);
   });
 
   it.each([
     ['composition', 0.25, 0.11, 2],
     ['factual review', 0.33, 0.005, 3],
-  ] as const)('reserves unknown reading cost before admitting %s within the same $0.35 turn', async (_stage, unknownBound, compositionBound, expectedRequests) => {
-    const base = script();
-    const request = vi.fn(async (args: any) => {
-      if (args.tools?.[0]?.name === 'check_circuit_reading')
-        throw new MetaClientError('timeout', null, true);
-      return base(args);
-    });
-    const review = vi.fn(async () => result('review_exploration', { verdict: 'approve', findings: [] }, 9));
-    const settle = vi.fn(async (_reservation: string, _knownCost: number, _certain: boolean) => {});
-    const soma = createExplorationService({
-      request: request as never,
-      upperBound: (args) => args.tools.some((tool: any) => tool.name === 'check_circuit_reading')
-        ? unknownBound : args.instructions.includes('source reader') ? 0.01 : compositionBound,
-      reserve: async () => 'unknown-reading-reservation', settle,
-      enabled: () => true, validateImage: vi.fn() as never, revalidate: async () => {},
-      review: review as never, reviewEnabled: () => true,
-    });
-    await soma.initialize(owner);
-    await expect(soma.generate(owner, screenshot() as never)).rejects.toMatchObject({ code: 'capacity' });
-    // The first source read completes. Wonder's response is lost after sending; its
-    // upper bound must still reduce what composition and factual review may spend.
-    expect(request).toHaveBeenCalledTimes(expectedRequests);
-    expect(review).not.toHaveBeenCalled();
-    expect(settle).toHaveBeenCalledWith('unknown-reading-reservation', expect.any(Number), false);
-  });
+  ] as const)(
+    'reserves unknown reading cost before admitting %s within the same $0.35 turn',
+    async (_stage, unknownBound, compositionBound, expectedRequests) => {
+      const base = script();
+      const request = vi.fn(async (args: any) => {
+        if (args.tools?.[0]?.name === 'check_circuit_reading')
+          throw new MetaClientError('timeout', null, true);
+        return base(args);
+      });
+      const review = vi.fn(async () =>
+        result('review_exploration', { verdict: 'approve', findings: [] }, 9),
+      );
+      const settle = vi.fn(
+        async (_reservation: string, _knownCost: number, _certain: boolean) => {},
+      );
+      const soma = createExplorationService({
+        request: request as never,
+        upperBound: (args) =>
+          args.tools.some((tool: any) => tool.name === 'check_circuit_reading')
+            ? unknownBound
+            : args.instructions.includes('source reader')
+              ? 0.01
+              : compositionBound,
+        reserve: async () => 'unknown-reading-reservation',
+        settle,
+        enabled: () => true,
+        validateImage: vi.fn() as never,
+        revalidate: async () => {},
+        review: review as never,
+        reviewEnabled: () => true,
+      });
+      await soma.initialize(owner);
+      await expect(soma.generate(owner, screenshot() as never)).rejects.toMatchObject({
+        code: 'capacity',
+      });
+      // The first source read completes. Wonder's response is lost after sending; its
+      // upper bound must still reduce what composition and factual review may spend.
+      expect(request).toHaveBeenCalledTimes(expectedRequests);
+      expect(review).not.toHaveBeenCalled();
+      expect(settle).toHaveBeenCalledWith('unknown-reading-reservation', expect.any(Number), false);
+    },
+  );
 
   it('never publishes a checked circuit after unresolved source polarity disagreement, even if composition tries', async () => {
     const base = script();
     let compositions = 0;
     const request = vi.fn(async (args: any) => {
       if (args.tools?.[0]?.name === 'check_circuit_reading')
-        return result('check_circuit_reading', {
-          verdict: 'disagree',
-          issues: [{ componentId: 'V1', kind: 'polarity', value: null, note: 'The positive terminal is at the other end.' }],
-        }, 2);
+        return result(
+          'check_circuit_reading',
+          {
+            verdict: 'disagree',
+            issues: [
+              {
+                componentId: 'V1',
+                kind: 'polarity',
+                value: null,
+                note: 'The positive terminal is at the other end.',
+              },
+            ],
+          },
+          2,
+        );
       if (args.instructions.includes('source reader')) return base(args);
       expect(args.instructions).not.toContain('Use compose_circuit');
       const context = JSON.parse(args.input[0].content);
@@ -354,23 +482,59 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
       if (compositions === 1) {
         // A model can ignore the instructed fallback. The actual application binding
         // must reject this otherwise valid checked spec before accepting a clarification.
-        return result('compose_exploration', { spec: circuitSpec({
-          id: binding[1], version: Number(binding[2]),
-          observationId: context.source.observationId, sourceVersion: 1,
-          input: heroCircuit, layout: heroCircuitLayout, uncertainty: [],
-          copy: { title: 'A bridge', objective: 'Read the bridge.', assumptions: [],
-            steps: [{ traceIndex: 0, caption: 'D is ground.', narration: 'D is ground.', highlightIds: ['D'] }], followups: [] },
-        }) }, 3);
+        return result(
+          'compose_exploration',
+          {
+            spec: circuitSpec({
+              id: binding[1],
+              version: Number(binding[2]),
+              observationId: context.source.observationId,
+              sourceVersion: 1,
+              input: heroCircuit,
+              layout: heroCircuitLayout,
+              uncertainty: [],
+              copy: {
+                title: 'A bridge',
+                objective: 'Read the bridge.',
+                assumptions: [],
+                steps: [
+                  {
+                    traceIndex: 0,
+                    caption: 'D is ground.',
+                    narration: 'D is ground.',
+                    highlightIds: ['D'],
+                  },
+                ],
+                followups: [],
+              },
+            }),
+          },
+          3,
+        );
       }
-      return result('compose_exploration', { spec: {
-        schemaVersion: 'exploration-v1', id: binding[1], version: Number(binding[2]),
-        mode: 'clarify', title: 'Check the battery polarity', objective: 'Resolve the source reading.',
-        sources: [{ observationId: context.source.observationId, version: 1, region: null }],
-        assumptions: [], uncertainty: context.source.uncertainty, unsupportedClaims: [],
-        question: 'Which terminal of V1 is positive? Please share a clearer image.',
-      } }, 4);
+      return result(
+        'compose_exploration',
+        {
+          spec: {
+            schemaVersion: 'exploration-v1',
+            id: binding[1],
+            version: Number(binding[2]),
+            mode: 'clarify',
+            title: 'Check the battery polarity',
+            objective: 'Resolve the source reading.',
+            sources: [{ observationId: context.source.observationId, version: 1, region: null }],
+            assumptions: [],
+            uncertainty: context.source.uncertainty,
+            unsupportedClaims: [],
+            question: 'Which terminal of V1 is positive? Please share a clearer image.',
+          },
+        },
+        4,
+      );
     });
-    const review = vi.fn(async () => result('review_exploration', { verdict: 'approve', findings: [] }, 5));
+    const review = vi.fn(async () =>
+      result('review_exploration', { verdict: 'approve', findings: [] }, 5),
+    );
     const soma = service(request as never, review);
     await soma.initialize(owner);
     const artifact = (await soma.generate(owner, screenshot() as never)).artifact;
@@ -408,7 +572,9 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
       rationale: 'R₄ sets the voltage at C, the far end of R₅.',
     });
     expect(second.generation.audit.map((a) => a.event)).toContain('cost-probed');
-    const composer = JSON.parse((request.mock.calls.at(-1)![0].input[0] as { content: string }).content);
+    const composer = JSON.parse(
+      (request.mock.calls.at(-1)![0].input[0] as { content: string }).content,
+    );
     expect(composer.circuitExperiment.criticalValue).toBe(8);
     // A later follow-up keeps the experiment, recomputed under the learner's current changes.
     const third = (
@@ -446,14 +612,21 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
   it.each([
     ['R4 sets the voltage at C.', 'R4 sets the voltage at C.'],
     // A label that ends the sentence is still a label, not a decimal.
-    ['R4 sets the voltage at C, the far end of R5.', 'R4 sets the voltage at C, the far end of R5.'],
+    [
+      'R4 sets the voltage at C, the far end of R5.',
+      'R4 sets the voltage at C, the far end of R5.',
+    ],
     ['R4 at 8.5 sets the voltage at C.', null],
   ])('keeps a reason that names a part by its label: %s', async (reason, kept) => {
     const request = script();
     const base = request.getMockImplementation()!;
     request.mockImplementation(async (r: { instructions: string; input: readonly unknown[] }) =>
       r.instructions.includes('choose_circuit_investigation')
-        ? result('choose_circuit_investigation', { componentId: 'R4', watch: 'current', targetId: 'R5', condition: 'zero', reason }, 7)
+        ? result(
+            'choose_circuit_investigation',
+            { componentId: 'R4', watch: 'current', targetId: 'R5', condition: 'zero', reason },
+            7,
+          )
         : base(r),
     );
     const soma = service(request);
@@ -490,7 +663,14 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
       title: 'One source, two paths',
       objective: 'See where the source current goes.',
       assumptions: [],
-      steps: [{ traceIndex: context.checkedCircuit.steps.length - 1, caption: 'A sits at 4 V.', narration: 'A sits at 4 V.', highlightIds: ['A'] }],
+      steps: [
+        {
+          traceIndex: context.checkedCircuit.steps.length - 1,
+          caption: 'A sits at 4 V.',
+          narration: 'A sits at 4 V.',
+          highlightIds: ['A'],
+        },
+      ],
       followups: [],
     }));
     const base = request.getMockImplementation()!;
@@ -514,7 +694,9 @@ describe('a circuit read from a slide becomes a checked circuit', () => {
         state: { ...first.state, disabledEdgeIds: ['R1', 'R2'], step: 0 },
       } as never)
     ).artifact;
-    const context = JSON.parse((request.mock.calls.at(-1)![0].input[0] as { content: string }).content);
+    const context = JSON.parse(
+      (request.mock.calls.at(-1)![0].input[0] as { content: string }).content,
+    );
     expect(context.experimentNote).toContain('R₁ open, R₂ open');
     if (reply.spec.mode !== 'checked-circuit') throw new Error('mode');
     expect(reply.spec.writtenFor ?? null).toBeNull();
@@ -528,14 +710,20 @@ describe('printed numbers used as circuit IDs', () => {
     const { letterSourceIds } = await import('../../src/lib/server/exploration');
     const { args, renamed } = letterSourceIds({
       circuit: {
-        nodes: [{ id: '1', label: '1' }, { id: '2', label: '2' }],
+        nodes: [
+          { id: '1', label: '1' },
+          { id: '2', label: '2' },
+        ],
         ground: '2',
         components: [
           { id: '1', label: 'R1', kind: 'resistor', from: '1', to: '2', value: 4 },
           { id: 'V1', label: 'V1', kind: 'voltage-source', from: '2', to: '1', value: 12 },
         ],
       },
-      circuitLayout: { nodes: [{ nodeId: '1', x: 0.1, y: 0.1 }], components: [{ componentId: '1', x1: 0, y1: 0, x2: 1, y2: 1 }] },
+      circuitLayout: {
+        nodes: [{ nodeId: '1', x: 0.1, y: 0.1 }],
+        components: [{ componentId: '1', x1: 0, y1: 0, x2: 1, y2: 1 }],
+      },
     }) as { args: any; renamed: string[] };
     expect(renamed).toEqual(['1 → n1', '2 → n2', '1 → p1']);
     expect(args.circuit.ground).toBe('n2');

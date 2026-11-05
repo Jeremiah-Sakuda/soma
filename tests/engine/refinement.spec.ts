@@ -1,30 +1,122 @@
-import {test,expect} from '@playwright/test';
-test('half speed follows actual media and changes rate without a pose reset',async({page})=>{
- await page.goto('/');await page.getByRole('combobox',{name:'Playback speed'}).selectOption('0.5');await page.getByRole('slider').fill('270');await page.getByRole('button',{name:/Play the cycle|Resume film|Play from here/}).click();
- await expect.poll(()=>page.locator('audio').evaluate((e:HTMLAudioElement)=>e.currentTime)).toBeGreaterThan(9.1);
- expect(await page.locator('audio').evaluate((e:HTMLAudioElement)=>e.playbackRate)).toBe(.5);expect(await page.locator('audio').evaluate((e:HTMLAudioElement)=>e.preservesPitch)).toBe(true);
- const before=Number(await page.getByRole('slider').inputValue());await page.getByRole('combobox',{name:'Playback speed'}).selectOption('1');await expect.poll(()=>page.locator('audio').evaluate((e:HTMLAudioElement)=>e.playbackRate)).toBe(1);expect(Number(await page.getByRole('slider').inputValue())).toBeGreaterThanOrEqual(before-1);await page.getByRole('button',{name:'Pause film'}).click();
+import { test, expect } from '@playwright/test';
+test('half speed follows actual media and changes rate without a pose reset', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('combobox', { name: 'Playback speed' }).selectOption('0.5');
+  await page.getByRole('slider').fill('270');
+  await page.getByRole('button', { name: /Play the cycle|Resume film|Play from here/ }).click();
+  await expect
+    .poll(() => page.locator('audio').evaluate((e: HTMLAudioElement) => e.currentTime))
+    .toBeGreaterThan(9.1);
+  expect(await page.locator('audio').evaluate((e: HTMLAudioElement) => e.playbackRate)).toBe(0.5);
+  expect(await page.locator('audio').evaluate((e: HTMLAudioElement) => e.preservesPitch)).toBe(
+    true,
+  );
+  const before = Number(await page.getByRole('slider').inputValue());
+  await page.getByRole('combobox', { name: 'Playback speed' }).selectOption('1');
+  await expect
+    .poll(() => page.locator('audio').evaluate((e: HTMLAudioElement) => e.playbackRate))
+    .toBe(1);
+  expect(Number(await page.getByRole('slider').inputValue())).toBeGreaterThanOrEqual(before - 1);
+  await page.getByRole('button', { name: 'Pause film' }).click();
 });
-test('silent half-speed advances at the same rate and manual takeover ends repeat',async({page})=>{
- await page.goto('/');await page.getByRole('checkbox',{name:'Narration'}).uncheck();await page.getByRole('combobox',{name:'Playback speed'}).selectOption('0.5');await page.getByRole('button',{name:'Loop cycle'}).click();await page.getByRole('slider').fill('715');await page.getByRole('button',{name:/Play the cycle|Resume film|Play from here/}).click();
- await expect.poll(async()=>Number(await page.getByRole('slider').inputValue())).toBeLessThan(30);await expect(page.getByRole('button',{name:'Pause film'})).toBeVisible();
- const sample=await page.getByRole('slider').evaluate((e:HTMLInputElement)=>({at:performance.now(),value:Number(e.value)}));await page.waitForTimeout(400);const after=await page.getByRole('slider').evaluate((e:HTMLInputElement)=>({at:performance.now(),value:Number(e.value)}));expect(Math.abs((after.value-sample.value)-(after.at-sample.at)*.015)).toBeLessThan(2);
- await page.getByRole('slider').fill('450');await page.waitForTimeout(120);await expect(page.getByRole('slider')).toHaveValue('450');await expect(page.getByRole('button',{name:/Play the cycle|Resume film|Play from here/})).toBeVisible();
+test('silent half-speed advances at the same rate and manual takeover ends repeat', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('checkbox', { name: 'Narration' }).uncheck();
+  await page.getByRole('combobox', { name: 'Playback speed' }).selectOption('0.5');
+  await page.getByRole('button', { name: 'Loop cycle' }).click();
+  await page.getByRole('slider').fill('715');
+  await page.getByRole('button', { name: /Play the cycle|Resume film|Play from here/ }).click();
+  await expect
+    .poll(async () => Number(await page.getByRole('slider').inputValue()))
+    .toBeLessThan(30);
+  await expect(page.getByRole('button', { name: 'Pause film' })).toBeVisible();
+  const sample = await page
+    .getByRole('slider')
+    .evaluate((e: HTMLInputElement) => ({ at: performance.now(), value: Number(e.value) }));
+  await page.waitForTimeout(400);
+  const after = await page
+    .getByRole('slider')
+    .evaluate((e: HTMLInputElement) => ({ at: performance.now(), value: Number(e.value) }));
+  expect(Math.abs(after.value - sample.value - (after.at - sample.at) * 0.015)).toBeLessThan(2);
+  await page.getByRole('slider').fill('450');
+  await page.waitForTimeout(120);
+  await expect(page.getByRole('slider')).toHaveValue('450');
+  await expect(
+    page.getByRole('button', { name: /Play the cycle|Resume film|Play from here/ }),
+  ).toBeVisible();
 });
-test('voice repeat crosses the endpoint and stays synchronized',async({page})=>{
- await page.goto('/');await page.getByRole('button',{name:'Loop cycle'}).click();await page.getByRole('slider').fill('713');await page.getByRole('button',{name:/Play the cycle|Resume film|Play from here/}).click();await expect.poll(()=>page.locator('audio').evaluate((e:HTMLAudioElement)=>e.currentTime)).toBeLessThan(1);
- await expect(page.getByRole('button',{name:'Pause film'})).toBeVisible();const sample=await page.evaluate(()=>({a:document.querySelector('audio')!.currentTime,d:Number(document.querySelector('[data-engine]')!.getAttribute('data-degrees'))}));expect(Math.abs(sample.a*30-sample.d)).toBeLessThan(3);
- await page.getByRole('button',{name:'Loop cycle'}).click();expect(await page.locator('audio').evaluate((e:HTMLAudioElement)=>e.loop)).toBe(false);await page.getByRole('button',{name:'Pause film'}).click();
+test('voice repeat crosses the endpoint and stays synchronized', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Loop cycle' }).click();
+  await page.getByRole('slider').fill('713');
+  await page.getByRole('button', { name: /Play the cycle|Resume film|Play from here/ }).click();
+  await expect
+    .poll(() => page.locator('audio').evaluate((e: HTMLAudioElement) => e.currentTime))
+    .toBeLessThan(1);
+  await expect(page.getByRole('button', { name: 'Pause film' })).toBeVisible();
+  const sample = await page.evaluate(() => ({
+    a: document.querySelector('audio')!.currentTime,
+    d: Number(document.querySelector('[data-engine]')!.getAttribute('data-degrees')),
+  }));
+  expect(Math.abs(sample.a * 30 - sample.d)).toBeLessThan(3);
+  await page.getByRole('button', { name: 'Loop cycle' }).click();
+  expect(await page.locator('audio').evaluate((e: HTMLAudioElement) => e.loop)).toBe(false);
+  await page.getByRole('button', { name: 'Pause film' }).click();
 });
-test('presentation preserves the pose and exits with usable focus and scroll',async({page})=>{
- await page.setViewportSize({width:1280,height:800});await page.goto('/');await page.getByRole('slider').fill('425');await page.getByRole('button',{name:'Presentation view'}).click();await expect(page.locator('main')).toHaveAttribute('data-presenting','true');await expect(page.getByRole('slider')).toHaveValue('425');expect(await page.evaluate(()=>getComputedStyle(document.body).overflow)).toBe('hidden');
- const box=(await page.getByRole('slider').boundingBox())!;expect(box.y+box.height).toBeLessThan(800);await expect(page.getByRole('link',{name:'About this study'})).not.toBeVisible();await expect(page.locator('.present-recording')).toBeVisible();
- await page.getByRole('button',{name:'01 Piston',exact:true}).click();await page.keyboard.press('Escape');await expect(page.locator('main')).toHaveAttribute('data-presenting','true');await expect(page.locator('#part-piston')).toBeFocused();await page.keyboard.press('Escape');await expect(page.locator('main')).toHaveAttribute('data-presenting','false');expect(await page.evaluate(()=>getComputedStyle(document.body).overflow)).not.toBe('hidden');await expect(page.getByRole('slider')).toHaveValue('425');await expect(page.locator('#part-piston')).toBeFocused();
+test('presentation preserves the pose and exits with usable focus and scroll', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  await page.getByRole('slider').fill('425');
+  await page.getByRole('button', { name: 'Presentation view' }).click();
+  await expect(page.locator('main')).toHaveAttribute('data-presenting', 'true');
+  await expect(page.getByRole('slider')).toHaveValue('425');
+  expect(await page.evaluate(() => getComputedStyle(document.body).overflow)).toBe('hidden');
+  const box = (await page.getByRole('slider').boundingBox())!;
+  expect(box.y + box.height).toBeLessThan(800);
+  await expect(page.getByRole('link', { name: 'About this study' })).not.toBeVisible();
+  await expect(page.locator('.present-recording')).toBeVisible();
+  await page.getByRole('button', { name: '01 Piston', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('main')).toHaveAttribute('data-presenting', 'true');
+  await expect(page.locator('#part-piston')).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('main')).toHaveAttribute('data-presenting', 'false');
+  expect(await page.evaluate(() => getComputedStyle(document.body).overflow)).not.toBe('hidden');
+  await expect(page.getByRole('slider')).toHaveValue('425');
+  await expect(page.locator('#part-piston')).toBeFocused();
 });
-test('motion cues and valve annotations agree with the same current pose',async({page})=>{
- await page.goto('/');for(const [a,open]of [[90,true],[270,false],[450,false],[630,false]] as const){await page.getByRole('slider').fill(String(a));await expect(page.locator('[data-labels]')).toContainText(open?'Intake · open':'Intake · closed');await expect(page.locator('[data-motion-guide=crank]')).toBeVisible();}
- await page.getByRole('slider').fill('180');await expect(page.locator('[data-motion-guide=crank]')).toHaveCount(0);await expect(page.locator('.mechanism-state')).toContainText('At turn');
+test('motion cues and valve annotations agree with the same current pose', async ({ page }) => {
+  await page.goto('/');
+  for (const [a, open] of [
+    [90, true],
+    [270, false],
+    [450, false],
+    [630, false],
+  ] as const) {
+    await page.getByRole('slider').fill(String(a));
+    await expect(page.locator('[data-labels]')).toContainText(
+      open ? 'Intake · open' : 'Intake · closed',
+    );
+    await expect(page.locator('[data-motion-guide=crank]')).toBeVisible();
+  }
+  await page.getByRole('slider').fill('180');
+  await expect(page.locator('[data-motion-guide=crank]')).toHaveCount(0);
+  await expect(page.locator('.mechanism-state')).toContainText('At turn');
 });
-test('presentation and playback options work on phone with reduced motion',async({page})=>{
- await page.setViewportSize({width:375,height:900});await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/');await page.getByRole('button',{name:'Presentation view'}).click();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.getByRole('checkbox',{name:'Narration'}).uncheck();await page.getByRole('combobox',{name:'Playback speed'}).selectOption('0.5');await page.getByRole('button',{name:/Play the cycle|Resume film|Play from here/}).click();await expect(page.locator('[data-engine]')).toHaveAttribute('data-degrees','90');await page.getByRole('slider').press('End');await expect(page.locator('[data-engine]')).toHaveAttribute('data-degrees','720');await page.getByRole('button',{name:'Exit presentation'}).click();await expect(page.locator('main')).toHaveAttribute('data-presenting','false');
+test('presentation and playback options work on phone with reduced motion', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 900 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Presentation view' }).click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole('checkbox', { name: 'Narration' }).uncheck();
+  await page.getByRole('combobox', { name: 'Playback speed' }).selectOption('0.5');
+  await page.getByRole('button', { name: /Play the cycle|Resume film|Play from here/ }).click();
+  await expect(page.locator('[data-engine]')).toHaveAttribute('data-degrees', '90');
+  await page.getByRole('slider').press('End');
+  await expect(page.locator('[data-engine]')).toHaveAttribute('data-degrees', '720');
+  await page.getByRole('button', { name: 'Exit presentation' }).click();
+  await expect(page.locator('main')).toHaveAttribute('data-presenting', 'false');
 });

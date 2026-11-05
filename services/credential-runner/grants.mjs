@@ -1,3 +1,25 @@
 // Durable consumed IDs survive process restarts. No entry capability or secret
 // is retained. TTL deletion must exceed the app authorization retention window.
-export function createGcsGrantStore(bucket){return {async consume(id,owner){if(!/^[a-f0-9-]{36}$/.test(id)||!/^[a-f0-9]{64}$/.test(owner))throw new Error('Invalid grant.');try{await bucket.file(`credential-grants/${id}.json`).save(JSON.stringify({v:1,owner,consumed:true}),{resumable:false,contentType:'application/json',metadata:{cacheControl:'no-store'},preconditionOpts:{ifGenerationMatch:0}});}catch(error){throw Object.assign(new Error('Grant unavailable.'),{code:error?.code===412?'grant_replayed':'grant_storage',status:error?.code===412?409:503});}}};}
+export function createGcsGrantStore(bucket) {
+  return {
+    async consume(id, owner) {
+      if (!/^[a-f0-9-]{36}$/.test(id) || !/^[a-f0-9]{64}$/.test(owner))
+        throw new Error('Invalid grant.');
+      try {
+        await bucket
+          .file(`credential-grants/${id}.json`)
+          .save(JSON.stringify({ v: 1, owner, consumed: true }), {
+            resumable: false,
+            contentType: 'application/json',
+            metadata: { cacheControl: 'no-store' },
+            preconditionOpts: { ifGenerationMatch: 0 },
+          });
+      } catch (error) {
+        throw Object.assign(new Error('Grant unavailable.'), {
+          code: error?.code === 412 ? 'grant_replayed' : 'grant_storage',
+          status: error?.code === 412 ? 409 : 503,
+        });
+      }
+    },
+  };
+}

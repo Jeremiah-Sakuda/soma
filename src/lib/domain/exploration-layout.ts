@@ -11,10 +11,7 @@ export function diagramLayout(panel: Diagram, compact: boolean, availableWidth?:
       : Math.max(280, Math.min(760, availableWidth));
   const cardWidth = 150;
   const nodes = panel.objects.filter((o) => o.kind === 'node' || o.kind === 'block');
-  const cardHeight = Math.max(
-    76,
-    ...nodes.map((o) => Math.ceil(o.label.length / 15) * 20 + 16),
-  );
+  const cardHeight = Math.max(76, ...nodes.map((o) => Math.ceil(o.label.length / 15) * 20 + 16));
   const top = Math.max(55, cardHeight / 2 + 16);
   let positions = nodes.map((o) => ({
     id: o.id,
@@ -24,9 +21,7 @@ export function diagramLayout(panel: Diagram, compact: boolean, availableWidth?:
   const crowded = positions.some((p, i) =>
     positions
       .slice(i + 1)
-      .some(
-        (q) => Math.abs(p.x - q.x) < cardWidth + 16 && Math.abs(p.y - q.y) < cardHeight + 16,
-      ),
+      .some((q) => Math.abs(p.x - q.x) < cardWidth + 16 && Math.abs(p.y - q.y) < cardHeight + 16),
   );
   if (crowded) {
     const authored = [...nodes].sort(
@@ -86,10 +81,7 @@ export function diagramLayout(panel: Diagram, compact: boolean, availableWidth?:
     .filter((o) => o.kind === 'text')
     .map((o) => {
       const y = bottom,
-        height = Math.max(
-          42,
-          Math.ceil(o.text.length / Math.floor((width - 48) / 7)) * 20 + 16,
-        );
+        height = Math.max(42, Math.ceil(o.text.length / Math.floor((width - 48) / 7)) * 20 + 16);
       bottom += height;
       return { ...o, y, height };
     });
@@ -220,9 +212,11 @@ export function arrangeExplanationPanels(spec: ExplorationSpec): {
     }
     for (let i = 0; i < placement.columnSpan; i++)
       occupied.add(`${placement.row}:${placement.column + i}`);
-    panels.push(panel.kind === 'spatial'
-      ? { ...panel, placement: { column: 1, row: placement.row, columnSpan: 2 } }
-      : { ...panel, placement });
+    panels.push(
+      panel.kind === 'spatial'
+        ? { ...panel, placement: { column: 1, row: placement.row, columnSpan: 2 } }
+        : { ...panel, placement },
+    );
   }
   return changed
     ? { spec: { ...spec, scene: { ...spec.scene, panels } }, changed: true }

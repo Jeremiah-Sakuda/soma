@@ -1,4 +1,4 @@
-# Personal companion — PM086
+# Personal continuity
 
 October 30, 2026. Soma remains a broad screen companion. Coding is one possible demo context, alongside coursework, diagrams and unfamiliar software. The core journey is selected context → generated visual → exploration → saved understanding → a better-informed next interaction. Optional computer actions have a separate native authority boundary.
 
@@ -27,22 +27,14 @@ You can edit/delete goals, correct/remove concepts and connections, or clear mem
 
 Actual synthetic Meta testing passed the complete chain: selection of a prior original saved graph, two linked concepts and a next activity, a new checked Dijkstra visual supplied with personal context, and an exact `Display name = Ada` form-action proposal. No real user source, native click or field was involved. This is a development integration case, not a cross-subject reliability benchmark.
 
-The first live attempts exposed Meta's requirement that every strict-tool property be required. The wire schema now requires a nullable recommendation while the persisted domain keeps absence optional. Failed attempts and their conservative reservations were retained. The successful pre-merge test recorded a shared ledger reading of $11.69797825/$15; concurrent work uses the same ledger, so this is a checkpoint, not an account billing balance.
+The first live attempts exposed Meta's requirement that every strict-tool property be required. The wire schema now requires a nullable recommendation while the persisted domain keeps absence optional. Failed attempts and their conservative reservations were retained. Failed attempts retained their conservative reservations; a historical test ledger is not the current remaining allowance.
 
 Tests cover real local persistence and HTTP boundaries, source deletion, stale/replayed requests, forged refs and recommendations, model usage accounting, cancellation, goal edits during generation, ownership revocation, and forgetting memory during settlement. Browser checks cover editing/reload/reset, preserved drafts after conflicts, relationship/evidence inspection, suggestion review and 375/620px layouts. Full integration testing caught and corrected a layout regression: memory now occupies the existing source area rather than moving the main visual below the first viewport.
 
-Final aggregate checks and merge identity are recorded in VERIFICATION.md. Accessibility permission was unavailable for the native helper, so physical native execution remains unverified. The existing signed 0.3.0 app does not include the new action controller; an isolated 0.4.0 package is prepared for testing and needs signing/notarization before public distribution.
+Current aggregate and distribution checks are in [verification](VERIFICATION.md). The 0.5.0 companion includes the action controller; physical Accessibility execution remains a separate acceptance boundary.
 
 ## Acceptance and remaining human checks
 
 The implementation supports explicit goals, evidence-linked concepts across saved experiences, a proposed next activity, memory-informed visuals and individually approved native action proposals. It does not claim independent learning gains, universal scientific simulation, general desktop autonomy or correct operation in every app. Standard Accessibility controls are the initial action boundary.
 
-Verify the new native build with macOS Accessibility permission and a benign form: inspect the target/value, replace a field, confirm readback, try a button and stop with Escape. Then evaluate real cross-subject explanations and whether proposed connections help you. Public release signing and a coordinated production deployment are separate from merging the source branch.
-
-## Prompt and milestone record
-
-PM086, exact receipt timestamp unavailable:
-
-> Alright, implementy this. There is another session working in parallel so avoid interfering with that work, but commit frequently on a ne wbranch, push, and merge to main when done
-
-The work was isolated from the private root and parallel release checkout on `codex/personal-companion`. Milestone commits cover owned memory, UI, bounded native proposals, the native executor, Muse selection/composition, independent race tests and live compatibility. The parallel session's `af78c68` generation recovery/progress work was merged with both import conflicts resolved by retaining both features. The public repository had no `main`; its existing `codex/submission-release` branch is preserved.
+Verify the new native build with macOS Accessibility permission and a benign form: inspect the target/value, replace a field, confirm readback, try a button and stop with Escape. Then evaluate real cross-subject explanations and whether proposed connections help you. The published installer’s signing is recorded separately from physical action acceptance.

@@ -9,14 +9,28 @@ const out = path.resolve(process.argv[2] || path.join(__dirname, '../../.local/l
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 (async () => {
   fs.mkdirSync(out, { recursive: true });
-  const { sheetRegion } = await import(pathToFileURL(path.join(__dirname, '../lift-geometry.mjs')).href);
-  const { models, cut } = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/hero-lift.json'), 'utf8'));
-  const slide = fs.readFileSync(path.join(__dirname, '../../docs/examples/hero-dijkstra/lecture-14-dijkstra.png')).toString('base64');
-  const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  const { sheetRegion } = await import(
+    pathToFileURL(path.join(__dirname, '../lift-geometry.mjs')).href
+  );
+  const { models, cut } = JSON.parse(
+    fs.readFileSync(path.join(__dirname, 'fixtures/hero-lift.json'), 'utf8'),
+  );
+  const slide = fs
+    .readFileSync(path.join(__dirname, '../../docs/examples/hero-dijkstra/lecture-14-dijkstra.png'))
+    .toString('base64');
+  const browser = await chromium.launch({
+    args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
+  });
   const errors = [];
   try {
-    const W = Number(process.env.W || 1600), H = Number(process.env.H || 900);
-    const context = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: Number(process.env.DPR || 1), bypassCSP: true, reducedMotion: process.env.REDUCED ? 'reduce' : 'no-preference' });
+    const W = Number(process.env.W || 1600),
+      H = Number(process.env.H || 900);
+    const context = await browser.newContext({
+      viewport: { width: W, height: H },
+      deviceScaleFactor: Number(process.env.DPR || 1),
+      bypassCSP: true,
+      reducedMotion: process.env.REDUCED ? 'reduce' : 'no-preference',
+    });
     const page = await context.newPage();
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
@@ -39,20 +53,42 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     });
     await page.goto(pathToFileURL(path.join(__dirname, '../point-overlay.html')).href);
     // The slide stands in for the learner's screen behind the transparent overlay.
-    await page.addStyleTag({ content: `html{background:#fff url(data:image/png;base64,${slide}) 0 0/100% 100% no-repeat}` });
+    await page.addStyleTag({
+      content: `html{background:#fff url(data:image/png;base64,${slide}) 0 0/100% 100% no-repeat}`,
+    });
     const sheetFor = (model) =>
-      page.evaluate(async ({ src, region }) => {
-        const img = new Image();
-        img.src = src;
-        await img.decode();
-        const c = document.createElement('canvas');
-        c.width = Math.round(region.width * img.naturalWidth);
-        c.height = Math.round(region.height * img.naturalHeight);
-        c.getContext('2d').drawImage(img, region.x * img.naturalWidth, region.y * img.naturalHeight, c.width, c.height, 0, 0, c.width, c.height);
-        return { dataUrl: c.toDataURL('image/jpeg', 0.9), region };
-      }, { src: `data:image/png;base64,${slide}`, region: sheetRegion(model) });
+      page.evaluate(
+        async ({ src, region }) => {
+          const img = new Image();
+          img.src = src;
+          await img.decode();
+          const c = document.createElement('canvas');
+          c.width = Math.round(region.width * img.naturalWidth);
+          c.height = Math.round(region.height * img.naturalHeight);
+          c.getContext('2d').drawImage(
+            img,
+            region.x * img.naturalWidth,
+            region.y * img.naturalHeight,
+            c.width,
+            c.height,
+            0,
+            0,
+            c.width,
+            c.height,
+          );
+          return { dataUrl: c.toDataURL('image/jpeg', 0.9), region };
+        },
+        { src: `data:image/png;base64,${slide}`, region: sheetRegion(model) },
+      );
     const display = { x: 0, y: 0, width: W, height: H };
-    const draw = (model, view, sheet) => page.evaluate((e) => window.__draw(e), { type: 'graph', model, display, view, ...(sheet ? { sheet } : {}) });
+    const draw = (model, view, sheet) =>
+      page.evaluate((e) => window.__draw(e), {
+        type: 'graph',
+        model,
+        display,
+        view,
+        ...(sheet ? { sheet } : {}),
+      });
     const advance = (ms) => page.evaluate((v) => window.__advance(v), ms);
     const shot = async (name) => {
       await page.screenshot({ path: path.join(out, `${name}.png`) });
@@ -64,7 +100,13 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     await shot('00-flat-2d');
     const sheet = await sheetFor(final);
     await draw(final, '3d', sheet);
-    for (const [ms, name] of [[48, '01-lift-start'], [450, '02-lift-tilting'], [500, '03-lift-rising'], [900, '04-lifted'], [2600, '05-lifted-sway']]) {
+    for (const [ms, name] of [
+      [48, '01-lift-start'],
+      [450, '02-lift-tilting'],
+      [500, '03-lift-rising'],
+      [900, '04-lifted'],
+      [2600, '05-lifted-sway'],
+    ]) {
       await advance(ms);
       await shot(name);
     }

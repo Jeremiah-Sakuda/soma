@@ -14,7 +14,10 @@ export function cameraDistance(height, fovDegrees) {
 }
 
 /** Normalized capture point to world pixels: origin at the display centre, y up. */
-export const toWorld = (p, frame) => ({ x: p.x * frame.width - frame.width / 2, y: frame.height / 2 - p.y * frame.height });
+export const toWorld = (p, frame) => ({
+  x: p.x * frame.width - frame.width / 2,
+  y: frame.height / 2 - p.y * frame.height,
+});
 
 /** How much longer a connection is than the climb between its ends: 0 means taut. Negative
  * only next to an estimate: the connection offers a shorter way and will lower it. */
@@ -37,9 +40,16 @@ export function sheetRegion(model) {
   const nodePad = r * 1.8;
   const edgePad = model.aspect === undefined ? nodePad : Math.max(model.font * 1.5, r * 0.6);
   const aspect = model.aspect ?? 1;
-  const xs = [...model.nodes.flatMap((n) => [n.x - nodePad, n.x + nodePad]), ...model.edges.flatMap((e) => [e.center.x - edgePad, e.center.x + edgePad])];
-  const ys = [...model.nodes.flatMap((n) => [n.y - nodePad / aspect, n.y + nodePad / aspect]), ...model.edges.flatMap((e) => [e.center.y - edgePad / aspect, e.center.y + edgePad / aspect])];
-  const x = Math.max(0, Math.min(...xs)), y = Math.max(0, Math.min(...ys));
+  const xs = [
+    ...model.nodes.flatMap((n) => [n.x - nodePad, n.x + nodePad]),
+    ...model.edges.flatMap((e) => [e.center.x - edgePad, e.center.x + edgePad]),
+  ];
+  const ys = [
+    ...model.nodes.flatMap((n) => [n.y - nodePad / aspect, n.y + nodePad / aspect]),
+    ...model.edges.flatMap((e) => [e.center.y - edgePad / aspect, e.center.y + edgePad / aspect]),
+  ];
+  const x = Math.max(0, Math.min(...xs)),
+    y = Math.max(0, Math.min(...ys));
   return {
     x,
     y,
@@ -51,14 +61,24 @@ export function sheetRegion(model) {
 /** Everything the renderer draws, from one validated overlay model. Heights and slack come
  * only from the model's checked distances and costs. */
 export function liftLayout(model, frame) {
-  const lift = model.lift ?? { directed: false, source: model.nodes[0]?.id, goal: null, maxDistance: 1, unit: 'cost' };
+  const lift = model.lift ?? {
+    directed: false,
+    source: model.nodes[0]?.id,
+    goal: null,
+    maxDistance: 1,
+    unit: 'cost',
+  };
   const region = sheetRegion(model);
   const regionPx = { width: region.width * frame.width, height: region.height * frame.height };
   const r = model.radius * frame.width;
   // Use the whole search's range, including sub-unit costs, as a stable visual scale.
-  const tallest = Math.max(r * 6, Math.min(frame.height * 0.36, Math.max(regionPx.height, regionPx.width * 0.5) * 0.7));
+  const tallest = Math.max(
+    r * 6,
+    Math.min(frame.height * 0.36, Math.max(regionPx.height, regionPx.width * 0.5) * 0.7),
+  );
   const scale = tallest / lift.maxDistance;
-  if (!Number.isFinite(scale)) throw new RangeError('The checked distance range cannot be lifted at this display size.');
+  if (!Number.isFinite(scale))
+    throw new RangeError('The checked distance range cannot be lifted at this display size.');
   // A node at distance 0 rests on the sheet; height above that is distance.
   const base = r * 0.78;
   const byId = new Map();
@@ -71,7 +91,10 @@ export function liftLayout(model, frame) {
       distance: known ? n.distance : null,
       // The start is known exactly from the outset, and breadth-first distances are final
       // when found; only Dijkstra's queued costs are estimates.
-      tentative: n.status === 'waiting' && lift.unit === 'cost' && !(n.id === lift.source && n.distance === 0),
+      tentative:
+        n.status === 'waiting' &&
+        lift.unit === 'cost' &&
+        !(n.id === lift.source && n.distance === 0),
       ...toWorld(n, frame),
       // Within the search's own range, so a bad value cannot fly off screen.
       height: known ? base + Math.max(0, Math.min(lift.maxDistance, n.distance)) * scale : 0,
@@ -82,11 +105,24 @@ export function liftLayout(model, frame) {
     return node;
   });
   const edges = model.edges.flatMap((e) => {
-    const a = byId.get(e.fromId), b = byId.get(e.toId);
+    const a = byId.get(e.fromId),
+      b = byId.get(e.toId);
     // A loop has no length to hang as a string.
     if (!a || !b || a === b) return [];
     const weight = Number.isFinite(e.weight) ? e.weight : null;
-    if (e.tone === 'cut') return [{ id: e.id, from: a.id, to: b.id, weight, slack: null, kind: 'cut', tone: e.tone, label: '' }];
+    if (e.tone === 'cut')
+      return [
+        {
+          id: e.id,
+          from: a.id,
+          to: b.id,
+          weight,
+          slack: null,
+          kind: 'cut',
+          tone: e.tone,
+          label: '',
+        },
+      ];
     const slack = weight === null ? null : slackOf(weight, a.distance, b.distance, lift.directed);
     // A string to a tentative node holds it up at its current estimate; it may still change.
     // Between two estimates nothing is settled yet, so it stays drawn on the sheet.
@@ -110,7 +146,19 @@ export function liftLayout(model, frame) {
           : kind === 'taut' || kind === 'tentative'
             ? fmt(weight)
             : '';
-    return [{ id: e.id, from: a.id, to: b.id, weight, slack, kind, tone: e.tone, label, directed: lift.directed }];
+    return [
+      {
+        id: e.id,
+        from: a.id,
+        to: b.id,
+        weight,
+        slack,
+        kind,
+        tone: e.tone,
+        label,
+        directed: lift.directed,
+      },
+    ];
   });
   // The sheet hinges on its bottom edge, so the graph's base stays on the slide.
   const sheet = {
@@ -119,7 +167,20 @@ export function liftLayout(model, frame) {
     height: regionPx.height,
   };
   const hinge = { x: sheet.x, y: sheet.y - sheet.height / 2 };
-  return { nodes, edges, sheet, hinge, region, radius: r, scale, base, tallest, maxDistance: lift.maxDistance, unit: lift.unit, source: lift.source };
+  return {
+    nodes,
+    edges,
+    sheet,
+    hinge,
+    region,
+    radius: r,
+    scale,
+    base,
+    tallest,
+    maxDistance: lift.maxDistance,
+    unit: lift.unit,
+    source: lift.source,
+  };
 }
 
 /** Vertical drop of a slack string's midpoint, proportional to its slack (at least `least`
@@ -158,13 +219,15 @@ export function riseAt(t, rank, count) {
 }
 
 /** Moves a value toward its target, frame-rate independent. */
-export const approach = (value, target, dt, tau = 0.22) => target + (value - target) * Math.exp(-dt / tau);
+export const approach = (value, target, dt, tau = 0.22) =>
+  target + (value - target) * Math.exp(-dt / tau);
 
 /** Nudges overlapping labels apart, keeping the most important in place. Each item is
  * {x, y, w, h, priority} with (x, y) the bottom centre; returns new y values. */
 export function separateLabels(items, gap = 3) {
   const order = items.map((item, i) => ({ ...item, i })).sort((a, b) => b.priority - a.priority);
-  const placed = [], ys = items.map((item) => item.y);
+  const placed = [],
+    ys = items.map((item) => item.y);
   const hits = (a, y, b) =>
     Math.abs(a.x - b.x) < (a.w + b.w) / 2 + gap && y - a.h < b.y + gap && b.y - b.h < y + gap;
   for (const item of order) {

@@ -1,6 +1,6 @@
 # Actual Muse before/after examples — PM117
 
-**October 31, PM118:** The current gallery includes a fresh Muse piston correction: shorter travel avoids the base, and the rod touches the head and grip. The original After recording is retained in `piston-original-after.json`. Direct slider dragging no longer eases behind input, and markers follow moving parts. See [the correction and verification record](../../ANATOMY_SLIDER_FIX.md). The generation/results paragraphs below record the original PM117 run; the correction added $0.04767325, bringing cumulative spending to $15.30956725/$20.
+**October 31, PM118:** The current gallery includes a fresh Muse piston correction: shorter travel avoids the base, and the rod touches the head and grip. The original After recording is retained in `piston-original-after.json`. Direct slider dragging no longer eases behind input, and markers follow moving parts. See [the correction and verification record](../../MUSE_MECHANISM_AUTHORING.md). The generation/results paragraphs below record the original PM117 run; the correction added $0.04767325, bringing cumulative spending to $15.30956725/$20.
 
 Open **[the local comparison gallery](http://localhost:41908)**. The three tabs contain matched original-synthetic source images and actual Muse outputs:
 
@@ -28,7 +28,6 @@ This request added **$0.32454525** to the shared ledger. At `2026-10-31T00:23:46
 - In-app browser inspection exercised the actual gate control and switched among the generated comparisons. Paired screenshots were visually inspected.
 - Static serving is restricted to the built gallery on loopback. GET/HEAD only, no API routes, no workspace-file serving, no provider credentials, and a CSP with `connect-src 'none'`. Replaying or manipulating examples makes no model calls. Required bundled notices are included.
 
-Initial gallery test inputs used noncanonical `.9` range strings; these were corrected to `0.9`. A blade-count assertion initially also matched “Hub turns with blades”; it now counts the actual driven prism blade pieces. Those failed test receipts and the failed model generation remain under `.local/pm117/`. The build's client-directive warnings are expected for this all-client standalone artifact; the large Three chunk loads only when 3D is selected.
 
 The viewer is already running for this review. To rebuild and serve it later from the canonical repository root, using the existing pinned dependencies:
 
@@ -37,6 +36,5 @@ node node_modules/vite/bin/vite.js build --config docs/examples/pm117/viewer/vit
 node scripts/serve-mechanism-comparison.mjs
 ```
 
-Detailed private run receipts: `.local/pm117/generation-r1.log`, `generation-results.json`, `geometry-checks-r2.log`, `gallery-tests-final.log`, `typecheck-final.log`, `gallery-build-final.log`, source files and paired screenshots. No main merge, push, deployment, publication or user visual acceptance is claimed.
 
 Artifact commit: [5e2aa4b](https://github.com/Jeremiah-Sakuda/soma/commit/5e2aa4b).

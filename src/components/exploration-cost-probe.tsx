@@ -51,9 +51,7 @@ export function ExplorationCostProbe({
           <strong>Why this connection:</strong> {rationale}
         </p>
       )}
-      <p>
-        Change only this connection. The graph and both searches recompute from the same cost.
-      </p>
+      <p>Change only this connection. The graph and both searches recompute from the same cost.</p>
       <label htmlFor="probe-cost">
         Connection cost: <strong>{value}</strong>
       </label>

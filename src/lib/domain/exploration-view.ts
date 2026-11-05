@@ -1,7 +1,13 @@
 import type { SpatialView } from './spatial-schema';
 import { runBfs, type BfsInput, type BfsExecution, type ExplorationSpec } from './exploration';
 import { solveDc, type DcInput, type DcObservation, type DcSolution } from './dc-circuit';
-import { defaultGraphControls, applyGraphControls, applyComparisonGraphControls, graphControlsEqual, type GraphControls } from './graph-state';
+import {
+  defaultGraphControls,
+  applyGraphControls,
+  applyComparisonGraphControls,
+  graphControlsEqual,
+  type GraphControls,
+} from './graph-state';
 
 export type ExplorationViewState = {
   step: number;
@@ -35,17 +41,27 @@ export function explorationExecution(
 }
 /** Resolve legacy nullable starts and omitted costs without accepting presentation fields. */
 function graphViewControls(input: BfsInput, state: ExplorationViewState): GraphControls {
-  return { start: state.start ?? input.start, goal: state.goal, disabledEdgeIds: state.disabledEdgeIds,
-    reversed: state.reversed, edgeWeights: state.edgeWeights ?? {} };
+  return {
+    start: state.start ?? input.start,
+    goal: state.goal,
+    disabledEdgeIds: state.disabledEdgeIds,
+    reversed: state.reversed,
+    edgeWeights: state.edgeWeights ?? {},
+  };
 }
 /** Source/experiment labeling is independent of whether the authored words match this state. */
 export function graphExperimentActive(spec: ExplorationSpec, state: ExplorationViewState): boolean {
-  return (spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') &&
-    !graphControlsEqual(graphViewControls(spec.input, state), defaultGraphControls(spec.input));
+  return (
+    (spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') &&
+    !graphControlsEqual(graphViewControls(spec.input, state), defaultGraphControls(spec.input))
+  );
 }
 /** The circuit under the learner's experiment: open parts are `disabledEdgeIds`, changed
  * values are `edgeWeights`, so the same view state and controls serve both families. */
-export function circuitSolution(spec: ExplorationSpec, state: ExplorationViewState): DcSolution | null {
+export function circuitSolution(
+  spec: ExplorationSpec,
+  state: ExplorationViewState,
+): DcSolution | null {
   if (spec.mode !== 'checked-circuit') return null;
   return solveDc(spec.input, { open: state.disabledEdgeIds, values: state.edgeWeights ?? {} });
 }
@@ -55,7 +71,8 @@ export function explorationInputsChanged(spec: ExplorationSpec, state: Explorati
   if (spec.mode === 'checked-circuit') {
     const written = spec.writtenFor ?? { open: [], values: {} };
     const same = (a: Record<string, number>, b: Record<string, number>) =>
-      Object.keys(a).length === Object.keys(b).length && Object.entries(a).every(([id, v]) => Object.hasOwn(b, id) && b[id] === v);
+      Object.keys(a).length === Object.keys(b).length &&
+      Object.entries(a).every(([id, v]) => Object.hasOwn(b, id) && b[id] === v);
     return (
       [...state.disabledEdgeIds].sort().join() !== [...written.open].sort().join() ||
       !same(state.edgeWeights ?? {}, written.values)
@@ -63,7 +80,10 @@ export function explorationInputsChanged(spec: ExplorationSpec, state: Explorati
   }
   return (
     (spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') &&
-    !graphControlsEqual(graphViewControls(spec.input, state), spec.writtenFor ?? defaultGraphControls(spec.input))
+    !graphControlsEqual(
+      graphViewControls(spec.input, state),
+      spec.writtenFor ?? defaultGraphControls(spec.input),
+    )
   );
 }
 function executionCaption(execution: BfsExecution, index: number) {
@@ -90,16 +110,26 @@ export function circuitQuantity(value: number, unit: string) {
 }
 /** The solver's exact fraction beside its rounded decimal, "12/29 A ≈ 0.4138 A", when the
  * value is not a whole number; otherwise the plain quantity. */
-export function circuitExactQuantity(exact: string | null | undefined, value: number, unit: string, magnitude = false) {
+export function circuitExactQuantity(
+  exact: string | null | undefined,
+  value: number,
+  unit: string,
+  magnitude = false,
+) {
   if (!exact?.includes('/')) return circuitQuantity(magnitude ? Math.abs(value) : value, unit);
   const fraction = (magnitude ? exact.replace('-', '') : exact).replace('-', '−');
   return `${fraction} ${unit} ${circuitQuantity(magnitude ? Math.abs(value) : value, unit).replace(/^(?!≈)/, '= ')}`;
 }
 const circuitName = (input: DcInput, id: string) =>
-  input.nodes.find((n) => n.id === id)?.label ?? input.components.find((c) => c.id === id)?.label ?? id;
+  input.nodes.find((n) => n.id === id)?.label ??
+  input.components.find((c) => c.id === id)?.label ??
+  id;
 /** The selected experiment's consequence, without repeating every newly revealed part.
  * Decline when the observation is unavailable so the full circuit caption keeps its context. */
-export function circuitObservationCaption(solution: DcSolution, observation: DcObservation): string | null {
+export function circuitObservationCaption(
+  solution: DcSolution,
+  observation: DcObservation,
+): string | null {
   if (solution.status !== 'solved') return null;
   const { input } = solution;
   const voltageAt = (id: string) => {
@@ -107,14 +137,16 @@ export function circuitObservationCaption(solution: DcSolution, observation: DcO
     return typeof v === 'number' && Number.isFinite(v) ? v : null;
   };
   if (observation.kind === 'voltage') {
-    const node = input.nodes.find((n) => n.id === observation.nodeId), v = voltageAt(observation.nodeId);
+    const node = input.nodes.find((n) => n.id === observation.nodeId),
+      v = voltageAt(observation.nodeId);
     return node && v !== null
       ? `${node.label} is at ${circuitQuantity(v, 'V')} relative to ${circuitName(input, input.ground)} (ground).`
       : null;
   }
   const c = input.components.find((part) => part.id === observation.componentId);
   if (!c) return null;
-  const fromVoltage = voltageAt(c.from), toVoltage = voltageAt(c.to);
+  const fromVoltage = voltageAt(c.from),
+    toVoltage = voltageAt(c.to);
   if (fromVoltage === null || toVoltage === null) return null;
   if (observation.kind === 'power') {
     const power = solution.power[c.id];
@@ -130,9 +162,10 @@ export function circuitObservationCaption(solution: DcSolution, observation: DcO
       ? `${c.label} carries 0 A: both ends are at ${circuitQuantity(fromVoltage, 'V')}.`
       : `${c.label} carries 0 A.`;
   const [from, to] = current > 0 ? [c.from, c.to] : [c.to, c.from];
-  const contrast = c.kind === 'resistor'
-    ? ` ${circuitName(input, c.from)} is at ${circuitQuantity(fromVoltage, 'V')}; ${circuitName(input, c.to)} is at ${circuitQuantity(toVoltage, 'V')}.`
-    : '';
+  const contrast =
+    c.kind === 'resistor'
+      ? ` ${circuitName(input, c.from)} is at ${circuitQuantity(fromVoltage, 'V')}; ${circuitName(input, c.to)} is at ${circuitQuantity(toVoltage, 'V')}.`
+      : '';
   return `${c.label} carries ${circuitQuantity(Math.abs(current), 'A')} from ${circuitName(input, from)} to ${circuitName(input, to)}.${contrast}`;
 }
 /** Whether a part's two ends are still joined through the other connected parts. */
@@ -140,7 +173,7 @@ function connectedWithout(solution: DcSolution, id: string) {
   const { input, state } = solution;
   const part = input.components.find((c) => c.id === id)!;
   const reached = new Set([part.from]);
-  for (let grew = true; grew; ) {
+  for (let grew = true; grew;) {
     grew = false;
     for (const c of input.components)
       if (c.id !== id && !state.open.includes(c.id) && reached.has(c.from) !== reached.has(c.to)) {
@@ -154,12 +187,16 @@ function connectedWithout(solution: DcSolution, id: string) {
  * carries, with the current's direction in the circuit's own node names. */
 export function circuitCaption(solution: DcSolution, index: number): string {
   const { input } = solution;
-  if (solution.status !== 'solved') return solution.reason ?? 'This change leaves the circuit without one solution.';
+  if (solution.status !== 'solved')
+    return solution.reason ?? 'This change leaves the circuit without one solution.';
   const step = solution.steps[Math.min(index, solution.steps.length - 1)];
   const before = index > 0 ? solution.steps[Math.min(index, solution.steps.length - 1) - 1] : null;
   const fresh = step.revealedComponents.filter((id) => !before?.revealedComponents.includes(id));
   const parts: string[] = [];
-  if (!step.node) parts.push(`${circuitName(input, input.ground)} is the 0 V reference; every voltage is measured from it.`);
+  if (!step.node)
+    parts.push(
+      `${circuitName(input, input.ground)} is the 0 V reference; every voltage is measured from it.`,
+    );
   else {
     const v = solution.voltages[step.node];
     parts.push(
@@ -214,13 +251,14 @@ export function explorationVisibleCaption(
   if (circuit) return circuitCaption(circuit, state.step);
   const execution = explorationExecution(spec, state);
   if (!execution) return spec.steps[Math.min(state.explanationStep, spec.steps.length - 1)].caption;
-  if ((spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') && spec.comparison)
-  {
+  if ((spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra') && spec.comparison) {
     const comparison = comparisonExecution(spec, state)!;
     const name = (computed: BfsExecution) =>
       computed.modelId === 'dijkstra-nonnegative' ? 'Dijkstra' : 'BFS';
     const [first, second] =
-      name(execution) === name(comparison) ? ['This search', 'Comparison'] : [name(execution), name(comparison)];
+      name(execution) === name(comparison)
+        ? ['This search', 'Comparison']
+        : [name(execution), name(comparison)];
     return `${first}: ${executionCaption(execution, state.step)} ${second}: ${executionCaption(comparison, state.step)}`;
   }
   return executionCaption(execution, state.step);
@@ -230,7 +268,11 @@ export function explorationVisibleCaption(
  * which node, quantity or step a number describes, or validate number-free claims.
  * Never use this filter to select checked drawing captions; compute those from
  * the current snapshot instead. */
-export function captionIsGrounded(caption: string, executions: (BfsExecution | null)[], circuit: DcSolution | null = null) {
+export function captionIsGrounded(
+  caption: string,
+  executions: (BfsExecution | null)[],
+  circuit: DcSolution | null = null,
+) {
   const allowed = new Set<string>();
   const add = (n: number) => allowed.add(String(Number(n.toFixed(2))));
   if (circuit) {
@@ -250,7 +292,10 @@ export function captionIsGrounded(caption: string, executions: (BfsExecution | n
     }
     for (const text of [...circuit.input.nodes, ...circuit.input.components].map((x) => x.label))
       (text.match(/\d+(?:\.\d+)?/g) ?? []).forEach((d) => add(Number(d)));
-    for (const exact of [...Object.values(circuit.exact.voltages), ...Object.values(circuit.exact.currents)])
+    for (const exact of [
+      ...Object.values(circuit.exact.voltages),
+      ...Object.values(circuit.exact.currents),
+    ])
       (exact?.match(/\d+/g) ?? []).forEach((d) => add(Number(d)));
     for (let i = 0; i <= circuit.steps.length; i++) add(i);
     add(circuit.input.nodes.length);
@@ -265,7 +310,9 @@ export function captionIsGrounded(caption: string, executions: (BfsExecution | n
     add(run.input.nodes.length);
     add(run.input.edges.length);
   }
-  return (caption.match(/\d+(?:\.\d+)?/g) ?? []).every((n) => allowed.has(String(Number(Number(n).toFixed(2)))));
+  return (caption.match(/\d+(?:\.\d+)?/g) ?? []).every((n) =>
+    allowed.has(String(Number(Number(n).toFixed(2)))),
+  );
 }
 
 const nodeName = (input: BfsInput, id: string | null) =>
@@ -296,7 +343,9 @@ export function nextPlaybackState(
     const steps = circuitSolution(spec, state)!.steps.length;
     if (state.step + 1 >= steps) return null;
     const step = state.step + 1,
-      authored = spec.steps.findIndex((item) => item.execution === 'primary' && item.executionStep === step);
+      authored = spec.steps.findIndex(
+        (item) => item.execution === 'primary' && item.executionStep === step,
+      );
     return { ...state, step, ...(authored >= 0 ? { explanationStep: authored } : {}) };
   }
   const execution = explorationExecution(spec, state)!;
@@ -321,5 +370,11 @@ export function comparisonExecution(
 ): BfsExecution | null {
   if ((spec.mode !== 'checked-bfs' && spec.mode !== 'checked-dijkstra') || !spec.comparison)
     return null;
-  return runBfs(applyComparisonGraphControls(spec.input, spec.comparison.input, graphViewControls(spec.input, state)));
+  return runBfs(
+    applyComparisonGraphControls(
+      spec.input,
+      spec.comparison.input,
+      graphViewControls(spec.input, state),
+    ),
+  );
 }

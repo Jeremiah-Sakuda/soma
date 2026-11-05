@@ -22,5 +22,11 @@
     "@electron/osx-sign": "2.7.2",
     "@electron/packager": "20.3.0",
     "electron": "45.1.0"
+  },
+  "overrides": {
+    "@electron/asar": {
+      "glob": "14.0.3",
+      "minimatch": "11.0.1"
+    }
   }
 }

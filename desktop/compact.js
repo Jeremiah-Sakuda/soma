@@ -11,7 +11,16 @@ const form = document.getElementById('bar'),
   lift = document.getElementById('lift');
 const IDLE = 'Return sends one snapshot of this screen with your question. Esc hides the bar.';
 // `step` is the zero-based index of the shown step; `steps` is how many there are.
-let state = { visual: false, busy: false, investigable: false, step: null, steps: null, playing: false, message: '', view: '2d' };
+let state = {
+  visual: false,
+  busy: false,
+  investigable: false,
+  step: null,
+  steps: null,
+  playing: false,
+  message: '',
+  view: '2d',
+};
 let sending = false,
   // A follow-up's text stays in the box until the page takes it, in case it is refused.
   handedOver = null;
@@ -24,7 +33,11 @@ const busy = () => sending || state.busy;
 function render() {
   document.body.classList.toggle('busy', busy());
   form.setAttribute('aria-busy', String(busy()));
-  const hasSteps = state.visual && Number.isInteger(state.steps) && state.steps > 1 && Number.isInteger(state.step);
+  const hasSteps =
+    state.visual &&
+    Number.isInteger(state.steps) &&
+    state.steps > 1 &&
+    Number.isInteger(state.step);
   steps.hidden = !hasSteps;
   if (hasSteps) {
     step.textContent = `${state.step + 1} / ${state.steps}`;
@@ -46,7 +59,8 @@ function render() {
   // With nothing drawn, every question needs a snapshot.
   fresh.hidden = !state.visual;
   if (!state.visual) fresh.setAttribute('aria-pressed', 'false');
-  input.placeholder = state.visual && !freshPressed() ? 'Ask a follow-up, or “What if…”' : 'Ask about your screen…';
+  input.placeholder =
+    state.visual && !freshPressed() ? 'Ask a follow-up, or “What if…”' : 'Ask about your screen…';
 }
 async function send(mode) {
   const text = input.value.trim();
@@ -59,10 +73,21 @@ async function send(mode) {
     say('Muse is still working on your last question.');
     return;
   }
-  const kind = mode === 'investigate' ? 'investigate' : !state.visual || freshPressed() ? 'snapshot' : 'followup';
+  const kind =
+    mode === 'investigate'
+      ? 'investigate'
+      : !state.visual || freshPressed()
+        ? 'snapshot'
+        : 'followup';
   sending = true;
   render();
-  say(kind === 'snapshot' ? 'Taking one snapshot of this screen…' : kind === 'investigate' ? 'Muse is choosing what to test…' : 'Muse is answering…');
+  say(
+    kind === 'snapshot'
+      ? 'Taking one snapshot of this screen…'
+      : kind === 'investigate'
+        ? 'Muse is choosing what to test…'
+        : 'Muse is answering…',
+  );
   try {
     const result = await window.somaCompact.ask(text, kind);
     if (result?.ok) {
@@ -105,8 +130,16 @@ fresh.addEventListener('click', () => {
   render();
   input.focus();
 });
-for (const [id, action] of [['previous', 'previous'], ['next', 'next'], ['play', 'play'], ['expand', 'expand'], ['lift', 'lift']])
-  document.getElementById(id).addEventListener('click', () => void window.somaCompact.control(action));
+for (const [id, action] of [
+  ['previous', 'previous'],
+  ['next', 'next'],
+  ['play', 'play'],
+  ['expand', 'expand'],
+  ['lift', 'lift'],
+])
+  document
+    .getElementById(id)
+    .addEventListener('click', () => void window.somaCompact.control(action));
 window.somaCompact.onStatus((message) => {
   if (message) say(message);
 });
@@ -123,7 +156,10 @@ window.somaCompact.onState((incoming) => {
     handedOver = null;
     say(state.message);
   } else if (was.busy && !state.busy && !state.message && !sending) {
-    if (state.visual) say(`On your screen. Ask a follow-up${state.investigable ? ', ⌘↩ tests it' : ''}, Esc clears.`);
+    if (state.visual)
+      say(
+        `On your screen. Ask a follow-up${state.investigable ? ', ⌘↩ tests it' : ''}, Esc clears.`,
+      );
     else if (WORKING.test(status.textContent) || !status.textContent) say(IDLE);
   }
   render();

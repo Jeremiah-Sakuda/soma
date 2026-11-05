@@ -33,10 +33,13 @@ export function ExplorationWeightedStage({
   // it fits its card, rather than being clipped.
   const svgRef = useRef<SVGSVGElement>(null);
   useLayoutEffect(() => {
-    for (const label of svgRef.current?.querySelectorAll<HTMLElement>('.exploration-weighted-node-label') ?? []) {
+    for (const label of svgRef.current?.querySelectorAll<HTMLElement>(
+      '.exploration-weighted-node-label',
+    ) ?? []) {
       label.style.fontSize = '';
       let size = parseFloat(getComputedStyle(label).fontSize);
-      const fits = () => label.scrollHeight <= label.clientHeight + 1 && label.scrollWidth <= label.clientWidth + 1;
+      const fits = () =>
+        label.scrollHeight <= label.clientHeight + 1 && label.scrollWidth <= label.clientWidth + 1;
       while (!fits() && size > 9) label.style.fontSize = `${(size -= 1)}px`;
     }
   });

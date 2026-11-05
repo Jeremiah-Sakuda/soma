@@ -35,9 +35,7 @@ function maxNewGuests() {
 }
 function maxActiveGenerations() {
   const configured = Number(process.env.SOMA_EXPLORATION_MAX_ACTIVE ?? 4);
-  return Number.isSafeInteger(configured) && configured >= 1 && configured <= 16
-    ? configured
-    : 4;
+  return Number.isSafeInteger(configured) && configured >= 1 && configured <= 16 ? configured : 4;
 }
 const hash = (value: string) => createHash('sha256').update(value).digest('hex');
 export const assertExplorationOrigin = requireSameOrigin;
@@ -212,21 +210,28 @@ export async function readExistingExplorationSession(principal: ExplorationPrinc
   validatePrincipal(principal);
   if (getPersistenceMode() === 'firestore') return explorationStore.read(principal);
   if (principal.kind === 'account') throw new ExplorationError('unavailable');
-  const path = resolve(/* turbopackIgnore: true */ process.env.SOMA_EXPLORATION_DB_PATH || '.local/soma-explorations.sqlite');
-  try { statSync(path); }
-  catch (error) {
+  const path = resolve(
+    /* turbopackIgnore: true */ process.env.SOMA_EXPLORATION_DB_PATH ||
+      '.local/soma-explorations.sqlite',
+  );
+  try {
+    statSync(path);
+  } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
     throw error;
   }
   const connection = new DatabaseSync(path, { readOnly: true });
   try {
-    const row = connection.prepare('SELECT payload FROM exploration_sessions WHERE key=? AND expires_at>?')
+    const row = connection
+      .prepare('SELECT payload FROM exploration_sessions WHERE key=? AND expires_at>?')
       .get(principal.key, Date.now()) as { payload: string } | undefined;
     if (!row) return null;
     const state = JSON.parse(row.payload) as ExplorationSession;
     check(principal, state);
     return state;
-  } finally { connection.close(); }
+  } finally {
+    connection.close();
+  }
 }
 export const explorationStore: ExplorationStore = {
   async read(principal) {

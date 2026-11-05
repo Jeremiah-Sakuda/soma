@@ -66,10 +66,7 @@ export function ExplorationSearchStage({
   // Nodes are pills sized to their full name; long names widen the node, never truncate.
   const fontSize = compact ? 12 : 14;
   const labelWidth = (id: string) => Math.ceil(name(id).length * fontSize * 0.62) + 22;
-  const inset = Math.max(
-    55,
-    ...execution.input.nodes.map((node) => labelWidth(node.id) / 2 + 6),
-  );
+  const inset = Math.max(55, ...execution.input.nodes.map((node) => labelWidth(node.id) / 2 + 6));
   const point = (id: string) => {
     const p = panel.positions.find((p) => p.nodeId === id)!;
     return {
@@ -96,7 +93,10 @@ export function ExplorationSearchStage({
     const t =
       halfWidth <= radius
         ? (radius + 5) / length
-        : Math.min((halfWidth + 5) / (Math.abs(dx) || 0.001), (radius + 5) / (Math.abs(dy) || 0.001));
+        : Math.min(
+            (halfWidth + 5) / (Math.abs(dx) || 0.001),
+            (radius + 5) / (Math.abs(dy) || 0.001),
+          );
     return { x: center.x + dx * Math.min(t, 0.5), y: center.y + dy * Math.min(t, 0.5) };
   };
   const token = (id: string, position: Point, opacity = 1, kind = 'queue') => (

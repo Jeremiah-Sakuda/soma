@@ -12,7 +12,16 @@ export type AuditMutation<T> = { run: AuditRun; result: T };
  * this boundary; both adapters store the same run without projecting originals. */
 export interface AuditStorage {
   create(access: WorkspaceAccess, state: WorkspaceState, run: AuditRun): Promise<void>;
-  mutate<T>(access: WorkspaceAccess, workspaceId: string, id: string, change: (run: AuditRun) => AuditMutation<T>): Promise<T>;
-  read(access: WorkspaceAccess, workspaceId: string, query: { runId?: string; after?: AuditCursor }): Promise<AuditRun[]>;
+  mutate<T>(
+    access: WorkspaceAccess,
+    workspaceId: string,
+    id: string,
+    change: (run: AuditRun) => AuditMutation<T>,
+  ): Promise<T>;
+  read(
+    access: WorkspaceAccess,
+    workspaceId: string,
+    query: { runId?: string; after?: AuditCursor },
+  ): Promise<AuditRun[]>;
   purgeExpiredDemos(limit: number): Promise<number>;
 }

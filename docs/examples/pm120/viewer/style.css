@@ -1,2 +1,305 @@
 @import '../../pm117/viewer/style.css';
-:root{--paper:#f7f6f3;--ink:#24372f;--muted:#59665d;background:var(--paper)}main{max-width:1450px}.intro{display:block;margin:32px 0 28px}.intro>.eyebrow{display:block;margin-bottom:14px;font-size:11px}.intro h1{font-size:42px;max-width:24ch;margin-bottom:12px;line-height:1.12}.intro p{font-size:16px}.comparison-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}.plate>header{display:block;padding:18px 22px}.plate .eyebrow{display:block;margin-bottom:7px}.plate header p{font-size:13px;color:var(--muted);margin:7px 0 0;line-height:1.5}.plate.film{border-color:#a1b395}.stage{position:relative;aspect-ratio:640/460;border-block:1px solid var(--border);overflow:hidden;background:#faf9f4}.stage .anatomy-canvas{position:absolute;inset:0}.motion-scene{display:block;width:100%;height:100%;overflow:hidden}.plate-foot{display:flex;align-items:center;gap:12px;min-height:62px;padding:8px 20px;font-size:12px;color:var(--muted)}.plate-foot strong{color:var(--ink);font-size:13px;font-weight:550}.plate-foot button{margin-left:auto;font-size:12px;background:none;border-color:transparent;text-decoration:underline}.player{margin-top:20px;border:1px solid var(--border);border-radius:14px;background:#fffefa;padding:18px 22px}.transport{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.primary{background:#2d4b3d!important;color:white!important;border-color:#2d4b3d!important;min-width:126px;font-weight:550}.primary:hover{background:#233b30!important}.transport output{margin-left:auto;font-family:ui-monospace,monospace;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}.download{color:var(--ink);font-size:13px;padding:12px;text-underline-offset:3px;min-height:44px}.sound{display:flex;align-items:center;gap:8px;font-size:13px;min-height:44px;padding-inline:6px;cursor:pointer}.sound input{width:18px;height:18px;accent-color:#3b5a46}.scrubber{display:block;margin-top:5px}.scrubber input,.experiment input{width:100%;height:44px;accent-color:#52734f;margin:0;cursor:pointer}.chapters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:4px}.chapters button{display:flex;align-items:center;gap:10px;font-size:12px;text-align:left;line-height:1.4}.chapters span{font-size:10px;font-family:ui-monospace,monospace;color:var(--muted)}.narration{font-family:Georgia,serif;font-size:21px;line-height:1.5;margin:20px 0;max-width:70ch;min-height:32px}.experiment{display:flex;align-items:center;gap:25px;border-top:1px solid var(--border);padding-top:16px}.experiment label{display:block;flex:1;max-width:700px}.experiment label>span{display:flex;justify-content:space-between;font-size:14px;gap:20px}.experiment p{font-size:13px;color:var(--muted);line-height:1.5}.experiment button{font-size:13px}.status{color:var(--muted);font-size:13px;margin:8px 0 0}.provenance{font-size:14px}.source-details li,.provenance ol{font-size:13px;color:var(--muted);line-height:1.7}.source-details h3{margin-top:10px}footer{margin-bottom:6px}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}@media(max-width:850px){.intro h1{font-size:36px}.comparison-grid{grid-template-columns:minmax(0,1fr)}.stage{max-height:480px}.chapters{grid-template-columns:repeat(2,minmax(0,1fr))}.player{padding:16px}.narration{font-size:20px}.experiment{gap:12px;flex-wrap:wrap}.experiment label{min-width:210px}.experiment p{margin:0}.plate-foot{min-height:58px}}@media(max-width:460px){.intro h1{font-size:32px}.transport output{margin-left:0}.transport{gap:6px}.download{margin-left:auto}.chapters button{padding:8px;font-size:12px;gap:6px}.plate>header{padding:16px}.plate-foot{padding-inline:16px;gap:8px}.plate-foot strong{font-size:12px}.stage{aspect-ratio:640/460}.narration{font-size:19px}.recording-tag{max-width:120px;text-align:center;line-height:1.4}}
+:root {
+  --paper: #f7f6f3;
+  --ink: #24372f;
+  --muted: #59665d;
+  background: var(--paper);
+}
+main {
+  max-width: 1450px;
+}
+.intro {
+  display: block;
+  margin: 32px 0 28px;
+}
+.intro > .eyebrow {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 11px;
+}
+.intro h1 {
+  font-size: 42px;
+  max-width: 24ch;
+  margin-bottom: 12px;
+  line-height: 1.12;
+}
+.intro p {
+  font-size: 16px;
+}
+.comparison-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 22px;
+}
+.plate > header {
+  display: block;
+  padding: 18px 22px;
+}
+.plate .eyebrow {
+  display: block;
+  margin-bottom: 7px;
+}
+.plate header p {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 7px 0 0;
+  line-height: 1.5;
+}
+.plate.film {
+  border-color: #a1b395;
+}
+.stage {
+  position: relative;
+  aspect-ratio: 640/460;
+  border-block: 1px solid var(--border);
+  overflow: hidden;
+  background: #faf9f4;
+}
+.stage .anatomy-canvas {
+  position: absolute;
+  inset: 0;
+}
+.motion-scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.plate-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 62px;
+  padding: 8px 20px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.plate-foot strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 550;
+}
+.plate-foot button {
+  margin-left: auto;
+  font-size: 12px;
+  background: none;
+  border-color: transparent;
+  text-decoration: underline;
+}
+.player {
+  margin-top: 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fffefa;
+  padding: 18px 22px;
+}
+.transport {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.primary {
+  background: #2d4b3d !important;
+  color: white !important;
+  border-color: #2d4b3d !important;
+  min-width: 126px;
+  font-weight: 550;
+}
+.primary:hover {
+  background: #233b30 !important;
+}
+.transport output {
+  margin-left: auto;
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.download {
+  color: var(--ink);
+  font-size: 13px;
+  padding: 12px;
+  text-underline-offset: 3px;
+  min-height: 44px;
+}
+.sound {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  min-height: 44px;
+  padding-inline: 6px;
+  cursor: pointer;
+}
+.sound input {
+  width: 18px;
+  height: 18px;
+  accent-color: #3b5a46;
+}
+.scrubber {
+  display: block;
+  margin-top: 5px;
+}
+.scrubber input,
+.experiment input {
+  width: 100%;
+  height: 44px;
+  accent-color: #52734f;
+  margin: 0;
+  cursor: pointer;
+}
+.chapters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+.chapters button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  text-align: left;
+  line-height: 1.4;
+}
+.chapters span {
+  font-size: 10px;
+  font-family: ui-monospace, monospace;
+  color: var(--muted);
+}
+.narration {
+  font-family: Georgia, serif;
+  font-size: 21px;
+  line-height: 1.5;
+  margin: 20px 0;
+  max-width: 70ch;
+  min-height: 32px;
+}
+.experiment {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.experiment label {
+  display: block;
+  flex: 1;
+  max-width: 700px;
+}
+.experiment label > span {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  gap: 20px;
+}
+.experiment p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.experiment button {
+  font-size: 13px;
+}
+.status {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+.provenance {
+  font-size: 14px;
+}
+.source-details li,
+.provenance ol {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.source-details h3 {
+  margin-top: 10px;
+}
+footer {
+  margin-bottom: 6px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+@media (max-width: 850px) {
+  .intro h1 {
+    font-size: 36px;
+  }
+  .comparison-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .stage {
+    max-height: 480px;
+  }
+  .chapters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .player {
+    padding: 16px;
+  }
+  .narration {
+    font-size: 20px;
+  }
+  .experiment {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .experiment label {
+    min-width: 210px;
+  }
+  .experiment p {
+    margin: 0;
+  }
+  .plate-foot {
+    min-height: 58px;
+  }
+}
+@media (max-width: 460px) {
+  .intro h1 {
+    font-size: 32px;
+  }
+  .transport output {
+    margin-left: 0;
+  }
+  .transport {
+    gap: 6px;
+  }
+  .download {
+    margin-left: auto;
+  }
+  .chapters button {
+    padding: 8px;
+    font-size: 12px;
+    gap: 6px;
+  }
+  .plate > header {
+    padding: 16px;
+  }
+  .plate-foot {
+    padding-inline: 16px;
+    gap: 8px;
+  }
+  .plate-foot strong {
+    font-size: 12px;
+  }
+  .stage {
+    aspect-ratio: 640/460;
+  }
+  .narration {
+    font-size: 19px;
+  }
+  .recording-tag {
+    max-width: 120px;
+    text-align: center;
+    line-height: 1.4;
+  }
+}

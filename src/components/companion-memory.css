@@ -72,7 +72,7 @@
   color: var(--muted);
   font-size: 13px;
 }
-.companion-memory [role="alert"] {
+.companion-memory [role='alert'] {
   color: var(--ink);
   padding: 12px;
   border: 1px solid var(--control-border);

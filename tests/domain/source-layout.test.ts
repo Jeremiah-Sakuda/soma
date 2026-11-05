@@ -28,11 +28,14 @@ describe('source graph layout', () => {
   it('refuses incomplete or indistinguishable placements', () => {
     expect(fitSourcePositions(['A', 'B', 'G'], slide)).toBeNull();
     expect(
-      fitSourcePositions(['A', 'B', 'C'], [
-        { nodeId: 'A', x: 0, y: 0 },
-        { nodeId: 'B', x: 1, y: 0 },
-        { nodeId: 'C', x: 1.01, y: 0 },
-      ]),
+      fitSourcePositions(
+        ['A', 'B', 'C'],
+        [
+          { nodeId: 'A', x: 0, y: 0 },
+          { nodeId: 'B', x: 1, y: 0 },
+          { nodeId: 'C', x: 1.01, y: 0 },
+        ],
+      ),
     ).toBeNull();
   });
   it('places a fresh source layout, otherwise keeps the previous revision, never changing the graph', () => {

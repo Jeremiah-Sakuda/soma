@@ -1,13 +1,53 @@
-import {beforeEach,it,expect,vi} from 'vitest';
-import {requireSameOrigin} from '../../src/lib/server/http';
-import {encodeVoiceWav} from '../../src/lib/domain/voice-audio';
-import {ExplorationError} from '../../src/lib/server/exploration-types';
-const mocks=vi.hoisted(()=>({resolve:vi.fn(),speak:vi.fn()}));
-vi.mock('../../src/lib/server/exploration-store',()=>({assertExplorationOrigin:requireSameOrigin,resolveExplorationPrincipal:mocks.resolve,explorationStore:{},revalidateExplorationPrincipal:vi.fn()}));
-vi.mock('../../src/lib/server/gemini-speech',async original=>({...await original<typeof import('../../src/lib/server/gemini-speech')>(),speakExploration:mocks.speak}));
-import {POST} from '../../src/app/api/explore/speech/route';
-const request=(origin='https://soma.example',body='{}')=>new Request('https://soma.example/api/explore/speech',{method:'POST',headers:{origin,'content-type':'application/json'},body});
-beforeEach(()=>{vi.clearAllMocks();mocks.resolve.mockResolvedValue({principal:{key:'original'}});mocks.speak.mockResolvedValue(encodeVoiceWav(new Float32Array(24000)));});
-it('requires same-origin and existing identity before synthesis',async()=>{expect((await POST(request('https://foreign.invalid'))).status).toBe(403);expect(mocks.resolve).not.toHaveBeenCalled();mocks.resolve.mockRejectedValue(new ExplorationError('account_required'));expect((await POST(request())).status).toBe(401);expect(mocks.speak).not.toHaveBeenCalled();});
-it('returns private uncached WAV without credentials or JSON audio conversion',async()=>{const source=request(),response=await POST(source);expect(response.status).toBe(200);expect(response.headers.get('cache-control')).toBe('private, no-store');expect(response.headers.get('content-type')).toBe('audio/wav');expect(mocks.resolve).toHaveBeenCalledWith(source,{createGuest:false});expect(new Uint8Array(await response.arrayBuffer())).toEqual(encodeVoiceWav(new Float32Array(24000)));});
-it('rejects oversized bodies and sanitizes unexpected provider failures',async()=>{expect((await POST(request(undefined,'x'.repeat(4097)))).status).toBe(400);expect(mocks.speak).not.toHaveBeenCalled();mocks.speak.mockRejectedValue(new Error('private credential'));const response=await POST(request());expect(response.status).toBe(503);expect(await response.text()).not.toContain('private credential');});
+import { beforeEach, it, expect, vi } from 'vitest';
+import { requireSameOrigin } from '../../src/lib/server/http';
+import { encodeVoiceWav } from '../../src/lib/domain/voice-audio';
+import { ExplorationError } from '../../src/lib/server/exploration-types';
+const mocks = vi.hoisted(() => ({ resolve: vi.fn(), speak: vi.fn() }));
+vi.mock('../../src/lib/server/exploration-store', () => ({
+  assertExplorationOrigin: requireSameOrigin,
+  resolveExplorationPrincipal: mocks.resolve,
+  explorationStore: {},
+  revalidateExplorationPrincipal: vi.fn(),
+}));
+vi.mock('../../src/lib/server/gemini-speech', async (original) => ({
+  ...(await original<typeof import('../../src/lib/server/gemini-speech')>()),
+  speakExploration: mocks.speak,
+}));
+import { POST } from '../../src/app/api/explore/speech/route';
+const request = (origin = 'https://soma.example', body = '{}') =>
+  new Request('https://soma.example/api/explore/speech', {
+    method: 'POST',
+    headers: { origin, 'content-type': 'application/json' },
+    body,
+  });
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.resolve.mockResolvedValue({ principal: { key: 'original' } });
+  mocks.speak.mockResolvedValue(encodeVoiceWav(new Float32Array(24000)));
+});
+it('requires same-origin and existing identity before synthesis', async () => {
+  expect((await POST(request('https://foreign.invalid'))).status).toBe(403);
+  expect(mocks.resolve).not.toHaveBeenCalled();
+  mocks.resolve.mockRejectedValue(new ExplorationError('account_required'));
+  expect((await POST(request())).status).toBe(401);
+  expect(mocks.speak).not.toHaveBeenCalled();
+});
+it('returns private uncached WAV without credentials or JSON audio conversion', async () => {
+  const source = request(),
+    response = await POST(source);
+  expect(response.status).toBe(200);
+  expect(response.headers.get('cache-control')).toBe('private, no-store');
+  expect(response.headers.get('content-type')).toBe('audio/wav');
+  expect(mocks.resolve).toHaveBeenCalledWith(source, { createGuest: false });
+  expect(new Uint8Array(await response.arrayBuffer())).toEqual(
+    encodeVoiceWav(new Float32Array(24000)),
+  );
+});
+it('rejects oversized bodies and sanitizes unexpected provider failures', async () => {
+  expect((await POST(request(undefined, 'x'.repeat(4097)))).status).toBe(400);
+  expect(mocks.speak).not.toHaveBeenCalled();
+  mocks.speak.mockRejectedValue(new Error('private credential'));
+  const response = await POST(request());
+  expect(response.status).toBe(503);
+  expect(await response.text()).not.toContain('private credential');
+});

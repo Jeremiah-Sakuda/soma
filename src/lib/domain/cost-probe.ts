@@ -32,7 +32,10 @@ export function routeCost(input: BfsInput, path: string[] | null): number | null
 }
 /** Shortest distances from one node over the given edges (reversed for distances *to* it). */
 function distancesFrom(input: BfsInput, from: string, reverse = false) {
-  const edges = reverse && input.directed ? input.edges.map((e) => ({ ...e, from: e.to, to: e.from })) : input.edges;
+  const edges =
+    reverse && input.directed
+      ? input.edges.map((e) => ({ ...e, from: e.to, to: e.from }))
+      : input.edges;
   const run = runDijkstra({ ...input, algorithm: 'dijkstra', edges, start: from, goal: null });
   return run.steps.at(-1)?.distances ?? {};
 }
@@ -41,7 +44,11 @@ function distancesFrom(input: BfsInput, from: string, reverse = false) {
  * route starts or stops using it. Any connection qualifies, not only a direct start-goal one:
  * a route through it costs (best distance to one end) + cost + (best distance from the other
  * end), both measured without it, and it competes with the best route avoiding it. */
-export function probeEdgeCost(raw: unknown, edgeId: string, rationale: string | null = null): CostProbe {
+export function probeEdgeCost(
+  raw: unknown,
+  edgeId: string,
+  rationale: string | null = null,
+): CostProbe {
   const input = bfsInputSchema.parse(raw),
     edge = input.edges.find((e) => e.id === edgeId);
   if (!edge || !input.goal) throw new Error('Select an existing edge and goal.');
@@ -54,11 +61,16 @@ export function probeEdgeCost(raw: unknown, edgeId: string, rationale: string | 
     toGoal = distancesFrom(without, goal, true);
   const via = (a: string, b: string) =>
     fromStart[a] === undefined || toGoal[b] === undefined ? Infinity : fromStart[a] + toGoal[b];
-  const through = Math.min(via(edge.from, edge.to), input.directed ? Infinity : via(edge.to, edge.from));
+  const through = Math.min(
+    via(edge.from, edge.to),
+    input.directed ? Infinity : via(edge.to, edge.from),
+  );
   // Keep the same Number precision as the checked traces. Fixed decimal rounding
   // or an absolute epsilon can turn a small, meaningful cost difference into a tie.
-  const rawBoundary = alternativeCost === null || through === Infinity ? null : alternativeCost - through;
-  const criticalCost = rawBoundary !== null && rawBoundary >= 0 && rawBoundary <= 1000000 ? rawBoundary : null;
+  const rawBoundary =
+    alternativeCost === null || through === Infinity ? null : alternativeCost - through;
+  const criticalCost =
+    rawBoundary !== null && rawBoundary >= 0 && rawBoundary <= 1000000 ? rawBoundary : null;
   const name = (id: string) => input.nodes.find((n) => n.id === id)?.label ?? id;
   const link = `${name(edge.from)}–${name(edge.to)}`;
   const values = [
@@ -90,18 +102,18 @@ export function probeEdgeCost(raw: unknown, edgeId: string, rationale: string | 
     criticalCost !== null && originalCost === criticalCost
       ? `At its current cost, a route through ${link} ties the best route avoiding it${criticalCost > 0 ? '; any cheaper and the route uses it' : ''}, any dearer and it avoids it.`
       : criticalCost === 0 && originalCost > 0
-      ? `Even at cost 0, a route through ${link} only ties the best route avoiding it, so raising its cost never brings it onto the route.`
-      : criticalCost !== null
-      ? originalCost < criticalCost
-        ? `The cheapest route uses ${link} while it costs less than ${criticalCost}. At ${criticalCost} the best route avoiding it costs the same; above that, the route avoids it.`
-        : `The cheapest route avoids ${link} until it costs less than ${criticalCost}. At ${criticalCost} both routes cost the same; below that, the route uses it.`
-      : rawBoundary !== null && rawBoundary > 1000000
-        ? `The cheapest route uses ${link} at every cost up to 1,000,000.`
-      : through === Infinity
-        ? `No route from ${name(input.start)} to ${name(goal)} can use ${link}, so its cost never changes the route.`
-        : alternativeCost === null
-          ? `Every route from ${name(input.start)} to ${name(goal)} needs ${link}; its cost changes the total but never the route.`
-          : `Even at cost 0, a route through ${link} costs more than the best route avoiding it, so it never changes the route.`;
+        ? `Even at cost 0, a route through ${link} only ties the best route avoiding it, so raising its cost never brings it onto the route.`
+        : criticalCost !== null
+          ? originalCost < criticalCost
+            ? `The cheapest route uses ${link} while it costs less than ${criticalCost}. At ${criticalCost} the best route avoiding it costs the same; above that, the route avoids it.`
+            : `The cheapest route avoids ${link} until it costs less than ${criticalCost}. At ${criticalCost} both routes cost the same; below that, the route uses it.`
+          : rawBoundary !== null && rawBoundary > 1000000
+            ? `The cheapest route uses ${link} at every cost up to 1,000,000.`
+            : through === Infinity
+              ? `No route from ${name(input.start)} to ${name(goal)} can use ${link}, so its cost never changes the route.`
+              : alternativeCost === null
+                ? `Every route from ${name(input.start)} to ${name(goal)} needs ${link}; its cost changes the total but never the route.`
+                : `Even at cost 0, a route through ${link} costs more than the best route avoiding it, so it never changes the route.`;
   return {
     version: 'cost-probe-v1',
     edgeId,

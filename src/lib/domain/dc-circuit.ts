@@ -21,10 +21,16 @@ export const dcComponentSchema = z.strictObject({
 export const DC_UNITS = { resistor: 'Ω', 'voltage-source': 'V', 'current-source': 'A' } as const;
 /** Allowed magnitudes per kind; resistances must be positive (a wire is a shared node). */
 export const dcValueAllowed = (kind: (typeof DC_KINDS)[number], v: number) =>
-  Number.isFinite(v) && (kind === 'resistor' ? v > 0 && v <= 1e9 : Math.abs(v) <= (kind === 'voltage-source' ? 1e5 : 1e3));
+  Number.isFinite(v) &&
+  (kind === 'resistor'
+    ? v > 0 && v <= 1e9
+    : Math.abs(v) <= (kind === 'voltage-source' ? 1e5 : 1e3));
 export const dcInputSchema = z
   .strictObject({
-    nodes: z.array(z.strictObject({ id: sceneIdSchema, label })).min(2).max(10),
+    nodes: z
+      .array(z.strictObject({ id: sceneIdSchema, label }))
+      .min(2)
+      .max(10),
     ground: sceneIdSchema,
     components: z.array(dcComponentSchema).min(2).max(16),
   })
@@ -37,12 +43,18 @@ export const dcInputSchema = z
     for (const c of input.components) {
       if (ids.has(c.id)) issue('Object IDs must be unique.');
       ids.add(c.id);
-      if (!nodeIds.has(c.from) || !nodeIds.has(c.to)) issue('Component terminals must name circuit nodes.');
+      if (!nodeIds.has(c.from) || !nodeIds.has(c.to))
+        issue('Component terminals must name circuit nodes.');
       if (c.from === c.to) issue('A component must join two different nodes.');
       if (!dcValueAllowed(c.kind, c.value)) issue(`${c.label} has an unsupported value.`);
     }
     if (!input.components.some((c) => c.kind !== 'resistor')) issue('The circuit needs a source.');
-    if (islands(input.nodes.map((n) => n.id), input.components).some((island) => !island.includes(input.ground)))
+    if (
+      islands(
+        input.nodes.map((n) => n.id),
+        input.components,
+      ).some((island) => !island.includes(input.ground))
+    )
       issue('Every node must connect to the rest of the circuit.');
   });
 export type DcInput = z.infer<typeof dcInputSchema>;
@@ -107,21 +119,26 @@ const isZero = (a: Q) => a.n === 0n;
 const eq = (a: Q, b: Q) => a.n === b.n && a.d === b.d;
 const bits = (v: bigint) => (v < 0n ? -v : v).toString(2).length;
 const toNumber = (a: Q) => {
-  const numerator = Number(a.n), denominator = Number(a.d);
+  const numerator = Number(a.n),
+    denominator = Number(a.d);
   if (Number.isFinite(numerator) && Number.isFinite(denominator)) return numerator / denominator;
   // Scale each side independently: shifting both by the larger side's size can turn a
   // small denominator into zero even when the quotient itself is representable.
-  const negative = a.n < 0n, magnitude = negative ? -a.n : a.n;
-  const numeratorShift = Math.max(0, bits(magnitude) - 53), denominatorShift = Math.max(0, bits(a.d) - 53);
-  const ratio = Number(magnitude >> BigInt(numeratorShift)) / Number(a.d >> BigInt(denominatorShift));
+  const negative = a.n < 0n,
+    magnitude = negative ? -a.n : a.n;
+  const numeratorShift = Math.max(0, bits(magnitude) - 53),
+    denominatorShift = Math.max(0, bits(a.d) - 53);
+  const ratio =
+    Number(magnitude >> BigInt(numeratorShift)) / Number(a.d >> BigInt(denominatorShift));
   const exponent = numeratorShift - denominatorShift;
   // Apply the boundary scale last so an intermediate 2**1024 or 2**-1075 cannot
   // overflow/underflow a representable final value (including subnormal numbers).
-  const value = exponent > 1023
-    ? (ratio * 2 ** (exponent - 1023)) * 2 ** 1023
-    : exponent < -1022
-      ? (ratio * 2 ** (exponent + 1074)) * Number.MIN_VALUE
-      : ratio * 2 ** exponent;
+  const value =
+    exponent > 1023
+      ? ratio * 2 ** (exponent - 1023) * 2 ** 1023
+      : exponent < -1022
+        ? ratio * 2 ** (exponent + 1074) * Number.MIN_VALUE
+        : ratio * 2 ** exponent;
   return negative ? -value : value;
 };
 const toText = (a: Q) => (a.d === 1n ? `${a.n}` : `${a.n}/${a.d}`);
@@ -182,12 +199,20 @@ const asRead = (c: DcComponent) => c.value;
 /** Modified nodal analysis. Unknowns are node potentials (one reference per connected island,
  * ground for its own island) and the current through every voltage source or shorted part.
  * `exactValues` overrides values with exact fractions, for tipping points such as 20/3 Ω. */
-function solveExact(input: DcInput, state: DcState, exactValues = new Map<string, Q>()): ExactSolution | null {
+function solveExact(
+  input: DcInput,
+  state: DcState,
+  exactValues = new Map<string, Q>(),
+): ExactSolution | null {
   const open = new Set(state.open),
     shorted = new Set(state.shorted);
   const active = input.components.filter((c) => !open.has(c.id));
-  const value = (c: DcComponent) => exactValues.get(c.id) ?? exactDecimal(state.values[c.id] ?? asRead(c));
-  const groups = islands(input.nodes.map((n) => n.id), active);
+  const value = (c: DcComponent) =>
+    exactValues.get(c.id) ?? exactDecimal(state.values[c.id] ?? asRead(c));
+  const groups = islands(
+    input.nodes.map((n) => n.id),
+    active,
+  );
   const references = new Set(groups.map((g) => (g.includes(input.ground) ? input.ground : g[0])));
   const unknownNodes = input.nodes.map((n) => n.id).filter((id) => !references.has(id));
   const branches = active.filter((c) => c.kind === 'voltage-source' || shorted.has(c.id));
@@ -226,9 +251,15 @@ function solveExact(input: DcInput, state: DcState, exactValues = new Map<string
   });
   const x = size ? solveLinear(A, b) : [];
   if (!x) return null;
-  const potentials = new Map<string, Q>(input.nodes.map((n) => [n.id, index.has(n.id) ? x[index.get(n.id)!] : ZERO]));
+  const potentials = new Map<string, Q>(
+    input.nodes.map((n) => [n.id, index.has(n.id) ? x[index.get(n.id)!] : ZERO]),
+  );
   const grounded = new Set(groups.find((g) => g.includes(input.ground)) ?? []);
-  const section = new Map(groups.flatMap((g) => g.map((id) => [id, g.includes(input.ground) ? input.ground : g[0]] as const)));
+  const section = new Map(
+    groups.flatMap((g) =>
+      g.map((id) => [id, g.includes(input.ground) ? input.ground : g[0]] as const),
+    ),
+  );
   const currents = new Map<string, Q>();
   for (const c of input.components) {
     if (open.has(c.id)) currents.set(c.id, ZERO);
@@ -272,7 +303,9 @@ export function solveDc(raw: unknown, rawState?: Partial<DcState>): DcSolution {
     steps: [],
   });
   if (!exact)
-    return unavailable('No single answer exists: an ideal source is shorted or left with no path for its current.');
+    return unavailable(
+      'No single answer exists: an ideal source is shorted or left with no path for its current.',
+    );
   const { potentials, grounded, section, currents, value } = exact;
   const drop = (c: DcComponent) => sub(potentials.get(c.from)!, potentials.get(c.to)!);
   const open = new Set(state.open),
@@ -280,7 +313,12 @@ export function solveDc(raw: unknown, rawState?: Partial<DcState>): DcSolution {
   const kcl = input.nodes.every((n) =>
     isZero(
       input.components.reduce(
-        (sum, c) => (c.from === n.id ? add(sum, currents.get(c.id)!) : c.to === n.id ? sub(sum, currents.get(c.id)!) : sum),
+        (sum, c) =>
+          c.from === n.id
+            ? add(sum, currents.get(c.id)!)
+            : c.to === n.id
+              ? sub(sum, currents.get(c.id)!)
+              : sum,
         ZERO,
       ),
     ),
@@ -299,11 +337,15 @@ export function solveDc(raw: unknown, rawState?: Partial<DcState>): DcSolution {
     ...input.components.filter((c) => section.get(c.from) === section.get(c.to)).map(drop),
     ...absorbed.values(),
   ];
-  if (displayed.some((quantity) => {
-    const value = toNumber(quantity);
-    return !Number.isFinite(value) || (value === 0 && !isZero(quantity));
-  }))
-    return unavailable('The result is outside the supported numeric range. Try less extreme component values.');
+  if (
+    displayed.some((quantity) => {
+      const value = toNumber(quantity);
+      return !Number.isFinite(value) || (value === 0 && !isZero(quantity));
+    })
+  )
+    return unavailable(
+      'The result is outside the supported numeric range. Try less extreme component values.',
+    );
   const voltages: Record<string, number | null> = {},
     exactVoltages: Record<string, string | null> = {};
   for (const n of input.nodes) {
@@ -311,7 +353,8 @@ export function solveDc(raw: unknown, rawState?: Partial<DcState>): DcSolution {
     voltages[n.id] = v && toNumber(v);
     exactVoltages[n.id] = v && toText(v);
   }
-  const record = <T>(f: (c: DcComponent) => T) => Object.fromEntries(input.components.map((c) => [c.id, f(c)]));
+  const record = <T>(f: (c: DcComponent) => T) =>
+    Object.fromEntries(input.components.map((c) => [c.id, f(c)]));
   return {
     ...base,
     status: 'solved',
@@ -342,9 +385,18 @@ function revealSteps(input: DcInput, potentials: Map<string, Q>, grounded: Set<s
     })
     .map((n) => n.id);
   const revealed = [input.ground];
-  const known = () => input.components.filter((c) => revealed.includes(c.from) && revealed.includes(c.to)).map((c) => c.id);
+  const known = () =>
+    input.components
+      .filter((c) => revealed.includes(c.from) && revealed.includes(c.to))
+      .map((c) => c.id);
   const steps: DcStep[] = [
-    { index: 0, node: null, revealedNodes: [...revealed], revealedComponents: known(), status: order.length ? 'ready' : 'complete' },
+    {
+      index: 0,
+      node: null,
+      revealedNodes: [...revealed],
+      revealedComponents: known(),
+      status: order.length ? 'ready' : 'complete',
+    },
   ];
   for (const id of order) {
     revealed.push(id);
@@ -382,11 +434,21 @@ export type DcProbe = {
 };
 
 const observe = (s: DcSolution, o: DcObservation) =>
-  o.kind === 'voltage' ? s.voltages[o.nodeId] : o.kind === 'current' ? s.currents[o.componentId] : s.power[o.componentId];
-function observeExact(input: DcInput, state: DcState, o: DcObservation, exactValues?: Map<string, Q>): Q | null {
+  o.kind === 'voltage'
+    ? s.voltages[o.nodeId]
+    : o.kind === 'current'
+      ? s.currents[o.componentId]
+      : s.power[o.componentId];
+function observeExact(
+  input: DcInput,
+  state: DcState,
+  o: DcObservation,
+  exactValues?: Map<string, Q>,
+): Q | null {
   const exact = solveExact(input, state, exactValues);
   if (!exact) return null;
-  if (o.kind === 'voltage') return exact.grounded.has(o.nodeId) ? exact.potentials.get(o.nodeId)! : null;
+  if (o.kind === 'voltage')
+    return exact.grounded.has(o.nodeId) ? exact.potentials.get(o.nodeId)! : null;
   const current = exact.currents.get(o.componentId)!;
   if (o.kind === 'current') return current;
   const c = input.components.find((x) => x.id === o.componentId)!;
@@ -410,18 +472,31 @@ export function probeDcValue(
   if (!component || state.open.includes(componentId) || state.shorted.includes(componentId))
     throw new Error('Choose a connected component to vary.');
   const observedId = observation.kind === 'voltage' ? observation.nodeId : observation.componentId;
-  if (!(observation.kind === 'voltage' ? input.nodes : input.components).some((x) => x.id === observedId))
+  if (
+    !(observation.kind === 'voltage' ? input.nodes : input.components).some(
+      (x) => x.id === observedId,
+    )
+  )
     throw new Error('Observe a part of this circuit.');
   if (
     condition === 'maximum-power' &&
-    !(observation.kind === 'power' && observation.componentId === componentId && component.kind === 'resistor')
+    !(
+      observation.kind === 'power' &&
+      observation.componentId === componentId &&
+      component.kind === 'resistor'
+    )
   )
     throw new Error('Maximum power applies to the varied resistor itself.');
   if (observation.kind === 'power' && typeof condition === 'object')
-    throw new Error('Ask for power to vanish or peak; ask about a current or voltage reaching a value.');
+    throw new Error(
+      'Ask for power to vanish or peak; ask about a current or voltage reaching a value.',
+    );
   // The power fit below uses P = I²R. An ideal source instead absorbs V·I, so its
   // power can vanish while its current is unchanged. Keep this bounded probe to resistors.
-  if (observation.kind === 'power' && input.components.find((c) => c.id === observation.componentId)!.kind !== 'resistor')
+  if (
+    observation.kind === 'power' &&
+    input.components.find((c) => c.id === observation.componentId)!.kind !== 'resistor'
+  )
     throw new Error('Power investigations require a resistor.');
   const resistor = component.kind === 'resistor';
   const unit = DC_UNITS[component.kind];
@@ -429,7 +504,9 @@ export function probeDcValue(
   const allowed = (p: Q) => (!resistor || p.n > 0n) && dcValueAllowed(component.kind, toNumber(p));
   const at = (p: Q) => new Map([[componentId, p]]);
   const name = (id: string) =>
-    input.components.find((c) => c.id === id)?.label ?? input.nodes.find((n) => n.id === id)?.label ?? id;
+    input.components.find((c) => c.id === id)?.label ??
+    input.nodes.find((n) => n.id === id)?.label ??
+    id;
   const quantity =
     observation.kind === 'voltage'
       ? `the voltage at ${name(observation.nodeId)}`
@@ -437,9 +514,13 @@ export function probeDcValue(
   const Quantity = quantity[0].toUpperCase() + quantity.slice(1);
   // Power is the current squared times the resistance, so fit the current and reason from it.
   const fitted: DcObservation =
-    observation.kind === 'power' ? { kind: 'current', componentId: observation.componentId } : observation;
+    observation.kind === 'power'
+      ? { kind: 'current', componentId: observation.componentId }
+      : observation;
   const p0 = exactDecimal(originalValue);
-  const samples = resistor ? [p0, mul(p0, q(2n)), div(p0, q(2n))] : [p0, add(p0, ONE), add(p0, q(2n))];
+  const samples = resistor
+    ? [p0, mul(p0, q(2n)), div(p0, q(2n))]
+    : [p0, add(p0, ONE), add(p0, q(2n))];
   const ys = samples.map((p) => observeExact(input, state, fitted, at(p)));
   let critical: Q | null = null,
     note = '';
@@ -449,7 +530,8 @@ export function probeDcValue(
     if (!fit) {
       // A fixed current through the varied resistor still makes its power grow with R.
       // It has no finite peak (and no zero for R > 0), rather than constant power.
-      const growingPower = observation.kind === 'power' && observation.componentId === componentId && !isZero(ys[0]!);
+      const growingPower =
+        observation.kind === 'power' && observation.componentId === componentId && !isZero(ys[0]!);
       note = growingPower
         ? condition === 'maximum-power'
           ? `No resistance for ${name(componentId)} gives it a power peak; its current stays fixed, so power rises with resistance.`
@@ -461,7 +543,9 @@ export function probeDcValue(
     else {
       const target = condition === 'zero' ? ZERO : exactDecimal(condition.equals);
       const denominator = sub(fit.beta, mul(target, fit.delta));
-      critical = isZero(denominator) ? null : div(sub(mul(target, fit.gamma), fit.alpha), denominator);
+      critical = isZero(denominator)
+        ? null
+        : div(sub(mul(target, fit.gamma), fit.alpha), denominator);
     }
     if (critical && !allowed(critical)) critical = null;
   }
@@ -494,7 +578,10 @@ export function probeDcValue(
             : `No allowed value of ${name(componentId)} makes ${quantity} equal ${trim(condition.equals)}.`;
   }
   const around = criticalValue ?? originalValue;
-  const values = [originalValue, ...(resistor ? [around / 2, around, around * 2] : [around - 1, around, around + 1])];
+  const values = [
+    originalValue,
+    ...(resistor ? [around / 2, around, around * 2] : [around - 1, around, around + 1]),
+  ];
   const cases = [...new Set(values.map((v) => Number(v.toPrecision(12))))]
     .filter((v) => dcValueAllowed(component.kind, v))
     .sort((a, b) => a - b)

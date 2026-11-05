@@ -2,9 +2,7 @@ import { expect, it } from 'vitest';
 import { readExplorationStream } from '../../src/lib/client/exploration-stream';
 
 function response(events: unknown[], stride = 19) {
-  const bytes = new TextEncoder().encode(
-    events.map((e) => JSON.stringify(e)).join('\n') + '\n',
-  );
+  const bytes = new TextEncoder().encode(events.map((e) => JSON.stringify(e)).join('\n') + '\n');
   return new Response(
     new ReadableStream({
       start(c) {

@@ -75,26 +75,23 @@ export async function POST(request: Request) {
     const body = await readJsonBody(request, 1_460_000);
     const action = z
       .object({
-        action: z.enum([
-          'generate',
-          'cancel',
-          'example',
-          'recording',
-          'prediction',
-          'application',
-        ]),
+        action: z.enum(['generate', 'cancel', 'example', 'recording', 'prediction', 'application']),
       })
       .safeParse(body);
     if (!action.success) throw new ExplorationError('invalid_request');
     if (action.data.action === 'recording') {
-      const parsed = z.strictObject({
-        action: z.literal('recording'),
-        mechanism: z.boolean().optional(),
-        subject: z.enum(['graph', 'circuit']).optional(),
-      }).refine((value) => !(value.mechanism && value.subject)).safeParse(body);
-      if (!parsed.success)
-        throw new ExplorationError('invalid_request');
-      return response(await explorationService.recording(principal, parsed.data.mechanism, parsed.data.subject));
+      const parsed = z
+        .strictObject({
+          action: z.literal('recording'),
+          mechanism: z.boolean().optional(),
+          subject: z.enum(['graph', 'circuit']).optional(),
+        })
+        .refine((value) => !(value.mechanism && value.subject))
+        .safeParse(body);
+      if (!parsed.success) throw new ExplorationError('invalid_request');
+      return response(
+        await explorationService.recording(principal, parsed.data.mechanism, parsed.data.subject),
+      );
     }
     if (action.data.action === 'application')
       return response(await explorationService.application(principal, body));

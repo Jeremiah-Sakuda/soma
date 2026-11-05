@@ -1,91 +1,21 @@
-# Production readiness and operations
+# Deployment and operational checks
 
-## Current visual-exploration release — October 29, 2026 (P084)
+The hosted browser experience and signed macOS companion are independent deliverables. A successful source build is not proof of deployment parity or native permission acceptance.
 
-The primary `/explore` experience is deployed from commit `e1d3fc0` using a clean archive. Its default hosted compiler passed. Actual hosted synthetic verification passed image→Spark→checked scene, exact Firestore state resume, contextual comparison, earlier-version recovery, cross-guest/cross-origin denial, cancellation-before-registration and owned deletion. See [SOMA_V2_VALIDATION.md](SOMA_V2_VALIDATION.md) for current checks and limitations.
+## Before deploying
 
-The total test cap is $5 under P084, with the shared consumption/reservation ledger and $30 reserve unchanged. The existing v1 recurring GitHub worker is parked (`SOMA_WORKER_ENABLED=false` repository variable) under the back-burner direction; its connected source selections and stored credentials remain preserved. The authenticated worker endpoint still exists but is not invoked by this v2 verification. Re-enable recurring v1 processing only as a deliberate follow-up with its consent/budget boundary reviewed. Guest exploration TTL is ACTIVE; deletion is asynchronous. The earlier v1 beta record below is historical and does not establish complete course collection for v2.
+- Use managed Firestore for hosted persistence, server credentials and the checked-in deny-client rules. Keep all Admin/provider credentials server-only.
+- Set the actual Meta allocation, cumulative spend cap, live-inference flag and desired review setting. Admission and spending limits can stop live generation; prepared/recorded examples must remain distinguishable and usable.
+- Configure optional voice/browser/credential workers only after their isolated authentication and deployment checks pass. Course setup must not block exploration.
+- Run types, unit/service tests, desktop policies, production build, isolated trace and browser journeys. Validate the runtime manifest and check excluded/private paths.
+- Compare the hosted `/release.json` with the intended source manifest after deployment; a hosting READY status alone does not establish content parity.
 
-October 26, 2026 — bounded private beta. This is an implementation and verification record, not a claim that every PRD release gate has passed. Deployment evidence is recorded below. P032 explicitly authorized selected-source production processing. A direct authenticated worker check passed; the recurring GitHub fallback is enabled and its verification result is recorded below.
+## Runtime behavior
 
-## Runtime boundaries
+A request has bounded calls, time and a spend reservation. Cancellation, unknown provider usage, review failure and stale version publication have separate outcomes. Never clear a shared budget ledger to make a demonstration work. Show the actual allowance and retain the last usable artifact.
 
-- Vercel hosts the Next.js application and bounded HTTP workers; Firestore is the durable system of record. A local SQLite file is used only in explicit synthetic development mode. Browserbase runs the remote browser separately from the application.
-- Firebase verifies sign-in sessions with revocation checks. HTTP actions, stored records, connections, jobs, model tools and publication enforce the authenticated owner. Scheduled work uses a separate constant-time Bearer check and a short-lived server capability reconstructed only from stored account roots, verified Firebase users and the current workspace generation. The worker cannot accept a client-supplied identity or workspace selector.
-- Each source version, lesson version, original attempt, assistance record and interpretation remains individually addressable. Updates use workspace compare-and-swap. Atomic operations have a 450-record write ceiling; source imports and collection are bounded. This is a semester-sized beta store, not a measured high-concurrency service. Loading a workspace currently reads its retained records; large-account load testing and pagination remain scaling work.
-- Source tools are read-only and scoped. Connector secrets use AES-256-GCM bound to the owner, workspace generation and connection. Login/MFA stays in the provider's private browser. Google grants are read-only; collection requires selected mail queries/calendar or supported exact course URLs. A successful authorization is distinct from a successful content read.
-- Generated specifications cannot execute arbitrary code. Spark chooses bounded tools; deterministic models, citation/reference validation, current versions, assistance constraints and transactional publication enforce the execution boundary. The circuit family remains a development preview until course fit and independent review pass.
-- Durable preparation/adaptation jobs have idempotent identities, leases and bounded attempts. A saved diagnostic response and its adaptation outbox entry share one Firestore transaction. Post-response dispatch reduces latency; scheduled recovery handles interrupted execution. Source reconciliation recovers saved current sources whose job enqueue did not complete.
+Guest workspaces have bounded retention and ownership; private-account data uses managed storage. Source freshness, provider authorization, actual read success and prepared model output remain distinct states. Existing scheduled course processing is a separate route from explicit screen exploration.
 
-## Scheduling and capacity
+## Distribution
 
-`POST /api/internal/worker` accepts no parameters and requires the private `SOMA_WORKER_SECRET`, with `SOMA_WORKER_ENABLED=true`. Each tick scans a bounded page from a persisted account cursor, performs at most one refresh/preparation/adaptation task, and holds an overlap lease. Due source checks target six hours; retry/backoff, account fairness, budget limits and deployment availability can delay them. No open browser is required.
-
-The GitHub workflow `.github/workflows/soma-worker.yml` is a fallback: every 15 minutes, at most two bounded ticks, serialized per repository. [GitHub schedules are best-effort and can be delayed](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule); this is not a production timing SLA. Repository variables `SOMA_WORKER_ENABLED=true` and `SOMA_WORKER_URL=https://soma-woad-beta.vercel.app/api/internal/worker` activate it; the shared secret is an encrypted Actions secret. Its private-repository runner allowance must be watched. Trigger.dev credentials remain a prerequisite for the intended dedicated scheduler deployment; do not claim it is configured from placeholders. The current Google project has billing disabled, so Cloud Scheduler has not been provisioned.
-
-Worker controls are stored under `somaWorker/scheduled`; account schedule state is under `somaAccounts/{hashed uid}/workerState/schedule`. Inspect aggregate completion/outcome metadata and queued/failed jobs, not source bodies or secrets. HTTP200 means a tick completed; distinguish `processed`, `deferred`, `busy`, `idle` and cycle completion. A deferred job is not a generated lesson.
-
-## Deployment checklist and recovery
-
-1. Run `npm run check:config` with the ignored local environment. This prints pass/fail names only. It does not prove production environment parity, source authorization or provider balance. Production uses encrypted `FIREBASE_SERVICE_ACCOUNT_JSON`; a local credential path is not valid on Vercel.
-2. Run `npm run check` and `npm run test:e2e`. Opt-in Firestore/provider cases are separate; report their actual flags, results and cleanup. Scripted transport tests verify boundary behavior, not model quality.
-3. Deploy with `vercel deploy --prod --yes`, wait for READY and the production alias, then verify the entrance, account isolation, forbidden worker access and an authenticated bounded tick. A changed environment value applies only after a new deployment.
-4. Check remote CI for the committed revision. Do not count a prior revision's CI result as current.
-
-For an incident, disable the repository scheduler variable and set `SOMA_WORKER_ENABLED=false` in Vercel, then redeploy. To stop inference independently set `SOMA_LIVE_INFERENCE=false` and redeploy; saved lessons remain available. Preserve reservations of unknown usage, original evidence and failure records. Never reset spending records to create headroom. The authorized application cap is $2 total, with the user-confirmed $150 allocation and $30 reserve; it is not an unlimited operating allowance.
-
-Revert a defective commit and deploy the known revision; retain the durable schema's backward compatibility. Deployment rollback alone does not undo a Firestore mutation. Deletion tombstones/generation checks prevent an old worker from recreating or publishing into a deleted/recreated workspace. Account deletion removes owned subcollections in guarded batches. For database recovery, preserve the affected records and use a deliberate owner-scoped repair; automated backup/PITR is not configured in the current no-billing project.
-
-Rotate a worker secret in both Vercel and Actions and redeploy before enabling the scheduler again. Disconnect/reconnect provider authorizations when rotating their grant. Do not replace `SOMA_CONNECTOR_ENCRYPTION_KEY` while saved grants exist without a migration: it makes them unreadable. Never copy credentials or private source/learner records into fixtures, public logs or a support issue.
-
-## Remaining acceptance boundaries
-
-Actual BU Blackboard, Gradescope, Piazza, Gmail and Calendar reads must be verified after connection, including expiry/reconnection and unchanged refresh. Supported URL/read policies may reject provider pages; the text/import fallback remains available. General returned-work image/PDF interpretation, criteria-based open-response grading, comprehensive concept/prerequisite mapping and model-directed external computer use are not implemented by the text collector. Model-selected academic date/coverage publication currently requires owner-confirmed typed source metadata; arbitrary prose extraction remains needs-evidence.
-
-Independent scientific/instructional review, broader held-out reliability, genuine later learning checks, multiple real student journeys and institution coverage cannot be replaced by mocked responses or synthetic scenarios. These remain release gates even if infrastructure tests pass. Do not label all remaining work cosmetic before these checks are complete.
-
-## Executed evidence
-
-- Browserbase key-only project discovery reached the actual service and found exactly one accessible project, without starting a course session or printing identifiers. Browser policy/lifecycle checks: 33 passed.
-- Production dependency audit: `npm audit --omit=dev --json` returned zero known advisories at this checkpoint. This is advisory coverage, not a security certification.
-- Final local verification: typecheck, optimized Next build, 327 default tests and all 19 browser journeys passed. Opt-in tests are distinct from default counts; the final default run skips 25 cases after adding the hosted probe.
-- Managed worker integration passed against final source policy and stable ordering in 47.72s: two disposable users, fair dispatch, overlap/lease exclusion, source races, missing enqueue recovery, budget refusal, disabled/deleted accounts and generation safety. No actual Meta/source-provider calls; cleanup completed and global ledger unchanged.
-- Managed adaptation integration passed against final strict evidence consent in 43.08s: actual response/outbox transaction, restart, automatic worker publication, stale/new-answer rejection, isolation, privacy transport and disabled-during-inference rejection. Only Meta transport was scripted; cleanup completed.
-- Stable ordering passed with 1,000 retained lessons, unchanged historical document updateTimes, insertions/moves, and a separate Node-process reload and further insertion (38.1s). This verifies retained-history correctness; it is not a throughput/load SLA.
-- Runtime `8ff0b47` deployed READY as `dpl_Ast47Du1rWhB4XX5mfSjMhdQchaX`, aliased at https://soma-woad-beta.vercel.app. The $2 cap and encrypted Browserbase/worker configuration are active in this deployment.
-- Hosted worker preflight returned 401 for missing/wrong Bearer and 400 for an account-selector body. The initial general tick was rejected by automatic approval review and did not execute. P032 subsequently supplied explicit approval for selected-source processing within the $2 cap. The newly authorized production check returned HTTP200/idle, scanning one active account with no due work. The GitHub recurring fallback is now enabled; its first verification is recorded below. This does not establish an actual institutional source read.
-- Hosted automatic adaptation passed once in 21.15s using one disposable synthetic account, a clearly authored prepared initial diagnostic and actual Meta follow-up. Posting the original response alone triggered processing; only Firestore readback observed completion, with no UI, investigation POST or manual worker call. Ready job, linked live hypothesis revisions, one settled reservation and unchanged original response passed. Both user/workspace were deleted. Cost $0.03165825; reconciled global ledger $0.80650275/$2. This is dispatch/persistence proof, not evidence of a newly generated second lesson or real learning benefit. Calls/decision detail from the initial console were suppressed; the record does not reconstruct them.
-- GitHub CI run `40410283634` passed for implementation/test checkpoint `8d24a5f`, including clean install, Firebase module compatibility, typecheck, all default tests, production build and the complete remote browser suite. Subsequent documentation-only evidence does not change the deployed runtime.
-- Final production entrance smoke passed: root/auth/workspace HTTP200; zero workspace reads before explicit demo choice, one afterward; no page errors or unexpected mutations; DELETE200 cleanup.
-
-### P032 recurring processing activation
-
-The user's explicit approval supersedes the earlier activation hold. The direct authenticated check passed HTTP200/idle/scanned1. GitHub variable `SOMA_WORKER_ENABLED=true` is active; [workflow 40413385697](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40413385697) passed with idle/scanned0/cycleComplete true. Firestore aggregate confirms two completed ticks and idle outcome. No selected work was due; this establishes deployed invocation and scheduler authentication, not actual connector access. Application usage stayed $0.80650275/$2. The recurring workflow runs every 15 minutes, best-effort, under the existing selected-source and budget controls. Trigger.dev remains undeployed.
-
-### P034 progressive AI auditability
-
-Runtime `00eb4b1` deployed READY as `dpl_49WFE1KpromZZ5WZCpTWabaG7nh6` at the canonical alias. [AI auditability](AI_AUDITABILITY.md) documents actual support, protected explanations/export, retention, failure handling and the distinction between application observations and model-stated purposes. These are not hidden-reasoning transcripts or a tamper-evident forensic log. All direct/preparation/adaptation model paths and selected-source refreshes now create owned durable journals. No new source permission or budget was added.
-
-Typecheck, optimized build, 364 default tests (27 opt-in skipped) and all 23 browser journeys passed. Real Firestore audit lifecycle/pagination/isolation/deletion and indexed demo-expiry cleanup passed 2/2 in 10.41s, with no Meta calls. A five-second journal confirmation deadline halts further inference; post-commit confirmation failure preserves saved work with an explicit incomplete-audit notice. Source-refresh job handoff can recover from durable observations. Scheduler housekeeping uses a bounded deadline and reports deferred cleanup independently of source work.
-
-The hosted synthetic model/audit check passed in 12.56s: actual live progress before completion, protected in-flight model text, two real Spark calls, application commit and usage events, recorded short stated purposes, same projection in JSON export, cross-session denial, durable readback and zero-call cache reuse. Both disposable sessions were deleted. Estimated settled charge $0.01678750; aggregate application ledger $0.82329025/$2. This verifies the deployed source-only no-effect investigation and journal, not real institutional access or diagnostic learning benefit. Discarded diagnostic protection and version/context/race disclosure were verified separately with scripted transport and actual persistence.
-
-Final managed worker/adaptation regression passed 2/2 in 67.47s against real Firebase after the publication-revision guard was added: original synthetic accounts, scripted Meta boundaries and fixture cleanup; no new inference charge.
-
-See [remaining user work](USER_REMAINING_WORK.md) for source selections, content review, optional Trigger setup and submission inputs. Existing independent-review, real-source and held-out/learner gates remain open.
-
-GitHub CI [40418506341](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40418506341) passed for `19f0af3` with the full default/build/browser checks. Later evidence-only documentation does not change the deployed runtime `00eb4b1`.
-
-### P037 architecture iteration and hero documentation
-
-The three selected refactors are implemented: typed execution-failure facts and durable job causes (`7a2ecae`), concentrated audited publication across four entry points (`40d7724`), and shared journal policy over actual Firestore/synthetic SQLite adapters (`a60b31a`). Caller authentication, automatic-source consent, original responses, source versions, generation/revision/lease checks, budgets, quota and protected disclosure remain enforced. No storage migration, index change or new retry category is required.
-
-Failures during journal cleanup no longer suppress durable job recovery. Confirmation failure after an actual commit preserves the activity and ready job; interactive requests receive an incomplete-audit notice, and background work surfaces the failure to the worker without relabeling saved work. Bounded structured causes remain in failed/retrying jobs independently of display text. The safe classification facts do not contain provider payloads or raw reasoning.
-
-Executed checks: typecheck, optimized build, 397 default tests (34 opt-in skipped), 23 browser journeys, seven shared journal contract cases against each real store plus two managed identity/expiry cases (16 total, 15.46s), and final real Firestore worker/adaptation tests (2/2, 57.02s). Provider transport in the managed job tests was scripted and no private source was processed. The initial browser run exhausted the old shared synthetic database's 200-session quota; per-run temporary storage and guarded cleanup fixed repeatability (`44cb761`), preserving the app limit. Runtime checkpoint `c0cf2fb` is deployed READY as `dpl_B2NvPz7wHvZiawp8v9moyVzwxeg9` at https://soma-woad-beta.vercel.app.
-
-The hero storyboard is now the returned-work diagnostic sequence in [Demo and Evaluation](DEMO_AND_EVALUATION.md). This documentation decision does not implement missing image/PDF input, region evidence or model-directed navigation, confirm a real-course model family, or waive evaluation gates. R12's product behavior remains; its video role is brief or in the judge route.
-
-Hosted confirmation passed once in 14.39s using two disposable synthetic demo sessions: one actual source-only Spark investigation, live protected audit progress, recorded stated purpose, confirmed publication/usage, matching owner export, cross-session denial, managed readback and zero-call reuse. Two calls settled $0.01670325; aggregate app usage $0.83999350/$2. Both sessions deleted. This verifies the deployed consolidated path, not vision, institutional access or learning benefit. No extra retry or budget increase was used.
-
-GitHub CI [40421572121](https://github.com/Jeremiah-Sakuda/soma/actions/runs/40421572121) passed for deployed checkpoint `c0cf2fb`: clean install, module restrictions, typecheck, default suite, production build and complete browser suite. Subsequent evidence-only documentation does not modify the deployed runtime.
+Use [0.5.0 Latest](https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.5.0) for current native lifts. Its exact notarization and checksum are in [verification](VERIFICATION.md). A locally built unsigned app is not that distribution artifact. Clean-Mac installation, physical capture/shortcut permissions, multi-display/fullscreen behavior and audible narration require separate acceptance.

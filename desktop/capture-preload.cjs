@@ -71,15 +71,9 @@ window.addEventListener('soma:point-feedback', (event) => {
     !isExploration() ||
     !payload ||
     payload.id !== pointInteraction ||
-    ![
-      'recording',
-      'transcribing',
-      'generating',
-      'ready',
-      'error',
-      'cancelled',
-      'partial',
-    ].includes(payload.state)
+    !['recording', 'transcribing', 'generating', 'ready', 'error', 'cancelled', 'partial'].includes(
+      payload.state,
+    )
   )
     return;
   ipcRenderer.send('desktop:point-feedback', {
@@ -121,13 +115,15 @@ ipcRenderer.on('desktop:source-highlight-result', (_event, d) => {
 window.addEventListener('soma:screen-overlay', (event) => {
   const d = event.detail;
   if (!isExploration() || !d || d.id !== sourceInteraction) return;
-  if (d.model !== null && (typeof d.model !== 'object' || JSON.stringify(d.model).length > 60000)) return;
+  if (d.model !== null && (typeof d.model !== 'object' || JSON.stringify(d.model).length > 60000))
+    return;
   ipcRenderer.send('desktop:screen-overlay', { id: d.id, model: d.model });
 });
 // The page may ask for its on-screen drawing to lift into 3D or set back down.
 window.addEventListener('soma:screen-overlay-view', (event) => {
   const d = event.detail;
-  if (!isExploration() || !d || d.id !== sourceInteraction || !['2d', '3d'].includes(d.view)) return;
+  if (!isExploration() || !d || d.id !== sourceInteraction || !['2d', '3d'].includes(d.view))
+    return;
   ipcRenderer.send('desktop:screen-overlay-view', { id: d.id, view: d.view });
 });
 ipcRenderer.on('desktop:screen-overlay-action', (_event, d) => {
@@ -155,7 +151,9 @@ ipcRenderer.on('desktop:screen-overlay-result', (_event, d) => {
           shown: d.shown === true,
           dismissed: d.dismissed === true,
           ...(d.view === '3d' || d.view === '2d' ? { view: d.view } : {}),
-          ...(['changed', 'moved', 'webgl', 'sheet', 'checking', 'cleared'].includes(d.reason) ? { reason: d.reason } : {}),
+          ...(['changed', 'moved', 'webgl', 'sheet', 'checking', 'cleared'].includes(d.reason)
+            ? { reason: d.reason }
+            : {}),
         },
       }),
     );
@@ -167,7 +165,11 @@ ipcRenderer.on('desktop:compact', (_event, d) => {
   if (!isExploration() || !d || !COMPACT_ACTIONS.includes(d.action)) return;
   window.dispatchEvent(
     new CustomEvent('soma:compact', {
-      detail: { action: d.action, ...(typeof d.text === 'string' ? { text: d.text.slice(0, 1000) } : {}), ...(typeof d.on === 'boolean' ? { on: d.on } : {}) },
+      detail: {
+        action: d.action,
+        ...(typeof d.text === 'string' ? { text: d.text.slice(0, 1000) } : {}),
+        ...(typeof d.on === 'boolean' ? { on: d.on } : {}),
+      },
     }),
   );
 });

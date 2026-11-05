@@ -1,5 +1,13 @@
 'use client';
-import { DC_UNITS, dcValueAllowed, probeDcValue, solveDc, type DcInput, type DcProbe, type DcState } from '@/lib/domain/dc-circuit';
+import {
+  DC_UNITS,
+  dcValueAllowed,
+  probeDcValue,
+  solveDc,
+  type DcInput,
+  type DcProbe,
+  type DcState,
+} from '@/lib/domain/dc-circuit';
 import { circuitQuantity } from '@/lib/domain/exploration-view';
 
 /** Muse chose one part of the circuit; Soma computed exactly where the watched quantity tips.
@@ -26,14 +34,28 @@ export function ExplorationCircuitProbe({
   // Recompute under the current experiment: other opened parts or values change the answer.
   let current = probe;
   try {
-    current = probeDcValue(input, state, probe.componentId, probe.observe, probe.condition, probe.rationale);
+    current = probeDcValue(
+      input,
+      state,
+      probe.componentId,
+      probe.observe,
+      probe.condition,
+      probe.rationale,
+    );
   } catch {
     // A saved boundary is not evidence for changed values that cannot be evaluated.
-    return <p className="meta">This experiment cannot be checked at the current component values. Adjust a value to try again.</p>;
+    return (
+      <p className="meta">
+        This experiment cannot be checked at the current component values. Adjust a value to try
+        again.
+      </p>
+    );
   }
   const unit = DC_UNITS[part.kind];
   const name = (id: string) =>
-    input.components.find((c) => c.id === id)?.label ?? input.nodes.find((n) => n.id === id)?.label ?? id;
+    input.components.find((c) => c.id === id)?.label ??
+    input.nodes.find((n) => n.id === id)?.label ??
+    id;
   const watched =
     current.observe.kind === 'voltage'
       ? `the voltage at ${name(current.observe.nodeId)}`
@@ -59,10 +81,13 @@ export function ExplorationCircuitProbe({
     const o = current.observe;
     if (o.kind === 'voltage') {
       const v = solved.voltages[o.nodeId];
-      return v === null ? `${name(o.nodeId)} is cut off from ground.` : `Voltage at ${name(o.nodeId)}: ${circuitQuantity(v, 'V')}`;
+      return v === null
+        ? `${name(o.nodeId)} is cut off from ground.`
+        : `Voltage at ${name(o.nodeId)}: ${circuitQuantity(v, 'V')}`;
     }
     const c = input.components.find((x) => x.id === o.componentId)!;
-    if (o.kind === 'power') return `Power in ${c.label}: ${circuitQuantity(solved.power[c.id], 'W')}`;
+    if (o.kind === 'power')
+      return `Power in ${c.label}: ${circuitQuantity(solved.power[c.id], 'W')}`;
     const i = solved.currents[c.id];
     // Only an exact zero is zero. Small currents, including residue from a rounded
     // non-terminating tipping value, retain their computed magnitude and direction.
@@ -72,7 +97,10 @@ export function ExplorationCircuitProbe({
   })();
   const nudge = (direction: number, big: boolean) => {
     const step = resistor ? Math.max(value * (big ? 0.1 : 0.01), 1e-6) : big ? 1 : 0.1;
-    const next = Math.min(top, Math.max(bottom, Number((value + direction * step).toPrecision(10))));
+    const next = Math.min(
+      top,
+      Math.max(bottom, Number((value + direction * step).toPrecision(10))),
+    );
     if (dcValueAllowed(part.kind, next)) onChange(next);
   };
   return (
@@ -90,7 +118,10 @@ export function ExplorationCircuitProbe({
       )}
       <p>Change only {part.label}. Soma re-solves the whole circuit at every value.</p>
       <label htmlFor="circuit-probe-value">
-        {part.label}: <strong>{Number(value.toPrecision(4))} {unit}</strong>
+        {part.label}:{' '}
+        <strong>
+          {Number(value.toPrecision(4))} {unit}
+        </strong>
       </label>
       <input
         id="circuit-probe-value"
@@ -115,18 +146,25 @@ export function ExplorationCircuitProbe({
         <strong>{reading}</strong>
       </p>
       {critical !== null && (
-        <button type="button" className="secondary-button" disabled={disabled} onClick={() => onChange(critical)}>
+        <button
+          type="button"
+          className="secondary-button"
+          disabled={disabled}
+          onClick={() => onChange(critical)}
+        >
           Try the tipping point at {Number(critical.toPrecision(6))} {unit}
         </button>
       )}
       <p>{current.note}</p>
       {current.verified && critical !== null && (
         <p className="meta">
-          Verified: Soma re-solved the circuit with {part.label} at exactly {current.criticalExact} {unit}, and the
-          condition held exactly.
+          Verified: Soma re-solved the circuit with {part.label} at exactly {current.criticalExact}{' '}
+          {unit}, and the condition held exactly.
         </p>
       )}
-      <p className="meta">Hypothetical change to this captured circuit. Your source is unchanged.</p>
+      <p className="meta">
+        Hypothetical change to this captured circuit. Your source is unchanged.
+      </p>
     </section>
   );
 }

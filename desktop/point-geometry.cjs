@@ -11,9 +11,7 @@ function selectFocus(samples, bounds) {
     bounds.height <= 0
   )
     throw Error('No pointing context');
-  const points = samples
-    .slice(-192)
-    .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
+  const points = samples.slice(-192).filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
   if (
     !points.length ||
     points.some(
@@ -37,8 +35,7 @@ function selectFocus(samples, bounds) {
       height = Math.max(...ys) - y;
     if (width < 24 || height < 24) continue;
     const diagonal = Math.hypot(width, height),
-      closed =
-        Math.hypot(path[0].x - last.x, path[0].y - last.y) <= Math.max(16, diagonal * 0.25);
+      closed = Math.hypot(path[0].x - last.x, path[0].y - last.y) <= Math.max(16, diagonal * 0.25);
     let area = 0,
       length = 0;
     for (let i = 0; i < path.length; i++) {

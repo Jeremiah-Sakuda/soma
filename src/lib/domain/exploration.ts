@@ -9,8 +9,22 @@ import {
   type BfsExecution,
   type BfsInput,
 } from './graph-search';
-import { dcInputSchema, dcValueAllowed, solveDc, DC_MODEL_ID, DC_MODEL_VERSION, type DcInput, type DcSolution } from './dc-circuit';
-import { graphControlsSchema, defaultGraphControls, validateGraphControls, applyGraphControls, applyComparisonGraphControls } from './graph-state';
+import {
+  dcInputSchema,
+  dcValueAllowed,
+  solveDc,
+  DC_MODEL_ID,
+  DC_MODEL_VERSION,
+  type DcInput,
+  type DcSolution,
+} from './dc-circuit';
+import {
+  graphControlsSchema,
+  defaultGraphControls,
+  validateGraphControls,
+  applyGraphControls,
+  applyComparisonGraphControls,
+} from './graph-state';
 export { bfsInputSchema, runBfs, BFS_MODEL_ID, BFS_MODEL_VERSION } from './graph-search';
 export { DC_MODEL_ID, DC_MODEL_VERSION } from './dc-circuit';
 export type { DcInput, DcSolution } from './dc-circuit';
@@ -191,7 +205,10 @@ export const explorationSpecSchema = z.discriminatedUnion('mode', [
       .optional(),
     scene,
     steps: z.array(step).min(1).max(12),
-    controls: z.array(z.enum(['step', 'replay', 'open-component', 'set-value'])).min(1).max(4),
+    controls: z
+      .array(z.enum(['step', 'replay', 'open-component', 'set-value']))
+      .min(1)
+      .max(4),
     followups: z.array(text).max(4),
   }),
 ]);
@@ -207,7 +224,8 @@ export type CheckedExploration = {
       | 'checked-circuit'
       | 'explanation-only'
       | 'needs-clarification';
-    modelVersion: typeof BFS_MODEL_VERSION | 'dijkstra-nonnegative-v1' | typeof DC_MODEL_VERSION | null;
+    modelVersion:
+      typeof BFS_MODEL_VERSION | 'dijkstra-nonnegative-v1' | typeof DC_MODEL_VERSION | null;
     checks: string[];
   };
   executions: { primary: BfsExecution; comparison?: BfsExecution } | null;
@@ -284,7 +302,9 @@ export function validateExplorationSpec(raw: unknown): ExplorationSpec {
         (spec.writtenFor.open.length && !spec.controls.includes('open-component')) ||
         (Object.keys(spec.writtenFor.values).length && !spec.controls.includes('set-value')) ||
         spec.writtenFor.open.some((id) => !parts.has(id)) ||
-        Object.entries(spec.writtenFor.values).some(([id, v]) => !parts.has(id) || !dcValueAllowed(parts.get(id)!.kind, v)) ||
+        Object.entries(spec.writtenFor.values).some(
+          ([id, v]) => !parts.has(id) || !dcValueAllowed(parts.get(id)!.kind, v),
+        ) ||
         experiment.status !== 'solved'
       )
         reject('Step references an unavailable checked state.');
@@ -294,9 +314,7 @@ export function validateExplorationSpec(raw: unknown): ExplorationSpec {
   }
   for (const id of objects.keys()) addId(id);
   const executions: { primary: BfsExecution; comparison?: BfsExecution } | null =
-    spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra'
-      ? graphExecutions(spec)
-      : null;
+    spec.mode === 'checked-bfs' || spec.mode === 'checked-dijkstra' ? graphExecutions(spec) : null;
   if (spec.scene.panels.filter((panel) => panel.kind === 'spatial').length > 1)
     reject('Only one spatial workspace is supported.');
   for (const panel of spec.scene.panels) {
@@ -457,11 +475,23 @@ export function checkExploration(raw: unknown): CheckedExploration {
   };
 }
 
-function graphExecutions(spec: Extract<ExplorationSpec, { mode: 'checked-bfs' | 'checked-dijkstra' }>) {
-  const controls = validateGraphControls(spec.input, spec.writtenFor ?? defaultGraphControls(spec.input), spec.controls);
+function graphExecutions(
+  spec: Extract<ExplorationSpec, { mode: 'checked-bfs' | 'checked-dijkstra' }>,
+) {
+  const controls = validateGraphControls(
+    spec.input,
+    spec.writtenFor ?? defaultGraphControls(spec.input),
+    spec.controls,
+  );
   return {
     primary: runBfs(applyGraphControls(spec.input, controls)),
-    ...(spec.comparison ? { comparison: runBfs(applyComparisonGraphControls(spec.input, spec.comparison.input, controls)) } : {}),
+    ...(spec.comparison
+      ? {
+          comparison: runBfs(
+            applyComparisonGraphControls(spec.input, spec.comparison.input, controls),
+          ),
+        }
+      : {}),
   };
 }
 

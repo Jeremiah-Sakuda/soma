@@ -18,25 +18,19 @@
       </header>
       <p id="app"></p>
       <p>
-        Optional computer control. Review Muse’s whole plan before Soma moves
-        the cursor, presses a control, replaces a field or sends a navigation
-        key. Enter passwords and payment details yourself. Soma never submits
-        coursework.
+        Optional computer control. Review Muse’s whole plan before Soma moves the cursor, presses a
+        control, replaces a field or sends a navigation key. Enter passwords and payment details
+        yourself. Soma never submits coursework.
       </p>
       <details>
         <summary>Controls shared with Muse</summary>
         <ul id="controls"></ul>
       </details>
       <label for="goal">What should Soma do in this app?</label
-      ><textarea
-        id="goal"
-        maxlength="1000"
-        rows="3"
-        placeholder="Go to the next slide"
-      ></textarea>
+      ><textarea id="goal" maxlength="1000" rows="3" placeholder="Go to the next slide"></textarea>
       <p>
-        Only this task, control labels and prior approved steps are sent. No
-        screenshot, existing field values or secure fields are sent.
+        Only this task, control labels and prior approved steps are sent. No screenshot, existing
+        field values or secure fields are sent.
       </p>
       <button id="plan">Ask Muse for a plan</button>
       <section aria-labelledby="plan-heading" id="plan-section" hidden>
@@ -45,16 +39,15 @@
         <ol id="steps"></ol>
         <div id="approve-block">
           <label id="approval"
-            ><input type="checkbox" id="consent" /> I approve these exact steps
-            in this app. Steps marked “needs its own approval” will pause for a
-            separate confirmation.</label
+            ><input type="checkbox" id="consent" /> I approve these exact steps in this app. Steps
+            marked “needs its own approval” will pause for a separate confirmation.</label
           ><button id="approve" disabled>Approve and run plan</button>
         </div>
         <div id="confirm-block" hidden>
           <p id="confirm-text"></p>
           <label id="step-approval"
-            ><input type="checkbox" id="step-consent" /> I approve this step,
-            including its send, submit, delete or purchase effect.</label
+            ><input type="checkbox" id="step-consent" /> I approve this step, including its send,
+            submit, delete or purchase effect.</label
           >
           <div class="row">
             <button id="confirm-step" disabled>Run this step</button

@@ -2,11 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { createRequire } from 'node:module';
 import { solveDc } from '../../src/lib/domain/dc-circuit';
 import { circuitOverlayModel } from '../../src/lib/domain/circuit-overlay-model';
-import { captionIsGrounded, circuitCaption, circuitExactQuantity } from '../../src/lib/domain/exploration-view';
+import {
+  captionIsGrounded,
+  circuitCaption,
+  circuitExactQuantity,
+} from '../../src/lib/domain/exploration-view';
 import { heroCircuit, heroCircuitLayout } from '../fixtures/hero-circuit';
 
 const require = createRequire(import.meta.url);
-const { validOverlayModel } = require('../../desktop/screen-overlay.cjs') as { validOverlayModel: (m: unknown) => boolean };
+const { validOverlayModel } = require('../../desktop/screen-overlay.cjs') as {
+  validOverlayModel: (m: unknown) => boolean;
+};
 const model = (state = {}, index = 99) => {
   const solution = solveDc(heroCircuit, state);
   return circuitOverlayModel({
@@ -46,7 +52,9 @@ describe('a checked circuit drawn over its own slide', () => {
     expect(tags['current-V1'].text).toBe('12 V battery: 3 A ↑');
     expect(m.edges.find((e) => e.id === 'R5')!.tone).toBe('idle');
     expect(m.edges.find((e) => e.id === 'R1')!.tone).toBe('path');
-    expect(m.caption!.text).toContain('R₅ carries no current: both its ends are at the same voltage.');
+    expect(m.caption!.text).toContain(
+      'R₅ carries no current: both its ends are at the same voltage.',
+    );
     expect(m.final).toBe(true);
   });
 
@@ -85,7 +93,9 @@ describe('a checked circuit drawn over its own slide', () => {
 
   it('gives the real reason a source with an intact loop carries nothing', () => {
     const off = solveDc(heroCircuit, { values: { V1: 0 } });
-    expect(off.steps.map((_, i) => circuitCaption(off, i)).join(' ')).toContain('12 V battery is set to 0, so it drives no current.');
+    expect(off.steps.map((_, i) => circuitCaption(off, i)).join(' ')).toContain(
+      '12 V battery is set to 0, so it drives no current.',
+    );
   });
 });
 

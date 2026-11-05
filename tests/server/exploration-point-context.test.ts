@@ -7,10 +7,7 @@ import {
   createExplorationService,
   generateExplorationSchema,
 } from '../../src/lib/server/exploration';
-import {
-  closeExplorationStore,
-  explorationStore,
-} from '../../src/lib/server/exploration-store';
+import { closeExplorationStore, explorationStore } from '../../src/lib/server/exploration-store';
 import { createExampleExploration } from '../../src/lib/domain/exploration';
 import type { MetaResult } from '../../src/lib/server/meta-client';
 import type { ExplorationPrincipal } from '../../src/lib/server/exploration-types';
@@ -117,9 +114,7 @@ it('passes explicit focus into vision and composition, persists its exact source
   expect((await service.read(owner, original.id, 1)).active!.source.focus).toEqual(focus);
   expect((await explorationStore.read(owner))!.artifacts[0]).toEqual(original);
   expect(
-    readFileSync(join(directory, 'point.sqlite')).includes(
-      Buffer.from('ORIGINAL_SYNTHETIC_ONLY'),
-    ),
+    readFileSync(join(directory, 'point.sqlite')).includes(Buffer.from('ORIGINAL_SYNTHETIC_ONLY')),
   ).toBe(false);
   expect(JSON.stringify(await explorationStore.read(owner))).not.toContain('data:image');
   await service.initialize(principal('b'));
@@ -131,22 +126,18 @@ it.each([
   { kind: 'point', region: { x: 0.9, y: 0, width: 0.2, height: 0.1 } },
   { kind: 'circle', region: { x: 0, y: 0, width: 0, height: 0.1 } },
   { kind: 'point', region: { x: 0, y: 0, width: 0.1, height: 0.1 }, path: [{ x: 1, y: 2 }] },
-])(
-  'rejects out-of-bounds, degenerate and raw-trajectory input before generation: %j',
-  (bad) => {
-    const request = input();
-    expect(
-      generateExplorationSchema.safeParse({
-        ...request,
-        source: { ...request.source, focus: bad },
-      }).success,
-    ).toBe(false);
-  },
-);
+])('rejects out-of-bounds, degenerate and raw-trajectory input before generation: %j', (bad) => {
+  const request = input();
+  expect(
+    generateExplorationSchema.safeParse({
+      ...request,
+      source: { ...request.source, focus: bad },
+    }).success,
+  ).toBe(false);
+});
 it('does not attach pointing observations to an authored example', () => {
   const r = input();
   expect(
-    generateExplorationSchema.safeParse({ ...r, source: { ...r.source, kind: 'example' } })
-      .success,
+    generateExplorationSchema.safeParse({ ...r, source: { ...r.source, kind: 'example' } }).success,
   ).toBe(false);
 });

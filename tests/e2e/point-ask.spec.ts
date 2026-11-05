@@ -171,10 +171,7 @@ async function setup(
   });
   await page.goto('/explore');
   await openMoreExamples(page);
-  await page
-    .getByRole('button', { name: 'Try the original example', exact: true })
-    .first()
-    .click();
+  await page.getByRole('button', { name: 'Try the original example', exact: true }).first().click();
   await page.getByRole('heading', { name: 'Original graph', exact: true }).waitFor();
   const source = await page.evaluate(() => {
     const c = document.createElement('canvas');
@@ -203,12 +200,7 @@ async function setup(
     },
   };
 }
-async function native(
-  page: Page,
-  type: string,
-  id = first,
-  extra: Record<string, unknown> = {},
-) {
+async function native(page: Page, type: string, id = first, extra: Record<string, unknown> = {}) {
   await page.evaluate(
     (d) => window.dispatchEvent(new CustomEvent('soma:point-ask', { detail: d })),
     { type, id, ...extra },
@@ -251,7 +243,7 @@ test('point-and-ask joins source and prepared browser audio, submits once, prese
   await expect(page.getByLabel('Selected circle region')).toBeVisible();
   await native(page, 'end');
   await expect.poll(() => h.calls.filter((c) => c.action === 'generate').length).toBe(1);
-  const pendingSource = page.getByRole('figure', {name:'Source being explained'});
+  const pendingSource = page.getByRole('figure', { name: 'Source being explained' });
   await expect(pendingSource).toBeVisible();
   await expect(pendingSource.getByLabel('Selected circle region')).toBeVisible();
   await expect(pendingSource.getByRole('img')).toBeVisible();
@@ -260,9 +252,7 @@ test('point-and-ask joins source and prepared browser audio, submits once, prese
   expect(sent.question).toBe('Why this connection?');
   expect(sent).not.toHaveProperty('artifactId');
   expect(h.audio[0]).toBeGreaterThan(0);
-  await expect(
-    page.getByRole('heading', { name: 'Original graph', exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Original graph', exact: true })).toBeVisible();
   await h.completeGeneration();
   await expect(
     page.getByRole('heading', { name: 'Pointed connection', exact: true }),
@@ -274,9 +264,7 @@ test('point-and-ask joins source and prepared browser audio, submits once, prese
   await expect(
     page.getByRole('heading', { name: 'Pointed connection', exact: true }),
   ).toBeVisible();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-    true,
-  );
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: '/tmp/soma-pm077-pointed-native.png' });
 });
 test('a cancelled late transcript cannot submit or replace the current visual', async ({
@@ -295,18 +283,14 @@ test('a cancelled late transcript cannot submit or replace the current visual', 
   await h.completeTranscript();
   await page.waitForTimeout(200);
   expect(h.calls.some((c) => c.action === 'generate')).toBe(false);
-  await expect(
-    page.getByRole('heading', { name: 'Original graph', exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Original graph', exact: true })).toBeVisible();
 });
 test('release during microphone permission cleans up a late permission result without sending audio', async ({
   page,
 }) => {
   const h = await setup(page, { pendingPermission: true });
   await native(page, 'begin');
-  await expect
-    .poll(() => page.evaluate(() => !!(window as any).__pointTest.resolve))
-    .toBe(true);
+  await expect.poll(() => page.evaluate(() => !!(window as any).__pointTest.resolve)).toBe(true);
   await native(page, 'end');
   await page.evaluate(() => (window as any).__pointTest.resolve());
   await expect
@@ -327,9 +311,7 @@ test('a stale source and release from an earlier interaction are ignored', async
   });
   await native(page, 'cancel', second);
   expect(h.calls.some((c) => c.action === 'generate')).toBe(false);
-  await expect(
-    page.getByRole('heading', { name: 'Original graph', exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Original graph', exact: true })).toBeVisible();
 });
 test.afterEach(async ({ page }, info) => {
   if (info.status !== info.expectedStatus)
@@ -368,41 +350,130 @@ test('a press and release in the same render cannot leave an orphaned point sess
   expect(h.calls.some((c) => c.action === 'generate')).toBe(false);
 });
 
-test('choosing an upload during a hold cancels native audio and ignores its late context', async ({page}) => {
-  const h=await setup(page);
-  await native(page,'begin');
-  await expect.poll(()=>page.evaluate(()=>(window as any).__pointTest.recorder?.state)).toBe('recording');
-  await page.getByLabel('Upload a PNG or JPEG screenshot',{exact:true}).setInputFiles({name:'Replacement.jpg',mimeType:'image/jpeg',buffer:Buffer.from(h.source.split(',')[1],'base64')});
-  await expect.poll(()=>page.evaluate(()=>(window as any).__pointTest.stops)).toBeGreaterThan(0);
-  await expect.poll(()=>page.evaluate(()=>(window as any).__pointTest.feedback.some((e:any)=>e.state==='cancelled'))).toBe(true);
-  await native(page,'end');
-  await native(page,'source',first,{dataUrl:h.source,focus,canPointBack:true,capturedAt:'2026-10-30T12:00:00Z'});
-  expect(h.calls.some(c=>c.action==='generate')).toBe(false);
-  await expect(page.getByText('Replacement.jpg',{exact:true})).toBeVisible();
+test('choosing an upload during a hold cancels native audio and ignores its late context', async ({
+  page,
+}) => {
+  const h = await setup(page);
+  await native(page, 'begin');
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__pointTest.recorder?.state))
+    .toBe('recording');
+  await page.getByLabel('Upload a PNG or JPEG screenshot', { exact: true }).setInputFiles({
+    name: 'Replacement.jpg',
+    mimeType: 'image/jpeg',
+    buffer: Buffer.from(h.source.split(',')[1], 'base64'),
+  });
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__pointTest.stops))
+    .toBeGreaterThan(0);
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (window as any).__pointTest.feedback.some((e: any) => e.state === 'cancelled'),
+      ),
+    )
+    .toBe(true);
+  await native(page, 'end');
+  await native(page, 'source', first, {
+    dataUrl: h.source,
+    focus,
+    canPointBack: true,
+    capturedAt: '2026-10-30T12:00:00Z',
+  });
+  expect(h.calls.some((c) => c.action === 'generate')).toBe(false);
+  await expect(page.getByText('Replacement.jpg', { exact: true })).toBeVisible();
 });
 
-test('source regions stay attached to the capture and a later native capture carries its exact earlier image',async({page})=>{
- const h=await setup(page);let firstImage='';const generated:any[]=[];
- await page.route('**/api/explore',async route=>{if(route.request().method()!=='POST'||route.request().postDataJSON().action!=='generate')return route.fallback();const b=route.request().postDataJSON();generated.push(b);const a=artifact(second,'Grounded visual',b.source.focus);a.version=generated.length;a.spec.version=a.version;a.source.capturedAt=b.source.capturedAt;(a.source as any).anchors=[{id:'source-region',label:'Original connection',region:focus.region}];if(a.spec.mode!=='clarify')a.spec.steps[0].sourceHighlightIds=['source-region'];if(generated.length===1)firstImage=b.source.dataUrl;else{expect(b.previousImage).toBe(firstImage);expect(b.artifactId).toBe(second);expect(b.baseVersion).toBe(1);(a.source as any).change={relationship:'same-material',summary:'No source content changed.',changed:[],uncertainty:[]};}await route.fulfill({json:{artifact:a}});});
- await begin(page);await native(page,'end');await native(page,'source',first,{dataUrl:h.source,focus,canPointBack:true,capturedAt:'2026-10-30T12:00:00Z'});
- await expect(page.getByRole('heading',{name:'Grounded visual',exact:true})).toBeVisible();
- // Source-region visibility follows the authored step, not the separate trace step.
- // Force a valid later-playback state that the original assertion did not account for.
- await page.getByRole('button',{name:'Replay from start',exact:true}).click();
- await expect(page.getByRole('button',{name:'Play explanation',exact:true})).toBeVisible();
- await page.getByText('Explanation & checked state',{exact:true}).click();
- const lastAuthoredStep=page.locator('.exploration-explanation-steps button').last();
- await lastAuthoredStep.click();
- await expect(lastAuthoredStep).toHaveAttribute('aria-current','step');
- await page.getByText('See on source · 1 model-located region',{exact:true}).click();
- await expect(page.locator('.exploration-grounding-region')).toHaveCount(0);
- await expect(page.getByRole('button',{name:'Point on screen',exact:true})).toBeDisabled();
- const region=page.getByRole('button',{name:'Original connection',exact:true});
- await region.click();
- await expect(region).toHaveAttribute('aria-pressed','true');
- await expect(page.locator('.exploration-grounding-region')).toHaveCount(1);
- await expect(page.getByRole('button',{name:'Point on screen',exact:true})).toBeEnabled();
- await page.evaluate(()=>window.addEventListener('soma:source-highlight',(e:any)=>{(window as any).__sourcePoint=e.detail;}));await page.getByRole('button',{name:'Point on screen',exact:true}).click();expect(await page.evaluate(()=>(window as any).__sourcePoint.id)).toBe(first);
- await page.evaluate(id=>window.dispatchEvent(new CustomEvent('soma:source-highlight-result',{detail:{id,shown:false}})),first);await expect(page.getByText(/The screen changed or this capture expired/)).toBeVisible();
- await native(page,'begin',second);await expect.poll(()=>page.evaluate(()=>(window as any).__pointTest.recorder?.state)).toBe('recording');await native(page,'end',second);await native(page,'source',second,{dataUrl:h.source,focus,capturedAt:'2026-10-30T12:01:00Z'});await expect(page.getByText('No source content changed.',{exact:false})).toBeVisible();await page.getByText('Compare captures',{exact:true}).click();await expect(page.getByRole('img',{name:'Earlier captured source',exact:true})).toBeVisible();await expect(page.getByRole('img',{name:'Current captured source',exact:true})).toBeVisible();expect(generated).toHaveLength(2);
+test('source regions stay attached to the capture and a later native capture carries its exact earlier image', async ({
+  page,
+}) => {
+  const h = await setup(page);
+  let firstImage = '';
+  const generated: any[] = [];
+  await page.route('**/api/explore', async (route) => {
+    if (route.request().method() !== 'POST' || route.request().postDataJSON().action !== 'generate')
+      return route.fallback();
+    const b = route.request().postDataJSON();
+    generated.push(b);
+    const a = artifact(second, 'Grounded visual', b.source.focus);
+    a.version = generated.length;
+    a.spec.version = a.version;
+    a.source.capturedAt = b.source.capturedAt;
+    (a.source as any).anchors = [
+      { id: 'source-region', label: 'Original connection', region: focus.region },
+    ];
+    if (a.spec.mode !== 'clarify') a.spec.steps[0].sourceHighlightIds = ['source-region'];
+    if (generated.length === 1) firstImage = b.source.dataUrl;
+    else {
+      expect(b.previousImage).toBe(firstImage);
+      expect(b.artifactId).toBe(second);
+      expect(b.baseVersion).toBe(1);
+      (a.source as any).change = {
+        relationship: 'same-material',
+        summary: 'No source content changed.',
+        changed: [],
+        uncertainty: [],
+      };
+    }
+    await route.fulfill({ json: { artifact: a } });
+  });
+  await begin(page);
+  await native(page, 'end');
+  await native(page, 'source', first, {
+    dataUrl: h.source,
+    focus,
+    canPointBack: true,
+    capturedAt: '2026-10-30T12:00:00Z',
+  });
+  await expect(page.getByRole('heading', { name: 'Grounded visual', exact: true })).toBeVisible();
+  // Source-region visibility follows the authored step, not the separate trace step.
+  // Force a valid later-playback state that the original assertion did not account for.
+  await page.getByRole('button', { name: 'Replay from start', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Play explanation', exact: true })).toBeVisible();
+  await page.getByText('Explanation & checked state', { exact: true }).click();
+  const lastAuthoredStep = page.locator('.exploration-explanation-steps button').last();
+  await lastAuthoredStep.click();
+  await expect(lastAuthoredStep).toHaveAttribute('aria-current', 'step');
+  await page.getByText('See on source · 1 model-located region', { exact: true }).click();
+  await expect(page.locator('.exploration-grounding-region')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Point on screen', exact: true })).toBeDisabled();
+  const region = page.getByRole('button', { name: 'Original connection', exact: true });
+  await region.click();
+  await expect(region).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.exploration-grounding-region')).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Point on screen', exact: true })).toBeEnabled();
+  await page.evaluate(() =>
+    window.addEventListener('soma:source-highlight', (e: any) => {
+      (window as any).__sourcePoint = e.detail;
+    }),
+  );
+  await page.getByRole('button', { name: 'Point on screen', exact: true }).click();
+  expect(await page.evaluate(() => (window as any).__sourcePoint.id)).toBe(first);
+  await page.evaluate(
+    (id) =>
+      window.dispatchEvent(
+        new CustomEvent('soma:source-highlight-result', { detail: { id, shown: false } }),
+      ),
+    first,
+  );
+  await expect(page.getByText(/The screen changed or this capture expired/)).toBeVisible();
+  await native(page, 'begin', second);
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__pointTest.recorder?.state))
+    .toBe('recording');
+  await native(page, 'end', second);
+  await native(page, 'source', second, {
+    dataUrl: h.source,
+    focus,
+    capturedAt: '2026-10-30T12:01:00Z',
+  });
+  await expect(page.getByText('No source content changed.', { exact: false })).toBeVisible();
+  await page.getByText('Compare captures', { exact: true }).click();
+  await expect(
+    page.getByRole('img', { name: 'Earlier captured source', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('img', { name: 'Current captured source', exact: true }),
+  ).toBeVisible();
+  expect(generated).toHaveLength(2);
 });

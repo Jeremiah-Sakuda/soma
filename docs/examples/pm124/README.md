@@ -22,7 +22,6 @@ The diagram remains illustrative. No pressure, force, thermodynamic or scored-ph
 - TypeScript, standalone Vite build,1920×1080 export/frame/codec/duration and served-MP4 SHA matching the current render receipt passed. Canonical product remains PM118,263files/SHA `195d3d553598638a63403e84534d7196f76aa165d48d415178273f844f32d8d1`.
 - Actual in-app inspection entered presentation view, selected0.5× narration/repeat near713°, observed the loop return into intake, paused and changed the crank to425°. Final visual inspection/screenshot captures the finished presentation. No fresh native Mac verification is claimed.
 
-Private evidence: `.local/pm124/browser-final-r2.log`, `offline-final.log`, `unit-r1.log`, `typecheck-final-r2.log`, `export-final.log`, `runtime-unchanged.json`, `render/frames/00425.png`, final in-app screenshot. The previous presentation is preserved in commit9982244.
 
 ## Reproduce
 

@@ -10,19 +10,33 @@ const [artifactPath, slidePath, outArg] = process.argv.slice(2);
 const out = path.resolve(outArg || '.local/model-harness');
 (async () => {
   fs.mkdirSync(out, { recursive: true });
-  const { build } = await import(require.resolve('rolldown', { paths: [path.resolve(__dirname, '../..')] }));
+  const { build } = await import(
+    require.resolve('rolldown', { paths: [path.resolve(__dirname, '../..')] })
+  );
   const bundle = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'soma-scene-')), 'scene.cjs');
-  await build({ input: path.join(__dirname, 'scene-from-artifact.ts'), resolve: { alias: { '@': path.resolve(__dirname, '../../src') } }, output: { file: bundle, format: 'cjs' }, logLevel: 'silent' });
+  await build({
+    input: path.join(__dirname, 'scene-from-artifact.ts'),
+    resolve: { alias: { '@': path.resolve(__dirname, '../../src') } },
+    output: { file: bundle, format: 'cjs' },
+    logLevel: 'silent',
+  });
   const { overlayFor, circuitOverlay } = require(bundle);
   // "circuit" renders the Lecture 9 bridge's voltage lift instead of a saved explanation.
   const circuit = artifactPath === 'circuit';
-  const { spec, state } = circuit ? { spec: { mode: 'checked-circuit' }, state: {} } : JSON.parse(fs.readFileSync(artifactPath, 'utf8'));
+  const { spec, state } = circuit
+    ? { spec: { mode: 'checked-circuit' }, state: {} }
+    : JSON.parse(fs.readFileSync(artifactPath, 'utf8'));
   const slide = fs.readFileSync(slidePath).toString('base64');
-  const W = Number(process.env.W || 1280), H = Number(process.env.H || 720);
-  const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  const W = Number(process.env.W || 1280),
+    H = Number(process.env.H || 720);
+  const browser = await chromium.launch({
+    args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
+  });
   const errors = [];
   try {
-    const page = await (await browser.newContext({ viewport: { width: W, height: H }, bypassCSP: true })).newPage();
+    const page = await (
+      await browser.newContext({ viewport: { width: W, height: H }, bypassCSP: true })
+    ).newPage();
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     await page.addInitScript(() => {
@@ -34,46 +48,116 @@ const out = path.resolve(outArg || '.local/model-harness');
           await new Promise((r) => requestAnimationFrame(r));
         }
       };
-      window.somaPointOverlay = { onDraw: (cb) => (window.__draw = cb), hover: (on) => (window.__hover = on), toggleEdge() {}, select: (id) => (window.__selected = id), liftFailed: (r) => (window.__liftFailed = r ?? true) };
+      window.somaPointOverlay = {
+        onDraw: (cb) => (window.__draw = cb),
+        hover: (on) => (window.__hover = on),
+        toggleEdge() {},
+        select: (id) => (window.__selected = id),
+        liftFailed: (r) => (window.__liftFailed = r ?? true),
+      };
     });
     await page.goto(pathToFileURL(path.join(__dirname, '../point-overlay.html')).href);
-    await page.addStyleTag({ content: `html{background:#fff url(data:image/png;base64,${slide}) 0 0/100% 100% no-repeat}` });
+    await page.addStyleTag({
+      content: `html{background:#fff url(data:image/png;base64,${slide}) 0 0/100% 100% no-repeat}`,
+    });
     const display = { x: 0, y: 0, width: W, height: H };
     // FOCUS=x,y,w,h (fractions of the slide) stands in for the region the learner pointed at.
-    const focus = process.env.FOCUS ? (([x, y, width, height]) => ({ x, y, width, height }))(process.env.FOCUS.split(',').map(Number)) : undefined;
+    const focus = process.env.FOCUS
+      ? (([x, y, width, height]) => ({ x, y, width, height }))(
+          process.env.FOCUS.split(',').map(Number),
+        )
+      : undefined;
     // The same search for clear edges the page does, on a small copy of the slide.
-    const inkData = process.env.FOCUS ? await page.evaluate(async (src) => {
-      const img = new Image();
-      img.src = src;
-      await img.decode();
-      const width = 512, height = Math.round((width * img.naturalHeight) / img.naturalWidth), c = document.createElement('canvas');
-      c.width = width; c.height = height;
-      const g = c.getContext('2d');
-      g.drawImage(img, 0, 0, width, height);
-      const data = g.getImageData(0, 0, width, height).data, counts = new Map();
-      for (let i = 0; i < data.length; i += 4) { const k = ((data[i] >> 4) << 8) | ((data[i + 1] >> 4) << 4) | (data[i + 2] >> 4); counts.set(k, (counts.get(k) ?? 0) + 1); }
-      const p = [...counts].sort((a, b) => b[1] - a[1])[0][0], [r, gr, b] = [(p >> 8) * 17, ((p >> 4) & 15) * 17, (p & 15) * 17], ink = [];
-      for (let i = 0; i < width * height; i++) ink.push(Math.abs(data[i * 4] - r) + Math.abs(data[i * 4 + 1] - gr) + Math.abs(data[i * 4 + 2] - b) > 30 ? 1 : 0);
-      return { width, height, ink };
-    }, `data:image/png;base64,${slide}`) : null;
+    const inkData = process.env.FOCUS
+      ? await page.evaluate(async (src) => {
+          const img = new Image();
+          img.src = src;
+          await img.decode();
+          const width = 512,
+            height = Math.round((width * img.naturalHeight) / img.naturalWidth),
+            c = document.createElement('canvas');
+          c.width = width;
+          c.height = height;
+          const g = c.getContext('2d');
+          g.drawImage(img, 0, 0, width, height);
+          const data = g.getImageData(0, 0, width, height).data,
+            counts = new Map();
+          for (let i = 0; i < data.length; i += 4) {
+            const k = ((data[i] >> 4) << 8) | ((data[i + 1] >> 4) << 4) | (data[i + 2] >> 4);
+            counts.set(k, (counts.get(k) ?? 0) + 1);
+          }
+          const p = [...counts].sort((a, b) => b[1] - a[1])[0][0],
+            [r, gr, b] = [(p >> 8) * 17, ((p >> 4) & 15) * 17, (p & 15) * 17],
+            ink = [];
+          for (let i = 0; i < width * height; i++)
+            ink.push(
+              Math.abs(data[i * 4] - r) +
+                Math.abs(data[i * 4 + 1] - gr) +
+                Math.abs(data[i * 4 + 2] - b) >
+                30
+                ? 1
+                : 0,
+            );
+          return { width, height, ink };
+        }, `data:image/png;base64,${slide}`)
+      : null;
     const ink = inkData ? { ...inkData, ink: Uint8Array.from(inkData.ink) } : undefined;
-    const at = (i) => (circuit ? circuitOverlay(i, H / W) : overlayFor(spec, state, i, H / W, focus, ink));
+    const at = (i) =>
+      circuit ? circuitOverlay(i, H / W) : overlayFor(spec, state, i, H / W, focus, ink);
     const first = at(0);
-    const steps = circuit ? first?.steps ?? 0 : spec.mode === 'explanation' ? spec.steps.length : 0;
+    const steps = circuit
+      ? (first?.steps ?? 0)
+      : spec.mode === 'explanation'
+        ? spec.steps.length
+        : 0;
     if (!first) throw new Error('This answer has no 3D scene.');
     // The companion cuts the drawing's own region when it has one, the scene's otherwise.
-    const region = first.nodes.length ? (() => { const xs = first.nodes.map((n) => n.x), ys = first.nodes.map((n) => n.y), pad = first.radius * 1.8; const x = Math.max(0, Math.min(...xs) - pad), y = Math.max(0, Math.min(...ys) - pad); return { x, y, width: Math.min(1, Math.max(...xs) + pad) - x, height: Math.min(1, Math.max(...ys) + pad) - y }; })() : first.scene.region;
-    const sheet = await page.evaluate(async ({ src, region }) => {
-      const img = new Image();
-      img.src = src;
-      await img.decode();
-      const c = document.createElement('canvas');
-      c.width = Math.round(region.width * img.naturalWidth);
-      c.height = Math.round(region.height * img.naturalHeight);
-      c.getContext('2d').drawImage(img, region.x * img.naturalWidth, region.y * img.naturalHeight, c.width, c.height, 0, 0, c.width, c.height);
-      return { dataUrl: c.toDataURL('image/jpeg', 0.9), region };
-    }, { src: `data:image/png;base64,${slide}`, region });
-    const draw = (model, view, withSheet) => page.evaluate((e) => window.__draw(e), { type: 'graph', model, display, view, ...(withSheet ? { sheet } : {}) });
+    const region = first.nodes.length
+      ? (() => {
+          const xs = first.nodes.map((n) => n.x),
+            ys = first.nodes.map((n) => n.y),
+            pad = first.radius * 1.8;
+          const x = Math.max(0, Math.min(...xs) - pad),
+            y = Math.max(0, Math.min(...ys) - pad);
+          return {
+            x,
+            y,
+            width: Math.min(1, Math.max(...xs) + pad) - x,
+            height: Math.min(1, Math.max(...ys) + pad) - y,
+          };
+        })()
+      : first.scene.region;
+    const sheet = await page.evaluate(
+      async ({ src, region }) => {
+        const img = new Image();
+        img.src = src;
+        await img.decode();
+        const c = document.createElement('canvas');
+        c.width = Math.round(region.width * img.naturalWidth);
+        c.height = Math.round(region.height * img.naturalHeight);
+        c.getContext('2d').drawImage(
+          img,
+          region.x * img.naturalWidth,
+          region.y * img.naturalHeight,
+          c.width,
+          c.height,
+          0,
+          0,
+          c.width,
+          c.height,
+        );
+        return { dataUrl: c.toDataURL('image/jpeg', 0.9), region };
+      },
+      { src: `data:image/png;base64,${slide}`, region },
+    );
+    const draw = (model, view, withSheet) =>
+      page.evaluate((e) => window.__draw(e), {
+        type: 'graph',
+        model,
+        display,
+        view,
+        ...(withSheet ? { sheet } : {}),
+      });
     const advance = (ms) => page.evaluate((v) => window.__advance(v), ms);
     const shot = (name) => page.screenshot({ path: path.join(out, `${name}.png`) });
     await draw(first, '2d');
@@ -91,10 +175,19 @@ const out = path.resolve(outArg || '.local/model-harness');
     }
     // SECOND=1 steps back to the start and through again, reading the crank's readout at each stop.
     if (process.env.SECOND) {
-      const readout = () => page.evaluate(() => document.getElementById('lift-turn-text')?.textContent ?? '');
+      const readout = () =>
+        page.evaluate(() => document.getElementById('lift-turn-text')?.textContent ?? '');
       const pass = { first: [], back: [], again: [] };
-      for (let i = 0; i < steps; i++) { await draw(at(i), '3d'); await advance(3200); pass.first.push(await readout()); }
-      for (let i = steps - 2; i >= 0; i--) { await draw(at(i), '3d'); await advance(3200); pass.back.push(await readout()); }
+      for (let i = 0; i < steps; i++) {
+        await draw(at(i), '3d');
+        await advance(3200);
+        pass.first.push(await readout());
+      }
+      for (let i = steps - 2; i >= 0; i--) {
+        await draw(at(i), '3d');
+        await advance(3200);
+        pass.back.push(await readout());
+      }
       for (let i = 1; i < steps; i++) {
         await draw(at(i), '3d');
         await advance(500);
@@ -116,7 +209,11 @@ const out = path.resolve(outArg || '.local/model-harness');
         p.z += (v.extent.min.z + v.extent.max.z) / 2;
         s.model.localToWorld(p);
         p.project(s.camera);
-        return { id: v.id, x: ((p.x + 1) / 2) * s.frame.width + s.frame.dx, y: ((1 - p.y) / 2) * s.frame.height + s.frame.dy };
+        return {
+          id: v.id,
+          x: ((p.x + 1) / 2) * s.frame.width + s.frame.dx,
+          y: ((1 - p.y) / 2) * s.frame.height + s.frame.dy,
+        };
       });
       await page.mouse.move(target.x, target.y);
       await advance(100);
@@ -126,7 +223,9 @@ const out = path.resolve(outArg || '.local/model-harness');
       const picked = await page.evaluate(() => window.__selected ?? null);
       // The page answers a pick by sending the scene back with the part selected.
       const last = at(steps - 1);
-      last.scene.objects = last.scene.objects.map((o) => (o.id === picked ? { ...o, selected: true } : o));
+      last.scene.objects = last.scene.objects.map((o) =>
+        o.id === picked ? { ...o, selected: true } : o,
+      );
       await draw(last, '3d');
       await advance(600);
       await shot('screen-picked');

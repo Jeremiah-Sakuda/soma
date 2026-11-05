@@ -17,7 +17,11 @@ export type ExplorationPrincipal = {
   key: string;
   account?: VerifiedAccount;
 };
-export type PublicDemoImage = '/synthetic/recorded-detour.png' | '/synthetic/recorded-mechanism.png' | '/synthetic/recorded-lecture-14.png' | '/synthetic/recorded-lecture-9.png';
+export type PublicDemoImage =
+  | '/synthetic/recorded-detour.png'
+  | '/synthetic/recorded-mechanism.png'
+  | '/synthetic/recorded-lecture-14.png'
+  | '/synthetic/recorded-lecture-9.png';
 export type RecordedPresentation = {
   kind: 'circuit-drawing-alignment-v1' | 'graph-drawing-alignment-v1';
   sourceImageSha256: string;
@@ -148,8 +152,7 @@ export type ExplorationArtifact = CheckedExploration & {
   saved: boolean;
 };
 export type ExplorationFailure = {
-  stage:
-    'interpretation' | 'computation' | 'composition' | 'validation' | 'review' | 'publication';
+  stage: 'interpretation' | 'computation' | 'composition' | 'validation' | 'review' | 'publication';
   issues: { code: string; path: (string | number)[] }[];
 };
 export type ExplorationRun = {
@@ -212,10 +215,7 @@ const errors = {
   account_required: [401, 'Please sign in again.'],
   forbidden: [403, 'This exploration belongs to a different session.'],
   not_found: [404, 'This exploration could not be found.'],
-  revision_conflict: [
-    409,
-    'This exploration changed. Reopen the latest version and try again.',
-  ],
+  revision_conflict: [409, 'This exploration changed. Reopen the latest version and try again.'],
   cancelled: [409, 'This request was cancelled. Your previous exploration is unchanged.'],
   busy: [429, 'Another exploration is running. Please try again shortly.'],
   capacity: [429, 'The exploration limit has been reached. Please try again later.'],

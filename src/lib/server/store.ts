@@ -5,7 +5,12 @@ import { dirname, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { seedWorkspace } from '../domain/seed';
 import type { WorkspaceState } from '../domain/types';
-import { insertManagedWorkspace, readManagedWorkspace, replaceManagedWorkspace, deleteManagedWorkspace } from './firestore';
+import {
+  insertManagedWorkspace,
+  readManagedWorkspace,
+  replaceManagedWorkspace,
+  deleteManagedWorkspace,
+} from './firestore';
 
 const TOKEN_RE = /^[a-f0-9]{64}$/;
 const MAX_SNAPSHOT_BYTES = 768 * 1024;
@@ -13,24 +18,46 @@ const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 const connections = new Map<string, DatabaseSync>();
 
 export class WorkspaceStoreError extends Error {
-  constructor(message: string, public readonly status: number, public readonly code: string) { super(message); }
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly code: string,
+  ) {
+    super(message);
+  }
 }
 export class WorkspaceConflictError extends WorkspaceStoreError {
-  constructor() { super('This workspace changed. Refresh and try again.', 409, 'revision_conflict'); }
+  constructor() {
+    super('This workspace changed. Refresh and try again.', 409, 'revision_conflict');
+  }
 }
 export class WorkspaceNotFoundError extends WorkspaceStoreError {
-  constructor() { super('This session expired or could not be found. Start a new demo.', 401, 'session_expired'); }
+  constructor() {
+    super('This session expired or could not be found. Start a new demo.', 401, 'session_expired');
+  }
 }
 
 export function getPersistenceMode(): 'local-synthetic' | 'firestore' {
   const mode = process.env.SOMA_PERSISTENCE || 'local-synthetic';
-  if (mode !== 'firestore' && mode !== 'local-synthetic') throw new WorkspaceStoreError('SOMA_PERSISTENCE must be firestore or local-synthetic.', 503, 'invalid_persistence_configuration');
-  if (mode === 'local-synthetic' && process.env.VERCEL) throw new WorkspaceStoreError('Hosted deployments require Firestore persistence.', 503, 'persistent_storage_required');
+  if (mode !== 'firestore' && mode !== 'local-synthetic')
+    throw new WorkspaceStoreError(
+      'SOMA_PERSISTENCE must be firestore or local-synthetic.',
+      503,
+      'invalid_persistence_configuration',
+    );
+  if (mode === 'local-synthetic' && process.env.VERCEL)
+    throw new WorkspaceStoreError(
+      'Hosted deployments require Firestore persistence.',
+      503,
+      'persistent_storage_required',
+    );
   return mode;
 }
 
 function database() {
-  const path = resolve(/* turbopackIgnore: true */ process.env.SOMA_LOCAL_DATABASE_PATH || '.local/soma-demo.sqlite');
+  const path = resolve(
+    /* turbopackIgnore: true */ process.env.SOMA_LOCAL_DATABASE_PATH || '.local/soma-demo.sqlite',
+  );
   let db = connections.get(path);
   if (!db) {
     mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
@@ -58,11 +85,23 @@ function hashToken(token: string): string {
 }
 
 function serializeSyntheticWorkspace(workspace: WorkspaceState): string {
-  if (workspace.mode !== 'demo' || workspace.sources.some(source => source.kind !== 'synthetic')) {
-    throw new WorkspaceStoreError('Anonymous demo storage accepts original synthetic material only. Private source ingestion requires the account service.', 422, 'synthetic_only');
+  if (
+    workspace.mode !== 'demo' ||
+    workspace.sources.some((source) => source.kind !== 'synthetic')
+  ) {
+    throw new WorkspaceStoreError(
+      'Anonymous demo storage accepts original synthetic material only. Private source ingestion requires the account service.',
+      422,
+      'synthetic_only',
+    );
   }
   const json = JSON.stringify(workspace);
-  if (Buffer.byteLength(json, 'utf8') > MAX_SNAPSHOT_BYTES) throw new WorkspaceStoreError('Demo workspace capacity reached. Start a new demo.', 413, 'workspace_capacity');
+  if (Buffer.byteLength(json, 'utf8') > MAX_SNAPSHOT_BYTES)
+    throw new WorkspaceStoreError(
+      'Demo workspace capacity reached. Start a new demo.',
+      413,
+      'workspace_capacity',
+    );
   return json;
 }
 
@@ -74,12 +113,20 @@ export async function createWorkspace(): Promise<{ workspace: WorkspaceState; to
   workspace.revision = 0;
   const payload = serializeSyntheticWorkspace(workspace);
   const tokenHash = hashToken(token);
-  if (getPersistenceMode() === 'firestore') await insertManagedWorkspace(tokenHash, JSON.parse(payload) as WorkspaceState);
+  if (getPersistenceMode() === 'firestore')
+    await insertManagedWorkspace(tokenHash, JSON.parse(payload) as WorkspaceState);
   else {
     const db = database();
     db.prepare('DELETE FROM demo_sessions WHERE expires_at <= ?').run(Date.now());
-    if (Number(db.prepare('SELECT COUNT(*) AS count FROM demo_sessions').get()?.count) >= 200) throw new WorkspaceStoreError('Demo session capacity reached. Please try again later.', 429, 'session_capacity');
-    db.prepare('INSERT INTO demo_sessions (token_hash, workspace_id, revision, expires_at, payload) VALUES (?, ?, ?, ?, ?)').run(tokenHash, workspace.id, workspace.revision, Date.parse(workspace.expiresAt), payload);
+    if (Number(db.prepare('SELECT COUNT(*) AS count FROM demo_sessions').get()?.count) >= 200)
+      throw new WorkspaceStoreError(
+        'Demo session capacity reached. Please try again later.',
+        429,
+        'session_capacity',
+      );
+    db.prepare(
+      'INSERT INTO demo_sessions (token_hash, workspace_id, revision, expires_at, payload) VALUES (?, ?, ?, ?, ?)',
+    ).run(tokenHash, workspace.id, workspace.revision, Date.parse(workspace.expiresAt), payload);
   }
   return { workspace, token };
 }
@@ -91,25 +138,50 @@ export async function readWorkspace(token: string): Promise<WorkspaceState | nul
   if (getPersistenceMode() === 'firestore') return readManagedWorkspace(tokenHash);
   const db = database();
   db.prepare('DELETE FROM demo_sessions WHERE expires_at <= ?').run(Date.now());
-  const row = db.prepare('SELECT payload FROM demo_sessions WHERE token_hash = ? AND expires_at > ?').get(tokenHash, Date.now()) as { payload: string } | undefined;
-  return row ? JSON.parse(row.payload) as WorkspaceState : null;
+  const row = db
+    .prepare('SELECT payload FROM demo_sessions WHERE token_hash = ? AND expires_at > ?')
+    .get(tokenHash, Date.now()) as { payload: string } | undefined;
+  return row ? (JSON.parse(row.payload) as WorkspaceState) : null;
 }
 
 /** Optimistic compare-and-swap: async work never holds a database transaction. */
-export async function updateWorkspace(token: string, mutator: (workspace: WorkspaceState) => WorkspaceState | Promise<WorkspaceState>, expectedRevision?: number): Promise<WorkspaceState> {
+export async function updateWorkspace(
+  token: string,
+  mutator: (workspace: WorkspaceState) => WorkspaceState | Promise<WorkspaceState>,
+  expectedRevision?: number,
+): Promise<WorkspaceState> {
   const current = await readWorkspace(token);
   if (!current) throw new WorkspaceNotFoundError();
-  if (expectedRevision !== undefined && current.revision !== expectedRevision) throw new WorkspaceConflictError();
+  if (expectedRevision !== undefined && current.revision !== expectedRevision)
+    throw new WorkspaceConflictError();
   const next = reconcileLearningGraph(current, await mutator(structuredClone(current)));
-  if (next.id !== current.id || next.mode !== current.mode || next.createdAt !== current.createdAt || next.expiresAt !== current.expiresAt) {
-    throw new WorkspaceStoreError('Workspace ownership and lifetime cannot be changed by an action.', 422, 'immutable_workspace');
+  if (
+    next.id !== current.id ||
+    next.mode !== current.mode ||
+    next.createdAt !== current.createdAt ||
+    next.expiresAt !== current.expiresAt
+  ) {
+    throw new WorkspaceStoreError(
+      'Workspace ownership and lifetime cannot be changed by an action.',
+      422,
+      'immutable_workspace',
+    );
   }
   next.revision = current.revision + 1;
   const payload = serializeSyntheticWorkspace(next);
   let changed: boolean;
-  if (getPersistenceMode() === 'firestore') changed = await replaceManagedWorkspace(hashToken(token), JSON.parse(payload) as WorkspaceState, current.revision);
+  if (getPersistenceMode() === 'firestore')
+    changed = await replaceManagedWorkspace(
+      hashToken(token),
+      JSON.parse(payload) as WorkspaceState,
+      current.revision,
+    );
   else {
-    const result = database().prepare('UPDATE demo_sessions SET payload = ?, revision = ? WHERE token_hash = ? AND revision = ? AND expires_at > ?').run(payload, next.revision, hashToken(token), current.revision, Date.now());
+    const result = database()
+      .prepare(
+        'UPDATE demo_sessions SET payload = ?, revision = ? WHERE token_hash = ? AND revision = ? AND expires_at > ?',
+      )
+      .run(payload, next.revision, hashToken(token), current.revision, Date.now());
     changed = Number(result.changes) === 1;
   }
   if (!changed) throw new WorkspaceConflictError();
@@ -121,7 +193,8 @@ export async function deleteWorkspace(token: string): Promise<void> {
   if (getPersistenceMode() === 'firestore') await deleteManagedWorkspace(hashToken(token));
   else {
     const db = database();
-    if (db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='audit_runs'").get()) db.prepare('DELETE FROM audit_runs WHERE token_hash = ?').run(hashToken(token));
+    if (db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='audit_runs'").get())
+      db.prepare('DELETE FROM audit_runs WHERE token_hash = ?').run(hashToken(token));
     db.prepare('DELETE FROM demo_sessions WHERE token_hash = ?').run(hashToken(token));
   }
 }

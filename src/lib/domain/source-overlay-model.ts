@@ -22,7 +22,14 @@ export type SourceOverlayModel = {
   aspect?: number;
   /** Tag font size as a fraction of the capture width. */
   font: number;
-  nodes: { id: string; label: string; x: number; y: number; status: OverlayStatus; distance: number | null }[];
+  nodes: {
+    id: string;
+    label: string;
+    x: number;
+    y: number;
+    status: OverlayStatus;
+    distance: number | null;
+  }[];
   edges: {
     id: string;
     label: string;
@@ -40,20 +47,45 @@ export type SourceOverlayModel = {
   }[];
   weights: { edgeId: string; x: number; y: number; text: string }[];
   /** Small tags with leader lines, in the reference style. Text is computed from the trace. */
-  tags: { id: string; text: string; tone: OverlayTagTone; x: number; y: number; anchor: Point; curved: boolean; quiet?: boolean }[];
+  tags: {
+    id: string;
+    text: string;
+    tone: OverlayTagTone;
+    x: number;
+    y: number;
+    anchor: Point;
+    curved: boolean;
+    quiet?: boolean;
+  }[];
   /** Kept for compatibility; the overlay no longer outlines source regions. */
   callouts: { id: string; label: string; x: number; y: number; width: number; height: number }[];
-  caption: { text: string; stepLabel: string; x: number; y: number; anchor: 'top' | 'bottom'; font: number } | null;
+  caption: {
+    text: string;
+    stepLabel: string;
+    x: number;
+    y: number;
+    anchor: 'top' | 'bottom';
+    font: number;
+  } | null;
   /** Scale for the 3D lift: heights are checked distances, so they need the run's largest
    * value, including tentative estimates. */
-  lift?: { directed: boolean; source: string; goal: string | null; maxDistance: number; unit: 'cost' | 'edges' };
+  lift?: {
+    directed: boolean;
+    source: string;
+    goal: string | null;
+    maxDistance: number;
+    unit: 'cost' | 'edges';
+  };
   /** Any other answer's 3D view, for the companion to lift off the slide. */
   scene?: LiftScene;
 };
 
 const CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫'];
 /** Estimated tag box; renderers measure the real text and only widen. */
-export const tagBox = (text: string, font: number) => ({ w: text.length * font * 0.56 + font * 1.1, h: font * 1.65 });
+export const tagBox = (text: string, font: number) => ({
+  w: text.length * font * 0.56 + font * 1.1,
+  h: font * 1.65,
+});
 
 /** Presentation only: every mark, number and sentence comes from the supplied execution. */
 export function sourceOverlayModel({
@@ -93,7 +125,8 @@ export function sourceOverlayModel({
     step = execution.steps[at],
     finished = index >= execution.steps.length - 1;
   const input = execution.input;
-  const pairKey = (a: string, b: string) => (input.directed ? `${a}>${b}` : [a, b].sort().join('|'));
+  const pairKey = (a: string, b: string) =>
+    input.directed ? `${a}>${b}` : [a, b].sort().join('|');
   const fullName = (id: string) => graph.nodes.find((n) => n.id === id)?.label ?? id;
   // Tags shorten names, never numbers.
   const name = (id: string) => {
@@ -104,14 +137,20 @@ export function sourceOverlayModel({
     const rounded = Number(n.toFixed(places));
     // Compact labels may round, but keep at most 0.1% relative display error.
     // A fixed decimal count can otherwise turn .0051 into .01 or erase it.
-    return String(n !== 0 && Math.abs((rounded - n) / n) > 0.001 ? Number(n.toPrecision(6)) : rounded);
+    return String(
+      n !== 0 && Math.abs((rounded - n) / n) > 0.001 ? Number(n.toPrecision(6)) : rounded,
+    );
   };
   // A displayed relaxation must still add up and remain strictly below the old value.
   const sum = (a: number, b: number, total: number, old: number) => {
     for (const places of [2, 3, 4, 6, 9, 12, 15]) {
       const [x, y, z, previous] = [a, b, total, old].map((n) => Number(fmt(n, places)));
       const displayedSum = x + y;
-      if (Math.abs(displayedSum - z) <= Number.EPSILON * Math.max(Math.abs(displayedSum), Math.abs(z)) * 2 && z < previous)
+      if (
+        Math.abs(displayedSum - z) <=
+          Number.EPSILON * Math.max(Math.abs(displayedSum), Math.abs(z)) * 2 &&
+        z < previous
+      )
         return [a, b, total, old].map((n) => fmt(n, places));
     }
     return [a, b, total, old].map(String);
@@ -119,11 +158,20 @@ export function sourceOverlayModel({
   const dijkstra = execution.modelId === 'dijkstra-nonnegative';
   // Cut connections are absent from the executed input; their printed cost comes from the graph.
   const weightOf = (a: string, b: string) =>
-    (input.edges.find((e) => pairKey(e.from, e.to) === pairKey(a, b)) ?? graph.edges.find((e) => pairKey(e.from, e.to) === pairKey(a, b)))?.weight ?? 1;
+    (
+      input.edges.find((e) => pairKey(e.from, e.to) === pairKey(a, b)) ??
+      graph.edges.find((e) => pairKey(e.from, e.to) === pairKey(a, b))
+    )?.weight ?? 1;
 
   // The moment that explains Dijkstra: a known distance plus one edge beats the old estimate.
   // At the end, replay the relaxation that gave the goal its final cost.
-  type Relaxation = { node: string; parent: string; old: number; value: number; oldParent: string | null };
+  type Relaxation = {
+    node: string;
+    parent: string;
+    old: number;
+    value: number;
+    oldParent: string | null;
+  };
   const relaxationsAt = (k: number): Relaxation[] => {
     if (k <= 0) return [];
     const s = execution.steps[k],
@@ -131,7 +179,9 @@ export function sourceOverlayModel({
     return Object.entries(s.distances).flatMap(([node, value]) => {
       const old = p.distances[node],
         parent = s.parents[node];
-      return old !== undefined && value < old && parent ? [{ node, parent, old, value, oldParent: p.parents[node] ?? null }] : [];
+      return old !== undefined && value < old && parent
+        ? [{ node, parent, old, value, oldParent: p.parents[node] ?? null }]
+        : [];
     });
   };
   let relaxations = relaxationsAt(at);
@@ -148,14 +198,19 @@ export function sourceOverlayModel({
   }
   const pathEdges = new Set<string>();
   if (finished && execution.path)
-    for (let i = 1; i < execution.path.length; i++) pathEdges.add(pairKey(execution.path[i - 1], execution.path[i]));
+    for (let i = 1; i < execution.path.length; i++)
+      pathEdges.add(pairKey(execution.path[i - 1], execution.path[i]));
   const relaxed = new Set(relaxations.map((x) => pairKey(x.parent, x.node)));
   const struck = new Set(
-    relaxations.filter((x) => x.oldParent && x.oldParent !== x.parent).map((x) => pairKey(x.oldParent!, x.node)),
+    relaxations
+      .filter((x) => x.oldParent && x.oldParent !== x.parent)
+      .map((x) => pairKey(x.oldParent!, x.node)),
   );
 
   const points = [...nodes.values()];
-  const minGap = Math.min(...points.flatMap((a, i) => points.slice(i + 1).map((b) => Math.hypot(a.x - b.x, a.y - b.y))));
+  const minGap = Math.min(
+    ...points.flatMap((a, i) => points.slice(i + 1).map((b) => Math.hypot(a.x - b.x, a.y - b.y))),
+  );
   // Hug the source's own node circles, which slides draw at roughly a fifth of the spacing.
   const r = Math.max(9, Math.min(30, minGap * 0.2));
   // Annotation type sits a little smaller than the source's own labels.
@@ -177,16 +232,26 @@ export function sourceOverlayModel({
         : mid;
     const trim = (p: Point, toward: Point) => {
       const d = Math.hypot(toward.x - p.x, toward.y - p.y) || 1;
-      return { x: p.x + ((toward.x - p.x) / d) * r * 1.1, y: p.y + ((toward.y - p.y) / d) * r * 1.1 };
+      return {
+        x: p.x + ((toward.x - p.x) / d) * r * 1.1,
+        y: p.y + ((toward.y - p.y) / d) * r * 1.1,
+      };
     };
     const cut = disabledEdgeIds.includes(edge.id),
       key = pairKey(edge.from, edge.to),
-      centre = { x: 0.25 * a.x + 0.5 * control.x + 0.25 * b.x, y: 0.25 * a.y + 0.5 * control.y + 0.25 * b.y };
+      centre = {
+        x: 0.25 * a.x + 0.5 * control.x + 0.25 * b.x,
+        y: 0.25 * a.y + 0.5 * control.y + 0.25 * b.y,
+      };
     edgeCentre.set(key, centre);
     let strike: Point | undefined;
     if (struck.has(key) && !cut) {
-      const along = (t: number) => ({ x: (1 - t) ** 2 * a.x + 2 * (1 - t) * t * control.x + t * t * b.x, y: (1 - t) ** 2 * a.y + 2 * (1 - t) * t * control.y + t * t * b.y });
-      const clearOf = (p: Point) => [...labels.values()].every((l) => Math.hypot(l.x - p.x, l.y - p.y) > Math.max(r * 1.6, 18));
+      const along = (t: number) => ({
+        x: (1 - t) ** 2 * a.x + 2 * (1 - t) * t * control.x + t * t * b.x,
+        y: (1 - t) ** 2 * a.y + 2 * (1 - t) * t * control.y + t * t * b.y,
+      });
+      const clearOf = (p: Point) =>
+        [...labels.values()].every((l) => Math.hypot(l.x - p.x, l.y - p.y) > Math.max(r * 1.6, 18));
       strike = norm([0.32, 0.4, 0.25, 0.6, 0.68, 0.5].map(along).find(clearOf) ?? along(0.32));
     }
     edges.push({
@@ -216,13 +281,26 @@ export function sourceOverlayModel({
       spot = layout.edgeLabels.find((l) => l.edgeId === edge.id);
     return value === undefined || value === (edge.weight ?? 1) || !spot
       ? []
-      : [{ edgeId: edge.id, x: spot.x, y: spot.y, text: `${fmt(edge.weight ?? 1)} → ${fmt(value)}`.slice(0, 24) }];
+      : [
+          {
+            edgeId: edge.id,
+            x: spot.x,
+            y: spot.y,
+            text: `${fmt(edge.weight ?? 1)} → ${fmt(value)}`.slice(0, 24),
+          },
+        ];
   });
   const modelNodes: SourceOverlayModel['nodes'] = input.nodes.flatMap((node) => {
     const p = layout.nodes.find((n) => n.nodeId === node.id);
     if (!p) return [];
     const status: OverlayStatus =
-      step.current === node.id ? 'current' : step.expanded.includes(node.id) ? 'settled' : step.queue.includes(node.id) ? 'waiting' : 'unreached';
+      step.current === node.id
+        ? 'current'
+        : step.expanded.includes(node.id)
+          ? 'settled'
+          : step.queue.includes(node.id)
+            ? 'waiting'
+            : 'unreached';
     const distance = step.distances[node.id];
     return [{ id: node.id, label: node.label, x: p.x, y: p.y, status, distance: distance ?? null }];
   });
@@ -232,19 +310,46 @@ export function sourceOverlayModel({
     ...points.map((p) => ({ x: p.x, y: p.y, w: r * 2.5, h: r * 2.5 })),
     ...[...labels.values()].map((p) => ({ x: p.x, y: p.y, w: font * 2.4, h: font * 1.8 })),
     ...obstacles
-      .filter((o) => !points.some((p) => p.x >= o.x * W && p.x <= (o.x + o.width) * W && p.y >= o.y * H && p.y <= (o.y + o.height) * H))
-      .map((o) => ({ x: (o.x + o.width / 2) * W, y: (o.y + o.height / 2) * H, w: o.width * W, h: o.height * H })),
+      .filter(
+        (o) =>
+          !points.some(
+            (p) =>
+              p.x >= o.x * W &&
+              p.x <= (o.x + o.width) * W &&
+              p.y >= o.y * H &&
+              p.y <= (o.y + o.height) * H,
+          ),
+      )
+      .map((o) => ({
+        x: (o.x + o.width / 2) * W,
+        y: (o.y + o.height / 2) * H,
+        w: o.width * W,
+        h: o.height * H,
+      })),
   ];
-  const centre = { x: points.reduce((s, p) => s + p.x, 0) / points.length, y: points.reduce((s, p) => s + p.y, 0) / points.length };
+  const centre = {
+    x: points.reduce((s, p) => s + p.x, 0) / points.length,
+    y: points.reduce((s, p) => s + p.y, 0) / points.length,
+  };
   const overlap = (b: Box) =>
     blocked.reduce((sum, o) => {
-      const ox = Math.min(o.x + o.w / 2, b.x + b.w / 2 + 3) - Math.max(o.x - o.w / 2, b.x - b.w / 2 - 3),
-        oy = Math.min(o.y + o.h / 2, b.y + b.h / 2 + 2) - Math.max(o.y - o.h / 2, b.y - b.h / 2 - 2);
+      const ox =
+          Math.min(o.x + o.w / 2, b.x + b.w / 2 + 3) - Math.max(o.x - o.w / 2, b.x - b.w / 2 - 3),
+        oy =
+          Math.min(o.y + o.h / 2, b.y + b.h / 2 + 2) - Math.max(o.y - o.h / 2, b.y - b.h / 2 - 2);
       return ox > 0 && oy > 0 ? sum + ox * oy : sum;
     }, 0);
-  const inside = (b: Box) => b.x - b.w / 2 >= 2 && b.x + b.w / 2 <= W - 2 && b.y - b.h / 2 >= 2 && b.y + b.h / 2 <= H - 2;
+  const inside = (b: Box) =>
+    b.x - b.w / 2 >= 2 && b.x + b.w / 2 <= W - 2 && b.y - b.h / 2 >= 2 && b.y + b.h / 2 <= H - 2;
   const tags: SourceOverlayModel['tags'] = [];
-  const place = (id: string, label: string, tone: OverlayTagTone, anchor: Point, curved: boolean, optional = false) => {
+  const place = (
+    id: string,
+    label: string,
+    tone: OverlayTagTone,
+    anchor: Point,
+    curved: boolean,
+    optional = false,
+  ) => {
     const text = label.length > 60 ? `${label.slice(0, 59)}…` : label;
     const { w, h } = tagBox(text, font);
     const base = Math.atan2(anchor.y - centre.y, anchor.x - centre.x || 0.001);
@@ -252,7 +357,10 @@ export function sourceOverlayModel({
     for (const distance of [r * 2.2 + h / 2, r * 3.1 + h / 2, r * 4.3 + h / 2, r * 6 + h / 2])
       for (const turn of [0, 0.6, -0.6, 1.2, -1.2, 1.8, -1.8, Math.PI]) {
         const angle = base + turn;
-        candidates.push({ x: anchor.x + Math.cos(angle) * (distance + w * 0.3 * Math.abs(Math.cos(angle))), y: anchor.y + Math.sin(angle) * distance });
+        candidates.push({
+          x: anchor.x + Math.cos(angle) * (distance + w * 0.3 * Math.abs(Math.cos(angle))),
+          y: anchor.y + Math.sin(angle) * distance,
+        });
       }
     // The first clear spot, else the one that covers the least of the source.
     const fits = candidates.filter((c) => inside({ ...c, w, h }));
@@ -260,7 +368,10 @@ export function sourceOverlayModel({
     if (!clear && optional) return false;
     const spot =
       clear ??
-      fits.reduce<Point | null>((best, c) => (!best || overlap({ ...c, w, h }) < overlap({ ...best, w, h }) ? c : best), null) ??
+      fits.reduce<Point | null>(
+        (best, c) => (!best || overlap({ ...c, w, h }) < overlap({ ...best, w, h }) ? c : best),
+        null,
+      ) ??
       candidates[0];
     blocked.push({ ...spot, w, h });
     tags.push({
@@ -280,30 +391,44 @@ export function sourceOverlayModel({
     const anchor = nodes.get(x.node);
     if (!anchor || !edgeCentre.has(pairKey(x.parent, x.node))) continue;
     const w = weightOf(x.parent, x.node),
-      from = execution.steps.find((s2) => s2.parents[x.node] === x.parent && s2.distances[x.node] === x.value)?.distances[x.parent] ?? x.value - w;
+      from =
+        execution.steps.find(
+          (s2) => s2.parents[x.node] === x.parent && s2.distances[x.node] === x.value,
+        )?.distances[x.parent] ?? x.value - w;
     const [fa, fw, fv, previous] = sum(from, w, x.value, x.old);
     place(`equation-${x.node}`, `${fa} + ${fw} = ${fv} < ${previous}`, 'equation', anchor, true);
   }
   // The route and the goal's own tag claim their places first on the final frame.
   let routeLine: string | null = null;
-  const goalId = finished && execution.path && execution.path.length > 1 ? execution.path.at(-1)! : null;
+  const goalId =
+    finished && execution.path && execution.path.length > 1 ? execution.path.at(-1)! : null;
   if (goalId) {
     const goal = nodes.get(goalId);
     const unit = dijkstra ? '' : execution.path!.length - 1 === 1 ? ' edge' : ' edges';
-    const total = dijkstra ? step.distances[goalId] ?? execution.path!.slice(1).reduce((sum, to, i) => sum + weightOf(execution.path![i], to), 0) : execution.path!.length - 1;
+    const total = dijkstra
+      ? (step.distances[goalId] ??
+        execution.path!.slice(1).reduce((sum, to, i) => sum + weightOf(execution.path![i], to), 0))
+      : execution.path!.length - 1;
     const tail = ` = ${fmt(total)}${unit}`;
     // Shrink names, never the total; a route that still will not fit leads the caption.
     let text = `${execution.path!.map(name).join(' → ')}${tail}`;
     for (let limit = 10; text.length > 60 && limit >= 2; limit -= 2)
       text = `${execution.path!.map((id) => (fullName(id).length > limit ? `${fullName(id).slice(0, limit - 1)}…` : fullName(id))).join(' → ')}${tail}`;
-    if (text.length > 60 || !goal || !place('route', text, 'route', goal, true, true)) routeLine = `${execution.path!.map(fullName).join(' → ')}${tail}`;
+    if (text.length > 60 || !goal || !place('route', text, 'route', goal, true, true))
+      routeLine = `${execution.path!.map(fullName).join(' → ')}${tail}`;
   }
   const order = goalId ? [goalId, ...step.expanded.filter((id) => id !== goalId)] : step.expanded;
   for (const id of order) {
     const p = nodes.get(id),
       k = step.expanded.indexOf(id);
     if (p && k >= 0 && tags.length < 12)
-      place(`settled-${id}`, `${CIRCLED[k] ?? k + 1} ${name(id)} = ${fmt(step.distances[id])}`, id === step.current ? 'current' : 'settled', p, false);
+      place(
+        `settled-${id}`,
+        `${CIRCLED[k] ?? k + 1} ${name(id)} = ${fmt(step.distances[id])}`,
+        id === step.current ? 'current' : 'settled',
+        p,
+        false,
+      );
     else if (p && id === goalId && step.distances[id] !== undefined && tags.length < 12)
       place(`settled-${id}`, `${name(id)} = ${fmt(step.distances[id])}`, 'current', p, false);
   }
@@ -311,9 +436,16 @@ export function sourceOverlayModel({
     const before = at > 0 ? execution.steps[at - 1] : null;
     for (const id of step.queue) {
       const p = nodes.get(id);
-      if (p && tags.length < 12 && !step.expanded.includes(id) && step.distances[id] !== undefined && !relaxations.some((x) => x.node === id)) {
+      if (
+        p &&
+        tags.length < 12 &&
+        !step.expanded.includes(id) &&
+        step.distances[id] !== undefined &&
+        !relaxations.some((x) => x.node === id)
+      ) {
         place(`tentative-${id}`, `${name(id)} ≤ ${fmt(step.distances[id])}`, 'tentative', p, false);
-        if (before && before.distances[id] === step.distances[id]) tags[tags.length - 1].quiet = true;
+        if (before && before.distances[id] === step.distances[id])
+          tags[tags.length - 1].quiet = true;
       }
     }
   }
@@ -325,17 +457,22 @@ export function sourceOverlayModel({
   const left = Math.max(0.01, (Math.min(...points.map((p) => p.x)) - r * 2) / W);
   const underneath = H - bottom > font * 5 || H - bottom > top;
   // Tentative estimates can exceed final distances (F ≤ 11 before it settles at 7).
-  const allDistances = execution.steps.flatMap((x) => Object.values(x.distances)).filter(Number.isFinite);
+  const allDistances = execution.steps
+    .flatMap((x) => Object.values(x.distances))
+    .filter(Number.isFinite);
   const maxDistance = Math.max(0, ...allDistances) || 1;
   // Retain subnormal checked facts in 2D, but do not offer a lift whose pixel scale
   // could overflow. This floor leaves ample finite scale for actual display sizes.
-  const lift: SourceOverlayModel['lift'] = maxDistance >= 1e-300 ? {
-    directed: Boolean(input.directed),
-    source: input.start,
-    goal: input.goal ?? null,
-    maxDistance,
-    unit: dijkstra ? 'cost' : 'edges',
-  } : undefined;
+  const lift: SourceOverlayModel['lift'] =
+    maxDistance >= 1e-300
+      ? {
+          directed: Boolean(input.directed),
+          source: input.start,
+          goal: input.goal ?? null,
+          maxDistance,
+          unit: dijkstra ? 'cost' : 'edges',
+        }
+      : undefined;
   return {
     final: finished,
     ...(lift ? { lift } : {}),
@@ -348,9 +485,23 @@ export function sourceOverlayModel({
     tags: tags.slice(0, 12),
     callouts: [],
     caption: caption
-      ? (caption = caption.length > 380 ? `${caption.slice(0, 379)}…` : caption, underneath)
-        ? { text: caption, stepLabel, x: left, y: Math.min(0.86, (bottom + font * 0.8) / H), anchor: 'top', font: font / W }
-        : { text: caption, stepLabel, x: left, y: Math.max(0.02, (top - font * 0.8) / H), anchor: 'bottom', font: font / W }
+      ? ((caption = caption.length > 380 ? `${caption.slice(0, 379)}…` : caption), underneath)
+        ? {
+            text: caption,
+            stepLabel,
+            x: left,
+            y: Math.min(0.86, (bottom + font * 0.8) / H),
+            anchor: 'top',
+            font: font / W,
+          }
+        : {
+            text: caption,
+            stepLabel,
+            x: left,
+            y: Math.max(0.02, (top - font * 0.8) / H),
+            anchor: 'bottom',
+            font: font / W,
+          }
       : null,
   };
 }
@@ -365,7 +516,9 @@ export function loopPath(x: number, y: number, r: number, id: string): string {
     const t = start + (k / 24) * Math.PI * 2,
       wobble = Math.sin(t * 3 + seed) * r * 0.05 + (k > 24 ? (k - 24) * r * 0.04 : 0),
       rr = r + wobble;
-    parts.push(`${k ? 'L' : 'M'}${(x + Math.cos(t) * rr).toFixed(1)} ${(y + Math.sin(t) * rr * 0.94).toFixed(1)}`);
+    parts.push(
+      `${k ? 'L' : 'M'}${(x + Math.cos(t) * rr).toFixed(1)} ${(y + Math.sin(t) * rr * 0.94).toFixed(1)}`,
+    );
   }
   return parts.join(' ');
 }
@@ -373,7 +526,9 @@ export function loopPath(x: number, y: number, r: number, id: string): string {
 /** The order in which the checked route draws: from the start, one connection after another
  * to the goal, each in its direction of travel (`reverse` when travel runs to → from). Empty
  * when the route cannot be walked from the start (then it draws all at once, as before). */
-export function routeSequence(model: Pick<SourceOverlayModel, 'edges' | 'lift'>): Map<string, { index: number; reverse: boolean }> {
+export function routeSequence(
+  model: Pick<SourceOverlayModel, 'edges' | 'lift'>,
+): Map<string, { index: number; reverse: boolean }> {
   const order = new Map<string, { index: number; reverse: boolean }>();
   const route = model.edges.filter((e) => e.tone === 'path' && e.fromId && e.toId);
   let at = model.lift?.source;

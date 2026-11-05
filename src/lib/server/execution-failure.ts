@@ -8,14 +8,24 @@ export type ExecutionFailure =
 
 /** A known application boundary, distinct from an unexpected implementation error. */
 export class ExecutionBoundaryError extends Error {
-  constructor(public readonly failure: Exclude<ExecutionFailure, { kind: 'provider' }>, message: string) {
-    super(message); this.name = 'ExecutionBoundaryError';
+  constructor(
+    public readonly failure: Exclude<ExecutionFailure, { kind: 'provider' }>,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'ExecutionBoundaryError';
   }
 }
 
 /** Copy only known provider fields; never copy payloads, reasons or raw transport text. */
 export function executionFailure(error: unknown): ExecutionFailure | undefined {
-  if (error instanceof MetaClientError) return { kind: 'provider', code: error.code, requestSent: error.requestSent, usage: error.usage ? { ...error.usage } : null };
+  if (error instanceof MetaClientError)
+    return {
+      kind: 'provider',
+      code: error.code,
+      requestSent: error.requestSent,
+      usage: error.usage ? { ...error.usage } : null,
+    };
   if (error instanceof ExecutionBoundaryError) return { ...error.failure };
   return undefined;
 }

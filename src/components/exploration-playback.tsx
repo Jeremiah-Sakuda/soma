@@ -54,9 +54,7 @@ export function ExplorationPlayback({
   const narration = explorationNarration(spec, state);
   const playbackKey = JSON.stringify([artifactId, version, state]);
   useEffect(() => {
-    setAvailable(
-      'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined',
-    );
+    setAvailable('speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined');
   }, []);
   useEffect(() => {
     buffer.current.clear();
@@ -151,9 +149,7 @@ export function ExplorationPlayback({
           audio.onended = finish;
           audio.onerror = () => {
             if (current()) {
-              setError(
-                'This audio could not play. Try browser voice or continue with captions.',
-              );
+              setError('This audio could not play. Try browser voice or continue with captions.');
               callbacks.current.onPlaying(false);
             }
           };
@@ -222,16 +218,10 @@ export function ExplorationPlayback({
         <button
           type="button"
           className="primary-button"
-          disabled={
-            disabled || spec.mode === 'clarify' || (provider === 'browser' && !available)
-          }
+          disabled={disabled || spec.mode === 'clarify' || (provider === 'browser' && !available)}
           onClick={() => onPlaying(!playing)}
         >
-          {playing ? (
-            <Pause size={16} aria-hidden="true" />
-          ) : (
-            <Play size={16} aria-hidden="true" />
-          )}
+          {playing ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
           {playing ? 'Pause explanation' : 'Play explanation'}
         </button>
         <button
@@ -289,8 +279,8 @@ export function ExplorationPlayback({
           </select>
         </label>
         <p className="meta">
-          Pause and resume Gemini narration from the same point. Animation follows the actual
-          audio position.
+          Pause and resume Gemini narration from the same point. Animation follows the actual audio
+          position.
         </p>
         <div className="action-row">
           <button

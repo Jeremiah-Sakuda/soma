@@ -75,7 +75,9 @@ export function parseExplorationReview(result: MetaResult) {
         ? result.structured
         : undefined;
   if (!raw) throw new ExplorationReviewContractError('review_tool_shape');
-  const value = normalizeReview(typeof raw === 'object' && raw !== null && 'review' in raw ? raw.review : raw);
+  const value = normalizeReview(
+    typeof raw === 'object' && raw !== null && 'review' in raw ? raw.review : raw,
+  );
   const parsed = schema.safeParse(value);
   if (!parsed.success) throw new ExplorationReviewContractError('review_output_schema');
   const review = parsed.data;

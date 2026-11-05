@@ -1,2 +1,20 @@
-import {defineConfig} from '@playwright/test';
-export default defineConfig({testDir:'.',testMatch:'*.spec.ts',workers:1,reporter:'list',outputDir:'../../.local/pm121/browser-results',use:{baseURL:'http://127.0.0.1:41914',viewport:{width:1440,height:1050},screenshot:'only-on-failure',trace:'retain-on-failure'},webServer:{command:'node scripts/serve-engine-demo.mjs',cwd:'../..',url:'http://127.0.0.1:41914',reuseExistingServer:true}});
+import { defineConfig } from '@playwright/test';
+export default defineConfig({
+  testDir: '.',
+  testMatch: '*.spec.ts',
+  workers: 1,
+  reporter: 'list',
+  outputDir: '../../.local/pm121/browser-results',
+  use: {
+    baseURL: 'http://127.0.0.1:41914',
+    viewport: { width: 1440, height: 1050 },
+    screenshot: 'only-on-failure',
+    trace: 'retain-on-failure',
+  },
+  webServer: {
+    command: 'node scripts/serve-engine-demo.mjs',
+    cwd: '../..',
+    url: 'http://127.0.0.1:41914',
+    reuseExistingServer: true,
+  },
+});

@@ -1,133 +1,754 @@
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;pointer-events:none;font:13px system-ui;color:#fff}svg{position:absolute;inset:0;width:100%;height:100%;overflow:hidden}#trail{stroke:#6755ed;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}#pointer{stroke:#6755ed;stroke-width:3;fill:#6755ed22}#selection{display:none;fill:#6755ed14;stroke:#6755ed;stroke-width:3}#hint{position:absolute;max-width:260px;border-radius:12px;background:#30275c;padding:10px 14px;box-shadow:0 4px 16px #0002;line-height:1.4} @media(prefers-reduced-motion:reduce){*{animation:none;transition:none}}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  pointer-events: none;
+  font: 13px system-ui;
+  color: #fff;
+}
+svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+#trail {
+  stroke: #6755ed;
+  stroke-width: 3;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+#pointer {
+  stroke: #6755ed;
+  stroke-width: 3;
+  fill: #6755ed22;
+}
+#selection {
+  display: none;
+  fill: #6755ed14;
+  stroke: #6755ed;
+  stroke-width: 3;
+}
+#hint {
+  position: absolute;
+  max-width: 260px;
+  border-radius: 12px;
+  background: #30275c;
+  padding: 10px 14px;
+  box-shadow: 0 4px 16px #0002;
+  line-height: 1.4;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none;
+    transition: none;
+  }
+}
 
-.source-reference{fill:#6755ed18;stroke:#6755ed;stroke-width:3;rx:10}#source-annotations text{font:600 15px system-ui;fill:#201b46;stroke:#fff;stroke-width:4;paint-order:stroke;stroke-linejoin:round}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.source-reference {
+  fill: #6755ed18;
+  stroke: #6755ed;
+  stroke-width: 3;
+  rx: 10;
+}
+#source-annotations text {
+  font: 600 15px system-ui;
+  fill: #201b46;
+  stroke: #fff;
+  stroke-width: 4;
+  paint-order: stroke;
+  stroke-linejoin: round;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
 
 /* Soma's checked search drawn over the real display, as an annotated sketch. */
-#graph-layer{--ink:#1d1d1b;--hand:'Noteworthy','Bradley Hand','Marker Felt',cursive}
-@keyframes ink{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
-@keyframes pop{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-.graph-stroke,.graph-loop,.graph-leader,.graph-cut{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1}
-.ink-new.graph-stroke,.ink-new.graph-loop,.ink-new.graph-cut{animation:ink .7s ease-out both}
-.graph-tag.ink-new{animation:pop .35s ease-out both}.graph-tag.ink-new .graph-leader{animation:ink .45s ease-out both}
-.graph-edge.is-tree .graph-stroke{stroke:#f2c94c;opacity:.55}
-.graph-edge.is-path .graph-stroke{stroke:#ff6b4a;opacity:.7}
-.graph-edge.is-cut .graph-stroke{stroke:#e03b2c;opacity:.35}
-.graph-cut{stroke:#e03b2c}
-.graph-hit{fill:none;stroke:transparent;stroke-width:38;pointer-events:stroke;cursor:pointer}
-.graph-hit:hover{stroke:#e03b2c14}
-.graph-node.is-settled .graph-loop{stroke:#1f6f5c}
-.graph-node.is-current .graph-loop{stroke:#f06a2b}
-.graph-node.is-waiting .graph-loop{stroke:#1f6f5c;opacity:.45;stroke-dasharray:.04 .03}
-.graph-pencil{font-family:var(--hand);fill:#5b5b57}
-.graph-tag rect{stroke-width:1.3}
-.graph-tag text,.graph-weight text{font-family:var(--hand);font-weight:700;fill:var(--ink)}
-.graph-tag.is-settled rect{fill:#d6f2e4;stroke:#1f6f5c}
-.graph-tag.is-current rect{fill:#ffe0c4;stroke:#f06a2b}
-.graph-tag.is-change rect{fill:#fff1a6;stroke:#b88a00}
-.graph-tag.is-route rect{fill:#ffd3e4;stroke:#c2185b}
-.graph-tag.is-warn rect{fill:#ffe1de;stroke:#c62828}
-.graph-leader{stroke:var(--ink);stroke-width:1.5}.graph-dot{fill:var(--ink)}
-.graph-weight rect{fill:#fff1a6;stroke:#b88a00;stroke-width:1.3}
-.graph-callout rect{fill:none;stroke:#1f6f5c;stroke-width:2.5;stroke-dasharray:8 6}.graph-callout text{font:700 17px 'Noteworthy',cursive;fill:#17221f;stroke:#fff;stroke-width:5;paint-order:stroke;stroke-linejoin:round}
-#graph-caption{position:absolute;max-width:30em;padding:.7em 1em;border-radius:12px;background:#fbf7ec;color:#2b2a26;font-family:system-ui;line-height:1.4;box-shadow:0 14px 40px #0003;border:1px solid #e7dfcc}
-#graph-caption strong{display:block;font:700 1.35em/1.2 'Noteworthy','Bradley Hand',cursive;color:#1d1d1b}
-#graph-caption small{display:block;margin:2px 0 6px;font:600 .62em system-ui;letter-spacing:.08em;text-transform:uppercase;color:#8a8270}
-@media(prefers-reduced-motion:reduce){.ink-new,.graph-tag.ink-new .graph-leader{animation:none!important}}
+#graph-layer {
+  --ink: #1d1d1b;
+  --hand: 'Noteworthy', 'Bradley Hand', 'Marker Felt', cursive;
+}
+@keyframes ink {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.graph-stroke,
+.graph-loop,
+.graph-leader,
+.graph-cut {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+}
+.ink-new.graph-stroke,
+.ink-new.graph-loop,
+.ink-new.graph-cut {
+  animation: ink 0.7s ease-out both;
+}
+.graph-tag.ink-new {
+  animation: pop 0.35s ease-out both;
+}
+.graph-tag.ink-new .graph-leader {
+  animation: ink 0.45s ease-out both;
+}
+.graph-edge.is-tree .graph-stroke {
+  stroke: #f2c94c;
+  opacity: 0.55;
+}
+.graph-edge.is-path .graph-stroke {
+  stroke: #ff6b4a;
+  opacity: 0.7;
+}
+.graph-edge.is-cut .graph-stroke {
+  stroke: #e03b2c;
+  opacity: 0.35;
+}
+.graph-cut {
+  stroke: #e03b2c;
+}
+.graph-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 38;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+.graph-hit:hover {
+  stroke: #e03b2c14;
+}
+.graph-node.is-settled .graph-loop {
+  stroke: #1f6f5c;
+}
+.graph-node.is-current .graph-loop {
+  stroke: #f06a2b;
+}
+.graph-node.is-waiting .graph-loop {
+  stroke: #1f6f5c;
+  opacity: 0.45;
+  stroke-dasharray: 0.04 0.03;
+}
+.graph-pencil {
+  font-family: var(--hand);
+  fill: #5b5b57;
+}
+.graph-tag rect {
+  stroke-width: 1.3;
+}
+.graph-tag text,
+.graph-weight text {
+  font-family: var(--hand);
+  font-weight: 700;
+  fill: var(--ink);
+}
+.graph-tag.is-settled rect {
+  fill: #d6f2e4;
+  stroke: #1f6f5c;
+}
+.graph-tag.is-current rect {
+  fill: #ffe0c4;
+  stroke: #f06a2b;
+}
+.graph-tag.is-change rect {
+  fill: #fff1a6;
+  stroke: #b88a00;
+}
+.graph-tag.is-route rect {
+  fill: #ffd3e4;
+  stroke: #c2185b;
+}
+.graph-tag.is-warn rect {
+  fill: #ffe1de;
+  stroke: #c62828;
+}
+.graph-leader {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.graph-dot {
+  fill: var(--ink);
+}
+.graph-weight rect {
+  fill: #fff1a6;
+  stroke: #b88a00;
+  stroke-width: 1.3;
+}
+.graph-callout rect {
+  fill: none;
+  stroke: #1f6f5c;
+  stroke-width: 2.5;
+  stroke-dasharray: 8 6;
+}
+.graph-callout text {
+  font:
+    700 17px 'Noteworthy',
+    cursive;
+  fill: #17221f;
+  stroke: #fff;
+  stroke-width: 5;
+  paint-order: stroke;
+  stroke-linejoin: round;
+}
+#graph-caption {
+  position: absolute;
+  max-width: 30em;
+  padding: 0.7em 1em;
+  border-radius: 12px;
+  background: #fbf7ec;
+  color: #2b2a26;
+  font-family: system-ui;
+  line-height: 1.4;
+  box-shadow: 0 14px 40px #0003;
+  border: 1px solid #e7dfcc;
+}
+#graph-caption strong {
+  display: block;
+  font:
+    700 1.35em/1.2 'Noteworthy',
+    'Bradley Hand',
+    cursive;
+  color: #1d1d1b;
+}
+#graph-caption small {
+  display: block;
+  margin: 2px 0 6px;
+  font: 600 0.62em system-ui;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a8270;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ink-new,
+  .graph-tag.ink-new .graph-leader {
+    animation: none !important;
+  }
+}
 
 /* Round 2: restrained, like the references. Thin marks, small pastel tags, staggered ink. */
-.graph-edge.is-tree .graph-stroke{stroke:#f2c94c;opacity:.3}
-.graph-edge.is-relaxed .graph-stroke{stroke:#f2b632;opacity:.85}
-.graph-edge.is-path .graph-stroke{stroke:#f06a4a;opacity:.8}
-.graph-edge.is-struck .graph-stroke{stroke:#d93a2b;opacity:.7;stroke-dasharray:.03 .025}
-.ink-new.graph-loop{animation-delay:.25s}
-.graph-tag.ink-new{animation-delay:.65s}.graph-tag.ink-new .graph-leader{animation-delay:.5s}
-.graph-leader{stroke-width:1}
-.graph-tag rect{stroke-width:1;stroke-opacity:.5}
-.graph-tag.is-settled rect{fill:#d9f0e3;stroke:#2f7d5f}
-.graph-tag.is-current rect{fill:#ffe2c6;stroke:#d0702c}
-.graph-tag.is-equation rect{fill:#fff3b0;stroke:#a8860c}
-.graph-tag.is-route rect{fill:#fad4dc;stroke:#b0415d}
-.graph-tag.is-tentative rect{fill:#ffffffd9;stroke:#8a8780;stroke-dasharray:3 2}
-.graph-tag.is-tentative text{fill:#5f5d58;font-weight:400}
-.graph-hit:hover{stroke:transparent}
-#graph-caption{max-width:26em;padding:.55em .85em;border-radius:10px;font-size:15px}
-#graph-caption strong{font-size:20px}
+.graph-edge.is-tree .graph-stroke {
+  stroke: #f2c94c;
+  opacity: 0.3;
+}
+.graph-edge.is-relaxed .graph-stroke {
+  stroke: #f2b632;
+  opacity: 0.85;
+}
+.graph-edge.is-path .graph-stroke {
+  stroke: #f06a4a;
+  opacity: 0.8;
+}
+.graph-edge.is-struck .graph-stroke {
+  stroke: #d93a2b;
+  opacity: 0.7;
+  stroke-dasharray: 0.03 0.025;
+}
+.ink-new.graph-loop {
+  animation-delay: 0.25s;
+}
+.graph-tag.ink-new {
+  animation-delay: 0.65s;
+}
+.graph-tag.ink-new .graph-leader {
+  animation-delay: 0.5s;
+}
+.graph-leader {
+  stroke-width: 1;
+}
+.graph-tag rect {
+  stroke-width: 1;
+  stroke-opacity: 0.5;
+}
+.graph-tag.is-settled rect {
+  fill: #d9f0e3;
+  stroke: #2f7d5f;
+}
+.graph-tag.is-current rect {
+  fill: #ffe2c6;
+  stroke: #d0702c;
+}
+.graph-tag.is-equation rect {
+  fill: #fff3b0;
+  stroke: #a8860c;
+}
+.graph-tag.is-route rect {
+  fill: #fad4dc;
+  stroke: #b0415d;
+}
+.graph-tag.is-tentative rect {
+  fill: #ffffffd9;
+  stroke: #8a8780;
+  stroke-dasharray: 3 2;
+}
+.graph-tag.is-tentative text {
+  fill: #5f5d58;
+  font-weight: 400;
+}
+.graph-hit:hover {
+  stroke: transparent;
+}
+#graph-caption {
+  max-width: 26em;
+  padding: 0.55em 0.85em;
+  border-radius: 10px;
+  font-size: 15px;
+}
+#graph-caption strong {
+  font-size: 20px;
+}
 
-#graph-layer.is-final .graph-node.is-settled .graph-loop{opacity:.3}
-#graph-caption{max-width:22em;overflow:auto;overflow-wrap:anywhere;overscroll-behavior:contain;pointer-events:auto}
+#graph-layer.is-final .graph-node.is-settled .graph-loop {
+  opacity: 0.3;
+}
+#graph-caption {
+  max-width: 22em;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  overscroll-behavior: contain;
+  pointer-events: auto;
+}
 
 /* Companion pointer and settling pop-in. */
-#buddy{transition:opacity .25s ease}
-.buddy-shape{fill:#1f6f5c;stroke:#fff;stroke-width:1.5;stroke-linejoin:round;filter:drop-shadow(0 0 6px #1f6f5c88)}
-@keyframes settle{0%{opacity:0;transform:scale(.5)}70%{opacity:1;transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
-.graph-tag.ink-new{animation:settle .42s cubic-bezier(.2,.8,.2,1) .65s both;transform-box:fill-box;transform-origin:center}
-@media(prefers-reduced-motion:reduce){.graph-tag.ink-new{animation:none}}
+#buddy {
+  transition: opacity 0.25s ease;
+}
+.buddy-shape {
+  fill: #1f6f5c;
+  stroke: #fff;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px #1f6f5c88);
+}
+@keyframes settle {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.graph-tag.ink-new {
+  animation: settle 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) 0.65s both;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .graph-tag.ink-new {
+    animation: none;
+  }
+}
 
 /* Persistent marks change colour instead of redrawing. */
-.graph-loop,.graph-stroke{transition:stroke .45s ease,opacity .45s ease,stroke-width .45s ease}
+.graph-loop,
+.graph-stroke {
+  transition:
+    stroke 0.45s ease,
+    opacity 0.45s ease,
+    stroke-width 0.45s ease;
+}
 
-.graph-tag.is-quiet{opacity:.45}
-.buddy-shape{fill:#ff7a3d;stroke:#fff;stroke-width:1.8;filter:drop-shadow(0 0 7px #ff7a3d99)}
-#buddy-trail{fill:none;stroke:#ff7a3d;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .3s ease}
+.graph-tag.is-quiet {
+  opacity: 0.45;
+}
+.buddy-shape {
+  fill: #ff7a3d;
+  stroke: #fff;
+  stroke-width: 1.8;
+  filter: drop-shadow(0 0 7px #ff7a3d99);
+}
+#buddy-trail {
+  fill: none;
+  stroke: #ff7a3d;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
 
 /* The 3D lift: the sketch steps aside as the sheet starts to rise, and returns as it lands. */
-#graph-layer,#graph-caption,#buddy{transition:opacity .45s ease .2s}
-@media (prefers-reduced-motion:reduce){#graph-layer,#graph-caption,#buddy{transition:none}}
-body.lifted #graph-layer,body.lifted #graph-caption,body.lifted #buddy,body.lifted #buddy-trail{opacity:0}
-body.lifted #graph-caption{pointer-events:none}
+#graph-layer,
+#graph-caption,
+#buddy {
+  transition: opacity 0.45s ease 0.2s;
+}
+@media (prefers-reduced-motion: reduce) {
+  #graph-layer,
+  #graph-caption,
+  #buddy {
+    transition: none;
+  }
+}
+body.lifted #graph-layer,
+body.lifted #graph-caption,
+body.lifted #buddy,
+body.lifted #buddy-trail {
+  opacity: 0;
+}
+body.lifted #graph-caption {
+  pointer-events: none;
+}
 /* Hidden connections cannot be cut, including while the sheet is still landing. */
-body.lifted .graph-hit{pointer-events:none}
-#lift-canvas{position:absolute;pointer-events:none}
-#lift-labels{position:absolute;inset:0;pointer-events:none}
+body.lifted .graph-hit {
+  pointer-events: none;
+}
+#lift-canvas {
+  position: absolute;
+  pointer-events: none;
+}
+#lift-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
 /* Positioned every frame, so no transitions: a label never lingers after its node. */
 /* Rounded sans with a flagged 1 and even digits: a handwritten 1 reads as I at this size. */
-.lift-tag{position:absolute;left:0;top:0;white-space:nowrap;padding:.16em .5em;border-radius:6px;font:650 15px/1.2 ui-rounded,'SF Pro Rounded',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#1d1d1b;background:#ffffffeb;border:1px solid #0002;box-shadow:0 3px 10px #0002;will-change:transform}
-.lift-tag:empty{display:none}
-.lift-tag.is-node{font-size:18px;font-weight:700;margin-top:-4px}
-.lift-tag.is-settled{background:#d9f0e3f5;border-color:#2f7d5f80}
-.lift-tag.is-source{background:#fff1c4f5;border-color:#b8860080}
-.lift-tag.is-current{background:#ffe2c6f5;border-color:#d0702c;box-shadow:0 0 0 3px #ff7a3d,0 3px 10px #0002}
-.lift-tag.is-quiet{font-size:12.5px;font-weight:600;padding:.1em .4em;background:#ffffffc8;color:#4b4a45;box-shadow:none}
-#lift-leaders{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-#lift-leaders line{stroke:#3b3a36;stroke-width:1.2}
-#lift-leaders circle{fill:#3b3a36}
-.lift-tag.is-selected{background:#fffdf8;border-color:#1d2430;box-shadow:0 0 0 2px #1d2430,0 3px 10px #0002;max-width:15em;white-space:normal;text-align:left}
-.lift-tag.is-waiting{background:#fffffff0;border:1.5px dashed #64748b;color:#475569;font-weight:600}
-.lift-tag.is-drop{background:#fff3b0f5;border-color:#a8860c;color:#1d1d1b;font-weight:700}
-.lift-tag.is-edge{font-size:14.5px;padding:.08em .42em}
-.lift-tag.is-taut{background:#fff3b0eb;border-color:#a8860c60}
-.lift-tag.is-path{background:#ffd9cff5;border-color:#d8432a80}
-.lift-tag.is-slack{background:#eef1f4eb;border-color:#5d6b7860;color:#36414c}
-.lift-tag.is-tentative{background:#fffffff0;border:1.5px dashed #64748b;color:#475569;font-weight:600;font-size:14px}
-.lift-tag.is-pull{background:#f6d6f5f5;border-color:#b02aad80;color:#6d1a6b}
-.lift-tag.is-cut{background:#fff1f0f5;border:1.5px dashed #b45454;color:#b91c1c;font-size:17px;font-weight:700}
-.lift-tag.is-tick{font:700 15px/1 ui-rounded,system-ui,sans-serif;font-variant-numeric:tabular-nums;padding:0;background:none;border:0;box-shadow:none;color:#4f4a40}
-#lift-caption{position:absolute;max-width:30em;animation:lift-caption-in .45s ease-out both;padding:.6em .9em;border-radius:12px;background:#fbf7ec;color:#2b2a26;font:15px/1.4 system-ui;box-shadow:0 14px 40px #0003;border:1px solid #e7dfcc}
-#lift-caption strong{display:block;font:700 19px/1.25 ui-rounded,system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#1d1d1b}
-#lift-caption span{display:block}
-#lift-caption>span:empty{display:none}
-#lift-caption small{display:block;margin-top:.45em;padding-top:.4em;border-top:1px solid #e7dfcc;font-size:13px;color:#4f4a40}
-@keyframes lift-caption-in{from{opacity:0;transform:translateY(8px) scale(.97)}}
-@media (prefers-reduced-motion:reduce){#lift-caption{animation:none}}
-.lift-legend{display:grid;grid-template-columns:auto auto;justify-content:start;gap:.3em 1.4em;margin-top:.35em;font-size:15px;color:#4f4a40}
-.lift-legend span{display:inline-flex;align-items:center;gap:6px}
-.lift-legend i{display:inline-block;width:22px;height:6px;border-radius:3px}
-.lift-legend i.is-start{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffd977,#f2b632 60%,#b9820f)}
-.lift-legend i.is-path{background:#ff5a3c}.lift-legend i.is-taut{background:#f2a93b}
-.lift-legend i.is-slack{width:22px;height:8px;background:none;border:2px solid #8a94a6;border-top:0;border-radius:0 0 12px 12px}
-.lift-legend i.is-estimate{height:0;border-top:2px dashed #64748b;border-radius:0}
-.lift-legend i.is-ghost{width:12px;height:12px;border:2px solid #64748b;border-radius:50%;background:none;margin:0 5px}
+.lift-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  padding: 0.16em 0.5em;
+  border-radius: 6px;
+  font:
+    650 15px/1.2 ui-rounded,
+    'SF Pro Rounded',
+    system-ui,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: #1d1d1b;
+  background: #ffffffeb;
+  border: 1px solid #0002;
+  box-shadow: 0 3px 10px #0002;
+  will-change: transform;
+}
+.lift-tag:empty {
+  display: none;
+}
+.lift-tag.is-node {
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: -4px;
+}
+.lift-tag.is-settled {
+  background: #d9f0e3f5;
+  border-color: #2f7d5f80;
+}
+.lift-tag.is-source {
+  background: #fff1c4f5;
+  border-color: #b8860080;
+}
+.lift-tag.is-current {
+  background: #ffe2c6f5;
+  border-color: #d0702c;
+  box-shadow:
+    0 0 0 3px #ff7a3d,
+    0 3px 10px #0002;
+}
+.lift-tag.is-quiet {
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 0.1em 0.4em;
+  background: #ffffffc8;
+  color: #4b4a45;
+  box-shadow: none;
+}
+#lift-leaders {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+#lift-leaders line {
+  stroke: #3b3a36;
+  stroke-width: 1.2;
+}
+#lift-leaders circle {
+  fill: #3b3a36;
+}
+.lift-tag.is-selected {
+  background: #fffdf8;
+  border-color: #1d2430;
+  box-shadow:
+    0 0 0 2px #1d2430,
+    0 3px 10px #0002;
+  max-width: 15em;
+  white-space: normal;
+  text-align: left;
+}
+.lift-tag.is-waiting {
+  background: #fffffff0;
+  border: 1.5px dashed #64748b;
+  color: #475569;
+  font-weight: 600;
+}
+.lift-tag.is-drop {
+  background: #fff3b0f5;
+  border-color: #a8860c;
+  color: #1d1d1b;
+  font-weight: 700;
+}
+.lift-tag.is-edge {
+  font-size: 14.5px;
+  padding: 0.08em 0.42em;
+}
+.lift-tag.is-taut {
+  background: #fff3b0eb;
+  border-color: #a8860c60;
+}
+.lift-tag.is-path {
+  background: #ffd9cff5;
+  border-color: #d8432a80;
+}
+.lift-tag.is-slack {
+  background: #eef1f4eb;
+  border-color: #5d6b7860;
+  color: #36414c;
+}
+.lift-tag.is-tentative {
+  background: #fffffff0;
+  border: 1.5px dashed #64748b;
+  color: #475569;
+  font-weight: 600;
+  font-size: 14px;
+}
+.lift-tag.is-pull {
+  background: #f6d6f5f5;
+  border-color: #b02aad80;
+  color: #6d1a6b;
+}
+.lift-tag.is-cut {
+  background: #fff1f0f5;
+  border: 1.5px dashed #b45454;
+  color: #b91c1c;
+  font-size: 17px;
+  font-weight: 700;
+}
+.lift-tag.is-tick {
+  font:
+    700 15px/1 ui-rounded,
+    system-ui,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  color: #4f4a40;
+}
+#lift-caption {
+  position: absolute;
+  max-width: 30em;
+  animation: lift-caption-in 0.45s ease-out both;
+  padding: 0.6em 0.9em;
+  border-radius: 12px;
+  background: #fbf7ec;
+  color: #2b2a26;
+  font: 15px/1.4 system-ui;
+  box-shadow: 0 14px 40px #0003;
+  border: 1px solid #e7dfcc;
+}
+#lift-caption strong {
+  display: block;
+  font:
+    700 19px/1.25 ui-rounded,
+    system-ui,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: #1d1d1b;
+}
+#lift-caption span {
+  display: block;
+}
+#lift-caption > span:empty {
+  display: none;
+}
+#lift-caption small {
+  display: block;
+  margin-top: 0.45em;
+  padding-top: 0.4em;
+  border-top: 1px solid #e7dfcc;
+  font-size: 13px;
+  color: #4f4a40;
+}
+@keyframes lift-caption-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #lift-caption {
+    animation: none;
+  }
+}
+.lift-legend {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  gap: 0.3em 1.4em;
+  margin-top: 0.35em;
+  font-size: 15px;
+  color: #4f4a40;
+}
+.lift-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.lift-legend i {
+  display: inline-block;
+  width: 22px;
+  height: 6px;
+  border-radius: 3px;
+}
+.lift-legend i.is-start {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffd977, #f2b632 60%, #b9820f);
+}
+.lift-legend i.is-path {
+  background: #ff5a3c;
+}
+.lift-legend i.is-taut {
+  background: #f2a93b;
+}
+.lift-legend i.is-slack {
+  width: 22px;
+  height: 8px;
+  background: none;
+  border: 2px solid #8a94a6;
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+}
+.lift-legend i.is-estimate {
+  height: 0;
+  border-top: 2px dashed #64748b;
+  border-radius: 0;
+}
+.lift-legend i.is-ghost {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #64748b;
+  border-radius: 50%;
+  background: none;
+  margin: 0 5px;
+}
 /* The engine's crank readout in the step card: a dial for the whole cycle and each stroke's progress. */
-#lift-turn{display:flex;align-items:center;gap:12px;margin:10px 0 4px;color:#2b3440}
-#lift-turn[hidden]{display:none}
-#lift-turn svg{position:static;inset:auto;width:60px;height:60px;flex:none;overflow:visible}
-.lift-turn-info{flex:1;min-width:0}
-#lift-turn-text{display:block;font:600 13.5px/1.3 -apple-system,system-ui,sans-serif;margin-bottom:6px}
-.lift-turns{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:3px;font:600 10.5px/1.2 -apple-system,system-ui,sans-serif;color:#5c5a52;text-align:center}
-.lift-strokes{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+#lift-turn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0 4px;
+  color: #2b3440;
+}
+#lift-turn[hidden] {
+  display: none;
+}
+#lift-turn svg {
+  position: static;
+  inset: auto;
+  width: 60px;
+  height: 60px;
+  flex: none;
+  overflow: visible;
+}
+.lift-turn-info {
+  flex: 1;
+  min-width: 0;
+}
+#lift-turn-text {
+  display: block;
+  font:
+    600 13.5px/1.3 -apple-system,
+    system-ui,
+    sans-serif;
+  margin-bottom: 6px;
+}
+.lift-turns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  margin-bottom: 3px;
+  font:
+    600 10.5px/1.2 -apple-system,
+    system-ui,
+    sans-serif;
+  color: #5c5a52;
+  text-align: center;
+}
+.lift-strokes {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+}
 /* The end of the first crank turn, halfway through the cycle. */
-.lift-strokes::after{content:'';position:absolute;left:calc(50% - 1px);top:-3px;bottom:-3px;width:2px;background:#1d2430}
-.lift-stroke{position:relative;min-width:0;padding:3px 2px;border-radius:5px;background:#ebe4d3;overflow:hidden;text-align:center}
-.lift-stroke i{position:absolute;inset:0 auto 0 0;width:0}
-.lift-stroke b{position:relative;font:650 10.5px/1.2 -apple-system,system-ui,sans-serif;color:#1d2430;mix-blend-mode:multiply}
-#lift-caption.is-engine>span{display:block;min-height:2.8em}
+.lift-strokes::after {
+  content: '';
+  position: absolute;
+  left: calc(50% - 1px);
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: #1d2430;
+}
+.lift-stroke {
+  position: relative;
+  min-width: 0;
+  padding: 3px 2px;
+  border-radius: 5px;
+  background: #ebe4d3;
+  overflow: hidden;
+  text-align: center;
+}
+.lift-stroke i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+}
+.lift-stroke b {
+  position: relative;
+  font:
+    650 10.5px/1.2 -apple-system,
+    system-ui,
+    sans-serif;
+  color: #1d2430;
+  mix-blend-mode: multiply;
+}
+#lift-caption.is-engine > span {
+  display: block;
+  min-height: 2.8em;
+}

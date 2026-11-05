@@ -51,46 +51,68 @@ async function runCase(browser, item) {
   try {
     await page.goto(base + '/explore');
     await page.waitForSelector('#exploration-question');
-    await page.setInputFiles('input[aria-label="Upload a PNG or JPEG screenshot"]', await slidePng(browser, item.id));
+    await page.setInputFiles(
+      'input[aria-label="Upload a PNG or JPEG screenshot"]',
+      await slidePng(browser, item.id),
+    );
     await page.fill('#exploration-question', item.question);
     const ask = page.getByRole('button', { name: 'Ask Soma', exact: true });
     await until('the question to be accepted', async () => !(await ask.isDisabled()), 30000);
     const started = Date.now();
     await ask.click();
     const settle = async (label, done) =>
-      until(label, async () => {
-        const t = await text();
-        const head = t.split(/YOUR STUDY JOURNAL|Muse Spark generated/)[0];
-        if (/could not validate|could not prepare|did not finish|is busy|limit|could not finish/i.test(head))
-          throw new Error(`${label} failed: ${head.split('\n').filter(Boolean).slice(2, 3).join(' ').slice(0, 200)}`);
-        return done.test(t) && !/Cancel request/.test(t);
-      }, 300000);
+      until(
+        label,
+        async () => {
+          const t = await text();
+          const head = t.split(/YOUR STUDY JOURNAL|Muse Spark generated/)[0];
+          if (
+            /could not validate|could not prepare|did not finish|is busy|limit|could not finish/i.test(
+              head,
+            )
+          )
+            throw new Error(
+              `${label} failed: ${head.split('\n').filter(Boolean).slice(2, 3).join(' ').slice(0, 200)}`,
+            );
+          return done.test(t) && !/Cancel request/.test(t);
+        },
+        300000,
+      );
     await settle('the answer', /New visual card ready/);
     artifact = await latest();
     result.answerSeconds = Math.round((Date.now() - started) / 1000);
     await wait(1500);
     await page.screenshot({ path: path.join(dir, 'answer.png') });
     result.mode = artifact.spec.mode;
-    result.panels = artifact.spec.mode === 'clarify' ? [] : artifact.spec.scene.panels.map((p) => p.kind);
+    result.panels =
+      artifact.spec.mode === 'clarify' ? [] : artifact.spec.scene.panels.map((p) => p.kind);
     if (artifact.spec.mode === 'clarify') {
       result.notes.push(`clarify: ${artifact.spec.question}`);
       return result;
     }
     // Open the answer in 3D however the page offers it.
-    const open3d = page.getByRole('button', { name: /^(3D workspace|See it in 3D|Build it in 3D|Show in 3D)$/ }).first();
+    const open3d = page
+      .getByRole('button', { name: /^(3D workspace|See it in 3D|Build it in 3D|Show in 3D)$/ })
+      .first();
     if (await open3d.isVisible().catch(() => false)) {
-      const before = artifact.version, started3d = Date.now();
+      const before = artifact.version,
+        started3d = Date.now();
       const building = /See it in 3D/.test((await open3d.textContent()) ?? '');
       await open3d.click();
       try {
         if (building) await settle('the 3D model', /The 3D model is ready/);
-        await until('the 3D stage', async () => (await page.locator('.spatial-stage canvas, .spatial-stage svg').count()) > 0, 30000);
+        await until(
+          'the 3D stage',
+          async () => (await page.locator('.spatial-stage canvas, .spatial-stage svg').count()) > 0,
+          30000,
+        );
       } catch (e) {
         result.notes.push(String(e.message));
       }
       result.modelSeconds = Math.round((Date.now() - started3d) / 1000);
       artifact = (await latest()) ?? artifact;
-      if (artifact.version !== before) result.notes.push(`3D model authored as version ${artifact.version}`);
+      if (artifact.version !== before)
+        result.notes.push(`3D model authored as version ${artifact.version}`);
       await wait(2500);
     } else result.notes.push('no 3D control offered');
     const stage = page.locator('.spatial-stage').first();
@@ -115,14 +137,24 @@ async function runCase(browser, item) {
       const before = artifact.version;
       await page.fill('#exploration-question', process.env.EVAL_FOLLOWUP);
       await page.getByRole('button', { name: 'Ask Soma', exact: true }).click();
-      await settle('the follow-up', /New visual card ready/).catch((e) => result.notes.push(`follow-up: ${e.message}`));
+      await settle('the follow-up', /New visual card ready/).catch((e) =>
+        result.notes.push(`follow-up: ${e.message}`),
+      );
       artifact = (await latest()) ?? artifact;
-      result.followupPanels = artifact.spec.mode === 'clarify' ? [] : artifact.spec.scene.panels.map((p) => p.kind);
+      result.followupPanels =
+        artifact.spec.mode === 'clarify' ? [] : artifact.spec.scene.panels.map((p) => p.kind);
       const toggle = page.getByRole('button', { name: '3D workspace', exact: true });
-      if (await toggle.isVisible().catch(() => false) && (await toggle.getAttribute('aria-pressed')) !== 'true') await toggle.click();
+      if (
+        (await toggle.isVisible().catch(() => false)) &&
+        (await toggle.getAttribute('aria-pressed')) !== 'true'
+      )
+        await toggle.click();
       await wait(3000);
       await shoot('followup-3d');
-      fs.writeFileSync(path.join(dir, 'followup.json'), JSON.stringify({ spec: artifact.spec }, null, 2));
+      fs.writeFileSync(
+        path.join(dir, 'followup.json'),
+        JSON.stringify({ spec: artifact.spec }, null, 2),
+      );
     }
     result.spatialPanel = artifact.spec.scene.panels.some((p) => p.kind === 'spatial');
     result.ok = true;
@@ -133,7 +165,15 @@ async function runCase(browser, item) {
     fs.writeFileSync(path.join(dir, 'FAIL-page.txt'), await text().catch(() => ''));
     return result;
   } finally {
-    if (artifact) fs.writeFileSync(path.join(dir, 'artifact.json'), JSON.stringify({ spec: artifact.spec, state: artifact.state, generation: artifact.generation }, null, 2));
+    if (artifact)
+      fs.writeFileSync(
+        path.join(dir, 'artifact.json'),
+        JSON.stringify(
+          { spec: artifact.spec, state: artifact.state, generation: artifact.generation },
+          null,
+          2,
+        ),
+      );
     result.errors = errors;
     fs.writeFileSync(path.join(dir, 'result.json'), JSON.stringify(result, null, 2));
     await context.close();
@@ -142,8 +182,12 @@ async function runCase(browser, item) {
 
 (async () => {
   fs.mkdirSync(out, { recursive: true });
-  const cases = JSON.parse(fs.readFileSync(path.join(casesDir, 'cases.json'), 'utf8')).filter((c) => !only.length || only.includes(c.id));
-  const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+  const cases = JSON.parse(fs.readFileSync(path.join(casesDir, 'cases.json'), 'utf8')).filter(
+    (c) => !only.length || only.includes(c.id),
+  );
+  const browser = await chromium.launch({
+    args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+  });
   const results = [];
   const queue = [...cases];
   // Two at a time: the server is shared and each answer takes a model round trip.
@@ -154,7 +198,13 @@ async function runCase(browser, item) {
         log('start', item.id);
         const r = await runCase(browser, item);
         results.push(r);
-        log(r.ok ? 'done' : 'FAIL', item.id, r.mode ?? '', (r.panels ?? []).join(','), r.notes.join(' | ').slice(0, 200));
+        log(
+          r.ok ? 'done' : 'FAIL',
+          item.id,
+          r.mode ?? '',
+          (r.panels ?? []).join(','),
+          r.notes.join(' | ').slice(0, 200),
+        );
       }
     }),
   );

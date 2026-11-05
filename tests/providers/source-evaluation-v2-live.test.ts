@@ -21,32 +21,57 @@ it.skipIf(process.env.SOMA_EVAL_V2_LIVE !== 'true')(
     expect(Number(process.env.META_APP_SPEND_CAP_USD)).toBeLessThanOrEqual(40);
     const cases = JSON.parse(readFileSync(`${dir}/cases.json`, 'utf8')) as Case[];
     const freeze = createHash('sha256');
-    for (const file of ['cases.json', ...cases.map((c) => `${c.id}.png`)]) freeze.update(readFileSync(`${dir}/${file}`));
+    for (const file of ['cases.json', ...cases.map((c) => `${c.id}.png`)])
+      freeze.update(readFileSync(`${dir}/${file}`));
     const only = process.env.SOMA_EVAL_V2_ONLY?.split(',');
     const local = '.local/source-eval-v2';
     mkdirSync(local, { recursive: true });
     const fs = getServerFirestore();
-    const ledger = async () => Number((await fs.doc('somaBudget/global').get()).data()?.consumed ?? 0);
-    const turns = async () => (await fs.doc('somaServiceLimits/exploration-global').get()).data() as { day?: string; turns?: number } | undefined;
+    const ledger = async () =>
+      Number((await fs.doc('somaBudget/global').get()).data()?.consumed ?? 0);
+    const turns = async () =>
+      (await fs.doc('somaServiceLimits/exploration-global').get()).data() as
+        { day?: string; turns?: number } | undefined;
     const results: Record<string, unknown>[] = [];
-    const save = () => writeFileSync(`${dir}/results.json`, JSON.stringify(results, null, 1) + '\n');
-    results.push({ phase: 'preflight', at: new Date().toISOString(), freezeSha256: freeze.digest('hex'), ledger: await ledger(), turns: await turns() });
+    const save = () =>
+      writeFileSync(`${dir}/results.json`, JSON.stringify(results, null, 1) + '\n');
+    results.push({
+      phase: 'preflight',
+      at: new Date().toISOString(),
+      freezeSha256: freeze.digest('hex'),
+      ledger: await ledger(),
+      turns: await turns(),
+    });
     save();
     for (const c of cases) {
       if (only && !only.includes(c.id)) continue;
       // Stop well inside the cap and the day's turns so the live demo keeps headroom. As in the
       // store, a count from an earlier UTC day is stale until the next turn resets it.
       const today = await turns();
-      const used = today?.day === new Date().toISOString().slice(0, 10) ? Number(today.turns ?? 0) : 0;
+      const used =
+        today?.day === new Date().toISOString().slice(0, 10) ? Number(today.turns ?? 0) : 0;
       if ((await ledger()) > 37.5 || used > 150) {
         results.push({ id: c.id, status: 'not-run', reason: 'headroom guard' });
         save();
         continue;
       }
       const id = randomBytes(32).toString('hex'),
-        principal: ExplorationPrincipal = { kind: 'guest', id, workspaceId: id, generation: id, key: 'guest-' + id };
-      const service = createExplorationService({ reviewEnabled: () => true, request: requestMetaVisionResponse, review: requestMetaResponse });
-      const png = await sharp(readFileSync(`${dir}/${c.id}.png`)).resize({ width: 1600 }).png().toBuffer();
+        principal: ExplorationPrincipal = {
+          kind: 'guest',
+          id,
+          workspaceId: id,
+          generation: id,
+          key: 'guest-' + id,
+        };
+      const service = createExplorationService({
+        reviewEnabled: () => true,
+        request: requestMetaVisionResponse,
+        review: requestMetaResponse,
+      });
+      const png = await sharp(readFileSync(`${dir}/${c.id}.png`))
+        .resize({ width: 1600 })
+        .png()
+        .toBuffer();
       const started = Date.now();
       try {
         await service.initialize(principal);
@@ -54,7 +79,12 @@ it.skipIf(process.env.SOMA_EVAL_V2_LIVE !== 'true')(
           action: 'generate',
           requestId: randomUUID(),
           question: c.question,
-          source: { kind: 'screenshot', label: 'Lecture slide (original test slide)', capturedAt: new Date().toISOString(), dataUrl: 'data:image/png;base64,' + png.toString('base64') },
+          source: {
+            kind: 'screenshot',
+            label: 'Lecture slide (original test slide)',
+            capturedAt: new Date().toISOString(),
+            dataUrl: 'data:image/png;base64,' + png.toString('base64'),
+          },
         });
         writeFileSync(`${local}/${c.id}.json`, JSON.stringify(artifact, null, 2));
         const spec = artifact.spec as { mode: string; input?: unknown };
@@ -71,11 +101,23 @@ it.skipIf(process.env.SOMA_EVAL_V2_LIVE !== 'true')(
           audit: artifact.generation.audit.map((a) => `${a.event}: ${a.detail}`).slice(0, 12),
         });
       } catch (error) {
-        results.push({ id: c.id, subject: c.subject, status: 'failed', passed: false, elapsedMs: Date.now() - started, error: String((error as Error).message ?? error).slice(0, 300) });
+        results.push({
+          id: c.id,
+          subject: c.subject,
+          status: 'failed',
+          passed: false,
+          elapsedMs: Date.now() - started,
+          error: String((error as Error).message ?? error).slice(0, 300),
+        });
       }
       save();
     }
-    results.push({ phase: 'final', at: new Date().toISOString(), ledger: await ledger(), turns: await turns() });
+    results.push({
+      phase: 'final',
+      at: new Date().toISOString(),
+      ledger: await ledger(),
+      turns: await turns(),
+    });
     save();
   },
   1_800_000,

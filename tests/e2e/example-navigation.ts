@@ -4,7 +4,7 @@ import { expect, type Page } from '@playwright/test';
 export async function openMoreExamples(page: Page) {
   const disclosure = page.locator('.journal-more-examples:visible').first();
   await expect(disclosure).toBeVisible();
-  if (await disclosure.getAttribute('open') === null) {
+  if ((await disclosure.getAttribute('open')) === null) {
     await disclosure.locator('summary').click();
   }
   await expect(disclosure).toHaveAttribute('open', '');

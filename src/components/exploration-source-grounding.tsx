@@ -1,7 +1,7 @@
-"use client";
-import { useEffect, useState } from "react";
-import type { SourceAnchor, SourceChange } from "@/lib/domain/source-grounding";
-import type { ExplorationCapture } from "./exploration-capture";
+'use client';
+import { useEffect, useState } from 'react';
+import type { SourceAnchor, SourceChange } from '@/lib/domain/source-grounding';
+import type { ExplorationCapture } from './exploration-capture';
 
 type SourceOwner = {
   capturedAt: string | undefined;
@@ -11,8 +11,10 @@ type SourceOwner = {
 };
 type SourceInteraction = { owner: SourceOwner; selected: string | null; status: string };
 const sameOwner = (a: SourceOwner, b: SourceOwner) =>
-  a.capturedAt === b.capturedAt && a.nativeId === b.nativeId &&
-  a.image === b.image && a.anchors === b.anchors;
+  a.capturedAt === b.capturedAt &&
+  a.nativeId === b.nativeId &&
+  a.image === b.image &&
+  a.anchors === b.anchors;
 
 /** A captured source is inspectable even when the live desktop has moved on. */
 export function ExplorationSourceGrounding({
@@ -28,9 +30,9 @@ export function ExplorationSourceGrounding({
   change?: SourceChange;
   previous?: ExplorationCapture;
 }) {
-  const anchorDefinitions = JSON.stringify(anchors.map((a) => [
-    a.id, a.label, a.region.x, a.region.y, a.region.width, a.region.height,
-  ]));
+  const anchorDefinitions = JSON.stringify(
+    anchors.map((a) => [a.id, a.label, a.region.x, a.region.y, a.region.width, a.region.height]),
+  );
   const owner: SourceOwner = {
     capturedAt: capture?.capturedAt,
     nativeId: capture?.nativeId,
@@ -38,28 +40,28 @@ export function ExplorationSourceGrounding({
     anchors: anchorDefinitions,
   };
   const [interaction, setInteraction] = useState<SourceInteraction>(() => ({
-    owner, selected: null, status: "",
+    owner,
+    selected: null,
+    status: '',
   }));
   // Invalidate immediately during render as well as clearing retained state below:
   // a new capture must never briefly inherit an old region or pointing notice.
   const owned = sameOwner(interaction.owner, owner);
   const selected = owned ? interaction.selected : null;
-  const status = owned ? interaction.status : "";
-  const updateInteraction = (next: Partial<Pick<SourceInteraction, "selected" | "status">>) =>
+  const status = owned ? interaction.status : '';
+  const updateInteraction = (next: Partial<Pick<SourceInteraction, 'selected' | 'status'>>) =>
     setInteraction((current) => ({
       owner,
       selected: sameOwner(current.owner, owner) ? current.selected : null,
-      status: sameOwner(current.owner, owner) ? current.status : "",
+      status: sameOwner(current.owner, owner) ? current.status : '',
       ...next,
     }));
-  const active = anchors.filter((a) =>
-    selected ? a.id === selected : activeIds.includes(a.id),
-  );
+  const active = anchors.filter((a) => (selected ? a.id === selected : activeIds.includes(a.id)));
   const visible = active;
   useEffect(() => {
-    setInteraction((current) => sameOwner(current.owner, owner)
-      ? current
-      : { owner, selected: null, status: "" });
+    setInteraction((current) =>
+      sameOwner(current.owner, owner) ? current : { owner, selected: null, status: '' },
+    );
   }, [capture?.capturedAt, capture?.nativeId, capture?.dataUrl, anchorDefinitions]);
   useEffect(() => {
     if (!capture?.nativeId) return;
@@ -68,13 +70,12 @@ export function ExplorationSourceGrounding({
       if (d?.id === capture.nativeId)
         updateInteraction({
           status: d.shown
-            ? "Pointing at the captured source on your screen."
-            : "The screen changed or this capture expired. Use the captured source below or capture again.",
+            ? 'Pointing at the captured source on your screen.'
+            : 'The screen changed or this capture expired. Use the captured source below or capture again.',
         });
     };
-    window.addEventListener("soma:source-highlight-result", listen);
-    return () =>
-      window.removeEventListener("soma:source-highlight-result", listen);
+    window.addEventListener('soma:source-highlight-result', listen);
+    return () => window.removeEventListener('soma:source-highlight-result', listen);
   }, [capture?.capturedAt, capture?.nativeId, capture?.dataUrl, anchorDefinitions]);
   if (!anchors.length && !change) return null;
   return (
@@ -82,17 +83,15 @@ export function ExplorationSourceGrounding({
       {change && (
         <p className="exploration-source-change">
           <strong>
-            {change.relationship === "same-material"
-              ? "What changed"
-              : change.relationship === "different-material"
-                ? "New material"
-                : "Source relationship uncertain"}
+            {change.relationship === 'same-material'
+              ? 'What changed'
+              : change.relationship === 'different-material'
+                ? 'New material'
+                : 'Source relationship uncertain'}
             :
-          </strong>{" "}
+          </strong>{' '}
           {change.summary}
-          {change.uncertainty.length > 0 && (
-            <small>{change.uncertainty.join(" ")}</small>
-          )}
+          {change.uncertainty.length > 0 && <small>{change.uncertainty.join(' ')}</small>}
         </p>
       )}
       {change && previous && capture && (
@@ -113,15 +112,12 @@ export function ExplorationSourceGrounding({
       {!!anchors.length && (
         <details>
           <summary>
-            See on source · {anchors.length} model-located{" "}
-            {anchors.length === 1 ? "region" : "regions"}
+            See on source · {anchors.length} model-located{' '}
+            {anchors.length === 1 ? 'region' : 'regions'}
           </summary>
           {capture ? (
             <div className="exploration-grounding-image">
-              <img
-                src={capture.dataUrl}
-                alt="Captured source with model-located regions"
-              />
+              <img src={capture.dataUrl} alt="Captured source with model-located regions" />
               {visible.map((a) => (
                 <span
                   key={a.id}
@@ -141,14 +137,13 @@ export function ExplorationSourceGrounding({
             </div>
           ) : (
             <p className="meta">
-              Source pixels were not saved. Capture again to inspect these
-              locations.
+              Source pixels were not saved. Capture again to inspect these locations.
             </p>
           )}
           <p className="meta">
             {selected
-              ? "This region stays selected as the explanation advances. Select it again to follow the explanation."
-              : "Regions follow the explanation. Select one to keep it in view."}
+              ? 'This region stays selected as the explanation advances. Select it again to follow the explanation.'
+              : 'Regions follow the explanation. Select one to keep it in view.'}
           </p>
           <div className="action-row">
             {anchors.map((a) => (
@@ -158,7 +153,9 @@ export function ExplorationSourceGrounding({
                 type="button"
                 aria-label={a.label}
                 aria-pressed={selected === a.id}
-                onClick={() => updateInteraction({ selected: selected === a.id ? null : a.id, status: "" })}
+                onClick={() =>
+                  updateInteraction({ selected: selected === a.id ? null : a.id, status: '' })
+                }
               >
                 {anchors.indexOf(a) + 1} · {a.label}
               </button>
@@ -170,9 +167,9 @@ export function ExplorationSourceGrounding({
               type="button"
               disabled={!visible.length}
               onClick={() => {
-                updateInteraction({ status: "Checking that the screen still matches…" });
+                updateInteraction({ status: 'Checking that the screen still matches…' });
                 window.dispatchEvent(
-                  new CustomEvent("soma:source-highlight", {
+                  new CustomEvent('soma:source-highlight', {
                     detail: { id: capture.nativeId, anchors: visible },
                   }),
                 );
@@ -182,8 +179,8 @@ export function ExplorationSourceGrounding({
             </button>
           )}
           <p className="meta">
-            Locations are model interpretations. Native pointing requires the
-            screen to still match this capture.
+            Locations are model interpretations. Native pointing requires the screen to still match
+            this capture.
           </p>
           {status && <p role="status">{status}</p>}
         </details>

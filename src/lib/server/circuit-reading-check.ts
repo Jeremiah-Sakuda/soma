@@ -17,18 +17,34 @@ export function circuitReadingSchemas(input: DcInput) {
   return {
     check: z.strictObject({
       verdict: z.enum(['confirmed', 'disagree']),
-      issues: z.array(z.strictObject({
-        componentId: z.enum(ids).nullable(),
-        kind: z.enum(['value', 'polarity', 'connection', 'missing', 'extra', 'label', 'unreadable']),
-        value: z.number().finite().nullable(),
-        note: z.string().min(1).max(160),
-      })).max(6),
+      issues: z
+        .array(
+          z.strictObject({
+            componentId: z.enum(ids).nullable(),
+            kind: z.enum([
+              'value',
+              'polarity',
+              'connection',
+              'missing',
+              'extra',
+              'label',
+              'unreadable',
+            ]),
+            value: z.number().finite().nullable(),
+            note: z.string().min(1).max(160),
+          }),
+        )
+        .max(6),
     }),
     reread: z.strictObject({
-      values: z.array(z.strictObject({
-        componentId: z.enum(ids),
-        value: z.number().finite().nullable(),
-      })).max(6),
+      values: z
+        .array(
+          z.strictObject({
+            componentId: z.enum(ids),
+            value: z.number().finite().nullable(),
+          }),
+        )
+        .max(6),
     }),
   };
 }
@@ -39,12 +55,21 @@ type Rereading = z.infer<ReturnType<typeof circuitReadingSchemas>['reread']>;
 export function circuitValueDisagreements(input: DcInput, reading: Reading) {
   return reading.issues.filter((issue) => {
     const part = input.components.find((part) => part.id === issue.componentId);
-    return issue.kind === 'value' && part && issue.value !== null &&
-      issue.value !== part.value && dcValueAllowed(part.kind, issue.value);
+    return (
+      issue.kind === 'value' &&
+      part &&
+      issue.value !== null &&
+      issue.value !== part.value &&
+      dcValueAllowed(part.kind, issue.value)
+    );
   });
 }
 
-export function reconcileCircuitReading(input: DcInput, reading: Reading, reread: Rereading | null) {
+export function reconcileCircuitReading(
+  input: DcInput,
+  reading: Reading,
+  reread: Rereading | null,
+) {
   const corrections: CircuitReadingCheck['corrections'] = [];
   const disputes: string[] = [];
   for (const issue of reading.issues) {
@@ -53,17 +78,28 @@ export function reconcileCircuitReading(input: DcInput, reading: Reading, reread
     const second = reread?.values.filter((value) => value.componentId === issue.componentId) ?? [];
     // Repeated contradictory responses are not a consensus. No arithmetic or unit
     // inference happens here: both models must report the same base-unit value.
-    const uniqueIssue = reading.issues.filter((other) => other.componentId === issue.componentId).length === 1;
-    if (issue.kind === 'value' && part && issue.value !== null &&
-        dcValueAllowed(part.kind, issue.value) && uniqueIssue &&
-        second.length === 1 && second[0].value === issue.value) {
+    const uniqueIssue =
+      reading.issues.filter((other) => other.componentId === issue.componentId).length === 1;
+    if (
+      issue.kind === 'value' &&
+      part &&
+      issue.value !== null &&
+      dcValueAllowed(part.kind, issue.value) &&
+      uniqueIssue &&
+      second.length === 1 &&
+      second[0].value === issue.value
+    ) {
       corrections.push({ componentId: part.id, from: part.value, to: issue.value });
     } else {
-      disputes.push(`Muse Wonder questions ${part?.label ?? 'the circuit'} (${issue.kind}): ${issue.note}`);
+      disputes.push(
+        `Muse Wonder questions ${part?.label ?? 'the circuit'} (${issue.kind}): ${issue.note}`,
+      );
     }
   }
   if (reading.verdict === 'disagree' && reading.issues.length === 0)
-    disputes.push('Muse Wonder disagreed with the circuit reading without identifying a specific part.');
+    disputes.push(
+      'Muse Wonder disagreed with the circuit reading without identifying a specific part.',
+    );
   const check: CircuitReadingCheck = {
     model: 'muse-wonder-1.0',
     status: disputes.length ? 'disputed' : corrections.length ? 'corrected' : 'confirmed',
@@ -73,10 +109,13 @@ export function reconcileCircuitReading(input: DcInput, reading: Reading, reread
   };
   return {
     check,
-    input: { ...input, components: input.components.map((part) => {
-      const correction = corrections.find((correction) => correction.componentId === part.id);
-      return correction ? { ...part, value: correction.to } : part;
-    }) },
+    input: {
+      ...input,
+      components: input.components.map((part) => {
+        const correction = corrections.find((correction) => correction.componentId === part.id);
+        return correction ? { ...part, value: correction.to } : part;
+      }),
+    },
   };
 }
 

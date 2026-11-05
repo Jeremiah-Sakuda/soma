@@ -271,8 +271,14 @@
   font-size: 13px;
   line-height: 1.45;
 }
-.exploration-app .journal-source-uncertainty summary { cursor: pointer; padding: 6px 0; }
-.exploration-app .journal-source-uncertainty ul { padding-left: 20px; margin: 4px 0 10px; }
+.exploration-app .journal-source-uncertainty summary {
+  cursor: pointer;
+  padding: 6px 0;
+}
+.exploration-app .journal-source-uncertainty ul {
+  padding-left: 20px;
+  margin: 4px 0 10px;
+}
 .exploration-app .journal-recording-details {
   font-size: 12px;
   color: var(--ink-2);
@@ -640,7 +646,11 @@
 }
 
 /* ── Diagram: one node language for both searches ────────────────────── */
-.exploration-app .journal-right .exploration-search-stage .exploration-node .exploration-node-shape {
+.exploration-app
+  .journal-right
+  .exploration-search-stage
+  .exploration-node
+  .exploration-node-shape {
   fill: var(--paper);
   stroke: var(--ink);
   stroke-width: 2;
@@ -649,18 +659,30 @@
   fill: var(--ink);
   font-family: var(--font-journal-serif), 'Young Serif', Georgia, serif;
 }
-.exploration-app .journal-right .exploration-search-stage .exploration-node.is-visited .exploration-node-shape {
+.exploration-app
+  .journal-right
+  .exploration-search-stage
+  .exploration-node.is-visited
+  .exploration-node-shape {
   fill: var(--ink);
 }
 .exploration-app .journal-right .exploration-search-stage .exploration-node.is-visited > text {
   fill: var(--paper);
 }
-.exploration-app .journal-right .exploration-search-stage .exploration-node.is-current .exploration-node-shape {
+.exploration-app
+  .journal-right
+  .exploration-search-stage
+  .exploration-node.is-current
+  .exploration-node-shape {
   fill: var(--highlight);
   stroke: var(--ink);
   stroke-width: 2.5;
 }
-.exploration-app .journal-right .exploration-search-stage .exploration-node.is-selected .exploration-node-shape {
+.exploration-app
+  .journal-right
+  .exploration-search-stage
+  .exploration-node.is-selected
+  .exploration-node-shape {
   stroke: var(--accent);
   stroke-width: 3;
 }
@@ -711,7 +733,11 @@
   font-family: var(--font-geist-mono);
   font-size: 13px;
 }
-.exploration-app .journal-right [data-weighted-node].is-settled .exploration-weighted-node-label span {
+.exploration-app
+  .journal-right
+  [data-weighted-node].is-settled
+  .exploration-weighted-node-label
+  span {
   color: #e6dcc9;
 }
 .exploration-app .journal-right .exploration-queue-track {
@@ -812,7 +838,11 @@
   color: var(--ink);
 }
 .exploration-app .journal-right .exploration-playback .exploration-voice-settings > summary,
-.exploration-app.has-exploration .journal-right .exploration-playback .exploration-voice-settings summary {
+.exploration-app.has-exploration
+  .journal-right
+  .exploration-playback
+  .exploration-voice-settings
+  summary {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
@@ -1071,7 +1101,10 @@
 /* The diagram is the page's subject: it scales with the page and is never squeezed
  * to make room for chrome. */
 .exploration-app .journal-right .exploration-panel-graph > .exploration-weighted-stage,
-.exploration-app.has-exploration .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+.exploration-app.has-exploration
+  .journal-right
+  .exploration-panel-graph
+  > .exploration-weighted-stage,
 .exploration-app .journal-right .exploration-search-stage,
 .exploration-app.has-exploration .journal-right .exploration-search-stage {
   width: 100%;
@@ -1082,7 +1115,10 @@
 }
 @media (max-width: 760px) {
   .exploration-app .journal-right .exploration-panel-graph > .exploration-weighted-stage,
-  .exploration-app.has-exploration .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app.has-exploration
+    .journal-right
+    .exploration-panel-graph
+    > .exploration-weighted-stage,
   .exploration-app .journal-right .exploration-search-stage,
   .exploration-app.has-exploration .journal-right .exploration-search-stage {
     height: auto;
@@ -1103,7 +1139,10 @@
   .exploration-app .journal-save .secondary-button,
   .exploration-app .journal-right .exploration-step-bar .secondary-button:has(> svg),
   .exploration-app .journal-right .exploration-step-bar .primary-button:has(> svg),
-  .exploration-app.has-exploration .journal-right .exploration-step-bar .secondary-button:has(> svg),
+  .exploration-app.has-exploration
+    .journal-right
+    .exploration-step-bar
+    .secondary-button:has(> svg),
   .exploration-app.has-exploration .journal-right .exploration-step-bar .primary-button:has(> svg) {
     width: 44px;
     min-width: 44px;
@@ -1172,7 +1211,10 @@
   }
   .exploration-app .journal-right .exploration-step-bar .secondary-button:has(> svg),
   .exploration-app .journal-right .exploration-step-bar .primary-button:has(> svg),
-  .exploration-app.has-exploration .journal-right .exploration-step-bar .secondary-button:has(> svg),
+  .exploration-app.has-exploration
+    .journal-right
+    .exploration-step-bar
+    .secondary-button:has(> svg),
   .exploration-app.has-exploration .journal-right .exploration-step-bar .primary-button:has(> svg) {
     width: 44px;
     min-width: 44px;
@@ -1184,7 +1226,10 @@
     display: none;
   }
   .exploration-app .journal-right .exploration-panel-graph > .exploration-weighted-stage,
-  .exploration-app.has-exploration .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app.has-exploration
+    .journal-right
+    .exploration-panel-graph
+    > .exploration-weighted-stage,
   .exploration-app .journal-right .exploration-search-stage,
   .exploration-app.has-exploration .journal-right .exploration-search-stage {
     width: auto;
@@ -1240,7 +1285,9 @@
   position: sticky;
   bottom: 12px;
   z-index: 30;
-  box-shadow: 0 3px 0 #c9bb9f, 0 -6px 24px rgb(38 34 29 / 0.08);
+  box-shadow:
+    0 3px 0 #c9bb9f,
+    0 -6px 24px rgb(38 34 29 / 0.08);
 }
 @media (max-width: 760px) {
   .exploration-app .exploration-ask-card.journal-composer,
@@ -1286,7 +1333,11 @@
   font-family: var(--font-geist-mono);
 }
 /* Route tabs: the name and total are enough; the found route stays as status text. */
-.exploration-app .journal-right .exploration-comparison-switch button .meta:not(:has([role='status'])) {
+.exploration-app
+  .journal-right
+  .exploration-comparison-switch
+  button
+  .meta:not(:has([role='status'])) {
   display: none;
 }
 .exploration-app .journal-right .exploration-controls > p.meta:last-child {
@@ -1305,15 +1356,26 @@
 /* Narrow windows: the diagram takes the room actually left above the question line. */
 @media (max-width: 760px) {
   .exploration-app .journal-right .exploration-panel-graph > .exploration-weighted-stage,
-  .exploration-app.has-exploration .journal-right .exploration-panel-graph > .exploration-weighted-stage,
+  .exploration-app.has-exploration
+    .journal-right
+    .exploration-panel-graph
+    > .exploration-weighted-stage,
   .exploration-app .journal-right .exploration-search-stage,
   .exploration-app.has-exploration .journal-right .exploration-search-stage {
     max-height: var(--journal-graph-room, max(220px, calc(100dvh - 450px)));
   }
 }
 @media (max-width: 760px) {
-  .exploration-app .journal-right .exploration-playback .exploration-voice-settings > summary.journal-summary-icon,
-  .exploration-app.has-exploration .journal-right .exploration-playback .exploration-voice-settings summary.journal-summary-icon {
+  .exploration-app
+    .journal-right
+    .exploration-playback
+    .exploration-voice-settings
+    > summary.journal-summary-icon,
+  .exploration-app.has-exploration
+    .journal-right
+    .exploration-playback
+    .exploration-voice-settings
+    summary.journal-summary-icon {
     font-size: 0;
     gap: 0;
     min-width: 44px;
@@ -1352,6 +1414,12 @@ html[data-soma-desktop] .exploration-app {
   font-weight: 500;
   list-style: none;
 }
-.exploration-app .journal-more-examples > summary::-webkit-details-marker { display: none; }
-.exploration-app .journal-more-examples[open] > summary svg { transform: rotate(180deg); }
-.exploration-app .journal-more-examples .journal-example-extras { margin-top: 12px; }
+.exploration-app .journal-more-examples > summary::-webkit-details-marker {
+  display: none;
+}
+.exploration-app .journal-more-examples[open] > summary svg {
+  transform: rotate(180deg);
+}
+.exploration-app .journal-more-examples .journal-example-extras {
+  margin-top: 12px;
+}

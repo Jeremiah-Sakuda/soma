@@ -18,7 +18,6 @@ The original synthetic source card is included, informed by [NASA Glenn’s four
 
 Five bounded operations made **16 actual Spark/Wonder calls**, costing **$0.47103575**. Latest observed shared ledger **$16.28536175 / $20**, at **2026-10-31T23:31:01.878Z**; all previous usage and uncertain reservations retained. Admission,90-second operations,30-second requests,4-call limits and$0.35 reservations remain enforced. No cap increase/reset.
 
-Earlier full-art candidates omitted the exhaust poppet head, left the crank connection incomplete, obstructed passages or said all exhaust was expelled. Reviewer snapshots initially missed the brief spark interval; explicit renderer semantics and an ignition sample corrected that prompt. Raw rejected artifacts/requests remain privately in `.local/pm121/author-r1` through `author-r3`; the committed generation receipt retains all advisory verdicts and costs. After repeated full-spec omissions, a schema-constrained three-path repair preserved all other art/story data. Final render inspection still found a detached counterweight after advisory approval; one more recorded Muse path repair connected it to the hub, with a new SVG fill-continuity assertion. Rendered and independent checks remain necessary.
 
 ## Executed verification
 
@@ -26,7 +25,6 @@ Earlier full-art candidates omitted the exhaust poppet head, left the crank conn
 - **Ten production browser journeys**: source data, stroke/valve behavior,241 rendered angle samples, exact held-pointer reversals, actual media clock/pause/seek/end, voice failure recovery, valve-head seats, path/label bounds, labels off, keyboard/reduced motion and375/620/900/1440 layouts, icon sizing, no outbound/API/workspace access and range media serving.
 - TypeScript and standalone Vite build passed. Canonical product runtime remains PM118:263files / SHA `195d3d553598638a63403e84534d7196f76aa165d48d415178273f844f32d8d1`.
 - Same SVG scene exported as **720 frames /30fps /24 seconds /800×600 H264 with AAC audio**. All four local speech segments fit their six-second chapters without cutting words (3.84–4.49 seconds each).
-- Final in-app inspection confirmed the finished composition, direct stroke selection and natural narrated playback from0° to720°, ending in the paused Play again state. Screenshot proof remains privately in `.local/pm121/`. Native Mac Chrome access was unavailable because the Mac was locked; no unlock was attempted. No fresh native acceptance claim.
 
 This remains a static private demo, with no canonical exploration generation endpoint, save/reopen/follow-up integration, main merge, deployment or publication.
 

@@ -8,10 +8,7 @@ import { imageRegionSchema, sourceAnchorsSchema } from '../../src/lib/domain/sou
 import { cropSourceDetail } from '../../src/lib/server/source-detail';
 import { createExplorationService } from '../../src/lib/server/exploration';
 import { createExampleExploration } from '../../src/lib/domain/exploration';
-import {
-  explorationStore,
-  closeExplorationStore,
-} from '../../src/lib/server/exploration-store';
+import { explorationStore, closeExplorationStore } from '../../src/lib/server/exploration-store';
 import type { ExplorationPrincipal } from '../../src/lib/server/exploration-types';
 const owner: ExplorationPrincipal = {
   kind: 'guest',
@@ -69,9 +66,7 @@ function service({
   const seen: any[] = [];
   const request = vi.fn(async (args) => {
     seen.push(args);
-    const c = JSON.parse(
-      (args.input[0] as any).content[0]?.text ?? (args.input[0] as any).content,
-    );
+    const c = JSON.parse((args.input[0] as any).content[0]?.text ?? (args.input[0] as any).content);
     if (!args.instructions.includes('Required spec id=')) {
       inspections++;
       if (crop && inspections === 1)
@@ -116,8 +111,7 @@ function service({
     s.sources = [
       { observationId: c.source.observationId, version: c.source.version, region: null },
     ];
-    if (s.mode !== 'clarify')
-      s.steps[0].sourceHighlightIds = [badAnchor ? 'absent' : anchor.id];
+    if (s.mode !== 'clarify') s.steps[0].sourceHighlightIds = [badAnchor ? 'absent' : anchor.id];
     return structured
       ? {
           status: 'completed',
@@ -153,12 +147,8 @@ const input = (dataUrl: string) => ({
   },
 });
 it('rejects out-of-image, nonfinite and duplicate locations', () => {
-  expect(imageRegionSchema.safeParse({ x: 0.9, y: 0, width: 0.2, height: 1 }).success).toBe(
-    false,
-  );
-  expect(imageRegionSchema.safeParse({ x: NaN, y: 0, width: 1, height: 1 }).success).toBe(
-    false,
-  );
+  expect(imageRegionSchema.safeParse({ x: 0.9, y: 0, width: 0.2, height: 1 }).success).toBe(false);
+  expect(imageRegionSchema.safeParse({ x: NaN, y: 0, width: 1, height: 1 }).success).toBe(false);
   expect(sourceAnchorsSchema.safeParse([anchor, anchor]).success).toBe(false);
 });
 it('crops the actual selected pixels, rejects oversize/tiny regions and external URLs', async () => {
@@ -187,9 +177,7 @@ it('crops the actual selected pixels, rejects oversize/tiny regions and external
     .toBuffer();
   expect(p[2]).toBeGreaterThan(240);
   expect(p[0]).toBeLessThan(10);
-  await expect(
-    cropSourceDetail('https://example.org/image.png', anchor.region),
-  ).rejects.toThrow();
+  await expect(cropSourceDetail('https://example.org/image.png', anchor.region)).rejects.toThrow();
   await expect(
     cropSourceDetail(await image('red'), { x: 0, y: 0, width: 1, height: 1 }),
   ).rejects.toThrow();

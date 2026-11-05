@@ -1,10 +1,11 @@
 # Soma desktop companion
 
-Soma turns a diagram on your screen into an experiment whose answers are computed, not guessed, starting with the slide you're studying. Explanations work over whatever you're looking at; the checked part today is graph search and DC circuits, drawn directly on the source. This Apple Silicon companion requires macOS 14.2 or newer and uses the current hosted Soma engine; it needs an internet connection. Capture is one snapshot at a time, only when requested, with preview before any model submission.
+Soma turns a diagram on your screen into an experiment whose answers are computed, not guessed, starting with the slide you're studying. Explanatory visuals can address other supported material; the checked part today is graph search and DC circuits, drawn directly on the source. This Apple Silicon companion requires macOS 14.2 or newer and uses the current hosted Soma engine; it needs an internet connection. Capture is explicit, one snapshot at a time. The panel offers preview; submitting a compact-bar question consents to capture and send.
 
 From the repository root:
 
 ```sh
+npm ci
 npm ci --prefix desktop
 npm start --prefix desktop
 npm test --prefix desktop
@@ -24,7 +25,7 @@ SOMA_DESKTOP_URL=http://127.0.0.1:3000 npm start --prefix desktop
 
 Only loopback HTTP overrides are allowed in development; packaged builds lock to the production origin. No API credentials are bundled. The desktop session is separate from your ordinary browser session. Uploaded screenshots use the existing transient preview path. Never bundle app session data or private captures.
 
-The smoke script launches real Electron with an original local HTML fixture; it checks screenshot delivery without OS capture or provider calls. See `docs/DESKTOP.md` for current verification evidence and open gates. The upload adapter deliberately targets the existing labeled file input. Keep that integration check when editing source setup.
+The smoke script launches real Electron with an original local HTML fixture; it checks screenshot delivery without OS capture or provider calls. See [desktop verification](../docs/VERIFICATION.md) for executed evidence and limits. The upload adapter deliberately targets the existing labeled file input. Keep that integration check when editing source setup.
 
 
 ## Compact ask bar
@@ -41,11 +42,11 @@ A drag moves the bar; it stays where you put it on that display. While Soma runs
 
 ## Lift into 3D
 
-Any answer can be lifted off the slide: **3D** in the compact bar (⌘L), or **Lift into 3D** on the page. What rises depends on the answer:
+Supported answers can be lifted off the slide: **3D** in the compact bar (⌘L), or **Lift into 3D** on the page. What rises depends on the answer:
 
 - **A checked search (Dijkstra or breadth-first)** lifts as described below: heights are checked distances.
 - **A checked circuit**: each node rises from where it is printed to its checked voltage, on a stem, with each part a straight ramp labelled with its value. In a balanced bridge, R₅ lies flat.
-- **Any other explanation**: Muse builds a 3D model of what the explanation is about (the first lift asks for it; it is saved as a new version), and the diagram region tilts back as a crisp card with the model standing on it. Typed questions use that diagram region too. Parts are named where they are; forces and flows are arrows; stepping through the explanation moves, reveals and lights up the parts each step is about. The model is labelled illustrative: shapes and motion are schematic, not measured.
+- **An explanation-only visual**: Muse builds a 3D model of what the explanation is about (the first lift asks for it; it is saved as a new version), and the diagram region tilts back as a crisp card with the model standing on it. Typed questions use that diagram region too. Parts are named where they are; forces and flows are arrows; stepping through the explanation moves, reveals and lights up the parts each step is about. The model is labelled illustrative: shapes and motion are schematic, not measured.
 
 The four-stroke engine uses Soma’s built-in cutaway. Muse chooses its placement and teaching steps; Soma assembles and poses its parts. Parts, proportions and motion are labeled illustrative. The original source slide is [Lecture 7](../docs/examples/hero-engine/lecture-7-four-stroke.png). If model creation fails, the bar reports the failure and **3D** can be pressed again; it does not substitute an upright flat diagram.
 

@@ -31,7 +31,15 @@ const owner: ExplorationPrincipal = {
 };
 const result = (name: string, value: unknown, index: number): MetaResult => ({
   status: 'completed',
-  tools: [{ type: 'function_call', name, arguments: JSON.stringify(value), call_id: `call-${index}`, parsedArguments: value as Record<string, unknown> }],
+  tools: [
+    {
+      type: 'function_call',
+      name,
+      arguments: JSON.stringify(value),
+      call_id: `call-${index}`,
+      parsedArguments: value as Record<string, unknown>,
+    },
+  ],
   usage: { input_tokens: 100, output_tokens: 200 },
 });
 let directory: string;
@@ -61,7 +69,10 @@ it('a circuit solution that fails Kirchhoff’s current law is never published a
           nodePositions: null,
           edgeLabels: null,
           circuit: heroCircuit,
-          circuitLayout: { nodes: heroCircuitLayout.nodes, components: heroCircuitLayout.components },
+          circuitLayout: {
+            nodes: heroCircuitLayout.nodes,
+            components: heroCircuitLayout.components,
+          },
           anchors: [],
           change: null,
         },
@@ -87,9 +98,26 @@ it('a circuit solution that fails Kirchhoff’s current law is never published a
           mode: 'explanation',
           scene: {
             layout: 'stack',
-            panels: [{ id: 'about', kind: 'text', title: 'The slide', text: 'A bridge of five resistors.', placement: { column: 1, row: 1, columnSpan: 2 } }],
+            panels: [
+              {
+                id: 'about',
+                kind: 'text',
+                title: 'The slide',
+                text: 'A bridge of five resistors.',
+                placement: { column: 1, row: 1, columnSpan: 2 },
+              },
+            ],
           },
-          steps: [{ id: 'read', caption: 'Read the bridge.', narration: null, highlightIds: ['about'], execution: null, executionStep: null }],
+          steps: [
+            {
+              id: 'read',
+              caption: 'Read the bridge.',
+              narration: null,
+              highlightIds: ['about'],
+              execution: null,
+              executionStep: null,
+            },
+          ],
           followups: [],
         },
       },
@@ -110,7 +138,12 @@ it('a circuit solution that fails Kirchhoff’s current law is never published a
     action: 'generate',
     requestId: randomUUID(),
     question: 'Why is there no current through R5?',
-    source: { kind: 'screenshot', dataUrl: 'data:image/png;base64,AAAA', label: 'Lecture 9 slide', capturedAt: new Date().toISOString() },
+    source: {
+      kind: 'screenshot',
+      dataUrl: 'data:image/png;base64,AAAA',
+      label: 'Lecture 9 slide',
+      capturedAt: new Date().toISOString(),
+    },
   } as never);
   expect(artifact.spec.mode).toBe('explanation');
   expect(artifact.circuit ?? null).toBeNull();

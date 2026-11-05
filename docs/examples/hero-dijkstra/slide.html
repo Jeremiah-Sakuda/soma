@@ -1,86 +1,219 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<title>Lecture 14 · Dijkstra's Algorithm</title>
-<style>
-  @page { size: 1920px 1080px; margin: 0; }
-  html, body { margin: 0; padding: 0; background: #fff; }
-  .slide {
-    width: 1920px; height: 1080px; box-sizing: border-box; position: relative;
-    padding: 72px 96px 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #1b1f24;
-  }
-  .kicker { font-size: 26px; letter-spacing: .04em; color: #5b6573; text-transform: uppercase; }
-  h1 { margin: 10px 0 0; font-size: 64px; font-weight: 700; color: #16365f; }
-  .rule { height: 4px; width: 100%; background: #16365f; margin: 26px 0 0; }
-  .body { display: grid; grid-template-columns: 1040px 1fr; gap: 64px; margin-top: 36px; }
-  .task { font-size: 34px; margin: 6px 0 28px; }
-  ol { margin: 0; padding-left: 40px; font-size: 28px; line-height: 1.5; }
-  ol li { margin-bottom: 14px; }
-  code { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 24px; white-space: nowrap; background: #f1f4f8; padding: 2px 8px; border-radius: 4px; }
-  .note { margin-top: 30px; font-size: 28px; color: #5b6573; }
-  .footer {
-    position: absolute; left: 96px; right: 96px; bottom: 36px; display: flex; justify-content: space-between;
-    font-size: 20px; color: #8a93a0; border-top: 1px solid #dde2e8; padding-top: 14px;
-  }
-</style>
-</head>
-<body>
-<div class="slide">
-  <div class="kicker">Algorithms · Lecture 14 · Single-source shortest paths</div>
-  <h1>Dijkstra’s Algorithm: Worked Example</h1>
-  <div class="rule"></div>
-  <div class="body">
-    <svg width="1040" height="640" viewBox="0 0 1040 640" role="img" aria-label="Undirected weighted graph with vertices A to F">
-      <style>
-        .e { stroke: #3a4350; stroke-width: 4; fill: none; }
-        .w { font: 700 34px "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #1b1f24; text-anchor: middle; dominant-baseline: central; }
-        .wb { fill: #fff; }
-        .n { fill: #fff; stroke: #16365f; stroke-width: 5; }
-        .ns { fill: #e3ecf7; stroke: #16365f; stroke-width: 5; }
-        .nl { font: 700 42px "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #16365f; text-anchor: middle; dominant-baseline: central; }
-        .tag { font: 600 24px "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #5b6573; text-anchor: middle; }
-      </style>
-      <!-- edges -->
-      <path class="e" d="M 110 330 C 260 -20, 780 -20, 930 330" />
-      <line class="e" x1="110" y1="330" x2="340" y2="190" />
-      <line class="e" x1="110" y1="330" x2="340" y2="500" />
-      <line class="e" x1="340" y1="190" x2="340" y2="500" />
-      <line class="e" x1="340" y1="190" x2="700" y2="190" />
-      <line class="e" x1="340" y1="500" x2="700" y2="500" />
-      <line class="e" x1="700" y1="190" x2="700" y2="500" />
-      <line class="e" x1="700" y1="190" x2="930" y2="330" />
-      <line class="e" x1="700" y1="500" x2="930" y2="330" />
-      <!-- weights -->
-      <rect class="wb" x="498" y="44" width="44" height="44" rx="6"/><text class="w" x="520" y="66">11</text>
-      <rect class="wb" x="203" y="232" width="34" height="44" rx="6"/><text class="w" x="220" y="254">4</text>
-      <rect class="wb" x="203" y="392" width="34" height="44" rx="6"/><text class="w" x="220" y="414">1</text>
-      <rect class="wb" x="356" y="323" width="34" height="44" rx="6"/><text class="w" x="373" y="345">2</text>
-      <rect class="wb" x="503" y="146" width="34" height="44" rx="6"/><text class="w" x="520" y="168">1</text>
-      <rect class="wb" x="503" y="504" width="34" height="44" rx="6"/><text class="w" x="520" y="526">5</text>
-      <rect class="wb" x="716" y="323" width="34" height="44" rx="6"/><text class="w" x="733" y="345">3</text>
-      <rect class="wb" x="822" y="222" width="34" height="44" rx="6"/><text class="w" x="839" y="244">3</text>
-      <rect class="wb" x="822" y="394" width="34" height="44" rx="6"/><text class="w" x="839" y="416">3</text>
-      <!-- nodes -->
-      <circle class="ns" cx="110" cy="330" r="44"/><text class="nl" x="110" y="330">A</text>
-      <circle class="n" cx="340" cy="190" r="44"/><text class="nl" x="340" y="190">B</text>
-      <circle class="n" cx="340" cy="500" r="44"/><text class="nl" x="340" y="500">C</text>
-      <circle class="n" cx="700" cy="190" r="44"/><text class="nl" x="700" y="190">D</text>
-      <circle class="n" cx="700" cy="500" r="44"/><text class="nl" x="700" y="500">E</text>
-      <circle class="ns" cx="930" cy="330" r="44"/><text class="nl" x="930" y="330">F</text>
-    </svg>
-    <div>
-      <p class="task"><strong>Find the cheapest path from A to F.</strong><br>Edges are undirected; weights are costs.</p>
-      <ol>
-        <li>Set <code>dist[A] = 0</code>; every other vertex <code>∞</code>.</li>
-        <li>Settle the unsettled vertex with the smallest <code>dist</code>.</li>
-        <li>Relax each edge <code>(u, v)</code>:<br><code>dist[v] = min(dist[v], dist[u] + w)</code></li>
-        <li>Repeat until F is settled.</li>
-      </ol>
-      <p class="note">Shortest A → F cost: <strong>7</strong></p>
+  <head>
+    <meta charset="utf-8" />
+    <title>Lecture 14 · Dijkstra's Algorithm</title>
+    <style>
+      @page {
+        size: 1920px 1080px;
+        margin: 0;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #fff;
+      }
+      .slide {
+        width: 1920px;
+        height: 1080px;
+        box-sizing: border-box;
+        position: relative;
+        padding: 72px 96px 0;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        color: #1b1f24;
+      }
+      .kicker {
+        font-size: 26px;
+        letter-spacing: 0.04em;
+        color: #5b6573;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 10px 0 0;
+        font-size: 64px;
+        font-weight: 700;
+        color: #16365f;
+      }
+      .rule {
+        height: 4px;
+        width: 100%;
+        background: #16365f;
+        margin: 26px 0 0;
+      }
+      .body {
+        display: grid;
+        grid-template-columns: 1040px 1fr;
+        gap: 64px;
+        margin-top: 36px;
+      }
+      .task {
+        font-size: 34px;
+        margin: 6px 0 28px;
+      }
+      ol {
+        margin: 0;
+        padding-left: 40px;
+        font-size: 28px;
+        line-height: 1.5;
+      }
+      ol li {
+        margin-bottom: 14px;
+      }
+      code {
+        font-family: 'SF Mono', Menlo, Consolas, monospace;
+        font-size: 24px;
+        white-space: nowrap;
+        background: #f1f4f8;
+        padding: 2px 8px;
+        border-radius: 4px;
+      }
+      .note {
+        margin-top: 30px;
+        font-size: 28px;
+        color: #5b6573;
+      }
+      .footer {
+        position: absolute;
+        left: 96px;
+        right: 96px;
+        bottom: 36px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 20px;
+        color: #8a93a0;
+        border-top: 1px solid #dde2e8;
+        padding-top: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="slide">
+      <div class="kicker">Algorithms · Lecture 14 · Single-source shortest paths</div>
+      <h1>Dijkstra’s Algorithm: Worked Example</h1>
+      <div class="rule"></div>
+      <div class="body">
+        <svg
+          width="1040"
+          height="640"
+          viewBox="0 0 1040 640"
+          role="img"
+          aria-label="Undirected weighted graph with vertices A to F"
+        >
+          <style>
+            .e {
+              stroke: #3a4350;
+              stroke-width: 4;
+              fill: none;
+            }
+            .w {
+              font:
+                700 34px 'Helvetica Neue',
+                Helvetica,
+                Arial,
+                sans-serif;
+              fill: #1b1f24;
+              text-anchor: middle;
+              dominant-baseline: central;
+            }
+            .wb {
+              fill: #fff;
+            }
+            .n {
+              fill: #fff;
+              stroke: #16365f;
+              stroke-width: 5;
+            }
+            .ns {
+              fill: #e3ecf7;
+              stroke: #16365f;
+              stroke-width: 5;
+            }
+            .nl {
+              font:
+                700 42px 'Helvetica Neue',
+                Helvetica,
+                Arial,
+                sans-serif;
+              fill: #16365f;
+              text-anchor: middle;
+              dominant-baseline: central;
+            }
+            .tag {
+              font:
+                600 24px 'Helvetica Neue',
+                Helvetica,
+                Arial,
+                sans-serif;
+              fill: #5b6573;
+              text-anchor: middle;
+            }
+          </style>
+          <!-- edges -->
+          <path class="e" d="M 110 330 C 260 -20, 780 -20, 930 330" />
+          <line class="e" x1="110" y1="330" x2="340" y2="190" />
+          <line class="e" x1="110" y1="330" x2="340" y2="500" />
+          <line class="e" x1="340" y1="190" x2="340" y2="500" />
+          <line class="e" x1="340" y1="190" x2="700" y2="190" />
+          <line class="e" x1="340" y1="500" x2="700" y2="500" />
+          <line class="e" x1="700" y1="190" x2="700" y2="500" />
+          <line class="e" x1="700" y1="190" x2="930" y2="330" />
+          <line class="e" x1="700" y1="500" x2="930" y2="330" />
+          <!-- weights -->
+          <rect class="wb" x="498" y="44" width="44" height="44" rx="6" />
+          <text class="w" x="520" y="66">11</text>
+          <rect class="wb" x="203" y="232" width="34" height="44" rx="6" />
+          <text class="w" x="220" y="254">4</text>
+          <rect class="wb" x="203" y="392" width="34" height="44" rx="6" />
+          <text class="w" x="220" y="414">1</text>
+          <rect class="wb" x="356" y="323" width="34" height="44" rx="6" />
+          <text class="w" x="373" y="345">2</text>
+          <rect class="wb" x="503" y="146" width="34" height="44" rx="6" />
+          <text class="w" x="520" y="168">1</text>
+          <rect class="wb" x="503" y="504" width="34" height="44" rx="6" />
+          <text class="w" x="520" y="526">5</text>
+          <rect class="wb" x="716" y="323" width="34" height="44" rx="6" />
+          <text class="w" x="733" y="345">3</text>
+          <rect class="wb" x="822" y="222" width="34" height="44" rx="6" />
+          <text class="w" x="839" y="244">3</text>
+          <rect class="wb" x="822" y="394" width="34" height="44" rx="6" />
+          <text class="w" x="839" y="416">3</text>
+          <!-- nodes -->
+          <circle class="ns" cx="110" cy="330" r="44" />
+          <text class="nl" x="110" y="330">A</text>
+          <circle class="n" cx="340" cy="190" r="44" />
+          <text class="nl" x="340" y="190">B</text>
+          <circle class="n" cx="340" cy="500" r="44" />
+          <text class="nl" x="340" y="500">C</text>
+          <circle class="n" cx="700" cy="190" r="44" />
+          <text class="nl" x="700" y="190">D</text>
+          <circle class="n" cx="700" cy="500" r="44" />
+          <text class="nl" x="700" y="500">E</text>
+          <circle class="ns" cx="930" cy="330" r="44" />
+          <text class="nl" x="930" y="330">F</text>
+        </svg>
+        <div>
+          <p class="task">
+            <strong>Find the cheapest path from A to F.</strong><br />Edges are undirected; weights
+            are costs.
+          </p>
+          <ol>
+            <li>Set <code>dist[A] = 0</code>; every other vertex <code>∞</code>.</li>
+            <li>Settle the unsettled vertex with the smallest <code>dist</code>.</li>
+            <li>
+              Relax each edge <code>(u, v)</code>:<br /><code
+                >dist[v] = min(dist[v], dist[u] + w)</code
+              >
+            </li>
+            <li>Repeat until F is settled.</li>
+          </ol>
+          <p class="note">Shortest A → F cost: <strong>7</strong></p>
+        </div>
+      </div>
+      <div class="footer">
+        <span>Algorithms · Week 9</span><span>Original example slide made for the Soma demo</span
+        ><span>14</span>
+      </div>
     </div>
-  </div>
-  <div class="footer"><span>Algorithms · Week 9</span><span>Original example slide made for the Soma demo</span><span>14</span></div>
-</div>
-</body>
+  </body>
 </html>

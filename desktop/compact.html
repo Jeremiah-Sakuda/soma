@@ -1,18 +1,66 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Soma ask bar</title><link rel="stylesheet" href="compact.css"></head><body>
-<form id="bar" autocomplete="off">
-  <span class="mark" aria-hidden="true"></span>
-  <label class="sr" for="question">Ask Soma about your screen</label>
-  <input id="question" name="question" maxlength="1000" placeholder="Ask about your screen…" spellcheck="true">
-  <button id="test" type="button" title="Test it: Muse chooses what to vary; Soma computes when the outcome changes (⌘↩)">Test it</button>
-  <span class="steps" id="steps" hidden>
-    <button id="previous" type="button" aria-label="Previous step">‹</button>
-    <span id="step"></span>
-    <button id="next" type="button" aria-label="Next step">›</button>
-    <button id="play" type="button" aria-label="Play the explanation">▶</button>
-  </span>
-  <button id="lift" type="button" aria-pressed="false" title="Lift the answer off your slide in 3D (⌘L)" hidden>3D</button>
-  <button id="fresh" type="button" aria-pressed="false" title="Take a new snapshot for this question instead of following up (⌘N)">New snapshot</button>
-  <button id="expand" type="button" title="Open the full Soma panel" aria-label="Open the full Soma panel">⤢</button>
-</form>
-<p id="status" role="status"></p>
-<script src="compact.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'"
+    />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Soma ask bar</title>
+    <link rel="stylesheet" href="compact.css" />
+  </head>
+  <body>
+    <form id="bar" autocomplete="off">
+      <span class="mark" aria-hidden="true"></span>
+      <label class="sr" for="question">Ask Soma about your screen</label>
+      <input
+        id="question"
+        name="question"
+        maxlength="1000"
+        placeholder="Ask about your screen…"
+        spellcheck="true"
+      />
+      <button
+        id="test"
+        type="button"
+        title="Test it: Muse chooses what to vary; Soma computes when the outcome changes (⌘↩)"
+      >
+        Test it
+      </button>
+      <span class="steps" id="steps" hidden>
+        <button id="previous" type="button" aria-label="Previous step">‹</button>
+        <span id="step"></span>
+        <button id="next" type="button" aria-label="Next step">›</button>
+        <button id="play" type="button" aria-label="Play the explanation">▶</button>
+      </span>
+      <button
+        id="lift"
+        type="button"
+        aria-pressed="false"
+        title="Lift the answer off your slide in 3D (⌘L)"
+        hidden
+      >
+        3D
+      </button>
+      <button
+        id="fresh"
+        type="button"
+        aria-pressed="false"
+        title="Take a new snapshot for this question instead of following up (⌘N)"
+      >
+        New snapshot
+      </button>
+      <button
+        id="expand"
+        type="button"
+        title="Open the full Soma panel"
+        aria-label="Open the full Soma panel"
+      >
+        ⤢
+      </button>
+    </form>
+    <p id="status" role="status"></p>
+    <script src="compact.js"></script>
+  </body>
+</html>

@@ -27,10 +27,8 @@ A first reviewed candidate still placed labels over a guide. Native/in-app visua
 - **20 motion-domain cases passed**, covering deterministic seeking/interpolation, exact reversals, immutable output, coupling/reference limits and rejection of executable markup, external fills, cyclic groups, oversized/nonfinite paths, competing drivers and invalid timelines.
 - **Nine production-gallery browser journeys passed**, including actual SVG geometry across101 manual settings (head/base/guide clearance, attachments, fixed supports), held-pointer reversals, real WAV/media-clock playback, interruption/restart/natural completion, zero idle animation after settling, blocked-audio fallback, canvas/path/text bounds and label/part collisions, keyboard/reduced motion,375/620/1440 widths, source-byte equality and loopback/no-API/media-range boundaries.
 - **MP4 export check passed**: complete local narration,720 frames,H.264/AAC,640×460,30fps,24 seconds. TypeScript and the Vite production build passed. Full offline regression passed **1,667 /97 opt-in skipped**; the affected20 cases were rerun after final renderer/output changes.
-- In-app playback completed naturally at0:24, then scrubbing and manual experiments were inspected. Native Mac Chrome exercised playback and keyboard interruption/reversal. Final screenshots are in `.local/pm120/`. The Mac locked before the last native refresh; the final corrected layout was checked in-app and by the production-gallery browser suite. No unlock was attempted.
 - The canonical application runtime is unchanged:263files/SHA195d3d553598638a63403e84534d7196f76aa165d48d415178273f844f32d8d1. No Next route, provider service, account boundary or production visual default changed.
 
-Initial browser failures were a zero-valued range fill that did not emit a change event, and ambiguous status locators matching native `<output>` elements. Tests now enter experiment mode explicitly and target the actual status paragraph; pointer/keyboard takeover and clock announcement behavior were also improved. Private failed and successful receipts remain in `.local/pm120/`.
 
 ## Reproduce locally
 

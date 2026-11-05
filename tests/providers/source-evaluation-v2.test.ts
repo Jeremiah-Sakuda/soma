@@ -6,7 +6,9 @@ import { scoreCircuit, scoreGraph, type Case } from './source-evaluation-v2-scor
 
 // The answer key must be self-consistent and the scorer must accept a faithful reading and reject
 // a wrong one, before any provider call is spent on the frozen set.
-const cases = JSON.parse(readFileSync('tests/fixtures/source-evaluation-v2/cases.json', 'utf8')) as Case[];
+const cases = JSON.parse(
+  readFileSync('tests/fixtures/source-evaluation-v2/cases.json', 'utf8'),
+) as Case[];
 const sub = (label: string) => label.replace(/\d/g, (d) => String.fromCharCode(0x2080 + Number(d)));
 
 function faithfulCircuit(c: Extract<Case, { subject: 'circuit' }>): DcInput {
@@ -29,7 +31,12 @@ function faithfulGraph(c: Extract<Case, { subject: 'graph' }>): BfsInput {
   const e = c.expected;
   return {
     nodes: e.nodes.map((n) => ({ id: `n_${n}`, label: n })),
-    edges: e.edges.map(([a, b, w], i) => ({ id: `e${i}`, from: `n_${a}`, to: `n_${b}`, ...(w !== undefined ? { weight: w } : {}) })),
+    edges: e.edges.map(([a, b, w], i) => ({
+      id: `e${i}`,
+      from: `n_${a}`,
+      to: `n_${b}`,
+      ...(w !== undefined ? { weight: w } : {}),
+    })),
     ...(e.algorithm === 'dijkstra' ? { algorithm: 'dijkstra' as const } : {}),
     directed: e.directed,
     start: `n_${e.start}`,
@@ -40,10 +47,16 @@ function faithfulGraph(c: Extract<Case, { subject: 'graph' }>): BfsInput {
 
 describe('second fresh source evaluation key', () => {
   it('covers six solvable circuits, one declined circuit and five larger graphs', () => {
-    expect(cases.filter((c) => c.subject === 'circuit' && c.expected.outcome === 'checked-circuit')).toHaveLength(6);
-    expect(cases.filter((c) => c.subject === 'circuit' && c.expected.outcome === 'declined')).toHaveLength(1);
+    expect(
+      cases.filter((c) => c.subject === 'circuit' && c.expected.outcome === 'checked-circuit'),
+    ).toHaveLength(6);
+    expect(
+      cases.filter((c) => c.subject === 'circuit' && c.expected.outcome === 'declined'),
+    ).toHaveLength(1);
     const graphs = cases.filter((c) => c.subject === 'graph');
-    expect(graphs.map((g) => g.subject === 'graph' && g.expected.nodes.length)).toEqual([8, 7, 10, 9, 12]);
+    expect(graphs.map((g) => g.subject === 'graph' && g.expected.nodes.length)).toEqual([
+      8, 7, 10, 9, 12,
+    ]);
   });
 
   for (const c of cases) {
@@ -51,10 +64,16 @@ describe('second fresh source evaluation key', () => {
       it(`${c.id}: the key solves, a faithful reading passes and wrong readings fail`, () => {
         const read = faithfulCircuit(c);
         expect(solveDc(read).status).toBe('solved');
-        expect(scoreCircuit(c, { mode: 'checked-circuit', input: read })).toMatchObject({ passed: true, mismatches: [] });
+        expect(scoreCircuit(c, { mode: 'checked-circuit', input: read })).toMatchObject({
+          passed: true,
+          mismatches: [],
+        });
         const source = read.components.findIndex((p) => p.kind !== 'resistor');
         const flipped = structuredClone(read);
-        [flipped.components[source].from, flipped.components[source].to] = [flipped.components[source].to, flipped.components[source].from];
+        [flipped.components[source].from, flipped.components[source].to] = [
+          flipped.components[source].to,
+          flipped.components[source].from,
+        ];
         expect(scoreCircuit(c, { mode: 'checked-circuit', input: flipped }).passed).toBe(false);
         const misread = structuredClone(read);
         misread.components[read.components.length - 1].value *= 10;
@@ -72,21 +91,38 @@ describe('second fresh source evaluation key', () => {
   }
 
   it('the two-source key gives V_B = 48/9 V', () => {
-    const c = cases.find((x) => x.id === 'circuit-two-sources') as Extract<Case, { subject: 'circuit' }>;
+    const c = cases.find((x) => x.id === 'circuit-two-sources') as Extract<
+      Case,
+      { subject: 'circuit' }
+    >;
     expect(solveDc(faithfulCircuit(c)).exact.voltages.n_B).toBe('16/3');
   });
 
   it('the ground-on-plus key puts A at −15 V', () => {
-    const c = cases.find((x) => x.id === 'circuit-ground-on-plus') as Extract<Case, { subject: 'circuit' }>;
+    const c = cases.find((x) => x.id === 'circuit-ground-on-plus') as Extract<
+      Case,
+      { subject: 'circuit' }
+    >;
     expect(solveDc(faithfulCircuit(c)).voltages.n_A).toBe(-15);
   });
 
-  const costs: Record<string, number> = { 'graph-undirected-8': 18, 'graph-directed-7': 15, 'graph-decimal-10': 12, 'graph-bfs-9': 3, 'graph-undirected-12': 16 };
+  const costs: Record<string, number> = {
+    'graph-undirected-8': 18,
+    'graph-directed-7': 15,
+    'graph-decimal-10': 12,
+    'graph-bfs-9': 3,
+    'graph-undirected-12': 16,
+  };
   for (const c of cases) {
     if (c.subject !== 'graph') continue;
     it(`${c.id}: hand-checked goal cost ${costs[c.id]}; a faithful reading passes and a wrong one fails`, () => {
       const read = faithfulGraph(c);
-      expect(scoreGraph(c, { mode: c.expected.algorithm === 'bfs' ? 'checked-bfs' : 'checked-dijkstra', input: read })).toMatchObject({
+      expect(
+        scoreGraph(c, {
+          mode: c.expected.algorithm === 'bfs' ? 'checked-bfs' : 'checked-dijkstra',
+          input: read,
+        }),
+      ).toMatchObject({
         passed: true,
         costMatches: true,
         wantCost: costs[c.id],
@@ -94,7 +130,12 @@ describe('second fresh source evaluation key', () => {
       });
       const wrong = structuredClone(read);
       wrong.edges.pop();
-      expect(scoreGraph(c, { mode: c.expected.algorithm === 'bfs' ? 'checked-bfs' : 'checked-dijkstra', input: wrong }).passed).toBe(false);
+      expect(
+        scoreGraph(c, {
+          mode: c.expected.algorithm === 'bfs' ? 'checked-bfs' : 'checked-dijkstra',
+          input: wrong,
+        }).passed,
+      ).toBe(false);
     });
   }
 });

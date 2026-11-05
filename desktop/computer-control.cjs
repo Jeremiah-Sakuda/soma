@@ -1,6 +1,6 @@
-const path = require("node:path");
-const { pathToFileURL } = require("node:url");
-const { execFile } = require("node:child_process");
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
+const { execFile } = require('node:child_process');
 const {
   createTask,
   assertLive,
@@ -8,7 +8,7 @@ const {
   validatePlan,
   checkStep,
   MAX_STEPS,
-} = require("./computer-policy.cjs");
+} = require('./computer-policy.cjs');
 function createComputerControl({
   BrowserWindow,
   ipcMain,
@@ -23,7 +23,7 @@ function createComputerControl({
   capture,
   settleMs = 500,
 }) {
-  const url = pathToFileURL(path.join(__dirname, "computer-control.html")).href;
+  const url = pathToFileURL(path.join(__dirname, 'computer-control.html')).href;
   let window,
     task,
     controller,
@@ -32,8 +32,8 @@ function createComputerControl({
     epoch = 0;
   function state(extra = {}) {
     if (window && !window.isDestroyed())
-      window.webContents.send("computer:state", {
-        app: task?.observation.app || "",
+      window.webContents.send('computer:state', {
+        app: task?.observation.app || '',
         controls: task?.observation.controls || [],
         plan: task?.plan || null,
         run: task?.run
@@ -54,7 +54,7 @@ function createComputerControl({
       });
   }
   let ownsEscape = false;
-  function stop(message = "Computer task stopped.") {
+  function stop(message = 'Computer task stopped.') {
     const run = task?.run;
     if (message && run && !run.done)
       message +=
@@ -67,7 +67,7 @@ function createComputerControl({
     task = null;
     busy = false;
     // Only release Escape if this task took it; a drawn overlay may own it otherwise.
-    if (ownsEscape) globalShortcut.unregister("Escape");
+    if (ownsEscape) globalShortcut.unregister('Escape');
     ownsEscape = false;
     state({ message });
     status(message);
@@ -78,19 +78,16 @@ function createComputerControl({
       const process = execFile(
         helperPath,
         [],
-        { timeout: 5000, maxBuffer: 40000, encoding: "utf8" },
+        { timeout: 5000, maxBuffer: 40000, encoding: 'utf8' },
         (error, out) => {
           if (child === process) child = null;
           try {
             const value = JSON.parse(out);
-            if (error || value.error)
-              reject(Error(value.error || "Native action failed."));
+            if (error || value.error) reject(Error(value.error || 'Native action failed.'));
             else resolve(value);
           } catch {
             reject(
-              Error(
-                "Native helper unavailable. Build Soma and grant Accessibility permission.",
-              ),
+              Error('Native helper unavailable. Build Soma and grant Accessibility permission.'),
             );
           }
         },
@@ -110,20 +107,20 @@ function createComputerControl({
   }
   async function start() {
     if (busy) return;
-    stop("");
+    stop('');
     stopPoint();
     busy = true;
     const ticket = epoch;
     try {
       if (!accessibility())
         throw Error(
-          "Allow Soma in System Settings → Privacy & Security → Accessibility, then try again.",
+          'Allow Soma in System Settings → Privacy & Security → Accessibility, then try again.',
         );
-      const observed = await helper({ command: "observe" });
+      const observed = await helper({ command: 'observe' });
       if (ticket !== epoch) return;
       task = createTask(observed);
-      if (!globalShortcut.register("Escape", () => stop()))
-        throw Error("Escape unavailable; task control cannot start.");
+      if (!globalShortcut.register('Escape', () => stop()))
+        throw Error('Escape unavailable; task control cannot start.');
       ownsEscape = true;
       if (!window || window.isDestroyed()) {
         window = new BrowserWindow({
@@ -131,10 +128,10 @@ function createComputerControl({
           height: 700,
           minWidth: 440,
           minHeight: 500,
-          title: "Soma · Apply to selected app",
+          title: 'Soma · Apply to selected app',
           alwaysOnTop: true,
           webPreferences: {
-            preload: path.join(__dirname, "computer-preload.cjs"),
+            preload: path.join(__dirname, 'computer-preload.cjs'),
             sandbox: true,
             contextIsolation: true,
             nodeIntegration: false,
@@ -143,10 +140,10 @@ function createComputerControl({
         });
         // Stay reachable above a full-screen app (for example a Preview slideshow).
         window.setVisibleOnAllWorkspaces?.(true, { visibleOnFullScreen: true });
-        window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
-        window.webContents.on("will-navigate", (e) => e.preventDefault());
-        window.webContents.on("will-attach-webview", (e) => e.preventDefault());
-        window.on("closed", () => stop());
+        window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+        window.webContents.on('will-navigate', (e) => e.preventDefault());
+        window.webContents.on('will-attach-webview', (e) => e.preventDefault());
+        window.on('closed', () => stop());
         await window.loadURL(url);
       }
       if (ticket !== epoch) return;
@@ -154,7 +151,7 @@ function createComputerControl({
       window.focus();
       state({
         message:
-          "Review the selected app and controls. Nothing has been sent to Muse. Each task lasts two minutes and allows at most five executed steps.",
+          'Review the selected app and controls. Nothing has been sent to Muse. Each task lasts two minutes and allows at most five executed steps.',
       });
     } catch (error) {
       stop(error.message);
@@ -163,29 +160,28 @@ function createComputerControl({
     }
   }
   const helperMessages = {
-    screen_changed: "the app changed just before the step",
-    focus_changed: "a different app came to the front",
-    app_closed: "the app closed",
-    ambiguous_target: "the target control became ambiguous",
-    target_changed: "the target control changed",
-    field_not_editable: "the field is not editable",
-    value_not_confirmed: "the field did not read back the exact value",
-    modifier_keys_held:
-      "a modifier key (Command, Shift, Option or Control) was held down",
-    invalid_key: "the key is not an allowed navigation key",
-    action_failed: "macOS did not accept the action",
+    screen_changed: 'the app changed just before the step',
+    focus_changed: 'a different app came to the front',
+    app_closed: 'the app closed',
+    ambiguous_target: 'the target control became ambiguous',
+    target_changed: 'the target control changed',
+    field_not_editable: 'the field is not editable',
+    value_not_confirmed: 'the field did not read back the exact value',
+    modifier_keys_held: 'a modifier key (Command, Shift, Option or Control) was held down',
+    invalid_key: 'the key is not an allowed navigation key',
+    action_failed: 'macOS did not accept the action',
   };
   const outcomeOf = (step, result) =>
-    step.kind === "type"
+    step.kind === 'type'
       ? result.valueConfirmed === true
-        ? "value-confirmed"
+        ? 'value-confirmed'
         : null
-      : step.kind === "key"
+      : step.kind === 'key'
         ? result.keyPosted === true
-          ? "key-accepted"
+          ? 'key-accepted'
           : null
         : result.executed === true
-          ? "press-accepted"
+          ? 'press-accepted'
           : null;
   function finish(active, message) {
     active.run.done = true;
@@ -220,7 +216,7 @@ function createComputerControl({
       window?.hide();
       const current = validateObservation(
         await helper({
-          command: "observe",
+          command: 'observe',
           pid: active.observation.pid,
           activate: active.observation.pid,
         }),
@@ -232,19 +228,19 @@ function createComputerControl({
         run.stopped = { step: i, reason: check.reason };
         return finish(
           active,
-          `Stopped before step ${i + 1} of ${total}: ${check.reason}. ${i ? `Steps 1–${i} ran; ` : ""}nothing else was attempted. Review the app and ask for a new plan if needed.`,
+          `Stopped before step ${i + 1} of ${total}: ${check.reason}. ${i ? `Steps 1–${i} ran; ` : ''}nothing else was attempted. Review the app and ask for a new plan if needed.`,
         );
       }
       let result;
       try {
         result = await helper({
-          command: "execute",
+          command: 'execute',
           pid: current.pid,
           fingerprint: current.fingerprint,
           kind: step.kind,
           target: check.target,
           role: step.role,
-          label: step.kind === "key" ? "" : step.label,
+          label: step.kind === 'key' ? '' : step.label,
           text: step.text,
           key: step.key,
         });
@@ -255,10 +251,10 @@ function createComputerControl({
         active.steps++;
         run.stopped = { step: i, reason };
         // A failure can follow a partly accepted step; never claim nothing happened.
-        run.results[i] = "failed";
+        run.results[i] = 'failed';
         try {
           active.observation = validateObservation(
-            await helper({ command: "observe", pid: current.pid }),
+            await helper({ command: 'observe', pid: current.pid }),
           );
         } catch {
           /* keep the last observation; the next plan step is not attempted */
@@ -272,7 +268,7 @@ function createComputerControl({
       if (ticket !== epoch) return;
       const outcome = outcomeOf(step, result);
       active.steps++;
-      run.results[i] = outcome || "failed";
+      run.results[i] = outcome || 'failed';
       if (outcome)
         active.history.push({
           kind: step.kind,
@@ -284,15 +280,13 @@ function createComputerControl({
       // Let the app settle so the next comparison is against its resulting state.
       if (settleMs) await new Promise((r) => setTimeout(r, settleMs));
       if (ticket !== epoch) return;
-      const after = validateObservation(
-        await helper({ command: "observe", pid: current.pid }),
-      );
+      const after = validateObservation(await helper({ command: 'observe', pid: current.pid }));
       if (ticket !== epoch) return;
       active.observation = after;
       if (!outcome) {
         run.stopped = {
           step: i,
-          reason: "the native result was not confirmed",
+          reason: 'the native result was not confirmed',
         };
         return finish(
           active,
@@ -303,27 +297,27 @@ function createComputerControl({
     active.completed = true;
     finish(
       active,
-      "All approved steps ran. Typed values were read back; presses and keys were only accepted by macOS, which does not prove the app finished. Verify the result in the app.",
+      'All approved steps ran. Typed values were read back; presses and keys were only accepted by macOS, which does not prove the app finished. Verify the result in the app.',
     );
   }
-  ipcMain.handle("computer:command", async (event, command, value) => {
-    if (!trusted(event)) throw Error("Untrusted computer control.");
-    if (command === "stop") {
+  ipcMain.handle('computer:command', async (event, command, value) => {
+    if (!trusted(event)) throw Error('Untrusted computer control.');
+    if (command === 'stop') {
       stop();
       return;
     }
-    if (command === "ready") {
+    if (command === 'ready') {
       state();
       return;
     }
-    if (busy) throw Error("Wait for the current step or stop.");
-    if (command === "capture") {
+    if (busy) throw Error('Wait for the current step or stop.');
+    if (command === 'capture') {
       // Offered only after a completed plan. Reuses the existing single-snapshot
       // capture path, which ends computer-control authority before capturing.
       if (!capture || !task?.completed || !task.run?.done)
-        throw Error("Capture is offered after a completed plan.");
+        throw Error('Capture is offered after a completed plan.');
       window?.hide();
-      stop("Computer task ended. Capturing this display in Soma for review.");
+      stop('Computer task ended. Capturing this display in Soma for review.');
       await capture();
       return;
     }
@@ -332,22 +326,22 @@ function createComputerControl({
     const ticket = epoch;
     const active = task;
     try {
-      if (command === "plan") {
-        if (typeof value !== "string" || !value.trim() || value.length > 1000)
-          throw Error("Enter a task of at most 1,000 characters.");
+      if (command === 'plan') {
+        if (typeof value !== 'string' || !value.trim() || value.length > 1000)
+          throw Error('Enter a task of at most 1,000 characters.');
         if (active.run && !active.run.done)
-          throw Error("Finish or decline the pending step first.");
+          throw Error('Finish or decline the pending step first.');
         active.plan = null;
         active.run = null;
         active.completed = false;
         state({
-          message: "Muse is proposing a short plan. No control is active.",
+          message: 'Muse is proposing a short plan. No control is active.',
         });
         controller = new AbortController();
         const response = await session.fetch(`${origin}/api/explore/computer`, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json", Origin: origin },
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', Origin: origin },
           body: JSON.stringify({
             goal: value.trim(),
             app: active.observation.app,
@@ -356,40 +350,29 @@ function createComputerControl({
             maxSteps: MAX_STEPS - active.steps,
           }),
           signal: controller.signal,
-          redirect: "error",
+          redirect: 'error',
         });
         const text = await response.text();
-        if (text.length > 20000) throw Error("Plan response too large.");
+        if (text.length > 20000) throw Error('Plan response too large.');
         const body = JSON.parse(text);
         if (ticket !== epoch) return;
-        if (!response.ok)
-          throw Error(
-            body.error || "Open Soma first to initialize your session.",
-          );
+        if (!response.ok) throw Error(body.error || 'Open Soma first to initialize your session.');
         assertLive(active);
-        active.plan = validatePlan(
-          body.plan,
-          active.observation,
-          MAX_STEPS - active.steps,
-        );
+        active.plan = validatePlan(body.plan, active.observation, MAX_STEPS - active.steps);
         state({
           message:
-            active.plan.kind === "plan"
-              ? "Review every step of Muse’s plan before approving it."
-              : "Muse did not propose steps.",
+            active.plan.kind === 'plan'
+              ? 'Review every step of Muse’s plan before approving it.'
+              : 'Muse did not propose steps.',
           audit: body.audit,
         });
-      } else if (command === "approve") {
-        if (value !== true) throw Error("Explicit approval is required.");
-        if (!active.plan || active.plan.kind !== "plan" || active.run)
-          throw Error("Request a plan first.");
+      } else if (command === 'approve') {
+        if (value !== true) throw Error('Explicit approval is required.');
+        if (!active.plan || active.plan.kind !== 'plan' || active.run)
+          throw Error('Request a plan first.');
         // The stored, reviewed plan is the only executable plan; the renderer
         // supplies only a boolean. Revalidate against the reviewed observation.
-        const plan = validatePlan(
-          active.plan,
-          active.observation,
-          MAX_STEPS - active.steps,
-        );
+        const plan = validatePlan(active.plan, active.observation, MAX_STEPS - active.steps);
         active.run = {
           plan,
           index: 0,
@@ -400,23 +383,22 @@ function createComputerControl({
           done: false,
         };
         await runPlan(active, ticket);
-      } else if (command === "confirm-step" || command === "decline-step") {
+      } else if (command === 'confirm-step' || command === 'decline-step') {
         const run = active.run;
         if (!run || run.done || run.awaiting === null)
-          throw Error("No step is waiting for approval.");
-        if (command === "decline-step") {
-          run.stopped = { step: run.awaiting, reason: "you declined it" };
+          throw Error('No step is waiting for approval.');
+        if (command === 'decline-step') {
+          run.stopped = { step: run.awaiting, reason: 'you declined it' };
           finish(
             active,
             `Step ${run.awaiting + 1} was not run. The rest of the plan was discarded.`,
           );
         } else {
-          if (value !== run.awaiting)
-            throw Error("Approve the exact step that is waiting.");
+          if (value !== run.awaiting) throw Error('Approve the exact step that is waiting.');
           run.confirmed = run.awaiting;
           await runPlan(active, ticket);
         }
-      } else throw Error("Unknown action.");
+      } else throw Error('Unknown action.');
     } catch (error) {
       if (ticket === epoch) {
         let message = helperMessages[error.message] || error.message;
@@ -435,15 +417,15 @@ function createComputerControl({
       if (ticket === epoch) busy = false;
     }
   });
-  globalShortcut.register("CommandOrControl+Shift+A", () => void start());
+  globalShortcut.register('CommandOrControl+Shift+A', () => void start());
   return {
     start,
     stop,
     dispose() {
       stop();
       window?.destroy();
-      globalShortcut.unregister("CommandOrControl+Shift+A");
-      ipcMain.removeHandler("computer:command");
+      globalShortcut.unregister('CommandOrControl+Shift+A');
+      ipcMain.removeHandler('computer:command');
     },
   };
 }

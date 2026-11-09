@@ -1,0 +1,23 @@
+{
+  "name": "soma-xr",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@iwsdk/core": "1.1.0-rc.2",
+    "three": "npm:super-three@0.185.0"
+  },
+  "devDependencies": {
+    "@iwsdk/vite-plugin-dev": "1.1.0-rc.2",
+    "typescript": "7.0.2",
+    "vite": "7.3.8"
+  },
+  "overrides": {
+    "three": "npm:super-three@0.185.0"
+  }
+}

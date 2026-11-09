@@ -3,7 +3,8 @@
  * over the desk within reach. Poke or pinch an edge to cut it; grab the bead on the probe edge's rail and slide it
  * to change that cost. Everything drawn comes from a LabState; the scene never computes a route or a caption.
  */
-import { Grabbed, OneHandGrabbable, PokeInteractable, Pressed, RayInteractable, World, createSystem, type Entity } from '@iwsdk/core';
+import { Grabbed, OneHandGrabbable, PokeInteractable, RayInteractable, World, createSystem } from '@iwsdk/core';
+import type {} from '@pmndrs/pointer-events';
 import {
   BoxGeometry, Color, CylinderGeometry, DirectionalLight, HemisphereLight, Mesh, MeshBasicMaterial,
   MeshStandardMaterial, PlaneGeometry, SphereGeometry, SRGBColorSpace, TextureLoader, Vector3,
@@ -15,8 +16,8 @@ import { textPanel } from './text';
 
 const SEATED_EYE = 1.15;
 const DESK_TOP = 0.74;
-/** The graph stands 0.16 m over the desk, centred 0.42 m ahead: inside a seated two-foot reach. */
-const GRAPH = { width: 0.62, depth: 0.4, centre: new Vector3(0, DESK_TOP + 0.16, -0.42) };
+/** The graph stands 0.14 m over the desk, centred 0.45 m ahead: about 50 degrees wide, inside a seated two-foot reach. */
+const GRAPH = { width: 0.42, depth: 0.26, centre: new Vector3(0, DESK_TOP + 0.14, -0.45) };
 /** The probe rail: 10 cm of travel maps onto the full cost range. */
 const RAIL = { length: 0.1 };
 
@@ -67,15 +68,16 @@ for (const node of state.nodes) {
   ball.position.copy(at.get(node.id)!);
   world.scene.add(ball);
   nodeMeshes.set(node.id, ball);
-  const label = textPanel(0.05, 0.03, { font: 150 });
+  const label = textPanel(0.06, 0.036, { font: 190 });
   label.set([node.label]);
-  label.mesh.position.copy(ball.position).add(new Vector3(0, 0.045, 0));
+  label.mesh.position.copy(ball.position).add(new Vector3(0, 0.05, 0));
   world.scene.add(label.mesh);
 }
 
 // Edges: a thin rod to see, a thick invisible sleeve to poke or point at, and a cost tag.
-type EdgeView = { rod: Mesh; entity: Entity; tag: ReturnType<typeof textPanel>; wasPressed: boolean };
+type EdgeView = { rod: Mesh; tag: ReturnType<typeof textPanel> };
 const edgeViews = new Map<string, EdgeView>();
+let pressedEdge: string | null = null;
 for (const edge of state.edges) {
   const a = at.get(edge.from)!, b = at.get(edge.to)!;
   const middle = a.clone().add(b).multiplyScalar(0.5);
@@ -90,10 +92,16 @@ for (const edge of state.edges) {
   const entity = world.createTransformEntity(sleeve);
   entity.addComponent(RayInteractable);
   entity.addComponent(PokeInteractable);
+  // A press commits on release over the same edge: a poke, a pinch along the hand's ray, or a mouse on desktop.
+  sleeve.addEventListener('pointerdown', () => (pressedEdge = edge.id));
+  sleeve.addEventListener('pointerup', () => {
+    if (pressedEdge === edge.id) render(lab.toggleEdge(edge.id));
+    pressedEdge = null;
+  });
   const tag = textPanel(0.04, 0.026, { font: 150, background: 'rgba(16,20,24,0.85)' });
   tag.mesh.position.copy(middle).add(new Vector3(0, 0.02, 0));
   world.scene.add(tag.mesh);
-  edgeViews.set(edge.id, { rod, entity, tag, wasPressed: false });
+  edgeViews.set(edge.id, { rod, tag });
 }
 
 // The probe: a vertical rail above the probe edge, and a bead to slide along it.
@@ -118,8 +126,8 @@ railTag.mesh.position.copy(railBase).add(new Vector3(0, RAIL.length + 0.035, 0))
 world.scene.add(railTag.mesh);
 
 // The caption board between the graph and the slide: the computed result and where the experiment came from.
-const board = textPanel(0.9, 0.16, { background: 'rgba(16,20,24,0.9)', align: 'left', font: 46 });
-board.mesh.position.set(0, DESK_TOP + 0.36, -0.78);
+const board = textPanel(0.8, 0.14, { background: 'rgba(16,20,24,0.9)', align: 'left', font: 46 });
+board.mesh.position.set(0, DESK_TOP + 0.42, -0.9);
 world.scene.add(board.mesh);
 
 function render(next: LabState) {
@@ -134,15 +142,12 @@ function render(next: LabState) {
   board.set([route, next.caption, `Experiment chosen in a ${next.provenance.label}; results computed now by Soma's Dijkstra.`]);
 }
 render(state);
+// A release anywhere else abandons the press.
+window.addEventListener('pointerup', () => queueMicrotask(() => (pressedEdge = null)));
 
-// Hands: a press on an edge sleeve cuts or restores it; a grabbed bead sets the probe cost by its height.
+// Hands: a grabbed bead sets the probe cost by its height; a released bead settles on the current cost.
 class LabSystem extends createSystem({}) {
   update() {
-    for (const [id, view] of edgeViews) {
-      const pressed = view.entity.hasComponent(Pressed);
-      if (pressed && !view.wasPressed) render(lab.toggleEdge(id));
-      view.wasPressed = pressed;
-    }
     const height = Math.min(Math.max(bead.position.y - railBase.y, 0), RAIL.length);
     const cost = Math.round((height / RAIL.length) * LAB_COST_RANGE.max);
     const current = state.edges.find((e) => e.id === state.probe.edgeId)!.cost;

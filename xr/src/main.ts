@@ -3,16 +3,17 @@
  * over the desk within reach. Poke or pinch an edge to cut it; grab the bead on the probe edge's rail and slide it
  * to change that cost. Everything drawn comes from a LabState; the scene never computes a route or a caption.
  */
-import { Grabbed, OneHandGrabbable, PokeInteractable, RayInteractable, World, createSystem } from '@iwsdk/core';
+import { PokeInteractable, RayInteractable, World, createSystem } from '@iwsdk/core';
 import type {} from '@pmndrs/pointer-events';
 import {
   BoxGeometry, Color, CylinderGeometry, DirectionalLight, HemisphereLight, Mesh, MeshBasicMaterial,
-  MeshStandardMaterial, PlaneGeometry, SphereGeometry, SRGBColorSpace, TextureLoader, Vector3,
+  MeshStandardMaterial, Plane, PlaneGeometry, SphereGeometry, SRGBColorSpace, TextureLoader, Vector3,
 } from 'three';
 import type { LabState } from '../../src/lib/xr-lab/contract';
 import { LAB_COST_RANGE } from '../../src/lib/xr-lab/contract';
 import { openRecordedGraphLab } from '../../src/lib/xr-lab/recorded-graph-lab';
 import { textPanel } from './text';
+
 
 const SEATED_EYE = 1.15;
 const DESK_TOP = 0.74;
@@ -114,14 +115,36 @@ const bead = new Mesh(new SphereGeometry(0.016, 20, 14), probeInk);
 const costToY = (cost: number) => railBase.y + (cost / LAB_COST_RANGE.max) * RAIL.length;
 bead.position.set(railBase.x, costToY(probe.cost), railBase.z);
 const beadEntity = world.createTransformEntity(bead);
-beadEntity.addComponent(OneHandGrabbable, {
-  rotate: false,
-  translate: true,
-  translateMin: [railBase.x, railBase.y, railBase.z],
-  translateMax: [railBase.x, railBase.y + RAIL.length, railBase.z],
+beadEntity.addComponent(RayInteractable);
+beadEntity.addComponent(PokeInteractable);
+// A larger invisible grip makes the bead easy to catch with a ray or a fingertip.
+bead.add(new Mesh(new SphereGeometry(0.035, 12, 8), hitbox));
+// Press the bead and move: the pointer is captured, and its ray is projected onto the rail's vertical plane.
+let dragging = false;
+const railPlane = new Plane();
+const hit = new Vector3();
+bead.addEventListener('pointerdown', (event) => {
+  dragging = true;
+  bead.setPointerCapture(event.pointerId);
 });
+bead.addEventListener('pointermove', (event) => {
+  if (!dragging) return;
+  const facing = event.ray.origin.clone().sub(railBase).setY(0);
+  if (facing.lengthSq() < 1e-6) return;
+  railPlane.setFromNormalAndCoplanarPoint(facing.normalize(), railBase);
+  if (!event.ray.intersectPlane(railPlane, hit)) return;
+  const height = Math.min(Math.max(hit.y - railBase.y, 0), RAIL.length);
+  const cost = Math.round((height / RAIL.length) * LAB_COST_RANGE.max);
+  if (cost !== state.edges.find((e) => e.id === state.probe.edgeId)!.cost) render(lab.setCost(state.probe.edgeId, cost));
+});
+const endDrag = (event: { pointerId: number }) => {
+  dragging = false;
+  if (bead.hasPointerCapture(event.pointerId)) bead.releasePointerCapture(event.pointerId);
+};
+bead.addEventListener('pointerup', endDrag);
+bead.addEventListener('pointercancel', endDrag);
 const railTag = textPanel(0.13, 0.03, { font: 120 });
-railTag.set([`Slide to change ${probe.from}–${probe.to}`]);
+railTag.set([`Drag to change ${probe.from}–${probe.to}`]);
 railTag.mesh.position.copy(railBase).add(new Vector3(0, RAIL.length + 0.035, 0));
 world.scene.add(railTag.mesh);
 
@@ -145,17 +168,22 @@ render(state);
 // A release anywhere else abandons the press.
 window.addEventListener('pointerup', () => queueMicrotask(() => (pressedEdge = null)));
 
-// Hands: a grabbed bead sets the probe cost by its height; a released bead settles on the current cost.
+// The bead always shows the current probe cost: it moves in whole steps while dragged and follows a reset.
 class LabSystem extends createSystem({}) {
   update() {
-    const height = Math.min(Math.max(bead.position.y - railBase.y, 0), RAIL.length);
-    const cost = Math.round((height / RAIL.length) * LAB_COST_RANGE.max);
     const current = state.edges.find((e) => e.id === state.probe.edgeId)!.cost;
-    if (beadEntity.hasComponent(Grabbed)) {
-      if (cost !== current) render(lab.setCost(state.probe.edgeId, cost));
-    } else {
-      bead.position.set(railBase.x, costToY(current), railBase.z);
-    }
+    bead.position.set(railBase.x, costToY(current), railBase.z);
   }
 }
 world.registerSystem(LabSystem);
+
+// Local checks only: publish the bead's position and the lab result as page attributes, which emulator tests read.
+// Never set on a hosted page.
+if (['127.0.0.1', 'localhost'].includes(location.hostname)) {
+  const root = document.documentElement;
+  setInterval(() => {
+    root.dataset.somaBead = JSON.stringify(bead.getWorldPosition(new Vector3()).toArray());
+    root.dataset.somaRail = JSON.stringify(railBase.toArray());
+    root.dataset.somaResult = JSON.stringify({ path: state.path, cost: state.totalCost, probe: state.edges.find((e) => e.id === state.probe.edgeId)?.cost, caption: state.caption });
+  }, 200);
+}

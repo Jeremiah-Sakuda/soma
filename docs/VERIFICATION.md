@@ -2,6 +2,14 @@
 
 Executed evidence, November 4, 2026. Source tests, actual provider runs, browser rendering, native-device behavior and distribution checks are separate evidence. A passed synthetic test does not establish real capture permissions, audio quality or learning benefit.
 
+## VR spike lab model
+
+November 9, 2026, on `vr-spike/lab-model`. The recorded graph opens at A → C → B → D → F with computed cost 7. D–F ties the alternative at cost 5. At cost 6, the solver takes A → C → E → F at total cost 9. Tests also cover cut and restore, an unreachable goal, reset, and the 0–10 edit range. The original A–F cost of 11 remains on open and reset.
+
+Typecheck and runtime manifest verification passed. The full Vitest run passed 2,037 tests with 107 gated skips, including all nine lab tests. The initial run lacked isolated runner dependencies and local loopback access. The rerun used the installed runner dependencies and local test ports.
+
+These checks exercise the model in a local replay. Hosted WebXR, hand tracking and headset behavior remain unverified.
+
 ## Companion 0.5.0 distribution
 
 [0.5.0 is public and Latest](https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.5.0), not a draft/prerelease. Its immutable tag targets `1305844ad25e4b2758053c24ff62c62afa889772`. The final archive is Developer ID signed, Apple-notarized and stapled; deep strict code-sign verification, Gatekeeper and extracted-ZIP round-trip verification passed.
@@ -41,7 +49,7 @@ The full browser suite exposed a removed `PCFSoftShadowMap` setting. Three alrea
 
 The handwritten source diff was compared against pinned formatter output. The shadow setting is the one intentional rendering-code cleanup; no solver, orchestration or prompt behavior was rewritten. Metadata-only receipt cleanup removes private artifact locations without changing recorded model responses. The targeted secret-value comparison found no tracked matches; pattern-scan findings in the current tree and existing main history were classified as generated file digests or an explicitly synthetic test capability. This does not certify the absence of every possible private datum.
 
-Current source manifest: `soma-source-polish-2026-11-04`, 318 runtime/public files, source-tree SHA-256 `ba3306a2b89ea122754b5c425596b0db26682c8f73d2191ffc912942ac3c4f10`. It differs from the immutable notarized release tag because of source formatting and dependency maintenance. Compare hosted `/release.json` separately before claiming deployment parity.
+November 4 maintenance manifest: `soma-source-polish-2026-11-04`, 318 runtime/public files, source-tree SHA-256 `ba3306a2b89ea122754b5c425596b0db26682c8f73d2191ffc912942ac3c4f10`. It differs from the immutable notarized release tag because of source formatting and dependency maintenance. Compare hosted `/release.json` separately before claiming deployment parity.
 
 ```sh
 npm run format:check

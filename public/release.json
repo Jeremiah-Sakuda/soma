@@ -1,6 +1,6 @@
 {
-  "releaseId": "soma-source-polish-2026-11-04",
-  "sourceTreeSha256": "ba3306a2b89ea122754b5c425596b0db26682c8f73d2191ffc912942ac3c4f10",
+  "releaseId": "soma-vr-lab-model-2026-11-09",
+  "sourceTreeSha256": "020e116b1f4951da57cb012e2dab573e8d8579d61bad0d9269ed6c09b3243ed5",
   "runtime": {
     ".nvmrc": "9c579c4eab1d526e689fe7cda201a0ab2f39070304043bb55c459a3d90954250",
     "desktop/Info.plist": "a7566833b9abda71d595bb76ba892daf8c33cccb10413e3a510a1a502c0db050",
@@ -316,9 +316,11 @@
     "src/lib/server/worker-auth.ts": "3da9d745e242eb6457f1a4882809418603ae74890bde4d553f1be75413dcc80c",
     "src/lib/server/worker.ts": "4b2a80c62300d7ced75b93d792aa7ada6247715ac00924054c425c33b57cf779",
     "src/lib/server/workspace-access.ts": "1927660000c8a3d34124c5705ba54215f8dae71b42b4781b71ac800572cb45a2",
+    "src/lib/xr-lab/contract.ts": "aa2916a8ad2657ceea87aaa137f925ccb5789dd56372555bc52cbeef2e6aef0b",
+    "src/lib/xr-lab/recorded-graph-lab.ts": "9e88459b5e23850a8f99c652cba22f0686a59492c048e38035d00152544e3621",
     "src/vendor/anatomy/LICENSE": "f387fa1e4252b610ae913ba2ff6a861022fcef4be5d69a59a84cae32de036a4c",
     "src/vendor/anatomy/iso-kit.ts": "1fce3d8452b6fdec1a0b9ec3e5e82114467fdd725f9d9f089f0f8bba6eae89cc",
-    "tsconfig.json": "22c9f1de599e6d628ad9118f28a77bfca5ef1802e8c04491e8d57e266d5348c3",
+    "tsconfig.json": "9bc0ae9470b976d8981cdeaf0d11d2509e6a4a30f759c64a4d49bab6ee2cbd14",
     "vercel.json": "56776a20baf58f968a38ac3a4e5aa6578219643d090042856db66157a9cb8838"
   }
 }

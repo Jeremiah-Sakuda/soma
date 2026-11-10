@@ -24,6 +24,23 @@ const PANEL_BG = 'rgba(27,31,34,0.96)';
 const INK = '#f8f2e8';
 const CYAN = '#a9e2f1';
 
+// Presentation offsets in metres keep the camera-facing readouts clear of each other
+// and of the probe targets. The source-aligned bodies and wires stay in place.
+const NODE_LABEL_OFFSETS: Record<string, [number, number, number]> = {
+  A: [0, 0.074, 0],
+  B: [-0.048, 0.037, 0],
+  C: [0.0165, 0.052, 0],
+  D: [0, 0.05, 0.005],
+};
+const PART_LABEL_OFFSETS: Record<string, [number, number, number]> = {
+  VS1: [-0.016, 0.04, 0],
+  R1: [-0.095, 0.05, 0],
+  R2: [-0.127, 0.025, 0.002],
+  R3: [-0.065, 0.073, 0],
+  R4: [-0.072, 0.02, 0.018],
+  R5: [-0.008, 0.043, 0.024],
+};
+
 // Preserve the source alignment while fitting the recorded bridge inside the seated tray.
 function place(x: number, y: number) {
   return new Vector3(x - 0.303, SURFACE, -0.58 + ((y - 0.2975) / 0.482) * 0.26);
@@ -34,6 +51,7 @@ export function createCircuitScene(
   root: Group,
   onChange: (state: CircuitLabState) => void,
 ) {
+  const rootEntity = world.createTransformEntity(root);
   const lab = openRecordedCircuitLab();
   const initial = lab.state();
   const observed = initial.probe.observe;
@@ -75,8 +93,7 @@ export function createCircuitScene(
   }
 
   function action(mesh: Mesh, run: () => void) {
-    world.createTransformEntity(mesh).addComponent(RayInteractable);
-    root.add(mesh);
+    world.createTransformEntity(mesh, rootEntity).addComponent(RayInteractable);
     // IWSDK indexes interactables directly, without filtering hidden ancestor groups.
     const raycast = mesh.raycast;
     mesh.raycast = function (...args) {
@@ -103,15 +120,15 @@ export function createCircuitScene(
 
   const nodeLabels = new Map(
     initial.nodes.map((node) => {
-      const point = nodePoints.get(node.id)!.clone();
-      point.y += 0.034;
-      if (node.id === 'B') point.x -= 0.054;
-      if (node.id === 'C') point.x += 0.002;
-      if (node.id === 'D') point.z += 0.008;
+      const offset = NODE_LABEL_OFFSETS[node.id] ?? [0, 0.034, 0];
+      const point = nodePoints
+        .get(node.id)!
+        .clone()
+        .add(new Vector3(...offset));
       const post = new Mesh(new CylinderGeometry(0.008, 0.008, 0.012, 14), wireInk);
       post.position.copy(nodePoints.get(node.id)!);
       root.add(post);
-      return [node.id, label(point, 0.064, 0.025)] as const;
+      return [node.id, label(point, 0.061, 0.024)] as const;
     }),
   );
 
@@ -160,15 +177,13 @@ export function createCircuitScene(
       }
 
       // Show both the resistance and the live signed current near their own component.
-      const labelPoint = place(part.labelX, part.labelY).add(new Vector3(0, 0.042, 0));
-      if (part.id === 'VS1') labelPoint.x -= 0.016;
-      if (part.id === 'R3' || part.id === probeId) labelPoint.x -= 0.08;
-      if (part.id === observedId) labelPoint.z -= 0.012;
+      const offset = PART_LABEL_OFFSETS[part.id] ?? [0, 0.042, 0];
+      const labelPoint = place(part.labelX, part.labelY).add(new Vector3(...offset));
       const observedPart = part.id === observedId;
       const tag = label(
         labelPoint,
-        observedPart ? 0.139 : 0.069,
-        observedPart ? 0.044 : 0.041,
+        observedPart ? 0.11 : 0.061,
+        observedPart ? 0.038 : 0.035,
         observedPart ? CYAN : INK,
       );
       return [part.id, { solid, lever, tag, midpoint, along }] as const;
@@ -181,11 +196,11 @@ export function createCircuitScene(
 
   const presetControls = PRESETS.map((value, index) => {
     const centre = new Vector3(-0.1 + 0.1 * index, SURFACE, -0.275);
-    const button = label(centre, 0.081, 0.044, CYAN);
+    const button = label(centre, 0.068, 0.036, CYAN);
     action(button.mesh, () => setValue(probeId, value));
     return { value, button };
   });
-  const presetHint = label(new Vector3(0, SURFACE + 0.022, -0.306), 0.135, 0.026, CYAN);
+  const presetHint = label(new Vector3(0, SURFACE + 0.016, -0.307), 0.12, 0.022, CYAN);
   presetHint.set([`${probeId} · Choose resistance`]);
 
   function render(state: CircuitLabState) {
@@ -194,7 +209,7 @@ export function createCircuitScene(
         .get(node.id)!
         .set([
           node.voltage === null
-            ? `${node.label} · Floating`
+            ? `${node.label} · ${state.status === 'solved' ? 'Floating' : 'Unknown'}`
             : `${node.label} · ${circuitQuantity(node.voltage, 'V')}`,
         ]);
     }
@@ -217,8 +232,8 @@ export function createCircuitScene(
     }
     const current = state.parts.find(({ id }) => id === observedId)!.current;
     arrow.visible = current !== null && current !== 0;
-    if (arrow.visible) {
-      const direction = bridge.along.clone().multiplyScalar(current! > 0 ? 1 : -1);
+    if (current !== null && current !== 0) {
+      const direction = bridge.along.clone().multiplyScalar(current > 0 ? 1 : -1);
       arrow.setDirection(direction);
       arrow.position.copy(bridge.midpoint).addScaledVector(direction, -0.045);
       arrow.position.y += 0.02;

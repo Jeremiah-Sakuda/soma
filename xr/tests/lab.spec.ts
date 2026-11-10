@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { Object3D, PerspectiveCamera, Vector3 } from 'three';
+import { PerspectiveCamera, Vector3 } from 'three';
 import presentation from '../../src/lib/fixtures/recorded-graph-presentation.json' with { type: 'json' };
 
 type Result = { path: string[] | null; cost: number | null; probe: number; caption: string };
@@ -31,7 +31,7 @@ async function project(page: Page, worldPoint: Vector3): Promise<Point> {
   if (!canvas) throw new Error('The rendered canvas must be visible.');
   const camera = new PerspectiveCamera(50, canvas.width / canvas.height, 0.1, 200);
   camera.position.set(0, 1.15, 0);
-  camera.lookAt(0, 0.74 + 0.12, -0.55);
+  camera.lookAt(0, 0.74 + 0.17, -0.55);
   camera.updateMatrixWorld(true);
   const ndc = worldPoint.clone().project(camera);
   expect(ndc.z, 'Target must be in front of the camera').toBeGreaterThan(-1);
@@ -138,14 +138,7 @@ test('production lab cuts an edge, drags the probe, and resets using the mouse',
   ) as number[];
   expect(movedBead[1]).toBeGreaterThan(bead.y);
 
-  // Reset's centre falls just below this desktop camera's view. Target an actual point
-  // on the visible upper face (14 mm above centre; plaque height is 35 mm), transformed
-  // by the same lookAt as the scene. This is geometry, not a guessed pixel coordinate.
-  const reset = new Object3D();
-  reset.position.set(-0.3, 0.74 + 0.03, -0.28);
-  reset.lookAt(0, 1.15, 0);
-  reset.updateMatrixWorld(true);
-  const resetPoint = await project(page, reset.localToWorld(new Vector3(0, 0.014, 0)));
+  const resetPoint = await project(page, new Vector3(0.23, 0.91, -0.66));
   await press(page, resetPoint);
   await release(page);
   await expectRoute(page, originalRoute, 7);
@@ -166,4 +159,67 @@ test('production lab cuts an edge, drags the probe, and resets using the mouse',
     contentType: 'application/json',
   });
   await testInfo.attach('reset-view', { body: await page.screenshot(), contentType: 'image/png' });
+});
+
+test('pins a checked graph comparison, switches to the bridge, and recalls the pin after reload', async ({
+  page,
+}, testInfo) => {
+  await page.bringToFront();
+  await page.goto('/');
+  await expectRoute(page, originalRoute, 7);
+
+  const clickWorld = async (x: number, y: number, z: number) => {
+    await press(page, await project(page, new Vector3(x, y, z)));
+    await release(page);
+  };
+  const readDesk = async () => {
+    const raw = await page.locator('html').getAttribute('data-soma-desk');
+    return raw ? JSON.parse(raw) : null;
+  };
+  await clickWorld(0.08, 0.88, -0.275);
+  await expect.poll(async () => (await result(page))?.probe).toBe(4);
+  await expectRoute(page, originalRoute, 8);
+  await clickWorld(0.08, 0.91, -0.66);
+  await expect
+    .poll(readDesk)
+    .toMatchObject({
+      pinned: { baseline: 'A → C → B → D → F · cost 7', result: 'A → C → B → D → F · cost 8' },
+    });
+
+  await clickWorld(-0.07, 0.91, -0.66);
+  await expect
+    .poll(readDesk)
+    .toMatchObject({ lab: 'circuit', result: 'R4 8 Ω · R5 0 A', pinned: null });
+  await clickWorld(-0.1, 0.88, -0.275);
+  await expect.poll(readDesk).toMatchObject({ result: 'R4 4 Ω · R5 0.24 A B → C' });
+  await clickWorld(0.1, 0.88, -0.275);
+  await expect.poll(readDesk).toMatchObject({ result: 'R4 16 Ω · R5 0.1678 A C → B' });
+  await testInfo.attach('bridge-at-16-ohms', {
+    body: await page.screenshot(),
+    contentType: 'image/png',
+  });
+  await clickWorld(0.08, 0.91, -0.66);
+  await expect
+    .poll(readDesk)
+    .toMatchObject({
+      pinned: { baseline: 'R4 8 Ω · R5 0 A', result: 'R4 16 Ω · R5 0.1678 A C → B' },
+    });
+  await clickWorld(0.23, 0.91, -0.66);
+  await expect.poll(readDesk).toMatchObject({ result: 'R4 8 Ω · R5 0 A' });
+  await clickWorld(-0.21, 0.91, -0.66);
+  await expect.poll(readDesk).toMatchObject({ lab: 'graph', result: 'A → C → B → D → F · cost 8' });
+
+  await page.reload();
+  await expectRoute(page, originalRoute, 7);
+  await expect
+    .poll(readDesk)
+    .toMatchObject({ lab: 'graph', pinned: { result: 'A → C → B → D → F · cost 8' } });
+  await page.getByRole('button', { name: 'Desk controls' }).focus();
+  await page.keyboard.press('Enter');
+  await page.getByRole('button', { name: 'Bridge circuit', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#desk-note')).toContainText('Pinned: R4 16 Ω · R5 0.1678 A C → B');
+  await page.getByRole('button', { name: 'R4 at 4 Ω' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#desk-result')).toContainText('R4 4 Ω · R5 0.24 A B → C');
 });

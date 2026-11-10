@@ -1,6 +1,6 @@
 import { PokeInteractable, RayInteractable, type World } from '@iwsdk/core';
 import type {} from '@pmndrs/pointer-events';
-import { Group, Vector3 } from 'three';
+import { Vector3 } from 'three';
 import { textPanel } from './text';
 
 export type LabId = 'graph' | 'circuit';
@@ -35,7 +35,7 @@ export function saveFinding(lab: LabId, finding: Finding): boolean {
 
 export function studyButton(
   world: World,
-  group: Group,
+  parent: ReturnType<World['createTransformEntity']>,
   label: string,
   position: [number, number, number],
   width: number,
@@ -49,11 +49,10 @@ export function studyButton(
   panel.set([label]);
   panel.mesh.position.set(...position);
   panel.mesh.lookAt(new Vector3(0, 1.15, 0));
-  const entity = world.createTransformEntity(panel.mesh);
+  const entity = world.createTransformEntity(panel.mesh, parent);
   entity.addComponent(RayInteractable);
   entity.addComponent(PokeInteractable);
-  group.add(panel.mesh);
-  panel.mesh.pointerEventsType = () => group.visible;
+  panel.mesh.pointerEventsType = () => parent.object3D!.visible;
   const presses = new Set<number>();
   const hover = new Set<number>();
   panel.mesh.addEventListener('pointerenter', ({ pointerId }) => {
@@ -68,7 +67,7 @@ export function studyButton(
   });
   panel.mesh.addEventListener('pointercancel', ({ pointerId }) => presses.delete(pointerId));
   panel.mesh.addEventListener('pointerup', ({ pointerId }) => {
-    if (presses.delete(pointerId) && group.parent) action();
+    if (presses.delete(pointerId) && parent.object3D!.visible) action();
   });
   return panel;
 }

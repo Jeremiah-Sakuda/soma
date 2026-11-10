@@ -103,7 +103,8 @@ const graphRoot = new Group();
 const circuitRoot = new Group();
 circuitRoot.visible = false;
 const deskUI = new Group();
-world.scene.add(graphRoot, deskUI);
+const graphEntity = world.createTransformEntity(graphRoot);
+const deskEntity = world.createTransformEntity(deskUI);
 let activeLab: LabId = 'graph';
 let message = '';
 const pinned = { graph: readFinding('graph'), circuit: readFinding('circuit') };
@@ -157,7 +158,7 @@ for (const edge of state.edges) {
   const sleeve = new Mesh(new CylinderGeometry(0.016, 0.016, a.distanceTo(b) * 0.7, 10), hitbox);
   sleeve.position.copy(middle);
   sleeve.quaternion.copy(rod.quaternion);
-  const entity = world.createTransformEntity(sleeve);
+  const entity = world.createTransformEntity(sleeve, graphEntity);
   entity.addComponent(RayInteractable);
   entity.addComponent(PokeInteractable);
   // A press commits on release over the same edge: a poke, a pinch along the hand's ray, or a mouse on desktop.
@@ -194,7 +195,7 @@ graphRoot.add(rail);
 const bead = new Mesh(new SphereGeometry(0.016, 20, 14), probeInk);
 const costToY = (cost: number) => railBase.y + (cost / LAB_COST_RANGE.max) * RAIL.length;
 bead.position.set(railBase.x, costToY(probe.cost), railBase.z);
-const beadEntity = world.createTransformEntity(bead);
+const beadEntity = world.createTransformEntity(bead, graphEntity);
 beadEntity.addComponent(RayInteractable);
 beadEntity.addComponent(PokeInteractable);
 graphRoot.add(bead);
@@ -251,12 +252,12 @@ tickTag.mesh.position.set(railBase.x + 0.05, costToY(state.probe.criticalCost), 
 graphRoot.add(tickTag.mesh);
 
 // Keep navigation and the experiment's result in the same seated view.
-studyButton(world, deskUI, 'Routes', [-0.21, 0.91, -0.66], 0.12, () => selectLab('graph'));
-studyButton(world, deskUI, 'Circuit', [-0.07, 0.91, -0.66], 0.12, () => selectLab('circuit'));
-studyButton(world, deskUI, 'Pin finding', [0.08, 0.91, -0.66], 0.15, pinFinding);
-studyButton(world, deskUI, 'Reset', [0.23, 0.91, -0.66], 0.12, resetLab);
-studyButton(world, graphRoot, '− D–F', [-0.08, 0.88, -0.275], 0.13, () => stepCost(-1));
-studyButton(world, graphRoot, '+ D–F', [0.08, 0.88, -0.275], 0.13, () => stepCost(1));
+studyButton(world, deskEntity, 'Routes', [-0.21, 0.91, -0.66], 0.12, () => selectLab('graph'));
+studyButton(world, deskEntity, 'Circuit', [-0.07, 0.91, -0.66], 0.12, () => selectLab('circuit'));
+studyButton(world, deskEntity, 'Pin finding', [0.08, 0.91, -0.66], 0.15, pinFinding);
+studyButton(world, deskEntity, 'Reset', [0.23, 0.91, -0.66], 0.12, resetLab);
+studyButton(world, graphEntity, '− D–F', [-0.08, 0.88, -0.275], 0.13, () => stepCost(-1));
+studyButton(world, graphEntity, '+ D–F', [0.08, 0.88, -0.275], 0.13, () => stepCost(1));
 
 // A bright pulse runs along the route whenever it changes, so the eye follows the consequence.
 const pulse = new Mesh(
@@ -301,7 +302,6 @@ const circuit = createCircuitScene(world, circuitRoot, () => {
     refreshDesk();
   }
 });
-circuitRoot.removeFromParent();
 const initialCircuit = circuit.state();
 const graphSummary = (s: LabState) =>
   s.path ? `${s.path.join(' → ')} · cost ${s.totalCost}` : 'No route to the goal';
@@ -350,8 +350,7 @@ function refreshDesk() {
   element('pick-circuit').setAttribute('aria-pressed', String(!graph));
   element('graph-actions').hidden = !graph;
   element('circuit-actions').hidden = graph;
-  element<HTMLButtonElement>('pin-finding').disabled =
-    finding.result === finding.baseline && !saved;
+  element<HTMLButtonElement>('pin-finding').disabled = !hasExperiment();
 }
 function selectLab(id: LabId) {
   if (activeLab === id) return;
@@ -361,9 +360,6 @@ function selectLab(id: LabId) {
   message = '';
   graphRoot.visible = id === 'graph';
   circuitRoot.visible = id === 'circuit';
-  graphRoot.removeFromParent();
-  circuitRoot.removeFromParent();
-  world.scene.add(id === 'graph' ? graphRoot : circuitRoot);
   slideMaterial.map = id === 'graph' ? slideTexture : circuitTexture;
   refreshDesk();
 }

@@ -143,18 +143,57 @@ const endDrag = (event: { pointerId: number }) => {
 };
 bead.addEventListener('pointerup', endDrag);
 bead.addEventListener('pointercancel', endDrag);
-const railTag = textPanel(0.13, 0.03, { font: 120 });
+const railTag = textPanel(0.13, 0.03, { font: 120, align: 'left' });
 railTag.set([`Drag to change ${probe.from}–${probe.to}`]);
-railTag.mesh.position.copy(railBase).add(new Vector3(0, RAIL.length + 0.035, 0));
+railTag.mesh.position.copy(railBase).add(new Vector3(0.1, RAIL.length * 0.85, 0));
 world.scene.add(railTag.mesh);
 
 // The caption board between the graph and the slide: the computed result and where the experiment came from.
+// It stands just behind the graph and tilts toward the seated eye, so it reads while looking down at the graph,
+// and its lower edge stays above the line of sight to the farthest nodes.
 const board = textPanel(0.8, 0.14, { background: 'rgba(16,20,24,0.9)', align: 'left', font: 46 });
-board.mesh.position.set(0, DESK_TOP + 0.42, -0.9);
+board.mesh.position.set(0, DESK_TOP + 0.29, -0.8);
+board.mesh.lookAt(0, SEATED_EYE, 0);
 world.scene.add(board.mesh);
 
+// The recorded experiment's turning point, marked on the rail.
+const tick = new Mesh(new CylinderGeometry(0.009, 0.009, 0.002, 20), routeInk);
+tick.position.set(railBase.x, costToY(state.probe.criticalCost), railBase.z);
+world.scene.add(tick);
+const tickTag = textPanel(0.07, 0.022, { font: 120, align: 'left' });
+tickTag.set([`turns at ${state.probe.criticalCost}`]);
+tickTag.mesh.position.set(railBase.x + 0.05, costToY(state.probe.criticalCost), railBase.z);
+world.scene.add(tickTag.mesh);
+
+// Reset, within reach at the front of the desk.
+const resetPlaque = textPanel(0.09, 0.035, { font: 150, background: 'rgba(40,46,54,0.95)' });
+resetPlaque.set(['Reset']);
+resetPlaque.mesh.position.set(-0.3, DESK_TOP + 0.03, -0.28);
+resetPlaque.mesh.lookAt(0, SEATED_EYE, 0);
+const resetEntity = world.createTransformEntity(resetPlaque.mesh);
+resetEntity.addComponent(RayInteractable);
+resetEntity.addComponent(PokeInteractable);
+let resetPressed = false;
+resetPlaque.mesh.addEventListener('pointerdown', () => (resetPressed = true));
+resetPlaque.mesh.addEventListener('pointerup', () => {
+  if (resetPressed) render(lab.reset());
+  resetPressed = false;
+});
+
+// A bright pulse runs along the route whenever it changes, so the eye follows the consequence.
+const pulse = new Mesh(new SphereGeometry(0.012, 16, 12), new MeshBasicMaterial({ color: 0xfff1c4 }));
+pulse.visible = false;
+world.scene.add(pulse);
+let pulseRoute: Vector3[] = [];
+let pulseT = 0;
+
 function render(next: LabState) {
+  const previous = state.path?.join('>');
   state = next;
+  if (next.path && next.path.join('>') !== previous) {
+    pulseRoute = next.path.map((id) => at.get(id)!);
+    pulseT = 0;
+  }
   for (const node of next.nodes) nodeMeshes.get(node.id)!.material = next.path?.includes(node.id) ? routeInk : ink;
   for (const edge of next.edges) {
     const view = edgeViews.get(edge.id)!;
@@ -170,9 +209,18 @@ window.addEventListener('pointerup', () => queueMicrotask(() => (pressedEdge = n
 
 // The bead always shows the current probe cost: it moves in whole steps while dragged and follows a reset.
 class LabSystem extends createSystem({}) {
-  update() {
+  delta = 0;
+  update(delta: number) {
+    this.delta = delta;
     const current = state.edges.find((e) => e.id === state.probe.edgeId)!.cost;
     bead.position.set(railBase.x, costToY(current), railBase.z);
+    // The pulse crosses one route segment every 0.35 s, then rests.
+    if (pulseRoute.length > 1 && pulseT < pulseRoute.length - 1) {
+      pulseT = Math.min(pulseRoute.length - 1, pulseT + this.delta / 0.35);
+      const i = Math.min(Math.floor(pulseT), pulseRoute.length - 2);
+      pulse.position.lerpVectors(pulseRoute[i], pulseRoute[i + 1], pulseT - i).add(new Vector3(0, 0.004, 0));
+      pulse.visible = pulseT < pulseRoute.length - 1;
+    } else pulse.visible = false;
   }
 }
 world.registerSystem(LabSystem);

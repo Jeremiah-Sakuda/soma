@@ -2,6 +2,12 @@
 
 Executed evidence, November 4, 2026. Source tests, actual provider runs, browser rendering, native-device behavior and distribution checks are separate evidence. A passed synthetic test does not establish real capture permissions, audio quality or learning benefit.
 
+## VR Productivity graph-first device candidate
+
+Build `7dd81b101db2098698eff8424c2f560fc1efb452` keeps the live versus dashed route comparison in the graph and a single live current arrow in the circuit. The graph provides a first pinch instruction. Ending an immersive session clears held graph input.
+
+XR typecheck and the production build passed. The separate [Quest device candidate](https://soma-quest-check.vercel.app/) serves 33 anonymous HTTPS files that matched the uploaded local bytes, including the [commit marker](https://soma-quest-check.vercel.app/candidate.json). No emulator or simulated interaction run was used for this iteration. Browser inspection was declined at the origin approval gate. Physical Quest launch, gestures and frame rate still need acceptance.
+
 ## VR Productivity replay iteration
 
 The replay recipe is bound to the original recording ID, revision and source image digest. Reopening validates edited controls and builds a fresh lab through the same deterministic adapters. The original out-of-range graph cost survives a cut-only replay. Tests cover malformed, stale, cross-lab and out-of-bounds controls. Existing note-only pins remain readable.

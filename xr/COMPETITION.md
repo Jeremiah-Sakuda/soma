@@ -32,6 +32,10 @@ The four scored criteria have equal weight. Stage One checks competition fit and
 
 **Frame timing.** Add `?diagnostics=1` to the release URL, enter VR, and use each lab for 60 active seconds. Switching labs or exiting VR closes the sample. After exit, open Desk controls and expand **XR app frame timing** to copy the per-lab reports. Samples pause when the immersive session loses visibility and cap at 120 seconds. Record actual headset and build details with the results. The numbers measure app callback cadence. Use Quest instrumentation to confirm presented frame rate if callbacks and presentation differ.
 
+### Hosted device candidate
+
+Open [Soma Lab on Quest](https://soma-quest-check.vercel.app/?diagnostics=1) in Quest Browser. The separate static project serves build `7dd81b101db2098698eff8424c2f560fc1efb452`. The [build marker](https://soma-quest-check.vercel.app/candidate.json) identifies the current hosted revision. All 33 files, including that marker, matched the local production upload over anonymous HTTPS. This is the device acceptance candidate. Log the exact URL and commit before recording or submitting.
+
 ### Quest acceptance procedure
 
 1. Load the intended HTTPS release URL in Quest Browser on the actual device. Use a clean browser session for the first run. Record the commit, URL, headset model, OS/browser versions, headset refresh rate, test date, and whether recording is active. Disable or set aside controllers and use native hand tracking throughout. Keep the headset wearer seated.

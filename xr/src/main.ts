@@ -28,7 +28,15 @@ import { openRecordedGraphLab } from '../../src/lib/xr-lab/recorded-graph-lab';
 import { textPanel } from './text';
 import { circuitQuantity } from '../../src/lib/domain/exploration-view';
 import { createCircuitScene } from './circuit-scene';
-import { readFinding, saveFinding, studyButton, type Finding, type LabId } from './study-controls';
+import { readFinding, saveFinding, studyButton } from './study-controls';
+import {
+  circuitRecipe,
+  graphRecipe,
+  replayFinding,
+  type Finding,
+  type LabId,
+} from './finding-replay';
+import { createFrameSampler, type FrameSampleReport } from './frame-sample';
 import './desk.css';
 
 const element = <T extends HTMLElement = HTMLElement>(id: string) =>
@@ -109,8 +117,15 @@ const deskEntity = world.createTransformEntity(deskUI);
 let activeLab: LabId = 'graph';
 let message = '';
 const pinned = { graph: readFinding('graph'), circuit: readFinding('circuit') };
+const replayable = {
+  graph: replayFinding('graph', pinned.graph?.replay),
+  circuit: replayFinding('circuit', pinned.circuit?.replay),
+};
+const sampler =
+  new URLSearchParams(location.search).get('diagnostics') === '1' ? createFrameSampler() : null;
+const samples: FrameSampleReport[] = [];
 
-const lab = openRecordedGraphLab();
+let lab = openRecordedGraphLab();
 let state = lab.state();
 
 /** Slide coordinates (0..1) onto the desk. The slide's graph occupies roughly x 0.1–0.55, y 0.4–0.72. */
@@ -143,7 +158,8 @@ for (const node of state.nodes) {
 }
 
 // Edges: a thin rod to see, a thick invisible sleeve to poke or point at, and a cost tag.
-type EdgeView = { rod: Mesh; tag: ReturnType<typeof textPanel> };
+const referenceInk = new MeshBasicMaterial({ color: 0x9dd9d4 });
+type EdgeView = { rod: Mesh; tag: ReturnType<typeof textPanel>; reference: Group };
 const edgeViews = new Map<string, EdgeView>();
 const pressedEdges = new Map<number, string>();
 for (const edge of state.edges) {
@@ -179,7 +195,17 @@ for (const edge of state.edges) {
   const tag = textPanel(0.04, 0.026, { font: 150, background: 'rgba(16,20,24,0.85)' });
   tag.mesh.position.copy(middle).add(new Vector3(0, 0.02, 0));
   graphRoot.add(tag.mesh);
-  edgeViews.set(edge.id, { rod, tag });
+  const reference = new Group();
+  reference.visible = false;
+  const geometry = new CylinderGeometry(0.0026, 0.0026, a.distanceTo(b) / 7, 8);
+  for (const offset of [0.23, 0.5, 0.77]) {
+    const dash = new Mesh(geometry, referenceInk);
+    dash.position.lerpVectors(a, b, offset).y += 0.013;
+    dash.quaternion.copy(rod.quaternion);
+    reference.add(dash);
+  }
+  graphRoot.add(reference);
+  edgeViews.set(edge.id, { rod, tag, reference });
 }
 
 // The probe: a vertical rail above the probe edge, and a bead to slide along it.
@@ -245,7 +271,14 @@ graphRoot.add(tick);
 // Keep navigation and the experiment's result in the same seated view.
 studyButton(world, deskEntity, 'Routes', [-0.21, 0.944, -0.66], 0.12, () => selectLab('graph'));
 studyButton(world, deskEntity, 'Circuit', [-0.07, 0.944, -0.66], 0.12, () => selectLab('circuit'));
-studyButton(world, deskEntity, 'Pin finding', [0.08, 0.944, -0.66], 0.15, pinFinding);
+const findingButton = studyButton(
+  world,
+  deskEntity,
+  'Pin finding',
+  [0.08, 0.944, -0.66],
+  0.15,
+  findingAction,
+);
 studyButton(world, deskEntity, 'Reset', [0.27, 0.944, -0.66], 0.11, resetLab);
 studyButton(world, graphEntity, '− D–F', [-0.08, 0.89, -0.287], 0.106, () => stepCost(-1));
 studyButton(world, graphEntity, '+ D–F', [0.08, 0.89, -0.287], 0.106, () => stepCost(1));
@@ -326,6 +359,27 @@ function refreshDesk() {
       : 'Try 4, 8 or 16 Ω. Watch the current through R5.';
   const finding = currentFinding();
   const saved = pinned[activeLab];
+  const savedLab = replayable[activeLab];
+  const edited = hasExperiment();
+  const canReopen = !edited && savedLab !== null;
+  findingButton.setLabel(canReopen ? 'Reopen pin' : 'Pin finding');
+  const webFindingButton = element<HTMLButtonElement>('pin-finding');
+  webFindingButton.textContent = canReopen ? 'Reopen pin' : 'Pin finding';
+  webFindingButton.disabled = !edited && !canReopen;
+  const savedGraph = savedLab?.id === 'graph' ? savedLab.lab.state() : null;
+  const pinnedRoute = savedGraph && savedGraph.path?.join('>') !== state.path?.join('>');
+  const reference = pinnedRoute ? savedGraph : initialGraph;
+  let hasReferenceRoute = false;
+  if (graph) {
+    for (const edge of state.edges) {
+      const visible =
+        !edge.onPath && reference.edges.some((prior) => prior.id === edge.id && prior.onPath);
+      edgeViews.get(edge.id)!.reference.visible = visible;
+      hasReferenceRoute ||= visible;
+    }
+  } else {
+    circuit.compare(savedLab?.id === 'circuit' ? savedLab.lab.state() : null);
+  }
   const tip = graph
     ? `D–F costs ${state.edges.find((edge) => edge.id === state.probe.edgeId)!.cost} · Recorded tie at ${state.probe.criticalCost} · Pinch or tap + / −`
     : 'What happens to R5 either side of 8 Ω?';
@@ -336,7 +390,9 @@ function refreshDesk() {
     `Start: ${finding.baseline}`,
     `Now: ${finding.result}`,
     message || note,
-    'Recorded Muse probe · computed by Soma',
+    hasReferenceRoute
+      ? `Solid now · Dashed ${pinnedRoute ? 'pinned' : 'start'}`
+      : 'Recorded Muse probe · computed by Soma',
   ]);
   element('desk-result').textContent = `${finding.result}. ${finding.caption}`;
   element('desk-note').textContent =
@@ -345,13 +401,14 @@ function refreshDesk() {
   element('pick-circuit').setAttribute('aria-pressed', String(!graph));
   element('graph-actions').hidden = !graph;
   element('circuit-actions').hidden = graph;
-  element<HTMLButtonElement>('pin-finding').disabled = !hasExperiment();
 }
 function selectLab(id: LabId) {
   if (activeLab === id) return;
   if (dragPointer !== null) endDrag({ pointerId: dragPointer });
   pressedEdges.clear();
+  if (sampler && world.renderer.xr.getSession()) finishSample();
   activeLab = id;
+  if (sampler && world.renderer.xr.getSession()) startSample();
   message = '';
   graphRoot.visible = id === 'graph';
   circuitRoot.visible = id === 'circuit';
@@ -376,15 +433,33 @@ function hasExperiment() {
         part.open !== initialCircuit.parts[i].open || part.value !== initialCircuit.parts[i].value,
     );
 }
-function pinFinding() {
-  const finding = currentFinding();
+function findingAction() {
   if (!hasExperiment()) {
-    message = 'Try a change before pinning a finding.';
-  } else if (saveFinding(activeLab, finding)) {
-    pinned[activeLab] = finding;
-    message = `Pinned: ${finding.result}`;
+    const reopened = replayFinding(activeLab, pinned[activeLab]?.replay);
+    if (!reopened) {
+      message = 'Change something before pinning a finding.';
+    } else {
+      if (reopened.id === 'graph') {
+        lab = reopened.lab;
+        render(lab.state());
+      } else {
+        circuit.restore(reopened.lab);
+      }
+      message = 'Pin reopened · recomputed from saved controls';
+    }
   } else {
-    message = 'This browser could not save the finding.';
+    const replay =
+      activeLab === 'graph'
+        ? graphRecipe(initialGraph, state)
+        : circuitRecipe(initialCircuit, circuit.state());
+    const finding = { ...currentFinding(), replay };
+    if (saveFinding(activeLab, finding)) {
+      pinned[activeLab] = finding;
+      replayable[activeLab] = replayFinding(activeLab, replay);
+      message = `Pinned: ${finding.result}`;
+    } else {
+      message = 'This browser could not save the finding.';
+    }
   }
   refreshDesk();
 }
@@ -401,14 +476,41 @@ element('toggle-r4').onclick = () => circuit.togglePart('R4');
 for (const button of document.querySelectorAll<HTMLButtonElement>('button[data-resistance]')) {
   button.onclick = () => circuit.setValue('R4', Number(button.dataset.resistance));
 }
-element('pin-finding').onclick = pinFinding;
+element('pin-finding').onclick = findingAction;
 element('reset-lab').onclick = resetLab;
 render(state);
+
+function startSample() {
+  sampler?.start(activeLab);
+  if (world.renderer.xr.getSession()?.visibilityState !== 'visible') sampler?.pause();
+}
+function finishSample() {
+  if (!sampler) return;
+  sampler.stop();
+  const report = sampler.report();
+  if (report.sampleCount === 0) return;
+  samples.push(report);
+  if (samples.length > 12) samples.shift();
+  element('frame-report').textContent = JSON.stringify(samples, null, 2);
+}
+function sampleVisibility() {
+  if (world.renderer.xr.getSession()?.visibilityState === 'visible') sampler?.resume();
+  else sampler?.pause();
+}
+if (sampler) {
+  element('frame-diagnostics').hidden = false;
+  world.renderer.xr.addEventListener('sessionstart', () => {
+    startSample();
+    world.renderer.xr.getSession()?.addEventListener('visibilitychange', sampleVisibility);
+  });
+  world.renderer.xr.addEventListener('sessionend', finishSample);
+}
 
 // The bead always shows the current probe cost: it moves in whole steps while dragged and follows a reset.
 class LabSystem extends createSystem({}) {
   delta = 0;
   update(delta: number) {
+    sampler?.tick();
     this.delta = delta;
     const current = state.edges.find((e) => e.id === state.probe.edgeId)!.cost;
     bead.position.set(railBase.x, costToY(current), railBase.z);
@@ -439,6 +541,9 @@ if (['127.0.0.1', 'localhost'].includes(location.hostname)) {
       lab: activeLab,
       ...currentFinding(),
       pinned: pinned[activeLab],
+      referenceEdges: [...edgeViews]
+        .filter(([, view]) => activeLab === 'graph' && view.reference.visible)
+        .map(([id]) => id),
     });
     root.dataset.somaBead = JSON.stringify(bead.getWorldPosition(new Vector3()).toArray());
     root.dataset.somaRail = JSON.stringify(railBase.toArray());

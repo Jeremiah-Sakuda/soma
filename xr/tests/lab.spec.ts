@@ -106,6 +106,12 @@ test('production lab cuts an edge, drags the probe, and resets using the mouse',
   expect(cut.caption).toContain('Cut B–D.');
   expect(cut.caption).toContain('cost 9');
   expect(cut.probe).toBe(3);
+  await expect
+    .poll(
+      async () =>
+        JSON.parse((await page.locator('html').getAttribute('data-soma-desk'))!).referenceEdges,
+    )
+    .toEqual(expect.arrayContaining(['e_BD', 'e_DF']));
 
   await page.reload();
   await page.bringToFront();
@@ -206,11 +212,17 @@ test('pins a checked graph comparison, switches to the bridge, and recalls the p
   await expect
     .poll(readDesk)
     .toMatchObject({ lab: 'graph', pinned: { result: 'A → C → B → D → F · cost 8' } });
+  await clickWorld(0.08, 0.944, -0.66);
+  await expectRoute(page, originalRoute, 8);
+  expect((await result(page))?.probe).toBe(4);
   await page.getByRole('button', { name: 'Desk controls' }).focus();
   await page.keyboard.press('Enter');
   await page.getByRole('button', { name: 'Bridge circuit', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('#desk-note')).toContainText('Pinned: R4 16 Ω · R5 ≈ 0.1678 A C → B');
+  await page.getByRole('button', { name: 'Reopen pin' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#desk-result')).toContainText('R4 16 Ω · R5 ≈ 0.1678 A C → B');
   await page.getByRole('button', { name: 'R4 at 4 Ω' }).focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('#desk-result')).toContainText('R4 4 Ω · R5 0.24 A B → C');

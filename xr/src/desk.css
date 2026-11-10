@@ -104,3 +104,7 @@ h1 {
   font-size: 0.9rem;
   pointer-events: none;
 }
+#frame-report {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

@@ -80,7 +80,7 @@ async function select(page: Page, point: Point) {
 
 test('IWER hand ray completes both labs and pins a finding', async ({ page }, testInfo) => {
   await page.bringToFront();
-  await page.goto('/');
+  await page.goto('/?diagnostics=1');
   await expectRoute(page, originalRoute, 7);
   await expect
     .poll(() => command(page, 'get_session_status'))
@@ -165,6 +165,11 @@ test('IWER hand ray completes both labs and pins a finding', async ({ page }, te
   const reset = (await readResult(page))!;
   expect(reset.probe).toBe(3);
   expect(reset.caption).toContain('Reset to the recorded graph.');
+  await select(page, pin);
+  await expectRoute(page, alternateRoute, 9);
+  expect((await readResult(page))?.probe).toBe(dragged.probe);
+  await select(page, { x: 0.27, y: 0.944, z: -0.66 });
+  await expectRoute(page, originalRoute, 7);
 
   await select(page, { x: -0.07, y: 0.944, z: -0.66 });
   await expect
@@ -194,12 +199,28 @@ test('IWER hand ray completes both labs and pins a finding', async ({ page }, te
       result: original,
       pinned: { baseline: original, result: changed },
     });
+  const timing = JSON.parse((await page.locator('#frame-report').textContent())!);
+  expect(timing).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        lab: 'graph',
+        status: 'complete',
+        sampleCount: expect.any(Number),
+      }),
+      expect.objectContaining({
+        lab: 'circuit',
+        status: 'complete',
+        sampleCount: expect.any(Number),
+      }),
+    ]),
+  );
+  expect(timing.every((entry: { sampleCount: number }) => entry.sampleCount > 0)).toBe(true);
   const events = await page.evaluate(() => (window as IwerWindow).somaHandEvents);
   expect(events).toEqual(
-    Array.from({ length: 10 }).flatMap(() => ['selectstart:right:true', 'selectend:right:true']),
+    Array.from({ length: 12 }).flatMap(() => ['selectstart:right:true', 'selectend:right:true']),
   );
   await testInfo.attach('iwer-hand-results', {
-    body: JSON.stringify({ cut, dragged, reset, circuit, events }, null, 2),
+    body: JSON.stringify({ cut, dragged, reset, circuit, events, timing }, null, 2),
     contentType: 'application/json',
   });
   await testInfo.attach('immersive-hand-view', {

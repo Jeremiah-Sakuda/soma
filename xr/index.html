@@ -41,6 +41,14 @@
         <button id="reset-lab" type="button">Reset</button>
       </div>
       <p id="desk-note"></p>
+      <details id="frame-diagnostics" hidden>
+        <summary>XR app frame timing</summary>
+        <p>
+          Sampling starts on entering VR. Switch labs or exit VR to collect a report. These are app
+          callback intervals.
+        </p>
+        <pre id="frame-report">No completed samples yet.</pre>
+      </details>
     </aside>
     <p id="desk-status" class="status" role="status">Preparing the study desk…</p>
     <script type="module" src="./src/main.ts"></script>

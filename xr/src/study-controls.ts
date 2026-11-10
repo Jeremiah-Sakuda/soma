@@ -3,8 +3,7 @@ import type {} from '@pmndrs/pointer-events';
 import { Vector3 } from 'three';
 import { textPanel } from './text';
 
-export type LabId = 'graph' | 'circuit';
-export type Finding = { baseline: string; result: string; caption: string };
+import type { Finding, LabId } from './finding-replay';
 
 const keyFor = (lab: LabId) => `soma-study-desk-v1:${lab}`;
 
@@ -17,7 +16,12 @@ export function readFinding(lab: LabId): Finding | null {
       [value.baseline, value.result, value.caption].every(
         (field) => typeof field === 'string' && field.length > 0 && field.length <= 500,
       )
-      ? { baseline: value.baseline!, result: value.result!, caption: value.caption! }
+      ? {
+          baseline: value.baseline!,
+          result: value.result!,
+          caption: value.caption!,
+          replay: value.replay,
+        }
       : null;
   } catch {
     return null;
@@ -36,7 +40,7 @@ export function saveFinding(lab: LabId, finding: Finding): boolean {
 export function studyButton(
   world: World,
   parent: ReturnType<World['createTransformEntity']>,
-  label: string,
+  initialLabel: string,
   position: [number, number, number],
   width: number,
   action: () => void,
@@ -46,6 +50,7 @@ export function studyButton(
     font: Math.round(0.018 * (384 / width)),
     background: '#253b3c',
   });
+  let label = initialLabel;
   panel.set([label]);
   panel.mesh.position.set(...position);
   panel.mesh.lookAt(new Vector3(0, 1.15, 0));
@@ -69,5 +74,10 @@ export function studyButton(
   panel.mesh.addEventListener('pointerup', ({ pointerId }) => {
     if (presses.delete(pointerId) && parent.object3D!.visible) action();
   });
-  return panel;
+  return {
+    setLabel(next: string) {
+      label = next;
+      panel.set([hover.size ? `› ${label}` : label]);
+    },
+  };
 }

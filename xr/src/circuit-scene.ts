@@ -12,7 +12,7 @@ import {
 } from 'three';
 import { circuitQuantity } from '../../src/lib/domain/exploration-view';
 import presentation from '../../src/lib/fixtures/recorded-circuit-presentation.json';
-import type { CircuitLabState } from '../../src/lib/xr-lab/circuit-contract';
+import type { CircuitLab, CircuitLabState } from '../../src/lib/xr-lab/circuit-contract';
 import { openRecordedCircuitLab } from '../../src/lib/xr-lab/recorded-circuit-lab';
 import { textPanel } from './text';
 
@@ -52,7 +52,7 @@ export function createCircuitScene(
   onChange: (state: CircuitLabState) => void,
 ) {
   const rootEntity = world.createTransformEntity(root);
-  const lab = openRecordedCircuitLab();
+  let lab = openRecordedCircuitLab();
   const initial = lab.state();
   const observed = initial.probe.observe;
   if (observed.kind !== 'current')
@@ -193,6 +193,30 @@ export function createCircuitScene(
   const bridge = partViews.get(observedId)!;
   const arrow = new ArrowHelper(bridge.along, bridge.midpoint, 0.09, 0x468da7, 0.015, 0.012);
   root.add(arrow);
+  const priorArrow = new ArrowHelper(bridge.along, bridge.midpoint, 0.065, 0x9dd9d4, 0.012, 0.009);
+  const priorTag = label(
+    bridge.midpoint.clone().add(new Vector3(0, 0.049, -0.041)),
+    0.064,
+    0.019,
+    CYAN,
+  );
+  priorTag.set(['Pinned flow']);
+  root.add(priorArrow);
+  priorArrow.visible = priorTag.mesh.visible = false;
+
+  function compare(prior: CircuitLabState | null) {
+    const previous = prior?.parts.find(({ id }) => id === observedId)?.current;
+    const now = lab.state().parts.find(({ id }) => id === observedId)?.current;
+    const reversed = typeof previous === 'number' && typeof now === 'number' && previous * now < 0;
+    priorArrow.visible = priorTag.mesh.visible = reversed;
+    if (reversed) {
+      const direction = bridge.along.clone().multiplyScalar(Math.sign(previous));
+      priorArrow.setDirection(direction);
+      priorArrow.position.copy(bridge.midpoint).addScaledVector(direction, -0.0325);
+      priorArrow.position.y += 0.036;
+      priorArrow.position.z -= 0.025;
+    }
+  }
 
   const presetControls = PRESETS.map((value, index) => {
     const centre = new Vector3(-0.1 + 0.1 * index, SURFACE, -0.275);
@@ -260,5 +284,15 @@ export function createCircuitScene(
   }
 
   render(initial);
-  return { state: () => lab.state(), reset: () => update(lab.reset()), togglePart, setValue };
+  return {
+    state: () => lab.state(),
+    reset: () => update(lab.reset()),
+    restore(next: CircuitLab) {
+      lab = next;
+      update(lab.state());
+    },
+    togglePart,
+    setValue,
+    compare,
+  };
 }

@@ -6,14 +6,40 @@
 import { PokeInteractable, RayInteractable, World, createSystem } from '@iwsdk/core';
 import type {} from '@pmndrs/pointer-events';
 import {
-  BoxGeometry, Color, CylinderGeometry, DirectionalLight, HemisphereLight, Mesh, MeshBasicMaterial,
-  MeshStandardMaterial, Plane, PlaneGeometry, SphereGeometry, SRGBColorSpace, TextureLoader, Vector3,
+  BoxGeometry,
+  Color,
+  CylinderGeometry,
+  DirectionalLight,
+  Group,
+  HemisphereLight,
+  Mesh,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  Plane,
+  PlaneGeometry,
+  SphereGeometry,
+  SRGBColorSpace,
+  TextureLoader,
+  Vector3,
 } from 'three';
 import type { LabState } from '../../src/lib/xr-lab/contract';
 import { LAB_COST_RANGE } from '../../src/lib/xr-lab/contract';
 import { openRecordedGraphLab } from '../../src/lib/xr-lab/recorded-graph-lab';
 import { textPanel } from './text';
+import { createCircuitScene } from './circuit-scene';
+import { readFinding, saveFinding, studyButton, type Finding, type LabId } from './study-controls';
+import './desk.css';
 
+const element = <T extends HTMLElement = HTMLElement>(id: string) =>
+  document.getElementById(id)! as T;
+const status = element('desk-status');
+const controls = element('controls');
+const controlsButton = element<HTMLButtonElement>('desk-controls');
+controlsButton.addEventListener('click', () => {
+  controls.hidden = !controls.hidden;
+  controlsButton.setAttribute('aria-expanded', String(!controls.hidden));
+});
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 const SEATED_EYE = 1.15;
 const DESK_TOP = 0.74;
@@ -23,25 +49,64 @@ const GRAPH = { width: 0.42, depth: 0.26, centre: new Vector3(0, DESK_TOP + 0.14
 const RAIL = { length: 0.1 };
 
 const world = await World.create(document.getElementById('app')!, {
-  xr: { offer: 'always' },
-  render: { camera: { position: [0, SEATED_EYE, 0], lookAt: [0, DESK_TOP + 0.12, -0.55] } },
+  xr: { offer: 'always', features: { handTracking: { required: true } } },
+  render: { camera: { position: [0, SEATED_EYE, 0], lookAt: [0, DESK_TOP + 0.17, -0.55] } },
   features: { grabbing: { useHandPinchForGrab: true }, spatialUI: true },
+}).catch((error: unknown) => {
+  status.textContent = 'The 3D desk could not start. This browser needs WebGL to render it.';
+  element<HTMLButtonElement>('desk-controls').disabled = true;
+  throw error;
 });
 
-world.scene.background = new Color(0x0f1316);
+const enter = element<HTMLButtonElement>('enter-vr');
+if (navigator.xr) {
+  void navigator.xr
+    .isSessionSupported('immersive-vr')
+    .then((supported) => {
+      enter.hidden = !supported;
+      if (supported)
+        status.textContent = 'Sit comfortably and switch to hand tracking before entering VR.';
+    })
+    .catch(() => {});
+}
+enter.addEventListener('click', () => world.launchXR());
+world.renderer.xr.addEventListener('sessionstart', () => {
+  enter.disabled = true;
+});
+world.renderer.xr.addEventListener('sessionend', () => {
+  enter.disabled = false;
+});
+status.textContent = 'Try D–F, or open Desk controls for keyboard access.';
+
+world.scene.background = new Color(0x101819);
 world.scene.add(new HemisphereLight(0xdfe8ff, 0x2a2420, 1.1));
 const key = new DirectionalLight(0xfff1dc, 1.5);
 key.position.set(0.6, 2.2, 0.8);
 world.scene.add(key);
 
-const desk = new Mesh(new BoxGeometry(1.4, 0.04, 0.75), new MeshStandardMaterial({ color: 0x4f3d2f, roughness: 0.85 }));
+const desk = new Mesh(
+  new BoxGeometry(1.4, 0.04, 0.75),
+  new MeshStandardMaterial({ color: 0x4f3d2f, roughness: 0.85 }),
+);
 desk.position.set(0, DESK_TOP - 0.02, -0.5);
 world.scene.add(desk);
-const slideTexture = new TextureLoader().load('./lecture-14-dijkstra.png');
-slideTexture.colorSpace = SRGBColorSpace;
-const slide = new Mesh(new PlaneGeometry(1.6, 0.9), new MeshBasicMaterial({ map: slideTexture }));
-slide.position.set(0, 1.5, -1.3);
+const loader = new TextureLoader();
+const slideTexture = loader.load('./lecture-14-dijkstra.png');
+const circuitTexture = loader.load('./lecture-09-bridge.png');
+slideTexture.colorSpace = circuitTexture.colorSpace = SRGBColorSpace;
+const slideMaterial = new MeshBasicMaterial({ map: slideTexture });
+const slide = new Mesh(new PlaneGeometry(0.62, 0.349), slideMaterial);
+slide.position.set(-0.33, 0.98, -0.91);
+slide.lookAt(0, SEATED_EYE, 0);
 world.scene.add(slide);
+const graphRoot = new Group();
+const circuitRoot = new Group();
+circuitRoot.visible = false;
+const deskUI = new Group();
+world.scene.add(graphRoot, deskUI);
+let activeLab: LabId = 'graph';
+let message = '';
+const pinned = { graph: readFinding('graph'), circuit: readFinding('circuit') };
 
 const lab = openRecordedGraphLab();
 let state = lab.state();
@@ -67,26 +132,28 @@ const nodeMeshes = new Map<string, Mesh>();
 for (const node of state.nodes) {
   const ball = new Mesh(new SphereGeometry(0.02, 24, 16), ink);
   ball.position.copy(at.get(node.id)!);
-  world.scene.add(ball);
+  graphRoot.add(ball);
   nodeMeshes.set(node.id, ball);
   const label = textPanel(0.06, 0.036, { font: 190 });
   label.set([node.label]);
   label.mesh.position.copy(ball.position).add(new Vector3(0, 0.05, 0));
-  world.scene.add(label.mesh);
+  graphRoot.add(label.mesh);
 }
 
 // Edges: a thin rod to see, a thick invisible sleeve to poke or point at, and a cost tag.
 type EdgeView = { rod: Mesh; tag: ReturnType<typeof textPanel> };
 const edgeViews = new Map<string, EdgeView>();
-let pressedEdge: string | null = null;
+const pressedEdges = new Map<number, string>();
 for (const edge of state.edges) {
-  const a = at.get(edge.from)!, b = at.get(edge.to)!;
+  const a = at.get(edge.from)!,
+    b = at.get(edge.to)!;
   const middle = a.clone().add(b).multiplyScalar(0.5);
-  const up = new Vector3(0, 1, 0), along = b.clone().sub(a).normalize();
+  const up = new Vector3(0, 1, 0),
+    along = b.clone().sub(a).normalize();
   const rod = new Mesh(new CylinderGeometry(0.004, 0.004, a.distanceTo(b), 10), ink);
   rod.position.copy(middle);
   rod.quaternion.setFromUnitVectors(up, along);
-  world.scene.add(rod);
+  graphRoot.add(rod);
   const sleeve = new Mesh(new CylinderGeometry(0.016, 0.016, a.distanceTo(b) * 0.7, 10), hitbox);
   sleeve.position.copy(middle);
   sleeve.quaternion.copy(rod.quaternion);
@@ -94,118 +161,258 @@ for (const edge of state.edges) {
   entity.addComponent(RayInteractable);
   entity.addComponent(PokeInteractable);
   // A press commits on release over the same edge: a poke, a pinch along the hand's ray, or a mouse on desktop.
-  sleeve.addEventListener('pointerdown', () => (pressedEdge = edge.id));
-  sleeve.addEventListener('pointerup', () => {
-    if (pressedEdge === edge.id) render(lab.toggleEdge(edge.id));
-    pressedEdge = null;
+  graphRoot.add(sleeve);
+  sleeve.pointerEventsType = () => graphRoot.visible;
+  sleeve.addEventListener('pointerdown', ({ pointerId }) => pressedEdges.set(pointerId, edge.id));
+  const cancel = ({ pointerId }: { pointerId: number }) => {
+    if (pressedEdges.get(pointerId) === edge.id) pressedEdges.delete(pointerId);
+  };
+  sleeve.addEventListener('pointerleave', cancel);
+  sleeve.addEventListener('pointercancel', cancel);
+  sleeve.addEventListener('pointerup', ({ pointerId }) => {
+    if (activeLab === 'graph' && pressedEdges.get(pointerId) === edge.id)
+      render(lab.toggleEdge(edge.id));
+    pressedEdges.delete(pointerId);
   });
   const tag = textPanel(0.04, 0.026, { font: 150, background: 'rgba(16,20,24,0.85)' });
   tag.mesh.position.copy(middle).add(new Vector3(0, 0.02, 0));
-  world.scene.add(tag.mesh);
+  graphRoot.add(tag.mesh);
   edgeViews.set(edge.id, { rod, tag });
 }
 
 // The probe: a vertical rail above the probe edge, and a bead to slide along it.
 const probe = state.edges.find((e) => e.id === state.probe.edgeId)!;
-const railBase = at.get(probe.from)!.clone().add(at.get(probe.to)!).multiplyScalar(0.5).add(new Vector3(0, 0.05, 0));
+const railBase = at
+  .get(probe.from)!
+  .clone()
+  .add(at.get(probe.to)!)
+  .multiplyScalar(0.5)
+  .add(new Vector3(0, 0.05, 0));
 const rail = new Mesh(new CylinderGeometry(0.0025, 0.0025, RAIL.length, 8), probeInk);
 rail.position.copy(railBase).add(new Vector3(0, RAIL.length / 2, 0));
-world.scene.add(rail);
+graphRoot.add(rail);
 const bead = new Mesh(new SphereGeometry(0.016, 20, 14), probeInk);
 const costToY = (cost: number) => railBase.y + (cost / LAB_COST_RANGE.max) * RAIL.length;
 bead.position.set(railBase.x, costToY(probe.cost), railBase.z);
 const beadEntity = world.createTransformEntity(bead);
 beadEntity.addComponent(RayInteractable);
 beadEntity.addComponent(PokeInteractable);
+graphRoot.add(bead);
+bead.pointerEventsType = () => graphRoot.visible;
 // A larger invisible grip makes the bead easy to catch with a ray or a fingertip.
 bead.add(new Mesh(new SphereGeometry(0.035, 12, 8), hitbox));
 // Press the bead and move: the pointer is captured, and its ray is projected onto the rail's vertical plane.
-let dragging = false;
+let dragPointer: number | null = null;
 const railPlane = new Plane();
 const hit = new Vector3();
 bead.addEventListener('pointerdown', (event) => {
-  dragging = true;
+  if (activeLab !== 'graph' || dragPointer !== null) return;
+  dragPointer = event.pointerId;
   bead.setPointerCapture(event.pointerId);
 });
 bead.addEventListener('pointermove', (event) => {
-  if (!dragging) return;
+  if (activeLab !== 'graph' || dragPointer !== event.pointerId) return;
   const facing = event.ray.origin.clone().sub(railBase).setY(0);
   if (facing.lengthSq() < 1e-6) return;
   railPlane.setFromNormalAndCoplanarPoint(facing.normalize(), railBase);
   if (!event.ray.intersectPlane(railPlane, hit)) return;
   const height = Math.min(Math.max(hit.y - railBase.y, 0), RAIL.length);
   const cost = Math.round((height / RAIL.length) * LAB_COST_RANGE.max);
-  if (cost !== state.edges.find((e) => e.id === state.probe.edgeId)!.cost) render(lab.setCost(state.probe.edgeId, cost));
+  if (cost !== state.edges.find((e) => e.id === state.probe.edgeId)!.cost)
+    render(lab.setCost(state.probe.edgeId, cost));
 });
 const endDrag = (event: { pointerId: number }) => {
-  dragging = false;
+  if (dragPointer !== event.pointerId) return;
+  dragPointer = null;
   if (bead.hasPointerCapture(event.pointerId)) bead.releasePointerCapture(event.pointerId);
 };
 bead.addEventListener('pointerup', endDrag);
 bead.addEventListener('pointercancel', endDrag);
 const railTag = textPanel(0.13, 0.03, { font: 120, align: 'left' });
-railTag.set([`Drag to change ${probe.from}–${probe.to}`]);
+railTag.set([`Pinch and slide ${probe.from}–${probe.to}`]);
 railTag.mesh.position.copy(railBase).add(new Vector3(0.1, RAIL.length * 0.85, 0));
-world.scene.add(railTag.mesh);
+graphRoot.add(railTag.mesh);
 
 // The caption board between the graph and the slide: the computed result and where the experiment came from.
 // It stands just behind the graph and tilts toward the seated eye, so it reads while looking down at the graph,
 // and its lower edge stays above the line of sight to the farthest nodes.
-const board = textPanel(0.8, 0.14, { background: 'rgba(16,20,24,0.9)', align: 'left', font: 46 });
-board.mesh.position.set(0, DESK_TOP + 0.29, -0.8);
+const board = textPanel(0.62, 0.29, { background: '#1b2b2c', align: 'left', font: 55 });
+board.mesh.position.set(0.34, 0.98, -0.91);
 board.mesh.lookAt(0, SEATED_EYE, 0);
 world.scene.add(board.mesh);
 
 // The recorded experiment's turning point, marked on the rail.
 const tick = new Mesh(new CylinderGeometry(0.009, 0.009, 0.002, 20), routeInk);
 tick.position.set(railBase.x, costToY(state.probe.criticalCost), railBase.z);
-world.scene.add(tick);
+graphRoot.add(tick);
 const tickTag = textPanel(0.07, 0.022, { font: 120, align: 'left' });
 tickTag.set([`turns at ${state.probe.criticalCost}`]);
 tickTag.mesh.position.set(railBase.x + 0.05, costToY(state.probe.criticalCost), railBase.z);
-world.scene.add(tickTag.mesh);
+graphRoot.add(tickTag.mesh);
 
-// Reset, within reach at the front of the desk.
-const resetPlaque = textPanel(0.09, 0.035, { font: 150, background: 'rgba(40,46,54,0.95)' });
-resetPlaque.set(['Reset']);
-resetPlaque.mesh.position.set(-0.3, DESK_TOP + 0.03, -0.28);
-resetPlaque.mesh.lookAt(0, SEATED_EYE, 0);
-const resetEntity = world.createTransformEntity(resetPlaque.mesh);
-resetEntity.addComponent(RayInteractable);
-resetEntity.addComponent(PokeInteractable);
-let resetPressed = false;
-resetPlaque.mesh.addEventListener('pointerdown', () => (resetPressed = true));
-resetPlaque.mesh.addEventListener('pointerup', () => {
-  if (resetPressed) render(lab.reset());
-  resetPressed = false;
-});
+// Keep navigation and the experiment's result in the same seated view.
+studyButton(world, deskUI, 'Routes', [-0.21, 0.91, -0.66], 0.12, () => selectLab('graph'));
+studyButton(world, deskUI, 'Circuit', [-0.07, 0.91, -0.66], 0.12, () => selectLab('circuit'));
+studyButton(world, deskUI, 'Pin finding', [0.08, 0.91, -0.66], 0.15, pinFinding);
+studyButton(world, deskUI, 'Reset', [0.23, 0.91, -0.66], 0.12, resetLab);
+studyButton(world, graphRoot, '− D–F', [-0.08, 0.88, -0.275], 0.13, () => stepCost(-1));
+studyButton(world, graphRoot, '+ D–F', [0.08, 0.88, -0.275], 0.13, () => stepCost(1));
 
 // A bright pulse runs along the route whenever it changes, so the eye follows the consequence.
-const pulse = new Mesh(new SphereGeometry(0.012, 16, 12), new MeshBasicMaterial({ color: 0xfff1c4 }));
+const pulse = new Mesh(
+  new SphereGeometry(0.012, 16, 12),
+  new MeshBasicMaterial({ color: 0xfff1c4 }),
+);
 pulse.visible = false;
-world.scene.add(pulse);
+graphRoot.add(pulse);
 let pulseRoute: Vector3[] = [];
 let pulseT = 0;
 
 function render(next: LabState) {
   const previous = state.path?.join('>');
   state = next;
-  if (next.path && next.path.join('>') !== previous) {
+  if (!reducedMotion.matches && next.path && next.path.join('>') !== previous) {
     pulseRoute = next.path.map((id) => at.get(id)!);
     pulseT = 0;
   }
-  for (const node of next.nodes) nodeMeshes.get(node.id)!.material = next.path?.includes(node.id) ? routeInk : ink;
+  for (const node of next.nodes)
+    nodeMeshes.get(node.id)!.material = next.path?.includes(node.id) ? routeInk : ink;
   for (const edge of next.edges) {
     const view = edgeViews.get(edge.id)!;
-    view.rod.material = !edge.enabled ? cutInk : edge.onPath ? routeInk : edge.id === next.probe.edgeId ? probeInk : ink;
+    view.rod.material = !edge.enabled
+      ? cutInk
+      : edge.onPath
+        ? routeInk
+        : edge.id === next.probe.edgeId
+          ? probeInk
+          : ink;
     view.tag.set([edge.enabled ? String(edge.cost) : '✕']);
   }
-  const route = next.path ? `Route ${next.path.join(' → ')} · cost ${next.totalCost}` : 'No route to the goal';
-  board.set([route, next.caption, `Experiment chosen in a ${next.provenance.label}; results computed now by Soma's Dijkstra.`]);
+
+  if (activeLab === 'graph') {
+    message = '';
+    refreshDesk();
+  }
 }
+
+const circuit = createCircuitScene(world, circuitRoot, () => {
+  if (activeLab === 'circuit') {
+    message = '';
+    refreshDesk();
+  }
+});
+circuitRoot.removeFromParent();
+const initialCircuit = circuit.state();
+const graphSummary = (s: LabState) =>
+  s.path ? `${s.path.join(' → ')} · cost ${s.totalCost}` : 'No route to the goal';
+const initialGraph = lab.state();
+const initialGraphSummary = graphSummary(initialGraph);
+const circuitSummary = (s: typeof initialCircuit) => {
+  const r4 = s.parts.find(({ id }) => id === 'R4')!;
+  const r5 = s.parts.find(({ id }) => id === 'R5')!;
+  const current = r5.current;
+  const value = r4.open ? 'R4 open' : `R4 ${r4.value} Ω`;
+  const flow =
+    current === null
+      ? 'unavailable'
+      : current === 0
+        ? '0 A'
+        : `${Number(Math.abs(current).toPrecision(4))} A ${current > 0 ? 'B → C' : 'C → B'}`;
+  return `${value} · R5 ${flow}`;
+};
+
+function currentFinding(): Finding {
+  const cs = activeLab === 'circuit' ? circuit.state() : null;
+  return !cs
+    ? { baseline: initialGraphSummary, result: graphSummary(state), caption: state.caption }
+    : { baseline: circuitSummary(initialCircuit), result: circuitSummary(cs), caption: cs.caption };
+}
+function refreshDesk() {
+  const graph = activeLab === 'graph';
+  const finding = currentFinding();
+  const saved = pinned[activeLab];
+  const tip = graph
+    ? 'Can a higher D–F cost change the route?'
+    : 'What happens to R5 either side of 8 Ω?';
+  const note = saved ? `Pinned: ${saved.result}` : 'Change one thing, then pin your finding.';
+  board.set([
+    graph ? 'Shortest routes' : 'Bridge circuit',
+    tip,
+    `Start: ${finding.baseline}`,
+    `Now: ${finding.result}`,
+    message || note,
+    'Recorded Muse probe · computed by Soma',
+  ]);
+  element('desk-result').textContent = `${finding.result}. ${finding.caption}`;
+  element('desk-note').textContent =
+    message || (saved ? `${note}. Started at ${saved.baseline}. ${saved.caption}` : note);
+  element('pick-graph').setAttribute('aria-pressed', String(graph));
+  element('pick-circuit').setAttribute('aria-pressed', String(!graph));
+  element('graph-actions').hidden = !graph;
+  element('circuit-actions').hidden = graph;
+  element<HTMLButtonElement>('pin-finding').disabled =
+    finding.result === finding.baseline && !saved;
+}
+function selectLab(id: LabId) {
+  if (activeLab === id) return;
+  if (dragPointer !== null) endDrag({ pointerId: dragPointer });
+  pressedEdges.clear();
+  activeLab = id;
+  message = '';
+  graphRoot.visible = id === 'graph';
+  circuitRoot.visible = id === 'circuit';
+  graphRoot.removeFromParent();
+  circuitRoot.removeFromParent();
+  world.scene.add(id === 'graph' ? graphRoot : circuitRoot);
+  slideMaterial.map = id === 'graph' ? slideTexture : circuitTexture;
+  refreshDesk();
+}
+function stepCost(delta: number) {
+  const cost = state.edges.find((edge) => edge.id === state.probe.edgeId)!.cost;
+  render(lab.setCost(state.probe.edgeId, cost + delta));
+}
+function hasExperiment() {
+  if (activeLab === 'graph') {
+    return state.edges.some(
+      (edge, i) =>
+        edge.enabled !== initialGraph.edges[i].enabled || edge.cost !== initialGraph.edges[i].cost,
+    );
+  }
+  return circuit
+    .state()
+    .parts.some(
+      (part, i) =>
+        part.open !== initialCircuit.parts[i].open || part.value !== initialCircuit.parts[i].value,
+    );
+}
+function pinFinding() {
+  const finding = currentFinding();
+  if (!hasExperiment()) {
+    message = 'Try a change before pinning a finding.';
+  } else if (saveFinding(activeLab, finding)) {
+    pinned[activeLab] = finding;
+    message = `Pinned: ${finding.result}`;
+  } else {
+    message = 'This browser could not save the finding.';
+  }
+  refreshDesk();
+}
+function resetLab() {
+  if (activeLab === 'graph') render(lab.reset());
+  else circuit.reset();
+}
+element('pick-graph').onclick = () => selectLab('graph');
+element('pick-circuit').onclick = () => selectLab('circuit');
+element('toggle-bd').onclick = () => render(lab.toggleEdge('e_BD'));
+element('less-cost').onclick = () => stepCost(-1);
+element('more-cost').onclick = () => stepCost(1);
+element('toggle-r4').onclick = () => circuit.togglePart('R4');
+for (const button of document.querySelectorAll<HTMLButtonElement>('button[data-resistance]')) {
+  button.onclick = () => circuit.setValue('R4', Number(button.dataset.resistance));
+}
+element('pin-finding').onclick = pinFinding;
+element('reset-lab').onclick = resetLab;
 render(state);
-// A release anywhere else abandons the press.
-window.addEventListener('pointerup', () => queueMicrotask(() => (pressedEdge = null)));
 
 // The bead always shows the current probe cost: it moves in whole steps while dragged and follows a reset.
 class LabSystem extends createSystem({}) {
@@ -215,10 +422,17 @@ class LabSystem extends createSystem({}) {
     const current = state.edges.find((e) => e.id === state.probe.edgeId)!.cost;
     bead.position.set(railBase.x, costToY(current), railBase.z);
     // The pulse crosses one route segment every 0.35 s, then rests.
-    if (pulseRoute.length > 1 && pulseT < pulseRoute.length - 1) {
+    if (
+      !reducedMotion.matches &&
+      activeLab === 'graph' &&
+      pulseRoute.length > 1 &&
+      pulseT < pulseRoute.length - 1
+    ) {
       pulseT = Math.min(pulseRoute.length - 1, pulseT + this.delta / 0.35);
       const i = Math.min(Math.floor(pulseT), pulseRoute.length - 2);
-      pulse.position.lerpVectors(pulseRoute[i], pulseRoute[i + 1], pulseT - i).add(new Vector3(0, 0.004, 0));
+      pulse.position
+        .lerpVectors(pulseRoute[i], pulseRoute[i + 1], pulseT - i)
+        .add(new Vector3(0, 0.004, 0));
       pulse.visible = pulseT < pulseRoute.length - 1;
     } else pulse.visible = false;
   }
@@ -230,8 +444,18 @@ world.registerSystem(LabSystem);
 if (['127.0.0.1', 'localhost'].includes(location.hostname)) {
   const root = document.documentElement;
   setInterval(() => {
+    root.dataset.somaDesk = JSON.stringify({
+      lab: activeLab,
+      ...currentFinding(),
+      pinned: pinned[activeLab],
+    });
     root.dataset.somaBead = JSON.stringify(bead.getWorldPosition(new Vector3()).toArray());
     root.dataset.somaRail = JSON.stringify(railBase.toArray());
-    root.dataset.somaResult = JSON.stringify({ path: state.path, cost: state.totalCost, probe: state.edges.find((e) => e.id === state.probe.edgeId)?.cost, caption: state.caption });
+    root.dataset.somaResult = JSON.stringify({
+      path: state.path,
+      cost: state.totalCost,
+      probe: state.edges.find((e) => e.id === state.probe.edgeId)?.cost,
+      caption: state.caption,
+    });
   }, 200);
 }

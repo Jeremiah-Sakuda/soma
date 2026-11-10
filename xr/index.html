@@ -4,12 +4,45 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Soma Lab</title>
-    <style>
-      html, body, #app { margin: 0; height: 100%; background: #101418; }
-    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app" aria-hidden="true"></div>
+    <header class="toolbar">
+      <div class="wordmark">SOMA <span>STUDY DESK</span></div>
+      <div class="toolbar-actions">
+        <button id="enter-vr" type="button" hidden>Enter VR</button>
+        <button id="desk-controls" type="button" aria-expanded="false" aria-controls="controls">
+          Desk controls
+        </button>
+      </div>
+    </header>
+    <aside id="controls" hidden aria-label="Study desk controls">
+      <p class="eyebrow">FIVE-MINUTE STUDY LAB</p>
+      <h1>Test one change</h1>
+      <p>Choose a lab, try a change, and pin the result for your next study session.</p>
+      <div class="actions" aria-label="Labs">
+        <button id="pick-graph" type="button" aria-pressed="true">Shortest routes</button>
+        <button id="pick-circuit" type="button" aria-pressed="false">Bridge circuit</button>
+      </div>
+      <p id="desk-result" role="status"></p>
+      <div id="graph-actions" class="actions">
+        <button id="toggle-bd" type="button">Cut or restore B–D</button>
+        <button id="less-cost" type="button">Decrease D–F cost</button>
+        <button id="more-cost" type="button">Increase D–F cost</button>
+      </div>
+      <div id="circuit-actions" class="actions" hidden>
+        <button type="button" data-resistance="4">R4 at 4 Ω</button>
+        <button type="button" data-resistance="8">R4 at 8 Ω</button>
+        <button type="button" data-resistance="16">R4 at 16 Ω</button>
+        <button id="toggle-r4" type="button">Open or close R4</button>
+      </div>
+      <div class="actions">
+        <button id="pin-finding" type="button">Pin finding</button>
+        <button id="reset-lab" type="button">Reset</button>
+      </div>
+      <p id="desk-note"></p>
+    </aside>
+    <p id="desk-status" class="status" role="status">Preparing the study desk…</p>
     <script type="module" src="./src/main.ts"></script>
   </body>
 </html>

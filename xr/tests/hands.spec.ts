@@ -152,7 +152,7 @@ test('IWER hand ray completes both labs and pins a finding', async ({ page }, te
   await expectRoute(page, alternateRoute, 9);
   const dragged = (await readResult(page))!;
 
-  const pin = { x: 0.08, y: 0.91, z: -0.66 };
+  const pin = { x: 0.08, y: 0.944, z: -0.66 };
   const original = 'A → C → B → D → F · cost 7';
   const changed = 'A → C → E → F · cost 9';
   await select(page, pin);
@@ -160,20 +160,20 @@ test('IWER hand ray completes both labs and pins a finding', async ({ page }, te
     .poll(() => readDesk(page))
     .toMatchObject({ lab: 'graph', pinned: { baseline: original, result: changed } });
 
-  await select(page, { x: 0.23, y: 0.91, z: -0.66 });
+  await select(page, { x: 0.27, y: 0.944, z: -0.66 });
   await expectRoute(page, originalRoute, 7);
   const reset = (await readResult(page))!;
   expect(reset.probe).toBe(3);
   expect(reset.caption).toContain('Reset to the recorded graph.');
 
-  await select(page, { x: -0.07, y: 0.91, z: -0.66 });
+  await select(page, { x: -0.07, y: 0.944, z: -0.66 });
   await expect
     .poll(() => readDesk(page))
     .toMatchObject({ lab: 'circuit', result: 'R4 8 Ω · R5 0 A' });
   const circuit = [];
   for (const { x, result } of [
     { x: -0.1, result: 'R4 4 Ω · R5 0.24 A B → C' },
-    { x: 0.1, result: 'R4 16 Ω · R5 0.1678 A C → B' },
+    { x: 0.1, result: 'R4 16 Ω · R5 ≈ 0.1678 A C → B' },
     { x: 0, result: 'R4 8 Ω · R5 0 A' },
   ]) {
     // The three preset controls sit on the front edge of the bridge tray.
@@ -186,7 +186,7 @@ test('IWER hand ray completes both labs and pins a finding', async ({ page }, te
     contentType: 'image/png',
   });
 
-  await select(page, { x: -0.21, y: 0.91, z: -0.66 });
+  await select(page, { x: -0.21, y: 0.944, z: -0.66 });
   await expect
     .poll(() => readDesk(page))
     .toMatchObject({

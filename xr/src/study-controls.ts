@@ -41,9 +41,9 @@ export function studyButton(
   width: number,
   action: () => void,
 ) {
-  const panel = textPanel(width, 0.048, {
+  const panel = textPanel(width, 0.037, {
     px: 384,
-    font: Math.round(0.024 * (384 / width)),
+    font: Math.round(0.018 * (384 / width)),
     background: '#253b3c',
   });
   panel.set([label]);

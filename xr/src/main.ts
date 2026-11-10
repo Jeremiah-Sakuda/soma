@@ -26,6 +26,7 @@ import type { LabState } from '../../src/lib/xr-lab/contract';
 import { LAB_COST_RANGE } from '../../src/lib/xr-lab/contract';
 import { openRecordedGraphLab } from '../../src/lib/xr-lab/recorded-graph-lab';
 import { textPanel } from './text';
+import { circuitQuantity } from '../../src/lib/domain/exploration-view';
 import { createCircuitScene } from './circuit-scene';
 import { readFinding, saveFinding, studyButton, type Finding, type LabId } from './study-controls';
 import './desk.css';
@@ -95,9 +96,9 @@ const slideTexture = loader.load('./lecture-14-dijkstra.png');
 const circuitTexture = loader.load('./lecture-09-bridge.png');
 slideTexture.colorSpace = circuitTexture.colorSpace = SRGBColorSpace;
 const slideMaterial = new MeshBasicMaterial({ map: slideTexture });
-const slide = new Mesh(new PlaneGeometry(0.62, 0.349), slideMaterial);
-slide.position.set(-0.33, 0.98, -0.91);
-slide.lookAt(0, SEATED_EYE, 0);
+const slide = new Mesh(new PlaneGeometry(0.53, 0.298125), slideMaterial);
+slide.position.set(-0.3, 1.014, -1.03);
+slide.lookAt(slide.position.x, SEATED_EYE, 0);
 world.scene.add(slide);
 const graphRoot = new Group();
 const circuitRoot = new Group();
@@ -229,35 +230,25 @@ const endDrag = (event: { pointerId: number }) => {
 };
 bead.addEventListener('pointerup', endDrag);
 bead.addEventListener('pointercancel', endDrag);
-const railTag = textPanel(0.13, 0.03, { font: 120, align: 'left' });
-railTag.set([`Pinch and slide ${probe.from}–${probe.to}`]);
-railTag.mesh.position.copy(railBase).add(new Vector3(0.1, RAIL.length * 0.85, 0));
-graphRoot.add(railTag.mesh);
-
 // The caption board between the graph and the slide: the computed result and where the experiment came from.
 // It stands just behind the graph and tilts toward the seated eye, so it reads while looking down at the graph,
 // and its lower edge stays above the line of sight to the farthest nodes.
-const board = textPanel(0.62, 0.29, { background: '#1b2b2c', align: 'left', font: 55 });
-board.mesh.position.set(0.34, 0.98, -0.91);
-board.mesh.lookAt(0, SEATED_EYE, 0);
+const board = textPanel(0.56, 0.21, { background: '#1b2b2c', align: 'left', font: 49 });
+board.mesh.position.set(0.31, 1.035, -1.03);
+board.mesh.lookAt(board.mesh.position.x, SEATED_EYE, 0);
 world.scene.add(board.mesh);
 
 // The recorded experiment's turning point, marked on the rail.
 const tick = new Mesh(new CylinderGeometry(0.009, 0.009, 0.002, 20), routeInk);
 tick.position.set(railBase.x, costToY(state.probe.criticalCost), railBase.z);
 graphRoot.add(tick);
-const tickTag = textPanel(0.07, 0.022, { font: 120, align: 'left' });
-tickTag.set([`turns at ${state.probe.criticalCost}`]);
-tickTag.mesh.position.set(railBase.x + 0.05, costToY(state.probe.criticalCost), railBase.z);
-graphRoot.add(tickTag.mesh);
-
 // Keep navigation and the experiment's result in the same seated view.
-studyButton(world, deskEntity, 'Routes', [-0.21, 0.91, -0.66], 0.12, () => selectLab('graph'));
-studyButton(world, deskEntity, 'Circuit', [-0.07, 0.91, -0.66], 0.12, () => selectLab('circuit'));
-studyButton(world, deskEntity, 'Pin finding', [0.08, 0.91, -0.66], 0.15, pinFinding);
-studyButton(world, deskEntity, 'Reset', [0.23, 0.91, -0.66], 0.12, resetLab);
-studyButton(world, graphEntity, '− D–F', [-0.08, 0.88, -0.275], 0.13, () => stepCost(-1));
-studyButton(world, graphEntity, '+ D–F', [0.08, 0.88, -0.275], 0.13, () => stepCost(1));
+studyButton(world, deskEntity, 'Routes', [-0.21, 0.944, -0.66], 0.12, () => selectLab('graph'));
+studyButton(world, deskEntity, 'Circuit', [-0.07, 0.944, -0.66], 0.12, () => selectLab('circuit'));
+studyButton(world, deskEntity, 'Pin finding', [0.08, 0.944, -0.66], 0.15, pinFinding);
+studyButton(world, deskEntity, 'Reset', [0.27, 0.944, -0.66], 0.11, resetLab);
+studyButton(world, graphEntity, '− D–F', [-0.08, 0.89, -0.287], 0.106, () => stepCost(-1));
+studyButton(world, graphEntity, '+ D–F', [0.08, 0.89, -0.287], 0.106, () => stepCost(1));
 
 // A bright pulse runs along the route whenever it changes, so the eye follows the consequence.
 const pulse = new Mesh(
@@ -317,7 +308,7 @@ const circuitSummary = (s: typeof initialCircuit) => {
       ? 'unavailable'
       : current === 0
         ? '0 A'
-        : `${Number(Math.abs(current).toPrecision(4))} A ${current > 0 ? 'B → C' : 'C → B'}`;
+        : `${circuitQuantity(Math.abs(current), 'A')} ${current > 0 ? 'B → C' : 'C → B'}`;
   return `${value} · R5 ${flow}`;
 };
 
@@ -329,12 +320,16 @@ function currentFinding(): Finding {
 }
 function refreshDesk() {
   const graph = activeLab === 'graph';
+  if (enter.hidden)
+    status.textContent = graph
+      ? 'Try D–F, or open Desk controls for keyboard access.'
+      : 'Try 4, 8 or 16 Ω. Watch the current through R5.';
   const finding = currentFinding();
   const saved = pinned[activeLab];
   const tip = graph
-    ? 'Can a higher D–F cost change the route?'
+    ? `D–F costs ${state.edges.find((edge) => edge.id === state.probe.edgeId)!.cost} · Recorded tie at ${state.probe.criticalCost} · Pinch or tap + / −`
     : 'What happens to R5 either side of 8 Ω?';
-  const note = saved ? `Pinned: ${saved.result}` : 'Change one thing, then pin your finding.';
+  const note = saved ? `Pinned: ${saved.result}` : 'Pin a finding to see it on your next visit.';
   board.set([
     graph ? 'Shortest routes' : 'Bridge circuit',
     tip,

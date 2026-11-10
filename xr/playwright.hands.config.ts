@@ -18,6 +18,7 @@ export default defineConfig({
     viewport: { width: 1600, height: 900 },
     baseURL: 'http://127.0.0.1:4176',
     trace: 'retain-on-failure',
+    video: process.env.SOMA_RECORD_XR === '1' ? 'on' : 'retain-on-failure',
     screenshot: 'only-on-failure',
     launchOptions: {
       args: [

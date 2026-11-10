@@ -27,7 +27,7 @@ const CYAN = '#a9e2f1';
 // Presentation offsets in metres keep the camera-facing readouts clear of each other
 // and of the probe targets. The source-aligned bodies and wires stay in place.
 const NODE_LABEL_OFFSETS: Record<string, [number, number, number]> = {
-  A: [0, 0.074, 0],
+  A: [0, 0.055, 0],
   B: [-0.048, 0.037, 0],
   C: [0.0165, 0.052, 0],
   D: [0, 0.05, 0.005],

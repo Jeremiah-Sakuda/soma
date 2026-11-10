@@ -49,7 +49,7 @@ async function project(page: Page, worldPoint: Vector3): Promise<Point> {
 
 // IWSDK resolves pointers during the frame loop. Let it process each actual mouse action
 // before the next action; no synthetic dispatch, lab calls, or dataset writes are used.
-async function frames(page: Page, count = 3) {
+async function frames(page: Page, count = 5) {
   await page.evaluate(async (count) => {
     for (let i = 0; i < count; i++)
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
@@ -138,7 +138,7 @@ test('production lab cuts an edge, drags the probe, and resets using the mouse',
   ) as number[];
   expect(movedBead[1]).toBeGreaterThan(bead.y);
 
-  const resetPoint = await project(page, new Vector3(0.23, 0.91, -0.66));
+  const resetPoint = await project(page, new Vector3(0.27, 0.944, -0.66));
   await press(page, resetPoint);
   await release(page);
   await expectRoute(page, originalRoute, 7);
@@ -176,37 +176,29 @@ test('pins a checked graph comparison, switches to the bridge, and recalls the p
     const raw = await page.locator('html').getAttribute('data-soma-desk');
     return raw ? JSON.parse(raw) : null;
   };
-  await clickWorld(0.08, 0.88, -0.275);
+  await clickWorld(0.08, 0.89, -0.287);
   await expect.poll(async () => (await result(page))?.probe).toBe(4);
   await expectRoute(page, originalRoute, 8);
-  await clickWorld(0.08, 0.91, -0.66);
-  await expect
-    .poll(readDesk)
-    .toMatchObject({
-      pinned: { baseline: 'A → C → B → D → F · cost 7', result: 'A → C → B → D → F · cost 8' },
-    });
+  await clickWorld(0.08, 0.944, -0.66);
+  await expect.poll(readDesk).toMatchObject({
+    pinned: { baseline: 'A → C → B → D → F · cost 7', result: 'A → C → B → D → F · cost 8' },
+  });
 
-  await clickWorld(-0.07, 0.91, -0.66);
+  await clickWorld(-0.07, 0.944, -0.66);
   await expect
     .poll(readDesk)
     .toMatchObject({ lab: 'circuit', result: 'R4 8 Ω · R5 0 A', pinned: null });
   await clickWorld(-0.1, 0.88, -0.275);
   await expect.poll(readDesk).toMatchObject({ result: 'R4 4 Ω · R5 0.24 A B → C' });
   await clickWorld(0.1, 0.88, -0.275);
-  await expect.poll(readDesk).toMatchObject({ result: 'R4 16 Ω · R5 0.1678 A C → B' });
-  await testInfo.attach('bridge-at-16-ohms', {
-    body: await page.screenshot(),
-    contentType: 'image/png',
+  await expect.poll(readDesk).toMatchObject({ result: 'R4 16 Ω · R5 ≈ 0.1678 A C → B' });
+  await clickWorld(0.08, 0.944, -0.66);
+  await expect.poll(readDesk).toMatchObject({
+    pinned: { baseline: 'R4 8 Ω · R5 0 A', result: 'R4 16 Ω · R5 ≈ 0.1678 A C → B' },
   });
-  await clickWorld(0.08, 0.91, -0.66);
-  await expect
-    .poll(readDesk)
-    .toMatchObject({
-      pinned: { baseline: 'R4 8 Ω · R5 0 A', result: 'R4 16 Ω · R5 0.1678 A C → B' },
-    });
-  await clickWorld(0.23, 0.91, -0.66);
+  await clickWorld(0.27, 0.944, -0.66);
   await expect.poll(readDesk).toMatchObject({ result: 'R4 8 Ω · R5 0 A' });
-  await clickWorld(-0.21, 0.91, -0.66);
+  await clickWorld(-0.21, 0.944, -0.66);
   await expect.poll(readDesk).toMatchObject({ lab: 'graph', result: 'A → C → B → D → F · cost 8' });
 
   await page.reload();
@@ -218,8 +210,13 @@ test('pins a checked graph comparison, switches to the bridge, and recalls the p
   await page.keyboard.press('Enter');
   await page.getByRole('button', { name: 'Bridge circuit', exact: true }).focus();
   await page.keyboard.press('Enter');
-  await expect(page.locator('#desk-note')).toContainText('Pinned: R4 16 Ω · R5 0.1678 A C → B');
+  await expect(page.locator('#desk-note')).toContainText('Pinned: R4 16 Ω · R5 ≈ 0.1678 A C → B');
   await page.getByRole('button', { name: 'R4 at 4 Ω' }).focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('#desk-result')).toContainText('R4 4 Ω · R5 0.24 A B → C');
+  await page.getByRole('button', { name: 'Desk controls' }).click();
+  await testInfo.attach('bridge-at-4-ohms', {
+    body: await page.screenshot(),
+    contentType: 'image/png',
+  });
 });

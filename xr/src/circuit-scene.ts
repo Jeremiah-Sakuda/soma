@@ -195,7 +195,7 @@ export function createCircuitScene(
   root.add(arrow);
   const priorArrow = new ArrowHelper(bridge.along, bridge.midpoint, 0.065, 0x9dd9d4, 0.012, 0.009);
   const priorTag = label(
-    bridge.midpoint.clone().add(new Vector3(0, 0.049, -0.041)),
+    bridge.midpoint.clone().add(new Vector3(-0.018, 0.02, 0.086)),
     0.064,
     0.019,
     CYAN,
@@ -213,8 +213,8 @@ export function createCircuitScene(
       const direction = bridge.along.clone().multiplyScalar(Math.sign(previous));
       priorArrow.setDirection(direction);
       priorArrow.position.copy(bridge.midpoint).addScaledVector(direction, -0.0325);
-      priorArrow.position.y += 0.036;
-      priorArrow.position.z -= 0.025;
+      priorArrow.position.y += 0.024;
+      priorArrow.position.z += 0.067;
     }
   }
 

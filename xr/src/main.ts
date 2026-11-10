@@ -391,7 +391,7 @@ function refreshDesk() {
     `Now: ${finding.result}`,
     message || note,
     hasReferenceRoute
-      ? `Solid now · Dashed ${pinnedRoute ? 'pinned' : 'start'}`
+      ? `Amber now · Dashed ${pinnedRoute ? 'pinned' : 'start'}`
       : 'Recorded Muse probe · computed by Soma',
   ]);
   element('desk-result').textContent = `${finding.result}. ${finding.caption}`;
@@ -402,10 +402,13 @@ function refreshDesk() {
   element('graph-actions').hidden = !graph;
   element('circuit-actions').hidden = graph;
 }
-function selectLab(id: LabId) {
-  if (activeLab === id) return;
+function cancelGraphInput() {
   if (dragPointer !== null) endDrag({ pointerId: dragPointer });
   pressedEdges.clear();
+}
+function selectLab(id: LabId) {
+  if (activeLab === id) return;
+  cancelGraphInput();
   if (sampler && world.renderer.xr.getSession()) finishSample();
   activeLab = id;
   if (sampler && world.renderer.xr.getSession()) startSample();
@@ -440,6 +443,7 @@ function findingAction() {
       message = 'Change something before pinning a finding.';
     } else {
       if (reopened.id === 'graph') {
+        cancelGraphInput();
         lab = reopened.lab;
         render(lab.state());
       } else {
@@ -464,8 +468,10 @@ function findingAction() {
   refreshDesk();
 }
 function resetLab() {
-  if (activeLab === 'graph') render(lab.reset());
-  else circuit.reset();
+  if (activeLab === 'graph') {
+    cancelGraphInput();
+    render(lab.reset());
+  } else circuit.reset();
 }
 element('pick-graph').onclick = () => selectLab('graph');
 element('pick-circuit').onclick = () => selectLab('circuit');

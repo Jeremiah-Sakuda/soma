@@ -9,9 +9,9 @@ const keyFor = (lab: LabId) => `soma-study-desk-v1:${lab}`;
 
 export function readFinding(lab: LabId): Finding | null {
   try {
-    const value = JSON.parse(
-      localStorage.getItem(keyFor(lab)) ?? 'null',
-    ) as Partial<Finding> | null;
+    const raw = localStorage.getItem(keyFor(lab));
+    if (!raw || raw.length > 6000) return null;
+    const value = JSON.parse(raw) as Partial<Finding> | null;
     return value &&
       [value.baseline, value.result, value.caption].every(
         (field) => typeof field === 'string' && field.length > 0 && field.length <= 500,

@@ -2,6 +2,14 @@
 
 Executed evidence, November 4, 2026. Source tests, actual provider runs, browser rendering, native-device behavior and distribution checks are separate evidence. A passed synthetic test does not establish real capture permissions, audio quality or learning benefit.
 
+## VR Productivity replay iteration
+
+The replay recipe is bound to the original recording ID, revision and source image digest. Reopening validates edited controls and builds a fresh lab through the same deterministic adapters. The original out-of-range graph cost survives a cut-only replay. Tests cover malformed, stale, cross-lab and out-of-bounds controls. Existing note-only pins remain readable.
+
+Executed in `soma-lab-model`: four domain files and 26 tests passed, XR and Playwright types passed, and the root runtime manifest still verifies. Headed production Chromium passed both scenarios (16.5s), covering reset, graph and circuit pin/reopen after reload, reference graph edges and keyboard controls. Headed IWER passed the hand scenario (11.4s), including 12 right-hand selection pairs, reopening a checked result and sampling both labs' app callbacks. The first IWER attempt closed the browser before the first state check. The rerun passed after the XR timing hook used the renderer's active session at session start.
+
+A desktop capture confirms the live and pinned arrows appear in opposite directions on the bridge. IWER timing verifies instrumentation and is emulator evidence only. The public HTTPS launch, physical seated comfort, native hand tracking and Quest frame rate still require device acceptance.
+
 ## VR spike lab model
 
 November 9, 2026, on `vr-spike/lab-model`. The recorded graph opens at A → C → B → D → F with computed cost 7. D–F ties the alternative at cost 5. At cost 6, the solver takes A → C → E → F at total cost 9. Tests also cover cut and restore, an unreachable goal, reset, and the 0–10 edit range. The original A–F cost of 11 remains on open and reset.

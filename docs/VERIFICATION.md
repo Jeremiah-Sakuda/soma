@@ -10,6 +10,16 @@ Typecheck and runtime manifest verification passed. The full Vitest run passed 2
 
 These checks exercise the model in a local replay. Hosted WebXR, hand tracking and headset behavior remain unverified.
 
+## VR spike recorded circuit lab
+
+November 9, 2026, on `vr-spike/lab-model`, executed in the dedicated `soma-lab-model` worktree after `npm ci` there. This supersedes any implication that the earlier graph run established acceptance in this worktree. Root and isolated service lockfile installs completed with zero reported advisories. The initial root install was denied by the filesystem sandbox; the authorized worktree install then succeeded.
+
+The [circuit contract](../src/lib/xr-lab/circuit-contract.ts) and [recorded adapter](../src/lib/xr-lab/recorded-circuit-lab.ts) retain the original R4 probe observing R5 and use the existing exact DC solver for every current state. The balanced fixture gives A=12 V, B=C=8 V, D=0 V; currents are VS1=3 A, R1=R2=2 A, R3=R4=1 A, R5=0 A. Opening R4 gives source current 66/31 A and R5 current −12/31 A, checked against an independent series/parallel reduction and the solver. Current signs follow each part's `from`→`to` direction.
+
+Ten new tests cover those values, all recorded probe samples, opening/closing, per-kind clamping, edits retained while open, floating voltages, reset, consumer/session isolation and atomic rejection of invalid edits. Labels use documented derived anchors next to aligned component bodies because the recording contains no printed-label coordinates. Probe metadata remains historical after topology changes; captions and values are computed now. No inference is required.
+
+Executed here: `npm run typecheck` passed; `npm test` passed **2,047 tests**, with **107 gated skips** (168 passed files, 53 skipped); `npm run format:check` passed. Runtime manifest regenerated and verified for this branch. These are model-level/local test results, not hosted XR, hand-interaction or headset acceptance. No changes to main, deployment or release assets.
+
 ## Companion 0.5.0 distribution
 
 [0.5.0 is public and Latest](https://github.com/Jeremiah-Sakuda/soma/releases/tag/v0.5.0), not a draft/prerelease. Its immutable tag targets `1305844ad25e4b2758053c24ff62c62afa889772`. The final archive is Developer ID signed, Apple-notarized and stapled; deep strict code-sign verification, Gatekeeper and extracted-ZIP round-trip verification passed.

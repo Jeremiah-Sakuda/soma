@@ -193,31 +193,6 @@ export function createCircuitScene(
   const bridge = partViews.get(observedId)!;
   const arrow = new ArrowHelper(bridge.along, bridge.midpoint, 0.09, 0x468da7, 0.015, 0.012);
   root.add(arrow);
-  const priorArrow = new ArrowHelper(bridge.along, bridge.midpoint, 0.065, 0x9dd9d4, 0.012, 0.009);
-  const priorTag = label(
-    bridge.midpoint.clone().add(new Vector3(-0.018, 0.02, 0.086)),
-    0.064,
-    0.019,
-    CYAN,
-  );
-  priorTag.set(['Pinned flow']);
-  root.add(priorArrow);
-  priorArrow.visible = priorTag.mesh.visible = false;
-
-  function compare(prior: CircuitLabState | null) {
-    const previous = prior?.parts.find(({ id }) => id === observedId)?.current;
-    const now = lab.state().parts.find(({ id }) => id === observedId)?.current;
-    const reversed = typeof previous === 'number' && typeof now === 'number' && previous * now < 0;
-    priorArrow.visible = priorTag.mesh.visible = reversed;
-    if (reversed) {
-      const direction = bridge.along.clone().multiplyScalar(Math.sign(previous));
-      priorArrow.setDirection(direction);
-      priorArrow.position.copy(bridge.midpoint).addScaledVector(direction, -0.0325);
-      priorArrow.position.y += 0.024;
-      priorArrow.position.z += 0.067;
-    }
-  }
-
   const presetControls = PRESETS.map((value, index) => {
     const centre = new Vector3(-0.1 + 0.1 * index, SURFACE, -0.275);
     const button = label(centre, 0.068, 0.036, CYAN);
@@ -293,6 +268,5 @@ export function createCircuitScene(
     },
     togglePart,
     setValue,
-    compare,
   };
 }

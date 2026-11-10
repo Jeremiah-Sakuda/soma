@@ -84,8 +84,9 @@ world.renderer.xr.addEventListener('sessionstart', () => {
 });
 world.renderer.xr.addEventListener('sessionend', () => {
   enter.disabled = false;
+  cancelGraphInput();
 });
-status.textContent = 'Try D–F, or open Desk controls for keyboard access.';
+status.textContent = 'Click B–D to cut it, or open Desk controls.';
 
 world.scene.background = new Color(0x101819);
 world.scene.add(new HemisphereLight(0xdfe8ff, 0x2a2420, 1.1));
@@ -355,7 +356,7 @@ function refreshDesk() {
   const graph = activeLab === 'graph';
   if (enter.hidden)
     status.textContent = graph
-      ? 'Try D–F, or open Desk controls for keyboard access.'
+      ? 'Click B–D to cut it, or open Desk controls.'
       : 'Try 4, 8 or 16 Ω. Watch the current through R5.';
   const finding = currentFinding();
   const saved = pinned[activeLab];
@@ -377,17 +378,20 @@ function refreshDesk() {
       edgeViews.get(edge.id)!.reference.visible = visible;
       hasReferenceRoute ||= visible;
     }
-  } else {
-    circuit.compare(savedLab?.id === 'circuit' ? savedLab.lab.state() : null);
   }
-  const tip = graph
-    ? `D–F costs ${state.edges.find((edge) => edge.id === state.probe.edgeId)!.cost} · Recorded tie at ${state.probe.criticalCost} · Pinch or tap + / −`
-    : 'What happens to R5 either side of 8 Ω?';
+  const cut = state.edges.find((edge) => edge.id === 'e_BD')?.enabled === false;
+  const tip = !graph
+    ? 'Pinch a resistance below. Follow the current through R5.'
+    : !edited
+      ? 'Point at B–D, then pinch and release to cut it.'
+      : cut
+        ? 'Pinch B–D again to restore it, or pin this finding.'
+        : `Slide D–F or use + / −. Current cost ${state.edges.find((edge) => edge.id === state.probe.edgeId)!.cost}.`;
   const note = saved ? `Pinned: ${saved.result}` : 'Pin a finding to see it on your next visit.';
   board.set([
     graph ? 'Shortest routes' : 'Bridge circuit',
     tip,
-    `Start: ${finding.baseline}`,
+    ...(graph ? [`Start: ${finding.baseline}`] : []),
     `Now: ${finding.result}`,
     message || note,
     hasReferenceRoute
